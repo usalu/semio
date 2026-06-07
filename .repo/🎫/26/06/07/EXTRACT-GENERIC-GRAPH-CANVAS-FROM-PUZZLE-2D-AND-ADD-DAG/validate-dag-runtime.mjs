@@ -77,6 +77,20 @@ async function dragOnCanvas(canvas, from, to) {
   await canvas.page().waitForTimeout(400);
 }
 
+function portScreenPx(fixture, nodeId, portId, input, viewW, viewH) {
+  const node = fixture.nodes.find((n) => n.id === nodeId);
+  if (!node) return null;
+  const ports = input ? node.inputs : node.outputs;
+  const idx = ports.findIndex((p) => p.id === portId);
+  if (idx < 0) return null;
+  const t = (idx + 0.5) / Math.max(ports.length, 1);
+  const hw = node.width * 0.5;
+  const hh = node.height * 0.5;
+  const worldX = input ? node.x - hw : node.x + hw;
+  const worldY = node.y - hh + t * node.height;
+  return { x: worldX + viewW * 0.5, y: worldY + viewH * 0.5 };
+}
+
 const preferredPort = Number(process.env.DAG_PLAY_PORT ?? "6017");
 const baseUrl = await findDagDevUrl(preferredPort);
 if (!baseUrl) {
@@ -110,7 +124,12 @@ const midX = box.width * 0.5;
 const midY = box.height * 0.5;
 
 await dragOnCanvas(canvas, { x: midX - 120, y: midY }, { x: midX - 60, y: midY - 50 });
-await dragOnCanvas(canvas, { x: midX + 40, y: midY + 20 }, { x: midX - 40, y: midY - 30 });
+const fixtureAfterDrag = latestFixtureFromLogs(debugLogs);
+const combineB = fixtureAfterDrag ? portScreenPx(fixtureAfterDrag, "combine", "b", true, box.width, box.height) : null;
+const scaleOut = fixtureAfterDrag ? portScreenPx(fixtureAfterDrag, "scale", "out", false, box.width, box.height) : null;
+if (combineB && scaleOut) {
+  await dragOnCanvas(canvas, combineB, scaleOut);
+}
 
 const canvasCount = await page.locator("canvas").count();
 const unsupported = await page.getByText("Unsupported UiNode").count();

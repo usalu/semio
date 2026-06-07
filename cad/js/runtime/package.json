@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@cad/js/runtime",
+  "version": "0.1.0",
+  "description": "🚀 CAD runtime composition root.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @cad/js/runtime:test"
+  },
+  "dependencies": {
+    "@cad/js/core": "workspace:*",
+    "@cad/js/module/spatial-shape": "workspace:*",
+    "@cad/js/module/aec-building": "workspace:*",
+    "@cad/js/module/aec-building-energy": "workspace:*",
+    "@cad/js/module/aec-building-structure": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "bundleKind": "library"
+}

@@ -686,6 +686,61 @@
       }
     },
     {
+      "name": "🛠️dev📐cad🧪runtime",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @cad/js/runtime:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 165.6
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🧪module🧭spatial-shape",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @cad/js/module/spatial-shape:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 165.7
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🧪module🏗️aec-building",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @cad/js/module/aec-building:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 165.8
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🧪module⚡aec-building-energy",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @cad/js/module/aec-building-energy:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 165.9
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🧪module🏛️aec-building-structure",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @cad/js/module/aec-building-structure:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 166
+      }
+    },
+    {
       "name": "🛠️dev♾️infinite✈️cavas🧪react",
       "type": "node-terminal",
       "request": "launch",

@@ -1,15 +1,41 @@
 # DAG
 
-A directed acyclic graph.
+A left-to-right directed acyclic graph.
+
+# Node kind
+
+# Chanel kind
 
 # Node
 
-A node is a rectangle with a list of horizontal text inputs on the left, a vertical text in middle for the name, and a list of horizontal text outputs on the left.
+## Computation Node
+
+A computation node is a rectangle with channels.
+All in channels are listed on the left
+The label of the node is in middle vertically
+All out channels are listed on right.
+
+## Input Node
+
+### Slider
+
+### Select
+
+## Output Node
+
+### Screen
+
+To display images, svgs, pdfs, videos etc.
+
+# Channel
+
+A channel is used to connect nodes.
+Every out channel can be plugged into in channels.
 
 # In
 
-An in dictionary.
+An in channel.
 
 # Out
 
-An out dictionary.
+An out channel.

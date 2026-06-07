@@ -3,6 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { serializeGraphVelloThemePaletteJson } from "@ui/styling";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 
 // #region 🔖GpuWasmBridge
@@ -97,9 +98,17 @@ export interface CatalogueSection {
   readonly items: readonly CatalogueItem[];
 }
 
-export const FLOW_DRAG_MIME = "application/x-flow-widget";
+export const FLOW_WIDGET_DRAG_V1_MIME = "application/x-flow-widget-v1";
+export const FLOW_WIDGET_DRAG_PLAIN_MIME = "text/plain";
 
-function catalogueItemDescriptor(item: CatalogueItem): string {
+/** @emoji 📍 Flow widget palette drop: descriptor plus pointer in CSS space and world on the canvas. */
+export interface FlowWidgetDropDetail {
+  readonly descriptor: string;
+  readonly screen: { readonly x: number; readonly y: number };
+  readonly world: { readonly x: number; readonly y: number };
+}
+
+export function flowCatalogueItemDescriptor(item: CatalogueItem): string {
   if (item.kind === "neuron" && item.neuronKind) {
     return JSON.stringify({ kind: "neuron", neuronKind: item.neuronKind });
   }
@@ -109,43 +118,154 @@ function catalogueItemDescriptor(item: CatalogueItem): string {
   return JSON.stringify({ kind: item.kind });
 }
 
-export interface FlowCatalogueProps {
-  readonly sections: readonly CatalogueSection[];
-  readonly className?: string;
+export function encodeFlowWidgetDescriptorForDragV1(descriptorJson: string): string {
+  return descriptorJson;
 }
 
-export function FlowCatalogue({ sections, className }: FlowCatalogueProps): React.JSX.Element {
-  return (
-    <aside
-      className={className ?? "pointer-events-auto flex w-52 shrink-0 flex-col gap-2 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface-2)] p-2 text-sm"}
-      data-testid="flow-catalogue"
-    >
-      {sections.map((section) => (
-        <details key={section.id} open className="group rounded border border-[var(--color-border)] bg-[var(--color-surface-1)]">
-          <summary className="cursor-pointer select-none px-2 py-1.5 font-medium">{section.title}</summary>
-          <ul className="flex flex-col gap-1 p-1">
-            {section.items.map((item) => (
-              <li key={`${section.id}-${item.kind}-${item.neuronKind ?? item.name}`}>
-                <button
-                  type="button"
-                  draggable
-                  className="w-full cursor-grab rounded px-2 py-1.5 text-left hover:bg-[var(--color-surface-3)] active:cursor-grabbing"
-                  data-testid={`flow-catalogue-item-${item.neuronKind ?? item.kind}`}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(FLOW_DRAG_MIME, catalogueItemDescriptor(item));
-                    e.dataTransfer.effectAllowed = "copy";
-                  }}
-                >
-                  <div className="font-medium">{item.name}</div>
-                  <div className="text-xs text-[var(--color-muted)]">{item.summary}</div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ))}
-    </aside>
-  );
+export function decodeFlowWidgetDescriptorFromDragV1(encoded: string): string | null {
+  const trimmed = encoded.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = JSON.parse(trimmed) as { kind?: string };
+    return typeof parsed.kind === "string" ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function readFlowWidgetDragDataTransfer(dataTransfer: DataTransfer): string | null {
+  const custom = dataTransfer.getData(FLOW_WIDGET_DRAG_V1_MIME);
+  if (custom?.trim()) {
+    return decodeFlowWidgetDescriptorFromDragV1(custom);
+  }
+  const plain = dataTransfer.getData(FLOW_WIDGET_DRAG_PLAIN_MIME);
+  if (plain?.trim()) {
+    return decodeFlowWidgetDescriptorFromDragV1(plain);
+  }
+  return null;
+}
+
+export function flowPlayCatalogueItemDragData(item: CatalogueItem): Record<string, string> {
+  const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
+  return { [FLOW_WIDGET_DRAG_V1_MIME]: encoded, [FLOW_WIDGET_DRAG_PLAIN_MIME]: encoded };
+}
+
+export const flowWidgetPaletteDragRef = { active: false };
+export const flowWidgetPalettePointerDragRef = { active: false, encoded: null as string | null };
+export const flowWidgetDropPointerToWorldRef = {
+  current: null as ((clientX: number, clientY: number) => { screen: { x: number; y: number }; world: { x: number; y: number } } | null) | null,
+};
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded widget descriptor. */
+export function beginFlowWidgetPalettePointerDrag(encoded: string): void {
+  flowWidgetPalettePointerDragRef.active = true;
+  flowWidgetPalettePointerDragRef.encoded = encoded;
+  flowWidgetPaletteDragRef.active = true;
+  window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: { encoded } }));
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelFlowWidgetPalettePointerDrag(): void {
+  if (!flowWidgetPalettePointerDragRef.active && !flowWidgetPaletteDragRef.active) {
+    return;
+  }
+  flowWidgetPalettePointerDragRef.active = false;
+  flowWidgetPalettePointerDragRef.encoded = null;
+  flowWidgetPaletteDragRef.active = false;
+  window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: null }));
+}
+
+/** @emoji 🎯 True when client coordinates are over the flow widget drop host. */
+export function isClientPointOverFlowWidgetDropHost(clientX: number, clientY: number, host: HTMLElement | null | undefined): boolean {
+  if (!host) return false;
+  const rect = host.getBoundingClientRect();
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+/** @emoji 📥 Commits a palette widget drop at client coordinates. */
+export function commitFlowWidgetDropAtClient(
+  clientX: number,
+  clientY: number,
+  descriptor: string,
+  host: HTMLElement | null | undefined,
+  onWidgetDrop: ((detail: FlowWidgetDropDetail) => void) | undefined,
+): boolean {
+  const toWorld = flowWidgetDropPointerToWorldRef.current;
+  if (!toWorld || !onWidgetDrop) return false;
+  const mapped = toWorld(clientX, clientY);
+  if (!mapped) return false;
+  if (!isClientPointOverFlowWidgetDropHost(clientX, clientY, host)) return false;
+  onWidgetDrop({ descriptor, screen: mapped.screen, world: mapped.world });
+  return true;
+}
+
+/** @emoji 🖱️ Ends pointer palette drag and drops on the viewport when over the host. */
+export function endFlowWidgetPalettePointerDrag(
+  clientX: number,
+  clientY: number,
+  host: HTMLElement | null | undefined,
+  onWidgetDrop: ((detail: FlowWidgetDropDetail) => void) | undefined,
+): void {
+  if (!flowWidgetPalettePointerDragRef.active) return;
+  const encoded = flowWidgetPalettePointerDragRef.encoded;
+  cancelFlowWidgetPalettePointerDrag();
+  if (!encoded) return;
+  const descriptor = decodeFlowWidgetDescriptorFromDragV1(encoded);
+  if (!descriptor) return;
+  commitFlowWidgetDropAtClient(clientX, clientY, descriptor, host, onWidgetDrop);
+}
+
+/** @emoji 🔍 True when `dataTransfer.types` carries a flow widget palette drag. */
+export function flowWidgetDragMimeInTypes(types: readonly string[]): boolean {
+  return types.includes(FLOW_WIDGET_DRAG_V1_MIME) || types.includes(FLOW_WIDGET_DRAG_PLAIN_MIME);
+}
+
+/** @emoji 🔍 Whether the viewport should accept a palette widget drop for this drag gesture. */
+export function flowWidgetDragAcceptsTransfer(types: readonly string[]): boolean {
+  if (flowWidgetPalettePointerDragRef.active || flowWidgetPaletteDragRef.active) {
+    return true;
+  }
+  return flowWidgetDragMimeInTypes(types);
+}
+
+/** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry flow widget palette `dragData`. */
+export function flowWidgetPaletteTreeDragController(
+  dragDataByItemId: ReadonlyMap<string, Record<string, string>>,
+): import("@framework/platform/core").TreeDragAndDropController {
+  const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+    const payload = dragData?.[FLOW_WIDGET_DRAG_V1_MIME];
+    return payload?.trim() ? payload : undefined;
+  };
+  return {
+    getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: beginFlowWidgetPalettePointerDrag,
+      cancel: cancelFlowWidgetPalettePointerDrag,
+    },
+    onDragStart: ({ sourceItem }) => {
+      if (flowWidgetPalettePointerDragRef.active) return;
+      flowWidgetPaletteDragRef.active = true;
+      const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
+      if (payload) {
+        window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: { encoded: payload } }));
+      }
+    },
+    onDragEnd: () => {
+      if (flowWidgetPalettePointerDragRef.active) return;
+      flowWidgetPaletteDragRef.active = false;
+      window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: null }));
+    },
+  };
+}
+
+export function parseFlowCatalogueSections(json: string): CatalogueSection[] {
+  try {
+    const parsed = JSON.parse(json) as CatalogueSection[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 // #endregion 🔖Catalogue
 
@@ -154,22 +274,49 @@ export interface FlowCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
   readonly store?: FlowStore;
+  readonly fixtureDragDrop?: boolean;
   readonly onPreviewText?: (text: string) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
+  readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
+  readonly onWidgetDrop?: (detail: FlowWidgetDropDetail) => void;
 }
 
-export function FlowCanvas({ fixtureJson, className, store, onPreviewText, onFixtureChange }: FlowCanvasProps): React.JSX.Element {
+export function FlowCanvas({
+  fixtureJson,
+  className,
+  store,
+  fixtureDragDrop = false,
+  onPreviewText,
+  onFixtureChange,
+  onCatalogueReady,
+  onWidgetDrop,
+}: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<FlowSession | null>(null);
   const rafRef = useRef<number | null>(null);
   const onPreviewTextRef = useRef(onPreviewText);
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onCatalogueReadyRef = useRef(onCatalogueReady);
+  const onWidgetDropRef = useRef(onWidgetDrop);
   const storeRef = useRef(store ?? createLocalFlowStore());
   const pointerRef = useRef({ active: false, pan: false, id: -1 });
-  const [previewText, setPreviewText] = useState("—");
-  const [sliderValue, setSliderValue] = useState(3);
-  const [catalogueSections, setCatalogueSections] = useState<CatalogueSection[]>([]);
+  const fixtureDragDepthRef = useRef(0);
+  const lastVelloThemeJsonRef = useRef("");
+  const [fixtureDragActive, setFixtureDragActive] = useState(false);
+
+  const syncVelloTheme = useCallback(() => {
+    if (typeof document === "undefined") return;
+    try {
+      const json = serializeGraphVelloThemePaletteJson();
+      if (json !== lastVelloThemeJsonRef.current) {
+        lastVelloThemeJsonRef.current = json;
+        sessionRef.current?.setVelloThemeJson(json);
+      }
+    } catch {
+      lastVelloThemeJsonRef.current = "";
+    }
+  }, []);
 
   useEffect(() => {
     onPreviewTextRef.current = onPreviewText;
@@ -178,6 +325,14 @@ export function FlowCanvas({ fixtureJson, className, store, onPreviewText, onFix
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
   }, [onFixtureChange]);
+
+  useEffect(() => {
+    onCatalogueReadyRef.current = onCatalogueReady;
+  }, [onCatalogueReady]);
+
+  useEffect(() => {
+    onWidgetDropRef.current = onWidgetDrop;
+  }, [onWidgetDrop]);
 
   useEffect(() => {
     if (store) storeRef.current = store;
@@ -197,30 +352,45 @@ export function FlowCanvas({ fixtureJson, className, store, onPreviewText, onFix
 
   const renderFrame = useCallback(() => {
     try {
+      syncVelloTheme();
       sessionRef.current?.renderFrame();
     } catch {
       /* gpu not ready */
     }
-  }, []);
+  }, [syncVelloTheme]);
 
   const evaluate = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
     session.evaluate();
     const text = session.previewText();
-    setPreviewText((prev) => (prev === text ? prev : text));
     onPreviewTextRef.current?.(text);
     console.log(`[DEBUG] flow evaluate preview: ${text}`);
   }, []);
 
   const loadCatalogue = useCallback((session: FlowSession) => {
-    try {
-      const parsed = JSON.parse(session.catalogueJson()) as CatalogueSection[];
-      setCatalogueSections(parsed);
-    } catch {
-      setCatalogueSections([]);
-    }
+    const sections = parseFlowCatalogueSections(session.catalogueJson());
+    onCatalogueReadyRef.current?.(sections);
   }, []);
+
+  const commitWidgetDrop = useCallback(
+    (detail: FlowWidgetDropDetail) => {
+      const session = sessionRef.current;
+      if (!session) return false;
+      const handler = onWidgetDropRef.current;
+      if (handler) {
+        handler(detail);
+      } else {
+        session.addWidget(detail.descriptor, detail.world.x, detail.world.y);
+        evaluate();
+        persistFixture();
+      }
+      renderFrame();
+      console.log(`[DEBUG] flow add widget at ${detail.world.x.toFixed(1)}, ${detail.world.y.toFixed(1)}`);
+      return true;
+    },
+    [evaluate, persistFixture, renderFrame],
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -233,6 +403,12 @@ export function FlowCanvas({ fixtureJson, className, store, onPreviewText, onFix
     session.loadFixtureJson(json);
     loadCatalogue(session);
     evaluate();
+    try {
+      const layout = JSON.parse(session.fixtureJson()).layout ?? {};
+      console.log(`[DEBUG] flow fixture layout: ${JSON.stringify(layout)}`);
+    } catch {
+      /* fixture not serializable yet */
+    }
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
     const initW = Math.max(1, Math.round(rect.width));
@@ -333,80 +509,132 @@ export function FlowCanvas({ fixtureJson, className, store, onPreviewText, onFix
     [clientToCanvas, persistFixture, renderFrame],
   );
 
-  const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (e.dataTransfer.types.includes(FLOW_DRAG_MIME)) {
+  const resetFixtureDragDepth = useCallback(() => {
+    fixtureDragDepthRef.current = 0;
+    setFixtureDragActive(false);
+  }, []);
+
+  const onDragEnter = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (!fixtureDragDrop) return;
+      if (!flowWidgetDragAcceptsTransfer([...e.dataTransfer.types])) return;
+      fixtureDragDepthRef.current += 1;
+      setFixtureDragActive(true);
+    },
+    [fixtureDragDrop],
+  );
+
+  const onDragLeave = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (!fixtureDragDrop) return;
+      const target = e.currentTarget as HTMLElement;
+      const related = e.relatedTarget as Node | null;
+      if (related && target.contains(related)) return;
+      fixtureDragDepthRef.current = Math.max(0, fixtureDragDepthRef.current - 1);
+      if (fixtureDragDepthRef.current === 0) {
+        setFixtureDragActive(false);
+      }
+    },
+    [fixtureDragDrop],
+  );
+
+  const onDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (!fixtureDragDrop) return;
+      if (!flowWidgetDragAcceptsTransfer([...e.dataTransfer.types])) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
-    }
-  }, []);
+    },
+    [fixtureDragDrop],
+  );
+
+  const commitWidgetDropAtClient = useCallback(
+    (clientX: number, clientY: number, descriptor: string) => {
+      const session = sessionRef.current;
+      const host = containerRef.current ?? canvasRef.current;
+      if (!session || !host) return false;
+      const rect = host.getBoundingClientRect();
+      const screen = { x: clientX - rect.left, y: clientY - rect.top };
+      const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
+      return commitWidgetDrop({ descriptor, screen, world });
+    },
+    [commitWidgetDrop],
+  );
 
   const onDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
-      const session = sessionRef.current;
-      const canvas = canvasRef.current;
-      if (!session || !canvas) return;
-      const descriptor = e.dataTransfer.getData(FLOW_DRAG_MIME);
-      if (!descriptor) return;
+      if (!fixtureDragDrop) return;
+      const descriptor = readFlowWidgetDragDataTransfer(e.dataTransfer);
+      const accepts = descriptor !== null || flowWidgetDragAcceptsTransfer([...e.dataTransfer.types]);
+      if (!accepts) return;
       e.preventDefault();
-      const { x, y } = clientToCanvas(e.clientX, e.clientY);
-      const world = JSON.parse(session.worldFromScreen(x, y)) as { x: number; y: number };
-      session.addWidget(descriptor, world.x, world.y);
-      evaluate();
-      persistFixture();
-      renderFrame();
-      console.log(`[DEBUG] flow add widget at ${world.x.toFixed(1)}, ${world.y.toFixed(1)}`);
+      resetFixtureDragDepth();
+      if (!descriptor) return;
+      commitWidgetDropAtClient(e.clientX, e.clientY, descriptor);
     },
-    [clientToCanvas, evaluate, persistFixture, renderFrame],
+    [commitWidgetDropAtClient, fixtureDragDrop, resetFixtureDragDepth],
   );
 
-  const onSliderChange = useCallback(
-    (value: number) => {
-      setSliderValue(value);
-      sessionRef.current?.setSliderValue("slider", value);
-      evaluate();
-      persistFixture();
-    },
-    [evaluate, persistFixture],
-  );
+  useEffect(() => {
+    if (!fixtureDragDrop) {
+      flowWidgetDropPointerToWorldRef.current = null;
+      return;
+    }
+    flowWidgetDropPointerToWorldRef.current = (clientX, clientY) => {
+      const session = sessionRef.current;
+      const host = containerRef.current ?? canvasRef.current;
+      if (!session || !host) return null;
+      const rect = host.getBoundingClientRect();
+      const screen = { x: clientX - rect.left, y: clientY - rect.top };
+      const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
+      return { screen, world };
+    };
+    return () => {
+      flowWidgetDropPointerToWorldRef.current = null;
+    };
+  }, [fixtureDragDrop]);
 
-  const onResetFixture = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session) return;
-    storeRef.current.clear();
-    const json = flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
-    session.loadFixtureJson(json);
-    evaluate();
-    persistFixture();
-    renderFrame();
-  }, [evaluate, persistFixture, renderFrame]);
+  useEffect(() => {
+    if (!fixtureDragDrop) return;
+    const dropHost = (): HTMLElement | null => containerRef.current ?? canvasRef.current;
+    const onWindowPointerUp = (event: PointerEvent) => {
+      if (!flowWidgetPalettePointerDragRef.active) return;
+      resetFixtureDragDepth();
+      endFlowWidgetPalettePointerDrag(event.clientX, event.clientY, dropHost(), (detail) => {
+        commitWidgetDrop(detail);
+      });
+    };
+    const onWindowPointerCancel = () => {
+      if (!flowWidgetPalettePointerDragRef.active) return;
+      resetFixtureDragDepth();
+      cancelFlowWidgetPalettePointerDrag();
+    };
+    window.addEventListener("pointerup", onWindowPointerUp);
+    window.addEventListener("pointercancel", onWindowPointerCancel);
+    return () => {
+      window.removeEventListener("pointerup", onWindowPointerUp);
+      window.removeEventListener("pointercancel", onWindowPointerCancel);
+    };
+  }, [commitWidgetDrop, fixtureDragDrop, resetFixtureDragDepth]);
 
   return (
-    <div className={className ?? "relative flex h-full min-h-0 w-full min-w-0 bg-[var(--color-surface-1)]"} onDragOver={onDragOver} onDrop={onDrop}>
-      <FlowCatalogue sections={catalogueSections} />
-      <div ref={containerRef} className="relative min-h-0 min-w-0 flex-1">
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 block h-full w-full touch-none"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-          onWheel={onWheel}
-        />
-        <div className="pointer-events-auto absolute bottom-3 left-3 flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-sm shadow-md">
-          <label className="flex items-center gap-2">
-            <span className="w-14">Slider</span>
-            <input type="range" min={0} max={10} step={0.1} value={sliderValue} onChange={(ev) => onSliderChange(Number(ev.target.value))} />
-            <span className="tabular-nums">{sliderValue.toFixed(1)}</span>
-          </label>
-          <div>
-            Preview: <strong className="tabular-nums">{previewText}</strong>
-          </div>
-          <button type="button" className="rounded border border-[var(--color-border)] px-2 py-1 text-xs hover:bg-[var(--color-surface-3)]" onClick={onResetFixture}>
-            Reset flow
-          </button>
-        </div>
-      </div>
+    <div
+      ref={containerRef}
+      className={className ?? `relative h-full min-h-0 w-full min-w-0 bg-canvas${fixtureDragActive ? " ring-2 ring-inset ring-accent" : ""}`}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 block h-full w-full touch-none"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onWheel={onWheel}
+      />
     </div>
   );
 }
@@ -447,7 +675,13 @@ if (import.meta.vitest) {
   describe("flow catalogue descriptor", () => {
     it("builds neuron descriptor", () => {
       const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" };
-      expect(catalogueItemDescriptor(item)).toContain("math.add");
+      expect(flowCatalogueItemDescriptor(item)).toContain("math.add");
+    });
+
+    it("round-trips drag payload", () => {
+      const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" };
+      const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
+      expect(decodeFlowWidgetDescriptorFromDragV1(encoded)).toContain("math.add");
     });
   });
 }

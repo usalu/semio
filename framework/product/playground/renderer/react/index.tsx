@@ -519,6 +519,9 @@ function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[]
     return undefined;
   }
   const sample = dragByItemId.values().next().value;
+  if (sample && FLOW_WIDGET_DRAG_V1_MIME in sample) {
+    return flowWidgetPaletteTreeDragController(dragByItemId);
+  }
   if (sample && PUZZLE_2D_FIXTURE_DRAG_V1_MIME in sample) {
     return puzzle2dFixturePaletteTreeDragController(dragByItemId);
   }
@@ -6011,19 +6014,24 @@ import {
   FLOW_PLAY_BODY_KEY_MAIN,
   FLOW_PLAY_CONTROLLER_ID,
   FLOW_PLAY_DEFAULT_FIXTURE_JSON,
+  FLOW_PLAY_KINDS_TAB_ID,
   FLOW_PLAY_SURFACE_ID,
   FLOW_PLAY_WINDOW_KIND_ID,
   FlowPlayController,
+  buildFlowPlayKindsTree,
   registerFlowPlayDeclarativeBodies,
 } from "@flow/play";
-import { FlowCanvas } from "@flow/react";
+import { FLOW_WIDGET_DRAG_V1_MIME, FlowCanvas, flowWidgetPaletteTreeDragController } from "@flow/react";
 import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
 
 let flowPlayChromeRegistered = false;
+const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
 
 function useFlowPlayController(): FlowPlayController | undefined {
   const { runtime } = useApp();
-  return runtime.getActiveApp()?.controller as FlowPlayController | undefined;
+  const ctrl = runtime.getActiveApp()?.controller as FlowPlayController | undefined;
+  flowPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
 }
 
 function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
@@ -6035,7 +6043,58 @@ function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSur
     },
     [ctrl],
   );
-  return <FlowCanvas fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON} onPreviewText={onPreviewText} />;
+  const onCatalogueReady = reactHostPort.useCallback(
+    (sections: readonly import("@flow/react").CatalogueSection[]) => {
+      ctrl?.run("setCatalogueSections", { sections: [...sections] });
+    },
+    [ctrl],
+  );
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  return (
+    <FlowCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
+      fixtureDragDrop
+      onPreviewText={onPreviewText}
+      onCatalogueReady={onCatalogueReady}
+      onFixtureChange={onFixtureChange}
+    />
+  );
+}
+
+class FlowPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: FLOW_PLAY_KINDS_TAB_ID,
+      icon: createIconComponent("tags"),
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = flowPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildFlowPlayKindsTree(ctrl?.getCatalogueSections() ?? []);
+        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return {
+          ...config,
+          dragAndDropController: flowWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+        };
+      }),
+    };
+  }
+}
+
+function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const flowPlayKindsPanel = reactHostPort.useMemo(() => new FlowPlayKindsPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [flowPlayKindsPanel],
+    }),
+    [flowPlayKindsPanel],
+  );
+  return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
 
 export function registerFlowPlaySurfaceHosts(): void {
@@ -6046,7 +6105,7 @@ export function registerFlowPlaySurfaceHosts(): void {
 }
 
 function FlowPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} />;
+  return <FlowPlayInner runtime={runtime} />;
 }
 
 export function mountFlowPlayChrome(playground: Playground, rootId = "root"): void {

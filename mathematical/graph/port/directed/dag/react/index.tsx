@@ -3,6 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef } from "react";
+import { serializeGraphVelloThemePaletteJson } from "@ui/styling";
 import initDagWasm, { DagSession, initSync } from "../pkg/mathematical_graph_port_directed_dag.js";
 
 // #region 🔖GpuWasmBridge
@@ -103,14 +104,29 @@ export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<DagSession | null>(null);
   const rafRef = useRef<number | null>(null);
+  const lastVelloThemeJsonRef = useRef("");
+
+  const syncVelloTheme = useCallback(() => {
+    if (typeof document === "undefined") return;
+    try {
+      const json = serializeGraphVelloThemePaletteJson();
+      if (json !== lastVelloThemeJsonRef.current) {
+        lastVelloThemeJsonRef.current = json;
+        sessionRef.current?.setVelloThemeJson(json);
+      }
+    } catch {
+      lastVelloThemeJsonRef.current = "";
+    }
+  }, []);
 
   const renderFrame = useCallback(() => {
     try {
+      syncVelloTheme();
       sessionRef.current?.renderFrame();
     } catch {
       /* gpu not ready */
     }
-  }, []);
+  }, [syncVelloTheme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -192,7 +208,7 @@ export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX
   }, [fixtureJson, renderFrame]);
 
   return (
-    <div ref={containerRef} className={className ?? "relative h-full w-full min-h-0 min-w-0 bg-[#14161c]"}>
+    <div ref={containerRef} className={className ?? "relative h-full w-full min-h-0 min-w-0 bg-canvas"}>
       <canvas ref={canvasRef} className="block h-full w-full touch-none" />
     </div>
   );

@@ -32,6 +32,7 @@ class DevScript extends BundleScript {
 
 class ValidateScript extends BundleScript {
   run(segments: string[]): void {
+    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
     runBun([validateRuntimeScript, ...segments], this.root, {
       ...playPollingEnv(),
       FLOW_PLAY_PORT: process.env.FLOW_PLAY_PORT ?? playgroundDevPortString("flow"),

@@ -117,7 +117,13 @@ enum HitObject<E> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum InteractionMode {
     DragNode { node_id: NodeId, offset: Vec2 },
-    DrawEdge { anchor_handle: HandleId, anchor_is_source: bool, cursor: Point, reconnecting: Option<EdgeId> },
+    DrawEdge {
+        anchor_handle: HandleId,
+        anchor_is_source: bool,
+        fixed_target: Option<HandleId>,
+        cursor: Point,
+        reconnecting: Option<EdgeId>,
+    },
     Idle,
 }
 
@@ -361,8 +367,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
                 }
             }
-            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, reconnecting, .. } => {
-                self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, cursor: point, reconnecting };
+            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
+                self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor: point, reconnecting };
                 self.update_hover(self.hit_test(point).map(|hit| match hit {
                     HitObject::Edge(id) => id,
                     HitObject::Endpoint(ep) => P::endpoint_as_u64(ep),
@@ -380,21 +386,27 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn pointer_up(&mut self, x: f64, y: f64) {
-        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, reconnecting, .. } = self.interaction {
+        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } = self.interaction {
             let point = Point::new(x, y);
             if let Some(HitObject::Endpoint(ep)) = self.hit_test(point) {
-                let target_hid = P::endpoint_as_u64(ep);
-                let (source_hid, target_handle) = if anchor_is_source {
-                    (anchor_handle, target_hid)
+                let hit_hid = P::endpoint_as_u64(ep);
+                let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
+                    (hit_hid, tgt)
+                } else if anchor_is_source {
+                    (anchor_handle, hit_hid)
                 } else {
-                    (target_hid, anchor_handle)
+                    (hit_hid, anchor_handle)
                 };
                 if self.is_valid_connection(source_hid, target_handle, reconnecting) {
+                    let new_id = reconnecting.unwrap_or_else(|| {
+                        let id = self.next_edge_id;
+                        self.next_edge_id += 1;
+                        id
+                    });
                     if let Some(old_id) = reconnecting {
-                        self.remove_edge(old_id);
+                        self.edges.remove(&old_id);
+                        self.selection.edge_ids.remove(&old_id);
                     }
-                    let new_id = self.next_edge_id;
-                    self.next_edge_id += 1;
                     if let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_handle)) {
                         self.create_edge(new_id, src_ep, tgt_ep);
                         self.events.push(BoardEvent::EdgeConnected { id: new_id, source: source_hid, target: target_handle });
@@ -422,8 +434,15 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 snapshot.edges.push(curve);
             }
         }
-        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, cursor, .. } = self.interaction {
-            if let Some(anchor) = self.handles.get(&anchor_handle).and_then(|h| self.nodes.get(&h.node_id).map(|n| (n, h))) {
+        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, .. } = self.interaction {
+            if let Some(fixed_tgt) = fixed_target {
+                if let Some(tgt_h) = self.handles.get(&fixed_tgt) {
+                    if let Some(tn) = self.nodes.get(&tgt_h.node_id) {
+                        let to = handle_position(tn, tgt_h);
+                        snapshot.pending_edge = Some((cursor, to));
+                    }
+                }
+            } else if let Some(anchor) = self.handles.get(&anchor_handle).and_then(|h| self.nodes.get(&h.node_id).map(|n| (n, h))) {
                 let anchor_point = handle_position(anchor.0, anchor.1);
                 snapshot.pending_edge = Some(if anchor_is_source { (anchor_point, cursor) } else { (cursor, anchor_point) });
             }
@@ -513,16 +532,20 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             return;
         };
         let incoming = self.incoming_edge_for_handle(handle_id);
-        let reconnect_anchor = |edge_id: EdgeId| -> Option<(HandleId, bool, Option<EdgeId>)> {
+        let reconnect_from_target = |edge_id: EdgeId, target_hid: HandleId| -> Option<(HandleId, bool, Option<HandleId>, Option<EdgeId>)> {
             let src = P::endpoint_as_u64(self.edges.get(&edge_id)?.source);
-            Some((src, true, Some(edge_id)))
+            Some((src, true, Some(target_hid), Some(edge_id)))
         };
-        let (anchor_handle, anchor_is_source, reconnecting) = match handle.role {
-            HandleRole::Target => incoming.and_then(reconnect_anchor).unwrap_or((handle_id, false, None)),
-            HandleRole::Source => (handle_id, true, None),
-            HandleRole::Any => incoming.and_then(reconnect_anchor).unwrap_or((handle_id, true, None)),
+        let (anchor_handle, anchor_is_source, fixed_target, reconnecting) = match handle.role {
+            HandleRole::Target => incoming
+                .and_then(|e| reconnect_from_target(e, handle_id))
+                .unwrap_or((handle_id, false, None, None)),
+            HandleRole::Source => (handle_id, true, None, None),
+            HandleRole::Any => incoming
+                .and_then(|e| reconnect_from_target(e, handle_id))
+                .unwrap_or((handle_id, true, None, None)),
         };
-        self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, cursor, reconnecting };
+        self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, reconnecting };
     }
 
     fn incoming_edge_for_handle(&self, handle_id: HandleId) -> Option<EdgeId> {
@@ -552,17 +575,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             return false;
         }
         if self.edges.values().any(|e| {
-            e.id != reconnecting.unwrap_or(0)
-                && P::endpoint_as_u64(e.source) == source_hid
-                && P::endpoint_as_u64(e.target) == target_hid
+            Some(e.id) != reconnecting && P::endpoint_as_u64(e.source) == source_hid && P::endpoint_as_u64(e.target) == target_hid
         }) {
             return false;
         }
-        if self
-            .edges
-            .values()
-            .any(|e| e.id != reconnecting.unwrap_or(0) && P::endpoint_as_u64(e.target) == target_hid)
-        {
+        if self.edges.values().any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid) {
             return false;
         }
         if self.enforce_acyclic {
@@ -684,6 +701,19 @@ mod tests {
     }
 
     #[test]
+    fn rect_node_drags_from_center() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 100.0, 50.0, 160.0, 72.0, true);
+        engine.pointer_down(100.0, 50.0, false);
+        assert!(matches!(engine.interaction, InteractionMode::DragNode { .. }));
+        engine.pointer_move(140.0, 80.0);
+        engine.pointer_up(140.0, 80.0);
+        let c = engine.nodes.get(&1).unwrap().center;
+        assert!((c.x - 140.0).abs() < 0.01);
+        assert!((c.y - 80.0).abs() < 0.01);
+    }
+
+    #[test]
     fn rect_node_hit_and_wire_connect() {
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.enforce_acyclic = true;
@@ -697,6 +727,31 @@ mod tests {
         engine.pointer_up(140.0, 0.0);
         assert_eq!(engine.edges.len(), 1);
         assert!(engine.render_snapshot().pending_edge.is_none());
+    }
+
+    #[test]
+    fn reconnect_replaces_incoming_edge() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
+        engine.create_rect_node(2, 160.0, 0.0, 80.0, 56.0, true);
+        engine.create_rect_node(3, 320.0, 0.0, 80.0, 56.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 3, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Source);
+        engine.set_handle_role(12, HandleRole::Target);
+        engine.create_edge(4, 11, 12);
+        use cavas::vello::kurbo::Point;
+        let tgt = handle_position_on_rectangle(Point::new(320.0, 0.0), 80.0, 56.0, std::f64::consts::FRAC_PI_2);
+        let src = handle_position_on_rectangle(Point::new(0.0, 0.0), 80.0, 56.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(tgt.x, tgt.y, false);
+        engine.pointer_move(src.x, src.y);
+        engine.pointer_up(src.x, src.y);
+        assert_eq!(engine.edges.len(), 1);
+        let edge = engine.edges.values().next().unwrap();
+        assert_eq!(edge.source, 10);
+        assert_eq!(edge.target, 12);
     }
 
     #[test]

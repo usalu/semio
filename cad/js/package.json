@@ -1,7 +1,18 @@
 {
   "name": "@cad/js",
   "private": true,
-  "workspaces": ["core", "kernel/brepjs", "machine/stately", "query", "renderer"],
+  "workspaces": [
+    "core",
+    "runtime",
+    "module/spatial-shape",
+    "module/aec-building",
+    "module/aec-building-energy",
+    "module/aec-building-structure",
+    "kernel/brepjs",
+    "machine/stately",
+    "query",
+    "renderer"
+  ],
   "dependencies": {
     "xstate": "^5"
   }

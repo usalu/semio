@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
     self as graph, compute_edge_bezier_points, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
+    VelloThemePalette,
 };
 use graph::BoardEvent;
 
@@ -116,14 +117,25 @@ fn has_path(adj: &HashMap<String, Vec<String>>, from: &str, to: &str) -> bool {
 use mathematical_core::tree_layout::buchheim_positions;
 use serde_json::Value;
 
+/// 🧭 Tree layout flow direction for layered DAG positions.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DagLayoutOrientation {
+    #[default]
+    LeftRight,
+    TopBottom,
+}
+
 /// 🌲 Layered DAG layout options for fixture JSON.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagLayoutOptions {
     #[serde(default = "default_layer_spacing")]
     pub layer_spacing: f64,
     #[serde(default = "default_sibling_gap")]
     pub sibling_gap: f64,
+    #[serde(default)]
+    pub orientation: DagLayoutOrientation,
     #[serde(default)]
     pub center_x: Option<f64>,
     #[serde(default)]
@@ -136,12 +148,6 @@ fn default_layer_spacing() -> f64 {
 
 fn default_sibling_gap() -> f64 {
     40.0
-}
-
-impl Default for DagLayoutOptions {
-    fn default() -> Self {
-        Self { layer_spacing: default_layer_spacing(), sibling_gap: default_sibling_gap(), center_x: None, center_y: None }
-    }
 }
 
 /// 🌳 Writes node centers from a layered DAG layout into `dag.fixture/v1`.
@@ -237,8 +243,10 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
     let cy = (miny + maxy) * 0.5;
     let gx = opts.center_x.unwrap_or(0.0);
     let gy = opts.center_y.unwrap_or(0.0);
-    let dx = gx - cx * opts.sibling_gap;
-    let dy = gy - cy * opts.layer_spacing;
+    let (dx, dy) = match opts.orientation {
+        DagLayoutOrientation::LeftRight => (gx - cy * opts.layer_spacing, gy - cx * opts.sibling_gap),
+        DagLayoutOrientation::TopBottom => (gx - cx * opts.sibling_gap, gy - cy * opts.layer_spacing),
+    };
     for node in nodes.iter_mut() {
         let Some(obj) = node.as_object_mut() else {
             continue;
@@ -249,8 +257,12 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
         let Some((bx, by)) = pos.get(nid) else {
             continue;
         };
-        obj.insert("x".into(), serde_json::json!(bx * opts.sibling_gap + dx));
-        obj.insert("y".into(), serde_json::json!(by * opts.layer_spacing + dy));
+        let (nx, ny) = match opts.orientation {
+            DagLayoutOrientation::LeftRight => (by * opts.layer_spacing + dx, bx * opts.sibling_gap + dy),
+            DagLayoutOrientation::TopBottom => (bx * opts.sibling_gap + dx, by * opts.layer_spacing + dy),
+        };
+        obj.insert("x".into(), serde_json::json!(nx));
+        obj.insert("y".into(), serde_json::json!(ny));
     }
     Ok(())
 }
@@ -282,6 +294,7 @@ fn dag_debug_log(msg: &str) {
 pub struct DagHost {
     pub fixture: DagFixtureV1,
     pub engine: DagBoardEngine,
+    pub vello_theme: VelloThemePalette,
     width: u32,
     height: u32,
     dpr: f64,
@@ -290,6 +303,12 @@ pub struct DagHost {
     node_id_map: HashMap<NodeId, usize>,
     handle_key_map: HashMap<HandleId, String>,
     edge_id_map: HashMap<EdgeId, String>,
+}
+
+fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
+    use cavas::vello::peniko::Color;
+    let rgba = color.to_rgba8();
+    Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
 }
 
 /// 📦 `dag.fixture/v1` document.
@@ -349,6 +368,7 @@ impl DagHost {
         let mut host = Self {
             fixture,
             engine: DagBoardEngine::new(),
+            vello_theme: VelloThemePalette::default(),
             width: 1,
             height: 1,
             dpr: 1.0,
@@ -378,6 +398,15 @@ impl DagHost {
 
     pub fn fixture_json(&self) -> Result<String, String> {
         serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
+    }
+
+    /// 🌳 Recomputes node positions from the current graph using layered tree layout.
+    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), String> {
+        let mut fixture_value = serde_json::to_value(&self.fixture).map_err(|e| e.to_string())?;
+        apply_dag_layout_to_fixture_v1_value(&mut fixture_value, opts)?;
+        self.fixture = serde_json::from_value(fixture_value).map_err(|e| e.to_string())?;
+        self.rebuild_engine_with_layout(false);
+        Ok(())
     }
 
     fn rebuild_engine(&mut self) {
@@ -550,27 +579,32 @@ impl DagHost {
         self.process_engine_events();
     }
 
+    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.vello_theme.merge_from_json(json)
+    }
+
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
         use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
         use cavas::text::append_label;
         use cavas::vello::kurbo::{Affine, Circle, Point, Rect, Stroke};
-        use cavas::vello::peniko::{Color, Fill};
+        use cavas::vello::peniko::Fill;
 
+        let theme = &self.vello_theme;
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
         let snap = self.engine.render_snapshot();
         for curve in &snap.edges {
-            scene.stroke(&Stroke::new(2.0), aff, Color::from_rgb8(180, 200, 230), None, curve);
+            scene.stroke(&Stroke::new(2.0), aff, theme.edge_stroke, None, curve);
         }
         if let Some((a, b)) = snap.pending_edge {
             let preview = compute_edge_bezier_points(a, b, a, b);
-            scene.stroke(&Stroke::new(2.0), aff, Color::from_rgb8(120, 180, 255), None, &preview);
+            scene.stroke(&Stroke::new(2.0), aff, theme.edge_stroke_selected, None, &preview);
         }
-        let node_stroke = Color::from_rgb8(90, 110, 140);
-        let node_fill = Color::from_rgba8(40, 48, 62, 230);
-        let label_fill = Color::from_rgb8(230, 235, 245);
-        let label_halo = Color::from_rgba8(20, 22, 28, 200);
+        let node_stroke = theme.node_stroke;
+        let node_fill = theme.node_fill;
+        let label_fill = theme.node_stroke;
+        let label_halo = vello_color_with_alpha(theme.raster_clear, 200);
         for node in &self.fixture.nodes {
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
@@ -599,9 +633,9 @@ impl DagHost {
         }
         for (hid, center, radius) in &snap.handles {
             let fill = match self.engine.handles.get(hid).map(|h| h.role) {
-                Some(HandleRole::Source) => Color::from_rgb8(100, 200, 140),
-                Some(HandleRole::Target) => Color::from_rgb8(200, 140, 100),
-                _ => Color::from_rgb8(180, 200, 230),
+                Some(HandleRole::Source) => theme.wire_stroke_highlighted,
+                Some(HandleRole::Target) => theme.edge_stroke_selection_exit,
+                _ => theme.edge_stroke,
             };
             scene.fill(Fill::NonZero, aff, fill, None, &Circle::new(*center, *radius));
         }
@@ -711,12 +745,28 @@ mod wasm_session {
             self.state.borrow_mut().host.pointer_up(x, y);
         }
 
+        #[wasm_bindgen(js_name = reorganize)]
+        pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
+            let opts = if options_json.trim().is_empty() {
+                DagLayoutOptions::default()
+            } else {
+                serde_json::from_str(options_json).unwrap_or_default()
+            };
+            self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = setVelloThemeJson)]
+        pub fn set_vello_theme_json(&mut self, json: &str) {
+            let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+        }
+
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
             let mut scene = cavas::vello::Scene::new();
+            let clear = inner.host.vello_theme.raster_clear;
             inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
-            inner.gpu.render_frame(&scene, cavas::vello::peniko::Color::from_rgba8(20, 22, 28, 255))
+            inner.gpu.render_frame(&scene, clear)
         }
     }
 }
@@ -745,7 +795,7 @@ mod tests {
     }
 
     #[test]
-    fn dag_layout_moves_nodes() {
+    fn dag_layout_left_right_orders_depth_on_x() {
         let mut fixture: Value = serde_json::json!({
             "schema": "dag.fixture/v1",
             "nodes": [
@@ -755,9 +805,69 @@ mod tests {
             "edges": [{"id": "e1", "source": "a", "target": "b"}]
         });
         apply_dag_layout_to_fixture_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
+        let a_x = fixture["nodes"][0]["x"].as_f64().unwrap();
+        let b_x = fixture["nodes"][1]["x"].as_f64().unwrap();
+        assert!(b_x > a_x + 1.0);
+    }
+
+    #[test]
+    fn dag_layout_top_bottom_orders_depth_on_y() {
+        let mut fixture: Value = serde_json::json!({
+            "schema": "dag.fixture/v1",
+            "nodes": [
+                {"id": "a", "x": 0, "y": 0, "handles": []},
+                {"id": "b", "x": 0, "y": 0, "handles": []}
+            ],
+            "edges": [{"id": "e1", "source": "a", "target": "b"}]
+        });
+        let opts = DagLayoutOptions { orientation: DagLayoutOrientation::TopBottom, ..DagLayoutOptions::default() };
+        apply_dag_layout_to_fixture_v1_value(&mut fixture, &opts).unwrap();
         let a_y = fixture["nodes"][0]["y"].as_f64().unwrap();
         let b_y = fixture["nodes"][1]["y"].as_f64().unwrap();
-        assert!((b_y - a_y).abs() > 1.0);
+        assert!(b_y > a_y + 1.0);
+    }
+
+    #[test]
+    fn dag_layout_spacing_scales_coordinates() {
+        let mut fixture: Value = serde_json::json!({
+            "schema": "dag.fixture/v1",
+            "nodes": [
+                {"id": "a", "x": 0, "y": 0, "handles": []},
+                {"id": "b", "x": 0, "y": 0, "handles": []}
+            ],
+            "edges": [{"id": "e1", "source": "a", "target": "b"}]
+        });
+        apply_dag_layout_to_fixture_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
+        let default_gap = (fixture["nodes"][1]["x"].as_f64().unwrap() - fixture["nodes"][0]["x"].as_f64().unwrap()).abs();
+        let mut wide: Value = fixture.clone();
+        apply_dag_layout_to_fixture_v1_value(
+            &mut wide,
+            &DagLayoutOptions {
+                layer_spacing: 240.0,
+                sibling_gap: 80.0,
+                ..DagLayoutOptions::default()
+            },
+        )
+        .unwrap();
+        let wide_gap = (wide["nodes"][1]["x"].as_f64().unwrap() - wide["nodes"][0]["x"].as_f64().unwrap()).abs();
+        assert!(wide_gap > default_gap * 1.5);
+    }
+
+    #[test]
+    fn dag_host_reorganize_updates_engine_positions() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                IoNodeSpec { id: "a".into(), name: "A".into(), inputs: vec![], outputs: vec![IoPortSpec { id: "out".into(), label: "out".into() }], x: 500.0, y: 500.0, width: 160.0, height: 56.0 },
+                IoNodeSpec { id: "b".into(), name: "B".into(), inputs: vec![IoPortSpec { id: "in".into(), label: "in".into() }], outputs: vec![], x: 500.0, y: 500.0, width: 160.0, height: 56.0 },
+            ],
+            edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() }],
+        });
+        host.reorganize(&DagLayoutOptions::default()).unwrap();
+        let a = host.fixture.nodes.iter().find(|n| n.id == "a").expect("a");
+        let b = host.fixture.nodes.iter().find(|n| n.id == "b").expect("b");
+        assert!(b.x > a.x);
     }
 
     #[test]
@@ -769,35 +879,58 @@ mod tests {
         assert!(!host.engine.render_snapshot().edges.is_empty());
     }
 
+    fn handle_world(host: &DagHost, port_key: &str) -> cavas::vello::kurbo::Point {
+        let hid = host.handle_key_map.iter().find(|(_, key)| key.as_str() == port_key).map(|(id, _)| *id).expect("handle");
+        host.engine
+            .render_snapshot()
+            .handles
+            .iter()
+            .find(|(id, _, _)| *id == hid)
+            .map(|(_, p, _)| *p)
+            .expect("handle pos")
+    }
+
+    fn world_to_screen_px(host: &DagHost, p: cavas::vello::kurbo::Point) -> (f64, f64) {
+        (p.x + host.width as f64 * 0.5, p.y + host.height as f64 * 0.5)
+    }
+
     #[test]
     fn dag_host_drags_node_in_world_space() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
-        let before_x = host.fixture.nodes[0].x;
-        let before_y = host.fixture.nodes[0].y;
-        let sx = before_x + 640.0;
-        let sy = before_y + 400.0;
-        host.pointer_down(sx, sy, false);
-        host.pointer_move(sx + 40.0, sy + 30.0);
-        host.pointer_up(sx + 40.0, sy + 30.0);
-        assert!((host.fixture.nodes[0].x - before_x).abs() > 1.0);
-        assert!((host.fixture.nodes[0].y - before_y).abs() > 1.0);
+        let mut dragged = false;
+        for (nid, node) in host.engine.nodes.clone() {
+            let grab = cavas::vello::kurbo::Point::new(node.center.x - node.width * 0.4, node.center.y);
+            let (sx, sy) = world_to_screen_px(&host, grab);
+            host.pointer_down(sx, sy, false);
+            if !matches!(host.engine.interaction, InteractionMode::DragNode { node_id, .. } if node_id == nid) {
+                host.pointer_up(sx, sy);
+                continue;
+            }
+            let before = host.engine.nodes.get(&nid).expect("node").center;
+            host.pointer_move(sx + 40.0, sy + 30.0);
+            host.pointer_up(sx + 40.0, sy + 30.0);
+            let after = host.engine.nodes.get(&nid).expect("node").center;
+            assert!((after.x - before.x).abs() > 1.0);
+            assert!((after.y - before.y).abs() > 1.0);
+            dragged = true;
+            break;
+        }
+        assert!(dragged, "expected at least one draggable node hit via screen coordinates");
     }
 
     #[test]
     fn dag_host_reconnects_edge_endpoint() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
-        let combine_b = host.fixture.nodes.iter().position(|n| n.id == "combine").expect("combine");
-        let scale = &host.fixture.nodes[host.fixture.nodes.iter().position(|n| n.id == "scale").expect("scale")];
-        let combine = &host.fixture.nodes[combine_b];
-        let target_sx = combine.x - combine.width * 0.5 + 640.0;
-        let target_sy = combine.y + 400.0;
-        let source_sx = scale.x + scale.width * 0.5 + 640.0;
-        let source_sy = scale.y + 400.0;
-        host.pointer_down(target_sx, target_sy, false);
-        host.pointer_move(source_sx, source_sy);
-        host.pointer_up(source_sx, source_sy);
+        let in_w = handle_world(&host, "combine:b");
+        let out_w = handle_world(&host, "scale:out");
+        let (in_sx, in_sy) = world_to_screen_px(&host, in_w);
+        let (out_sx, out_sy) = world_to_screen_px(&host, out_w);
+        host.pointer_down(in_sx, in_sy, false);
+        assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
+        host.pointer_move(out_sx, out_sy);
+        host.pointer_up(out_sx, out_sy);
         let e4 = host.fixture.edges.iter().find(|e| e.id == "e4").expect("e4");
         assert_eq!(e4.source, "scale:out");
     }

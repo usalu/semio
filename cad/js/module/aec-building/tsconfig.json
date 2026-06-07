@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cad/js/core": ["../../core/index.ts"],
+      "@cad/js/runtime": ["../../runtime/index.ts"]
+    }
+  },
+  "include": ["index.ts"]
+}

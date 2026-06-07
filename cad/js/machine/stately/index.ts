@@ -307,9 +307,11 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 // #endregion 🎭Provider
 
 // #region 🧪Tests
+const __spatialStatelyTestRuntime = import.meta.vitest ? await import("@cad/js/runtime") : null;
 const __spatialStatelyTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 
 if (import.meta.vitest) {
+	__spatialStatelyTestRuntime!.bootstrapCadModules();
 	const { BrepjsKernel } = __spatialStatelyTestKernel!;
 	const { describe, expect, it } = import.meta.vitest;
 

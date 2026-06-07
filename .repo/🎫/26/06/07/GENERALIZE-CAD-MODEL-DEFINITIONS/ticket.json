@@ -1,0 +1,13 @@
+{
+  "title": "Generalize Cad Model Definitions",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Remove concrete model-definition IDs from core/kernel/renderer by introducing cad module system with runtime composition root.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1540"
+  },
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪c0d41c34daee45f09244fd1c2cbddf9d"
+  ]
+}

@@ -310,6 +310,68 @@ pub struct VelloThemePalette {
     pub selection_preview_stroke: Color,
 }
 
+impl VelloThemePalette {
+    fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+        let r = u8::try_from(arr.get(0)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
+        Some(Color::from_rgba8(r, g, b, a))
+    }
+
+    fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
+        if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+            if let Some(c) = Self::color_from_json_rgba8(arr) {
+                *next = c;
+            }
+        }
+    }
+
+    /// @emoji 🎨 Merges a partial Vello theme JSON payload from the React host into this palette.
+    pub fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
+        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let mut next = *self;
+        Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
+        Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
+        Self::merge_color_field(&mut next.edge_stroke, &v, "edgeStroke");
+        Self::merge_color_field(&mut next.edge_stroke_hovered, &v, "edgeStrokeHovered");
+        Self::merge_color_field(&mut next.edge_stroke_selected, &v, "edgeStrokeSelected");
+        Self::merge_color_field(&mut next.edge_stroke_selection_exit, &v, "edgeStrokeSelectionExit");
+        Self::merge_color_field(&mut next.edge_stroke_disabled, &v, "edgeStrokeDisabled");
+        Self::merge_color_field(&mut next.node_fill, &v, "nodeFill");
+        Self::merge_color_field(&mut next.node_stroke, &v, "nodeStroke");
+        Self::merge_color_field(&mut next.node_fill_hovered, &v, "nodeFillHovered");
+        Self::merge_color_field(&mut next.node_stroke_hovered, &v, "nodeStrokeHovered");
+        Self::merge_color_field(&mut next.node_fill_selected, &v, "nodeFillSelected");
+        Self::merge_color_field(&mut next.node_stroke_selected, &v, "nodeStrokeSelected");
+        Self::merge_color_field(&mut next.node_fill_selection_exit, &v, "nodeFillSelectionExit");
+        Self::merge_color_field(&mut next.node_stroke_selection_exit, &v, "nodeStrokeSelectionExit");
+        Self::merge_color_field(&mut next.node_fill_disabled, &v, "nodeFillDisabled");
+        Self::merge_color_field(&mut next.node_stroke_disabled, &v, "nodeStrokeDisabled");
+        Self::merge_color_field(&mut next.indirect_handle_fill, &v, "indirectHandleFill");
+        Self::merge_color_field(&mut next.indirect_handle_stroke, &v, "indirectHandleStroke");
+        Self::merge_color_field(&mut next.handle_fill, &v, "handleFill");
+        Self::merge_color_field(&mut next.handle_stroke, &v, "handleStroke");
+        Self::merge_color_field(&mut next.handle_fill_hovered, &v, "handleFillHovered");
+        Self::merge_color_field(&mut next.handle_stroke_hovered, &v, "handleStrokeHovered");
+        Self::merge_color_field(&mut next.handle_fill_selected, &v, "handleFillSelected");
+        Self::merge_color_field(&mut next.handle_stroke_selected, &v, "handleStrokeSelected");
+        Self::merge_color_field(&mut next.handle_fill_selection_exit, &v, "handleFillSelectionExit");
+        Self::merge_color_field(&mut next.handle_stroke_selection_exit, &v, "handleStrokeSelectionExit");
+        Self::merge_color_field(&mut next.handle_fill_disabled, &v, "handleFillDisabled");
+        Self::merge_color_field(&mut next.handle_stroke_disabled, &v, "handleStrokeDisabled");
+        Self::merge_color_field(&mut next.wire_stroke, &v, "wireStroke");
+        Self::merge_color_field(&mut next.wire_stroke_hovered, &v, "wireStrokeHovered");
+        Self::merge_color_field(&mut next.wire_stroke_selected, &v, "wireStrokeSelected");
+        Self::merge_color_field(&mut next.wire_stroke_highlighted, &v, "wireStrokeHighlighted");
+        Self::merge_color_field(&mut next.wire_stroke_disabled, &v, "wireStrokeDisabled");
+        Self::merge_color_field(&mut next.selection_preview_fill, &v, "selectionPreviewFill");
+        Self::merge_color_field(&mut next.selection_preview_stroke, &v, "selectionPreviewStroke");
+        *self = next;
+        Ok(())
+    }
+}
+
 impl Default for VelloThemePalette {
     fn default() -> Self {
         Self {

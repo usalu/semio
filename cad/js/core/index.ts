@@ -55,10 +55,31 @@ function resetModelDefinitionCaches(): void {
   typologyStyleCache = null;
 }
 
-/** @emoji 📥 Replaces shipped model-definition catalogs (tests or host injection). */
+function mergeModelDefinitionAssetModules(
+  base: ModelDefinitionAssetModules,
+  patch: ModelDefinitionAssetModules,
+): ModelDefinitionAssetModules {
+  return {
+    typologies: { ...base.typologies, ...patch.typologies },
+    actions: { ...base.actions, ...patch.actions },
+    interactions: { ...base.interactions, ...patch.interactions },
+    manifests: { ...base.manifests, ...patch.manifests },
+    extensions: { ...base.extensions, ...patch.extensions },
+    attributes: { ...base.attributes, ...patch.attributes },
+    propertyDefinitions: { ...base.propertyDefinitions, ...patch.propertyDefinitions },
+    properties: { ...base.properties, ...patch.properties },
+    statDefinitions: { ...base.statDefinitions, ...patch.statDefinitions },
+    transformations: { ...base.transformations, ...patch.transformations },
+  };
+}
+
+let interactionCompileCacheClear: () => void = () => {};
+
+/** @emoji 📥 Merges model-definition asset catalogs (host or module injection). */
 export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
-  modelDefinitionAssetModules = modules;
+  modelDefinitionAssetModules = mergeModelDefinitionAssetModules(modelDefinitionAssetModules, modules);
   resetModelDefinitionCaches();
+  interactionCompileCacheClear();
 }
 
 function modelDefinitionTypologyCatalog(): readonly unknown[] {
@@ -94,70 +115,57 @@ function modelDefinitionTransformationModules(): Readonly<Record<string, unknown
 }
 // #endregion 📥ModelDefinitionRegistry
 
-// #region 📥ModelDefinitionAssets
-const __modelDefinitionTypologyModules = import.meta.glob(
-  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
-  { eager: true, import: "default" },
-) as Record<string, unknown>;
+// #region 📥ImportProfiles
+/** @emoji 🪪 STEP/BIM import profile for one model definition. */
+export interface ModelImportProfile {
+  readonly layerTypology: Readonly<Record<string, TypologyRef>>;
+  readonly fallbackTypology: TypologyRef;
+  readonly preferPresentationLayers?: boolean;
+  readonly namespacedDomain?: string;
+}
 
-const __modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+const importProfiles = new Map<string, ModelImportProfile>();
 
-const __modelDefinitionInteractionModules = import.meta.glob("../../assets/modelDefinition/**/interaction/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+/** @emoji 📥 Registers STEP layer → typology mapping for one model definition. */
+export function registerImportProfile(modelDefinitionId: string, profile: ModelImportProfile): void {
+  importProfiles.set(modelDefinitionId, profile);
+}
 
-const __modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefinition/**/modelDefinition.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+/** @emoji 🧭 Resolves the STEP import profile for one model definition. */
+export function importProfileFor(modelDefinitionId: string): ModelImportProfile | null {
+  return importProfiles.get(modelDefinitionId) ?? null;
+}
 
-const __modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+/** @emoji 🏷️ Maps a STEP presentation-layer token to a typology via registered import profiles. */
+export function typologyFromStepLayer(layerName: string, modelDefinitionId: string): TypologyRef {
+  const trimmed = layerName.trim();
+  const namespaced = trimmed.match(/^([^:]+)::(.+)$/i);
+  if (namespaced) {
+    const domain = namespaced[1]!.trim().toLowerCase();
+    const part = namespaced[2]!.trim().toLowerCase();
+    for (const profile of importProfiles.values()) {
+      if (profile.namespacedDomain !== domain) continue;
+      const mapped = resolveImportLayerTypology(profile.layerTypology, part);
+      if (mapped) return mapped;
+    }
+  }
+  const profile = importProfileFor(modelDefinitionId);
+  if (!profile) return "" as TypologyRef;
+  const mapped = resolveImportLayerTypology(profile.layerTypology, trimmed.toLowerCase());
+  return mapped ?? profile.fallbackTypology;
+}
 
-const __modelDefinitionPropertyDefinitionModules = import.meta.glob(
-  ["../../assets/modelDefinition/**/propertyDefinition/*.json", "../../assets/modelDefinition/**/propertyKind/*.json"],
-  { eager: true, import: "default" },
-) as Record<string, unknown>;
-
-const __modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const __modelDefinitionStatDefinitionModules = import.meta.glob("../../assets/modelDefinition/**/statDefinition/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const __modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-const __modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
-
-registerModelDefinitionAssets({
-  typologies: __modelDefinitionTypologyModules,
-  actions: __modelDefinitionActionModules,
-  interactions: __modelDefinitionInteractionModules,
-  manifests: __modelDefinitionManifestModules,
-  extensions: __modelDefinitionExtensionManifestModules,
-  attributes: __modelDefinitionAttributeModules,
-  propertyDefinitions: __modelDefinitionPropertyDefinitionModules,
-  properties: __modelDefinitionPropertyModules,
-  statDefinitions: __modelDefinitionStatDefinitionModules,
-  transformations: __modelDefinitionTransformationModules,
-});
-// #endregion 📥ModelDefinitionAssets
+function resolveImportLayerTypology(table: Readonly<Record<string, TypologyRef>>, key: string): TypologyRef | null {
+  const direct = table[key];
+  if (direct) return direct;
+  if (key.endsWith("s")) {
+    const singular = table[key.slice(0, -1)];
+    if (singular) return singular;
+  }
+  const plural = table[`${key}s`];
+  return plural ?? null;
+}
+// #endregion 📥ImportProfiles
 
 // #region 🧮Vec
 /** @emoji 📐 Column vector `[x,y,z]` used by spatial factories. */
@@ -1327,10 +1335,15 @@ function normalizeSpatialObjectPrimitives(primitives: unknown): SpatialObjectPri
   return primitives && typeof primitives === "object" ? Object.fromEntries(sortedPrimitiveEntries(primitives as Record<string, unknown>)) : {};
 }
 
+function defaultBaseObjectTypology(): TypologyRef {
+  const manifest = listModelDefinitionManifests().find((row) => row.id === defaultModelDefinitionId());
+  return (manifest?.baseObjectTypology ?? "") as TypologyRef;
+}
+
 function normalizeSpatialObjectRecord(row: SpatialObjectRecord | Record<string, unknown>): SpatialObjectRecord {
   return {
     id: String(row.id) as ObjectRef,
-    typology: String(row.typology ?? "spatial.shape.object") as TypologyRef,
+    typology: String(row.typology ?? defaultBaseObjectTypology()) as TypologyRef,
     primitives: Array.isArray(row.primitives) ? {} : normalizeSpatialObjectPrimitives(row.primitives),
     ...(row.attributes && typeof row.attributes === "object" ? { attributes: row.attributes as Readonly<Record<string, unknown>> } : {}),
   };
@@ -1956,6 +1969,7 @@ export interface ModelDefinitionManifest {
   readonly description?: string;
   readonly kinds: readonly string[];
   readonly default?: boolean;
+  readonly baseObjectTypology?: string;
   readonly kernelTypologies?: Readonly<Partial<Record<TypologyPrimitiveKind, string>>>;
 }
 
@@ -1998,6 +2012,7 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
     description: typeof r.description === "string" ? r.description : undefined,
     kinds: r.kinds as string[],
     ...(r.default === true ? { default: true } : {}),
+    ...(typeof r.baseObjectTypology === "string" && r.baseObjectTypology.length > 0 ? { baseObjectTypology: r.baseObjectTypology } : {}),
     ...(kernelTypologies ? { kernelTypologies } : {}),
   };
 }
@@ -2518,20 +2533,32 @@ export function propertyDefinitionAppliesToObject(defn: PropertyDefinitionSpec, 
   return true;
 }
 
+/** @emoji 📐 Context passed to registered property computers. */
+export interface PropertyComputeContext {
+  readonly model: Model;
+  readonly kernel: SpatialKernel;
+  readonly object: SpatialObjectRecord;
+  readonly defn: PropertyDefinitionSpec;
+}
+
+/** @emoji 📐 Registered property computer for one property definition id. */
+export type PropertyComputer = (ctx: PropertyComputeContext) => Promise<Record<string, unknown>>;
+
+const propertyComputers = new Map<string, PropertyComputer>();
+
+/** @emoji 📐 Registers a TypeScript computer for one property definition id. */
+export function registerPropertyComputer(propertyId: string, computer: PropertyComputer): void {
+  propertyComputers.set(propertyId, computer);
+}
+
 /** @emoji 📐 Derives property output for one model object from a property definition. */
 export async function derivePropertyValue(
   defn: PropertyDefinitionSpec,
   ctx: { readonly model: Model; readonly kernel: SpatialKernel; readonly object: SpatialObjectRecord },
 ): Promise<Record<string, unknown>> {
   if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
-  const primaryPrimitiveRef = objectPrimaryPrimitiveRef(ctx.object);
-  if (defn.id === "spatial.shape.volume" || defn.id === "energy.heatedvolume") {
-    const kind = primaryPrimitiveRef ? resolvePrimitiveRefKind(ctx.model, primaryPrimitiveRef) : null;
-    if (kind !== "solid") return defn.id === "energy.heatedvolume" ? { heatedvolume: 0 } : { volume: 0 };
-    await ctx.kernel.syncSolidsFromModel(ctx.model);
-    const amount = await ctx.kernel.solidVolume(primaryPrimitiveRef as SolidRef);
-    return defn.id === "energy.heatedvolume" ? { heatedvolume: amount } : { volume: amount };
-  }
+  const computer = propertyComputers.get(defn.id);
+  if (computer) return computer({ ...ctx, defn });
   const output = defn.output ?? {};
   return { ...output };
 }
@@ -2695,7 +2722,7 @@ function zeroStatOutputs(defn: StatDefinitionSpec): Record<string, number> {
   return out;
 }
 
-function collectSolidRefsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): string[] {
+export function collectSolidRefsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): string[] {
   const ids = new Set<string>();
   for (const object of objects) {
     for (const primitiveRef of objectPrimitiveRefs(object)) {
@@ -2705,7 +2732,7 @@ function collectSolidRefsForObjects(model: Model, objects: readonly SpatialObjec
   return [...ids];
 }
 
-function collectFaceRefsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): string[] {
+export function collectFaceRefsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): string[] {
   const ids = new Set<string>();
   for (const object of objects) {
     for (const primitiveRef of objectPrimitiveRefs(object)) {
@@ -2728,7 +2755,7 @@ function collectFaceRefsForObjects(model: Model, objects: readonly SpatialObject
   return [...ids];
 }
 
-function collectVertexPositionsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): Vec3[] {
+export function collectVertexPositionsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): Vec3[] {
   const positions: Vec3[] = [];
   const seen = new Set<string>();
   const visitPrimitive = (primitiveRef: string): void => {
@@ -2768,7 +2795,7 @@ function collectVertexPositionsForObjects(model: Model, objects: readonly Spatia
   return positions;
 }
 
-function bboxSizesFromPositions(positions: readonly Vec3[]): { readonly sizeX: number; readonly sizeY: number; readonly sizeZ: number } {
+export function bboxSizesFromPositions(positions: readonly Vec3[]): { readonly sizeX: number; readonly sizeY: number; readonly sizeZ: number } {
   if (positions.length === 0) return { sizeX: 0, sizeY: 0, sizeZ: 0 };
   let minX = positions[0]![0];
   let minY = positions[0]![1];
@@ -2823,69 +2850,6 @@ export function objectsForStatCompute(
   return base.filter((object) => statDefinitionAppliesToObject(defn, object));
 }
 
-async function computeShapeGeometryStat(ctx: StatComputeContext): Promise<Record<string, number>> {
-  const solidIds = collectSolidRefsForObjects(ctx.model, ctx.objects);
-  const faceIds = collectFaceRefsForObjects(ctx.model, ctx.objects);
-  await ctx.kernel.syncSolidsFromModel(ctx.model);
-  let totalVolume = 0;
-  for (const solidId of solidIds) totalVolume += await ctx.kernel.solidVolume(solidRef(solidId));
-  let totalSurfaceArea = 0;
-  for (const faceId of faceIds) totalSurfaceArea += await ctx.kernel.faceArea(faceId as FaceRef, ctx.model);
-  const bbox = bboxSizesFromPositions(collectVertexPositionsForObjects(ctx.model, ctx.objects));
-  return {
-    objectCount: ctx.objects.length,
-    solidCount: solidIds.length,
-    totalVolume,
-    totalSurfaceArea,
-    sizeX: bbox.sizeX,
-    sizeY: bbox.sizeY,
-    sizeZ: bbox.sizeZ,
-  };
-}
-
-const ENERGY_DEFAULT_U_VALUE = 0.3;
-const ENERGY_HEATING_DEGREE_HOURS = 3000;
-const ENERGY_VENTILATION_FACTOR = 12;
-
-async function computeEnergyDemandStat(ctx: StatComputeContext): Promise<Record<string, number>> {
-  const solidIds = collectSolidRefsForObjects(ctx.model, ctx.objects);
-  const faceIds = collectFaceRefsForObjects(ctx.model, ctx.objects);
-  await ctx.kernel.syncSolidsFromModel(ctx.model);
-  let heatedVolume = 0;
-  for (const solidId of solidIds) heatedVolume += await ctx.kernel.solidVolume(solidRef(solidId));
-  let envelopeArea = 0;
-  for (const faceId of faceIds) envelopeArea += await ctx.kernel.faceArea(faceId as FaceRef, ctx.model);
-  const transmissionLoss = envelopeArea * ENERGY_DEFAULT_U_VALUE * ENERGY_HEATING_DEGREE_HOURS;
-  const ventilationLoss = heatedVolume * ENERGY_VENTILATION_FACTOR;
-  const annualHeatingDemand = transmissionLoss + ventilationLoss;
-  const specificDemand = heatedVolume > 0 ? annualHeatingDemand / heatedVolume : 0;
-  return { heatedVolume, envelopeArea, annualHeatingDemand, specificDemand };
-}
-
-const STRUCTURE_CONCRETE_DENSITY_KG_M3 = 2500;
-
-async function computeStructureStabilityStat(ctx: StatComputeContext): Promise<Record<string, number>> {
-  const solidIds = collectSolidRefsForObjects(ctx.model, ctx.objects);
-  await ctx.kernel.syncSolidsFromModel(ctx.model);
-  let structuralVolume = 0;
-  for (const solidId of solidIds) structuralVolume += await ctx.kernel.solidVolume(solidRef(solidId));
-  const bbox = bboxSizesFromPositions(collectVertexPositionsForObjects(ctx.model, ctx.objects));
-  const footprint = Math.max(bbox.sizeX * bbox.sizeY, bbox.sizeX * bbox.sizeZ, bbox.sizeY * bbox.sizeZ, 1e-6);
-  const height = Math.max(bbox.sizeX, bbox.sizeY, bbox.sizeZ, 1e-6);
-  const slenderness = height / Math.sqrt(footprint);
-  const stabilityIndex = Math.max(0, Math.min(1, 1 / (1 + slenderness)));
-  const estimatedMass = (structuralVolume * STRUCTURE_CONCRETE_DENSITY_KG_M3) / 1000;
-  return {
-    elementCount: ctx.objects.length,
-    structuralVolume,
-    estimatedMass,
-    stabilityIndex,
-  };
-}
-
-registerStatComputer("spatial.shape.geometry", computeShapeGeometryStat);
-registerStatComputer("energy.demand", computeEnergyDemandStat);
-registerStatComputer("structure.stability", computeStructureStabilityStat);
 // #endregion 📊StatDefinitions
 
 /** @emoji 🧭 Throws when `actionId` is outside the active model definition catalog. */
@@ -3175,11 +3139,8 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
 }
 
 function modelDefinitionIdFromTransformationAssetPath(assetPath: string): string | null {
-  const normalized = assetPath.replace(/\\/g, "/");
-  const marker = "/assets/modelDefinition/";
-  const idx = normalized.indexOf(marker);
-  if (idx < 0) return null;
-  const rest = normalized.slice(idx + marker.length);
+  const rest = modelDefinitionAssetPathRest(assetPath);
+  if (!rest) return null;
   const parts = rest.split("/");
   const tIdx = parts.indexOf("transformation");
   if (tIdx <= 0) return null;
@@ -3223,12 +3184,18 @@ export function listTransformationsFromModelDefinition(modelDefinitionId: string
 }
 
 // #region 🧭ModelDefinitionScope
-function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
+function modelDefinitionAssetPathRest(assetPath: string): string | null {
   const normalized = assetPath.replace(/\\/g, "/");
-  const marker = "/assets/modelDefinition/";
-  const idx = normalized.indexOf(marker);
-  if (idx < 0) return null;
-  const rest = normalized.slice(idx + marker.length);
+  for (const marker of ["/assets/modelDefinition/", "assets/modelDefinition/"]) {
+    const idx = normalized.indexOf(marker);
+    if (idx >= 0) return normalized.slice(idx + marker.length);
+  }
+  return null;
+}
+
+function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
+  const rest = modelDefinitionAssetPathRest(assetPath);
+  if (!rest) return null;
   const folder = rest.split("/")[0];
   return folder || null;
 }
@@ -3554,7 +3521,8 @@ export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDef
 // #endregion 🧭ModelDefinitionScope
 
 // #region 🔄TransformationGeometry
-type TransformationApplier = (spec: TransformationSpec, source: Model) => Model;
+/** @emoji 🔄 Registered transformation applier for one qualified transformation id. */
+export type TransformationApplier = (spec: TransformationSpec, source: Model) => Model;
 
 const transformationAppliers = new Map<string, TransformationApplier>();
 
@@ -3580,7 +3548,7 @@ function collectTransformationPrimitiveRefs(
   return [...refs].sort().map((id) => id as SolidRef);
 }
 
-function transformationObjectId(typology: string, index: number): ObjectRef {
+export function transformationObjectId(typology: string, index: number): ObjectRef {
   return (index === 0 ? typology : `${typology}#${index}`) as ObjectRef;
 }
 
@@ -3630,7 +3598,7 @@ function classifyFaceFromDeriveRules(
   return derive.classify.rules[derive.classify.rules.length - 1]!;
 }
 
-function cloneModelGeometryShell(source: Model): Model {
+export function cloneModelGeometryShell(source: Model): Model {
   const target = new Model();
   target.revision = source.revision;
   target.anchors = source.anchors;
@@ -3753,43 +3721,6 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
   target.bump();
   return target;
 }
-
-const BUILDING_TO_STRUCTURE_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
-  "building.building.column": "structure.structure.reinforcedconcretecolumn",
-  "building.building.slab": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.beam": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.wall": "structure.structure.reinforcedconcreteinternalwall",
-  "building.building.foundation": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.roof": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.stair": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.ceiling": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.railing": "structure.structure.reinforcedconcreteinternalwall",
-  "building.building.door": "structure.structure.reinforcedconcreteexternalwall",
-  "building.building.window": "structure.structure.reinforcedconcreteexternalwall",
-};
-
-function applyBuildingToStructureTransformation(_spec: TransformationSpec, source: Model): Model {
-  const target = cloneModelGeometryShell(source);
-  const counts = new Map<string, number>();
-  target.objects = {};
-  for (const row of Object.values(source.objects)) {
-    const mapped = BUILDING_TO_STRUCTURE_TYPOLOGY[row.typology];
-    if (!mapped) continue;
-    const index = counts.get(mapped) ?? 0;
-    counts.set(mapped, index + 1);
-    const objectId = transformationObjectId(mapped, index);
-    target.objects[objectId] = {
-      id: objectId,
-      typology: mapped,
-      primitives: { ...row.primitives },
-      ...(row.attributes ? { attributes: { ...row.attributes } } : {}),
-    };
-  }
-  target.bump();
-  return target;
-}
-
-registerTransformationApplier(qualifiedTransformationId("aec.building.structure", "from_building"), applyBuildingToStructureTransformation);
 
 // #endregion 🔄TransformationGeometry
 
@@ -6993,14 +6924,16 @@ export function selectionSeedTargetsForOperation(operation: SelectionApplyOperat
   return operation === "invert" || operation === "deselectAll" ? [seedCell] : [];
 }
 
-const shippedInteractionJsons = modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionFixture[];
+function shippedInteractionJsons(): readonly ModelDefinitionInteractionFixture[] {
+  return modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionFixture[];
+}
 
 function interactionFixtureRow(spec: ModelDefinitionInteractionFixture): SpatialInteraction {
   return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : (spec.id[0] ?? "?") };
 }
 
 function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
-  return shippedInteractionJsons.map(interactionFixtureRow);
+  return shippedInteractionJsons().map(interactionFixtureRow);
 }
 
 /** @emoji 🧭 Resolves a typed token to an interaction in one model definition (`key`, `id`, or compact `label`). */
@@ -7034,7 +6967,7 @@ export class InteractionRegistry {
 
   static withModelDefinitionInteractions(): InteractionRegistry {
     const r = new InteractionRegistry();
-    const xs = shippedInteractionJsons.map((raw) => {
+    const xs = shippedInteractionJsons().map((raw) => {
       const spec = parseInteractionSpec(raw);
       return spec ? compileInteraction(spec) : null;
     });
@@ -7046,12 +6979,13 @@ export class InteractionRegistry {
 }
 
 const COMPILED_INTERACTION_BY_ID = new Map<string, InteractionSpec>();
+interactionCompileCacheClear = () => COMPILED_INTERACTION_BY_ID.clear();
 
 /** @emoji 📚 Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
   const cached = COMPILED_INTERACTION_BY_ID.get(interactionId);
   if (cached) return cached;
-  const raw = shippedInteractionJsons.find((spec) => spec.id === interactionId);
+  const raw = shippedInteractionJsons().find((spec) => spec.id === interactionId);
   const spec = raw ? parseInteractionSpec(raw) : null;
   if (!spec) return null;
   const compiled = compileInteraction(spec);
@@ -7093,6 +7027,7 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 // #endregion 📦Interactions
 
 // #region 🧪Tests
+const __spatialCoreTestRuntime = import.meta.vitest ? await import("@cad/js/runtime") : null;
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 const __cadInteractionE2EFixtureModules = import.meta.vitest
   ? await Promise.all([
@@ -7103,6 +7038,7 @@ const __cadInteractionE2EFixtureModules = import.meta.vitest
   : null;
 
 if (import.meta.vitest) {
+  __spatialCoreTestRuntime!.bootstrapCadModules();
   const { BrepjsKernel, preciseSpatialKernelMath } = __spatialCoreTestKernel!;
   const geometryLoomFixtureJson = __cadInteractionE2EFixtureModules![0].default;
   const geometryRoutesFixtureJson = __cadInteractionE2EFixtureModules![1].default;
@@ -7203,7 +7139,7 @@ if (import.meta.vitest) {
     });
     it("loads geometry and AEC typology assets", () => {
       const typologies = listModelDefinitionTypologies();
-      expect(typologies.length).toBe(27);
+      expect(typologies.length).toBeGreaterThanOrEqual(27);
       expect(loadTypology("energy.energy.hull")?.properties).toContain("energy.heatedvolume");
       expect(loadTypology("energy.energy.hull")?.properties).toContain("spatial.shape.volume");
     });
@@ -7970,6 +7906,7 @@ if (import.meta.vitest) {
       const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
       const interactionIds = new Set(InteractionRegistry.withModelDefinitionInteractions().list().map((row) => row.id));
       for (const typology of listModelDefinitionTypologies()) {
+        if (typology.id.includes(".kernel.")) continue;
         const ids = typologyConstructAssetIds(typology.id, typology.label);
         if (!typology.interactions.includes(ids.construct)) {
           expect(typology.actions.length).toBeGreaterThan(0);

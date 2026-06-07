@@ -15,10 +15,19 @@ import {
   registerWindowBody,
   type WindowBodyViewContext,
   type UiNode,
+  type UiTreeItemNode,
+  type UiTreeSectionNode,
 } from "@framework/playground/core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
-import { FLOW_DEFAULT_FIXTURE, flowFixtureToJson, type FlowFixtureV1 } from "@flow/react";
+import {
+  FLOW_DEFAULT_FIXTURE,
+  flowFixtureToJson,
+  flowPlayCatalogueItemDragData,
+  type CatalogueItem,
+  type CatalogueSection,
+  type FlowFixtureV1,
+} from "@flow/react";
 
 export const FLOW_PLAY_APP_ID = "flow-play";
 export const FLOW_PLAY_CONTROLLER_ID = "flow-play";
@@ -30,12 +39,49 @@ export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = FLOW_DEFAULT_FIXTURE;
 export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
 
 export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["Flow"]);
+export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
+export const FLOW_PLAY_KINDS_TAB_ID = "flow-play-kinds";
+
+/** @emoji 🏷️ Workbench catalogue tab: module sections plus Inputs and Outputs. */
+export function buildFlowPlayKindsTree(sections: readonly CatalogueSection[]): UiNode {
+  if (!sections.length) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "flow-play-kinds.empty",
+          label: "Catalogue",
+          defaultOpen: true,
+          items: [{ id: "flow-play-kinds.empty.msg", label: "Loading catalogue…" }],
+        },
+      ],
+    };
+  }
+  const treeSections: UiTreeSectionNode[] = sections.map((section) => ({
+    id: `flow-play-kinds.${section.id}`,
+    label: section.title,
+    defaultOpen: true,
+    items: section.items.map((item, index) => flowPlayKindsTreeItem(section.id, index, item)),
+  }));
+  return { type: "tree", sections: treeSections };
+}
+
+function flowPlayKindsTreeItem(sectionId: string, index: number, item: CatalogueItem): UiTreeItemNode {
+  return {
+    id: `flow-play-kinds.${sectionId}.${index}.${item.neuronKind ?? item.kind}`,
+    label: item.name,
+    description: item.summary,
+    draggable: true,
+    dragData: flowPlayCatalogueItemDragData(item),
+  };
+}
 
 /** @emoji 🎛 Flow play shell controller. */
 export class FlowPlayController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Flow", undefined);
   private fixtureJson = FLOW_PLAY_DEFAULT_FIXTURE_JSON;
   private previewText = "—";
+  private catalogueSections: CatalogueSection[] = [];
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -50,11 +96,31 @@ export class FlowPlayController extends Controller {
     return this.previewText;
   }
 
+  getCatalogueSections(): readonly CatalogueSection[] {
+    return this.catalogueSections;
+  }
+
   override run(command: string, args?: unknown): void {
     if (command === "setPreviewText") {
       const text = (args as { text?: string }).text;
       if (typeof text === "string" && text !== this.previewText) {
         this.previewText = text;
+        this.emit();
+      }
+      return;
+    }
+    if (command === "setCatalogueSections") {
+      const sections = (args as { sections?: CatalogueSection[] }).sections;
+      if (Array.isArray(sections)) {
+        this.catalogueSections = sections;
+        this.emit();
+      }
+      return;
+    }
+    if (command === "setFixtureJson") {
+      const json = (args as { json?: string }).json;
+      if (typeof json === "string" && json !== this.fixtureJson) {
+        this.fixtureJson = json;
         this.emit();
       }
     }
@@ -99,6 +165,20 @@ if (import.meta.vitest) {
     it("default fixture is slider add preview", () => {
       expect(FLOW_PLAY_DEFAULT_FIXTURE.widgets.length).toBe(3);
       expect(FLOW_PLAY_DEFAULT_FIXTURE.synapses.length).toBe(2);
+    });
+
+    it("kinds tree marks catalogue rows draggable", () => {
+      const tree = buildFlowPlayKindsTree([
+        {
+          id: "math",
+          title: "Math",
+          items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }],
+        },
+      ]);
+      expect(tree.type).toBe("tree");
+      const item = tree.sections?.[0]?.items?.[0];
+      expect(item?.draggable).toBe(true);
+      expect(item?.dragData).toBeDefined();
     });
   });
 }

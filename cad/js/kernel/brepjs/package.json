@@ -14,6 +14,10 @@
     "brepjs-opencascade": "^0.15.6"
   },
   "devDependencies": {
+    "@cad/js/module/aec-building": "workspace:*",
+    "@cad/js/module/aec-building-energy": "workspace:*",
+    "@cad/js/module/aec-building-structure": "workspace:*",
+    "@cad/js/runtime": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

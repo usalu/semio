@@ -16,6 +16,7 @@ export {
 	resolveSemanticColorHex,
 	resolveThreeColor,
 	semanticVar,
+	serializeGraphVelloThemePaletteJson,
 	themeColorVar,
 	tokenHex,
 	tokenVar,

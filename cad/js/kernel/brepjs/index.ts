@@ -100,7 +100,10 @@ import {
 	StepEntityWriter,
 	derivePropertyValue,
 	defaultModelDefinitionId,
+	importProfileFor,
+	kernelTypologyIds,
 	solidRef,
+	typologyFromStepLayer,
 	type ModelSpaceJson,
 	type ObjectRef,
 	type TypologyRef,
@@ -2098,66 +2101,16 @@ function validSolidsFromImportedShape(shape: Shape3D): ValidSolid[] {
 	return subs.length === 1 ? subs : [];
 }
 
-/** @emoji 🏗️ Model definition id for imported BIM building representations. */
-export const BUILDING_BIM_MODEL_DEFINITION_ID = "aec.building";
+function kernelSolidTypology(modelDefinitionId: string): TypologyRef {
+	const kernel = kernelTypologyIds(modelDefinitionId);
+	if (kernel?.solid) return kernel.solid as TypologyRef;
+	const profile = importProfileFor(modelDefinitionId);
+	return profile?.fallbackTypology ?? ("" as TypologyRef);
+}
 
-/** @emoji ⚡ Model definition id for imported energy presentation fixtures. */
-export const ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
-
-/** @emoji 🏛️ Model definition id for imported classic structure presentation fixtures. */
-export const STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = "aec.building.structure.classic";
-
-const BIM_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
-	["slab", "building.building.slab"],
-	["slabs", "building.building.slab"],
-	["beam", "building.building.beam"],
-	["beams", "building.building.beam"],
-	["column", "building.building.column"],
-	["columns", "building.building.column"],
-	["wall", "building.building.wall"],
-	["walls", "building.building.wall"],
-	["roof", "building.building.roof"],
-	["roofs", "building.building.roof"],
-	["foundation", "building.building.foundation"],
-	["foundations", "building.building.foundation"],
-	["stair", "building.building.stair"],
-	["stairs", "building.building.stair"],
-	["ceiling", "building.building.ceiling"],
-	["ceilings", "building.building.ceiling"],
-	["railing", "building.building.railing"],
-	["railings", "building.building.railing"],
-	["door", "building.building.door"],
-	["doors", "building.building.door"],
-	["window", "building.building.window"],
-	["windows", "building.building.window"],
-]);
-
-const ENERGY_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
-	["slab", "energy.energy.baseplate"],
-	["baseplate", "energy.energy.baseplate"],
-	["roof", "energy.energy.roof"],
-	["wall", "energy.energy.externalwall"],
-	["walls", "energy.energy.externalwall"],
-	["hull", "energy.energy.hull"],
-	["window", "energy.energy.windows"],
-	["windows", "energy.energy.windows"],
-]);
-
-const STRUCTURE_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
-	["slab", "structure.structure.onewayreinforcedconcreteslab"],
-	["column", "structure.structure.reinforcedconcretecolumn"],
-	["columns", "structure.structure.reinforcedconcretecolumn"],
-	["beam", "structure.structure.reinforcedconcreteinternalwall"],
-	["beams", "structure.structure.reinforcedconcreteinternalwall"],
-	["wall", "structure.structure.reinforcedconcreteexternalwall"],
-	["walls", "structure.structure.reinforcedconcreteexternalwall"],
-]);
-
-function typologyFromNamespacedStepLayer(domain: string, part: string): TypologyRef | null {
-	const table =
-		domain === "energy" ? ENERGY_LAYER_TYPOLOGY : domain === "structure" ? STRUCTURE_LAYER_TYPOLOGY : null;
-	if (!table) return null;
-	return table.get(part) ?? (part.endsWith("s") ? table.get(part.slice(0, -1)) : table.get(`${part}s`)) ?? null;
+function importFallbackTypology(modelDefinitionId: string): TypologyRef {
+	const profile = importProfileFor(modelDefinitionId);
+	return profile?.fallbackTypology ?? ("" as TypologyRef);
 }
 
 function stepParseCartesianPointBody(body: string): Vec3 | null {
@@ -2330,7 +2283,7 @@ function modelPartFromStepPresentationEntity(
 
 function importStepPresentationLayersToModel(
 	stepText: string,
-	options: { readonly basePrefix: string; readonly lengthScale: number },
+	options: { readonly basePrefix: string; readonly lengthScale: number; readonly modelDefinitionId: string },
 ): Model {
 	const normalized = normalizeStepDataLines(stepText);
 	const entities = parseStepEntityMap(normalized);
@@ -2338,7 +2291,7 @@ function importStepPresentationLayersToModel(
 	const model = new Model();
 	let partIndex = 0;
 	for (const [entityRef, layerName] of [...layerByEntity.entries()].sort(([a], [b]) => a - b)) {
-		const typology = typologyFromStepLayer(layerName);
+		const typology = typologyFromStepLayer(layerName, options.modelDefinitionId);
 		const prefix = `${options.basePrefix}-${++partIndex}`;
 		const objectId = `object-${prefix}`;
 		const part = modelPartFromStepPresentationEntity(entities, entityRef, { prefix, objectId, typology, layerName });
@@ -2372,9 +2325,8 @@ function stepUsesManifoldSolidBreps(stepText: string): boolean {
 }
 
 function shouldImportStepPresentationLayers(stepText: string, modelDefinitionId: string): boolean {
-	if (modelDefinitionId === ENERGY_MODEL_DEFINITION_ID || modelDefinitionId === STRUCTURE_CLASSIC_MODEL_DEFINITION_ID) {
-		return true;
-	}
+	const profile = importProfileFor(modelDefinitionId);
+	if (profile?.preferPresentationLayers) return true;
 	return !stepUsesManifoldSolidBreps(stepText);
 }
 
@@ -2406,23 +2358,7 @@ function stepParseHashRefGroup(text: string): number[] {
 	return stepParseHashRefList(groups[groups.length - 1]![1]!);
 }
 
-/** @emoji 🏷️ Maps STEP presentation-layer names to typology ids. */
-export function typologyFromStepLayer(layerName: string): TypologyRef {
-	const trimmed = layerName.trim();
-	const namespaced = trimmed.match(/^([^:]+)::(.+)$/i);
-	if (namespaced) {
-		const mapped = typologyFromNamespacedStepLayer(namespaced[1]!.trim().toLowerCase(), namespaced[2]!.trim().toLowerCase());
-		if (mapped) return mapped;
-	}
-	const key = trimmed.toLowerCase();
-	const direct = BIM_LAYER_TYPOLOGY.get(key);
-	if (direct) return direct;
-	if (key.endsWith("s")) {
-		const singular = BIM_LAYER_TYPOLOGY.get(key.slice(0, -1));
-		if (singular) return singular;
-	}
-	return "building.building.slab";
-}
+export { typologyFromStepLayer };
 
 /** @emoji 🪜 Parses AP242 presentation layers and declared solid order from raw STEP text. */
 export function stepPresentationLayers(stepText: string): {
@@ -2504,7 +2440,7 @@ export function scaleModelPositions(model: Model, factor: number): void {
 
 function modelFromImportedBrepSolid(
 	brepSolid: ValidSolid,
-	options: { readonly prefix: string; readonly objectId: string; readonly typology?: TypologyRef },
+	options: { readonly prefix: string; readonly objectId: string; readonly typology?: TypologyRef; readonly modelDefinitionId?: string },
 ): Model {
 	const prefix = options.prefix;
 	const objectId = options.objectId;
@@ -2577,7 +2513,7 @@ function modelFromImportedBrepSolid(
 	model.solids[solidId] = { id: solidId, shellIds: [shellId] };
 	model.objects[objectId] = {
 		id: objectId as ObjectRef,
-		typology: options.typology ?? ("spatial.shape.kernel.solid" as TypologyRef),
+		typology: options.typology ?? kernelSolidTypology(options.modelDefinitionId ?? defaultModelDefinitionId()),
 		primitives: { solid: solidId },
 	};
 	model.bump();
@@ -3270,7 +3206,7 @@ class BrepjsWasmEngine {
 			const suffix = brepSolids.length === 1 ? "" : `-${i + 1}`;
 			const prefix = `${basePrefix}${suffix}`;
 			const objectId = `object-${prefix}`;
-			mergeImportedBrepPart(model, modelFromImportedBrepSolid(brepSolids[i]!, { prefix, objectId }));
+			mergeImportedBrepPart(model, modelFromImportedBrepSolid(brepSolids[i]!, { prefix, objectId, modelDefinitionId: modelId }));
 		}
 		scaleModelPositions(model, lengthScale);
 		const space = new ModelSpace();
@@ -3290,10 +3226,10 @@ class BrepjsWasmEngine {
 		if (!isOk(imported)) throw new Error(`STEP BIM import failed: ${String(imported.error)}`);
 		const basePrefix = options?.prefix ?? "step-bim-import";
 		const lengthScale = options?.lengthScale ?? STEP_BREP_IMPORT_MM_TO_M;
-		const modelDefinitionId = options?.modelDefinitionId ?? BUILDING_BIM_MODEL_DEFINITION_ID;
+		const modelDefinitionId = options?.modelDefinitionId ?? defaultModelDefinitionId();
 		const brepSolids = validSolidsFromImportedShape(imported.value as Shape3D);
 		if (shouldImportStepPresentationLayers(stepText, modelDefinitionId) || brepSolids.length === 0) {
-			const model = importStepPresentationLayersToModel(stepText, { basePrefix, lengthScale });
+			const model = importStepPresentationLayersToModel(stepText, { basePrefix, lengthScale, modelDefinitionId });
 			const space = new ModelSpace();
 			space.link(modelDefinitionId, model);
 			await this.syncSolidsFromModel(model);
@@ -3304,7 +3240,7 @@ class BrepjsWasmEngine {
 		for (let i = 0; i < brepSolids.length; i++) {
 			const solidEntityId = solidOrder[i];
 			const layerName = solidEntityId !== undefined ? layerBySolidEntity.get(solidEntityId) : undefined;
-			const typology = layerName ? typologyFromStepLayer(layerName) : ("building.building.slab" as TypologyRef);
+			const typology = layerName ? typologyFromStepLayer(layerName, modelDefinitionId) : importFallbackTypology(modelDefinitionId);
 			const suffix = brepSolids.length === 1 ? "" : `-${i + 1}`;
 			const prefix = `${basePrefix}${suffix}`;
 			const objectId = `object-${prefix}`;
@@ -3720,6 +3656,12 @@ if (isBrepjsDedicatedWorker()) {
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { beforeEach, describe, expect, it } = import.meta.vitest;
+	const { bootstrapCadModules } = await import("@cad/js/runtime");
+	const { AEC_BUILDING_MODEL_DEFINITION_ID } = await import("@cad/js/module/aec-building");
+	const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } = await import("@cad/js/module/aec-building-energy");
+	const { AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID } = await import("@cad/js/module/aec-building-structure");
+
+	bootstrapCadModules();
 
 	describe("@cad/js/kernel/brepjs", () => {
 		const kernel = new BrepjsKernel();
@@ -4296,8 +4238,8 @@ if (import.meta.vitest) {
 			expect(layerBySolidEntity.get(solidOrder[0]!)).toBe("Slab");
 			expect(layerBySolidEntity.get(solidOrder[1]!)).toBe("Beams");
 			expect(layerBySolidEntity.get(solidOrder[11]!)).toBe("Column");
-			expect(typologyFromStepLayer("Beams")).toBe("building.building.beam");
-			expect(typologyFromStepLayer("Column")).toBe("building.building.column");
+			expect(typologyFromStepLayer("Beams", AEC_BUILDING_MODEL_DEFINITION_ID)).toBe("building.building.beam");
+			expect(typologyFromStepLayer("Column", AEC_BUILDING_MODEL_DEFINITION_ID)).toBe("building.building.column");
 		});
 
 		it("imports BIM STEP with presentation-layer typologies for concrete forest left", async () => {
@@ -4310,8 +4252,9 @@ if (import.meta.vitest) {
 			const stepText = await readFile(stepPath, "utf8");
 			const space = await kernel.importStepBimToModelSpace(stepText, {
 				prefix: "hexagonal-cut-concrete-forest-left-bim",
+				modelDefinitionId: AEC_BUILDING_MODEL_DEFINITION_ID,
 			});
-			const model = space.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
+			const model = space.models[AEC_BUILDING_MODEL_DEFINITION_ID]!;
 			expect(Object.keys(geom(model).solids)).toHaveLength(12);
 			expect(Object.keys(model.objects)).toHaveLength(12);
 			const typologyCounts = new Map<string, number>();
@@ -4336,9 +4279,9 @@ if (import.meta.vitest) {
 			const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
 			const space = ModelSpace.fromJSON(fixtureJson);
 			const shape = space.models[defaultModelDefinitionId()]!;
-			const building = space.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
-			const energy = space.models[ENERGY_MODEL_DEFINITION_ID]!;
-			const structure = space.models[STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
+			const building = space.models[AEC_BUILDING_MODEL_DEFINITION_ID]!;
+			const energy = space.models[AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID]!;
+			const structure = space.models[AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
 			expect(Object.keys(shape.objects)).toHaveLength(1);
 			expect(Object.keys(building.objects)).toHaveLength(12);
 			expect(Object.keys(energy.objects)).toHaveLength(1);
@@ -4357,16 +4300,16 @@ if (import.meta.vitest) {
 			const structureText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
 			const energySpace = await kernel.importStepBimToModelSpace(energyText, {
 				prefix: "hexagonal-cut-concrete-forest-left-energy",
-				modelDefinitionId: ENERGY_MODEL_DEFINITION_ID,
+				modelDefinitionId: AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID,
 				lengthScale: 1,
 			});
 			const structureSpace = await kernel.importStepBimToModelSpace(structureText, {
 				prefix: "hexagonal-cut-concrete-forest-left-classic-structure",
-				modelDefinitionId: STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+				modelDefinitionId: AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
 				lengthScale: 1,
 			});
-			const energy = energySpace.models[ENERGY_MODEL_DEFINITION_ID]!;
-			const structure = structureSpace.models[STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
+			const energy = energySpace.models[AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID]!;
+			const structure = structureSpace.models[AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
 			expect(Object.keys(energy.objects)).toHaveLength(1);
 			expect(Object.values(energy.objects)[0]?.typology).toBe("energy.energy.baseplate");
 			expect(Object.keys(structure.objects)).toHaveLength(11);
@@ -4390,30 +4333,31 @@ if (import.meta.vitest) {
 					const bimText = await readFile(bimPath, "utf8");
 					const bimSpace = await kernel.importStepBimToModelSpace(bimText, {
 						prefix: "hexagonal-cut-concrete-forest-left-bim",
+						modelDefinitionId: AEC_BUILDING_MODEL_DEFINITION_ID,
 					});
 					const energyPath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp");
 					const energyText = await readFile(energyPath, "utf8");
 					const energySpace = await kernel.importStepBimToModelSpace(energyText, {
 						prefix: "hexagonal-cut-concrete-forest-left-energy",
-						modelDefinitionId: ENERGY_MODEL_DEFINITION_ID,
+						modelDefinitionId: AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID,
 						lengthScale: 1,
 					});
 					const structurePath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp");
 					const structureText = await readFile(structurePath, "utf8");
 					const structureSpace = await kernel.importStepBimToModelSpace(structureText, {
 						prefix: "hexagonal-cut-concrete-forest-left-classic-structure",
-						modelDefinitionId: STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+						modelDefinitionId: AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
 						lengthScale: 1,
 					});
 					const combined = new ModelSpace();
 					const shapeModel = shapeSpace.models[defaultModelDefinitionId()]!;
 					combined.link(defaultModelDefinitionId(), shapeModel);
-					const buildingModel = bimSpace.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
-					combined.link(BUILDING_BIM_MODEL_DEFINITION_ID, buildingModel);
-					const energyModel = energySpace.models[ENERGY_MODEL_DEFINITION_ID]!;
-					combined.link(ENERGY_MODEL_DEFINITION_ID, energyModel);
-					const structureModel = structureSpace.models[STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
-					combined.link(STRUCTURE_CLASSIC_MODEL_DEFINITION_ID, structureModel);
+					const buildingModel = bimSpace.models[AEC_BUILDING_MODEL_DEFINITION_ID]!;
+					combined.link(AEC_BUILDING_MODEL_DEFINITION_ID, buildingModel);
+					const energyModel = energySpace.models[AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID]!;
+					combined.link(AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, energyModel);
+					const structureModel = structureSpace.models[AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
+					combined.link(AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID, structureModel);
 					const outPath = resolve(playRoot, `${fixture.name}.model.json`);
 					await writeFile(outPath, `${JSON.stringify(combined.toJSON(), null, 2)}\n`, "utf8");
 					continue;

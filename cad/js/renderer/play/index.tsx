@@ -82,6 +82,15 @@ import {
   deleteObjectsFromModel,
   deletableObjectIdsFromSelection,
 } from "@cad/js/core";
+import { bootstrapCadModules } from "@cad/js/runtime";
+import { AEC_BUILDING_MODEL_DEFINITION_ID } from "@cad/js/module/aec-building";
+import { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } from "@cad/js/module/aec-building-energy";
+import {
+  AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+  AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID,
+} from "@cad/js/module/aec-building-structure";
+
+bootstrapCadModules();
 
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
 export const CAD_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
@@ -100,9 +109,9 @@ export const CAD_PLAY_HOVER_SOURCE_HIERARCHY = "cad-play-hierarchy";
 /** @emoji 🖱️ Hover owner id when the 3D canvas drives shared pointer focus. */
 export const CAD_PLAY_HOVER_SOURCE_CANVAS = "cad-play-canvas";
 
-export const CAD_PLAY_BUILDING_MODEL_DEFINITION_ID = "aec.building";
-export const CAD_PLAY_ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
-export const CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = "aec.building.structure.classic";
+export const CAD_PLAY_BUILDING_MODEL_DEFINITION_ID = AEC_BUILDING_MODEL_DEFINITION_ID;
+export const CAD_PLAY_ENERGY_MODEL_DEFINITION_ID = AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID;
+export const CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID;
 
 export type CadPlayPaneId = "shape" | "building" | "energy" | "structure-classic";
 
@@ -1326,11 +1335,12 @@ function transformationSourceScore(models: Readonly<Record<string, Model>>, spec
   if (!source) return 0;
   const scopedObjects = listModelObjectsForModelDefinition(source, spec.source.modelDefinition).length;
   if (scopedObjects === 0) return 0;
-  if (spec.source.modelDefinition === CAD_PLAY_BUILDING_MODEL_DEFINITION_ID && spec.target.modelDefinition.startsWith("aec.building.structure")) {
-    return 100 + scopedObjects;
-  }
-  if (isShapeModelDefinition(spec.source.modelDefinition)) return 50 + scopedObjects;
-  return 10 + scopedObjects;
+  let score = scopedObjects;
+  if (isShapeModelDefinition(spec.source.modelDefinition)) score += 50;
+  const targetDepth = spec.target.modelDefinition.split(".").length;
+  const sourceDepth = spec.source.modelDefinition.split(".").length;
+  if (targetDepth > sourceDepth) score += 20 * (targetDepth - sourceDepth);
+  return score;
 }
 
 function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, definitionId: string): Record<string, Model> {
@@ -1366,7 +1376,7 @@ export function ensurePlayQuadModelSlots(models: Readonly<Record<string, Model>>
 export function ensureCadPlayQuadModels(models: Readonly<Record<string, Model>>): Record<string, Model> {
   let next = ensurePlayQuadModelSlots(models);
   next = ensureDerivedModelInSpace(next, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID);
-  next = ensureDerivedModelInSpace(next, "aec.building.structure");
+  next = ensureDerivedModelInSpace(next, AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID);
   next = ensureDerivedModelInSpace(next, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID);
   return next;
 }
@@ -2360,7 +2370,7 @@ function CadPlayCatalogAside(): ReactNode {
     <>
       {!isShapeModelDefinition(activeModelDefinitionId) ? (
         <p className="text-muted-foreground leading-snug">
-          Shape fixtures apply to <code className="text-foreground">spatial.shape</code>. Use the navbar fixture menu or focus the Shape pane.
+          Shape fixtures apply to <code className="text-foreground">{defaultModelDefinitionId()}</code>. Use the navbar fixture menu or focus the Shape pane.
         </p>
       ) : null}
       {fileStatus ? <p className={statusTone}>{fileStatus}</p> : null}

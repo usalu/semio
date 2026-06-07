@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@cad/js/kernel/brepjs": "workspace:*",
+    "@cad/js/runtime": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

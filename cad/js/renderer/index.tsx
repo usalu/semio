@@ -6368,9 +6368,11 @@ export function SelectionPropertiesPanel({ model, kernel, activeModelDefinitionI
 // #endregion ­ƒ¬®Repl
 
 // #region ­ƒº¬Tests
+const __cadRendererTestRuntime = import.meta.vitest ? await import("@cad/js/runtime") : null;
 const __cadRendererTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 
 if (import.meta.vitest) {
+  __cadRendererTestRuntime!.bootstrapCadModules();
   const { BrepjsKernel, preciseSpatialKernelMath: M } = __cadRendererTestKernel!;
   const { describe, it, expect } = import.meta.vitest;
 

@@ -103,14 +103,27 @@ fn widget_io_ports(widget: &Widget) -> (Vec<IoPortSpec>, Vec<IoPortSpec>) {
     }
 }
 
+fn widget_node_size(widget: &Widget) -> (f64, f64) {
+    match widget {
+        Widget::InputSlider { .. } => (176.0, 72.0),
+        Widget::InputNote { .. } | Widget::OutputPreview { .. } => (176.0, 64.0),
+        _ => (160.0, 56.0),
+    }
+}
+
 fn widget_to_io_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>) -> IoNodeSpec {
     let (inputs, outputs) = widget_io_ports(widget);
     let id = match widget {
         Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
     };
+    let (width, height) = widget_node_size(widget);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
-    IoNodeSpec { id, name: widget_label(widget), inputs, outputs, x, y, width: 160.0, height: 56.0 }
+    IoNodeSpec { id, name: widget_label(widget), inputs, outputs, x, y, width, height }
 }
+
+const FLOW_SLIDER_MIN: f64 = 0.0;
+const FLOW_SLIDER_MAX: f64 = 10.0;
+const FLOW_SLIDER_STEP: f64 = 0.1;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -211,6 +224,7 @@ pub struct FlowHost {
     viewport_h: u32,
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
+    slider_adjust_id: Option<String>,
 }
 
 impl Default for FlowHost {
@@ -232,6 +246,7 @@ impl FlowHost {
             viewport_h: 1,
             viewport_dpr: 1.0,
             pan_anchor: None,
+            slider_adjust_id: None,
         };
         host.rebuild_dag();
         host.evaluate_internal();
@@ -368,6 +383,12 @@ impl FlowHost {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
             return;
         }
+        let world = self.screen_to_world_point(sx, sy);
+        if let Some(widget_id) = self.hit_slider_widget_at(world.x, world.y) {
+            self.slider_adjust_id = Some(widget_id.clone());
+            self.adjust_slider_at_world(&widget_id, world.x);
+            return;
+        }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_down(sx, sy, extend);
         self.sync_from_dag();
@@ -381,6 +402,11 @@ impl FlowHost {
             self.set_camera(cam_x - dx, cam_y - dy, zoom);
             return;
         }
+        if let Some(widget_id) = self.slider_adjust_id.clone() {
+            let world = self.screen_to_world_point(sx, sy);
+            self.adjust_slider_at_world(&widget_id, world.x);
+            return;
+        }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_move(sx, sy);
         self.sync_from_dag();
@@ -388,6 +414,11 @@ impl FlowHost {
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
         self.pan_anchor = None;
+        let was_slider = self.slider_adjust_id.take();
+        if was_slider.is_some() {
+            self.evaluate_internal();
+            return;
+        }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_up(sx, sy);
         self.sync_from_dag();
@@ -525,11 +556,122 @@ impl FlowHost {
         for widget in &mut self.fixture.widgets {
             if let Widget::InputSlider { id, value: v } = widget {
                 if id == widget_id {
-                    *v = value;
+                    *v = value.clamp(FLOW_SLIDER_MIN, FLOW_SLIDER_MAX);
                 }
             }
         }
         let _ = self.evaluate();
+    }
+
+    pub fn set_note_text(&mut self, widget_id: &str, text: &str) {
+        for widget in &mut self.fixture.widgets {
+            if let Widget::InputNote { id, text: note } = widget {
+                if id == widget_id {
+                    *note = text.to_string();
+                }
+            }
+        }
+        let _ = self.evaluate();
+    }
+
+    fn hit_slider_widget_at(&self, wx: f64, wy: f64) -> Option<String> {
+        for widget in &self.fixture.widgets {
+            let Widget::InputSlider { id, .. } = widget else { continue };
+            let node = self.dag.fixture.nodes.iter().find(|n| n.id == *id)?;
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            let left = node.x - hw + 4.0;
+            let right = node.x + hw - 16.0;
+            let top = node.y - hh + 4.0;
+            let bottom = node.y + hh - 4.0;
+            if wx >= left && wx <= right && wy >= top && wy <= bottom {
+                return Some(id.clone());
+            }
+        }
+        None
+    }
+
+    fn adjust_slider_at_world(&mut self, widget_id: &str, world_x: f64) {
+        let Some(node) = self.dag.fixture.nodes.iter().find(|n| n.id == widget_id) else { return };
+        let hw = node.width * 0.5;
+        let track_left = node.x - hw + 12.0;
+        let track_right = node.x + hw - 28.0;
+        let span = (track_right - track_left).max(1.0);
+        let t = ((world_x - track_left) / span).clamp(0.0, 1.0);
+        let raw = FLOW_SLIDER_MIN + t * (FLOW_SLIDER_MAX - FLOW_SLIDER_MIN);
+        let stepped = (raw / FLOW_SLIDER_STEP).round() * FLOW_SLIDER_STEP;
+        self.set_slider_value(widget_id, stepped);
+    }
+
+    fn format_dictionary_preview(dict: &Dictionary) -> String {
+        dict.get("number")
+            .and_then(|v| v.as_atom())
+            .and_then(|a| a.as_f64())
+            .map(|n| format!("{n}"))
+            .or_else(|| dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string))
+            .unwrap_or_else(|| "—".into())
+    }
+
+    fn paint_flow_widget_chrome(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
+        use cavas::camera::{camera_content_affine, world_to_screen, Camera, Viewport};
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::{Circle, Point, RoundedRect, RoundedRectRadii, Stroke};
+        use cavas::vello::peniko::{Color, Fill};
+
+        let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
+        let aff = camera_content_affine(&cam, &viewport);
+        let theme = &self.dag.vello_theme;
+        let track_fill = theme.node_fill;
+        let track_stroke = theme.node_stroke;
+        let thumb_fill = theme.handle_stroke_selected;
+        let text_fill = theme.node_stroke;
+        let text_halo = {
+            let rgba = theme.raster_clear.to_rgba8();
+            Color::from_rgba8(rgba.r, rgba.g, rgba.b, 210)
+        };
+
+        for widget in &self.fixture.widgets {
+            let id = widget_id_for(widget);
+            let Some(node) = self.dag.fixture.nodes.iter().find(|n| n.id == id) else { continue };
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            let px = (10.5 * cam.zoom).clamp(8.0, 16.0);
+            match widget {
+                Widget::InputSlider { value, .. } => {
+                    let track_left = node.x - hw + 12.0;
+                    let track_right = node.x + hw - 28.0;
+                    let track_y = node.y + 8.0;
+                    let track_h = 8.0;
+                    let track = RoundedRect::new(
+                        track_left,
+                        track_y - track_h * 0.5,
+                        track_right,
+                        track_y + track_h * 0.5,
+                        RoundedRectRadii::from_single_radius(4.0),
+                    );
+                    scene.fill(Fill::NonZero, aff, track_fill, None, &track);
+                    scene.stroke(&Stroke::new(1.0), aff, track_stroke, None, &track);
+                    let t = ((*value - FLOW_SLIDER_MIN) / (FLOW_SLIDER_MAX - FLOW_SLIDER_MIN)).clamp(0.0, 1.0);
+                    let thumb_x = track_left + t * (track_right - track_left);
+                    scene.fill(Fill::NonZero, aff, thumb_fill, None, &Circle::new(Point::new(thumb_x, track_y), 6.0));
+                    let label = format!("{value:.1}");
+                    let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y - hh + 16.0));
+                    append_label(scene, &label, screen, px, text_fill, text_halo);
+                }
+                Widget::InputNote { text, .. } => {
+                    let display = if text.is_empty() { "Note…" } else { text.as_str() };
+                    let screen = world_to_screen(&cam, &viewport, Point::new(node.x - hw + 14.0, node.y + 6.0));
+                    append_label(scene, display, screen, px, text_fill, text_halo);
+                }
+                Widget::OutputPreview { preview, .. } => {
+                    let display = Self::format_dictionary_preview(preview);
+                    let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + 10.0));
+                    append_label(scene, &display, screen, px * 1.05, text_fill, text_halo);
+                }
+                _ => {}
+            }
+        }
     }
 
     pub fn preview_text(&self) -> String {
@@ -548,8 +690,13 @@ impl FlowHost {
             .unwrap_or_else(|| "—".into())
     }
 
+    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.dag.set_vello_theme_from_json(json)
+    }
+
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
+        self.paint_flow_widget_chrome(scene, width, height, dpr);
     }
 }
 
@@ -601,8 +748,9 @@ impl FlowSessionInner {
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let mut scene = cavas::vello::Scene::new();
+        let clear = self.host.dag.vello_theme.raster_clear;
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
-        self.gpu.render_frame(&scene, cavas::vello::peniko::Color::from_rgba8(20, 22, 28, 255))
+        self.gpu.render_frame(&scene, clear)
     }
 }
 
@@ -650,6 +798,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = setSliderValue)]
     pub fn set_slider_value(&self, widget_id: &str, value: f64) {
         self.state.borrow_mut().host.set_slider_value(widget_id, value);
+    }
+
+    #[wasm_bindgen(js_name = setNoteText)]
+    pub fn set_note_text(&self, widget_id: &str, text: &str) {
+        self.state.borrow_mut().host.set_note_text(widget_id, text);
     }
 
     #[wasm_bindgen(js_name = addWidget)]
@@ -735,6 +888,11 @@ impl FlowSession {
         inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph);
     }
 
+    #[wasm_bindgen(js_name = setVelloThemeJson)]
+    pub fn set_vello_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+    }
+
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&mut self) -> Result<(), JsValue> {
         self.state.borrow_mut().render_frame_gpu()
@@ -774,6 +932,59 @@ mod tests {
         let mut host = FlowHost::default();
         host.set_slider_value("slider", 5.0);
         assert_eq!(host.preview_text(), "5");
+    }
+
+    #[test]
+    fn default_layout_places_slider_near_viewport_center() {
+        let mut host = FlowHost::default();
+        host.set_viewport(1280, 800, 1.0);
+        let slider = host.dag.fixture.nodes.iter().find(|n| n.id == "slider").expect("slider node");
+        let (sx, sy) = (640.0, 400.0);
+        let world = host.screen_to_world_point(sx, sy);
+        let hw = slider.width * 0.5;
+        let hh = slider.height * 0.5;
+        assert!(world.x >= slider.x - hw && world.x <= slider.x + hw);
+        assert!(world.y >= slider.y - hh && world.y <= slider.y + hh);
+    }
+
+    #[test]
+    fn canvas_slider_hit_adjusts_value_playground_viewport() {
+        let mut host = FlowHost::default();
+        host.set_viewport(1259, 706, 1.0);
+        let (sx, sy) = (629.5, 353.0);
+        host.pointer_down_screen(sx, sy, false, false);
+        host.pointer_move_screen(sx + 90.0, sy);
+        host.pointer_up_screen(sx + 90.0, sy);
+        let slider = host
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|w| match w {
+                Widget::InputSlider { id, value } if id == "slider" => Some(*value),
+                _ => None,
+            })
+            .unwrap();
+        assert!(slider > 3.0);
+    }
+
+    #[test]
+    fn canvas_slider_hit_adjusts_value() {
+        let mut host = FlowHost::default();
+        host.set_viewport(800, 600, 1.0);
+        let (sx, sy) = (400.0, 300.0);
+        host.pointer_down_screen(sx, sy, false, false);
+        host.pointer_move_screen(sx + 80.0, sy);
+        host.pointer_up_screen(sx + 80.0, sy);
+        let slider = host
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|w| match w {
+                Widget::InputSlider { id, value } if id == "slider" => Some(*value),
+                _ => None,
+            })
+            .unwrap();
+        assert!(slider > 3.0);
     }
 
     #[test]

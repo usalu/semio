@@ -243,6 +243,59 @@ export function readableForegroundHex(
 	_readableForegroundCache.set(cacheKey, result);
 	return result;
 }
+
+/** @emoji 🎨 Elements semantic tokens for graph canvas selection chrome. */
+const GRAPH_VELLO_CSS_COLOR_PRIMARY = tokenVar("primary");
+const GRAPH_VELLO_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
+const GRAPH_VELLO_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
+
+/** @emoji 🎨 Serializes UI semantic CSS for DAG/flow Vello WASM paints (`VelloThemePalette` JSON). */
+export function serializeGraphVelloThemePaletteJson(): string {
+	const pc = (expr: string, fallKey: StylingTokenKey | string, alpha?: number): number[] => [...resolveColorRgba(expr, fallKey, alpha ?? 255)];
+	const pbg = (expr: string, fallKey: StylingTokenKey | string, alpha?: number): number[] => {
+		const hex = resolveBackgroundColorHex(expr, fallKey);
+		return [...resolveColorRgba(hex, fallKey, alpha ?? 255)];
+	};
+	const border = resolveColorRgba(themeColorVar("border"), "gray");
+	return JSON.stringify({
+		rasterClear: pbg(semanticVar("canvas"), "light-8-9"),
+		gridMinorStroke: [border[0], border[1], border[2], 56],
+		edgeStroke: pc(themeColorVar("muted-foreground"), "gray"),
+		edgeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+		edgeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
+		edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+		nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
+		nodeStroke: pc(themeColorVar("emphasized"), "dark"),
+		nodeFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
+		nodeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+		nodeFillSelected: pbg(GRAPH_VELLO_CSS_SELECTED_FILL, "primary"),
+		nodeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		nodeFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
+		nodeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
+		nodeFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
+		nodeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+		indirectHandleFill: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
+		indirectHandleStroke: pc(tokenVar("secondary"), "secondary"),
+		handleFill: pbg(themeColorVar("base"), "light"),
+		handleStroke: pc(themeColorVar("emphasized"), "dark"),
+		handleFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
+		handleStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+		handleFillSelected: pbg(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		handleStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		handleFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
+		handleStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
+		handleFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
+		handleStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+		wireStroke: pc(themeColorVar("muted-foreground"), "gray"),
+		wireStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+		wireStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		wireStrokeHighlighted: pc(tokenVar("secondary"), "secondary"),
+		wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+		selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
+		selectionPreviewStroke: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+	});
+}
 //#endregion 🎨Resolve
 
 //#region 🧪Tests
@@ -283,6 +336,13 @@ if (import.meta.vitest) {
 			clearColorResolveCache();
 			expect(readableForegroundHex("var(--color-dark)")).toBe(tokenHex("light"));
 			expect(readableForegroundHex("var(--color-light)")).toBe(tokenHex("dark"));
+		});
+
+		it("serializeGraphVelloThemePaletteJson emits VelloThemePalette fields", () => {
+			clearColorResolveCache();
+			const parsed = JSON.parse(serializeGraphVelloThemePaletteJson()) as { rasterClear: number[]; nodeFill: number[] };
+			expect(parsed.rasterClear).toHaveLength(4);
+			expect(parsed.nodeFill).toHaveLength(4);
 		});
 	});
 }

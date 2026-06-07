@@ -1,4 +1,4 @@
-/** @emoji 🧪 Flow play end-to-end runtime probe — catalogue, drag-drop, evaluate, persistence. */
+/** @emoji 🧪 Flow play end-to-end runtime probe — workbench catalogue drag-drop, evaluate, persistence. */
 import { chromium } from "@playwright/test";
 import { createConnection } from "node:net";
 
@@ -49,44 +49,108 @@ page.on("console", (msg) => {
   if (text.includes("[DEBUG]")) debugLogs.push(text);
 });
 
-await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 120_000 });
-await page.waitForSelector('[data-testid="flow-catalogue"]', { timeout: 60_000 });
-await page.waitForSelector('input[type="range"]', { timeout: 60_000 });
+async function waitForDebugLog(logs, pattern, timeoutMs = 60_000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (logs.some((line) => line.includes(pattern))) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`timeout waiting for debug log: ${pattern}`);
+}
 
-const sectionTitles = await page.locator('[data-testid="flow-catalogue"] summary').allTextContents();
-const hasMath = sectionTitles.some((t) => /math/i.test(t));
-const hasText = sectionTitles.some((t) => /text/i.test(t));
-const hasLogic = sectionTitles.some((t) => /logic/i.test(t));
-const hasInputs = sectionTitles.some((t) => /inputs/i.test(t));
-const hasOutputs = sectionTitles.some((t) => /outputs/i.test(t));
+function latestPreviewFromLogs(logs) {
+  for (let i = logs.length - 1; i >= 0; i -= 1) {
+    const match = logs[i].match(/flow evaluate preview:\s*(\S+)/);
+    if (match) return match[1];
+  }
+  return "";
+}
+
+await page.goto(`${baseUrl}?probe=${Date.now()}`, { waitUntil: "networkidle", timeout: 120_000 });
+await page.evaluate(() => localStorage.removeItem("flow.fixture/v1"));
+await page.reload({ waitUntil: "networkidle" });
+const canvas = page.locator("canvas").first();
+await canvas.waitFor({ timeout: 60_000 });
+await waitForDebugLog(debugLogs, "flow evaluate preview: 3");
+
+async function pointerOnCanvas(canvasLocator, type, x, y) {
+  const box = await canvasLocator.boundingBox();
+  if (!box) throw new Error("canvas missing bounding box");
+  await canvasLocator.dispatchEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: box.x + x,
+    clientY: box.y + y,
+    pointerId: 1,
+    pointerType: "mouse",
+    isPrimary: true,
+    button: 0,
+    buttons: type === "pointerup" ? 0 : 1,
+  });
+}
+
+const workbenchToggle = page.getByRole("radio", { name: "Workbench" });
+if (await workbenchToggle.count()) {
+  const pressed = await workbenchToggle.getAttribute("aria-checked");
+  if (pressed !== "true") {
+    await workbenchToggle.click();
+  }
+}
 
 await page.waitForFunction(() => {
-  const strong = document.querySelector("strong.tabular-nums");
-  return strong != null && strong.textContent !== "—" && strong.textContent.trim().length > 0;
+  const labels = [...document.querySelectorAll("[data-tree-item-label], .tree-item-label, button, span")].map((el) => el.textContent?.trim() ?? "");
+  return labels.some((t) => /math/i.test(t)) && labels.some((t) => /inputs/i.test(t)) && labels.some((t) => /outputs/i.test(t));
 }, { timeout: 60_000 });
 
-const previewBefore = (await page.locator("strong.tabular-nums").first().textContent())?.trim() ?? "";
-await page.locator('input[type="range"]').evaluate((el) => {
-  const input = el;
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-  setter?.call(input, "5");
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-  input.dispatchEvent(new Event("change", { bubbles: true }));
-});
-await page.waitForFunction(
-  (before) => {
-    const text = document.querySelector("strong.tabular-nums")?.textContent?.trim() ?? "";
-    return text !== "—" && text !== before;
-  },
-  previewBefore,
-  { timeout: 15_000 },
-);
+const sectionLabels = await page.locator("body").innerText();
+const hasMath = /math/i.test(sectionLabels);
+const hasText = /text/i.test(sectionLabels);
+const hasLogic = /logic/i.test(sectionLabels);
+const hasInputs = /inputs/i.test(sectionLabels);
+const hasOutputs = /outputs/i.test(sectionLabels);
 
-const previewAfter = (await page.locator("strong.tabular-nums").first().textContent())?.trim() ?? "";
+const previewBefore = latestPreviewFromLogs(debugLogs) || "3";
 
-const addItem = page.locator('[data-testid="flow-catalogue-item-math.add"]');
-await addItem.dragTo(page.locator("canvas"), { targetPosition: { x: 200, y: 200 } });
-await page.waitForTimeout(500);
+async function adjustCanvasSlider(canvasLocator, deltaX, worldOffset = { x: 0, y: 0 }) {
+  const box = await canvasLocator.boundingBox();
+  if (!box) throw new Error("canvas missing bounding box");
+  const cx = box.width / 2 + worldOffset.x;
+  const cy = box.height / 2 + worldOffset.y;
+  await pointerOnCanvas(canvasLocator, "pointerdown", cx - 30, cy);
+  await pointerOnCanvas(canvasLocator, "pointermove", cx - 30 + deltaX, cy);
+  await pointerOnCanvas(canvasLocator, "pointerup", cx - 30 + deltaX, cy);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+}
+
+await waitForDebugLog(debugLogs, "flow fixture layout:");
+const layoutLine = debugLogs.find((entry) => entry.includes("flow fixture layout:"));
+const layout = JSON.parse(layoutLine.replace(/^.*flow fixture layout:\s*/, ""));
+const sliderWorld = layout.slider ?? { x: 40, y: 0 };
+await adjustCanvasSlider(canvas, 90, sliderWorld);
+await waitForDebugLog(debugLogs, "flow evaluate preview: 5", 15_000);
+const previewAfter = latestPreviewFromLogs(debugLogs);
+
+async function paletteDragToCanvas(page, sourceLocator, canvasLocator, target) {
+  const sourceBox = await sourceLocator.boundingBox();
+  const canvasBox = await canvasLocator.boundingBox();
+  if (!sourceBox || !canvasBox) {
+    throw new Error("palette drag: missing bounding box");
+  }
+  const fromX = sourceBox.x + sourceBox.width / 2;
+  const fromY = sourceBox.y + sourceBox.height / 2;
+  const toX = canvasBox.x + target.x;
+  const toY = canvasBox.y + target.y;
+  await page.mouse.move(fromX, fromY);
+  await page.mouse.down();
+  await page.mouse.move(fromX + 12, fromY + 12);
+  await page.mouse.move(toX, toY);
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+}
+
+const addRow = page.locator(".cursor-grab", { hasText: "Add" }).first();
+await addRow.waitFor({ timeout: 60_000 });
+await paletteDragToCanvas(page, addRow, canvas, { x: 200, y: 200 });
 
 await page.evaluate(() => {
   localStorage.setItem("flow.fixture/v1", JSON.stringify({
@@ -105,17 +169,15 @@ await page.evaluate(() => {
   }));
 });
 await page.reload({ waitUntil: "networkidle" });
-await page.waitForFunction(() => {
-  const strong = document.querySelector("strong.tabular-nums");
-  return strong?.textContent?.trim() === "7";
-}, { timeout: 60_000 });
-const previewPersisted = (await page.locator("strong.tabular-nums").first().textContent())?.trim() ?? "";
+await canvas.waitFor({ timeout: 60_000 });
+await waitForDebugLog(debugLogs, "flow evaluate preview: 7");
+const previewPersisted = latestPreviewFromLogs(debugLogs);
 
 const unsupported = await page.getByText("Unsupported UiNode").count();
 await browser.close();
 
 console.log("[validate-flow] url:", baseUrl);
-console.log("[validate-flow] sections:", sectionTitles);
+console.log("[validate-flow] sections:", { hasMath, hasText, hasLogic, hasInputs, hasOutputs });
 console.log("[validate-flow] debug logs:", debugLogs);
 console.log("[validate-flow] preview before:", previewBefore);
 console.log("[validate-flow] preview after slider:", previewAfter);

@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: validate
     content: Extend validate-dag-runtime.mjs to drive drag + reconnect via pointer events and assert fixture mutation; run cargo test, dag vitest, and runtime probe.
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

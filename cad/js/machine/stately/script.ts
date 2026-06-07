@@ -23,10 +23,12 @@ class TestScript extends BundleScript {
 
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
-    const { SHAPE_MODEL_DEFINITION_ID } = await import("@cad/js/core");
+    const { bootstrapCadModules } = await import("@cad/js/runtime");
+    const { defaultModelDefinitionId } = await import("@cad/js/core");
     const { buildSpatialStatelyMachineCatalogView } = await import("./index.ts");
+    bootstrapCadModules();
     let outPath = join(this.root, "machine.json");
-    let modelDefinitionId = SHAPE_MODEL_DEFINITION_ID;
+    let modelDefinitionId = defaultModelDefinitionId();
     const interactionIds: string[] = [];
     for (let i = 0; i < extra.length; i++) {
       const a = extra[i]!;
