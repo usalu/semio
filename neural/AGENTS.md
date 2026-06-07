@@ -8,7 +8,11 @@ A tree is a directed acyclic graph of neurons and synapses.
 
 # Dictionary
 
-A dictionary is an immutable, unordered, collision-free, collection of key-value pairs.
+A dictionary is an immutable, unordered, collision-free, collection of key-value pairs following a schema.
+
+# Schema
+
+A schema for a dictionary.
 
 # Kvp
 

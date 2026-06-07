@@ -1,0 +1,19 @@
+{
+  "title": "Flow Language Vertical Slice",
+  "emoji": "🌊",
+  "status": "closed",
+  "description": "End-to-end vertical slice for flow procedural language: neural engine (Dictionary/Neuron/Evaluator), math module, DAG UI crate, flow core wasm, react renderer, and play app with slider-\u003eadd-\u003epreview default fixture.",
+  "summary": "Delivered end-to-end flow language vertical slice: neural engine dictionary evaluation, math.add module, DAG IO layout crate, flow_core WASM session (load/evaluate/render), React FlowCanvas with slider+preview overlay, and flow play harness wired into framework playground.\n\nFixed runtime blockers:\n- Added `flow` to UiRenderer switch and renderPlaygroundHostSurface fallback so window bodies no longer show \"Unsupported UiNode\".\n- Fixed React infinite update loop: stabilized onPreviewText via ref in FlowCanvas, useCallback in FlowPlayPaneSurfaceHost, and skip controller emit when preview text unchanged.\n\nValidated: cargo tests (flow_core, neural_engine, math, dag), wasm build, flow/play vitest, browser at :6017 shows playground shell, DAG canvas, slider default 3.0, preview \"3\", no Unsupported UiNode.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1537"
+  },
+  "goal": "🎯r2603",
+  "plan": {
+    "client": "cursor",
+    "id": "0a888bfc",
+    "local": "flow_language_slice_0a888bfc.plan.md"
+  },
+  "sessions": [
+    "⚪689e19d6f6e24262ae58fd7199f0b93c"
+  ]
+}

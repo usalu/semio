@@ -69,8 +69,13 @@ export function FlowCanvas({ fixtureJson, className, onPreviewText }: FlowCanvas
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<FlowSession | null>(null);
   const rafRef = useRef<number | null>(null);
+  const onPreviewTextRef = useRef(onPreviewText);
   const [previewText, setPreviewText] = useState("—");
   const [sliderValue, setSliderValue] = useState(3);
+
+  useEffect(() => {
+    onPreviewTextRef.current = onPreviewText;
+  }, [onPreviewText]);
 
   const renderFrame = useCallback(() => {
     try {
@@ -85,10 +90,10 @@ export function FlowCanvas({ fixtureJson, className, onPreviewText }: FlowCanvas
     if (!session) return;
     session.evaluate();
     const text = session.previewText();
-    setPreviewText(text);
-    onPreviewText?.(text);
+    setPreviewText((prev) => (prev === text ? prev : text));
+    onPreviewTextRef.current?.(text);
     console.log(`[DEBUG] flow evaluate preview: ${text}`);
-  }, [onPreviewText]);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;

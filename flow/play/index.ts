@@ -29,7 +29,7 @@ export const FLOW_PLAY_WINDOW_KIND_ID = "flow-main";
 export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = FLOW_DEFAULT_FIXTURE;
 export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
 
-export const FLOW_PLAY_LAYOUT = createStackLayout(FLOW_PLAY_WINDOW_KIND_ID, "Flow");
+export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["Flow"]);
 
 /** @emoji 🎛 Flow play shell controller. */
 export class FlowPlayController extends Controller {
@@ -53,7 +53,7 @@ export class FlowPlayController extends Controller {
   override run(command: string, args?: unknown): void {
     if (command === "setPreviewText") {
       const text = (args as { text?: string }).text;
-      if (typeof text === "string") {
+      if (typeof text === "string" && text !== this.previewText) {
         this.previewText = text;
         this.emit();
       }

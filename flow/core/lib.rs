@@ -344,11 +344,6 @@ impl FlowHost {
     }
 }
 
-fn widget_id(widget: &Widget) -> &str {
-    match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id,
-    }
-}
 // #endregion 🔖FlowHost
 
 // #region 🔖WasmSession
@@ -372,8 +367,11 @@ struct FlowSessionInner {
 #[cfg(target_arch = "wasm32")]
 impl FlowSessionInner {
     fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
-        let cam = &self.host.fixture.camera;
-        self.host.engine.set_camera(cam.x, cam.y, cam.zoom);
+        let (cx, cy, zoom) = {
+            let cam = &self.host.fixture.camera;
+            (cam.x, cam.y, cam.zoom)
+        };
+        self.host.engine.set_camera(cx, cy, zoom);
         self.gpu.resize_surface(pw, ph);
         let _ = (lw, lh, dpr);
     }
@@ -457,8 +455,11 @@ impl FlowSession {
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
-            let cam = &g.host.fixture.camera;
-            g.host.engine.set_camera(cam.x, cam.y, cam.zoom);
+            let (cx, cy, zoom) = {
+                let cam = &g.host.fixture.camera;
+                (cam.x, cam.y, cam.zoom)
+            };
+            g.host.engine.set_camera(cx, cy, zoom);
             g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
             Ok(JsValue::UNDEFINED)
         })

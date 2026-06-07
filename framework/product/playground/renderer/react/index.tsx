@@ -416,6 +416,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "puzzle2d" ||
     node.type === "puzzle3d" ||
     node.type === "puzzle5d" ||
+    node.type === "flow" ||
     node.type === "panel" ||
     node.type === "table"
   ) {
@@ -663,6 +664,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "puzzle5d":
     case "cad":
     case "gismap":
+    case "flow":
     case "panel":
     case "table":
       return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
@@ -6006,15 +6008,14 @@ function useFlowPlayController(): FlowPlayController | undefined {
 
 function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
   const ctrl = useFlowPlayController();
-  return (
-    <FlowCanvas
-      fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
-      onPreviewText={(text) => {
-        console.log(`[DEBUG] flow play preview: ${text}`);
-        ctrl?.run("setPreviewText", { text });
-      }}
-    />
+  const onPreviewText = reactHostPort.useCallback(
+    (text: string) => {
+      console.log(`[DEBUG] flow play preview: ${text}`);
+      ctrl?.run("setPreviewText", { text });
+    },
+    [ctrl],
   );
+  return <FlowCanvas fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON} onPreviewText={onPreviewText} />;
 }
 
 export function registerFlowPlaySurfaceHosts(): void {
@@ -7024,6 +7025,24 @@ if (import.meta.vitest) {
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
         gisMapSurfaceHosts.delete(surfaceId);
+        unregisterSurfaceBinding(surfaceId);
+      }
+    });
+
+    it("renders flow nodes through flow surface hosts", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { buildFlowWindowBody } = await import("@framework/playground/core");
+      const surfaceId = "playground.test/flow";
+      function TestFlowHost(): React.ReactElement {
+        return <div data-host="flow">flow canvas</div>;
+      }
+      registerUiFlowSurfaceHost(surfaceId, TestFlowHost);
+      try {
+        const html = renderToStaticMarkup(<UiRenderer node={buildFlowWindowBody(surfaceId, "ctrl", "main")} commandBus={new CommandBus()} />);
+        expect(html).toContain('data-host="flow"');
+        expect(html).not.toContain("Unsupported UiNode");
+      } finally {
+        flowSurfaceHosts.delete(surfaceId);
         unregisterSurfaceBinding(surfaceId);
       }
     });
