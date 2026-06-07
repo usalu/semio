@@ -1,0 +1,215 @@
+diff --git a/flow/AGENTS.md b/flow/AGENTS.md
+new file mode 100644
+index 000000000..0ac9da60e
+--- /dev/null
++++ b/flow/AGENTS.md
+@@ -0,0 +1,86 @@
++# flow
++
++flow is a gui for the [neural engine](../neural/engine/AGENTS.md#engine).
++
++
++# Flow
++
++A flow is a graphical [directed acyclic graph](../mathematical/graph/port/directed/dag) [neural tree](../neural/AGENTS.md#tree) along with inputs and outputs.
++
++# Dictionary
++
++A dictionary is an immutable, unordered, collision-free, collection of key-value pairs.
++
++# Kvp
++
++A key value pair.
++
++# Key
++
++A key is string of dot-separated camelCase segments.
++
++```
++"segment"
++"segment.childSegment"
++```
++
++# Value
++
++A value is either an atom or a dictionary.
++
++# Atom
++
++An atom is an imumtable non-dictionary value.
++
++# Integer
++
++An integer number atom.
++
++# Decimal
++
++A floating number atom.
++
++# String
++
++A string atom.
++
++# Neuron
++
++A neuron is an instance of a neuron kind that processes concrete data.
++
++# Neuron Kind
++
++A neuron kind is definition for a neuron.
++
++## Function
++
++A function is computational unit that transforms one dictionary into another dictionary.
++
++## Input
++
++An input is a neuron that interactively produces a dictionary.
++
++### Slider
++
++A slider is an input for creating a single number dictionary.
++
++```json
++{"number":3.1}
++```
++
++### Note
++
++A note neuron is an input for creating a single text dictionary.
++
++```json
++{"text":"Some text"}
++```
++
++# Output
++
++An output is a neuron that 
++
++
++# Synapse
++
++A synapse is a directed connected between two neurons.
+\ No newline at end of file
+diff --git a/mathematical/graph/undirected/lib.rs b/flow/core/lib.rs
+similarity index 100%
+rename from mathematical/graph/undirected/lib.rs
+rename to flow/core/lib.rs
+diff --git a/mathematical/graph/normal/undirected/AGENTS.md b/mathematical/graph/normal/undirected/AGENTS.md
+index 91fc65e23..96088fe8f 100644
+--- a/mathematical/graph/normal/undirected/AGENTS.md
++++ b/mathematical/graph/normal/undirected/AGENTS.md
+@@ -2,3 +2,5 @@
+ technology: mathematical
+ path: 🧮mathematical⭕graphs
+ ---
++
++An undirected graph.
+\ No newline at end of file
+diff --git a/mathematical/graph/port/directed/dag/AGENTS.md b/mathematical/graph/port/directed/dag/AGENTS.md
+new file mode 100644
+index 000000000..4c31e5804
+--- /dev/null
++++ b/mathematical/graph/port/directed/dag/AGENTS.md
+@@ -0,0 +1,7 @@
++# DAG
++
++A directed acyclic graph.
++
++# Node
++
++A node is a rectangle with a list of horizontal text inputs on the left, a vertical text in middle for the name, and a list of horizontal text outputs on the left.
+\ No newline at end of file
+diff --git a/mathematical/graph/port/directed/dag/lib.rs b/mathematical/graph/port/directed/dag/lib.rs
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/mathematical/graph/port/directed/AGENTS.md b/mathematical/graph/port/directed/normal/AGENTS.md
+similarity index 100%
+rename from mathematical/graph/port/directed/AGENTS.md
+rename to mathematical/graph/port/directed/normal/AGENTS.md
+diff --git a/mathematical/graph/port/directed/Cargo.toml b/mathematical/graph/port/directed/normal/Cargo.toml
+similarity index 100%
+rename from mathematical/graph/port/directed/Cargo.toml
+rename to mathematical/graph/port/directed/normal/Cargo.toml
+diff --git a/mathematical/graph/port/directed/lib.rs b/mathematical/graph/port/directed/normal/lib.rs
+similarity index 100%
+rename from mathematical/graph/port/directed/lib.rs
+rename to mathematical/graph/port/directed/normal/lib.rs
+diff --git a/neural/AGENTS.md b/neural/AGENTS.md
+new file mode 100644
+index 000000000..963e96ddb
+--- /dev/null
++++ b/neural/AGENTS.md
+@@ -0,0 +1,60 @@
++# Neural
++
++Neural is headless procedural programming language that follows the philosophy dictionary in - dictionary out.
++
++# Tree
++
++A tree is a directed acyclic graph of neurons and synapses.
++
++# Dictionary
++
++A dictionary is an immutable, unordered, collision-free, collection of key-value pairs.
++
++# Kvp
++
++A key value pair.
++
++# Key
++
++A key is string of dot-separated camelCase segments.
++
++```
++"segment"
++"segment.childSegment"
++```
++
++# Value
++
++A value is either an atom or a dictionary.
++
++# Atom
++
++An atom is an imumtable non-dictionary value.
++
++# Integer
++
++An integer number atom.
++
++# Decimal
++
++A floating number atom.
++
++# String
++
++A string atom.
++
++# Neuron
++
++A neuron is an instance of a neuron kind that processes concrete data.
++
++# Neuron Kind
++
++A neuron kind is definition for a neuron.
++
++## Function
++
++A function is computational unit that transforms one dictionary into another dictionary.
++
++# Synapse
++
++A synapse is a directed connected between two neurons.
+\ No newline at end of file
+diff --git a/neural/engine/AGENTS.md b/neural/engine/AGENTS.md
+new file mode 100644
+index 000000000..6d3f72dfe
+--- /dev/null
++++ b/neural/engine/AGENTS.md
+@@ -0,0 +1 @@
++A wasm-compatible rust implemention of [neural](../AGENTS.md).
+\ No newline at end of file
+diff --git a/neural/engine/lib.rs b/neural/engine/lib.rs
+new file mode 100644
+index 000000000..e69de29bb
