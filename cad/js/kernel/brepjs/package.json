@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@cad/js/core": "workspace:*",
+    "@geometry/brep/js": "workspace:*",
     "brepjs": "^18.20.3",
     "brepjs-opencascade": "^0.15.6"
   },

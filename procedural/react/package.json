@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@procedural/react",
+  "version": "0.1.0",
+  "description": "procedural · react",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @procedural/react:test"
+  },
+  "dependencies": {
+    "@flow/react": "workspace:*",
+    "@geometry/brep/js": "workspace:*",
+    "@infinite/world/r3f": "workspace:*",
+    "@ui/react": "workspace:*",
+    "@ui/styling": "workspace:*",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "procedural/react"
+  },
+  "bundleKind": "library"
+}

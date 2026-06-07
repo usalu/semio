@@ -22,7 +22,61 @@ fn default_node_width() -> f64 {
 }
 
 fn default_node_height() -> f64 {
-    56.0
+    DAG_CHANNEL_ROW_HEIGHT
+}
+
+/// 📏 Fixed height of one input or output channel row on computation nodes.
+pub const DAG_CHANNEL_ROW_HEIGHT: f64 = 24.0;
+
+/// 🔢 Row count for a computation node body from its IO and variadic flags.
+pub fn computation_io_row_count(input_count: usize, output_count: usize, variadic_inputs: bool, variadic_outputs: bool) -> usize {
+    let input_rows = input_count + usize::from(variadic_inputs);
+    let output_rows = output_count + usize::from(variadic_outputs);
+    input_rows.max(output_rows).max(1)
+}
+
+/// 📐 Computation node height from channel row count.
+pub fn computation_node_height(input_count: usize, output_count: usize, variadic_inputs: bool, variadic_outputs: bool) -> f64 {
+    computation_io_row_count(input_count, output_count, variadic_inputs, variadic_outputs) as f64 * DAG_CHANNEL_ROW_HEIGHT
+}
+
+fn computation_io_row_count_for_node(node: &DagNodeSpec) -> usize {
+    match &node.kind {
+        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => {
+            computation_io_row_count(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs)
+        }
+        _ => 1,
+    }
+}
+
+fn channel_row_center_y(node_y: f64, node_height: f64, row_index: usize) -> f64 {
+    let hh = node_height * 0.5;
+    node_y - hh + (row_index as f64 + 0.5) * DAG_CHANNEL_ROW_HEIGHT
+}
+
+fn channel_row_bounds(node: &DagNodeSpec, row_index: usize) -> (f64, f64, f64, f64) {
+    let hw = node.width * 0.5;
+    let y_center = channel_row_center_y(node.y, node.height, row_index);
+    let half = DAG_CHANNEL_ROW_HEIGHT * 0.5;
+    (node.x - hw, y_center - half, node.x + hw, y_center + half)
+}
+
+fn computation_port_center_y(node: &DagNodeSpec, port_index: usize) -> f64 {
+    channel_row_center_y(node.y, node.height, port_index)
+}
+
+fn proportional_port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
+    let hh = node.height * 0.5;
+    let t = (port_index as f64 + 0.5) / count.max(1) as f64;
+    node.y - hh + t * node.height
+}
+
+fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
+    if matches!(node.kind, DagNodeKind::Computation { .. }) {
+        computation_port_center_y(node, port_index)
+    } else {
+        proportional_port_center_y(node, port_index, count)
+    }
 }
 
 /// 🪝 Named horizontal port on a DAG node edge.
@@ -209,24 +263,18 @@ pub fn io_node_handle_angles(input_index: usize, input_count: usize, output_inde
 }
 
 const DAG_VARIADIC_PLUS_ZOOM_THRESHOLD: f64 = 1.5;
-const DAG_VARIADIC_PLUS_HIT_RADIUS: f64 = 10.0;
 
 fn variadic_input_insert_positions(node: &DagNodeSpec) -> Vec<(usize, f64, f64)> {
     let inputs = node.inputs();
-    if inputs.is_empty() || !node.variadic_inputs() {
+    if !node.variadic_inputs() {
         return vec![];
     }
     let hw = node.width * 0.5;
-    let hh = node.height * 0.5;
-    let count = inputs.len();
-    let mut positions = Vec::with_capacity(count + 1);
-    for insert_index in 0..=count {
-        let t = insert_index as f64 / count as f64;
-        let port_y = node.y - hh + t * hh * 2.0;
-        let port_x = node.x - hw - 10.0;
-        positions.push((insert_index, port_x, port_y));
-    }
-    positions
+    let divider_inset = hw * 0.4;
+    let row = inputs.len();
+    let port_y = computation_port_center_y(node, row);
+    let port_x = node.x - hw + (hw - divider_inset) * 0.5;
+    vec![(inputs.len(), port_x, port_y)]
 }
 
 fn port_angle_on_side(index: usize, count: usize, left: bool) -> f64 {
@@ -244,11 +292,26 @@ pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: u
     use cavas::vello::kurbo::Point;
     use graph::rectangle_handle_angle_toward;
     let hw = width * 0.5;
-    let hh = height * 0.5;
-    let t = (index as f64 + 0.5) / count.max(1) as f64;
-    let port_y = y - hh + t * height;
+    let row_count = computation_io_row_count(count, count, false, false);
+    let port_y = if row_count * (DAG_CHANNEL_ROW_HEIGHT as usize) == height.round() as usize {
+        channel_row_center_y(y, height, index)
+    } else {
+        let hh = height * 0.5;
+        let t = (index as f64 + 0.5) / count.max(1) as f64;
+        y - hh + t * height
+    };
     let port_x = if left { x - hw } else { x + hw };
     rectangle_handle_angle_toward(Point::new(x, y), width, height, Point::new(port_x, port_y))
+}
+
+fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left: bool) -> f64 {
+    use cavas::vello::kurbo::Point;
+    use graph::rectangle_handle_angle_toward;
+    let hw = node.width * 0.5;
+    let count = if left { node.inputs().len() } else { node.outputs().len() };
+    let port_y = port_center_y(node, port_index, count);
+    let port_x = if left { node.x - hw } else { node.x + hw };
+    rectangle_handle_angle_toward(Point::new(node.x, node.y), node.width, node.height, Point::new(port_x, port_y))
 }
 // #endregion 🔖IoNode
 
@@ -709,17 +772,20 @@ impl DagHost {
         if zoom < DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
             return None;
         }
-        let radius = DAG_VARIADIC_PLUS_HIT_RADIUS / zoom.max(0.05);
         for node in self.fixture.nodes.iter().rev() {
             if !node.variadic_inputs() {
                 continue;
             }
-            for (index, px, py) in variadic_input_insert_positions(node) {
-                let dx = world_x - px;
-                let dy = world_y - py;
-                if dx * dx + dy * dy <= radius * radius {
-                    return Some((node.id.clone(), index));
-                }
+            let inputs = node.inputs();
+            let hw = node.width * 0.5;
+            let divider_inset = hw * 0.4;
+            let row = inputs.len();
+            let (x0, y0, hit_x1, y1) = {
+                let (x0, y0, _x1, y1) = channel_row_bounds(node, row);
+                (x0, y0, node.x - divider_inset, y1)
+            };
+            if point_in_rect(world_x, world_y, x0, y0, hit_x1, y1) {
+                return Some((node.id.clone(), inputs.len()));
             }
         }
         None
@@ -782,7 +848,7 @@ impl DagHost {
             let inputs = node.inputs();
             let outputs = node.outputs();
             for (port_idx, port) in inputs.iter().enumerate() {
-                let in_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, inputs.len().max(1), true);
+                let in_a = io_node_rect_port_angle_for_node(node, port_idx, true);
                 let hid = next_handle;
                 next_handle += 1;
                 let key = format!("{}:{}", node.id, port.id);
@@ -792,7 +858,7 @@ impl DagHost {
                 self.engine.set_handle_role(hid, HandleRole::Target);
             }
             for (port_idx, port) in outputs.iter().enumerate() {
-                let out_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, outputs.len().max(1), false);
+                let out_a = io_node_rect_port_angle_for_node(node, port_idx, false);
                 let hid = next_handle;
                 next_handle += 1;
                 let key = format!("{}:{}", node.id, port.id);
@@ -1065,17 +1131,16 @@ impl DagHost {
         use cavas::text::append_label;
         use cavas::vello::kurbo::Point;
         let hw = node.width * 0.5;
-        let hh = node.height * 0.5;
         let inputs = node.inputs();
         let outputs = node.outputs();
         for (i, port) in inputs.iter().enumerate() {
-            let t = (i as f64 + 0.5) / inputs.len().max(1) as f64;
-            let world = Point::new(node.x - hw + 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
+            let world_y = port_center_y(node, i, inputs.len());
+            let world = Point::new(node.x - hw + 8.0 / cam.zoom.max(0.05), world_y);
             append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
         }
         for (i, port) in outputs.iter().enumerate() {
-            let t = (i as f64 + 0.5) / outputs.len().max(1) as f64;
-            let world = Point::new(node.x + hw - 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
+            let world_y = port_center_y(node, i, outputs.len());
+            let world = Point::new(node.x + hw - 8.0 / cam.zoom.max(0.05), world_y);
             append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
         }
     }
@@ -1123,6 +1188,31 @@ impl DagHost {
             label_fill,
             label_halo,
         );
+    }
+
+    fn paint_channel_row_dividers(
+        scene: &mut cavas::vello::Scene,
+        aff: cavas::vello::kurbo::Affine,
+        node: &DagNodeSpec,
+        stroke: cavas::vello::peniko::Color,
+    ) {
+        use cavas::vello::kurbo::{Line, Point, Stroke};
+        if !matches!(node.kind, DagNodeKind::Computation { .. }) {
+            return;
+        }
+        let row_count = computation_io_row_count_for_node(node);
+        if row_count <= 1 {
+            return;
+        }
+        let hw = node.width * 0.5;
+        let hh = node.height * 0.5;
+        let y0 = node.y - hh;
+        let x_left = node.x - hw;
+        let x_right = node.x + hw;
+        for row in 1..row_count {
+            let y = y0 + row as f64 * DAG_CHANNEL_ROW_HEIGHT;
+            scene.stroke(&Stroke::new(1.0), aff, stroke, None, &Line::new(Point::new(x_left, y), Point::new(x_right, y)));
+        }
     }
 
     fn paint_section_dividers(
@@ -1202,6 +1292,7 @@ impl DagHost {
             }
             if lod.shows_sections() {
                 Self::paint_section_dividers(scene, aff, node, node_stroke);
+                Self::paint_channel_row_dividers(scene, aff, node, node_stroke);
             }
             match &node.kind {
                 DagNodeKind::Computation { variadic_inputs, .. } => {
@@ -1752,6 +1843,9 @@ mod tests {
 
     #[test]
     fn variadic_plus_hit_maps_insert_index() {
+        let row_height = DAG_CHANNEL_ROW_HEIGHT;
+        let row_count = computation_io_row_count(2, 1, true, false);
+        let height = row_count as f64 * row_height;
         let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
             schema: "dag.fixture/v1".into(),
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
@@ -1768,16 +1862,16 @@ mod tests {
                 0.0,
                 0.0,
                 160.0,
-                96.0,
+                height,
             )],
             edges: vec![],
         });
         let positions = variadic_input_insert_positions(&host.fixture.nodes[0]);
-        assert_eq!(positions.len(), 3);
-        let (_, px, py) = positions[1];
+        assert_eq!(positions.len(), 1);
+        let (_, px, py) = positions[0];
         let hit = host.port_insert_hit(px, py, 2.0).expect("hit");
         assert_eq!(hit.0, "merge");
-        assert_eq!(hit.1, 1);
+        assert_eq!(hit.1, 2);
         assert!(host.port_insert_hit(px, py, 1.0).is_none());
     }
 
@@ -1785,12 +1879,15 @@ mod tests {
     fn io_node_rect_port_angles_on_edges() {
         use cavas::vello::kurbo::Point;
         use graph::handle_position_on_rectangle;
-        let left = io_node_rect_port_angle(0.0, 0.0, 160.0, 72.0, 0, 2, true);
-        let right = io_node_rect_port_angle(0.0, 0.0, 160.0, 72.0, 0, 1, false);
-        let left_pos = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, left);
-        let right_pos = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, right);
+        let height = computation_node_height(2, 1, false, false);
+        let left = io_node_rect_port_angle(0.0, 0.0, 160.0, height, 0, 2, true);
+        let right = io_node_rect_port_angle(0.0, 0.0, 160.0, height, 0, 1, false);
+        let left_pos = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, height, left);
+        let right_pos = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, height, right);
         assert!(left_pos.x < -70.0);
         assert!(right_pos.x > 70.0);
+        assert!(left_pos.y < 0.0);
+        assert!(right_pos.y < 0.0);
     }
 
     #[test]

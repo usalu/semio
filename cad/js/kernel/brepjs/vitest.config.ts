@@ -12,6 +12,7 @@ export default defineConfig({
 	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: {
+			"@geometry/brep/js": resolve(root, "../../../../geometry/brep/js/index.ts"),
 			"@cad/js/core": coreEntry,
 			"@cad/js/runtime": resolve(root, "../../runtime/index.ts"),
 			"@cad/js/module/aec-building": resolve(root, "../../module/aec-building/index.ts"),

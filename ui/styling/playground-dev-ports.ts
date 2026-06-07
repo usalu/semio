@@ -12,6 +12,7 @@ export type PlaygroundHostKind =
 	| "wires"
 	| "flow"
 	| "dag"
+	| "procedural"
 	| "cad"
 	| "gis-map"
 	| "projektetage"
@@ -33,6 +34,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	wires: { dev: 6015, env: "WIRES_PLAY_PORT" },
 	flow: { dev: 6016, test: 6029, env: "FLOW_PLAY_PORT" },
 	dag: { dev: 6017, test: 6030, env: "DAG_PLAY_PORT" },
+	procedural: { dev: 6018, test: 6031, env: "PROCEDURAL_PLAY_PORT" },
 	cad: { dev: 6020, test: 6041, env: "CAD_JS_RENDERER_PLAY_PORT" },
 	"gis-map": { dev: 6040, env: "GIS_MAP_PLAY_PORT" },
 	projektetage: { dev: 6050, env: "PRAESENTATION_PROJEKTETAGE_PORT" },

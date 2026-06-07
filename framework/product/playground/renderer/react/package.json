@@ -14,6 +14,7 @@
     "./puzzle/5d": "./index.tsx",
     "./puzzle/map": "./index.tsx",
     "./flow": "./index.tsx",
+    "./procedural": "./index.tsx",
     "./presentation": "./index.tsx"
   },
   "dependencies": {
@@ -34,6 +35,8 @@
     "@gis/map/react": "workspace:*",
     "@flow/play": "workspace:*",
     "@flow/react": "workspace:*",
+    "@procedural/play": "workspace:*",
+    "@procedural/react": "workspace:*",
     "@ui/react": "workspace:*",
     "clsx": "^2.1.1",
     "react": "^19.2.3",

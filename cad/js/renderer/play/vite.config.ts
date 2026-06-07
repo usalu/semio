@@ -26,6 +26,7 @@ export default createPlaygroundPlayViteConfig({
 	extraAliases: [
 		{ find: "@cad/js/core", replacement: coreEntry },
 		{ find: "@cad/js/kernel/brepjs", replacement: kernelEntry },
+		{ find: "@geometry/brep/js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
 		{ find: "@cad/js/machine/stately", replacement: machineStatelyEntry },
 		{ find: "@cad/js/query", replacement: queryEntry },
 		{ find: "@cad/js/runtime", replacement: runtimeEntry },

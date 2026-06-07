@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@procedural/play",
+  "version": "0.1.0",
+  "description": "procedural · play",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "dev": "bun nx run @procedural/play:dev",
+    "build": "bun nx run @procedural/play:build",
+    "test": "bun nx run @procedural/play:test"
+  },
+  "dependencies": {
+    "@framework/playground/core": "workspace:*",
+    "@procedural/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@framework/playground/renderer/react": "workspace:*",
+    "@tailwindcss/vite": "^4.1.18",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "procedural/play"
+  },
+  "bundleKind": "application"
+}

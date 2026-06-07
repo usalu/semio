@@ -592,6 +592,7 @@ export interface FlowCanvasProps {
   readonly extensionRevision?: number;
   readonly extensionHost?: FlowExtensionHost;
   readonly onPreviewText?: (text: string) => void;
+  readonly onEvalOutputs?: (outputsJson: string) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
   readonly onWidgetDrop?: (detail: FlowWidgetDropDetail) => void;
@@ -606,6 +607,7 @@ export function FlowCanvas({
   extensionRevision = 0,
   extensionHost = flowExtensionHost,
   onPreviewText,
+  onEvalOutputs,
   onFixtureChange,
   onCatalogueReady,
   onWidgetDrop,
@@ -615,6 +617,7 @@ export function FlowCanvas({
   const sessionRef = useRef<FlowSession | null>(null);
   const rafRef = useRef<number | null>(null);
   const onPreviewTextRef = useRef(onPreviewText);
+  const onEvalOutputsRef = useRef(onEvalOutputs);
   const onFixtureChangeRef = useRef(onFixtureChange);
   const onCatalogueReadyRef = useRef(onCatalogueReady);
   const onWidgetDropRef = useRef(onWidgetDrop);
@@ -640,6 +643,10 @@ export function FlowCanvas({
   useEffect(() => {
     onPreviewTextRef.current = onPreviewText;
   }, [onPreviewText]);
+
+  useEffect(() => {
+    onEvalOutputsRef.current = onEvalOutputs;
+  }, [onEvalOutputs]);
 
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
@@ -681,9 +688,10 @@ export function FlowCanvas({
   const evaluate = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
-    session.evaluate();
+    const outputsJson = session.evaluate();
     const text = session.previewText();
     onPreviewTextRef.current?.(text);
+    onEvalOutputsRef.current?.(outputsJson);
     console.log(`[DEBUG] flow evaluate preview: ${text}`);
   }, []);
 

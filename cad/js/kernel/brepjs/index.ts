@@ -70,13 +70,6 @@ import {
 	applyModelDiff,
 	executeActionCapability,
 	isEmptyModelDiff,
-	emptyMeshTransfer,
-	type EdgeCurve,
-	type EdgeGroup,
-	type EdgeInfo,
-	type FaceGroup,
-	type FaceInfo,
-	type MeshTransfer,
 	type SpatialKernel,
 	type SpatialPreviewKernel,
 	Model,
@@ -84,8 +77,6 @@ import {
 	type ModelDiff,
 	type ModelJson,
 	type ActionResult,
-	kernelGeometry,
-	type Vec3,
 	assembleStepFile,
 	emitSpatialUdaProperty,
 	hashSolidRecord,
@@ -102,12 +93,23 @@ import {
 	defaultModelDefinitionId,
 	importProfileFor,
 	kernelTypologyIds,
-	solidRef,
 	typologyFromStepLayer,
 	type ModelSpaceJson,
 	type ObjectRef,
 	type TypologyRef,
 } from "@cad/js/core";
+import {
+	emptyMeshTransfer,
+	kernelGeometry,
+	type EdgeCurve,
+	type EdgeGroup,
+	type EdgeInfo,
+	type FaceGroup,
+	type FaceInfo,
+	type MeshTransfer,
+	type Vec3,
+	solidRef,
+} from "@geometry/brep/js";
 export { kernelGeometry };
 // #endregion 🔌Adapters
 

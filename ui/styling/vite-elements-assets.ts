@@ -256,7 +256,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "presentation" | "wires";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural" | "presentation" | "wires";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@framework/playground/renderer/react/puzzle/2d": "2d",
@@ -265,6 +265,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@framework/playground/renderer/react/puzzle/map": "map",
   "@framework/playground/renderer/react/flow": "flow",
   "@framework/playground/renderer/react/dag": "dag",
+  "@framework/playground/renderer/react/procedural": "procedural",
   "@framework/playground/renderer/react/presentation": "presentation",
   "@framework/playground/renderer/react/reasoning/wires": "wires",
 };
@@ -276,6 +277,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
   flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
   dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
+  procedural: { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
   presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
 };
@@ -756,6 +758,9 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@flow/module-list", replacement: resolve(repoRoot, "flow/modules/list/pkg/flow_module_list.js") },
     { find: "@dag/play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
     { find: "@dag/react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
+    { find: "@procedural/play", replacement: resolve(repoRoot, "procedural/play/index.ts") },
+    { find: "@procedural/react", replacement: resolve(repoRoot, "procedural/react/index.tsx") },
+    { find: "@geometry/brep/js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
   ];
 }
 

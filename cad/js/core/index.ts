@@ -1,5 +1,9 @@
 // #region 🧲Header
 /** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/assets/modelDefinition`. */
+import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@geometry/brep/js";
+import { emptyMeshTransfer, kernelGeometry, solidRef } from "@geometry/brep/js";
+export type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 };
+export { emptyMeshTransfer, kernelGeometry, solidRef };
 // #endregion 🧲Header
 
 // #region 📥ModelDefinitionRegistry
@@ -168,45 +172,7 @@ function resolveImportLayerTypology(table: Readonly<Record<string, TypologyRef>>
 // #endregion 📥ImportProfiles
 
 // #region 🧮Vec
-/** @emoji 📐 Column vector `[x,y,z]` used by spatial factories. */
-export type Vec3 = readonly [number, number, number];
 // #endregion 🧮Vec
-
-// #region 🌀EdgeGeometry
-/** @emoji 🌀 Edge curve geometry kinds (`line`, `arc`, `circle`, `ellipse`, `nurbs`). */
-export type EdgeCurve =
-  | { readonly kind: "line" }
-  | { readonly kind: "arc"; readonly center: Vec3 }
-  | { readonly kind: "circle"; readonly center: Vec3; readonly normal: Vec3; readonly radius: number }
-  | {
-      readonly kind: "ellipse";
-      readonly center: Vec3;
-      readonly normal: Vec3;
-      readonly majorAxis: Vec3;
-      readonly majorRadius: number;
-      readonly minorRadius: number;
-    }
-  | {
-      readonly kind: "nurbs";
-      readonly poles: readonly Vec3[];
-      readonly degree: number;
-      readonly through?: boolean;
-      readonly weights?: readonly number[];
-      readonly knots?: readonly number[];
-      readonly multiplicities?: readonly number[];
-      readonly periodic?: boolean;
-      readonly rational?: boolean;
-    };
-
-/** @emoji 🔵 Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
-export interface ArcPlaneFrame {
-  readonly center: Vec3;
-  readonly radius: number;
-  readonly normal: Vec3;
-  readonly u: Vec3;
-  readonly v: Vec3;
-}
-// #endregion 🌀EdgeGeometry
 
 // #region 🧱kernelGeometry
 
@@ -1158,106 +1124,7 @@ export function compileInteraction(spec: InteractionSpec): InteractionSpec {
 }
 // #endregion 📜Spec
 
-export namespace kernelGeometry {
-  export type AnchorRef = string & { readonly __brand: "AnchorRef" };
-  export type VertexRef = string & { readonly __brand: "VertexRef" };
-  export type EdgeRef = string & { readonly __brand: "EdgeRef" };
-  export type WireRef = string & { readonly __brand: "WireRef" };
-  export type FaceRef = string & { readonly __brand: "FaceRef" };
-  export type ShellRef = string & { readonly __brand: "ShellRef" };
-  export type SolidRef = string & { readonly __brand: "SolidRef" };
-  export type GeometryEntityKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
-  export type EditableEntityKind = GeometryEntityKind;
-  export function solidRef(id: string): SolidRef {
-    return id as SolidRef;
-  }
-
-  // #region 🧱ModelGeometry
-  /** @emoji 🧱 Kernel-private vertex payload (brepjs persistence; prefer `Object` at framework level). */
-  export interface VertexRecord {
-    readonly id: VertexRef;
-    readonly position: Vec3;
-  }
-
-  export type AnchorAttachment =
-    | { readonly kind: "vertex"; readonly id: VertexRef }
-    | { readonly kind: "edge"; readonly id: EdgeRef; readonly t: number }
-    | { readonly kind: "wire"; readonly id: WireRef; readonly t: number }
-    | { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
-    | { readonly kind: "solid"; readonly id: SolidRef; readonly u: number; readonly v: number; readonly w: number };
-
-  /** @emoji 🧱 Anchor payload: parametric point attached to kernel geometry. */
-  export interface AnchorRecord {
-    readonly id: AnchorRef;
-    readonly position: Vec3;
-    readonly attachment: AnchorAttachment;
-  }
-
-  /** @emoji 🧱 Edge payload: two boundary vertices; optional `curve`. */
-  export interface EdgeRecord {
-    readonly id: EdgeRef;
-    readonly vertexIds: readonly VertexRef[];
-    readonly curve?: EdgeCurve;
-  }
-
-  /** @emoji 🧱 Wire payload: ordered boundary edges. */
-  export interface WireRecord {
-    readonly id: WireRef;
-    readonly edgeIds: readonly EdgeRef[];
-  }
-
-  /** @emoji 🌊 Face-support geometry (`plane`, `cylinder`, `cone`, `sphere`, `torus`, `nurbs`). */
-  export type FaceSurface =
-    | { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
-    | { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
-    | { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
-    | { readonly kind: "cone"; readonly apex: Vec3; readonly axis: Vec3; readonly radius: number; readonly semiAngle: number }
-    | {
-        readonly kind: "nurbs";
-        readonly poles: readonly (readonly Vec3[])[];
-        readonly uDegree: number;
-        readonly vDegree: number;
-        readonly uKnots?: readonly number[];
-        readonly vKnots?: readonly number[];
-      };
-
-  /** @emoji 🧱 Face payload: trimming wires + optional underlying surface. */
-  export interface FaceRecord {
-    readonly id: FaceRef;
-    readonly wireIds: readonly WireRef[];
-    readonly surface?: FaceSurface;
-  }
-
-  /** @emoji 🧱 Shell payload: connected faces. */
-  export interface ShellRecord {
-    readonly id: ShellRef;
-    readonly faceIds: readonly FaceRef[];
-  }
-
-  /** @emoji 🧊 Analytic brepjs solid primitive (`box`, `sphere`, `cylinder`, `cone`). */
-  export type SolidPrimitive =
-    | { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
-    | { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
-    | { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
-    | { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
-
-  /** @emoji 🧱 Solid payload: closed shells and/or analytic primitive. */
-  export interface SolidRecord {
-    readonly id: SolidRef;
-    readonly shellIds: readonly ShellRef[];
-    readonly solid?: SolidPrimitive;
-  }
-
-  export interface KernelGeometryJson {
-    readonly anchors: readonly AnchorRecord[];
-    readonly vertices: readonly VertexRecord[];
-    readonly edges: readonly EdgeRecord[];
-    readonly wires: readonly WireRecord[];
-    readonly faces: readonly FaceRecord[];
-    readonly shells: readonly ShellRecord[];
-    readonly solids: readonly SolidRecord[];
-  }
-}
+// #region 🧱kernelGeometry
 
 type AnchorRef = kernelGeometry.AnchorRef;
 export type VertexRef = kernelGeometry.VertexRef;
@@ -1267,9 +1134,7 @@ export type FaceRef = kernelGeometry.FaceRef;
 export type ShellRef = kernelGeometry.ShellRef;
 export type SolidRef = kernelGeometry.SolidRef;
 type GeometryEntityKind = kernelGeometry.GeometryEntityKind;
-type EditableEntityKind = kernelGeometry.EditableEntityKind;
-
-export const solidRef = kernelGeometry.solidRef;
+type EditableEntityKind = GeometryEntityKind;
 
 /** @emoji 🧭 Framework + brepjs sub-element selection kinds. */
 export type ModelEntityKind = EditableEntityKind | "object" | "geometry" | "attribute";
@@ -4119,62 +3984,6 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   solidVolume(c: SolidRef): Promise<number>;
   adjacentSolids(solid: SolidRef, model: Model): Promise<readonly SolidRef[]>;
   sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]>;
-}
-
-/** @emoji 🧩 Triangle index range for one B-Rep face (Three.js `addGroup`). */
-export interface FaceGroup {
-  readonly start: number;
-  readonly count: number;
-  readonly entityId: FaceRef;
-}
-
-/** @emoji 🧩 Line index range for one B-Rep edge (Three.js edge pick). */
-export interface EdgeGroup {
-  readonly start: number;
-  readonly count: number;
-  readonly entityId: EdgeRef;
-}
-
-/** @emoji 🧩 Face metadata for kernel→renderer picking and tooltips. */
-export interface FaceInfo {
-  readonly entityId: FaceRef;
-  readonly surfaceType: string;
-  readonly area: number;
-  readonly normal: readonly [number, number, number];
-}
-
-/** @emoji 🧩 Edge metadata for kernel→renderer picking and tooltips. */
-export interface EdgeInfo {
-  readonly entityId: EdgeRef;
-  readonly curveType: string;
-  readonly length: number;
-}
-
-/** @emoji 🖼️ Zero-copy tessellation payload (grouped buffers + B-Rep edge polylines). */
-export interface MeshTransfer {
-  readonly position: Float32Array;
-  readonly normal: Float32Array;
-  readonly index: Uint32Array;
-  readonly edges: Float32Array;
-  readonly faceGroups: readonly FaceGroup[];
-  readonly edgeGroups: readonly EdgeGroup[];
-  readonly faceInfos: readonly FaceInfo[];
-  readonly edgeInfos: readonly EdgeInfo[];
-  readonly color?: string;
-}
-
-/** @emoji 🖼️ Empty mesh transfer for stubs and missing solids. */
-export function emptyMeshTransfer(): MeshTransfer {
-  return {
-    position: new Float32Array(0),
-    normal: new Float32Array(0),
-    index: new Uint32Array(0),
-    edges: new Float32Array(0),
-    faceGroups: [],
-    edgeGroups: [],
-    faceInfos: [],
-    edgeInfos: [],
-  };
 }
 
 /** @emoji 🧱 Appends a tessellated commit as one mesh `face` on `Model` (in-memory scene growth). */

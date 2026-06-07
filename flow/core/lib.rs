@@ -6,7 +6,7 @@ pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, HashMap};
 
-use dag::{would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec};
+use dag::{computation_node_height, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec};
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
@@ -204,8 +204,8 @@ fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo
         Widget::InputSlider { .. } => (176.0, 72.0),
         Widget::InputNote { .. } | Widget::OutputPreview { .. } => (176.0, 64.0),
         Widget::Neuron { neuronKind, input_ports, .. } => {
-            let (inputs, _, _, _) = neuron_io_layout(neuronKind, input_ports, kind_infos);
-            let height = 56.0 + (inputs.len().saturating_sub(1) as f64) * 20.0;
+            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
+            let height = computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs);
             (160.0, height)
         }
         _ => (160.0, 56.0),

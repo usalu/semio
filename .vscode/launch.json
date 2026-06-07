@@ -928,6 +928,36 @@
       }
     },
     {
+      "name": "🛠️dev🔧procedural",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:procedural",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCEDURAL_PLAY_PORT": "6018"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.8
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔧procedural🧪geometry-brep",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @geometry/brep/js:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.81
+      }
+    },
+    {
       "name": "🛠️dev🧩puzzle🩻2d",
       "type": "node-terminal",
       "request": "launch",

@@ -6236,6 +6236,84 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 }
 //#endregion 🔖DagPlayHost
 
+//#region 🔖ProceduralPlayHost
+import {
+  PROCEDURAL_PLAY_APP_ID,
+  PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON,
+  PROCEDURAL_PLAY_SURFACE_ID,
+  ProceduralPlayController,
+  registerProceduralPlayDeclarativeBodies,
+} from "@procedural/play";
+import { ProceduralEditor } from "@procedural/react";
+
+let proceduralPlayChromeRegistered = false;
+const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
+
+function useProceduralPlayController(): ProceduralPlayController | undefined {
+  const { runtime } = useApp();
+  const ctrl = runtime.getActiveApp()?.controller as ProceduralPlayController | undefined;
+  proceduralPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+  const ctrl = useProceduralPlayController();
+  const extensionRevision = ctrl?.getExtensionRevision() ?? 0;
+  const onPreviewText = reactHostPort.useCallback(
+    (text: string) => {
+      console.log(`[DEBUG] procedural play preview: ${text}`);
+      ctrl?.run("setPreviewText", { text });
+    },
+    [ctrl],
+  );
+  const onCatalogueReady = reactHostPort.useCallback(
+    (sections: readonly import("@flow/react").CatalogueSection[]) => {
+      ctrl?.run("setCatalogueSections", { sections: [...sections] });
+    },
+    [ctrl],
+  );
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  return (
+    <ProceduralEditor
+      fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      extensionRevision={extensionRevision}
+      onPreviewText={onPreviewText}
+      onFixtureChange={onFixtureChange}
+    />
+  );
+}
+
+export function registerProceduralPlaySurfaceHosts(): void {
+  if (proceduralPlayChromeRegistered) return;
+  proceduralPlayChromeRegistered = true;
+  registerUiFlowSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID, ProceduralPlayPaneSurfaceHost);
+  registerProceduralPlayDeclarativeBodies();
+}
+
+function ProceduralPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_PLAY_APP_ID} />;
+}
+
+export function mountProceduralPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<ProceduralPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const proceduralPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerProceduralPlaySurfaceHosts,
+  mount: mountProceduralPlayChrome,
+};
+
+export function bootProceduralPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, proceduralPlayChromeBoot, rootId);
+}
+//#endregion 🔖ProceduralPlayHost
+
 //#region 🔖PresentationPlayHost
 import {
 	PRESENTATION_PLAY_BODY_KEY_MAIN,
