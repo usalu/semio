@@ -811,16 +811,20 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	// #endregion 🔖Io
 
 	// #region 🔖Gears
-	makeExternalGearSync(teeth: number, module: number, pressureAngle = 20): GeometryRef {
+	makeExternalGearSync(teeth: number, module: number, pressureAngle = 20, thickness = 5): GeometryRef {
 		const t = Math.max(8, Math.round(teeth));
 		const m = Math.max(1, module);
-		return this.register("solid", makeExternalGear({ teeth: t, module: m, pressureAngle }));
+		const result = makeExternalGear({ teeth: t, moduleSize: m, thickness, pressureAngleDeg: pressureAngle });
+		if (!isOk(result)) throw new Error("brep: makeExternalGear failed");
+		return this.register("solid", result.value.solid);
 	}
 
-	makeInternalGearSync(teeth: number, module: number, pressureAngle = 20): GeometryRef {
+	makeInternalGearSync(teeth: number, module: number, pressureAngle = 20, thickness = 5): GeometryRef {
 		const t = Math.max(8, Math.round(teeth));
 		const m = Math.max(1, module);
-		return this.register("solid", makeInternalGear({ teeth: t, module: m, pressureAngle }));
+		const result = makeInternalGear({ teeth: t, moduleSize: m, thickness, pressureAngleDeg: pressureAngle });
+		if (!isOk(result)) throw new Error("brep: makeInternalGear failed");
+		return this.register("solid", result.value.solid);
 	}
 	// #endregion 🔖Gears
 

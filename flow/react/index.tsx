@@ -575,12 +575,211 @@ export function parseFlowCatalogueSections(json: string): CatalogueSection[] {
     return [];
   }
 }
+
+function flowCatalogueItemSearchText(item: CatalogueItem): string {
+  return [item.name, item.summary, item.neuronKind ?? "", item.kind, item.action ?? ""].join(" ").toLowerCase();
+}
+
+function flowCatalogueItemRankScore(item: CatalogueItem, query: string): number {
+  if (!query) return item.kind === "neuron" ? 0 : 1;
+  const q = query.toLowerCase();
+  const name = item.name.toLowerCase();
+  const kind = (item.neuronKind ?? item.kind).toLowerCase();
+  if (name === q || kind === q) return 0;
+  if (name.startsWith(q) || kind.startsWith(q)) return 1;
+  if (name.includes(q) || kind.includes(q)) return 2;
+  if (flowCatalogueItemSearchText(item).includes(q)) return 3;
+  return -1;
+}
+
+/** @emoji 🔍 Ranks catalogue items for flow canvas spotlight search. */
+export function flowRankCatalogueSuggestions(sections: readonly CatalogueSection[], query: string): CatalogueItem[] {
+  const items = sections.flatMap((section) => section.items);
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return [...items].sort((a, b) => {
+      const rankDelta = flowCatalogueItemRankScore(a, "") - flowCatalogueItemRankScore(b, "");
+      return rankDelta !== 0 ? rankDelta : a.name.localeCompare(b.name);
+    });
+  }
+  return items
+    .map((item) => ({ item, score: flowCatalogueItemRankScore(item, trimmed) }))
+    .filter((entry) => entry.score >= 0)
+    .sort((a, b) => (a.score !== b.score ? a.score - b.score : a.item.name.localeCompare(b.item.name)))
+    .map((entry) => entry.item);
+}
 // #endregion 🔖Catalogue
 
 export interface FlowReorganizeRequest {
   readonly epoch: number;
   readonly optionsJson: string;
 }
+
+// #region 🔖Spotlight
+interface FlowSpotlightAnchor {
+  readonly screen: { readonly x: number; readonly y: number };
+  readonly world: { readonly x: number; readonly y: number };
+}
+
+interface FlowSpotlightProps {
+  readonly anchor: FlowSpotlightAnchor;
+  readonly sections: readonly CatalogueSection[];
+  readonly session: FlowSession;
+  readonly onCommit: (detail: FlowWidgetDropDetail) => void;
+  readonly onClose: () => void;
+  readonly renderFrame: () => void;
+}
+
+function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFrame }: FlowSpotlightProps): React.JSX.Element {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const suggestions = flowRankCatalogueSuggestions(sections, query);
+  const visible = expanded ? suggestions : suggestions.slice(0, 1);
+  const hasMore = suggestions.length > 1;
+
+  const syncGhost = useCallback(
+    (item: CatalogueItem | undefined) => {
+      if (!item) {
+        session.clearGhostWidget();
+        renderFrame();
+        return;
+      }
+      try {
+        session.setGhostWidget(flowCatalogueItemDescriptor(item), anchor.world.x, anchor.world.y);
+        renderFrame();
+      } catch {
+        session.clearGhostWidget();
+      }
+    },
+    [anchor.world.x, anchor.world.y, renderFrame, session],
+  );
+
+  const commitItem = useCallback(
+    (item: CatalogueItem) => {
+      const descriptor = flowCatalogueItemDescriptor(item);
+      session.clearGhostWidget();
+      onCommit({ descriptor, screen: anchor.screen, world: anchor.world });
+      onClose();
+    },
+    [anchor.screen, anchor.world, onClose, onCommit, session],
+  );
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    syncGhost(suggestions[activeIndex]);
+  }, [activeIndex, suggestions, syncGhost]);
+
+  useEffect(() => {
+    return () => {
+      session.clearGhostWidget();
+    };
+  }, [session]);
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const root = rootRef.current;
+      if (!root || root.contains(event.target as Node)) return;
+      session.clearGhostWidget();
+      renderFrame();
+      onClose();
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, [onClose, renderFrame, session]);
+
+  const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      session.clearGhostWidget();
+      renderFrame();
+      onClose();
+      return;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (!suggestions.length) return;
+      setActiveIndex((index) => Math.min(index + 1, suggestions.length - 1));
+      if (!expanded && hasMore) setExpanded(true);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.max(index - 1, 0));
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const item = suggestions[activeIndex];
+      if (item) commitItem(item);
+    }
+  };
+
+  return (
+    <div
+      ref={rootRef}
+      className="absolute z-20 min-w-[14rem] max-w-[20rem] rounded-md border border-accent/50 bg-canvas shadow-lg ring-1 ring-accent/40"
+      style={{ left: anchor.screen.x, top: anchor.screen.y }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex items-center gap-1 border-b border-accent/30 px-2 py-1.5">
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          placeholder="Add function…"
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={onInputKeyDown}
+        />
+        {hasMore ? (
+          <button
+            type="button"
+            aria-label={expanded ? "Collapse suggestions" : "Show all suggestions"}
+            className="shrink-0 rounded px-1 text-muted hover:bg-accent/10 hover:text-accent"
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded ? "▴" : "▾"}
+          </button>
+        ) : null}
+      </div>
+      <ul className="max-h-56 overflow-y-auto py-1">
+        {visible.length === 0 ? (
+          <li className="px-3 py-2 text-sm text-muted">No matches</li>
+        ) : (
+          visible.map((item, index) => {
+            const globalIndex = expanded ? index : 0;
+            const active = globalIndex === activeIndex;
+            return (
+              <li key={`${item.kind}-${item.neuronKind ?? item.action ?? item.name}`}>
+                <button
+                  type="button"
+                  className={`flex w-full flex-col gap-0.5 px-3 py-1.5 text-left text-sm ${active ? "bg-accent/15 text-accent" : "hover:bg-accent/10"}`}
+                  onMouseEnter={() => setActiveIndex(globalIndex)}
+                  onClick={() => commitItem(item)}
+                >
+                  <span className="font-medium">{item.name}</span>
+                  <span className="text-xs text-muted">{item.summary}</span>
+                </button>
+              </li>
+            );
+          })
+        )}
+      </ul>
+    </div>
+  );
+}
+// #endregion 🔖Spotlight
 
 // #region 🔖FlowCanvas
 export interface FlowCanvasProps {
@@ -596,6 +795,25 @@ export interface FlowCanvasProps {
   readonly onFixtureChange?: (fixtureJson: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
   readonly onWidgetDrop?: (detail: FlowWidgetDropDetail) => void;
+  readonly onSelectionChange?: (ids: readonly string[]) => void;
+  readonly onHoverChange?: (id: string | null) => void;
+  readonly selectedNodeIds?: readonly string[];
+  readonly hoveredNodeId?: string | null;
+  readonly previewOffNodeIds?: readonly string[];
+}
+
+export function parseFlowWidgetIdArray(json: string): string[] {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function flowWidgetIdArraysEqual(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
 }
 
 export function FlowCanvas({
@@ -611,6 +829,11 @@ export function FlowCanvas({
   onFixtureChange,
   onCatalogueReady,
   onWidgetDrop,
+  onSelectionChange,
+  onHoverChange,
+  selectedNodeIds,
+  hoveredNodeId,
+  previewOffNodeIds,
 }: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -621,11 +844,15 @@ export function FlowCanvas({
   const onFixtureChangeRef = useRef(onFixtureChange);
   const onCatalogueReadyRef = useRef(onCatalogueReady);
   const onWidgetDropRef = useRef(onWidgetDrop);
+  const onSelectionChangeRef = useRef(onSelectionChange);
+  const onHoverChangeRef = useRef(onHoverChange);
   const storeRef = useRef(store ?? createLocalFlowStore());
   const pointerRef = useRef({ active: false, pan: false, id: -1 });
   const fixtureDragDepthRef = useRef(0);
   const lastVelloThemeJsonRef = useRef("");
+  const catalogueSectionsRef = useRef<CatalogueSection[]>([]);
   const [fixtureDragActive, setFixtureDragActive] = useState(false);
+  const [spotlight, setSpotlight] = useState<FlowSpotlightAnchor | null>(null);
 
   const syncVelloTheme = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -661,8 +888,24 @@ export function FlowCanvas({
   }, [onWidgetDrop]);
 
   useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange;
+  }, [onSelectionChange]);
+
+  useEffect(() => {
+    onHoverChangeRef.current = onHoverChange;
+  }, [onHoverChange]);
+
+  useEffect(() => {
     if (store) storeRef.current = store;
   }, [store]);
+
+  const emitInteractionState = useCallback((session: FlowSession) => {
+    const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
+    const hovered = session.hoveredWidgetId() ?? null;
+    onSelectionChangeRef.current?.(selected);
+    onHoverChangeRef.current?.(hovered);
+    console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] hover=${hovered ?? "—"}`);
+  }, []);
 
   const persistFixture = useCallback(() => {
     const session = sessionRef.current;
@@ -715,6 +958,7 @@ export function FlowCanvas({
       session.setCatalogueJson(extensionHost.catalogueJson());
       session.setNeuronKindInfosJson(extensionHost.kindInfosJson());
       const sections = parseFlowCatalogueSections(session.catalogueJson());
+      catalogueSectionsRef.current = sections;
       onCatalogueReadyRef.current?.(sections);
     },
     [extensionHost],
@@ -763,6 +1007,30 @@ export function FlowCanvas({
       renderFrame();
     });
   }, [evaluate, extensionHost, renderFrame, syncExtensionSurface]);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    if (selectedNodeIds !== undefined) {
+      const current = parseFlowWidgetIdArray(session.selectedWidgetIds());
+      if (!flowWidgetIdArraysEqual(current, selectedNodeIds)) {
+        session.setSelection(JSON.stringify([...selectedNodeIds]));
+      }
+    }
+    if (hoveredNodeId !== undefined) {
+      const current = session.hoveredWidgetId() ?? null;
+      if (current !== hoveredNodeId) {
+        session.setHover(hoveredNodeId);
+      }
+    }
+    if (previewOffNodeIds !== undefined) {
+      const current = parseFlowWidgetIdArray(session.previewOffWidgetIds());
+      if (!flowWidgetIdArraysEqual(current, previewOffNodeIds)) {
+        session.setPreviewOff(JSON.stringify([...previewOffNodeIds]));
+      }
+    }
+    renderFrame();
+  }, [hoveredNodeId, previewOffNodeIds, renderFrame, selectedNodeIds]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -848,9 +1116,10 @@ export function FlowCanvas({
       pointerRef.current = { active: true, pan: e.button === 1 || e.shiftKey, id: e.pointerId };
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
       session.pointerDownScreen(x, y, e.metaKey || e.ctrlKey, pointerRef.current.pan);
+      emitInteractionState(session);
       renderFrame();
     },
-    [clientToCanvas, renderFrame],
+    [clientToCanvas, emitInteractionState, renderFrame],
   );
 
   const onPointerMove = useCallback(
@@ -859,9 +1128,10 @@ export function FlowCanvas({
       if (!session || !pointerRef.current.active || pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
       session.pointerMoveScreen(x, y);
+      emitInteractionState(session);
       renderFrame();
     },
-    [clientToCanvas, renderFrame],
+    [clientToCanvas, emitInteractionState, renderFrame],
   );
 
   const onPointerUp = useCallback(
@@ -871,11 +1141,28 @@ export function FlowCanvas({
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
       session.pointerUpScreen(x, y);
       pointerRef.current = { active: false, pan: false, id: -1 };
+      emitInteractionState(session);
       evaluate();
       persistFixture();
       renderFrame();
     },
-    [clientToCanvas, evaluate, persistFixture, renderFrame],
+    [clientToCanvas, emitInteractionState, evaluate, persistFixture, renderFrame],
+  );
+
+  const closeSpotlight = useCallback(() => {
+    setSpotlight(null);
+  }, []);
+
+  const onCanvasDoubleClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      e.preventDefault();
+      const screen = clientToCanvas(e.clientX, e.clientY);
+      const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
+      setSpotlight({ screen, world });
+    },
+    [clientToCanvas],
   );
 
   const onWheel = useCallback(
@@ -1015,8 +1302,19 @@ export function FlowCanvas({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onDoubleClick={onCanvasDoubleClick}
         onWheel={onWheel}
       />
+      {spotlight && sessionRef.current ? (
+        <FlowSpotlight
+          anchor={spotlight}
+          sections={catalogueSectionsRef.current}
+          session={sessionRef.current}
+          onCommit={commitWidgetDrop}
+          onClose={closeSpotlight}
+          renderFrame={renderFrame}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1086,6 +1384,39 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("flow catalogue suggestions", () => {
+    const sections: CatalogueSection[] = [
+      {
+        id: "math",
+        title: "Math",
+        items: [
+          { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" },
+          { kind: "neuron", neuronKind: "math.multiply", name: "Multiply", summary: "Product" },
+        ],
+      },
+      {
+        id: "inputs",
+        title: "Inputs",
+        items: [{ kind: "inputSlider", name: "Slider", summary: "Number input" }],
+      },
+    ];
+
+    it("ranks prefix query to top match", () => {
+      const ranked = flowRankCatalogueSuggestions(sections, "mul");
+      expect(ranked[0]?.name).toBe("Multiply");
+    });
+
+    it("prefers neurons in empty query", () => {
+      const ranked = flowRankCatalogueSuggestions(sections, "");
+      expect(ranked[0]?.kind).toBe("neuron");
+    });
+
+    it("returns default ordering for empty query", () => {
+      const ranked = flowRankCatalogueSuggestions(sections, "");
+      expect(ranked.length).toBe(3);
+    });
+  });
+
   describe("flow catalogue descriptor", () => {
     it("builds neuron descriptor", () => {
       const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" };
@@ -1096,6 +1427,18 @@ if (import.meta.vitest) {
       const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" };
       const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
       expect(decodeFlowWidgetDescriptorFromDragV1(encoded)).toContain("math.add");
+    });
+  });
+
+  describe("flow interaction helpers", () => {
+    it("parses widget id arrays from session json", () => {
+      expect(parseFlowWidgetIdArray('["a","b"]')).toEqual(["a", "b"]);
+      expect(parseFlowWidgetIdArray("invalid")).toEqual([]);
+    });
+
+    it("compares widget id arrays in order", () => {
+      expect(flowWidgetIdArraysEqual(["a"], ["a"])).toBe(true);
+      expect(flowWidgetIdArraysEqual(["a"], ["b"])).toBe(false);
     });
   });
 }

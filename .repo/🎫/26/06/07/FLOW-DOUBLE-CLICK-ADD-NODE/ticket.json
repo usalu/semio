@@ -1,0 +1,16 @@
+{
+  "title": "Flow Double-Click Add Node",
+  "emoji": "🔍",
+  "status": "closed",
+  "description": "Double-click flow canvas to search functions, preview ghost node with highlight, Enter to add top suggestion, chevron for full list with hover preview.",
+  "summary": "Implemented flow canvas spotlight: double-click opens search overlay with ranked catalogue suggestions, chevron expands full list, hover/arrow keys preview candidates as accent-highlighted ghost nodes on the WASM canvas, Enter or click commits via addWidget. Rust: DagHost::paint_ghost_node, FlowHost ghost_node state with set/clear_ghost_widget and widget_from_descriptor refactor, FlowSession WASM bindings. React: flowRankCatalogueSuggestions, FlowSpotlight in FlowCanvas. Tests: flow core 15 pass, flow react 18 pass. WASM rebuilt.",
+  "goal": "🎯geometry🎯brep",
+  "files": [
+    "mathematical/graph/port/directed/dag/lib.rs",
+    "flow/core/lib.rs",
+    "flow/core/pkg/flow_core.d.ts",
+    "flow/core/pkg/flow_core.js",
+    "flow/core/pkg/flow_core_bg.wasm",
+    "flow/react/index.tsx"
+  ]
+}

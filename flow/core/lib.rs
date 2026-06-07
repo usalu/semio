@@ -22,6 +22,8 @@ pub enum Widget {
         params: Dictionary,
         #[serde(default)]
         input_ports: Vec<String>,
+        #[serde(default = "default_neuron_preview")]
+        preview: bool,
     },
     InputSlider { id: String, #[serde(default = "default_slider_value")] value: f64 },
     InputNote { id: String, #[serde(default)] text: String },
@@ -31,6 +33,10 @@ pub enum Widget {
 
 fn default_slider_value() -> f64 {
     3.0
+}
+
+fn default_neuron_preview() -> bool {
+    true
 }
 
 /// 📍 Persisted widget position on the canvas.
@@ -91,6 +97,7 @@ impl Default for FlowFixtureV1 {
                     neuronKind: "math.add".into(),
                     params: Dictionary::new(),
                     input_ports: vec![],
+                    preview: true,
                 },
                 Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
             ],
@@ -316,6 +323,22 @@ enum WidgetDescriptor {
     OutputPreview,
     OutputAction { #[serde(default)] action: String },
 }
+
+fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HashMap<String, NeuronKindInfo>) -> Widget {
+    match descriptor {
+        WidgetDescriptor::Neuron { neuronKind } => Widget::Neuron {
+            id,
+            neuronKind: neuronKind.clone(),
+            params: Dictionary::new(),
+            input_ports: default_neuron_input_ports(neuronKind, &[], kind_infos),
+            preview: true,
+        },
+        WidgetDescriptor::InputSlider => Widget::InputSlider { id, value: 3.0 },
+        WidgetDescriptor::InputNote => Widget::InputNote { id, text: String::new() },
+        WidgetDescriptor::OutputPreview => Widget::OutputPreview { id, preview: Dictionary::new() },
+        WidgetDescriptor::OutputAction { action } => Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } },
+    }
+}
 // #endregion 🔖Widget
 
 // #region 🔖Catalogue
@@ -442,6 +465,7 @@ pub struct FlowHost {
     viewport_h: u32,
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
+    ghost_node: Option<dag::DagNodeSpec>,
 }
 
 impl Default for FlowHost {
@@ -466,6 +490,7 @@ impl FlowHost {
             viewport_h: 1,
             viewport_dpr: 1.0,
             pan_anchor: None,
+            ghost_node: None,
         };
         host.rebuild_dag();
         host.evaluate_internal();
@@ -544,21 +569,24 @@ impl FlowHost {
         self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
     }
 
+    pub fn set_ghost_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), String> {
+        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
+        let id: String = "__ghost__".into();
+        let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
+        let mut layout = BTreeMap::new();
+        layout.insert(id, WidgetLayout { x: world_x, y: world_y });
+        self.ghost_node = Some(widget_to_dag_node(&widget, 0, &layout, &self.kind_infos));
+        Ok(())
+    }
+
+    pub fn clear_ghost_widget(&mut self) {
+        self.ghost_node = None;
+    }
+
     pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, String> {
         let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
         let id = self.next_widget_id(&descriptor);
-        let widget = match descriptor {
-            WidgetDescriptor::Neuron { neuronKind } => Widget::Neuron {
-                id: id.clone(),
-                neuronKind: neuronKind.clone(),
-                params: Dictionary::new(),
-                input_ports: default_neuron_input_ports(&neuronKind, &[], &self.kind_infos),
-            },
-            WidgetDescriptor::InputSlider => Widget::InputSlider { id: id.clone(), value: 3.0 },
-            WidgetDescriptor::InputNote => Widget::InputNote { id: id.clone(), text: String::new() },
-            WidgetDescriptor::OutputPreview => Widget::OutputPreview { id: id.clone(), preview: Dictionary::new() },
-            WidgetDescriptor::OutputAction { action } => Widget::OutputAction { id: id.clone(), action: if action.is_empty() { "log".into() } else { action } },
-        };
+        let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         self.fixture.widgets.push(widget);
         self.fixture.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
         self.rebuild_dag();
@@ -885,7 +913,70 @@ impl FlowHost {
         let fixture = self.build_dag_fixture_v1();
         self.dag = DagHost::from_fixture_without_layout(fixture);
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.sync_preview_dimmed();
         self.sync_from_dag();
+    }
+
+    fn sync_preview_dimmed(&mut self) {
+        let off = self.preview_off_widget_ids();
+        self.dag.set_dimmed(&off);
+    }
+
+    /// 🎯 Selected widget ids as JSON array.
+    pub fn selected_widget_ids_json(&self) -> String {
+        serde_json::to_string(&self.dag.selected_node_ids()).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// 🖱️ Hovered widget id when the pointer is over a node or port handle.
+    pub fn hovered_widget_id(&self) -> Option<String> {
+        self.dag.hovered_node_id()
+    }
+
+    /// ✅ Replaces selection from a JSON array of widget ids.
+    pub fn set_selection_json(&mut self, json: &str) {
+        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
+        self.dag.set_selection(&ids);
+    }
+
+    /// 🖱️ Sets hover to a widget id, or clears hover.
+    pub fn set_hover(&mut self, widget_id: Option<&str>) {
+        self.dag.set_hover(widget_id);
+    }
+
+    /// 🌫️ Widget ids with preview disabled.
+    pub fn preview_off_widget_ids(&self) -> Vec<String> {
+        self.fixture
+            .widgets
+            .iter()
+            .filter_map(|widget| match widget {
+                Widget::Neuron { id, preview: false, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// 🌫️ Sets preview-off neurons from a JSON array of widget ids.
+    pub fn set_preview_off_json(&mut self, json: &str) {
+        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
+        for widget in &mut self.fixture.widgets {
+            if let Widget::Neuron { id, preview, .. } = widget {
+                *preview = !ids.contains(id);
+            }
+        }
+        self.sync_preview_dimmed();
+    }
+
+    /// 👁️ Toggles preview on a neuron widget.
+    pub fn toggle_preview(&mut self, widget_id: &str) -> Result<(), String> {
+        let Some(widget) = self.fixture.widgets.iter_mut().find(|w| widget_id_for(w) == widget_id) else {
+            return Err(format!("unknown widget: {widget_id}"));
+        };
+        let Widget::Neuron { preview, .. } = widget else {
+            return Err(format!("widget is not a neuron: {widget_id}"));
+        };
+        *preview = !*preview;
+        self.sync_preview_dimmed();
+        Ok(())
     }
 
     fn sync_from_dag(&mut self) {
@@ -1016,6 +1107,9 @@ impl FlowHost {
 
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
+        if let Some(ref ghost) = self.ghost_node {
+            self.dag.paint_ghost_node(scene, ghost, width, height, dpr);
+        }
     }
 }
 
@@ -1160,6 +1254,45 @@ impl FlowSession {
         self.state.borrow().host.preview_text()
     }
 
+    #[wasm_bindgen(js_name = selectedWidgetIds)]
+    pub fn selected_widget_ids(&self) -> String {
+        self.state.borrow().host.selected_widget_ids_json()
+    }
+
+    #[wasm_bindgen(js_name = hoveredWidgetId)]
+    pub fn hovered_widget_id(&self) -> Option<String> {
+        self.state.borrow().host.hovered_widget_id()
+    }
+
+    #[wasm_bindgen(js_name = previewOffWidgetIds)]
+    pub fn preview_off_widget_ids(&self) -> String {
+        serde_json::to_string(&self.state.borrow().host.preview_off_widget_ids()).unwrap_or_else(|_| "[]".into())
+    }
+
+    #[wasm_bindgen(js_name = setSelection)]
+    pub fn set_selection(&self, json: &str) {
+        self.state.borrow_mut().host.set_selection_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setHover)]
+    pub fn set_hover(&self, widget_id: Option<String>) {
+        self.state.borrow_mut().host.set_hover(widget_id.as_deref());
+    }
+
+    #[wasm_bindgen(js_name = setPreviewOff)]
+    pub fn set_preview_off(&self, json: &str) {
+        self.state.borrow_mut().host.set_preview_off_json(json);
+    }
+
+    #[wasm_bindgen(js_name = togglePreview)]
+    pub fn toggle_preview(&self, widget_id: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .toggle_preview(widget_id)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
     #[wasm_bindgen(js_name = setSliderValue)]
     pub fn set_slider_value(&self, widget_id: &str, value: f64) {
         self.state.borrow_mut().host.set_slider_value(widget_id, value);
@@ -1173,6 +1306,20 @@ impl FlowSession {
     #[wasm_bindgen(js_name = addWidget)]
     pub fn add_widget(&self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, JsValue> {
         self.state.borrow_mut().host.add_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = setGhostWidget)]
+    pub fn set_ghost_widget(&self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .set_ghost_widget(descriptor_json, world_x, world_y)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = clearGhostWidget)]
+    pub fn clear_ghost_widget(&self) {
+        self.state.borrow_mut().host.clear_ghost_widget();
     }
 
     #[wasm_bindgen(js_name = removeWidget)]
@@ -1566,6 +1713,7 @@ mod tests {
                     neuronKind: "dictionary.merge".into(),
                     params: Dictionary::new(),
                     input_ports: vec!["0".into(), "1".into()],
+                    preview: true,
                 },
                 Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
             ],
@@ -1626,6 +1774,41 @@ mod tests {
             merged.get("number").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
             Some(2.0)
         );
+    }
+
+    #[test]
+    fn ghost_widget_preview_and_clear() {
+        let mut host = host_with_test_bridge();
+        host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 42.0, 24.0).unwrap();
+        let ghost = host.ghost_node.as_ref().expect("ghost");
+        assert!((ghost.x - 42.0).abs() < 1e-6);
+        assert!((ghost.y - 24.0).abs() < 1e-6);
+        assert!(ghost.name.contains("math.add"));
+        host.clear_ghost_widget();
+        assert!(host.ghost_node.is_none());
+    }
+
+    #[test]
+    fn ghost_widget_paint_scene_smoke() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(800, 600, 1.0);
+        host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 10.0, 20.0).unwrap();
+        let mut scene = cavas::vello::Scene::new();
+        host.paint_scene(&mut scene, 800, 600, 1.0);
+    }
+
+    #[test]
+    fn selection_and_preview_state_round_trip() {
+        let mut host = FlowHost::default();
+        host.set_selection_json(r#"["slider","add"]"#);
+        let selected: Vec<String> = serde_json::from_str(&host.selected_widget_ids_json()).unwrap();
+        assert_eq!(selected, vec!["slider", "add"]);
+        host.set_hover(Some("add"));
+        assert_eq!(host.hovered_widget_id().as_deref(), Some("add"));
+        host.set_preview_off_json(r#"["add"]"#);
+        assert_eq!(host.preview_off_widget_ids(), vec!["add"]);
+        host.toggle_preview("add").unwrap();
+        assert!(host.preview_off_widget_ids().is_empty());
     }
 
     #[test]

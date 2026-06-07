@@ -40,15 +40,6 @@ pub fn computation_node_height(input_count: usize, output_count: usize, variadic
     computation_io_row_count(input_count, output_count, variadic_inputs, variadic_outputs) as f64 * DAG_CHANNEL_ROW_HEIGHT
 }
 
-fn computation_io_row_count_for_node(node: &DagNodeSpec) -> usize {
-    match &node.kind {
-        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => {
-            computation_io_row_count(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs)
-        }
-        _ => 1,
-    }
-}
-
 fn channel_row_center_y(node_y: f64, node_height: f64, row_index: usize) -> f64 {
     let hh = node_height * 0.5;
     node_y - hh + (row_index as f64 + 0.5) * DAG_CHANNEL_ROW_HEIGHT
@@ -312,16 +303,23 @@ pub fn io_node_handle_angles(input_index: usize, input_count: usize, output_inde
 
 const DAG_VARIADIC_PLUS_ZOOM_THRESHOLD: f64 = 1.5;
 
+fn computation_column_center_x(node: &DagNodeSpec, left: bool) -> f64 {
+    let hw = node.width * 0.5;
+    if left {
+        node.x - hw * 0.75
+    } else {
+        node.x + hw * 0.75
+    }
+}
+
 fn variadic_input_insert_positions(node: &DagNodeSpec) -> Vec<(usize, f64, f64)> {
     let inputs = node.inputs();
     if !node.variadic_inputs() {
         return vec![];
     }
-    let hw = node.width * 0.5;
-    let divider_inset = hw * 0.4;
     let row = inputs.len();
     let port_y = computation_port_center_y(node, row);
-    let port_x = node.x - hw + (hw - divider_inset) * 0.5;
+    let port_x = computation_column_center_x(node, true);
     vec![(inputs.len(), port_x, port_y)]
 }
 
@@ -676,12 +674,12 @@ impl DagDrawLod {
         matches!(self, Self::Overview | Self::Compact)
     }
 
-    pub fn shows_sections(self) -> bool {
-        matches!(self, Self::Normal | Self::Detail | Self::Micro)
-    }
-
     pub fn shows_name(self) -> bool {
         matches!(self, Self::Detail | Self::Micro)
+    }
+
+    pub fn shows_computation_layout(self) -> bool {
+        matches!(self, Self::Normal | Self::Detail | Self::Micro)
     }
 
     pub fn shows_port_labels(self) -> bool {
@@ -732,6 +730,7 @@ pub struct DagHost {
     widget_drag: Option<usize>,
     pending_port_insert: Option<(String, usize)>,
     last_logged_lod: Cell<i8>,
+    dimmed: HashSet<NodeId>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -809,9 +808,89 @@ impl DagHost {
             widget_drag: None,
             pending_port_insert: None,
             last_logged_lod: Cell::new(-1),
+            dimmed: HashSet::new(),
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
+    }
+
+    fn engine_node_id_for_index(&self, idx: usize) -> Option<NodeId> {
+        self.node_id_map.iter().find(|(_, &i)| i == idx).map(|(&nid, _)| nid)
+    }
+
+    fn node_id_for_widget_id(&self, widget_id: &str) -> Option<NodeId> {
+        let idx = self.fixture.nodes.iter().position(|n| n.id == widget_id)?;
+        self.engine_node_id_for_index(idx)
+    }
+
+    fn widget_id_for_node_id(&self, node_id: NodeId) -> Option<String> {
+        let idx = *self.node_id_map.get(&node_id)?;
+        self.fixture.nodes.get(idx).map(|n| n.id.clone())
+    }
+
+    fn is_node_hovered(&self, node_id: NodeId) -> bool {
+        match self.engine.hover {
+            Some(hover) if hover == node_id => true,
+            Some(hover) => self.engine.handles.get(&hover).is_some_and(|handle| handle.node_id == node_id),
+            None => false,
+        }
+    }
+
+    fn is_node_selected(&self, node_id: NodeId) -> bool {
+        self.engine.selection.node_ids.contains(&node_id)
+    }
+
+    /// 🎯 Selected fixture node ids from the engine selection snapshot.
+    pub fn selected_node_ids(&self) -> Vec<String> {
+        self.engine
+            .selection
+            .node_ids
+            .iter()
+            .filter_map(|&nid| self.widget_id_for_node_id(nid))
+            .collect()
+    }
+
+    /// 🖱️ Hovered fixture node id when the pointer is over a node or its port handle.
+    pub fn hovered_node_id(&self) -> Option<String> {
+        let hover = self.engine.hover?;
+        if self.node_id_map.contains_key(&hover) {
+            return self.widget_id_for_node_id(hover);
+        }
+        let node_id = self.engine.handles.get(&hover).map(|handle| handle.node_id)?;
+        self.widget_id_for_node_id(node_id)
+    }
+
+    /// ✅ Replaces node selection from fixture widget ids.
+    pub fn set_selection(&mut self, widget_ids: &[String]) {
+        self.engine.selection = Selection::default();
+        for widget_id in widget_ids {
+            if let Some(nid) = self.node_id_for_widget_id(widget_id) {
+                self.engine.selection.node_ids.insert(nid);
+            }
+        }
+    }
+
+    /// 🖱️ Sets hover to a fixture widget id, or clears hover.
+    pub fn set_hover(&mut self, widget_id: Option<&str>) {
+        let next = widget_id.and_then(|id| self.node_id_for_widget_id(id));
+        if self.engine.hover != next {
+            self.engine.hover = next;
+        }
+    }
+
+    /// 🌫️ Marks preview-off nodes as dimmed on the canvas.
+    pub fn set_dimmed(&mut self, widget_ids: &[String]) {
+        self.dimmed.clear();
+        for widget_id in widget_ids {
+            if let Some(nid) = self.node_id_for_widget_id(widget_id) {
+                self.dimmed.insert(nid);
+            }
+        }
+    }
+
+    /// 📋 Preview-off fixture node ids currently dimmed on the canvas.
+    pub fn dimmed_node_ids(&self) -> Vec<String> {
+        self.dimmed.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect()
     }
 
     /// ➕ Returns and clears a pending variadic input insert request from the last pointer down.
@@ -830,11 +909,10 @@ impl DagHost {
             }
             let inputs = node.inputs();
             let hw = node.width * 0.5;
-            let divider_inset = hw * 0.4;
             let row = inputs.len();
             let (x0, y0, hit_x1, y1) = {
                 let (x0, y0, _x1, y1) = channel_row_bounds(node, row);
-                (x0, y0, node.x - divider_inset, y1)
+                (x0, y0, node.x - hw * 0.5, y1)
             };
             if point_in_rect(world_x, world_y, x0, y0, hit_x1, y1) {
                 return Some((node.id.clone(), inputs.len()));
@@ -1002,7 +1080,16 @@ impl DagHost {
                     wired = true;
                     dag_debug_log(&format!("[DEBUG] dag edge removed id={id}"));
                 }
-                _ => {}
+                BoardEvent::SelectionChanged { node_ids, .. } => {
+                    let ids: Vec<String> = node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
+                    dag_debug_log(&format!("[DEBUG] dag selection changed: {}", ids.join(", ")));
+                }
+                BoardEvent::HoverChanged { id } => {
+                    let label = id.and_then(|nid| self.widget_id_for_node_id(nid).or_else(|| {
+                        self.engine.handles.get(&nid).and_then(|handle| self.widget_id_for_node_id(handle.node_id))
+                    }));
+                    dag_debug_log(&format!("[DEBUG] dag hover changed: {}", label.as_deref().unwrap_or("—")));
+                }
             }
         }
         if moved {
@@ -1186,16 +1273,25 @@ impl DagHost {
         let handle_inset = 18.0 / cam.zoom.max(0.05);
         let inputs = node.inputs();
         let outputs = node.outputs();
+        let computation = matches!(node.kind, DagNodeKind::Computation { .. });
         for (i, port) in inputs.iter().enumerate() {
             let world_y = port_center_y(node, i, inputs.len());
-            let world = Point::new(node.x - hw + handle_inset, world_y);
-            append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
+            let world_x = if computation {
+                computation_column_center_x(node, true)
+            } else {
+                node.x - hw + handle_inset
+            };
+            append_label(scene, &port.label, world_to_screen(cam, viewport, Point::new(world_x, world_y)), px, label_fill, label_halo);
         }
         for (i, port) in outputs.iter().enumerate() {
             let world_y = port_center_y(node, i, outputs.len());
             let (label_w, _) = label_extent(&port.label, px);
-            let world = Point::new(node.x + hw - handle_inset - label_w, world_y);
-            append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
+            let world_x = if computation {
+                computation_column_center_x(node, false) - label_w
+            } else {
+                node.x + hw - handle_inset - label_w
+            };
+            append_label(scene, &port.label, world_to_screen(cam, viewport, Point::new(world_x, world_y)), px, label_fill, label_halo);
         }
     }
 
@@ -1263,58 +1359,32 @@ impl DagHost {
         );
     }
 
-    fn paint_channel_row_dividers(
-        scene: &mut cavas::vello::Scene,
-        aff: cavas::vello::kurbo::Affine,
-        node: &DagNodeSpec,
-        stroke: cavas::vello::peniko::Color,
-    ) {
-        use cavas::vello::kurbo::{Line, Point, Stroke};
-        if !matches!(node.kind, DagNodeKind::Computation { .. }) {
-            return;
-        }
-        let row_count = computation_io_row_count_for_node(node);
-        if row_count <= 1 {
-            return;
-        }
-        let hw = node.width * 0.5;
-        let hh = node.height * 0.5;
-        let y0 = node.y - hh;
-        let x_left = node.x - hw;
-        let x_right = node.x + hw;
-        for row in 1..row_count {
-            let y = y0 + row as f64 * DAG_CHANNEL_ROW_HEIGHT;
-            scene.stroke(&Stroke::new(1.0), aff, stroke, None, &Line::new(Point::new(x_left, y), Point::new(x_right, y)));
-        }
-    }
+    /// 👻 Paints a translucent highlighted ghost node preview (ignores LOD).
+    pub fn paint_ghost_node(&self, scene: &mut cavas::vello::Scene, node: &DagNodeSpec, viewport_w: u32, viewport_h: u32, dpr: f64) {
+        use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
+        use cavas::vello::kurbo::{Point, Rect, Stroke};
+        use cavas::vello::peniko::Fill;
 
-    fn paint_section_dividers(
-        scene: &mut cavas::vello::Scene,
-        aff: cavas::vello::kurbo::Affine,
-        node: &DagNodeSpec,
-        stroke: cavas::vello::peniko::Color,
-    ) {
-        use cavas::vello::kurbo::{Line, Point, Stroke};
-        if !matches!(node.kind, DagNodeKind::Computation { .. }) {
-            return;
-        }
-        let inputs = node.inputs();
-        let outputs = node.outputs();
-        if inputs.is_empty() && outputs.is_empty() {
-            return;
-        }
+        let theme = &self.vello_theme;
+        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
+        let aff = camera_content_affine(&cam, &viewport);
+        let accent = theme.wire_stroke_highlighted;
+        let ghost_fill = vello_color_with_alpha(accent, 48);
+        let label_fill = theme.node_stroke;
+        let label_halo = vello_color_with_alpha(theme.raster_clear, 200);
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
-        let y0 = node.y - hh;
-        let y1 = node.y + hh;
-        let divider_inset = hw * 0.4;
-        if !inputs.is_empty() {
-            let x = node.x - divider_inset;
-            scene.stroke(&Stroke::new(1.0), aff, stroke, None, &Line::new(Point::new(x, y0), Point::new(x, y1)));
-        }
-        if !outputs.is_empty() {
-            let x = node.x + divider_inset;
-            scene.stroke(&Stroke::new(1.0), aff, stroke, None, &Line::new(Point::new(x, y0), Point::new(x, y1)));
+        let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
+        scene.fill(Fill::NonZero, aff, ghost_fill, None, &rect);
+        scene.stroke(&Stroke::new(2.0), aff, accent, None, &rect);
+        let px = (10.0 * cam.zoom).clamp(8.0, 18.0);
+        let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+        if matches!(node.kind, DagNodeKind::Computation { .. }) {
+            Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+            Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+        } else {
+            Self::paint_node_name(scene, center_screen, node, px, label_fill, label_halo);
         }
     }
 
@@ -1348,15 +1418,32 @@ impl DagHost {
         let label_fill = theme.node_stroke;
         let label_halo = vello_color_with_alpha(theme.raster_clear, 200);
         let accent = theme.wire_stroke_highlighted;
-        for node in &self.fixture.nodes {
+        for (idx, node) in self.fixture.nodes.iter().enumerate() {
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
-            scene.fill(Fill::NonZero, aff, node_fill, None, &rect);
+            let engine_nid = self.engine_node_id_for_index(idx);
+            let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
+            let is_selected = engine_nid.is_some_and(|nid| self.is_node_selected(nid));
+            let is_hovered = engine_nid.is_some_and(|nid| self.is_node_hovered(nid));
+            let (fill, stroke, stroke_width) = if is_dimmed {
+                (
+                    vello_color_with_alpha(theme.node_fill_disabled, 120),
+                    vello_color_with_alpha(node_stroke, 110),
+                    1.0,
+                )
+            } else if is_selected {
+                (theme.node_fill_selected, theme.node_stroke_selected, 2.5)
+            } else if is_hovered {
+                (theme.node_fill_hovered, node_stroke, 2.0)
+            } else {
+                (node_fill, node_stroke, 1.5)
+            };
+            scene.fill(Fill::NonZero, aff, fill, None, &rect);
             if lod == DagDrawLod::Minimap {
                 continue;
             }
-            scene.stroke(&Stroke::new(1.5), aff, node_stroke, None, &rect);
+            scene.stroke(&Stroke::new(stroke_width), aff, stroke, None, &rect);
             let px = match lod {
                 DagDrawLod::Compact => (11.0 * cam.zoom).clamp(9.0, 18.0),
                 _ => (10.0 * cam.zoom).clamp(8.0, 18.0),
@@ -1366,10 +1453,6 @@ impl DagHost {
                 Self::paint_node_name_horizontal(scene, center_screen, &node.name, px, label_fill, label_halo);
                 continue;
             }
-            if lod.shows_sections() {
-                Self::paint_section_dividers(scene, aff, node, node_stroke);
-                Self::paint_channel_row_dividers(scene, aff, node, node_stroke);
-            }
             let paint_name = |scene: &mut cavas::vello::Scene| {
                 if lod.shows_name() {
                     Self::paint_node_name(scene, center_screen, node, px, label_fill, label_halo);
@@ -1377,13 +1460,13 @@ impl DagHost {
             };
             match &node.kind {
                 DagNodeKind::Computation { variadic_inputs, .. } => {
-                    if lod.shows_port_labels() {
+                    if lod.shows_computation_layout() {
                         Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                        Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
                         if *variadic_inputs && cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
                             Self::paint_variadic_plus_controls(scene, &cam, &viewport, node, px, accent, label_halo);
                         }
                     }
-                    paint_name(scene);
                 }
                 DagNodeKind::Slider { min, max, value, .. } => {
                     paint_name(scene);
@@ -1658,6 +1741,48 @@ mod tests {
         let (in_a, out_a) = io_node_handle_angles(0, 2, 0, 1);
         assert!(in_a > std::f64::consts::FRAC_PI_2);
         assert!(out_a.abs() < std::f64::consts::FRAC_PI_2);
+    }
+
+    #[test]
+    fn dag_selection_hover_and_dimmed_map_widget_ids() {
+        let fixture = DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                DagNodeSpec::computation(
+                    "a".into(),
+                    "A".into(),
+                    vec![],
+                    vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+                    false,
+                    false,
+                    0.0,
+                    0.0,
+                    160.0,
+                    24.0,
+                ),
+                DagNodeSpec::computation(
+                    "b".into(),
+                    "B".into(),
+                    vec![IoPortSpec { id: "in".into(), label: "in".into() }],
+                    vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+                    false,
+                    false,
+                    200.0,
+                    0.0,
+                    160.0,
+                    24.0,
+                ),
+            ],
+            edges: vec![],
+        };
+        let mut host = DagHost::from_fixture(fixture);
+        host.set_selection(&["a".to_string()]);
+        assert_eq!(host.selected_node_ids(), vec!["a"]);
+        host.set_hover(Some("b"));
+        assert_eq!(host.hovered_node_id().as_deref(), Some("b"));
+        host.set_dimmed(&["a".to_string()]);
+        assert_eq!(host.dimmed_node_ids(), vec!["a"]);
     }
 
     #[test]
@@ -2033,6 +2158,8 @@ mod tests {
     fn dag_draw_lod_progressive_disclosure_gates() {
         assert!(!DagDrawLod::Normal.shows_name());
         assert!(DagDrawLod::Detail.shows_name());
+        assert!(DagDrawLod::Normal.shows_computation_layout());
+        assert!(!DagDrawLod::Compact.shows_computation_layout());
         assert!(!DagDrawLod::Detail.shows_port_labels());
         assert!(DagDrawLod::Micro.shows_port_labels());
     }

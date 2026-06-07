@@ -11,7 +11,8 @@ import {
 	Playground,
 	WindowKindRuntime,
 	buildFlowWindowBody,
-	createStackLayout,
+	buildPanelWindowBody,
+	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
 	type CommandDescriptor,
@@ -30,10 +31,13 @@ import {
 	type FlowReorganizeRequest,
 } from "@flow/react";
 import {
+	extractGeometryHandles,
 	PROCEDURAL_DEFAULT_FIXTURE,
 	proceduralExtensionHost,
 	proceduralFixtureToJson,
 	type FlowFixtureV1,
+	type ProceduralGeometryHandle,
+	type ProceduralPreviewShowMode,
 } from "@procedural/react";
 
 export const PROCEDURAL_PLAY_APP_ID = "procedural-play";
@@ -41,10 +45,18 @@ export const PROCEDURAL_PLAY_CONTROLLER_ID = "procedural-play";
 export const PROCEDURAL_PLAY_SURFACE_ID = "procedural.play/v1";
 export const PROCEDURAL_PLAY_BODY_KEY_MAIN = "procedural.play.main";
 export const PROCEDURAL_PLAY_WINDOW_KIND_ID = "procedural-main";
+export const PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW = "procedural-preview";
+export const PROCEDURAL_PLAY_BODY_KEY_PREVIEW = "procedural.play.preview";
+export const PROCEDURAL_PLAY_SURFACE_ID_PREVIEW = "procedural.play.preview/v1";
 
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
-export const PROCEDURAL_PLAY_LAYOUT = createStackLayout([PROCEDURAL_PLAY_WINDOW_KIND_ID], ["Procedural"]);
+export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout(
+	[PROCEDURAL_PLAY_WINDOW_KIND_ID, PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW],
+	"row",
+	[55, 45],
+	["Flow", "Preview"],
+);
 export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
 
@@ -154,6 +166,12 @@ export class ProceduralPlayController extends Controller {
 	private reorganizeEpoch = 0;
 	private reorganizeOptionsJson = buildProceduralLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
 	private extensionRevision = 0;
+	private geometryHandles: ProceduralGeometryHandle[] = [];
+	private selectedNodeIds: string[] = [];
+	private hoveredNodeId: string | null = null;
+	private previewOffNodeIds: string[] = [];
+	private showMode: ProceduralPreviewShowMode = "everything";
+	private interactionRevision = 0;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(PROCEDURAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -184,6 +202,30 @@ export class ProceduralPlayController extends Controller {
 		return proceduralExtensionHost.listEntries();
 	}
 
+	getGeometryHandles(): readonly ProceduralGeometryHandle[] {
+		return this.geometryHandles;
+	}
+
+	getSelectedNodeIds(): readonly string[] {
+		return this.selectedNodeIds;
+	}
+
+	getHoveredNodeId(): string | null {
+		return this.hoveredNodeId;
+	}
+
+	getPreviewOffNodeIds(): readonly string[] {
+		return this.previewOffNodeIds;
+	}
+
+	getShowMode(): ProceduralPreviewShowMode {
+		return this.showMode;
+	}
+
+	getInteractionRevision(): number {
+		return this.interactionRevision;
+	}
+
 	/** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
 	subscribeSnapshot(listener: () => void): () => void {
 		this.snapshotListeners.add(listener);
@@ -211,7 +253,7 @@ export class ProceduralPlayController extends Controller {
 		this.emit();
 	}
 
-	private windowEngagement(): WindowEngagement {
+	private flowWindowEngagement(): WindowEngagement {
 		return {
 			sessionActive: false,
 			input: {
@@ -252,9 +294,35 @@ export class ProceduralPlayController extends Controller {
 		};
 	}
 
+	private previewWindowEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "preview-engagement-input",
+				value: "",
+				placeholder: "Preview",
+				onChange: proceduralPlayCmd("previewEngagementInput"),
+				onSubmit: proceduralPlayCmd("previewEngagementSubmit"),
+			},
+			control: {
+				kind: "ring",
+				id: "procedural-preview-show",
+				label: "Show",
+				value: this.showMode,
+				options: [
+					{ id: "everything", label: "Everything" },
+					{ id: "selected", label: "Selected" },
+				],
+				onSelect: proceduralPlayCmd("setShowMode"),
+			},
+			status: [{ id: "procedural-preview-geometry-count", text: `${this.geometryHandles.length} geometries` }],
+		};
+	}
+
 	private rebuildShellMode(): void {
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Procedural", PROCEDURAL_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
+			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Flow", PROCEDURAL_PLAY_BODY_KEY_MAIN, undefined, [], this.flowWindowEngagement()),
+			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW, "Preview", PROCEDURAL_PLAY_BODY_KEY_PREVIEW, undefined, [], this.previewWindowEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Procedural play window "${windowKind.id}"`);
@@ -317,6 +385,59 @@ export class ProceduralPlayController extends Controller {
 			}
 			return;
 		}
+		if (command === "setEvalOutputs") {
+			const outputsJson = (args as { outputsJson?: string }).outputsJson;
+			if (typeof outputsJson === "string") {
+				this.geometryHandles = extractGeometryHandles(outputsJson);
+				this.interactionRevision += 1;
+				this.notifySnapshot();
+				this.rebuildShellMode();
+				this.emit();
+			}
+			return;
+		}
+		if (command === "setSelection") {
+			const ids = (args as { ids?: string[] }).ids;
+			if (!Array.isArray(ids)) return;
+			const next = [...ids];
+			if (JSON.stringify(next) === JSON.stringify(this.selectedNodeIds)) return;
+			this.selectedNodeIds = next;
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setHover") {
+			const id = (args as { id?: string | null }).id;
+			const next = typeof id === "string" ? id : null;
+			if (next === this.hoveredNodeId) return;
+			this.hoveredNodeId = next;
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "togglePreview") {
+			const id = (args as { id?: string }).id;
+			if (typeof id !== "string") return;
+			const off = new Set(this.previewOffNodeIds);
+			if (off.has(id)) off.delete(id);
+			else off.add(id);
+			this.previewOffNodeIds = [...off];
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setShowMode") {
+			const id = (args as { id?: string }).id;
+			if (id !== "everything" && id !== "selected") return;
+			if (this.showMode === id) return;
+			this.showMode = id;
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
 		if (command === "setCatalogueSections") {
 			const sections = (args as { sections?: CatalogueSection[] }).sections;
 			if (Array.isArray(sections)) {
@@ -377,7 +498,10 @@ export class ProceduralPlayController extends Controller {
 }
 
 export function registerProceduralPlayDeclarativeBodies(): void {
-	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_MAIN, (_ctx: WindowBodyViewContext) => buildFlowWindowBody(PROCEDURAL_PLAY_SURFACE_ID));
+	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_MAIN, (_ctx: WindowBodyViewContext) =>
+		buildFlowWindowBody(PROCEDURAL_PLAY_SURFACE_ID, PROCEDURAL_PLAY_CONTROLLER_ID, PROCEDURAL_PLAY_WINDOW_KIND_ID));
+	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_PREVIEW, (_ctx: WindowBodyViewContext) =>
+		buildPanelWindowBody(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_PLAY_CONTROLLER_ID));
 }
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {
@@ -422,9 +546,9 @@ if (import.meta.vitest) {
 		it("kinds tree marks catalogue rows draggable", () => {
 			const tree = buildProceduralPlayKindsTree([
 				{
-					id: "brep",
-					title: "Brep",
-					items: [{ kind: "neuron", neuronKind: "brep.box", name: "Box", summary: "Box solid" }],
+					id: "brep-prim3d",
+					title: "Brep · Primitives 3D",
+					items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", summary: "Axis-aligned box" }],
 				},
 			]);
 			expect(tree.type).toBe("tree");
@@ -438,9 +562,55 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			expect(ctrl.getCatalogueRevision()).toBe(0);
 			ctrl.run("setCatalogueSections", {
-				sections: [{ id: "brep", title: "Brep", items: [{ kind: "neuron", neuronKind: "brep.box", name: "Box", summary: "Box" }] }],
+				sections: [
+					{ id: "brep-prim3d", title: "Brep · Primitives 3D", items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", summary: "Box" }] },
+					{ id: "brep-curves", title: "Brep · Curves", items: [{ kind: "neuron", neuronKind: "brep.curve.line", name: "Line", summary: "Line edge" }] },
+				],
 			});
 			expect(ctrl.getCatalogueRevision()).toBe(1);
+		});
+
+		it("catalogue revision bumps for multiple brep sections", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setCatalogueSections", {
+				sections: [
+					{ id: "brep-prim3d", title: "Brep · Primitives 3D", items: [] },
+					{ id: "brep-solid", title: "Brep · Solid Tools", items: [] },
+				],
+			});
+			expect(ctrl.getCatalogueSections().length).toBe(2);
+		});
+
+		it("controller exposes flow and preview window kinds", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			expect(ctrl.mainMode.windowKinds).toHaveLength(2);
+			expect(ctrl.mainMode.windowKinds[1]?.id).toBe(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW);
+		});
+
+		it("setShowMode updates preview filter", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setShowMode", { id: "selected" });
+			expect(ctrl.getShowMode()).toBe("selected");
+		});
+
+		it("setEvalOutputs stores geometry handles per widget", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
+			expect(ctrl.getGeometryHandles()).toEqual([{ widgetId: "box", handle: "solid-1" }]);
+		});
+
+		it("setSelection and setHover update interaction revision", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setSelection", { ids: ["box"] });
+			ctrl.run("setHover", { id: "box" });
+			expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
+			expect(ctrl.getHoveredNodeId()).toBe("box");
+			expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
 		});
 
 		it("extensions tree lists installed modules", () => {

@@ -16,9 +16,10 @@ use infinite_cavas::geom_sel::{
 };
 use crate::{
     board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
-    handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero, rectangle_handle_angle_toward, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
-    EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef,
-    NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
+    handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_drag_shape,
+    ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureV1Json, GraphPortMode, HandleData,
+    HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette,
+    WireData, WireKindDef,
 };
 
 pub use infinite_cavas::camera::Camera;
@@ -694,7 +695,7 @@ impl BoardHost {
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str, select_nodes: bool, select_edges: bool, select_handles: bool) {
         self.selection_options.method = method.into();
-        self.selection_options.mode = if mode == "default" { "replace" } else { mode }.into();
+        self.selection_options.mode = normalize_selection_mode(mode);
         self.selection_options.select_nodes = select_nodes;
         self.selection_options.select_edges = select_edges;
         self.selection_options.select_handles = select_handles;
@@ -3721,43 +3722,6 @@ impl BoardHost {
         None
     }
 
-    fn merge_pick_into_selection(initial: &BTreeSet<String>, hit_id: &str, mode: &str) -> BTreeSet<String> {
-        let mut next = initial.clone();
-        match mode {
-            "additive" => {
-                next.insert(hit_id.to_string());
-            }
-            "subtractive" => {
-                next.remove(hit_id);
-            }
-            "replace" => {
-                next.clear();
-                next.insert(hit_id.to_string());
-            }
-            _ => {
-                if next.contains(hit_id) {
-                    next.remove(hit_id);
-                } else {
-                    next.insert(hit_id.to_string());
-                }
-            }
-        }
-        next
-    }
-
-    fn pick_merge_mode_for_modifiers(ctrl_or_meta: bool, shift: bool, option_mode: &str) -> String {
-        if ctrl_or_meta && shift {
-            return "invertive".into();
-        }
-        if ctrl_or_meta {
-            return "subtractive".into();
-        }
-        if shift {
-            return "additive".into();
-        }
-        option_mode.to_string()
-    }
-
     pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), String> {
         if matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) {
             self.interaction = Interaction::None;
@@ -5166,7 +5130,7 @@ impl BoardHost {
             return;
         }
         let merge_from_modifiers = ctrl_or_meta || shift;
-        let pick_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+        let pick_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
         if button == 0 && !merge_from_modifiers && self.try_begin_bounded_selection_drag_at(world) {
             return;
         }
@@ -5184,7 +5148,7 @@ impl BoardHost {
                     let drag_group_before = members_before.contains(&nid) && members_before.len() > 1;
                     let force_pick_merge = (pick_mode == "replace" && !drag_group_before) || pick_mode == "subtractive" || (pick_mode == "invertive" && merge_from_modifiers);
                     if !drag_group_before || force_pick_merge {
-                        let next = Self::merge_pick_into_selection(&self.selection, &nid, pick_mode.as_str());
+                        let next = merge_pick_into_selection(&self.selection, &nid, pick_mode.as_str());
                         let ids: Vec<_> = next.iter().cloned().collect();
                         let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
                         self.set_selection_ids_gestured(&ids, gesture);
@@ -5205,7 +5169,7 @@ impl BoardHost {
         }
         if let Some(ref hid) = hit {
             if button == 0 && self.handles.contains_key(hid) && !self.handle_has_incident_edge(hid.as_str()) {
-                let next = Self::merge_pick_into_selection(&self.selection, hid, pick_mode.as_str());
+                let next = merge_pick_into_selection(&self.selection, hid, pick_mode.as_str());
                 let ids: Vec<_> = next.iter().cloned().collect();
                 let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
                 self.set_selection_ids_gestured(&ids, gesture);

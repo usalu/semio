@@ -2211,75 +2211,127 @@ function stepCollectShellBoundaryPoints(entities: ReadonlyMap<number, string>, e
 	return faceRef !== undefined ? stepCollectFaceBoundaryPoints(entities, faceRef) : [];
 }
 
-function modelFromStepLineMember(
-	start: Vec3,
-	end: Vec3,
-	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
-	crossSection: number,
-): Model {
-	const half = crossSection / 2;
-	const min: Vec3 = [
-		Math.min(start[0], end[0]) - half,
-		Math.min(start[1], end[1]) - half,
-		Math.min(start[2], end[2]) - half,
-	];
-	const max: Vec3 = [
-		Math.max(start[0], end[0]) + half,
-		Math.max(start[1], end[1]) + half,
-		Math.max(start[2], end[2]) + half,
-	];
-	const model = new Model();
-	const solidId = `${options.prefix}-solid` as SolidRef;
-	applyModelDiff(model, boxModelDiff({ cornerA: min, cornerB: [max[0], max[1], min[2]], height: Math.max(max[2] - min[2], crossSection) }, solidId));
-	model.objects[options.objectId] = {
-		id: options.objectId as ObjectRef,
-		typology: options.typology,
-		primitives: { solid: String(solidId) },
-	};
-	model.bump();
-	return model;
+const STEP_PRESENTATION_COLUMN_SECTION_M = 0.3;
+const STEP_PRESENTATION_BEAM_SECTION_M = 0.15;
+const STEP_PRESENTATION_SLAB_THICKNESS_M = 0.25;
+
+function stepPresentationCrossSection(layerName: string): number {
+	return layerName.toLowerCase().includes("column") ? STEP_PRESENTATION_COLUMN_SECTION_M : STEP_PRESENTATION_BEAM_SECTION_M;
 }
 
-function modelFromPlanarBoundary(
-	points: readonly Vec3[],
-	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
-	thickness = 0.05,
-): Model {
-	if (points.length < 3) return new Model();
+function stepPresentationSlabThickness(layerName: string): number {
+	void layerName;
+	return STEP_PRESENTATION_SLAB_THICKNESS_M;
+}
+
+function polygonNormalNewell(points: readonly Vec3[]): Vec3 {
+	let nx = 0;
+	let ny = 0;
+	let nz = 0;
+	for (let i = 0; i < points.length; i++) {
+		const a = points[i]!;
+		const b = points[(i + 1) % points.length]!;
+		nx += (a[1] - b[1]) * (a[2] + b[2]);
+		ny += (a[2] - b[2]) * (a[0] + b[0]);
+		nz += (a[0] - b[0]) * (a[1] + b[1]);
+	}
+	return vec3Normalize([nx, ny, nz]);
+}
+
+function squareProfilePoints(origin: Vec3, u: Vec3, v: Vec3, half: number): Vec3[] {
+	const at = (au: number, av: number): Vec3 => [
+		origin[0] + u[0] * au + v[0] * av,
+		origin[1] + u[1] * au + v[1] * av,
+		origin[2] + u[2] * au + v[2] * av,
+	];
+	return [at(half, half), at(-half, half), at(-half, -half), at(half, -half)];
+}
+
+function validSolidFromLoftOrExtrude(shape: Shape3D): ValidSolid | null {
+	if (isSolid(shape)) {
+		if (isValidSolid(shape)) return shape as ValidSolid;
+		const healed = healSolid(shape);
+		if (isOk(healed) && isValidSolid(healed.value)) return healed.value as ValidSolid;
+		return shape as ValidSolid;
+	}
+	const thickened = thicken(shape as Parameters<typeof thicken>[0], 1e-3);
+	if (isOk(thickened) && isSolid(thickened.value) && isValidSolid(thickened.value)) return thickened.value as ValidSolid;
+	return null;
+}
+
+function validSolidFromHorizontalSlabBoundary(points: readonly Vec3[], thickness: number): ValidSolid | null {
+	if (points.length < 3) return null;
 	const xs = points.map((point) => point[0]);
 	const ys = points.map((point) => point[1]);
 	const zs = points.map((point) => point[2]);
-	const zTop = Math.max(...zs);
-	const min: Vec3 = [Math.min(...xs), Math.min(...ys), zTop - thickness];
-	const max: Vec3 = [Math.max(...xs), Math.max(...ys), zTop];
-	const model = new Model();
-	const solidId = `${options.prefix}-solid` as SolidRef;
-	applyModelDiff(model, boxModelDiff({ cornerA: min, cornerB: [max[0], max[1], min[2]], height: thickness }, solidId));
-	model.objects[options.objectId] = {
-		id: options.objectId as ObjectRef,
-		typology: options.typology,
-		primitives: { solid: String(solidId) },
-	};
-	model.bump();
-	return model;
+	const z = zs.reduce((sum, value) => sum + value, 0) / zs.length;
+	const w = Math.max(...xs) - Math.min(...xs);
+	const d = Math.max(...ys) - Math.min(...ys);
+	if (w < 1e-9 || d < 1e-9) return null;
+	const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+	const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+	return box(w, d, thickness, { at: [cx, cy, z - thickness / 2], centered: true });
 }
 
-function modelPartFromStepPresentationEntity(
+function validSolidFromStepPlanarBoundary(points: readonly Vec3[], thickness: number): ValidSolid | null {
+	if (points.length < 3) return null;
+	try {
+		const normal = polygonNormalNewell(points);
+		const edges = points.map((point, index) => line(point, points[(index + 1) % points.length]!));
+		const loop = wireLoop(edges);
+		if (!isOk(loop)) return validSolidFromHorizontalSlabBoundary(points, thickness);
+		const filled = filledFace(loop.value as Parameters<typeof filledFace>[0]);
+		const planar = isOk(filled) ? filled : face(loop.value as Parameters<typeof face>[0]);
+		if (!isOk(planar)) return validSolidFromHorizontalSlabBoundary(points, thickness);
+		const ext = extrude(planar.value as Parameters<typeof extrude>[0], vec3Scale(normal, thickness));
+		if (!isOk(ext)) return validSolidFromHorizontalSlabBoundary(points, thickness);
+		return validSolidFromLoftOrExtrude(ext.value as Shape3D) ?? validSolidFromHorizontalSlabBoundary(points, thickness);
+	} catch {
+		return validSolidFromHorizontalSlabBoundary(points, thickness);
+	}
+}
+
+function validSolidFromStepLineMember(start: Vec3, end: Vec3, crossSection: number): ValidSolid | null {
+	try {
+		const axis = vec3Sub(end, start);
+		const len = vec3Length(axis);
+		if (len < 1e-9) return null;
+		const dir = vec3Scale(axis, 1 / len);
+		const ref: Vec3 = Math.abs(dir[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
+		const u = vec3Normalize(vec3Cross(dir, ref));
+		const v = vec3Normalize(vec3Cross(dir, u));
+		const half = crossSection / 2;
+		const wireAt = (origin: Vec3): Wire<Dimension> | null => {
+			const pts = squareProfilePoints(origin, u, v, half);
+			const edges = pts.map((point, index) => line(point, pts[(index + 1) % 4]!));
+			const loop = wireLoop(edges);
+			return isOk(loop) ? loop.value : null;
+		};
+		const profileStart = wireAt(start);
+		const profileEnd = wireAt(end);
+		if (!profileStart || !profileEnd) return null;
+		const lofted = loft([profileStart, profileEnd], { ruled: true });
+		if (!isOk(lofted)) return null;
+		return validSolidFromLoftOrExtrude(lofted.value as Shape3D);
+	} catch {
+		return null;
+	}
+}
+
+function brepSolidFromStepPresentationEntity(
 	entities: ReadonlyMap<number, string>,
 	entityRef: number,
-	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef; readonly layerName: string },
-): Model | null {
+	layerName: string,
+): ValidSolid | null {
 	const body = entities.get(entityRef);
 	if (!body) return null;
 	if (body.startsWith("LINE(")) {
 		const endpoints = stepParseLineEndpoints(entities, entityRef);
 		if (!endpoints) return null;
-		const layer = options.layerName.toLowerCase();
-		const crossSection = layer.includes("column") ? 0.3 : 0.15;
-		return modelFromStepLineMember(endpoints[0], endpoints[1], options, crossSection);
+		return validSolidFromStepLineMember(endpoints[0], endpoints[1], stepPresentationCrossSection(layerName));
 	}
 	const boundary = stepCollectShellBoundaryPoints(entities, entityRef);
-	if (boundary.length >= 3) return modelFromPlanarBoundary(boundary, options);
+	if (boundary.length >= 3) return validSolidFromStepPlanarBoundary(boundary, stepPresentationSlabThickness(layerName));
 	return null;
 }
 
@@ -2296,8 +2348,12 @@ function importStepPresentationLayersToModel(
 		const typology = typologyFromStepLayer(layerName, options.modelDefinitionId);
 		const prefix = `${options.basePrefix}-${++partIndex}`;
 		const objectId = `object-${prefix}`;
-		const part = modelPartFromStepPresentationEntity(entities, entityRef, { prefix, objectId, typology, layerName });
-		if (part) mergeImportedBrepPart(model, part);
+		const brepSolid = brepSolidFromStepPresentationEntity(entities, entityRef, layerName);
+		if (!brepSolid) continue;
+		mergeImportedBrepPart(
+			model,
+			modelFromImportedBrepSolid(brepSolid, { prefix, objectId, typology, modelDefinitionId: options.modelDefinitionId }),
+		);
 	}
 	if (Object.keys(model.objects).length === 0) throw new Error("STEP presentation import yielded no objects");
 	scaleModelPositions(model, options.lengthScale);
@@ -3223,14 +3279,21 @@ class BrepjsWasmEngine {
 		options?: { readonly prefix?: string; readonly lengthScale?: number; readonly modelDefinitionId?: string },
 	): Promise<ModelSpace> {
 		await this.ensureInit();
-		const blob = new Blob([stepText], { type: "application/step" });
-		const imported = await importSTEP(blob);
-		if (!isOk(imported)) throw new Error(`STEP BIM import failed: ${String(imported.error)}`);
 		const basePrefix = options?.prefix ?? "step-bim-import";
 		const lengthScale = options?.lengthScale ?? STEP_BREP_IMPORT_MM_TO_M;
 		const modelDefinitionId = options?.modelDefinitionId ?? defaultModelDefinitionId();
+		if (shouldImportStepPresentationLayers(stepText, modelDefinitionId)) {
+			const model = importStepPresentationLayersToModel(stepText, { basePrefix, lengthScale, modelDefinitionId });
+			const space = new ModelSpace();
+			space.link(modelDefinitionId, model);
+			await this.syncSolidsFromModel(model);
+			return space;
+		}
+		const blob = new Blob([stepText], { type: "application/step" });
+		const imported = await importSTEP(blob);
+		if (!isOk(imported)) throw new Error(`STEP BIM import failed: ${String(imported.error)}`);
 		const brepSolids = validSolidsFromImportedShape(imported.value as Shape3D);
-		if (shouldImportStepPresentationLayers(stepText, modelDefinitionId) || brepSolids.length === 0) {
+		if (brepSolids.length === 0) {
 			const model = importStepPresentationLayersToModel(stepText, { basePrefix, lengthScale, modelDefinitionId });
 			const space = new ModelSpace();
 			space.link(modelDefinitionId, model);
@@ -4318,6 +4381,11 @@ if (import.meta.vitest) {
 			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.onewayreinforcedconcreteslab")).toHaveLength(1);
 			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.reinforcedconcreteinternalwall")).toHaveLength(8);
 			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.reinforcedconcretecolumn")).toHaveLength(2);
+			await kernel.syncSolidsFromModel(structure);
+			for (const solidId of Object.keys(geom(structure).solids) as SolidRef[]) {
+				expect(await kernel.volume(solidId)).toBeGreaterThan(0);
+			}
+			expect(Object.keys(geom(structure).vertices).some((id) => id.includes("box-"))).toBe(false);
 		});
 
 		it("generates play fixtures from semio STEP sources", async () => {

@@ -6243,13 +6243,15 @@ import {
   PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
   PROCEDURAL_PLAY_KINDS_TAB_ID,
   PROCEDURAL_PLAY_SURFACE_ID,
+  PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
   ProceduralPlayController,
   buildProceduralPlayExtensionsTree,
   buildProceduralPlayKindsTree,
   registerProceduralPlayDeclarativeBodies,
 } from "@procedural/play";
 import { flowWidgetPaletteTreeDragController } from "@flow/react";
-import { ProceduralEditor } from "@procedural/react";
+import { ProceduralFlowEditor, ProceduralPreview, proceduralExtensionHost } from "@procedural/react";
+import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
 
 let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
@@ -6280,6 +6282,10 @@ function useProceduralPlayExtensionRevision(): number {
   return useProceduralPlaySnapshotRevision((ctrl) => ctrl.getExtensionRevision());
 }
 
+function useProceduralPlayInteractionRevision(): number {
+  return useProceduralPlaySnapshotRevision((ctrl) => ctrl.getInteractionRevision());
+}
+
 function useProceduralPlayController(): ProceduralPlayController | undefined {
   const { runtime } = useApp();
   const ctrl = runtime.getActiveApp()?.controller as ProceduralPlayController | undefined;
@@ -6290,10 +6296,19 @@ function useProceduralPlayController(): ProceduralPlayController | undefined {
 function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
   const ctrl = useProceduralPlayController();
   const extensionRevision = useProceduralPlayExtensionRevision();
+  const interactionRevision = useProceduralPlayInteractionRevision();
+  void interactionRevision;
   const onPreviewText = reactHostPort.useCallback(
     (text: string) => {
       console.log(`[DEBUG] procedural play preview: ${text}`);
       ctrl?.run("setPreviewText", { text });
+    },
+    [ctrl],
+  );
+  const onEvalOutputs = reactHostPort.useCallback(
+    (outputsJson: string) => {
+      console.log(`[DEBUG] procedural play eval outputs: ${outputsJson.slice(0, 120)}`);
+      ctrl?.run("setEvalOutputs", { outputsJson });
     },
     [ctrl],
   );
@@ -6309,14 +6324,64 @@ function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowH
     },
     [ctrl],
   );
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setSelection", { ids: [...ids] });
+    },
+    [ctrl],
+  );
+  const onHoverChange = reactHostPort.useCallback(
+    (id: string | null) => {
+      ctrl?.run("setHover", { id });
+    },
+    [ctrl],
+  );
   return (
-    <ProceduralEditor
+    <ProceduralFlowEditor
       fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
+      onEvalOutputs={onEvalOutputs}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      onHoverChange={onHoverChange}
+      selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      hoveredNodeId={ctrl?.getHoveredNodeId()}
+      previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
+      className="h-full w-full"
+    />
+  );
+}
+
+function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPanelHostSurfaceNode }): ReactElement {
+  const ctrl = useProceduralPlayController();
+  const interactionRevision = useProceduralPlayInteractionRevision();
+  void interactionRevision;
+  const onHover = reactHostPort.useCallback(
+    (id: string | null) => {
+      ctrl?.run("setHover", { id });
+    },
+    [ctrl],
+  );
+  const onSelect = reactHostPort.useCallback(
+    (id: string) => {
+      ctrl?.run("setSelection", { ids: [id] });
+    },
+    [ctrl],
+  );
+  return (
+    <ProceduralPreview
+      handles={ctrl?.getGeometryHandles() ?? []}
+      selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      hoveredNodeId={ctrl?.getHoveredNodeId()}
+      previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
+      showMode={ctrl?.getShowMode() ?? "everything"}
+      onHover={onHover}
+      onSelect={onSelect}
+      kernel={proceduralExtensionHost.getBrepKernel()}
+      className="h-full w-full"
     />
   );
 }
@@ -6375,6 +6440,7 @@ export function registerProceduralPlaySurfaceHosts(): void {
   if (proceduralPlayChromeRegistered) return;
   proceduralPlayChromeRegistered = true;
   registerUiFlowSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID, ProceduralPlayPaneSurfaceHost);
+  registerUiPanelSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, ProceduralPreviewSurfaceHost);
   registerProceduralPlayDeclarativeBodies();
 }
 
@@ -6420,7 +6486,6 @@ import {
 	type DispositionPosition,
 	type FigureTileSource,
 } from "@framework/presentation/core";
-import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
 
 const PRESENTATION_TILE_HANDLES: readonly NormalizedRectHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PRESENTATION_TILE_VIEWPORT_MIN_ZOOM = 0.2;

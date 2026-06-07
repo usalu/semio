@@ -28,19 +28,19 @@ todos:
     status: completed
   - id: kernel-tests
     content: "index.ts: export new symbols + extend vitest with per-category tests"
-    status: in_progress
+    status: completed
   - id: flow-kinds
     content: "procedural/react: full categorized BREP_FLOW_KINDS + point/vector constructor nodes + defaults"
-    status: in_progress
+    status: completed
   - id: flow-dispatch
     content: "procedural/react: rewrite evaluateBrepFlowKind as category-dispatched switch + catalogue sections + manifest"
-    status: pending
+    status: completed
   - id: viewport
     content: "procedural/react: multi-type BrepViewport (points/lines/surfaces/solids) + multi-handle extraction in ProceduralEditor"
-    status: pending
+    status: completed
   - id: play-tests
     content: "procedural/play + tests: default fixture + assert multiple brep sections; run all three vitest suites"
-    status: pending
+    status: completed
 isProject: false
 ---
 
