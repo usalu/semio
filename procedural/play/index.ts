@@ -806,7 +806,7 @@ if (import.meta.vitest) {
 						version: "0.1.0",
 						activationEvents: ["onStartup"],
 						contributes: {
-							neuronKinds: [{ id: "brep.box", module: "brep", name: "Box", summary: "Box", inputs: [], outputs: ["brep"] }],
+							neuronKinds: [{ id: "brep.box", module: "brep", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box", inputs: [], outputs: ["brep"] }],
 							widgets: [],
 							commands: [],
 							settings: [],

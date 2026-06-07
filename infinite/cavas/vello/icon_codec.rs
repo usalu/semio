@@ -427,9 +427,14 @@ fn resolve_icon_data(data: &str) -> BoardResolvedIcon {
 fn resolve_structured_icon(icon: &Icon, themed_lookup: ThemedSvgLookup) -> BoardResolvedIcon {
     match icon {
         Icon::Url { .. } => BoardResolvedIcon::None,
-        Icon::Shortcode { code } => icon_shortcodes::icon_shortcode_to_emoji(code)
-            .map(|em| resolve_emoji_body(em))
-            .unwrap_or(BoardResolvedIcon::None),
+        Icon::Shortcode { code } => match icon_shortcodes::icon_shortcode_resolve(code) {
+            Some(icon_shortcodes::ShortcodeResolved::Emoji(em)) => resolve_emoji_body(em),
+            Some(icon_shortcodes::ShortcodeResolved::SvgPlain(svg)) => BoardResolvedIcon::SvgPlain(svg.to_string()),
+            Some(icon_shortcodes::ShortcodeResolved::SvgThemed(svg)) => BoardResolvedIcon::SvgThemed(svg.to_string()),
+            None => themed_lookup(code)
+                .map(|svg| BoardResolvedIcon::SvgThemed(svg.to_string()))
+                .unwrap_or(BoardResolvedIcon::None),
+        },
         Icon::Data { data } => resolve_icon_data(data),
         Icon::Emoji { emoji } => resolve_emoji_body(emoji),
         Icon::Typst { src } => resolve_typst_src(src),
@@ -484,10 +489,28 @@ mod tests {
     }
 
     #[test]
-    fn icon_codec_resolves_shortcode_to_svg() {
-        let r = board_resolve_icon_kind(":smile:", |_| None);
+    fn icon_codec_resolves_emoji_shortcode_to_svg() {
+        let r = board_resolve_icon_kind(":grinning:", |_| None);
         match r {
             BoardResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn icon_codec_resolves_catalog_shortcode_to_svg() {
+        let r = board_resolve_icon_kind(":plus:", |_| None);
+        match r {
+            BoardResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn icon_codec_resolves_metabolism_shortcode_to_themed_svg() {
+        let r = board_resolve_icon_kind(":capsule_J:", |_| None);
+        match r {
+            BoardResolvedIcon::SvgThemed(s) => assert!(s.contains("<svg")),
             other => panic!("unexpected: {other:?}"),
         }
     }

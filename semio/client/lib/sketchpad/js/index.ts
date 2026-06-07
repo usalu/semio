@@ -71,6 +71,8 @@ import {
 
 //#region 🪁SemioUiI18n
 import {
+	decodeIcon,
+	encodeIcon,
 	iconSvgMarkup,
 	registerUiTranslationBundles,
 	setControlLabelIdResolver,
@@ -11914,14 +11916,13 @@ export function sketchpadKitEntityAvailableIcon(kit: Kit, nodeId: string, fileNo
 function sketchpadKitWiresCatalogIconKey(raw: string | undefined): string | undefined {
 	const icon = raw?.trim();
 	if (!icon) return undefined;
-	if (icon.startsWith("typst:") || icon.startsWith("emoji:")) return icon;
-	if (icon.startsWith("data:") || icon.startsWith("http://") || icon.startsWith("https://")) return icon;
-	if (icon.includes("<svg") || icon.startsWith("<?xml")) return undefined;
+	const decoded = decodeIcon(icon);
+	if (decoded) return encodeIcon(decoded);
+	if (icon.includes("<svg") || icon.startsWith("<?xml")) return icon;
 	if (iconSvgMarkup(icon)) return icon;
 	const svgMatch = icon.match(/(?:^|\/)([^/]+)\.svg$/i);
 	if (svgMatch) return svgMatch[1]!;
-	if (/\p{Extended_Pictographic}/u.test(icon)) return `emoji:${icon}`;
-	return icon;
+	return encodeIcon({ kind: "catalog", key: icon });
 }
 
 /** @emoji 🖼️ Puzzle 2d {@link iconKind} for a kit wires identity icon (catalog id, emoji, typst, data URL, or inline SVG). */

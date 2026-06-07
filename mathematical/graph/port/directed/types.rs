@@ -372,6 +372,195 @@ impl VelloThemePalette {
     }
 }
 
+// #region 🔖Icons
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
+
+use crate::cavas::usvg;
+use crate::cavas::vello::kurbo::{Affine, Rect};
+use crate::cavas::vello::peniko::{Blob, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
+use crate::cavas::vello::Scene;
+
+#[derive(Clone)]
+pub enum CachedIconBody {
+    Vector(Scene),
+    Raster(Arc<ImageData>),
+}
+
+#[derive(Clone)]
+struct CachedIconPaint {
+    bx: f64,
+    by: f64,
+    bw: f64,
+    bh: f64,
+    body: CachedIconBody,
+}
+
+/// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
+pub struct IconPaintCache {
+    cache: RefCell<HashMap<String, CachedIconPaint>>,
+    pub themed_icon_lookup: infinite_cavas::icon_codec::ThemedSvgLookup,
+}
+
+impl Default for IconPaintCache {
+    fn default() -> Self {
+        Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: |_| None }
+    }
+}
+
+impl Clone for IconPaintCache {
+    fn clone(&self) -> Self {
+        Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: self.themed_icon_lookup }
+    }
+}
+
+impl IconPaintCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn clear(&self) {
+        self.cache.borrow_mut().clear();
+    }
+
+    fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        svg.hash(&mut hasher);
+        let hx = hasher.finish();
+        let f = fg.to_rgba8();
+        let b = bg.to_rgba8();
+        format!(
+            "v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
+            svg.len(),
+            f.r,
+            f.g,
+            f.b,
+            f.a,
+            b.r,
+            b.g,
+            b.b,
+            b.a
+        )
+    }
+
+    fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        rgba.as_ref().hash(&mut hasher);
+        let hx = hasher.finish();
+        format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
+    }
+
+    pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
+        let resolved = infinite_cavas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
+        let key = match &resolved {
+            infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
+            infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg)
+            }
+            infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
+        };
+        {
+            let g = self.cache.borrow();
+            if let Some(c) = g.get(&key) {
+                return Some((c.bx, c.by, c.bw, c.bh, c.body.clone()));
+            }
+        }
+        let (bx, by, bw, bh, body) = match resolved {
+            infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
+            infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                let tree = usvg::Tree::from_str(s.trim(), infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
+                let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+                    return None;
+                }
+                let mut s = Scene::new();
+                if preserve_original_style {
+                    let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
+                } else {
+                    infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                }
+                (bx, by, bw, bh, CachedIconBody::Vector(s))
+            }
+            infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                let svg_t = s.trim();
+                let tree = usvg::Tree::from_str(svg_t, infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
+                let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+                    return None;
+                }
+                let mut s = Scene::new();
+                if preserve_original_style {
+                    let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
+                } else {
+                    infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                }
+                (bx, by, bw, bh, CachedIconBody::Vector(s))
+            }
+            infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+                let bx = 0.0_f64;
+                let by = 0.0_f64;
+                let bw = f64::from(w);
+                let bh = f64::from(h);
+                let img = ImageData {
+                    data: Blob::new(Arc::new(rgba.as_ref().to_vec())),
+                    format: ImageFormat::Rgba8,
+                    alpha_type: ImageAlphaType::Alpha,
+                    width: w,
+                    height: h,
+                };
+                (bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
+            }
+        };
+        let cached = CachedIconPaint { bx, by, bw, bh, body: body.clone() };
+        self.cache.borrow_mut().insert(key, cached);
+        Some((bx, by, bw, bh, body))
+    }
+
+    /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.
+    pub fn append_icon_at_screen_rect(
+        &self,
+        scene: &mut Scene,
+        icon_kind: &str,
+        center: Point,
+        avail_w: f64,
+        avail_h: f64,
+        fg: Color,
+        bg: Color,
+        preserve_original_style: bool,
+    ) {
+        let Some((bx, by, bw, bh, body)) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
+            return;
+        };
+        if !(avail_w > 0.0 && avail_h > 0.0) {
+            return;
+        }
+        let fit_inset = 0.76;
+        let sx_half = avail_w * fit_inset * 0.5;
+        let sy_half = avail_h * fit_inset * 0.5;
+        let cx = bx + bw * 0.5;
+        let cy = by + bh * 0.5;
+        let scale = (2.0 * sx_half / bw).min(2.0 * sy_half / bh);
+        let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+        let clip_inset = 0.88;
+        let hw = avail_w * clip_inset * 0.5;
+        let hh = avail_h * clip_inset * 0.5;
+        let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
+        scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+        match &body {
+            CachedIconBody::Vector(icon_scene) => {
+                scene.append(icon_scene, Some(aff));
+            }
+            CachedIconBody::Raster(img) => {
+                scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+            }
+        }
+        scene.pop_layer();
+    }
+}
+// #endregion 🔖Icons
+
 impl Default for VelloThemePalette {
     fn default() -> Self {
         Self {

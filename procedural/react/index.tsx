@@ -70,8 +70,47 @@ if (!import.meta.env.VITEST) {
 // #endregion 🔖BrepWasmBridge
 
 // #region 🔖BrepFlowModule
+function toPascalCase(label: string): string {
+	return label
+		.split(/[\s_-]+/)
+		.filter(Boolean)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+		.join("");
+}
+
+function brepAbbreviation(name: string): string {
+	const pascal = toPascalCase(name);
+	if (pascal.length <= 12) return pascal;
+	return name
+		.split(/[\s_-]+/)
+		.filter(Boolean)
+		.map((part) => part.charAt(0).toUpperCase())
+		.join("");
+}
+
+function brepIcon(id: string): string {
+	if (id.includes("point")) return "emoji:📍";
+	if (id.includes("vector")) return "emoji:➡️";
+	if (id.includes("box") || id.includes("rectangle") || id.includes("prim3d")) return "emoji:📦";
+	if (id.includes("sphere") || id.includes("circle")) return "emoji:⚪";
+	if (id.includes("cylinder") || id.includes("cone") || id.includes("torus") || id.includes("ellipsoid")) return "emoji:🛢️";
+	if (id.includes("curve") || id.includes("wire") || id.includes("arc") || id.includes("helix") || id.includes("line")) return "emoji:〰️";
+	if (id.includes("surface") || id.includes("face") || id.includes("fill")) return "emoji:🧩";
+	if (id.includes("solid") || id.includes("extrude") || id.includes("revolve") || id.includes("loft") || id.includes("sweep") || id.includes("shell") || id.includes("hull")) return "emoji:🧱";
+	if (id.includes("bool") || id.includes("fuse") || id.includes("cut") || id.includes("intersect") || id.includes("union")) return "emoji:🔗";
+	if (id.includes("xform") || id.includes("translate") || id.includes("rotate") || id.includes("mirror") || id.includes("scale") || id.includes("pattern") || id.includes("clone")) return "emoji:🔁";
+	if (id.includes("intersect") || id.includes("section") || id.includes("slice")) return "emoji:✂️";
+	if (id.includes("eval") || id.includes("measure") || id.includes("query")) return "emoji:📐";
+	if (id.includes("repair") || id.includes("heal")) return "emoji:🩹";
+	if (id.includes("io") || id.includes("export")) return "emoji:💾";
+	if (id.includes("gear")) return "emoji:⚙️";
+	if (id.includes("sketch") || id.includes("draw2d")) return "emoji:✏️";
+	return "emoji:🔷";
+}
+
 function brepKind(id: string, name: string, summary: string, inputs: readonly string[], outputs: readonly string[] = ["geometry"]): FlowModuleNeuronKindV1 {
-	return { id: `brep.${id}`, module: "brep", name, summary, inputs, outputs };
+	const displayName = toPascalCase(name);
+	return { id: `brep.${id}`, module: "brep", name: displayName, abbreviation: brepAbbreviation(name), icon: brepIcon(id), summary, inputs, outputs };
 }
 
 const BREP_CATALOGUE_SECTIONS: readonly { readonly id: string; readonly title: string; readonly kinds: readonly FlowModuleNeuronKindV1[] }[] = [

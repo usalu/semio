@@ -135,6 +135,23 @@ fn widget_label(widget: &Widget) -> String {
     }
 }
 
+fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (String, String, String) {
+    match widget {
+        Widget::Neuron { neuronKind, .. } => kind_infos.get(neuronKind).map(|info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())).unwrap_or_else(|| {
+            let (name, abbreviation) = dag::normalize_node_display(neuronKind, neuronKind);
+            (name, abbreviation, String::new())
+        }),
+        Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
+        Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝".into()),
+        Widget::OutputPreview { .. } => ("Preview".into(), "Preview".into(), "emoji:👁️".into()),
+        Widget::OutputAction { action, .. } => {
+            let title = if action.is_empty() { "Action" } else { action.as_str() };
+            let (name, abbreviation) = dag::normalize_node_display(title, title);
+            (name, abbreviation, "emoji:⚡".into())
+        }
+    }
+}
+
 fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &HashMap<String, NeuronKindInfo>) -> Vec<String> {
     if !input_ports.is_empty() {
         return input_ports.to_vec();
@@ -231,15 +248,17 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
     };
     let (width, height) = widget_node_size(widget, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
-    let name = widget_label(widget);
+    let (name, abbreviation, icon) = widget_display_meta(widget, kind_infos);
     match widget {
         Widget::Neuron { neuronKind, input_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
-            DagNodeSpec::computation(id, name, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
+            DagNodeSpec::computation(id, name, abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
         }
         Widget::InputSlider { value, .. } => DagNodeSpec {
             id,
             name,
+            abbreviation,
+            icon,
             x,
             y,
             width,
@@ -255,6 +274,8 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
         Widget::InputNote { text, .. } => DagNodeSpec {
             id,
             name,
+            abbreviation,
+            icon,
             x,
             y,
             width,
@@ -267,6 +288,8 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
         Widget::OutputPreview { preview, .. } => DagNodeSpec {
             id,
             name,
+            abbreviation,
+            icon,
             x,
             y,
             width,
@@ -279,6 +302,8 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
         Widget::OutputAction { action, .. } => DagNodeSpec {
             id,
             name,
+            abbreviation,
+            icon,
             x,
             y,
             width,
@@ -366,6 +391,8 @@ pub struct CatalogueItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
     pub name: String,
+    pub abbreviation: String,
+    pub icon: String,
     pub summary: String,
 }
 
@@ -375,16 +402,16 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
             id: "inputs".into(),
             title: "Inputs".into(),
             items: vec![
-                CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), summary: "Number input".into() },
-                CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), summary: "Text input".into() },
+                CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), abbreviation: "Slider".into(), icon: "emoji:🎚️".into(), summary: "Number input".into() },
+                CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝".into(), summary: "Text input".into() },
             ],
         },
         CatalogueSection {
             id: "outputs".into(),
             title: "Outputs".into(),
             items: vec![
-                CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, name: "Preview".into(), summary: "Preview dictionary".into() },
-                CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), name: "Action".into(), summary: "Side-effect action".into() },
+                CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, name: "Preview".into(), abbreviation: "Preview".into(), icon: "emoji:👁️".into(), summary: "Preview dictionary".into() },
+                CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), name: "Action".into(), abbreviation: "Action".into(), icon: "emoji:⚡".into(), summary: "Side-effect action".into() },
             ],
         },
     ]
@@ -1612,6 +1639,8 @@ mod tests {
                 id: "math.add".into(),
                 module: "math".into(),
                 name: "Add".into(),
+                abbreviation: "Add".into(),
+                icon: "emoji:➕".into(),
                 summary: "Sums two numbers".into(),
                 inputs: vec!["a".into(), "b".into()],
                 outputs: vec!["number".into()],
@@ -1620,7 +1649,9 @@ mod tests {
             NeuronKindInfo {
                 id: "math.passThrough".into(),
                 module: "math".into(),
-                name: "Pass Through".into(),
+                name: "PassThrough".into(),
+                abbreviation: "Pass".into(),
+                icon: "emoji:➡️".into(),
                 summary: "Forwards a number".into(),
                 inputs: vec!["number".into()],
                 outputs: vec!["number".into()],
@@ -1643,13 +1674,17 @@ mod tests {
                     neuronKind: Some("math.add".into()),
                     action: None,
                     name: "Add".into(),
+                    abbreviation: "Add".into(),
+                    icon: "emoji:➕".into(),
                     summary: "Sums two numbers".into(),
                 },
                 CatalogueItem {
                     kind: "neuron".into(),
                     neuronKind: Some("math.passThrough".into()),
                     action: None,
-                    name: "Pass Through".into(),
+                    name: "PassThrough".into(),
+                    abbreviation: "Pass".into(),
+                    icon: "emoji:➡️".into(),
                     summary: "Forwards a number".into(),
                 },
             ],
@@ -1898,6 +1933,8 @@ mod tests {
                 id: "dictionary.merge".into(),
                 module: "dictionary".into(),
                 name: "Merge".into(),
+                abbreviation: "Merge".into(),
+                icon: "emoji:🔀".into(),
                 summary: "Merge".into(),
                 inputs: vec![],
                 outputs: vec!["dictionary".into()],
@@ -1927,13 +1964,25 @@ mod tests {
     }
 
     #[test]
+    fn widget_to_dag_node_carries_display_meta() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
+        let node = host.dag.fixture.nodes.iter().find(|node| node.id == id).expect("node");
+        assert_eq!(node.name, "Add");
+        assert_eq!(node.abbreviation, "Add");
+        assert_eq!(node.icon, "emoji:➕");
+    }
+
+    #[test]
     fn ghost_widget_preview_and_clear() {
         let mut host = host_with_test_bridge();
         host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 42.0, 24.0).unwrap();
         let ghost = host.ghost_node.as_ref().expect("ghost");
         assert!((ghost.x - 42.0).abs() < 1e-6);
         assert!((ghost.y - 24.0).abs() < 1e-6);
-        assert!(ghost.name.contains("math.add"));
+        assert_eq!(ghost.name, "Add");
+        assert_eq!(ghost.abbreviation, "Add");
+        assert_eq!(ghost.icon, "emoji:➕");
         host.clear_ghost_widget();
         assert!(host.ghost_node.is_none());
     }
@@ -1968,6 +2017,8 @@ mod tests {
             id: "dictionary.merge".into(),
             module: "dictionary".into(),
             name: "Merge".into(),
+            abbreviation: "Merge".into(),
+            icon: "emoji:🔀".into(),
             summary: "Merge".into(),
             inputs: vec![],
             outputs: vec!["dictionary".into()],

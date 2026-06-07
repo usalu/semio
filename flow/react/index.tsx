@@ -67,6 +67,8 @@ export interface FlowModuleNeuronKindV1 {
   readonly id: string;
   readonly module: string;
   readonly name: string;
+  readonly abbreviation: string;
+  readonly icon: string;
   readonly summary: string;
   readonly inputs: readonly string[];
   readonly outputs: readonly string[];
@@ -279,6 +281,8 @@ export class FlowExtensionHost {
         kind: "neuron",
         neuronKind: kind.id,
         name: kind.name,
+        abbreviation: kind.abbreviation,
+        icon: kind.icon,
         summary: kind.summary,
       }));
       if (items.length === 0) continue;
@@ -411,6 +415,8 @@ export interface CatalogueItem {
   readonly neuronKind?: string;
   readonly action?: string;
   readonly name: string;
+  readonly abbreviation: string;
+  readonly icon: string;
   readonly summary: string;
 }
 
@@ -1636,7 +1642,7 @@ if (import.meta.vitest) {
           version: "0.1.0",
           activationEvents: ["onStartup"],
           contributes: {
-            neuronKinds: [{ id: "math.add", module: "math", name: "Add", summary: "Sum", inputs: ["a"], outputs: ["number"] }],
+            neuronKinds: [{ id: "math.add", module: "math", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum", inputs: ["a"], outputs: ["number"] }],
             widgets: [],
             commands: [],
             settings: [],
@@ -1664,7 +1670,7 @@ if (import.meta.vitest) {
         id: "math",
         title: "Math",
         items: [
-          { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" },
+          { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum" },
           { kind: "neuron", neuronKind: "math.multiply", name: "Multiply", summary: "Product" },
         ],
       },
@@ -1693,12 +1699,12 @@ if (import.meta.vitest) {
 
   describe("flow catalogue descriptor", () => {
     it("builds neuron descriptor", () => {
-      const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" };
+      const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum" };
       expect(flowCatalogueItemDescriptor(item)).toContain("math.add");
     });
 
     it("round-trips drag payload", () => {
-      const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" };
+      const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum" };
       const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
       expect(decodeFlowWidgetDescriptorFromDragV1(encoded)).toContain("math.add");
     });

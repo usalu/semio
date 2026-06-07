@@ -20,7 +20,7 @@ use crate::{
     handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
     rectangle_handle_angle_toward, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
     FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape,
-    SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
+    CachedIconBody, IconPaintCache, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
 
 use std::cell::RefCell;
@@ -156,21 +156,6 @@ pub fn puzzle_2d_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-#[derive(Clone)]
-enum CachedIconBody {
-    Vector(Scene),
-    Raster(Arc<ImageData>),
-}
-
-#[derive(Clone)]
-struct CachedIconPaint {
-    bx: f64,
-    by: f64,
-    bw: f64,
-    bh: f64,
-    body: CachedIconBody,
-}
-
 /// @emoji 🎨 Whether drawable style resolves committed selection chrome or neutral cached geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum StyleChromePass {
@@ -291,7 +276,7 @@ pub struct BoardHost {
     /// @emoji 📶 When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
     pub automatic_lod: bool,
     forced_draw_lod: Option<BoardDrawLod>,
-    icon_vector_cache: RefCell<HashMap<String, CachedIconPaint>>,
+    pub icon_paint_cache: IconPaintCache,
     /// @emoji 📡 Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
     link_compat_nodes_emit_key: Option<String>,
     /// @emoji 📡 Dedupes {@code linkTargetRing} emissions while a link wire is active.
@@ -325,7 +310,6 @@ pub struct BoardHost {
     /// @emoji ⌥ Alt held while brushing — enables flush offset and commit-on-leave.
     brush_alt_pressed: bool,
     pub port_mode: GraphPortMode,
-    pub themed_icon_lookup: infinite_cavas::icon_codec::ThemedSvgLookup,
 }
 
 impl Default for BoardHost {
@@ -364,7 +348,7 @@ impl Default for BoardHost {
             preserve_original_element_style: false,
             automatic_lod: true,
             forced_draw_lod: None,
-            icon_vector_cache: RefCell::new(HashMap::new()),
+            icon_paint_cache: IconPaintCache::new(),
             link_compat_nodes_emit_key: None,
             link_target_ring_emit_key: None,
             last_select_emit_sig: None,
@@ -388,7 +372,6 @@ impl Default for BoardHost {
             brush_handle_kind_weights: HashMap::new(),
             brush_alt_pressed: false,
             port_mode: GraphPortMode::Ported,
-            themed_icon_lookup: |_| None,
         }
     }
 }
@@ -587,81 +570,11 @@ impl BoardHost {
     }
 
     fn get_or_build_icon_paint(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
-        let resolved = infinite_cavas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
-        let key = match &resolved {
-            infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
-            infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
-            infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
-        };
-        {
-            let g = self.icon_vector_cache.borrow();
-            if let Some(c) = g.get(&key) {
-                return Some((c.bx, c.by, c.bw, c.bh, c.body.clone()));
-            }
-        }
-        let (bx, by, bw, bh, body) = match resolved {
-            infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
-            infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-                let tree = usvg::Tree::from_str(s.trim(), infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
-                let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
-                if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
-                    return None;
-                }
-                let mut s = Scene::new();
-                if preserve_original_style {
-                    let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
-                } else {
-                    infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
-                }
-                (bx, by, bw, bh, CachedIconBody::Vector(s))
-            }
-            infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
-                let svg_t = s.trim();
-                let tree = usvg::Tree::from_str(svg_t, infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
-                let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
-                if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
-                    return None;
-                }
-                let mut s = Scene::new();
-                if preserve_original_style {
-                    let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
-                } else {
-                    infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
-                }
-                (bx, by, bw, bh, CachedIconBody::Vector(s))
-            }
-            infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
-                let bx = 0.0_f64;
-                let by = 0.0_f64;
-                let bw = f64::from(w);
-                let bh = f64::from(h);
-                let img = ImageData { data: Blob::new(Arc::new(rgba.as_ref().to_vec())), format: ImageFormat::Rgba8, alpha_type: ImageAlphaType::Alpha, width: w, height: h };
-                (bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
-            }
-        };
-        let cached = CachedIconPaint { bx, by, bw, bh, body: body.clone() };
-        self.icon_vector_cache.borrow_mut().insert(key, cached);
-        Some((bx, by, bw, bh, body))
+        self.icon_paint_cache.get_or_build(encoded, fg, bg, preserve_original_style)
     }
 
     pub fn clear_icon_vector_cache(&mut self) {
-        self.icon_vector_cache.borrow_mut().clear();
-    }
-
-    fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        svg.hash(&mut hasher);
-        let hx = hasher.finish();
-        let f = fg.to_rgba8();
-        let b = bg.to_rgba8();
-        format!("v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}", svg.len(), f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a)
-    }
-
-    fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        rgba.as_ref().hash(&mut hasher);
-        let hx = hasher.finish();
-        format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
+        self.icon_paint_cache.clear();
     }
 
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -2710,7 +2623,7 @@ impl BoardHost {
             return;
         }
         self.preserve_original_element_style = enabled;
-        self.icon_vector_cache.borrow_mut().clear();
+        self.icon_paint_cache.clear();
     }
 
     pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
@@ -2722,7 +2635,7 @@ impl BoardHost {
 
     pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
         self.vello_theme.merge_from_json(json)?;
-        self.icon_vector_cache.borrow_mut().clear();
+        self.icon_paint_cache.clear();
         Ok(())
     }
 

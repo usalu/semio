@@ -19,7 +19,7 @@ import {
   type GraphWasmSession,
   type RenderMode,
 } from "@infinite/cavas/react-renderer";
-import { type TreeDragAndDropController } from "@ui/react";
+import { type TreeDragAndDropController, resolveIconUrlsInBoardJson } from "@ui/react";
 import {
   blendTokenHex,
   readableForegroundHex,
@@ -937,54 +937,7 @@ export interface Puzzle2dFixtureV1 {
 
 // #region 🏷️IconSelectorMode
 
-/** @emoji 🎛️ Puzzle 2d `iconKind` editor tab (`math` = `typst:` / leading `$`, `data` = data URLs, `emoji` = `emoji:` …, `vector` = catalog / inline SVG). */
-export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
-
-function stripLegacyImageDataPrefixForPuzzle2dIcon(raw: string): string {
-  const t = raw.trim();
-  return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
-}
-
-function isRasterDataUrlPayloadForPuzzle2dIcon(s: string): boolean {
-  const u = s.trim().toLowerCase();
-  return u.startsWith("data:image/png;base64,") || u.startsWith("data:image/jpeg;base64,") || u.startsWith("data:image/jpg;base64,");
-}
-
-function looksLikeAsciiCatalogishVectorStemForPuzzle2dIcon(s: string): boolean {
-  const t = s.trim();
-  if (t === "") {
-    return false;
-  }
-  if (!/^[\w.-]+$/.test(t)) {
-    return false;
-  }
-  return /[.-_]/.test(t) || t.length > 48;
-}
-
-/** @emoji 🧭 Picks a {@link Puzzle2dIconSelectorMode} tab for a stored puzzle 2d icon string (align with `puzzle2d_resolve_icon_kind` in `puzzle/2d/rs/lib.rs`). */
-export function classifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
-  const t = raw.trim();
-  if (t === "") {
-    return "math";
-  }
-  if (t.startsWith("typst:") || t.startsWith("$")) {
-    return "math";
-  }
-  if (t.startsWith("emoji:")) {
-    return "emoji";
-  }
-  const lower = t.toLowerCase();
-  if (lower.startsWith("data:") || isRasterDataUrlPayloadForPuzzle2dIcon(stripLegacyImageDataPrefixForPuzzle2dIcon(t))) {
-    return "data";
-  }
-  if (lower.startsWith("<?xml") || lower.includes("<svg")) {
-    return "vector";
-  }
-  if (looksLikeAsciiCatalogishVectorStemForPuzzle2dIcon(t)) {
-    return "vector";
-  }
-  return "emoji";
-}
+export { classifyIconSelectorMode as classifyPuzzle2dIconSelectorMode, type IconSelectorMode as Puzzle2dIconSelectorMode } from "@ui/react";
 
 // #endregion 🏷️IconSelectorMode
 
@@ -5904,14 +5857,20 @@ export class Puzzle2dRenderer {
   /** @emoji 📡 Pushes the current imperative scene graph (including empty) to the WASM host. */
   private syncImperativeSceneDescriptorToWasmSession(): void {
     const desc = this.descriptorJsonForWasmHost();
-    try {
-      this.session.syncDescriptorJson(desc);
-      this.lastPushedDescriptorJson = desc;
-      this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
-      this.lastSceneWasmFingerprint = puzzle2dSceneWasmFingerprintFromRenderer(this);
-    } catch (err) {
-      console.error("[DEBUG] syncDescriptorJson failed", err);
-    }
+    void resolveIconUrlsInBoardJson(desc).then((resolved) => {
+      try {
+        this.session.syncDescriptorJson(resolved);
+        this.lastPushedDescriptorJson = resolved;
+        this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
+        this.lastSceneWasmFingerprint = puzzle2dSceneWasmFingerprintFromRenderer(this);
+        if (resolved !== desc) {
+          console.log("[DEBUG] puzzle2d icon url prefetch applied");
+          this.invalidate();
+        }
+      } catch (err) {
+        console.error("[DEBUG] syncDescriptorJson failed", err);
+      }
+    });
   }
 
   private syncPuzzle2dAppearanceFromDocument(): void {

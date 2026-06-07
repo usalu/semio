@@ -13,25 +13,25 @@ todos:
     status: completed
   - id: js-url-prefetch
     content: "Add cached async url->data: prefetch in board React bridges (puzzle 2d / dag / flow) before WASM JSON sync"
-    status: pending
+    status: completed
   - id: ui-chrome
     content: Replace IconSource with canonical Icon union in ui/react; render all kinds in the Icon component; export encodeIcon/decodeIcon
-    status: in_progress
+    status: completed
   - id: icon-editor
     content: Generalize IconSelector into a shared editor for all Icon kinds; remove puzzle-specific classifier/mode
-    status: pending
+    status: completed
   - id: semio-domain
     content: Adopt canonical icon-string grammar for semio domain icon fields and resolve via shared codec on render
-    status: pending
+    status: completed
   - id: wire-canvases
     content: Route dag/flow/gis/reasoning node icons through the shared resolver; accept Icon union for r3f 2D markers via rasterized textures
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing Rust and TS test files for all 8 kinds and codec round-trips; verify puzzle 2d unchanged with [DEBUG] logs
-    status: pending
+    status: completed
   - id: close
     content: Close the ticket with summary and file list
-    status: pending
+    status: completed
 isProject: false
 ---
 

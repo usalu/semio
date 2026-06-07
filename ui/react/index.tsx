@@ -87,7 +87,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { ICONS, type IconName } from "@ui/assets";
+import { ICONS, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@ui/assets";
 export type { IconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -492,8 +492,265 @@ export function resolveIconSizePx(size?: number | IconSizeToken): number {
   return ICON_SIZE_PX[size];
 }
 
-/** @emoji 🖼 Icon payload: built-in name, inline svg/url, or custom node. */
+// #region 🖼️IconCodec
+
+/** @emoji 🖼 Canonical structured icon payload shared across canvases and UI chrome. */
+export type Icon =
+  | { readonly kind: "url"; readonly url: string }
+  | { readonly kind: "shortcode"; readonly code: string }
+  | { readonly kind: "data"; readonly data: string }
+  | { readonly kind: "emoji"; readonly emoji: string }
+  | { readonly kind: "typst"; readonly src: string }
+  | { readonly kind: "text"; readonly text: string }
+  | { readonly kind: "svg"; readonly svg: string }
+  | { readonly kind: "catalog"; readonly key: string }
+  | { readonly kind: "node"; readonly node: React.ReactNode };
+
+/** @emoji 🎛 Shared icon editor tab buckets aligned with {@link Icon}. */
+export type IconSelectorMode = "url" | "shortcode" | "data" | "emoji" | "math" | "text" | "vector";
+
+function stripLegacyImageDataPrefixForIcon(raw: string): string {
+  const t = raw.trim();
+  return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
+}
+
+function isRasterDataUrlPayloadForIcon(s: string): boolean {
+  const u = stripLegacyImageDataPrefixForIcon(s).toLowerCase();
+  return (
+    u.startsWith("data:image/png;base64,") ||
+    u.startsWith("data:image/jpeg;base64,") ||
+    u.startsWith("data:image/jpg;base64,") ||
+    u.startsWith("data:image/webp;base64,") ||
+    u.startsWith("data:image/gif;base64,")
+  );
+}
+
+function isSvgDataUrlPayloadForIcon(s: string): boolean {
+  return stripLegacyImageDataPrefixForIcon(s).toLowerCase().startsWith("data:image/svg+xml");
+}
+
+function looksLikeShortcodeToken(t: string): boolean {
+  return t.length >= 3 && t.startsWith(":") && t.endsWith(":") && /^:[\w+-]+:$/.test(t);
+}
+
+function looksLikeAsciiCatalogishStemForIcon(s: string): boolean {
+  const t = s.trim();
+  if (t === "" || !/^[\w.-]+$/.test(t)) {
+    return false;
+  }
+  return /[._-]/.test(t) || t.length > 48;
+}
+
+function looksLikeBareUrlForIcon(s: string): boolean {
+  const lower = s.trim().toLowerCase();
+  return lower.startsWith("http://") || lower.startsWith("https://");
+}
+
+function looksLikeBareEmojiForIcon(s: string): boolean {
+  return /\p{Extended_Pictographic}/u.test(s.trim());
+}
+
+/** @emoji 🔤 Decodes a canonical icon string into a structured {@link Icon}. */
+export function decodeIcon(encoded: string): Icon | undefined {
+  const t = encoded.trim();
+  if (t === "") {
+    return undefined;
+  }
+  if (t.startsWith("url:")) {
+    const url = t.slice("url:".length).trim();
+    return url === "" ? undefined : { kind: "url", url };
+  }
+  if (looksLikeBareUrlForIcon(t)) {
+    return { kind: "url", url: t };
+  }
+  if (looksLikeShortcodeToken(t)) {
+    return { kind: "shortcode", code: t.slice(1, -1) };
+  }
+  if (t.startsWith("typst:")) {
+    const src = t.slice("typst:".length).trim();
+    return src === "" ? undefined : { kind: "typst", src };
+  }
+  if (t.startsWith("$")) {
+    return { kind: "typst", src: t };
+  }
+  if (t.startsWith("emoji:")) {
+    const emoji = t.slice("emoji:".length).trim();
+    return emoji === "" ? undefined : { kind: "emoji", emoji };
+  }
+  if (t.startsWith("text:")) {
+    const text = t.slice("text:".length).trim();
+    return text === "" ? undefined : { kind: "text", text };
+  }
+  if (isRasterDataUrlPayloadForIcon(t) || isSvgDataUrlPayloadForIcon(t) || t.toLowerCase().startsWith("data:")) {
+    return { kind: "data", data: t };
+  }
+  const lower = t.toLowerCase();
+  if (lower.startsWith("<?xml") || lower.includes("<svg")) {
+    return { kind: "svg", svg: t };
+  }
+  if (looksLikeAsciiCatalogishStemForIcon(t)) {
+    return { kind: "catalog", key: t };
+  }
+  if (looksLikeBareEmojiForIcon(t)) {
+    return { kind: "emoji", emoji: t };
+  }
+  if ([...t].length <= 16) {
+    return { kind: "text", text: t };
+  }
+  return { kind: "catalog", key: t };
+}
+
+/** @emoji 🔤 Encodes a structured {@link Icon} into the canonical wire string. */
+export function encodeIcon(icon: Icon): string {
+  switch (icon.kind) {
+    case "url":
+      return `url:${icon.url.trim()}`;
+    case "shortcode":
+      return `:${icon.code.trim()}:`;
+    case "data":
+      return icon.data.trim();
+    case "emoji":
+      return `emoji:${icon.emoji.trim()}`;
+    case "typst":
+      return icon.src.trim().startsWith("$") ? icon.src.trim() : `typst:${icon.src.trim()}`;
+    case "text":
+      return `text:${icon.text.trim()}`;
+    case "svg":
+      return icon.svg.trim();
+    case "catalog":
+      return icon.key.trim();
+    case "node":
+      return "";
+  }
+}
+
+/** @emoji 🧭 Picks an {@link IconSelectorMode} tab for a stored icon string. */
+export function classifyIconSelectorMode(raw: string): IconSelectorMode {
+  const icon = decodeIcon(raw);
+  if (!icon) {
+    return "math";
+  }
+  switch (icon.kind) {
+    case "url":
+      return "url";
+    case "shortcode":
+      return "shortcode";
+    case "data":
+      return "data";
+    case "emoji":
+      return "emoji";
+    case "typst":
+      return "math";
+    case "text":
+      return "text";
+    case "svg":
+    case "catalog":
+      return "vector";
+    case "node":
+      return "vector";
+  }
+}
+
+function resolveShortcodeIcon(code: string): Icon {
+  const key = code.trim();
+  const lower = key.toLowerCase();
+  const emoji = shortcodeEmoji(lower);
+  if (emoji) {
+    return { kind: "emoji", emoji };
+  }
+  const catalog = shortcodeCatalogKey(key);
+  if (catalog) {
+    return { kind: "catalog", key: catalog };
+  }
+  return { kind: "shortcode", code: key };
+}
+
+async function fetchIconUrlAsDataUrl(url: string): Promise<string | undefined> {
+  const cached = iconUrlDataCache.get(url);
+  if (cached) {
+    return cached;
+  }
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      return undefined;
+    }
+    const blob = await res.blob();
+    const data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    const trimmed = data.trim();
+    if (trimmed !== "") {
+      iconUrlDataCache.set(url, trimmed);
+    }
+    return trimmed || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** @emoji 🌐 Prefetches `url:`/`http(s)` icons in board JSON to inline `data:` payloads before WASM sync. */
+export async function resolveIconUrlsInBoardJson(json: string): Promise<string> {
+  let root: unknown;
+  try {
+    root = JSON.parse(json);
+  } catch {
+    return json;
+  }
+  if (!root || typeof root !== "object") {
+    return json;
+  }
+  const record = root as Record<string, unknown>;
+  const pending: Promise<void>[] = [];
+  const visit = (iconKind: unknown, apply: (next: string) => void) => {
+    if (typeof iconKind !== "string" || iconKind.trim() === "") {
+      return;
+    }
+    const icon = decodeIcon(iconKind);
+    if (!icon || icon.kind !== "url") {
+      return;
+    }
+    const cached = iconUrlDataCache.get(icon.url);
+    if (cached) {
+      apply(cached);
+      return;
+    }
+    pending.push(
+      fetchIconUrlAsDataUrl(icon.url).then((data) => {
+        if (data) {
+          apply(data);
+        }
+      }),
+    );
+  };
+  for (const bucket of ["nodes", "handles"] as const) {
+    const rows = record[bucket];
+    if (!Array.isArray(rows)) {
+      continue;
+    }
+    for (const row of rows) {
+      if (!row || typeof row !== "object") {
+        continue;
+      }
+      const obj = row as Record<string, unknown>;
+      visit(obj.iconKind, (next) => {
+        obj.iconKind = next;
+      });
+    }
+  }
+  if (pending.length === 0) {
+    return json;
+  }
+  await Promise.all(pending);
+  return JSON.stringify(root);
+}
+
+/** @emoji 🖼 Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
 export type IconSource =
+  | Icon
   | IconName
   | { readonly name: IconName }
   | { readonly svg: string }
@@ -506,9 +763,31 @@ export type ControlIcon = IconSource | React.ReactElement;
 function isIconSource(value: ControlIcon): value is IconSource {
   if (typeof value === "string") return true;
   if (typeof value === "object" && value !== null && !React.isValidElement(value)) {
-    return "name" in value || "svg" in value || "url" in value || "node" in value;
+    return "kind" in value || "name" in value || "svg" in value || "url" in value || "node" in value;
   }
   return false;
+}
+
+function coerceIconSource(source: IconSource): Icon {
+  if (typeof source === "string") {
+    if ((ICONS as Record<string, string>)[source]) {
+      return { kind: "catalog", key: source };
+    }
+    return decodeIcon(source) ?? { kind: "catalog", key: source };
+  }
+  if ("kind" in source) {
+    return source;
+  }
+  if ("node" in source) {
+    return { kind: "node", node: source.node };
+  }
+  if ("svg" in source) {
+    return { kind: "svg", svg: source.svg };
+  }
+  if ("url" in source) {
+    return { kind: "url", url: source.url };
+  }
+  return { kind: "catalog", key: source.name };
 }
 
 /** @emoji 🎛 Renders a control icon or a visible missing-icon placeholder. */
@@ -527,46 +806,75 @@ export interface IconProps {
   title?: string;
 }
 
-function normalizeIconSource(source: IconSource): Exclude<IconSource, IconName> | { readonly name: IconName } {
-  if (typeof source === "string") return { name: source };
-  return source;
-}
-
 /** @emoji 🖼 Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
 export function iconSvgMarkup(name: string): string | undefined {
   return (ICONS as Record<string, string>)[name];
 }
 
-/** @emoji 🖼 Renders vendored UI SVG icons without depending on an external icon library. */
+/** @emoji 🖼 Renders canonical icons without depending on an external icon library. */
 export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
   const px = resolveIconSizePx(size);
-  const normalized = normalizeIconSource(icon);
-  if ("node" in normalized) {
+  let normalized = coerceIconSource(icon);
+  if (normalized.kind === "shortcode") {
+    normalized = resolveShortcodeIcon(normalized.code);
+  }
+  if (normalized.kind === "node") {
     return (
-      <span
-        className={cn("inline-flex shrink-0 items-center justify-center", className)}
-        style={{ width: px, height: px }}
-        title={title}
-      >
+      <span className={cn("inline-flex shrink-0 items-center justify-center", className)} style={{ width: px, height: px }} title={title}>
         {normalized.node}
       </span>
     );
   }
-  if ("url" in normalized) {
-    return <img src={normalized.url} alt="" width={px} height={px} className={cn("shrink-0", className)} title={title} />;
+  if (normalized.kind === "url" || normalized.kind === "data") {
+    const src = normalized.kind === "url" ? normalized.url : normalized.data;
+    return <img src={src} alt="" width={px} height={px} className={cn("shrink-0", className)} title={title} />;
   }
-  const svgMarkup = "svg" in normalized ? normalized.svg : ICONS[normalized.name];
+  if (normalized.kind === "emoji") {
+    return (
+      <span
+        className={cn("inline-flex shrink-0 items-center justify-center text-base leading-none", className)}
+        style={{ width: px, height: px, fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}
+        title={title}
+        aria-hidden={title ? undefined : true}
+      >
+        {normalized.emoji}
+      </span>
+    );
+  }
+  if (normalized.kind === "text" || normalized.kind === "typst") {
+    const label = normalized.kind === "text" ? normalized.text : normalized.src;
+    return (
+      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", className)} style={{ width: px, height: px }} title={title}>
+        {label}
+      </span>
+    );
+  }
+  const svgMarkup =
+    normalized.kind === "svg"
+      ? normalized.svg
+      : normalized.kind === "catalog"
+        ? (ICONS as Record<string, string>)[normalized.key] ?? iconSvgMarkup(normalized.key)
+        : undefined;
+  if (!svgMarkup) {
+    return (
+      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-[10px] text-muted-foreground", className)} style={{ width: px, height: px }} title={title}>
+        {normalized.kind === "catalog" ? normalized.key.slice(0, 3) : "?"}
+      </span>
+    );
+  }
   return (
     <span
       className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", className)}
       style={{ width: px, height: px }}
       title={title}
-      data-icon={"name" in normalized ? normalized.name : undefined}
+      data-icon={normalized.kind === "catalog" ? normalized.key : undefined}
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
       aria-hidden={title ? undefined : true}
     />
   );
 }
+
+// #endregion 🖼️IconCodec
 
 /** @emoji 🔗 Binds a built-in {@link IconName} for APIs expecting `ComponentType<{ size?: number }>`. */
 export function createIconComponent(name: IconName): React.ComponentType<{ size?: number; className?: string }> {
@@ -7833,346 +8141,234 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #region 🖼️IconSelector
 
-/** @emoji 🎛️ Tab buckets for {@link IconSelector} (puzzle 2d WASM `iconKind`: `typst:` / `$…`, `data:` payloads, `emoji:`, catalog or inline SVG). */
-export type Puzzle2dIconSelectorMode = "data" | "emoji" | "math" | "vector";
-
-function stripLegacyImageDataPrefixForIconSelectorUi(raw: string): string {
-	const t = raw.trim();
-	return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
-}
-
-function isRasterDataUrlPayloadForIconSelectorUi(s: string): boolean {
-	const u = s.trim().toLowerCase();
-	return (
-		u.startsWith("data:image/png;base64,") ||
-		u.startsWith("data:image/jpeg;base64,") ||
-		u.startsWith("data:image/jpg;base64,")
-	);
-}
-
-function looksLikeAsciiCatalogishVectorStemForIconSelectorUi(s: string): boolean {
-	const t = s.trim();
-	if (t === "") {
-		return false;
-	}
-	if (!/^[\w.-]+$/.test(t)) {
-		return false;
-	}
-	return /[.-_]/.test(t) || t.length > 48;
-}
-
-/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyPuzzle2dIconSelectorMode` in `@puzzle/2d/react`. */
-function defaultClassifyPuzzle2dIconSelectorMode(raw: string): Puzzle2dIconSelectorMode {
-	const t = raw.trim();
-	if (t === "") {
-		return "math";
-	}
-	if (t.startsWith("typst:") || t.startsWith("$")) {
-		return "math";
-	}
-	if (t.startsWith("emoji:")) {
-		return "emoji";
-	}
-	const lower = t.toLowerCase();
-	if (lower.startsWith("data:") || isRasterDataUrlPayloadForIconSelectorUi(stripLegacyImageDataPrefixForIconSelectorUi(t))) {
-		return "data";
-	}
-	if (lower.startsWith("<?xml") || lower.includes("<svg")) {
-		return "vector";
-	}
-	if (looksLikeAsciiCatalogishVectorStemForIconSelectorUi(t)) {
-		return "vector";
-	}
-	return "emoji";
-}
+/** @deprecated Use {@link IconSelectorMode}. */
+export type Puzzle2dIconSelectorMode = IconSelectorMode;
 
 function stripTypstEmojiPrefixesForIconSelector(raw: string): string {
-	const t = raw.trim();
-	if (t.startsWith("typst:")) {
-		return t.slice("typst:".length).trim();
-	}
-	if (t.startsWith("emoji:")) {
-		return t.slice("emoji:".length).trim();
-	}
-	return t;
+  const t = raw.trim();
+  if (t.startsWith("typst:")) {
+    return t.slice("typst:".length).trim();
+  }
+  if (t.startsWith("emoji:")) {
+    return t.slice("emoji:".length).trim();
+  }
+  return t;
 }
 
-function mathInnerFromIconKindStored(stored: string): string {
-	return stripTypstEmojiPrefixesForIconSelector(stored);
+function innerFromIconForSelectorMode(raw: string, mode: IconSelectorMode): string {
+  const icon = decodeIcon(raw);
+  if (!icon) {
+    return "";
+  }
+  switch (mode) {
+    case "url":
+      return icon.kind === "url" ? icon.url : "";
+    case "shortcode":
+      return icon.kind === "shortcode" ? icon.code : "";
+    case "data":
+      return icon.kind === "data" ? icon.data : "";
+    case "emoji":
+      return icon.kind === "emoji" ? icon.emoji : "";
+    case "math":
+      return icon.kind === "typst" ? icon.src : "";
+    case "text":
+      return icon.kind === "text" ? icon.text : "";
+    case "vector":
+      return icon.kind === "svg" ? icon.svg : icon.kind === "catalog" ? icon.key : "";
+  }
 }
 
-function emitMathIconKindFromInner(inner: string): string {
-	const i = inner.trim();
-	if (i === "") {
-		return "";
-	}
-	return `typst:${i}`;
+function emitIconKindFromSelectorMode(mode: IconSelectorMode, inner: string): string {
+  const i = inner.trim();
+  if (i === "") {
+    return "";
+  }
+  switch (mode) {
+    case "url":
+      return encodeIcon({ kind: "url", url: i });
+    case "shortcode":
+      return encodeIcon({ kind: "shortcode", code: i.replace(/^:+|:+$/g, "") });
+    case "data":
+      return i;
+    case "emoji":
+      return encodeIcon({ kind: "emoji", emoji: i });
+    case "math":
+      return encodeIcon({ kind: "typst", src: i });
+    case "text":
+      return encodeIcon({ kind: "text", text: i });
+    case "vector":
+      return i.includes("<svg") || i.startsWith("<?xml") ? i : encodeIcon({ kind: "catalog", key: i });
+  }
 }
 
-function emojiInnerFromIconKindStored(stored: string): string {
-	const t = stored.trim();
-	return t.startsWith("emoji:") ? t.slice("emoji:".length).trim() : stripTypstEmojiPrefixesForIconSelector(t);
-}
-
-function emitEmojiIconKindFromInner(inner: string): string {
-	const i = inner.trim();
-	return i === "" ? "" : `emoji:${i}`;
-}
-
-function migrateIconKindToIconSelectorMode(
-	prev: string,
-	mode: Puzzle2dIconSelectorMode,
-	classify: (raw: string) => Puzzle2dIconSelectorMode,
-): string {
-	const cur = classify(prev);
-	if (cur === mode) {
-		return prev;
-	}
-	if (mode === "data") {
-		return cur === "data" ? prev : "";
-	}
-	if (mode === "vector") {
-		if (cur === "vector") {
-			return prev;
-		}
-		return "";
-	}
-	const neutral = stripTypstEmojiPrefixesForIconSelector(prev).trim();
-	if (mode === "math") {
-		return neutral === "" ? "" : emitMathIconKindFromInner(neutral);
-	}
-	if (mode === "emoji") {
-		return neutral === "" ? "" : emitEmojiIconKindFromInner(neutral);
-	}
-	return "";
+function migrateIconKindToIconSelectorMode(prev: string, mode: IconSelectorMode, classify: (raw: string) => IconSelectorMode): string {
+  const cur = classify(prev);
+  if (cur === mode) {
+    return prev;
+  }
+  if (mode === "data" || mode === "vector") {
+    return cur === mode ? prev : "";
+  }
+  const neutral = stripTypstEmojiPrefixesForIconSelector(prev).trim();
+  if (mode === "math") {
+    return neutral === "" ? "" : emitIconKindFromSelectorMode("math", neutral);
+  }
+  if (mode === "emoji") {
+    return neutral === "" ? "" : emitIconKindFromSelectorMode("emoji", neutral);
+  }
+  if (mode === "text") {
+    return neutral === "" ? "" : emitIconKindFromSelectorMode("text", neutral);
+  }
+  if (mode === "url") {
+    return "";
+  }
+  if (mode === "shortcode") {
+    return "";
+  }
+  return "";
 }
 
 export interface IconSelectorProps {
-	id: string;
-	value: string;
-	onChange: (next: string) => void;
-	disabled?: boolean;
-	uniform?: boolean;
-	classifyPuzzle2dIconSelectorMode?: (raw: string) => Puzzle2dIconSelectorMode;
+  id: string;
+  value: string;
+  onChange: (next: string) => void;
+  disabled?: boolean;
+  uniform?: boolean;
+  classifyIconSelectorMode?: (raw: string) => IconSelectorMode;
+  /** @deprecated Use {@link IconSelectorProps.classifyIconSelectorMode}. */
+  classifyPuzzle2dIconSelectorMode?: (raw: string) => IconSelectorMode;
 }
 
-/** @emoji 🖼️ Puzzle 2d `iconKind` editor: mode dropdown (math / data URL / emoji / catalog or SVG), one editor, preview strip, import and clear. */
+/** @emoji 🖼️ Canonical `iconKind` editor for all canvases. */
 export function IconSelector({
-	id,
-	value,
-	onChange,
-	disabled = false,
-	uniform = true,
-	classifyPuzzle2dIconSelectorMode: classifyModeProp,
+  id,
+  value,
+  onChange,
+  disabled = false,
+  uniform = true,
+  classifyIconSelectorMode: classifyModeProp,
+  classifyPuzzle2dIconSelectorMode: legacyClassifyProp,
 }: IconSelectorProps): React.ReactElement {
-	const classifyMode = classifyModeProp ?? defaultClassifyPuzzle2dIconSelectorMode;
-	const activeMode = classifyMode(value);
-	const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
-	const locked = disabled || !uniform;
-	const mathFieldValue = uniform && activeMode === "math" ? mathInnerFromIconKindStored(value) : "";
-	const dataFieldValue = uniform && activeMode === "data" ? value : "";
-	const emojiFieldValue = uniform && activeMode === "emoji" ? emojiInnerFromIconKindStored(value) : "";
-	const vectorFieldValue = uniform && activeMode === "vector" ? value : "";
+  const classifyMode = classifyModeProp ?? legacyClassifyProp ?? classifyIconSelectorMode;
+  const activeMode = classifyMode(value);
+  const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
+  const locked = disabled || !uniform;
+  const editorValue = uniform ? innerFromIconForSelectorMode(value, activeMode) : "";
 
-	const onModeSelect = (next: string) => {
-		if (locked) {
-			return;
-		}
-		const mode = next as Puzzle2dIconSelectorMode;
-		onChange(migrateIconKindToIconSelectorMode(value, mode, classifyMode));
-	};
+  const onModeSelect = (next: string) => {
+    if (locked) {
+      return;
+    }
+    onChange(migrateIconKindToIconSelectorMode(value, next as IconSelectorMode, classifyMode));
+  };
 
-	const editorValue = uniform
-		? activeMode === "math"
-			? mathFieldValue
-			: activeMode === "data"
-				? dataFieldValue
-				: activeMode === "emoji"
-					? emojiFieldValue
-					: vectorFieldValue
-		: "";
+  const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (locked) {
+      return;
+    }
+    onChange(emitIconKindFromSelectorMode(activeMode, e.target.value));
+  };
 
-	const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		if (locked) {
-			return;
-		}
-		const raw = e.target.value;
-		if (activeMode === "math") {
-			onChange(emitMathIconKindFromInner(raw));
-			return;
-		}
-		if (activeMode === "emoji") {
-			onChange(emitEmojiIconKindFromInner(raw));
-			return;
-		}
-		onChange(raw);
-	};
+  const editorPlaceholder =
+    activeMode === "url"
+      ? "https://example.com/icon.png"
+      : activeMode === "shortcode"
+        ? "Shortcode (emoji alias, UI icon, or catalog id — stored as :name:)"
+        : activeMode === "math"
+          ? "Typst markup (e.g. $x^2$)"
+          : activeMode === "data"
+            ? "data:image/png;base64,… or other data:… URL"
+            : activeMode === "emoji"
+              ? "Emoji or Typst emoji body (stored as emoji:…)"
+              : activeMode === "text"
+                ? "Short label (stored as text:…)"
+                : "Catalog id or inline <svg …>";
 
-	const editorPlaceholder =
-		activeMode === "math"
-			? "Typst markup (e.g. $x^2$)"
-			: activeMode === "data"
-				? "data:image/png;base64,… or other data:… URL"
-				: activeMode === "emoji"
-					? "Typst body after emoji: (e.g. 😀)"
-					: "Catalog id or inline <svg …>";
+  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    const f = list?.[0];
+    e.target.value = "";
+    if (!f || locked) {
+      return;
+    }
+    const isSvgMime = f.type === "image/svg+xml" || /\.svg$/i.test(f.name);
+    if (isSvgMime) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = typeof reader.result === "string" ? reader.result.trim() : "";
+        onChange(text);
+      };
+      reader.readAsText(f);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = typeof reader.result === "string" ? reader.result : "";
+      onChange(url.trim());
+    };
+    reader.readAsDataURL(f);
+  };
 
-	const modeSelectTitle =
-		activeMode === "math"
-			? "Typst math (stored as typst:… or leading $)"
-			: activeMode === "data"
-				? "Raster or other data: URL"
-				: activeMode === "emoji"
-					? "Typst emoji cell (stored as emoji:…)"
-					: "Metabolism catalog id or inline SVG";
+  const previewIcon = decodeIcon(value.trim());
+  const preview = (() => {
+    if (!previewIcon) {
+      return <span className="text-muted-foreground text-xs">—</span>;
+    }
+    if (previewIcon.kind === "node") {
+      return previewIcon.node;
+    }
+    return <Icon icon={previewIcon} size={56} />;
+  })();
 
-	const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const list = e.target.files;
-		const f = list?.[0];
-		e.target.value = "";
-		if (!f || locked) {
-			return;
-		}
-		const isRasterMime = f.type === "image/png" || f.type === "image/jpeg" || /\.png$/i.test(f.name) || /\.jpe?g$/i.test(f.name);
-		const isSvgMime = f.type === "image/svg+xml" || /\.svg$/i.test(f.name);
-		if (isSvgMime) {
-			const reader = new FileReader();
-			reader.onload = () => {
-				const text = typeof reader.result === "string" ? reader.result.trim() : "";
-				onChange(text);
-			};
-			reader.readAsText(f);
-			return;
-		}
-		if (isRasterMime) {
-			const reader = new FileReader();
-			reader.onload = () => {
-				const url = typeof reader.result === "string" ? reader.result : "";
-				onChange(url.trim());
-			};
-			reader.readAsDataURL(f);
-			return;
-		}
-		const reader = new FileReader();
-		reader.onload = () => {
-			const url = typeof reader.result === "string" ? reader.result : "";
-			onChange(url.trim());
-		};
-		reader.readAsDataURL(f);
-	};
-
-	const vectorPreviewSrc = reactHostPort.useMemo(() => {
-		const t = value.trim();
-		const lower = t.toLowerCase();
-		if (!lower.includes("<svg")) {
-			return null;
-		}
-		try {
-			return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(t)}`;
-		} catch {
-			return null;
-		}
-	}, [value]);
-
-	const rasterPreviewSrc = reactHostPort.useMemo(() => {
-		const t = value.trim();
-		if (!/^data:image\/(png|jpeg|jpg);/i.test(t)) {
-			return null;
-		}
-		return t;
-	}, [value]);
-
-	const preview = (() => {
-		const t = value.trim();
-		if (t === "") {
-			return <span className="text-muted-foreground text-xs">—</span>;
-		}
-		const mode = classifyMode(t);
-		if (mode === "data") {
-			const src = rasterPreviewSrc ?? (t.toLowerCase().startsWith("data:") ? t : null);
-			if (src && /^data:image\/(png|jpeg|svg\+xml|jpg)/i.test(src)) {
-				return <img alt="" className="max-h-14 max-w-full object-contain" src={src} />;
-			}
-			return (
-				<span className="text-muted-foreground max-h-14 overflow-hidden font-mono text-[10px] leading-tight break-all">
-					{t.length > 180 ? `${t.slice(0, 180)}…` : t}
-				</span>
-			);
-		}
-		if (mode === "vector") {
-			if (vectorPreviewSrc) {
-				return <img alt="" className="max-h-14 max-w-full object-contain" src={vectorPreviewSrc} />;
-			}
-			return (
-				<span className="text-muted-foreground max-h-14 overflow-hidden font-mono text-xs leading-snug break-all">
-					{t.length > 120 ? `${t.slice(0, 120)}…` : t}
-				</span>
-			);
-		}
-		if (mode === "emoji") {
-			const inner = emojiInnerFromIconKindStored(t);
-			return (
-				<span className="text-2xl leading-none" style={{ fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}>
-					{inner || "—"}
-				</span>
-			);
-		}
-		const inner = mathInnerFromIconKindStored(t);
-		return <span className="text-muted-foreground max-h-14 overflow-hidden font-mono text-xs leading-snug break-all">{inner || "—"}</span>;
-	})();
-
-	return (
-		<div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
-			<Select disabled={locked} onValueChange={onModeSelect} value={activeMode}>
-				<SelectTrigger className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`} title={modeSelectTitle}>
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent position="popper">
-					<SelectItem id={`${id}.mode.math`} value="math">
-						<span className="inline-flex items-center gap-2">
-							<Puzzle2dIconMathGlyphIcon aria-hidden className="size-3.5 shrink-0" />
-							Math
-						</span>
-					</SelectItem>
-					<SelectItem id={`${id}.mode.data`} value="data">
-						<span className="inline-flex items-center gap-2">
-							<Puzzle2dIconRasterGlyphIcon aria-hidden className="size-3.5 shrink-0" />
-							Data URL
-						</span>
-					</SelectItem>
-					<SelectItem id={`${id}.mode.emoji`} value="emoji">
-						<span className="inline-flex items-center gap-2">
-							<Puzzle2dIconEmojiGlyphIcon aria-hidden className="size-3.5 shrink-0" />
-							Emoji
-						</span>
-					</SelectItem>
-					<SelectItem id={`${id}.mode.vector`} value="vector">
-						<span className="inline-flex items-center gap-2">
-							<Puzzle2dIconCatalogGlyphIcon aria-hidden className="size-3.5 shrink-0" />
-							Catalog / SVG
-						</span>
-					</SelectItem>
-				</SelectContent>
-			</Select>
-			<Textarea
-				className={cn("min-h-[72px] font-mono text-xs", (activeMode === "data" || activeMode === "vector") && "min-h-[88px]")}
-				id={`${id}.field`}
-				key={activeMode}
-				mixed={!uniform}
-				onChange={onEditorChange}
-				placeholder={editorPlaceholder}
-				readOnly={locked}
-				rows={activeMode === "data" || activeMode === "vector" ? 5 : 4}
-				value={editorValue}
-			/>
-			<div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
-			<div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-				<Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text="Import file…" />
-				<Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text="Clear" />
-			</div>
-			<input accept="image/png,image/jpeg,image/svg+xml,.svg,.png,.jpg,.jpeg" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
-		</div>
-	);
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
+      <Select disabled={locked} onValueChange={onModeSelect} value={activeMode}>
+        <SelectTrigger className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent position="popper">
+          <SelectItem id={`${id}.mode.url`} value="url">
+            URL
+          </SelectItem>
+          <SelectItem id={`${id}.mode.shortcode`} value="shortcode">
+            Shortcode
+          </SelectItem>
+          <SelectItem id={`${id}.mode.math`} value="math">
+            Math / Typst
+          </SelectItem>
+          <SelectItem id={`${id}.mode.data`} value="data">
+            Data URL
+          </SelectItem>
+          <SelectItem id={`${id}.mode.emoji`} value="emoji">
+            Emoji
+          </SelectItem>
+          <SelectItem id={`${id}.mode.text`} value="text">
+            Text
+          </SelectItem>
+          <SelectItem id={`${id}.mode.vector`} value="vector">
+            Catalog / SVG
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Textarea
+        className={cn("min-h-[72px] font-mono text-xs", (activeMode === "data" || activeMode === "vector") && "min-h-[88px]")}
+        id={`${id}.field`}
+        key={activeMode}
+        mixed={!uniform}
+        onChange={onEditorChange}
+        placeholder={editorPlaceholder}
+        readOnly={locked}
+        rows={activeMode === "data" || activeMode === "vector" ? 5 : 4}
+        value={editorValue}
+      />
+      <div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text="Import file…" />
+        <Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text="Clear" />
+      </div>
+      <input accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg,.png,.jpg,.jpeg,.webp,.gif" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
+    </div>
+  );
 }
 
 // #endregion 🖼️IconSelector
@@ -19602,6 +19798,35 @@ if (import.meta.vitest) {
     it("returns vendored svg markup for a known icon and undefined otherwise", () => {
       expect(iconSvgMarkup("component")).toContain("<svg");
       expect(iconSvgMarkup("definitely-not-a-vendored-icon")).toBeUndefined();
+    });
+  });
+
+  describe("iconCodec", () => {
+    it("round-trips canonical icon strings", () => {
+      const samples = [
+        "url:https://example.com/icon.png",
+        ":smile:",
+        "data:image/png;base64,iVBORw0KGgo=",
+        "emoji:☺",
+        "typst:$x^2$",
+        "text:Hi",
+        "capsule_J",
+      ];
+      for (const sample of samples) {
+        const icon = decodeIcon(sample);
+        expect(icon).toBeTruthy();
+        const encoded = encodeIcon(icon!);
+        expect(decodeIcon(encoded)).toEqual(icon);
+      }
+    });
+
+    it("classifies selector modes for all kinds", () => {
+      expect(classifyIconSelectorMode("url:https://x.test/a.png")).toBe("url");
+      expect(classifyIconSelectorMode(":plus:")).toBe("shortcode");
+      expect(shortcodeEmoji("grinning")).toBeTruthy();
+      expect(shortcodeCatalogKey("plus")).toBe("plus");
+      expect(classifyIconSelectorMode("text:Hi")).toBe("text");
+      expect(classifyIconSelectorMode("capsule_J")).toBe("vector");
     });
   });
 

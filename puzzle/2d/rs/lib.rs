@@ -71,13 +71,13 @@ pub fn puzzle_themed_icon_lookup(key: &str) -> Option<&'static str> {
 
 pub fn puzzle_board_host() -> BoardHost {
     let mut h = BoardHost::new();
-    h.themed_icon_lookup = puzzle_themed_icon_lookup;
+    h.icon_paint_cache.themed_icon_lookup = puzzle_themed_icon_lookup;
     h
 }
 
 pub fn puzzle_board_host_normal() -> BoardHost {
     let mut h = BoardHost::new_normal();
-    h.themed_icon_lookup = puzzle_themed_icon_lookup;
+    h.icon_paint_cache.themed_icon_lookup = puzzle_themed_icon_lookup;
     h
 }
 
@@ -4043,6 +4043,17 @@ mod force_graph_tests {
         let bg = crate::cavas::vello::peniko::Color::from_rgba8(10, 200, 10, 255);
         let mut scene2 = crate::cavas::vello::Scene::new();
         crate::cavas::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
+    }
+
+    #[test]
+    fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
+        let r = super::board_icon_codec::board_resolve_icon_kind("capsule_J");
+        match r {
+            crate::cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                assert!(s.contains("<svg"), "catalog metabolism key should resolve via themed lookup");
+            }
+            other => panic!("unexpected resolution for catalog capsule_J: {other:?}"),
+        }
     }
 
     #[test]

@@ -5,6 +5,8 @@
     {
       "id": "slider",
       "name": "Amount",
+      "abbreviation": "Amount",
+      "icon": "emoji:🎚️",
       "kind": "slider",
       "x": -400,
       "y": -40,
@@ -19,6 +21,8 @@
     {
       "id": "mode",
       "name": "Mode",
+      "abbreviation": "Mode",
+      "icon": "emoji:📋",
       "kind": "select",
       "x": -400,
       "y": 80,
@@ -31,6 +35,8 @@
     {
       "id": "scale",
       "name": "Scale",
+      "abbreviation": "Scale",
+      "icon": "emoji:📐",
       "kind": "computation",
       "x": -120,
       "y": -40,
@@ -42,6 +48,8 @@
     {
       "id": "combine",
       "name": "Combine",
+      "abbreviation": "Combine",
+      "icon": "emoji:🔀",
       "kind": "computation",
       "x": 120,
       "y": 0,
@@ -56,6 +64,8 @@
     {
       "id": "screen",
       "name": "Preview",
+      "abbreviation": "Preview",
+      "icon": "emoji:🖥️",
       "kind": "screen",
       "x": 400,
       "y": 0,
