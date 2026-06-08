@@ -1361,11 +1361,27 @@ export function ProceduralPreview({
 	const visibleItems =
 		showMode === "selected" ? items.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : items;
 
+	const gumballAnchorId = reactHostPort.useMemo(() => {
+		if (!onGumballTransform) return null;
+		if (gumballDragActive) {
+			const transformGeometry = gumballActiveWidgetIds.find((id) =>
+				items.some((entry) => entry.widgetId === id && entry.kind === "geometry"),
+			);
+			if (transformGeometry) return transformGeometry;
+			if (gumballInteractionWidgetId) return gumballInteractionWidgetId;
+		}
+		if (selectedNodeIds.length !== 1) return null;
+		return selectedNodeIds[0]!;
+	}, [gumballActiveWidgetIds, gumballDragActive, gumballInteractionWidgetId, items, onGumballTransform, selectedNodeIds]);
+
 	const gumballItem = reactHostPort.useMemo(() => {
-		if (selectedNodeIds.length !== 1 || !onGumballTransform) return null;
-		const selectedId = selectedNodeIds[0]!;
-		return visibleItems.find((entry): entry is Extract<ProceduralPreviewItem, { kind: "geometry" }> => entry.widgetId === selectedId && entry.kind === "geometry") ?? null;
-	}, [onGumballTransform, selectedNodeIds, visibleItems]);
+		if (!gumballAnchorId) return null;
+		return (
+			visibleItems.find(
+				(entry): entry is Extract<ProceduralPreviewItem, { kind: "geometry" }> => entry.widgetId === gumballAnchorId && entry.kind === "geometry",
+			) ?? null
+		);
+	}, [gumballAnchorId, visibleItems]);
 
 	const effectiveSelected = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
 	const effectivePreselect = useMemo(() => new Set(livePreselect.ids.length ? livePreselect.ids : preselectNodeIds), [livePreselect.ids, preselectNodeIds]);
@@ -1487,7 +1503,7 @@ export function ProceduralPreview({
 									previewOff: previewOffNodeIds.includes(entry.widgetId),
 									locked,
 									interactionHighlighted,
-									pickEnabled: gumballInteractionWidgetId === null,
+									pickEnabled: !gumballDragActive,
 									onHover,
 									onPick,
 								};
@@ -1495,6 +1511,7 @@ export function ProceduralPreview({
 							})}
 							{gumballItem ? (
 								<ProceduralPreviewGumball
+									key="procedural-gumball"
 									item={gumballItem}
 									kernel={kernel}
 									transformGranularity={transformGranularity}

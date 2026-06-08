@@ -2539,7 +2539,7 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 				rows={rows}
 				selectedRowIds={model.selectedRowIds ? new Set(model.selectedRowIds) : undefined}
 				emptyMessage={model.emptyMessage ?? "No file system nodes"}
-				rowClassName={(row) => (model.hoveredRowId === row.id ? "bg-hover-temporary" : "")}
+				rowClassName={(row) => (model.hoveredRowId === row.id ? "bg-hover-interactive-fill text-emphasized" : "")}
 				onRowMouseEnter={(row) => {
 					if (model.hoveredRowId === row.id) return;
 					dispatchRowHover(row.id);

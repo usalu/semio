@@ -1418,6 +1418,7 @@ interface FlowLabelOverlayRow {
   readonly nodeW: number;
   readonly nodeH: number;
   readonly fontScreenPx?: number;
+  readonly ghost?: boolean;
 }
 
 interface FlowLabelOverlayPaintState {
@@ -1476,10 +1477,14 @@ export function flowElementInteractionChrome(
 
 function flowOverlayLabelFill(
   nodeId: string,
+  ghost: boolean,
   hoveredId: string | null,
   chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> },
   previewOffIds: readonly string[],
 ): string {
+  if (ghost) {
+    return resolveColorHex(tokenVar("secondary"), "secondary");
+  }
   if (previewOffIds.includes(nodeId)) {
     return resolveSemanticColorHex("border-element-color", "gray");
   }
@@ -1536,8 +1541,8 @@ function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement,
     const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : FLOW_LABEL_SCREEN_PX;
     const fontPx = flowClampLabelFontPx(ctx, text, targetPx, maxW, maxH);
     ctx.font = `${fontPx}px ${FLOW_LABEL_FONT_FAMILY}`;
-    ctx.fillStyle = flowOverlayLabelFill(row.id, hoveredId, chrome, previewOffIds);
-    ctx.globalAlpha = previewOffIds.includes(row.id) ? 0.5 : 1;
+    ctx.fillStyle = flowOverlayLabelFill(row.id, row.ghost === true, hoveredId, chrome, previewOffIds);
+    ctx.globalAlpha = row.ghost ? 0.85 : previewOffIds.includes(row.id) ? 0.5 : 1;
     if (row.layout === "vertical") {
       ctx.save();
       ctx.translate(anchor.x, anchor.y);
@@ -1604,7 +1609,7 @@ export function flowSelectionUnionBoundsEqual(
 
 const FLOW_SELECTION_ALIGN_BUTTON_PX = 24;
 const FLOW_SELECTION_ALIGN_BUTTON_GAP_PX = 2;
-const FLOW_SELECTION_ALIGN_EDGE_INSET_PX = 4;
+const FLOW_SELECTION_ALIGN_EDGE_OUTSET_PX = 4;
 
 /** @emoji 🎯 Screen-space hit regions for selection align controls (container-relative coords). */
 export function flowSelectionAlignHitRegions(
@@ -1613,27 +1618,27 @@ export function flowSelectionAlignHitRegions(
 ): readonly { readonly mode: FlowSelectionAlignMode; readonly rect: ScreenRect }[] {
   const btn = FLOW_SELECTION_ALIGN_BUTTON_PX;
   const gap = FLOW_SELECTION_ALIGN_BUTTON_GAP_PX;
-  const inset = FLOW_SELECTION_ALIGN_EDGE_INSET_PX;
+  const outset = FLOW_SELECTION_ALIGN_EDGE_OUTSET_PX;
   const regions: { mode: FlowSelectionAlignMode; rect: ScreenRect }[] = [];
   if (selectionCount >= 2) {
-    const topY = rect.y + inset;
+    const topY = rect.y - outset - btn;
     const topRowW = btn * 3 + gap * 2;
     const topStartX = rect.x + rect.width / 2 - topRowW / 2;
     regions.push({ mode: "alignLeft", rect: { x: topStartX, y: topY, width: btn, height: btn } });
     regions.push({ mode: "alignHorizontal", rect: { x: topStartX + btn + gap, y: topY, width: btn, height: btn } });
     regions.push({ mode: "alignRight", rect: { x: topStartX + (btn + gap) * 2, y: topY, width: btn, height: btn } });
-    const rightX = rect.x + rect.width - inset - btn;
+    const rightX = rect.x + rect.width + outset;
     const rightColH = btn * 3 + gap * 2;
     const rightStartY = rect.y + rect.height / 2 - rightColH / 2;
     regions.push({ mode: "alignTop", rect: { x: rightX, y: rightStartY, width: btn, height: btn } });
     regions.push({ mode: "alignVertical", rect: { x: rightX, y: rightStartY + btn + gap, width: btn, height: btn } });
     regions.push({ mode: "alignBottom", rect: { x: rightX, y: rightStartY + (btn + gap) * 2, width: btn, height: btn } });
     if (selectionCount >= 3) {
-      const leftX = rect.x + inset;
+      const leftX = rect.x - outset - btn;
       const leftY = rect.y + rect.height / 2 - btn / 2;
       regions.push({ mode: "distributeVertical", rect: { x: leftX, y: leftY, width: btn, height: btn } });
       const bottomX = rect.x + rect.width / 2 - btn / 2;
-      const bottomY = rect.y + rect.height - inset - btn;
+      const bottomY = rect.y + rect.height + outset;
       regions.push({ mode: "distributeHorizontal", rect: { x: bottomX, y: bottomY, width: btn, height: btn } });
     }
   }
@@ -2617,6 +2622,13 @@ export function FlowCanvas({
           renderFrame();
           break;
         }
+        case "setSelection": {
+          const ids = Array.isArray(args.ids) ? args.ids.filter((id): id is string => typeof id === "string") : [];
+          session.setSelection(JSON.stringify(ids));
+          emitInteractionState(session);
+          renderFrame();
+          break;
+        }
         default:
           console.log(`[DEBUG] flow canvas unknown command: ${commandRequest.command}`);
       }
@@ -2901,7 +2913,7 @@ export function FlowCanvas({
     <div
       ref={containerRef}
       tabIndex={0}
-      className={cn(canvasViewportClass, className, fixtureDragActive && "ring-2 ring-inset ring-accent")}
+      className={cn(canvasViewportClass, "overflow-visible", className, fixtureDragActive && "ring-2 ring-inset ring-accent")}
       onPointerDownCapture={onContainerPointerDownCapture}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
@@ -2996,12 +3008,13 @@ if (import.meta.vitest) {
       const selected = flowElementInteractionChrome(["node-a"], { ids: [], removedIds: [] });
       const previewSelected = flowElementInteractionChrome([], { ids: ["node-a"], removedIds: [] });
       const previewHighlighted = flowElementInteractionChrome(["node-a"], { ids: [], removedIds: ["node-a"] });
-      expect(flowOverlayLabelFill("node-a", null, idle, [])).toBe(element);
-      expect(flowOverlayLabelFill("node-a", "node-a", idle, [])).toBe(emphasized);
-      expect(flowOverlayLabelFill("node-a", null, selected, [])).toBe(emphasized);
-      expect(flowOverlayLabelFill("node-a", null, previewSelected, [])).toBe(emphasized);
-      expect(flowOverlayLabelFill("node-a", null, previewHighlighted, [])).toBe(secondary);
-      expect(flowOverlayLabelFill("node-a", null, idle, ["node-a"])).toBe(element);
+      expect(flowOverlayLabelFill("node-a", false, null, idle, [])).toBe(element);
+      expect(flowOverlayLabelFill("node-a", false, "node-a", idle, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", false, null, selected, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", false, null, previewSelected, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", false, null, previewHighlighted, [])).toBe(secondary);
+      expect(flowOverlayLabelFill("node-a", false, null, idle, ["node-a"])).toBe(element);
+      expect(flowOverlayLabelFill("__ghost__", true, null, idle, [])).toBe(secondary);
     });
   });
 
@@ -3357,7 +3370,7 @@ if (import.meta.vitest) {
       expect(flowSelectionUnionBoundsEqual(null, null)).toBe(true);
     });
 
-    it("maps pointer hits to align modes inside the selection chrome", () => {
+    it("maps pointer hits to align modes outside the selection chrome", () => {
       const rect = { x: 100, y: 80, width: 200, height: 120 };
       const regions = flowSelectionAlignHitRegions(rect, 2);
       expect(regions.length).toBe(6);
@@ -3369,13 +3382,17 @@ if (import.meta.vitest) {
         "alignVertical",
         "alignBottom",
       ]);
+      expect(regions[0]!.rect.y + regions[0]!.rect.height).toBeLessThanOrEqual(rect.y);
+      expect(regions[3]!.rect.x).toBeGreaterThanOrEqual(rect.x + rect.width);
       const left = regions[0]!.rect;
       expect(flowPointerHitsSelectionAlign(left.x + 4, left.y + 4, rect, 2)).toBe("alignLeft");
       expect(flowPointerHitsSelectionAlign(rect.x + rect.width / 2, rect.y + rect.height / 2, rect, 2)).toBeNull();
       const distributeRegions = flowSelectionAlignHitRegions(rect, 3);
       expect(distributeRegions.length).toBe(8);
       expect(distributeRegions[6]!.mode).toBe("distributeVertical");
+      expect(distributeRegions[6]!.rect.x + distributeRegions[6]!.rect.width).toBeLessThanOrEqual(rect.x);
       expect(distributeRegions[7]!.mode).toBe("distributeHorizontal");
+      expect(distributeRegions[7]!.rect.y).toBeGreaterThanOrEqual(rect.y + rect.height);
     });
 
     it("aligns selected widgets through FlowSession wasm", async () => {

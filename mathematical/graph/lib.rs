@@ -163,6 +163,13 @@ impl Default for InteractionMode {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct ProximityConnection {
+    source: HandleId,
+    target: HandleId,
+    replacing: Option<EdgeId>,
+}
+
 pub fn handle_position(node: &Node, handle: &Handle) -> Point {
     match node.shape {
         NodeShape::Circle => geometry::handle_position_on_circle(node.center, node.radius, handle.angle),
@@ -174,8 +181,7 @@ fn distance(left: Point, right: Point) -> f64 {
     geometry::distance_between(left, right)
 }
 
-const WIRE_SNAP_HIT_TOLERANCE_PX: f64 = 10.0;
-const WIRE_SNAP_EXTRA_PX: f64 = 22.0;
+pub const DEFAULT_PROXIMITY_DISTANCE_WORLD: f64 = 48.0;
 
 fn node_contains_point(node: &Node, point: Point) -> bool {
     match node.shape {
@@ -482,6 +488,8 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub preselect_removed: Selection,
     pub selection_options: EngineSelectionOptions,
     pub handle_pointer_picking: bool,
+    pub proximity_distance_world: f64,
+    pub node_body_hit_excluded: BTreeSet<NodeId>,
     pub selection_preview_points: Vec<Point>,
     pub selection_preview_crossing: bool,
     area_initial: Selection,
@@ -509,6 +517,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             preselect_removed: Selection::default(),
             selection_options: EngineSelectionOptions::default(),
             handle_pointer_picking: true,
+            node_body_hit_excluded: BTreeSet::new(),
             selection_preview_points: Vec::new(),
             selection_preview_crossing: false,
             area_initial: Selection::default(),
@@ -1524,6 +1533,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         for node in self.nodes.values().rev() {
+            if self.node_body_hit_excluded.contains(&node.id) {
+                continue;
+            }
             if node_contains_point(node, point) {
                 return Some(HitObject::Node(node.id));
             }

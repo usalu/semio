@@ -173,6 +173,31 @@ fn input_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f
     Some((x0, y_center - half, x1, y_center + half))
 }
 
+fn output_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f64, f64, f64, f64)> {
+    let outputs = node.outputs();
+    if port_index >= outputs.len() {
+        return None;
+    }
+    let (x0, x1) = if matches!(node.kind, DagNodeKind::Computation { .. }) {
+        computation_output_column_x_bounds(node)?
+    } else {
+        let hw = node.width * 0.5;
+        (node.x, node.x + hw)
+    };
+    let count = outputs.len().max(1);
+    let y_center = port_center_y(node, port_index, count);
+    let half = if matches!(node.kind, DagNodeKind::Computation { .. }) {
+        DAG_CHANNEL_ROW_HEIGHT * 0.5
+    } else {
+        node.height / count as f64 * 0.5
+    };
+    Some((x0, y_center - half, x1, y_center + half))
+}
+
+fn computation_node_uses_channel_row_pick(node: &DagNodeSpec) -> bool {
+    matches!(node.kind, DagNodeKind::Computation { .. })
+}
+
 fn computation_port_center_y(node: &DagNodeSpec, port_index: usize) -> f64 {
     channel_row_center_y(node.y, node.height, port_index + DAG_COMPUTATION_HEADER_ROWS)
 }
@@ -815,7 +840,7 @@ fn computation_channel_row_count(node: &DagNodeSpec) -> usize {
     computation_io_row_count(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs) + DAG_COMPUTATION_HEADER_ROWS
 }
 
-fn fit_node_size(node: &mut DagNodeSpec) {
+pub fn fit_node_size(node: &mut DagNodeSpec) {
     match &node.kind {
         DagNodeKind::Computation {
             inputs,
@@ -1442,6 +1467,10 @@ impl DagDrawLod {
         self == Self::Normal
     }
 
+    pub fn uses_channel_row_pick(self) -> bool {
+        matches!(self, Self::Detail | Self::Micro)
+    }
+
     pub fn allows_connection_hit_picking(self) -> bool {
         self.uses_input_row_connection_hitbox() || self.shows_handles()
     }
@@ -1528,12 +1557,44 @@ pub struct DagHost {
     automatic_lod: bool,
     forced_draw_lod: Option<DagDrawLod>,
     icon_paint_cache: graph::IconPaintCache,
+    ghost_node: Option<DagNodeSpec>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
     use cavas::vello::peniko::Color;
     let rgba = color.to_rgba8();
     Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
+}
+
+#[derive(Clone, Copy)]
+struct DagNodePaintChrome {
+    is_dimmed: bool,
+    is_selected: bool,
+    is_highlighted: bool,
+    is_hovered: bool,
+    body_fill_alpha: u8,
+    ghost_tint: bool,
+}
+
+impl DagNodePaintChrome {
+    fn ghost_preview() -> Self {
+        Self {
+            is_dimmed: false,
+            is_selected: false,
+            is_highlighted: false,
+            is_hovered: false,
+            body_fill_alpha: 255,
+            ghost_tint: true,
+        }
+    }
+
+    fn tint_highlighted(self) -> bool {
+        self.is_highlighted || self.ghost_tint
+    }
+
+    fn has_interaction_chrome(self) -> bool {
+        self.is_dimmed || self.is_selected || self.is_highlighted || self.is_hovered
+    }
 }
 
 /// 📦 `dag.fixture/v1` document.
@@ -1611,6 +1672,7 @@ impl DagHost {
             automatic_lod: true,
             forced_draw_lod: None,
             icon_paint_cache: graph::IconPaintCache::new(),
+            ghost_node: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -1685,6 +1747,9 @@ impl DagHost {
                 false,
             );
         }
+        if self.engine.node_body_hit_excluded.contains(&node_id) {
+            return (false, false, false);
+        }
         (self.is_node_selected(node_id), false, self.is_node_hovered(node_id))
     }
 
@@ -1733,11 +1798,19 @@ impl DagHost {
             .collect()
     }
 
-    /// 🖱️ Hovered fixture node id when the pointer is over a node body (not a port handle).
+    /// 🖱️ Hovered fixture widget id for node body hover, or parent widget when a channel handle is hovered at detail LOD.
     pub fn hovered_node_id(&self) -> Option<String> {
         let hover = self.engine.hover?;
         if self.node_id_map.contains_key(&hover) {
+            if self.engine.node_body_hit_excluded.contains(&hover) {
+                return None;
+            }
             return self.widget_id_for_node_id(hover);
+        }
+        if self.draw_lod_for_frame().uses_channel_row_pick() {
+            if let Some(handle) = self.engine.handles.get(&hover) {
+                return self.widget_id_for_node_id(handle.node_id);
+            }
         }
         None
     }
@@ -2094,6 +2167,23 @@ impl DagHost {
         self.dpr = dpr.max(1.0);
     }
 
+    /// 👻 Sets or clears the placement preview node painted with the normal LOD path.
+    pub fn set_ghost_node(&mut self, node: Option<DagNodeSpec>) {
+        self.ghost_node = node;
+    }
+
+    pub fn ghost_node(&self) -> Option<&DagNodeSpec> {
+        self.ghost_node.as_ref()
+    }
+
+    pub fn automatic_lod(&self) -> bool {
+        self.automatic_lod
+    }
+
+    pub fn forced_draw_lod_label(&self) -> Option<&'static str> {
+        self.forced_draw_lod.map(|lod| lod.label())
+    }
+
     /// 🔍 Pins draw LOD while the wheel gesture is active so chrome does not flicker across bands.
     pub fn set_wheel_zoom_active(&mut self, active: bool) {
         if active && !self.wheel_zoom_active {
@@ -2354,29 +2444,71 @@ impl DagHost {
         self.engine.set_camera(x, y, zoom);
     }
 
-    fn normal_lod_input_row_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
-        if !self.draw_lod_for_frame().uses_input_row_connection_hitbox() {
-            return None;
-        }
+    fn handle_id_for_port(&self, node_id: &str, port_id: &str) -> Option<HandleId> {
+        let key = format!("{node_id}:{port_id}");
+        self.handle_key_map.iter().find(|(_, k)| k.as_str() == key).map(|(&hid, _)| hid)
+    }
+
+    fn port_row_handle_hit(&self, world_x: f64, world_y: f64, inputs: bool, outputs: bool) -> Option<HandleId> {
         for node in self.fixture.nodes.iter().rev() {
-            for (port_idx, port) in node.inputs().iter().enumerate() {
-                let Some((x0, y0, x1, y1)) = input_port_row_hit_bounds(node, port_idx) else {
-                    continue;
-                };
-                if !point_in_rect(world_x, world_y, x0, y0, x1, y1) {
-                    continue;
+            if inputs {
+                for (port_idx, port) in node.inputs().iter().enumerate() {
+                    let Some((x0, y0, x1, y1)) = input_port_row_hit_bounds(node, port_idx) else {
+                        continue;
+                    };
+                    if !point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                        continue;
+                    }
+                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                        return Some(hid);
+                    }
                 }
-                let key = format!("{}:{}", node.id, port.id);
-                if let Some((&hid, _)) = self.handle_key_map.iter().find(|(_, k)| k.as_str() == key) {
-                    return Some(hid);
+            }
+            if outputs {
+                for (port_idx, port) in node.outputs().iter().enumerate() {
+                    let Some((x0, y0, x1, y1)) = output_port_row_hit_bounds(node, port_idx) else {
+                        continue;
+                    };
+                    if !point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                        continue;
+                    }
+                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                        return Some(hid);
+                    }
                 }
             }
         }
         None
     }
 
+    fn channel_row_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
+        let lod = self.draw_lod_for_frame();
+        if lod.uses_input_row_connection_hitbox() {
+            return self.port_row_handle_hit(world_x, world_y, true, false);
+        }
+        if lod.uses_channel_row_pick() {
+            return self.port_row_handle_hit(world_x, world_y, true, true);
+        }
+        None
+    }
+
+    fn sync_detail_lod_node_body_hit_exclusion(&mut self) {
+        self.engine.node_body_hit_excluded.clear();
+        if !self.draw_lod_for_frame().uses_channel_row_pick() {
+            return;
+        }
+        for (idx, node) in self.fixture.nodes.iter().enumerate() {
+            if !computation_node_uses_channel_row_pick(node) {
+                continue;
+            }
+            if let Some(nid) = self.engine_node_id_for_index(idx) {
+                self.engine.node_body_hit_excluded.insert(nid);
+            }
+        }
+    }
+
     fn connection_hit_world(&self, world_x: f64, world_y: f64) -> (f64, f64) {
-        let Some(hid) = self.normal_lod_input_row_handle_hit(world_x, world_y) else {
+        let Some(hid) = self.channel_row_handle_hit(world_x, world_y) else {
             return (world_x, world_y);
         };
         let Some(handle) = self.engine.handles.get(&hid) else {
@@ -2393,7 +2525,7 @@ impl DagHost {
         if !self.draw_lod_for_frame().allows_connection_hit_picking() {
             return false;
         }
-        if self.normal_lod_input_row_handle_hit(world_x, world_y).is_some() {
+        if self.channel_row_handle_hit(world_x, world_y).is_some() {
             return true;
         }
         use cavas::vello::kurbo::Point;
@@ -2574,6 +2706,7 @@ impl DagHost {
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.sync_connection_hit_picking_for_lod();
+        self.sync_detail_lod_node_body_hit_exclusion();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
@@ -2602,6 +2735,7 @@ impl DagHost {
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.sync_connection_hit_picking_for_lod();
+        self.sync_detail_lod_node_body_hit_exclusion();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         if self.widget_drag.take().is_some() {
@@ -2655,6 +2789,123 @@ impl DagHost {
             }));
         }
         serde_json::to_string(&overlays).map_err(|e| e.to_string())
+    }
+
+    fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::vello::kurbo::Point> {
+        use cavas::vello::kurbo::Point;
+        use graph::handle_position_on_rectangle;
+        let center = Point::new(node.x, node.y);
+        let mut centers = Vec::new();
+        for port_idx in 0..node.inputs().len() {
+            let angle = io_node_rect_port_angle_for_node(node, port_idx, true);
+            centers.push(handle_position_on_rectangle(center, node.width, node.height, angle));
+        }
+        for port_idx in 0..node.outputs().len() {
+            let angle = io_node_rect_port_angle_for_node(node, port_idx, false);
+            centers.push(handle_position_on_rectangle(center, node.width, node.height, angle));
+        }
+        centers
+    }
+
+    fn paint_node_handles_for_spec(
+        &self,
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        cam: &cavas::camera::Camera,
+        node: &DagNodeSpec,
+        chrome: &DagNodePaintChrome,
+    ) {
+        use cavas::vello::kurbo::{Circle, Point};
+        use cavas::vello::peniko::Fill;
+        use cavas::vello::kurbo::Stroke;
+        use graph::{handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, NodeShape};
+
+        let theme = &self.vello_theme;
+        let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
+        let tint = chrome.tint_highlighted();
+        let fill = dag_handle_body_fill(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
+        let stroke_c = dag_handle_body_stroke(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
+        let handle_chrome = chrome.has_interaction_chrome();
+        let center = Point::new(node.x, node.y);
+        for handle_center in Self::node_handle_centers(node) {
+            let outward = handle_outward_at_node_rim(handle_center, center, NodeShape::Rectangle, 0.0, node.width, node.height);
+            if let Some(out) = outward {
+                if handle_chrome {
+                    scene.fill(
+                        Fill::NonZero,
+                        *aff,
+                        fill,
+                        None,
+                        &handle_exterior_cap_fill_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS),
+                    );
+                }
+                scene.stroke(
+                    &Stroke::new(handle_stroke_px),
+                    *aff,
+                    stroke_c,
+                    None,
+                    &handle_exterior_cap_stroke_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS),
+                );
+            } else {
+                let circle = Circle::new(handle_center, DAG_HANDLE_WORLD_RADIUS);
+                if handle_chrome {
+                    scene.fill(Fill::NonZero, *aff, fill, None, &circle);
+                }
+                scene.stroke(&Stroke::new(handle_stroke_px), *aff, stroke_c, None, &circle);
+            }
+        }
+    }
+
+    pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+        let lod = self.draw_lod_for_frame();
+        let zoom = self.fixture.camera.zoom;
+        let lod_index = dag_lod_index(zoom);
+        Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost)
+    }
+
+    fn label_overlay_rows_for_node(
+        node: &DagNodeSpec,
+        lod: DagDrawLod,
+        zoom: f64,
+        lod_index: usize,
+        ghost: bool,
+    ) -> Vec<serde_json::Value> {
+        let paint_px = dag_label_paint_px(zoom, lod_index);
+        let mut labels = Vec::new();
+        if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
+            let (layout, x, y) = if lod.node_label_is_horizontal() {
+                ("horizontal", node.x, node.y)
+            } else if matches!(node.kind, DagNodeKind::Computation { .. }) && lod.shows_computation_layout() {
+                let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
+                ("horizontal", lx, ly)
+            } else if matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls() {
+                let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
+                ("horizontal", lx, ly)
+            } else {
+                let (lx, ly) = io_widget_label_center(node);
+                ("vertical", lx, ly)
+            };
+            labels.push(serde_json::json!({
+                "id": node.id,
+                "text": text,
+                "layout": layout,
+                "x": x,
+                "y": y,
+                "nodeW": node.width,
+                "nodeH": node.height,
+                "fontScreenPx": paint_px,
+                "ghost": ghost,
+            }));
+        }
+        if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
+            for mut row in Self::port_label_overlay_rows(node, zoom, lod_index) {
+                if let Some(obj) = row.as_object_mut() {
+                    obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+                }
+                labels.push(row);
+            }
+        }
+        labels
     }
 
     fn port_label_overlay_rows(node: &DagNodeSpec, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
@@ -2736,38 +2987,13 @@ impl DagHost {
         let lod = self.draw_lod_for_frame();
         let cam = &self.fixture.camera;
         let lod_index = dag_lod_index(cam.zoom);
-        let paint_px = dag_label_paint_px(cam.zoom, lod_index);
         let mut labels = Vec::new();
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
-            let node = node.as_ref();
-            if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
-                let (layout, x, y) = if lod.node_label_is_horizontal() {
-                    ("horizontal", node.x, node.y)
-                } else if matches!(node.kind, DagNodeKind::Computation { .. }) && lod.shows_computation_layout() {
-                    let (lx, ly) = computation_name_world_center(node, &text, paint_px, cam.zoom);
-                    ("horizontal", lx, ly)
-                } else if matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls() {
-                    let (lx, ly) = computation_name_world_center(node, &text, paint_px, cam.zoom);
-                    ("horizontal", lx, ly)
-                } else {
-                    let (lx, ly) = io_widget_label_center(node);
-                    ("vertical", lx, ly)
-                };
-                labels.push(serde_json::json!({
-                    "id": node.id,
-                    "text": text,
-                    "layout": layout,
-                    "x": x,
-                    "y": y,
-                    "nodeW": node.width,
-                    "nodeH": node.height,
-                    "fontScreenPx": paint_px,
-                }));
-            }
-            if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
-                labels.extend(Self::port_label_overlay_rows(node, cam.zoom, lod_index));
-            }
+            labels.extend(Self::label_overlay_rows_for_node(node.as_ref(), lod, cam.zoom, lod_index, false));
+        }
+        if let Some(ghost) = self.ghost_node.as_ref() {
+            labels.extend(Self::label_overlay_rows_for_node(ghost, lod, cam.zoom, lod_index, true));
         }
         serde_json::to_string(&serde_json::json!({
             "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
@@ -2922,12 +3148,84 @@ impl DagHost {
         );
     }
 
+    fn paint_computation_channel_row_highlights(
+        &self,
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        node: &DagNodeSpec,
+        theme: &VelloThemePalette,
+    ) {
+        use cavas::vello::kurbo::Rect;
+        use cavas::vello::peniko::Fill;
+        let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, hovered: bool| {
+            if !selected && !hovered {
+                return;
+            }
+            let fill = if selected {
+                theme.handle_fill_selected
+            } else {
+                theme.handle_fill_hovered
+            };
+            let alpha = if selected { 56 } else { 36 };
+            scene.fill(
+                Fill::NonZero,
+                *aff,
+                vello_color_with_alpha(fill, alpha),
+                None,
+                &Rect::new(x0, y0, x1, y1),
+            );
+        };
+        for (port_idx, port) in node.inputs().iter().enumerate() {
+            let Some(bounds) = input_port_row_hit_bounds(node, port_idx) else {
+                continue;
+            };
+            let Some(hid) = self.handle_id_for_port(&node.id, &port.id) else {
+                continue;
+            };
+            let (selected, _, hovered) = self.handle_interaction_chrome(hid);
+            paint_bounds(bounds, selected, hovered);
+        }
+        for (port_idx, port) in node.outputs().iter().enumerate() {
+            let Some(bounds) = output_port_row_hit_bounds(node, port_idx) else {
+                continue;
+            };
+            let Some(hid) = self.handle_id_for_port(&node.id, &port.id) else {
+                continue;
+            };
+            let (selected, _, hovered) = self.handle_interaction_chrome(hid);
+            paint_bounds(bounds, selected, hovered);
+        }
+    }
+
+    fn computation_channel_row_divider_stroke(
+        &self,
+        node: &DagNodeSpec,
+        port_id: &str,
+        body_stroke: cavas::vello::peniko::Color,
+        label_fill: cavas::vello::peniko::Color,
+        default_stroke: cavas::vello::peniko::Color,
+    ) -> cavas::vello::peniko::Color {
+        let Some(hid) = self.handle_id_for_port(&node.id, port_id) else {
+            return default_stroke;
+        };
+        let (selected, _, hovered) = self.handle_interaction_chrome(hid);
+        if selected || hovered {
+            dag_node_internal_chrome_stroke(body_stroke, label_fill, true)
+        } else {
+            default_stroke
+        }
+    }
+
     fn paint_computation_channel_row_dividers(
+        &self,
         scene: &mut cavas::vello::Scene,
         aff: cavas::vello::kurbo::Affine,
         node: &DagNodeSpec,
         chrome_stroke: f64,
         stroke: cavas::vello::peniko::Color,
+        body_stroke: cavas::vello::peniko::Color,
+        label_fill: cavas::vello::peniko::Color,
+        channel_row_pick: bool,
     ) {
         use cavas::vello::kurbo::{Line, Point, Stroke};
         let grid_rows = computation_channel_row_count(node);
@@ -2936,14 +3234,23 @@ impl DagHost {
         }
         let (input_rows, output_rows) = computation_io_side_row_counts(node);
         let stroke_style = Stroke::new(chrome_stroke);
+        let row_stroke = |port_id: &str| {
+            if channel_row_pick {
+                self.computation_channel_row_divider_stroke(node, port_id, body_stroke, label_fill, stroke)
+            } else {
+                stroke
+            }
+        };
         if computation_input_column_x_bounds(node).is_some() {
             let (left, right) = computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Input);
+            let inputs = node.inputs();
             for row in computation_io_side_row_divider_indices(input_rows, grid_rows) {
                 let y = channel_row_divider_y(node.y, node.height, row);
+                let port_id = inputs.get(row.saturating_sub(1)).map(|port| port.id.as_str()).unwrap_or("");
                 scene.stroke(
                     &stroke_style,
                     aff,
-                    stroke,
+                    row_stroke(port_id),
                     None,
                     &Line::new(Point::new(left, y), Point::new(right, y)),
                 );
@@ -2951,12 +3258,14 @@ impl DagHost {
         }
         if computation_output_column_x_bounds(node).is_some() {
             let (left, right) = computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Output);
+            let outputs = node.outputs();
             for row in computation_io_side_row_divider_indices(output_rows, grid_rows) {
                 let y = channel_row_divider_y(node.y, node.height, row);
+                let port_id = outputs.get(row.saturating_sub(1)).map(|port| port.id.as_str()).unwrap_or("");
                 scene.stroke(
                     &stroke_style,
                     aff,
-                    stroke,
+                    row_stroke(port_id),
                     None,
                     &Line::new(Point::new(left, y), Point::new(right, y)),
                 );
@@ -3187,55 +3496,219 @@ impl DagHost {
         );
     }
 
-    /// 👻 Paints a translucent highlighted ghost node preview (ignores LOD).
-    pub fn paint_ghost_node(&self, scene: &mut cavas::vello::Scene, node: &DagNodeSpec, viewport_w: u32, viewport_h: u32, dpr: f64) {
-        use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::{Point, Rect, Stroke};
+    fn paint_node_visual(
+        &self,
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        cam: &cavas::camera::Camera,
+        viewport: &cavas::camera::Viewport,
+        lod: DagDrawLod,
+        lod_index: usize,
+        node: &DagNodeSpec,
+        widget_drag_idx: Option<usize>,
+        chrome: DagNodePaintChrome,
+    ) {
+        use cavas::camera::world_to_screen;
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::{Circle, Line, Point, Rect, Stroke};
         use cavas::vello::peniko::Fill;
 
         let theme = &self.vello_theme;
-        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
-        let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
-        let aff = camera_content_affine(&cam, &viewport);
-        let ghost_stroke = dag_node_body_stroke(theme, false, false, true, false);
-        let ghost_fill = vello_color_with_alpha(dag_node_body_fill(theme, false, false, true, false), 128);
-        let label_fill = dag_node_label_fill(theme, false, false, true, false);
         let label_halo = theme.label_halo;
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
         let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
-        scene.fill(Fill::NonZero, aff, ghost_fill, None, &rect);
-        scene.stroke(&Stroke::new(dag_world_stroke(DAG_NODE_STROKE_HOVERED_SCREEN_PX, cam.zoom)), aff, ghost_stroke, None, &rect);
+        let tint = chrome.tint_highlighted();
+        let fill = dag_node_paint_fill(lod, theme, chrome.is_dimmed, chrome.is_selected, chrome.is_highlighted, chrome.is_hovered)
+            .map(|color| vello_color_with_alpha(color, chrome.body_fill_alpha));
+        let stroke = dag_node_body_stroke(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
+        let label_fill = dag_node_label_fill(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
+        let internal_chrome_stroke =
+            dag_node_internal_chrome_stroke(stroke, label_fill, chrome.is_hovered || chrome.is_selected || chrome.is_highlighted);
+        let stroke_screen_px = dag_node_stroke_screen_px(chrome.is_dimmed, chrome.is_selected, chrome.is_highlighted, chrome.is_hovered);
+        if let Some(fill) = fill {
+            scene.fill(Fill::NonZero, *aff, fill, None, &rect);
+        }
+        if !chrome.is_selected {
+            scene.stroke(&Stroke::new(dag_world_stroke(stroke_screen_px, cam.zoom)), *aff, stroke, None, &rect);
+        }
         let layout_px = dag_label_layout_px();
-        let lod = DagDrawLod::Micro;
-        let lod_index = dag_lod_index(cam.zoom);
         let paint_px = dag_label_paint_px(cam.zoom, lod_index);
-        let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
-        self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, label_fill, ghost_fill);
-        if let Some(label) = Self::node_label_text(node, lod) {
-            let caption_on_overlay = Self::node_caption_delegated_to_js_overlay(node, lod);
-            if matches!(node.kind, DagNodeKind::Computation { .. }) {
-                let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
-                Self::paint_port_labels(scene, &cam, &viewport, node, lod, layout_px, paint_px, lod_index, label_fill, label_halo);
-                Self::paint_computation_column_divider(scene, aff, node, chrome_stroke, ghost_stroke);
-                Self::paint_computation_channel_row_dividers(scene, aff, node, chrome_stroke, ghost_stroke);
-                if !caption_on_overlay {
-                    Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
-                }
-            } else if matches!(node.kind, DagNodeKind::Slider { .. }) {
-                if !caption_on_overlay {
-                    Self::paint_slider_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
-                }
-            } else if !caption_on_overlay {
+        let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
+        let center_screen = world_to_screen(cam, viewport, Point::new(node.x, node.y));
+        let node_fill = fill.unwrap_or(theme.node_fill);
+        if !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
+            self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, label_fill, node_fill);
+        }
+        let label_text = Self::node_label_text(node, lod);
+        let caption_on_overlay = Self::node_caption_delegated_to_js_overlay(node, lod);
+        if lod.node_label_is_horizontal() {
+            if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                 Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
+            }
+        } else {
+            match &node.kind {
+                DagNodeKind::Computation { variadic_inputs, .. } => {
+                    if lod.shows_computation_layout() {
+                        let channel_row_pick = lod.uses_channel_row_pick();
+                        if channel_row_pick {
+                            self.paint_computation_channel_row_highlights(scene, aff, node, theme);
+                        }
+                        Self::paint_computation_column_divider(scene, *aff, node, chrome_stroke, internal_chrome_stroke);
+                        self.paint_computation_channel_row_dividers(
+                            scene,
+                            *aff,
+                            node,
+                            chrome_stroke,
+                            internal_chrome_stroke,
+                            stroke,
+                            label_fill,
+                            channel_row_pick,
+                        );
+                        if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                            Self::paint_computation_node_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
+                        }
+                        if *variadic_inputs && cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
+                            Self::paint_variadic_plus_controls(scene, cam, viewport, node, paint_px, label_fill, label_halo);
+                        }
+                    }
+                }
+                DagNodeKind::Slider { min, max, value, .. } => {
+                    if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
+                        Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = slider_track_bounds(node);
+                        let track_y = (y0 + y1) * 0.5;
+                        let track = Line::new(Point::new(x0, track_y), Point::new(x1, track_y));
+                        let track_emphasized = chrome.is_hovered || chrome.is_selected || widget_drag_idx.is_some();
+                        let track_stroke = if track_emphasized {
+                            theme.label_fill_hovered
+                        } else {
+                            theme.edge_stroke
+                        };
+                        scene.stroke(&Stroke::new(chrome_stroke), *aff, track_stroke, None, &track);
+                        let span = (max - min).max(1e-6);
+                        let t = ((*value - *min) / span).clamp(0.0, 1.0);
+                        let thumb_x = x0 + t * (x1 - x0);
+                        let knob_dragging = widget_drag_idx.is_some();
+                        let knob_fill = if knob_dragging {
+                            theme.handle_fill_selected
+                        } else {
+                            label_fill
+                        };
+                        scene.fill(
+                            Fill::NonZero,
+                            *aff,
+                            knob_fill,
+                            None,
+                            &Circle::new(Point::new(thumb_x, track_y), DAG_SLIDER_KNOB_SCREEN_PX / cam.zoom.max(0.05)),
+                        );
+                        let value_text = format!("{value:.1}");
+                        let value_px = paint_px * 0.9;
+                        let (vx, vy) = slider_value_world_center(node, &value_text, value_px, cam.zoom);
+                        let value_pos = world_to_screen(cam, viewport, Point::new(vx, vy));
+                        append_label(scene, &value_text, value_pos, value_px, label_fill, label_halo);
+                    }
+                }
+                DagNodeKind::Select { options, selected, .. } => {
+                    if lod.shows_controls() {
+                        Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
+                    }
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                        Self::paint_io_widget_name(scene, cam, viewport, node, lod, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        let (cx0, cy0, cx1, cy1) = select_control_bounds(node);
+                        let control = Rect::new(cx0, cy0, cx1, cy1);
+                        scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke, None, &control);
+                        if lod.shows_detail_text() {
+                            let option = options.get(*selected).map(String::as_str).unwrap_or("—");
+                            let option_pos = world_to_screen(cam, viewport, Point::new((cx0 + cx1) * 0.5, (cy0 + cy1) * 0.5));
+                            append_label(scene, option, option_pos, paint_px * 0.95, label_fill, label_halo);
+                            let chevron = world_to_screen(cam, viewport, Point::new(cx1 - 6.0 / cam.zoom.max(0.05), (cy0 + cy1) * 0.5));
+                            append_label(scene, "▾", chevron, paint_px, label_fill, label_halo);
+                        }
+                    }
+                }
+                DagNodeKind::Screen { media, .. } => {
+                    if lod.shows_controls() {
+                        Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
+                    }
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                        Self::paint_io_widget_name(scene, cam, viewport, node, lod, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        let inset = 8.0 / cam.zoom.max(0.05);
+                        let frame = Rect::new(node.x - hw + inset, node.y - hh + hh * 0.35, node.x + hw - inset, node.y + hh - inset);
+                        scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke_selection_exit, None, &frame);
+                    }
+                    if lod.shows_detail_text() {
+                        if let Some(media) = media {
+                            let kind_label = match media.kind {
+                                DagMediaKind::Image => "image",
+                                DagMediaKind::Svg => "svg",
+                                DagMediaKind::Pdf => "pdf",
+                                DagMediaKind::Video => "video",
+                            };
+                            let hint = world_to_screen(cam, viewport, Point::new(node.x, node.y + hh * 0.1));
+                            append_label(scene, kind_label, hint, paint_px * 0.85, vello_color_with_alpha(label_fill, 140), label_halo);
+                        }
+                    }
+                }
+                DagNodeKind::Note { text, .. } => {
+                    if lod.shows_detail_text() || lod.shows_controls() {
+                        let (x0, y0, x1, y1) = preview_content_bounds(node);
+                        let display = if text.is_empty() { "…" } else { text.as_str() };
+                        let pos = world_to_screen(cam, viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
+                        append_label(scene, display, pos, paint_px * 1.05, label_fill, label_halo);
+                    }
+                }
+                DagNodeKind::Image { src, .. } => {
+                    if lod.shows_controls() {
+                        Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
+                    }
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                        Self::paint_io_widget_name(scene, cam, viewport, node, lod, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = preview_content_bounds(node);
+                        let frame = Rect::new(x0, y0, x1, y1);
+                        scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke, None, &frame);
+                    }
+                    if lod.shows_detail_text() || lod.shows_controls() {
+                        self.paint_preview_image_content(scene, cam, viewport, node, src, label_fill, theme.raster_clear);
+                    }
+                }
+                DagNodeKind::Preview { content, expanded, .. } => {
+                    if lod.shows_detail_text() || lod.shows_controls() {
+                        self.paint_preview_content(scene, cam, viewport, node, content, expanded, paint_px, label_fill, label_halo, theme.raster_clear);
+                    }
+                }
+                DagNodeKind::Action { label, .. } => {
+                    if lod.shows_controls() {
+                        Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
+                    }
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                        Self::paint_io_widget_name(scene, cam, viewport, node, lod, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = action_control_bounds(node);
+                        let control = Rect::new(x0, y0, x1, y1);
+                        scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke, None, &control);
+                        if lod.shows_detail_text() {
+                            let pos = world_to_screen(cam, viewport, Point::new(node.x, node.y));
+                            append_label(scene, label, pos, paint_px * 0.95, label_fill, label_halo);
+                        }
+                    }
+                }
             }
         }
     }
 
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
-        use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::text::append_label;
-        use cavas::vello::kurbo::{Circle, Line, Point, Rect, Stroke};
+        use cavas::camera::{camera_content_affine, Camera as CavasCamera, Viewport};
+        use cavas::vello::kurbo::{Circle, Rect, Stroke};
         use cavas::vello::peniko::Fill;
 
         let theme = &self.vello_theme;
@@ -3301,8 +3774,10 @@ impl DagHost {
                     scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &circle);
                 }
             }
+            if let Some(ghost) = self.ghost_node.as_ref() {
+                self.paint_node_handles_for_spec(scene, &aff, &cam, ghost, &DagNodePaintChrome::ghost_preview());
+            }
         }
-        let label_halo = theme.label_halo;
         let paint_minimap_node = |scene: &mut cavas::vello::Scene, idx: usize, fixture_node: &DagNodeSpec| {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let node = node.as_ref();
@@ -3344,184 +3819,42 @@ impl DagHost {
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let node = node.as_ref();
-            let hw = node.width * 0.5;
-            let hh = node.height * 0.5;
-            let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
             let (is_selected, is_highlighted, is_hovered) = engine_nid
                 .map(|nid| self.node_interaction_chrome(nid))
                 .unwrap_or((false, false, false));
-            let fill = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered);
-            let stroke = dag_node_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
-            let label_fill = dag_node_label_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
-            let internal_chrome_stroke = dag_node_internal_chrome_stroke(stroke, label_fill, is_hovered || is_selected || is_highlighted);
-            let stroke_screen_px = dag_node_stroke_screen_px(is_dimmed, is_selected, is_highlighted, is_hovered);
-            if let Some(fill) = fill {
-                scene.fill(Fill::NonZero, aff, fill, None, &rect);
-            }
-            if !is_selected {
-                scene.stroke(&Stroke::new(dag_world_stroke(stroke_screen_px, cam.zoom)), aff, stroke, None, &rect);
-            }
-            let layout_px = dag_label_layout_px();
-            let paint_px = dag_label_paint_px(cam.zoom, lod_index);
-            let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
-            let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
-            let node_fill = fill.unwrap_or(theme.node_fill);
-            if !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
-                self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, label_fill, node_fill);
-            }
-            let label_text = Self::node_label_text(node, lod);
-            let caption_on_overlay = Self::node_caption_delegated_to_js_overlay(node, lod);
-            if lod.node_label_is_horizontal() {
-                if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                    Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
-                }
-            } else {
-            match &node.kind {
-                DagNodeKind::Computation { variadic_inputs, .. } => {
-                    if lod.shows_computation_layout() {
-                        Self::paint_computation_column_divider(scene, aff, node, chrome_stroke, internal_chrome_stroke);
-                        Self::paint_computation_channel_row_dividers(scene, aff, node, chrome_stroke, internal_chrome_stroke);
-                        if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                            Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
-                        }
-                        if *variadic_inputs && cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
-                            Self::paint_variadic_plus_controls(scene, &cam, &viewport, node, paint_px, label_fill, label_halo);
-                        }
-                    }
-                }
-                DagNodeKind::Slider { min, max, value, .. } => {
-                    if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
-                        Self::paint_slider_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        let (x0, y0, x1, y1) = slider_track_bounds(node);
-                        let track_y = (y0 + y1) * 0.5;
-                        let track = Line::new(Point::new(x0, track_y), Point::new(x1, track_y));
-                        let track_emphasized = is_hovered || is_selected || self.widget_drag == Some(idx);
-                        let track_stroke = if track_emphasized {
-                            theme.label_fill_hovered
-                        } else {
-                            theme.edge_stroke
-                        };
-                        scene.stroke(&Stroke::new(chrome_stroke), aff, track_stroke, None, &track);
-                        let span = (max - min).max(1e-6);
-                        let t = ((*value - *min) / span).clamp(0.0, 1.0);
-                        let thumb_x = x0 + t * (x1 - x0);
-                        let knob_dragging = self.widget_drag == Some(idx);
-                        let knob_fill = if knob_dragging {
-                            theme.handle_fill_selected
-                        } else {
-                            label_fill
-                        };
-                        scene.fill(
-                            Fill::NonZero,
-                            aff,
-                            knob_fill,
-                            None,
-                            &Circle::new(Point::new(thumb_x, track_y), DAG_SLIDER_KNOB_SCREEN_PX / cam.zoom.max(0.05)),
-                        );
-                        let value_text = format!("{value:.1}");
-                        let value_px = paint_px * 0.9;
-                        let (vx, vy) = slider_value_world_center(node, &value_text, value_px, cam.zoom);
-                        let value_pos = world_to_screen(&cam, &viewport, Point::new(vx, vy));
-                        append_label(scene, &value_text, value_pos, value_px, label_fill, label_halo);
-                    }
-                }
-                DagNodeKind::Select { options, selected, .. } => {
-                    if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
-                    }
-                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                        Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        let (cx0, cy0, cx1, cy1) = select_control_bounds(node);
-                        let control = Rect::new(cx0, cy0, cx1, cy1);
-                        scene.stroke(&Stroke::new(chrome_stroke), aff, theme.edge_stroke, None, &control);
-                        if lod.shows_detail_text() {
-                            let option = options.get(*selected).map(String::as_str).unwrap_or("—");
-                            let option_pos = world_to_screen(&cam, &viewport, Point::new((cx0 + cx1) * 0.5, (cy0 + cy1) * 0.5));
-                            append_label(scene, option, option_pos, paint_px * 0.95, label_fill, label_halo);
-                            let chevron = world_to_screen(&cam, &viewport, Point::new(cx1 - 6.0 / cam.zoom.max(0.05), (cy0 + cy1) * 0.5));
-                            append_label(scene, "▾", chevron, paint_px, label_fill, label_halo);
-                        }
-                    }
-                }
-                DagNodeKind::Screen { media, .. } => {
-                    if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
-                    }
-                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                        Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        let inset = 8.0 / cam.zoom.max(0.05);
-                        let frame = Rect::new(node.x - hw + inset, node.y - hh + hh * 0.35, node.x + hw - inset, node.y + hh - inset);
-                        scene.stroke(&Stroke::new(chrome_stroke), aff, theme.edge_stroke_selection_exit, None, &frame);
-                    }
-                    if lod.shows_detail_text() {
-                        if let Some(media) = media {
-                            let kind_label = match media.kind {
-                                DagMediaKind::Image => "image",
-                                DagMediaKind::Svg => "svg",
-                                DagMediaKind::Pdf => "pdf",
-                                DagMediaKind::Video => "video",
-                            };
-                            let hint = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.1));
-                            append_label(scene, kind_label, hint, paint_px * 0.85, vello_color_with_alpha(label_fill, 140), label_halo);
-                        }
-                    }
-                }
-                DagNodeKind::Note { text, .. } => {
-                    if lod.shows_detail_text() || lod.shows_controls() {
-                        let (x0, y0, x1, y1) = preview_content_bounds(node);
-                        let display = if text.is_empty() { "…" } else { text.as_str() };
-                        let pos = world_to_screen(&cam, &viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
-                        append_label(scene, display, pos, paint_px * 1.05, label_fill, label_halo);
-                    }
-                }
-                DagNodeKind::Image { src, .. } => {
-                    if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
-                    }
-                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                        Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        let (x0, y0, x1, y1) = preview_content_bounds(node);
-                        let frame = Rect::new(x0, y0, x1, y1);
-                        scene.stroke(&Stroke::new(chrome_stroke), aff, theme.edge_stroke, None, &frame);
-                    }
-                    if lod.shows_detail_text() || lod.shows_controls() {
-                        self.paint_preview_image_content(scene, &cam, &viewport, node, src, label_fill, theme.raster_clear);
-                    }
-                }
-                DagNodeKind::Preview { content, expanded, .. } => {
-                    if lod.shows_detail_text() || lod.shows_controls() {
-                        self.paint_preview_content(scene, &cam, &viewport, node, content, expanded, paint_px, label_fill, label_halo, theme.raster_clear);
-                    }
-                }
-                DagNodeKind::Action { label, .. } => {
-                    if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
-                    }
-                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                        Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        let (x0, y0, x1, y1) = action_control_bounds(node);
-                        let control = Rect::new(x0, y0, x1, y1);
-                        scene.stroke(&Stroke::new(chrome_stroke), aff, theme.edge_stroke, None, &control);
-                        if lod.shows_detail_text() {
-                            let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
-                            append_label(scene, label, pos, paint_px * 0.95, label_fill, label_halo);
-                        }
-                    }
-                }
-            }
-            }
+            self.paint_node_visual(
+                scene,
+                &aff,
+                &cam,
+                &viewport,
+                lod,
+                lod_index,
+                node,
+                self.widget_drag.filter(|drag_idx| *drag_idx == idx),
+                DagNodePaintChrome {
+                    is_dimmed,
+                    is_selected,
+                    is_highlighted,
+                    is_hovered,
+                    body_fill_alpha: 255,
+                    ghost_tint: false,
+                },
+            );
+        }
+        if let Some(ghost) = self.ghost_node.as_ref() {
+            self.paint_node_visual(
+                scene,
+                &aff,
+                &cam,
+                &viewport,
+                lod,
+                lod_index,
+                ghost,
+                None,
+                DagNodePaintChrome::ghost_preview(),
+            );
         }
     }
 }
@@ -4522,6 +4855,78 @@ mod tests {
     }
 
     #[test]
+    fn detail_lod_channel_rows_pick_handles_not_node_body() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("detail");
+        let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+        let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
+        let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
+        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let (sx, sy) = world_to_screen_px(&host, row_center);
+        host.pointer_move_screen(sx, sy, false, false, false);
+        assert!(host.hovered_node_id().as_deref() == Some("combine"));
+        assert!(host.engine.hover.is_some());
+        assert!(!host.engine.selection.node_ids.contains(
+            &host.node_id_for_widget_id("combine").expect("combine node id")
+        ));
+        let divider_x = computation_column_divider_x(&combine).expect("divider");
+        let (_, header_top, _, header_bottom) = channel_row_bounds(&combine, 0);
+        let title_probe = cavas::vello::kurbo::Point::new(divider_x, (header_top + header_bottom) * 0.5);
+        let (body_sx, body_sy) = world_to_screen_px(&host, title_probe);
+        host.pointer_move_screen(body_sx, body_sy, false, false, false);
+        assert!(host.hovered_node_id().is_none());
+        assert!(host.engine.hover.is_none());
+    }
+
+    #[test]
+    fn detail_lod_output_row_hitbox_starts_edge_draw() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("detail");
+        let scale = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale");
+        let port_idx = scale.outputs().iter().position(|p| p.id == "out").expect("port out");
+        let (x0, y0, x1, y1) = output_port_row_hit_bounds(scale, port_idx).expect("row bounds");
+        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let handle = handle_world(&host, "scale:out");
+        assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
+        let (sx, sy) = world_to_screen_px(&host, row_center);
+        host.pointer_down(sx, sy, false);
+        assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
+    }
+
+    #[test]
+    fn output_port_row_hit_bounds_span_output_column() {
+        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
+        let outputs = vec![
+            IoPortSpec { id: "x".into(), label: "x".into() },
+            IoPortSpec { id: "y".into(), label: "y".into() },
+        ];
+        let width = computation_node_width("Node", &inputs, &outputs);
+        let height = computation_node_height(1, 2, false, false);
+        let node = DagNodeSpec::computation(
+            "n".into(),
+            "Node".into(),
+            "Node".into(),
+            "emoji:🔢".into(),
+            inputs,
+            outputs,
+            false,
+            false,
+            0.0,
+            0.0,
+            width,
+            height,
+        );
+        let (col_left, col_right) = computation_output_column_x_bounds(&node).expect("output column");
+        let (x0, _, x1, _) = output_port_row_hit_bounds(&node, 1).expect("row");
+        assert!((x0 - col_left).abs() < 1e-9);
+        assert!((x1 - col_right).abs() < 1e-9);
+    }
+
+    #[test]
     fn input_port_row_hit_bounds_span_input_column() {
         let inputs = vec![
             IoPortSpec { id: "a".into(), label: "a".into() },
@@ -4865,6 +5270,9 @@ mod tests {
         assert!(DagDrawLod::Detail.shows_handles());
         assert!(DagDrawLod::Normal.uses_input_row_connection_hitbox());
         assert!(!DagDrawLod::Detail.uses_input_row_connection_hitbox());
+        assert!(DagDrawLod::Detail.uses_channel_row_pick());
+        assert!(DagDrawLod::Micro.uses_channel_row_pick());
+        assert!(!DagDrawLod::Normal.uses_channel_row_pick());
         assert!(!DagDrawLod::Minimap.allows_connection_hit_picking());
         assert!(!DagDrawLod::Overview.allows_connection_hit_picking());
         assert!(!DagDrawLod::Compact.allows_connection_hit_picking());

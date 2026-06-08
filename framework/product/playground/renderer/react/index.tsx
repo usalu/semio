@@ -6464,7 +6464,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   );
   const onSelectionChange = reactHostPort.useCallback(
     (ids: readonly string[]) => {
-      ctrl?.run("setSelection", { ids: [...ids], mode: "default" });
+      ctrl?.run("setSelection", { ids: [...ids], mode: "default", fromFlow: true });
     },
     [ctrl],
   );
@@ -6482,7 +6482,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   );
   const onPreviewOffChange = reactHostPort.useCallback(
     (ids: readonly string[]) => {
-      ctrl?.run("setPreviewOff", { ids: [...ids] });
+      ctrl?.run("setPreviewOff", { ids: [...ids], fromFlow: true });
     },
     [ctrl],
   );

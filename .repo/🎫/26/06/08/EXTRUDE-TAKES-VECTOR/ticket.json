@@ -1,9 +1,9 @@
 {
   "title": "Extrude Takes Vector",
   "emoji": "📐",
-  "status": "open",
+  "status": "closed",
   "description": "procedural: extrude should take a vector.",
-  "summary": "Changed `brep.solid.extrude` to accept a `vector` input instead of `distance`. The vector's magnitude is the extrusion length and its direction is normalized for the kernel. Default vector is `[0, 0, 1]`. Added `extrudeFromVector` helper and a test.",
+  "summary": "Fixed circle + extrude showing nothing in procedural preview. Root causes: curve circle edges lacked circle profile metadata so extrude produced untessellatable solids; draw circle profiles could fail preview tessellation; extrude default vector magnitude was 1 (invisible extrusion). Added circle profile to circleCurveSync, unified drawCircleSync on sketchCircle, default extrude vector [0,0,5], default fixture wires circle sketch → vector (z=5 slider) → extrude → preview.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1621"
   },

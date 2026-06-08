@@ -7,8 +7,8 @@ pub use neural_engine as neural;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use dag::{
-    computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, would_create_cycle,
-    DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
+    computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width,
+    normalize_node_display, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
 };
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
@@ -264,8 +264,10 @@ fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo
         Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), expanded),
         Widget::Neuron { neuronKind, input_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
+            let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
+            let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
             (
-                computation_node_width(&label, &inputs, &outputs),
+                computation_node_width(&normalized_name, &inputs, &outputs),
                 computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs),
             )
         }
@@ -830,12 +832,16 @@ impl FlowHost {
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         let mut layout = BTreeMap::new();
         layout.insert(id, WidgetLayout { x: world_x, y: world_y });
-        self.ghost_node = Some(widget_to_dag_node(&widget, 0, &layout, &self.kind_infos));
+        let mut node = widget_to_dag_node(&widget, 0, &layout, &self.kind_infos);
+        fit_node_size(&mut node);
+        self.ghost_node = Some(node.clone());
+        self.dag.set_ghost_node(Some(node));
         Ok(())
     }
 
     pub fn clear_ghost_widget(&mut self) {
         self.ghost_node = None;
+        self.dag.set_ghost_node(None);
     }
 
     pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, String> {
@@ -1334,12 +1340,24 @@ impl FlowHost {
         }
     }
 
+    fn sync_dag_ghost(&mut self) {
+        self.dag.set_ghost_node(self.ghost_node.clone());
+    }
+
     fn rebuild_dag(&mut self) {
         let fixture = self.build_dag_fixture_v1();
         let theme = self.dag.vello_theme;
+        let automatic_lod = self.dag.automatic_lod();
+        let forced_draw_lod = self.dag.forced_draw_lod_label().map(str::to_string);
+        let ghost = self.ghost_node.clone();
         self.dag = DagHost::from_fixture_without_layout(fixture);
         self.dag.vello_theme = theme;
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.dag.set_automatic_lod(automatic_lod);
+        if let Some(label) = forced_draw_lod {
+            self.dag.set_forced_draw_lod_label(&label);
+        }
+        self.dag.set_ghost_node(ghost);
         self.sync_preview_dimmed();
         self.sync_from_dag();
     }
@@ -1584,9 +1602,6 @@ impl FlowHost {
 
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
-        if let Some(ref ghost) = self.ghost_node {
-            self.dag.paint_ghost_node(scene, ghost, width, height, dpr);
-        }
     }
 
     pub fn set_automatic_lod(&mut self, enabled: bool) {
@@ -1723,6 +1738,7 @@ impl FlowSessionInner {
     }
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
+        self.host.sync_dag_ghost();
         let mut scene = cavas::vello::Scene::new();
         let clear = self.host.dag.vello_theme.raster_clear;
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
@@ -2701,6 +2717,38 @@ mod tests {
     }
 
     #[test]
+    fn ghost_widget_matches_placed_neuron_size() {
+        let mut host = host_with_test_bridge();
+        host.set_neuron_kind_infos_json(
+            &serde_json::to_string(&[NeuronKindInfo {
+                id: "brep.sketch2d.circle".into(),
+                module: "brep".into(),
+                name: "Sketch Circle".into(),
+                abbreviation: "Circle".into(),
+                icon: "emoji:⚪".into(),
+                summary: "Sketched circle profile".into(),
+                inputs: vec!["radius".into()],
+                outputs: vec!["geometry".into()],
+                ..Default::default()
+            }])
+            .unwrap(),
+        );
+        let descriptor = r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#;
+        host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
+        let ghost_width = host.ghost_node.as_ref().expect("ghost").width;
+        let placed_id = host.add_widget(descriptor, 80.0, 80.0).unwrap();
+        let placed_width = host
+            .dag
+            .fixture
+            .nodes
+            .iter()
+            .find(|node| node.id == placed_id)
+            .expect("placed")
+            .width;
+        assert!((ghost_width - placed_width).abs() < 1e-6, "ghost width {ghost_width} != placed {placed_width}");
+    }
+
+    #[test]
     fn ghost_widget_preview_and_clear() {
         let mut host = host_with_test_bridge();
         host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 42.0, 24.0).unwrap();
@@ -2712,6 +2760,100 @@ mod tests {
         assert_eq!(ghost.icon, "emoji:➕");
         host.clear_ghost_widget();
         assert!(host.ghost_node.is_none());
+    }
+
+    #[test]
+    fn ghost_widget_label_overlay_matches_placed_at_micro() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_neuron_kind_infos_json(
+            &serde_json::to_string(&[NeuronKindInfo {
+                id: "brep.sketch2d.circle".into(),
+                module: "brep".into(),
+                name: "Sketch Circle".into(),
+                abbreviation: "Circle".into(),
+                icon: "emoji:⚪".into(),
+                summary: "Sketched circle profile".into(),
+                inputs: vec!["radius".into()],
+                outputs: vec!["geometry".into()],
+                ..Default::default()
+            }])
+            .unwrap(),
+        );
+        host.dag.set_automatic_lod(false);
+        host.dag.set_forced_draw_lod_label("micro");
+        let descriptor = r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#;
+        host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
+        let ghost = host.dag.ghost_node().expect("ghost");
+        assert_eq!(host.draw_lod_label(), "micro");
+        assert_eq!(dag::DagDrawLod::Micro.node_label(), dag::DagNodeLabel::Name);
+        assert!(dag::DagDrawLod::Micro.shows_port_labels());
+        assert!(dag::DagDrawLod::Micro.shows_handles());
+        let ghost_overlay_rows = host.dag.label_overlay_rows_for_node_spec(ghost, true);
+        assert_eq!(ghost_overlay_rows.len(), 3);
+        let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let overlay_ghost_rows: Vec<_> = overlay["labels"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["ghost"] == true)
+            .collect();
+        assert_eq!(overlay_ghost_rows.len(), 3);
+        let placed_node = {
+            let widget = widget_from_descriptor(
+                &serde_json::from_str::<WidgetDescriptor>(descriptor).unwrap(),
+                "placed".into(),
+                &host.kind_infos,
+            );
+            let mut layout = BTreeMap::new();
+            layout.insert("placed".into(), WidgetLayout { x: 80.0, y: 80.0 });
+            let mut node = widget_to_dag_node(&widget, 0, &layout, &host.kind_infos);
+            fit_node_size(&mut node);
+            node
+        };
+        let placed_rows = host.dag.label_overlay_rows_for_node_spec(&placed_node, false);
+        assert_eq!(ghost_overlay_rows.len(), placed_rows.len());
+        for (ghost_row, placed_row) in ghost_overlay_rows.iter().zip(placed_rows.iter()) {
+            assert_eq!(ghost_row["text"], placed_row["text"]);
+            assert_eq!(ghost_row["layout"], placed_row["layout"]);
+            assert_eq!(ghost_row["align"], placed_row["align"]);
+        }
+        let mut scene = cavas::vello::Scene::new();
+        host.paint_scene(&mut scene, 1280, 800, 1.0);
+    }
+
+    #[test]
+    fn rebuild_dag_preserves_ghost_overlay_at_micro() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_neuron_kind_infos_json(
+            &serde_json::to_string(&[NeuronKindInfo {
+                id: "brep.sketch2d.circle".into(),
+                module: "brep".into(),
+                name: "Sketch Circle".into(),
+                abbreviation: "Circle".into(),
+                icon: "emoji:⚪".into(),
+                summary: "Sketched circle profile".into(),
+                inputs: vec!["radius".into()],
+                outputs: vec!["geometry".into()],
+                ..Default::default()
+            }])
+            .unwrap(),
+        );
+        host.dag.set_automatic_lod(false);
+        host.dag.set_forced_draw_lod_label("micro");
+        host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#, 12.0, 18.0).unwrap();
+        host.rebuild_dag();
+        assert!(host.dag.ghost_node().is_some());
+        assert_eq!(host.draw_lod_label(), "micro");
+        let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let ghost_rows: Vec<_> = overlay["labels"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["ghost"] == true)
+            .collect();
+        assert_eq!(ghost_rows.len(), 3);
     }
 
     #[test]

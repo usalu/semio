@@ -1,0 +1,14 @@
+{
+  "title": "Gumball Pick Priority Over Geometry",
+  "emoji": "🎛",
+  "status": "closed",
+  "description": "Make gumball always priority over all elements in infinite world. Geometry currently blocks gumball interaction in procedural, cad, puzzle 3d.",
+  "summary": "Gumball handles now win over occluding scene geometry in all infinite-world consumers (procedural, CAD, puzzle 3d). UnifiedGumball applies depth-biased raycast on handle meshes (same pattern as puzzle vortex pick priority), scans the full hit list for gumball handles at any depth, and starts drag/hover from window capture when a handle is under the cursor—even when closer geometry would otherwise steal R3F pointer events.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1623"
+  },
+  "goal": "🎯♾️infinite🎯🏙️world",
+  "sessions": [
+    "⚪8094890bc8aa464e87888caed7bb81f0"
+  ]
+}

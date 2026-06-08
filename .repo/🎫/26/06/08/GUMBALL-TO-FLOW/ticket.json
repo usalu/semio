@@ -3,7 +3,7 @@
   "emoji": "🎛",
   "status": "closed",
   "description": "Add gumball to procedural 3D preview. When moving/rotating/scaling, insert correct transform nodes in the flow graph (translate with sliders/vector, rotate, scale), rewire automatically, make incremental space, re-grab updates existing nodes, configurable transform detail granularity.",
-  "summary": "Gumball drag is now live: onDragStart inserts transform chain and selects all new flow nodes; onDrag (rAF-throttled) updates slider/params and re-evaluates for live 3D preview; proxy pose resets each frame so geometry comes from graph eval only. gumballActiveWidgetIds highlights transform + source in 3D; flow canvas multi-selects transform/slider/vector nodes during drag. WorldCanvas uses frameloop always while dragging.",
+  "summary": "Fixed gumball vanishing mid-drag: flow multi-select no longer overwrites preview selection during drag (flow-only setSelection canvas command + fromFlow guard on controller setSelection). Gumball stays mounted while gumballDragActive; anchor follows transform output geometry once eval returns. Live slider updates apply synchronously on each onDrag frame (removed rAF). Stable gumball component key preserves drag state across anchor switch.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1616"
   },
@@ -17,6 +17,7 @@
     "⚪f47d40bece5a4cbabdc74e74b8b02c7f",
     "⚪fb36d28622a64305be76d0ee2e260ffb",
     "⚪6515f8276944454a82dc6c6a28f59ab0",
-    "⚪619971bd93ed473895460c20f1a541a3"
+    "⚪619971bd93ed473895460c20f1a541a3",
+    "⚪fb82f07b84334b188b4c3e15d3c6a1fe"
   ]
 }

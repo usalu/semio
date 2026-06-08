@@ -1039,6 +1039,12 @@ export const interactiveOnClass = cn(
 export const interactiveActiveFillClass =
   "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized";
 
+/** @emoji 🎨 Table rows: element gray at rest, hover fill + emphasized content. */
+export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
+
+/** @emoji 🎨 Selected table row: primary fill + emphasized content. */
+export const tableRowSelectedClass = interactiveActiveFillClass;
+
 /** @emoji 🎨 Active tab: primary fill + emphasized content. */
 export const interactiveTabActiveClass = cn(
   "data-[state=active]:bg-active-base",
@@ -15929,6 +15935,49 @@ function gumballNdcFromPointer(clientX: number, clientY: number, rect: DOMRect):
 const _gumballPickRaycaster = new THREE.Raycaster();
 const _gumballPickNdc = new THREE.Vector2();
 
+/** @emoji 🎯 World-space depth bias so gumball handles win picking over occluding scene geometry (see puzzle vortex pick priority). */
+const GUMBALL_PICK_DEPTH_BIAS = 1.5;
+
+/** @emoji 🎯 Mesh raycast biasing gumball hits closer so occluding meshes do not swallow handle interaction. */
+function gumballHandleRaycast(this: THREE.Mesh, raycaster: THREE.Raycaster, intersects: THREE.Intersection[]): void {
+  const local: THREE.Intersection[] = [];
+  THREE.Mesh.prototype.raycast.call(this, raycaster, local);
+  for (const hit of local) {
+    hit.distance = Math.max(hit.distance - GUMBALL_PICK_DEPTH_BIAS, hit.distance * 0.01);
+    intersects.push(hit);
+  }
+}
+
+function gumballBindHandleRaycast(root: THREE.Object3D): void {
+  root.traverse((node) => {
+    if (node instanceof THREE.Mesh) {
+      node.raycast = gumballHandleRaycast;
+    }
+  });
+}
+
+/** @emoji 🎛 Raycasts a gumball root subtree for a handle at a client-space pointer. */
+function gumballRaycastOwnedAtClientPoint(
+  camera: THREE.Camera,
+  canvas: HTMLElement,
+  clientX: number,
+  clientY: number,
+  root: THREE.Object3D,
+): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  root.updateWorldMatrix(true, false);
+  const ndc = gumballNdcFromPointer(clientX, clientY, rect);
+  _gumballPickNdc.set(ndc.x, ndc.y);
+  _gumballPickRaycaster.setFromCamera(_gumballPickNdc, camera);
+  const hits = _gumballPickRaycaster.intersectObjects([root], true);
+  for (const hit of hits) {
+    const kind = gumballKindFromRaycastObject(hit.object);
+    if (kind) return { kind, object: hit.object };
+  }
+  return null;
+}
+
 /** @emoji 🎛 True while a gumball handle owns the active canvas pointer (blocks marquee / background pick). */
 export const gumballPointerConsumesCanvasEventRef = { current: false };
 
@@ -15943,8 +15992,14 @@ export function gumballKindFromRaycastObject(object: THREE.Object3D | null): Gum
   return null;
 }
 
-/** @emoji 🎛 Raycasts the scene for a gumball handle at a client-space pointer. */
-export function gumballRaycastKindAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): GumballHandleKind | null {
+/** @emoji 🎛 Raycasts the scene for a gumball handle at a client-space pointer (any depth; not limited to the closest scene hit). */
+export function gumballRaycastAtClientPoint(
+  scene: THREE.Scene,
+  camera: THREE.Camera,
+  canvas: HTMLElement,
+  clientX: number,
+  clientY: number,
+): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
   const ndc = gumballNdcFromPointer(clientX, clientY, rect);
@@ -15953,9 +16008,14 @@ export function gumballRaycastKindAtClientPoint(scene: THREE.Scene, camera: THRE
   const hits = _gumballPickRaycaster.intersectObjects(scene.children, true);
   for (const hit of hits) {
     const kind = gumballKindFromRaycastObject(hit.object);
-    if (kind) return kind;
+    if (kind) return { kind, object: hit.object };
   }
   return null;
+}
+
+/** @emoji 🎛 Raycasts the scene for a gumball handle kind at a client-space pointer. */
+export function gumballRaycastKindAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): GumballHandleKind | null {
+  return gumballRaycastAtClientPoint(scene, camera, canvas, clientX, clientY)?.kind ?? null;
 }
 
 interface GumballDragState {
@@ -16026,6 +16086,7 @@ function GumballHandleMesh(props: {
     const root = rootRef.current;
     if (!root) return;
     gumballApplyHandleVisualMaterial(root, material);
+    gumballBindHandleRaycast(root);
   }, [material, props.children, visual.color, visual.opacity]);
   return (
     <group
@@ -16207,29 +16268,6 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   const pointerGuardEnabled = gumballConfigVisible(config);
 
   reactHostPort.useEffect(() => {
-    if (!pointerGuardEnabled) return;
-    const canvas = gl.domElement;
-    const onPointerDownCapture = (event: PointerEvent) => {
-      if (event.button !== 0) return;
-      const target = event.target;
-      if (!(target instanceof Node) || !canvas.contains(target)) return;
-      gumballPointerConsumesCanvasEventRef.current = gumballRaycastKindAtClientPoint(scene, camera, canvas, event.clientX, event.clientY) !== null;
-    };
-    const clearPointerCapture = () => {
-      gumballPointerConsumesCanvasEventRef.current = false;
-    };
-    window.addEventListener("pointerdown", onPointerDownCapture, true);
-    window.addEventListener("pointerup", clearPointerCapture, true);
-    window.addEventListener("pointercancel", clearPointerCapture, true);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDownCapture, true);
-      window.removeEventListener("pointerup", clearPointerCapture, true);
-      window.removeEventListener("pointercancel", clearPointerCapture, true);
-      clearPointerCapture();
-    };
-  }, [camera, gl.domElement, pointerGuardEnabled, scene]);
-
-  reactHostPort.useEffect(() => {
     invalidate();
   }, [hovered, activeKind, palette, invalidate]);
 
@@ -16389,7 +16427,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
 
   const beginDrag = reactHostPort.useCallback(
     (kind: GumballHandleKind, event: ThreeEvent<PointerEvent>) => {
-      if (event.nativeEvent.button !== 0) return;
+      if (event.nativeEvent.button !== 0 || dragRef.current) return;
       const target = props.target;
       const before = gumballPoseFromObject3D(target);
       const rect = gl.domElement.getBoundingClientRect();
@@ -16441,6 +16479,52 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
     },
     [camera, controls, gl.domElement, onWindowKey, onWindowMove, onWindowUp, props],
   );
+
+  const beginDragRef = reactHostPort.useRef(beginDrag);
+  beginDragRef.current = beginDrag;
+
+  reactHostPort.useEffect(() => {
+    if (!pointerGuardEnabled) return;
+    const canvas = gl.domElement;
+    const onPointerDownCapture = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      const group = groupRef.current;
+      const ownedHit = group ? gumballRaycastOwnedAtClientPoint(camera, canvas, event.clientX, event.clientY, group) : null;
+      const anyHit = gumballRaycastKindAtClientPoint(scene, camera, canvas, event.clientX, event.clientY);
+      gumballPointerConsumesCanvasEventRef.current = ownedHit !== null || anyHit !== null;
+      if (!ownedHit) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      gumballPointerConsumesCanvasEventRef.current = true;
+      beginDragRef.current(ownedHit.kind, { nativeEvent: event, stopPropagation: () => event.stopPropagation() } as ThreeEvent<PointerEvent>);
+    };
+    const onPointerMoveCapture = (event: PointerEvent) => {
+      if (dragRef.current) return;
+      const group = groupRef.current;
+      if (!group) return;
+      const ownedHit = gumballRaycastOwnedAtClientPoint(camera, canvas, event.clientX, event.clientY, group);
+      if (ownedHit) {
+        setHovered((prev) => (prev === ownedHit.kind ? prev : ownedHit.kind));
+        invalidate();
+      } else {
+        setHovered((prev) => (prev === null ? prev : null));
+      }
+    };
+    const clearPointerCapture = () => {
+      gumballPointerConsumesCanvasEventRef.current = false;
+    };
+    canvas.addEventListener("pointerdown", onPointerDownCapture, true);
+    canvas.addEventListener("pointermove", onPointerMoveCapture, true);
+    canvas.addEventListener("pointerup", clearPointerCapture, true);
+    canvas.addEventListener("pointercancel", clearPointerCapture, true);
+    return () => {
+      canvas.removeEventListener("pointerdown", onPointerDownCapture, true);
+      canvas.removeEventListener("pointermove", onPointerMoveCapture, true);
+      canvas.removeEventListener("pointerup", clearPointerCapture, true);
+      canvas.removeEventListener("pointercancel", clearPointerCapture, true);
+      clearPointerCapture();
+    };
+  }, [camera, gl.domElement, invalidate, pointerGuardEnabled, scene]);
 
   const handlePointerOver = reactHostPort.useCallback(
     (kind: GumballHandleKind) => {
@@ -17088,7 +17172,13 @@ function TableDraggableRow<T>({
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-interactive-fill ring-2 ring-active" : "hover:bg-hover-interactive-fill"}`;
+  const baseRowClassName = cn(
+    borderNormalBottomClass,
+    rowHeightClass,
+    tableRowInteractiveClass,
+    isSelected && tableRowSelectedClass,
+    isOver && !isSelected && "bg-hover-interactive-fill text-emphasized ring-2 ring-active",
+  );
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
@@ -17260,7 +17350,7 @@ const Table = <T,>({
           <thead className={`${headerBgClass} ${borderNormalBottomClass} ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
-                <th key={column.id} className={`text-left p-single font-medium h-large ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
+                <th key={column.id} className={`text-left p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
                   {column.header}
                 </th>
               ))}
@@ -17301,13 +17391,13 @@ const Table = <T,>({
                   );
                 }
 
-                const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-interactive-fill"}`;
+                const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass);
                 const isDragging = activeId === rowId;
 
                 return (
                   <tr
                     key={key}
-                    className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+                    className={cn(baseRowClassName, customRowClassName, isDragging && "opacity-50", onRowClick && "cursor-selectable")}
                     onClick={(e) => {
                       if (e.detail >= 2) {
                         onRowDoubleClick?.(row, index);
@@ -17801,7 +17891,7 @@ const VirtualFileSystemNodeGlyph: React.FC<{
   readonly name: string;
 }> = ({ schema, fileNodeKindId, icon }) => {
   const kindIcon = icon ?? schema.fileNodeKinds[fileNodeKindId]?.icon;
-  const glyphClass = "inline-flex size-small shrink-0 items-center justify-center text-muted-foreground";
+  const glyphClass = "inline-flex size-small shrink-0 items-center justify-center";
   const schemaIcon = kindIcon ? resolveVirtualFileSystemSchemaIcon(kindIcon) : undefined;
   if (schemaIcon) {
     return (
@@ -17901,7 +17991,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
               <button
                 type="button"
                 data-vfs-expand
-                className="inline-flex size-small shrink-0 items-center justify-center rounded hover:bg-hover-interactive-fill"
+                className="inline-flex size-small shrink-0 items-center justify-center rounded text-element hover:bg-hover-interactive-fill hover:text-emphasized"
                 aria-label={row.isExpanded ? "Collapse" : "Expand"}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -19968,6 +20058,33 @@ if (import.meta.vitest) {
       expect(gumballKindFromRaycastObject(null)).toBeNull();
       gumballPointerConsumesCanvasEventRef.current = true;
       gumballPointerConsumesCanvasEventRef.current = false;
+      const gumballRoot = new THREE.Group();
+      const gumballHandle = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshBasicMaterial());
+      gumballHandle.userData = { gumballHandleKind: "moveX" };
+      gumballHandle.raycast = gumballHandleRaycast;
+      gumballRoot.add(gumballHandle);
+      const ownedCamera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 100);
+      ownedCamera.position.set(0, 0, 5);
+      ownedCamera.lookAt(0, 0, 0);
+      ownedCamera.updateMatrixWorld(true);
+      const ownedCanvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 200, height: 200, right: 200, bottom: 200, x: 0, y: 0, toJSON: () => ({}) }) } as HTMLElement;
+      expect(gumballRaycastOwnedAtClientPoint(ownedCamera, ownedCanvas, 100, 100, gumballRoot)?.kind).toBe("moveX");
+      expect(gumballRaycastOwnedAtClientPoint(ownedCamera, ownedCanvas, 10, 10, gumballRoot)).toBeNull();
+      gumballHandle.geometry.dispose();
+      (gumballHandle.material as THREE.Material).dispose();
+      const biasedPickMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+      biasedPickMesh.raycast = gumballHandleRaycast;
+      const raycaster = new THREE.Raycaster();
+      raycaster.set(new THREE.Vector3(0, 0, 10), new THREE.Vector3(0, 0, -1));
+      const biased: THREE.Intersection[] = [];
+      biasedPickMesh.raycast(raycaster, biased);
+      const plain: THREE.Intersection[] = [];
+      THREE.Mesh.prototype.raycast.call(biasedPickMesh, raycaster, plain);
+      expect(biased.length).toBeGreaterThan(0);
+      expect(plain.length).toBeGreaterThan(0);
+      expect(biased[0]!.distance).toBeLessThan(plain[0]!.distance);
+      biasedPickMesh.geometry.dispose();
+      (biasedPickMesh.material as THREE.Material).dispose();
     });
   });
 
@@ -22622,6 +22739,8 @@ if (treeVitest) {
       expect(markup).toContain("data-vfs-expand");
       expect(markup).toContain("readme.md");
       expect(markup).toContain("cursor-selectable");
+      expect(markup).toContain("text-element");
+      expect(markup).not.toContain("text-muted-foreground");
     });
 
     it("renders file node kind vendored icons instead of avatars for schema icon ids", () => {

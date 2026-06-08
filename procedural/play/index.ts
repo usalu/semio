@@ -615,8 +615,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private gumballBindingByTransformId = new Map<string, GumballTransformBinding>();
 	private gumballDragSession: GumballDragSession | null = null;
 	private gumballActiveWidgetIds: string[] = [];
-	private gumballPendingLive: ProceduralGumballTransformRequest | null = null;
-	private gumballLiveRaf: ReturnType<typeof requestAnimationFrame> | null = null;
 	private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
 	private lodModeByInstance: Record<string, DagLodModeKind> = {};
 	private effectiveLod: DagDrawLodKind = "normal";
@@ -788,11 +786,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private clearGumballDrag(): void {
 		this.gumballDragSession = null;
 		this.gumballActiveWidgetIds = [];
-		this.gumballPendingLive = null;
-		if (this.gumballLiveRaf !== null) {
-			cancelAnimationFrame(this.gumballLiveRaf);
-			this.gumballLiveRaf = null;
-		}
 	}
 
 	private syncGumballActiveChrome(binding: GumballTransformBinding): void {
@@ -804,11 +797,15 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 	}
 
+	private dispatchFlowCanvasSelection(ids: readonly string[]): void {
+		this.run("canvasCommand", { command: "setSelection", argsJson: JSON.stringify({ ids: [...ids] }) });
+	}
+
 	private dispatchGraphEdit(ops: readonly FlowGraphEditOp[], selectTransformId?: string): void {
 		this.run("canvasCommand", { command: "graphEdit", argsJson: JSON.stringify({ ops }) });
 		const binding = this.gumballDragSession?.binding;
 		if (binding) {
-			this.run("setSelection", { ids: gumballBindingNodeIds(binding), mode: "default" });
+			this.dispatchFlowCanvasSelection(gumballBindingNodeIds(binding));
 			this.syncGumballActiveChrome(binding);
 			return;
 		}
@@ -817,23 +814,12 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 	}
 
-	private flushLiveGumballDrag(): void {
-		const pending = this.gumballPendingLive;
-		this.gumballPendingLive = null;
+	private applyLiveGumballDrag(request: ProceduralGumballTransformRequest): void {
 		const session = this.gumballDragSession;
-		if (!pending || !session) return;
-		const values = applyGumballDeltaToBase(session.baseValues, session.binding.op, pending.delta);
+		if (!session) return;
+		const values = applyGumballDeltaToBase(session.baseValues, session.binding.op, request.delta);
 		setGumballBindingValues(session.binding, values);
 		this.dispatchGraphEdit(this.buildGumballUpdateOps(session.binding));
-	}
-
-	private scheduleLiveGumballDrag(request: ProceduralGumballTransformRequest): void {
-		this.gumballPendingLive = request;
-		if (this.gumballLiveRaf !== null) return;
-		this.gumballLiveRaf = requestAnimationFrame(() => {
-			this.gumballLiveRaf = null;
-			this.flushLiveGumballDrag();
-		});
 	}
 
 	private beginGumballDrag(request: ProceduralGumballTransformRequest): void {
@@ -859,18 +845,15 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	}
 
 	private finishGumballDrag(request: ProceduralGumballTransformRequest): void {
-		if (this.gumballLiveRaf !== null) {
-			cancelAnimationFrame(this.gumballLiveRaf);
-			this.gumballLiveRaf = null;
-		}
-		this.gumballPendingLive = null;
 		const session = this.gumballDragSession;
 		if (session) {
-			const values = applyGumballDeltaToBase(session.baseValues, session.binding.op, request.delta);
-			setGumballBindingValues(session.binding, values);
-			console.log(`[DEBUG] gumball end ${session.binding.transformId} op=${session.binding.op}`);
-			this.dispatchGraphEdit(this.buildGumballUpdateOps(session.binding));
+			const binding = session.binding;
+			const values = applyGumballDeltaToBase(session.baseValues, binding.op, request.delta);
+			setGumballBindingValues(binding, values);
+			console.log(`[DEBUG] gumball end ${binding.transformId} op=${binding.op}`);
 			this.clearGumballDrag();
+			this.dispatchGraphEdit(this.buildGumballUpdateOps(binding));
+			this.run("setSelection", { ids: [binding.transformId], mode: "default" });
 			return;
 		}
 		this.applyGumballTransformCommitted(request);
@@ -1016,7 +999,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			return;
 		}
 		if (phase === "live") {
-			this.scheduleLiveGumballDrag(request);
+			this.applyLiveGumballDrag(request);
 			return;
 		}
 		this.finishGumballDrag(request);
@@ -1292,7 +1275,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		if (command === "setSelection") {
 			const ids = (args as { ids?: string[] }).ids;
 			const mode = (args as { mode?: ProceduralPlaySelectionMode }).mode ?? "default";
+			const fromFlow = (args as { fromFlow?: boolean }).fromFlow === true;
 			if (!Array.isArray(ids)) return;
+			if (fromFlow && this.gumballDragSession) return;
 			const next = selectionMergeIds(mode, this.selectedNodeIds, ids);
 			if (JSON.stringify(next) === JSON.stringify(this.selectedNodeIds)) return;
 			this.selectedNodeIds = next;
@@ -1376,7 +1361,16 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 		if (command === "setPreviewOff") {
 			const ids = (args as { ids?: string[] }).ids;
+			const fromFlow = (args as { fromFlow?: boolean }).fromFlow === true;
 			if (!Array.isArray(ids)) return;
+			if (fromFlow && this.gumballDragSession) {
+				const next = [...ids];
+				if (JSON.stringify(next) === JSON.stringify(this.previewOffNodeIds)) return;
+				this.previewOffNodeIds = next;
+				this.interactionRevision += 1;
+				this.notifySnapshot();
+				return;
+			}
 			this.previewOffNodeIds = [...ids];
 			this.interactionRevision += 1;
 			this.notifySnapshot();

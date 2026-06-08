@@ -90,6 +90,10 @@
  * [data-tree-hover-path="row"]. Guide lines and elbows on the path emphasize
  * to match hovered row labels. */
 
+[data-slot="tree-guide"] {
+  z-index: 1;
+}
+
 [data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line],
 :is(
     [data-slot="tree-section-content"],
