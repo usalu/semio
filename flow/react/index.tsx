@@ -2372,6 +2372,48 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("flow context menu", () => {
+    const baseCtx: FlowCanvasContextMenuContext = {
+      hoveredNodeId: null,
+      selectedNodeIds: [],
+      isImageWidget: false,
+      isBackground: true,
+      previewOffNodeIds: [],
+      screen: { x: 100, y: 200 },
+      world: { x: 1, y: 2 },
+      clientX: 300,
+      clientY: 400,
+    };
+
+    it("background menu includes add node and reorganize", () => {
+      const commands: string[] = [];
+      const items = buildFlowContextMenuItems(baseCtx, (command) => commands.push(command));
+      expect(items.some((item) => item.id === "flow.ctx.add")).toBe(true);
+      expect(items.some((item) => item.id === "flow.ctx.reorganize")).toBe(true);
+      expect(items.some((item) => item.id === "flow.ctx.delete")).toBe(false);
+      items.find((item) => item.id === "flow.ctx.add")?.onSelect?.(new Event("click"));
+      expect(commands).toEqual(["canvasCommand"]);
+    });
+
+    it("node menu includes delete and preview toggle", () => {
+      const items = buildFlowContextMenuItems(
+        { ...baseCtx, hoveredNodeId: "node-a", isBackground: false, selectedNodeIds: ["node-a"] },
+        () => {},
+      );
+      expect(items.some((item) => item.id === "flow.ctx.delete")).toBe(true);
+      expect(items.some((item) => item.id === "flow.ctx.preview")).toBe(true);
+      expect(items.some((item) => item.id === "flow.ctx.add")).toBe(false);
+    });
+
+    it("image widget menu includes replace image", () => {
+      const items = buildFlowContextMenuItems(
+        { ...baseCtx, hoveredNodeId: "img", isBackground: false, isImageWidget: true, selectedNodeIds: ["img"] },
+        () => {},
+      );
+      expect(items.some((item) => item.id === "flow.ctx.replaceImage")).toBe(true);
+    });
+  });
+
   describe("flow interaction helpers", () => {
     it("parses widget id arrays from session json", () => {
       expect(parseFlowWidgetIdArray('["a","b"]')).toEqual(["a", "b"]);

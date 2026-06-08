@@ -30,6 +30,7 @@ import {
 } from "@framework/playground/core";
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@ui/react";
 import {
+	buildFlowContextMenuItems,
 	DAG_LOD_MODE_AUTOMATIC,
 	dagPlayLodTiers,
 	dagLodAutomaticSelectLabel,
@@ -40,9 +41,13 @@ import {
 	type CatalogueSection,
 	type DagDrawLodKind,
 	type DagLodModeKind,
+	type FlowCanvasCommandRequest,
+	type FlowCanvasContextMenuContext,
+	type FlowContextMenuDispatch,
 	type FlowExtensionEntry,
 	type FlowReorganizeRequest,
 } from "@flow/react";
+import type { ContextMenuItem } from "@ui/react";
 import type { WindowMeasure } from "@framework/playground/core";
 import {
 	extractPreviewItems,
@@ -138,14 +143,21 @@ function buildProceduralLayoutOptionsJson(layerSpacing: number, siblingGap: numb
 	return JSON.stringify({ layerSpacing, siblingGap, orientation });
 }
 
-/** @emoji 🧬 Graph signature for preview state — excludes flow camera pan/zoom. */
-export function proceduralFixtureGraphSignature(fixtureJson: string): string | null {
-	try {
-		const fixture = JSON.parse(fixtureJson) as { widgets?: unknown; synapses?: unknown };
-		return JSON.stringify({ widgets: fixture.widgets ?? [], synapses: fixture.synapses ?? [] });
-	} catch {
-		return null;
+/** @emoji 🖱️ Procedural play canvas right-click menu with preview actions. */
+export function buildProceduralPlayCanvasContextMenu(ctx: FlowCanvasContextMenuContext, dispatch: FlowContextMenuDispatch): ContextMenuItem[] {
+	const items = [...buildFlowContextMenuItems(ctx, dispatch)];
+	if (ctx.hoveredNodeId) {
+		items.splice(items.length - 1, 0, {
+			id: "procedural.ctx.isolatePreview",
+			label: "Isolate in preview",
+			icon: "eye",
+			onSelect: () => {
+				dispatch("setSelection", { ids: [ctx.hoveredNodeId], mode: "default" });
+				dispatch("setShowMode", { id: "selected" });
+			},
+		});
 	}
+	return items;
 }
 
 /** @emoji 🧩 Workbench extensions tab: installed modules with enable/disable toggles. */
@@ -448,6 +460,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private orientation: ProceduralLayoutOrientation = "leftRight";
 	private reorganizeEpoch = 0;
 	private reorganizeOptionsJson = buildProceduralLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
+	private commandRequestEpoch = 0;
+	private commandRequestPayload: Omit<FlowCanvasCommandRequest, "epoch"> = { command: "" };
 	private extensionRevision = 0;
 	private previewItems: ProceduralPreviewItem[] = [];
 	private selectedNodeIds: string[] = [];
@@ -508,18 +522,19 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.mainMode.tools = buildProceduralPlayToolbarTools(this.toolbarState(), this.id);
 	}
 
-	private applyFixtureJson(json: string): void {
+	private resetInteractionState(): void {
+		this.selectedNodeIds = [];
+		this.preselectNodeIds = [];
+		this.preselectRemovedNodeIds = [];
+		this.hoveredNodeId = null;
+		this.previewOffNodeIds = [];
+		this.previewItems = [];
+	}
+
+	private applyFixtureJson(json: string, resetInteraction = false): void {
 		if (!json.includes("flow.fixture/v1") || json === this.fixtureJson) return;
-		const graphChanged = proceduralFixtureGraphSignature(this.fixtureJson) !== proceduralFixtureGraphSignature(json);
 		this.fixtureJson = json;
-		if (graphChanged) {
-			this.selectedNodeIds = [];
-			this.preselectNodeIds = [];
-			this.preselectRemovedNodeIds = [];
-			this.hoveredNodeId = null;
-			this.previewOffNodeIds = [];
-			this.previewItems = [];
-		}
+		if (resetInteraction) this.resetInteractionState();
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.rebuildShellMode();
@@ -530,7 +545,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
 		if (nextId === this.activeFixtureId && nextId !== PLAYGROUND_NO_FIXTURE_ID) return;
 		this.activeFixtureId = nextId;
-		this.applyFixtureJson(proceduralFixtureJsonForId(nextId));
+		this.applyFixtureJson(proceduralFixtureJsonForId(nextId), true);
 	}
 
 	getFixtureJson(): string {
@@ -633,6 +648,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	getReorganize(): FlowReorganizeRequest {
 		return { epoch: this.reorganizeEpoch, optionsJson: this.reorganizeOptionsJson };
+	}
+
+	getCommandRequest(): FlowCanvasCommandRequest {
+		return { epoch: this.commandRequestEpoch, ...this.commandRequestPayload };
 	}
 
 	private syncReorganizeOptionsJson(): void {
@@ -752,10 +771,19 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.triggerReorganize();
 			return;
 		}
+		if (command === "canvasCommand") {
+			const canvasCommand = (args as { command?: string; argsJson?: string }).command;
+			if (typeof canvasCommand !== "string" || !canvasCommand) return;
+			const argsJson = (args as { argsJson?: string }).argsJson;
+			this.commandRequestPayload = { command: canvasCommand, ...(argsJson !== undefined ? { argsJson } : {}) };
+			this.commandRequestEpoch += 1;
+			this.emit();
+			return;
+		}
 		if (command === "setFixtureJson") {
-			const json = (args as { json?: string }).json;
+			const { json, resetInteraction } = args as { json?: string; resetInteraction?: boolean };
 			if (typeof json === "string") {
-				this.applyFixtureJson(json);
+				this.applyFixtureJson(json, resetInteraction === true);
 			}
 			return;
 		}
@@ -776,13 +804,13 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 		if (command === "loadStored") {
 			const json = this.fixtureStore.load();
-			if (json) this.applyFixtureJson(json);
+			if (json) this.applyFixtureJson(json, true);
 			return;
 		}
 		if (command === "resetFixture") {
 			this.fixtureStore.clear();
 			this.activeFixtureId = PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID;
-			this.applyFixtureJson(PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON);
+			this.applyFixtureJson(PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON, true);
 			return;
 		}
 		if (command === "setLodMode") {
@@ -908,6 +936,15 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			if (off.has(id)) off.delete(id);
 			else off.add(id);
 			this.previewOffNodeIds = [...off];
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setPreviewOff") {
+			const ids = (args as { ids?: string[] }).ids;
+			if (!Array.isArray(ids)) return;
+			this.previewOffNodeIds = [...ids];
 			this.interactionRevision += 1;
 			this.notifySnapshot();
 			this.emit();
@@ -1092,24 +1129,65 @@ if (import.meta.vitest) {
 			expect(ctrl.getShowMode()).toBe("selected");
 		});
 
-		it("setFixtureJson preserves preview items when only flow camera changes", () => {
+		it("canvasCommand bumps command request epoch", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("canvasCommand", { command: "deleteSelection" });
+			expect(ctrl.getCommandRequest().command).toBe("deleteSelection");
+			expect(ctrl.getCommandRequest().epoch).toBe(1);
+		});
+
+		it("setPreviewOff stores preview-off node ids", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setPreviewOff", { ids: ["a", "b"] });
+			expect(ctrl.getPreviewOffNodeIds()).toEqual(["a", "b"]);
+		});
+
+		it("buildProceduralPlayCanvasContextMenu adds isolate in preview for hovered node", () => {
+			const items = buildProceduralPlayCanvasContextMenu(
+				{
+					hoveredNodeId: "box",
+					selectedNodeIds: ["box"],
+					isImageWidget: false,
+					isBackground: false,
+					previewOffNodeIds: [],
+					screen: { x: 0, y: 0 },
+					world: { x: 0, y: 0 },
+					clientX: 0,
+					clientY: 0,
+				},
+				() => {},
+			);
+			expect(items.some((item) => item.id === "procedural.ctx.isolatePreview")).toBe(true);
+		});
+
+		it("setFixtureJson sync preserves preview items after flow interaction", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
 			const base = ctrl.getFixtureJson();
-			const zoomed = JSON.stringify({
+			const interacted = JSON.stringify({
 				...JSON.parse(base),
 				camera: { x: 12, y: -4, zoom: 2.5 },
+				widgets: [
+					{ kind: "neuron", id: "sketch", neuronKind: "brep.sketch2d.rectangle" },
+					{ kind: "neuron", id: "solid", neuronKind: "brep.solid.extrude" },
+					{ kind: "outputPreview", id: "preview", preview: { geometry: "solid-9" } },
+				],
 			});
-			ctrl.run("setFixtureJson", { json: zoomed });
+			ctrl.run("setFixtureJson", { json: interacted });
 			expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", kind: "geometry", handle: "solid-1" }]);
 		});
 
-		it("setFixtureJson clears preview items when graph structure changes", () => {
+		it("setFixtureJson with resetInteraction clears preview items", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
-			ctrl.run("setFixtureJson", { json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}' });
+			ctrl.run("setFixtureJson", {
+				json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}',
+				resetInteraction: true,
+			});
 			expect(ctrl.getPreviewItems()).toEqual([]);
 		});
 

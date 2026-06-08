@@ -54,8 +54,8 @@ const DAG_COMPUTATION_HEADER_ROWS: usize = 0;
 
 const DAG_NODE_EDGE_INSET: f64 = 2.0;
 const DAG_NODE_COLUMN_GAP: f64 = 2.0;
-const DAG_IO_COLUMN_MIN: f64 = 32.0;
-const DAG_IO_COLUMN_MAX: f64 = 44.0;
+const DAG_IO_COLUMN_MIN: f64 = 28.0;
+const DAG_IO_COLUMN_MAX: f64 = 38.0;
 const DAG_IO_WIDGET_HEIGHT: f64 = 28.0;
 const DAG_SLIDER_KNOB_SCREEN_PX: f64 = 8.0;
 const DAG_LABEL_SCREEN_PX: f64 = 11.0;
@@ -105,7 +105,7 @@ pub fn computation_node_width(name: &str, inputs: &[IoPortSpec], outputs: &[IoPo
     };
     let (name_w, _) = label_extent(name, DAG_LABEL_SCREEN_PX);
     let content = io_w.max(name_w);
-    (content + DAG_NODE_EDGE_INSET * 2.0).max(32.0)
+    (content + DAG_NODE_EDGE_INSET * 2.0).max(28.0)
 }
 
 /// 📐 IO widget width from vertically rotated title metrics.
@@ -113,7 +113,7 @@ pub fn io_widget_width(name: &str) -> f64 {
     use cavas::text::label_extent;
     let name_px = DAG_LABEL_SCREEN_PX * 1.05;
     let (_, label_h) = label_extent(name, name_px);
-    (label_h + DAG_NODE_EDGE_INSET * 2.0 + 6.0).max(32.0)
+    (label_h + DAG_NODE_EDGE_INSET * 2.0 + 4.0).max(28.0)
 }
 
 /// 📐 IO widget height from vertically rotated title metrics plus a control band.
@@ -626,12 +626,14 @@ fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
     (node.x - hw + DAG_NODE_EDGE_INSET, node.y + hh * 0.12, node.x + hw - 10.0, node.y + hh - DAG_NODE_EDGE_INSET)
 }
 
-fn note_content_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
-    let hw = node.width * 0.5;
-    let hh = node.height * 0.5;
-    let pad = DAG_NODE_EDGE_INSET;
-    let top = node.y + hh * 0.08;
-    (node.x - hw + pad, top, node.x + hw - pad, node.y + hh - pad)
+/// 📐 Note node size from its text payload.
+pub fn note_widget_size(text: &str) -> (f64, f64) {
+    let display = if text.is_empty() { "…" } else { text };
+    let tw = preview_scalar_text_width(display);
+    (
+        tw.max(DAG_PREVIEW_MIN_SIZE) + DAG_PREVIEW_PAD * 2.0,
+        DAG_PREVIEW_ROW_HEIGHT.max(DAG_PREVIEW_MIN_SIZE) + DAG_PREVIEW_PAD * 2.0,
+    )
 }
 
 fn preview_content_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -828,7 +830,12 @@ fn fit_node_size(node: &mut DagNodeSpec) {
             node.width = slider_widget_width(&node.name, output);
             node.height = slider_widget_height();
         }
-        DagNodeKind::Select { .. } | DagNodeKind::Note { .. } | DagNodeKind::Action { .. } => {
+        DagNodeKind::Note { text, .. } => {
+            let (w, h) = note_widget_size(text);
+            node.width = w;
+            node.height = h;
+        }
+        DagNodeKind::Select { .. } | DagNodeKind::Action { .. } => {
             node.width = io_widget_width(&node.name);
             node.height = io_widget_height(&node.name);
         }
@@ -1158,13 +1165,13 @@ const DAG_LODS: &[Lod; 6] = &[
     Lod {
         id: "detail",
         name: "Detail",
-        description: "Icons, abbreviations, port labels, and control text.",
+        description: "Abbreviations, port labels, and control text.",
         max_zoom: 2.5,
     },
     Lod {
         id: "micro",
         name: "Micro",
-        description: "Icons, names, and maximum node fidelity.",
+        description: "Names and maximum node fidelity.",
         max_zoom: f64::INFINITY,
     },
 ];
@@ -1202,6 +1209,7 @@ const DAG_NODE_STROKE_HOVERED_SCREEN_PX: f64 = 2.0;
 const DAG_EDGE_STROKE_SCREEN_PX: f64 = 2.0;
 const DAG_EDGE_STROKE_MINIMAP_SCREEN_PX: f64 = 1.0;
 const DAG_CHROME_STROKE_SCREEN_PX: f64 = 1.25;
+const DAG_BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
 
 fn dag_world_stroke(screen_px: f64, zoom: f64) -> f64 {
     (screen_px / zoom.max(0.05)).max(1e-3)
@@ -1390,7 +1398,7 @@ impl DagDrawLod {
     }
 
     pub fn node_icon_visible(self) -> bool {
-        matches!(self, Self::Overview | Self::Detail | Self::Micro)
+        matches!(self, Self::Overview)
     }
 
     pub fn node_label(self) -> DagNodeLabel {
@@ -2245,6 +2253,16 @@ impl DagHost {
         }
     }
 
+    /// 📐 Recomputes note node sizes after text changes.
+    pub fn fit_note_sizes(&mut self) {
+        for idx in 0..self.fixture.nodes.len() {
+            if matches!(self.fixture.nodes[idx].kind, DagNodeKind::Note { .. }) {
+                fit_node_size(&mut self.fixture.nodes[idx]);
+                self.sync_fixture_node_size_to_engine(idx);
+            }
+        }
+    }
+
     fn try_widget_pointer_down(&mut self, world_x: f64, world_y: f64) -> bool {
         if !self.draw_lod_for_frame().shows_controls() {
             return false;
@@ -2282,6 +2300,11 @@ impl DagHost {
         }
     }
 
+    /// @emoji 🧭 Minimap LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
+    fn lod_uses_bounded_drag(&self) -> bool {
+        matches!(self.draw_lod_for_frame(), DagDrawLod::Minimap)
+    }
+
     pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
         self.pointer_down_screen(x, y, 0, extend, false, false);
     }
@@ -2298,6 +2321,18 @@ impl DagHost {
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
         if !self.world_hits_handle(hit_x, hit_y) && self.try_widget_pointer_down(world.x, world.y) {
             return;
+        }
+        let merge_from_modifiers = ctrl_or_meta || shift;
+        if button == 0
+            && !merge_from_modifiers
+            && self.lod_uses_bounded_drag()
+        {
+            let pad = DAG_BOUNDED_DRAG_HIT_PAD_PX / self.fixture.camera.zoom.max(1e-9);
+            if self.engine.try_begin_selection_union_drag_at(world, pad) {
+                self.process_engine_events();
+                self.sync_camera_from_engine();
+                return;
+            }
         }
         self.engine.pointer_down_screen(sx, sy, hit_x, hit_y, button, shift, ctrl_or_meta, alt);
         self.process_engine_events();
@@ -2505,7 +2540,7 @@ impl DagHost {
                     "fontScreenPx": paint_px,
                 }));
             }
-            if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. }) {
+            if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
                 labels.extend(Self::port_label_overlay_rows(node, cam.zoom, lod_index));
             }
         }
@@ -2803,7 +2838,7 @@ impl DagHost {
     }
 
     fn node_label_text<'a>(node: &'a DagNodeSpec, lod: DagDrawLod) -> Option<&'a str> {
-        if matches!(node.kind, DagNodeKind::Preview { .. }) {
+        if matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
             return None;
         }
         let text = match lod.node_label() {
@@ -3101,7 +3136,7 @@ impl DagHost {
             let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
             let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
             let node_fill = fill.unwrap_or(theme.node_fill);
-            if !matches!(node.kind, DagNodeKind::Preview { .. }) {
+            if !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
                 self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, label_fill, node_fill);
             }
             let label_text = Self::node_label_text(node, lod);
@@ -3208,21 +3243,11 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Note { text, .. } => {
-                    if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
-                    }
-                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
-                        Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        let (x0, y0, x1, y1) = note_content_bounds(node);
-                        let frame = Rect::new(x0, y0, x1, y1);
-                        scene.stroke(&Stroke::new(chrome_stroke), aff, theme.edge_stroke, None, &frame);
-                    }
-                    if lod.shows_detail_text() {
-                        let display = if text.is_empty() { "Note…" } else { text.as_str() };
-                        let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.12));
-                        append_label(scene, display, pos, paint_px * 0.95, label_fill, label_halo);
+                    if lod.shows_detail_text() || lod.shows_controls() {
+                        let (x0, y0, x1, y1) = preview_content_bounds(node);
+                        let display = if text.is_empty() { "…" } else { text.as_str() };
+                        let pos = world_to_screen(&cam, &viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
+                        append_label(scene, display, pos, paint_px * 1.05, label_fill, label_halo);
                     }
                 }
                 DagNodeKind::Image { src, .. } => {
@@ -4087,6 +4112,45 @@ mod tests {
     }
 
     #[test]
+    fn dag_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("minimap");
+        host.set_camera(0.0, 0.0, 0.1);
+        host.set_selection(&["scale".into(), "combine".into()]);
+        let scale_before = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale").clone();
+        let combine_before = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+        let gap = cavas::vello::kurbo::Point::new(0.0, 0.0);
+        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
+        let cam = CavasCamera {
+            x: host.fixture.camera.x,
+            y: host.fixture.camera.y,
+            zoom: host.fixture.camera.zoom,
+        };
+        let viewport = Viewport {
+            width: 800,
+            height: 600,
+            dpr: 1.0,
+        };
+        let start = world_to_screen(&cam, &viewport, gap);
+        host.pointer_down_screen(start.x, start.y, 0, false, false, false);
+        assert!(
+            matches!(host.engine.interaction, InteractionMode::DragNodes { .. }),
+            "expected bounded drag inside selection union at minimap LOD"
+        );
+        host.pointer_move_screen(start.x + 50.0, start.y + 30.0, false, false, false);
+        host.pointer_up_screen(start.x + 50.0, start.y + 30.0, false, false, false);
+        let zoom = host.fixture.camera.zoom;
+        let dx = 50.0 / zoom;
+        let dy = 30.0 / zoom;
+        let scale_after = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale");
+        let combine_after = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine");
+        assert!((scale_after.x - (scale_before.x + dx)).abs() < 1e-3 && (scale_after.y - (scale_before.y + dy)).abs() < 1e-3);
+        assert!((combine_after.x - (combine_before.x + dx)).abs() < 1e-3 && (combine_after.y - (combine_before.y + dy)).abs() < 1e-3);
+    }
+
+    #[test]
     fn dag_host_drags_node_in_world_space() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
@@ -4257,7 +4321,7 @@ mod tests {
         ];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
         let width = computation_node_width("Box", &inputs, &outputs);
-        assert!(width > 85.0 && width < 105.0, "two IO columns should fit port labels, got {width}");
+        assert!(width > 78.0 && width < 90.0, "two IO columns should fit port labels, got {width}");
     }
 
     #[test]
@@ -4271,8 +4335,8 @@ mod tests {
         let outputs_long = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
         let short = computation_node_width("n", &inputs_short, &outputs_short);
         let long = computation_node_width("n", &inputs_long, &outputs_long);
-        assert!(short >= 68.0, "IO columns should not collapse below minimum, got {short}");
-        assert!(long <= 105.0, "long port labels should cap column width, got {long}");
+        assert!(short >= 58.0, "IO columns should not collapse below minimum, got {short}");
+        assert!(long <= 88.0, "long port labels should cap column width, got {long}");
         assert!(long >= short, "longer labels should not shrink columns");
     }
 
@@ -4454,7 +4518,7 @@ mod tests {
         let height = computation_node_height(3, 1, false, false);
         assert!(height <= 42.0, "expected compact height, got {height}");
         assert!(height < 96.0, "expected shorter than legacy 4-row layout");
-        assert!(width > 85.0 && width < 105.0, "expected balanced IO column width, got {width}");
+        assert!(width > 78.0 && width < 90.0, "expected balanced IO column width, got {width}");
     }
 
     #[test]
@@ -4710,6 +4774,66 @@ mod tests {
     }
 
     #[test]
+    fn note_widget_size_grows_with_text() {
+        let short = note_widget_size("hi");
+        let long = note_widget_size("some longer note text");
+        assert!(long.0 > short.0);
+        assert!(short.0 >= DAG_PREVIEW_MIN_SIZE + DAG_PREVIEW_PAD * 2.0);
+    }
+
+    #[test]
+    fn fit_note_sizes_resizes_after_text_change() {
+        let mut host = DagHost::from_fixture(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "note".into(),
+                name: "Note".into(),
+                abbreviation: "Note".into(),
+                icon: "emoji:📝".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 80.0,
+                height: 80.0,
+                kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
+            }],
+            edges: vec![],
+        });
+        let short_h = host.fixture.nodes[0].height;
+        let DagNodeKind::Note { text, .. } = &mut host.fixture.nodes[0].kind else {
+            panic!("expected note");
+        };
+        *text = "a much longer note body".into();
+        host.fit_note_sizes();
+        assert!(host.fixture.nodes[0].height >= short_h);
+        assert!(host.fixture.nodes[0].width > note_widget_size("hi").0);
+    }
+
+    #[test]
+    fn note_label_overlay_skips_title_and_ports() {
+        let mut host = DagHost::from_fixture(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "note".into(),
+                name: "Note".into(),
+                abbreviation: "Note".into(),
+                icon: "emoji:📝".into(),
+                x: 0.0,
+                y: 0.0,
+                width: note_widget_size("hello").0,
+                height: note_widget_size("hello").1,
+                kind: DagNodeKind::Note { text: "hello".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
+            }],
+            edges: vec![],
+        });
+        host.set_viewport(800, 600, 1.0);
+        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let labels = raw["labels"].as_array().expect("labels");
+        assert!(labels.iter().all(|row| row["text"] != "Note" && row["text"] != "out"));
+    }
+
+    #[test]
     fn note_preview_action_port_accessors() {
         let note = DagNodeSpec {
             id: "note".into(),
@@ -4718,8 +4842,8 @@ mod tests {
             icon: "emoji:📝".into(),
             x: 0.0,
             y: 0.0,
-            width: 160.0,
-            height: 48.0,
+            width: note_widget_size("hi").0,
+            height: note_widget_size("hi").1,
             kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
         };
         assert!(note.inputs().is_empty());
@@ -4759,9 +4883,9 @@ mod tests {
         assert_eq!(DagDrawLod::Compact.node_label(), DagNodeLabel::Abbreviation);
         assert!(!DagDrawLod::Normal.node_icon_visible());
         assert_eq!(DagDrawLod::Normal.node_label(), DagNodeLabel::Name);
-        assert!(DagDrawLod::Detail.node_icon_visible());
+        assert!(!DagDrawLod::Detail.node_icon_visible());
         assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Abbreviation);
-        assert!(DagDrawLod::Micro.node_icon_visible());
+        assert!(!DagDrawLod::Micro.node_icon_visible());
         assert_eq!(DagDrawLod::Micro.node_label(), DagNodeLabel::Name);
     }
 

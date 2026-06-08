@@ -1,0 +1,14 @@
+{
+  "title": "Flow Detail Micro Lod No Icons",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Remove icon display for detail and micro LOD in flow DAG rendering. Icons should only show at overview LOD.",
+  "summary": "Removed node icon painting at detail and micro LOD tiers in the shared DAG renderer used by flow. `node_icon_visible()` now returns true only for overview LOD; detail and micro LOD descriptions updated accordingly. Ghost nodes at micro LOD also skip icons. `dag_draw_lod_node_content_matrix` test updated; passes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1608"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪db369b278dc54565a83c4ecf79b7cf74"
+  ]
+}

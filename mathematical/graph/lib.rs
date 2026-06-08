@@ -208,8 +208,8 @@ impl GraphPortModel for Ported {
 
 // #region 🔖SelectionMarquee
 pub use cavas::geom_sel::{
-    point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
-    world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
+    inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box,
+    world_box_contains_box, world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
 };
 
 pub const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
@@ -670,6 +670,60 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn pointer_down(&mut self, x: f64, y: f64, extend_selection: bool) {
         self.pointer_down_screen(x, y, x, y, 0, extend_selection, false, false);
+    }
+
+    /// @emoji 📦 Starts a group drag when `point` lies inside the padded union bounds of draggable selected nodes.
+    pub fn try_begin_selection_union_drag_at(&mut self, point: Point, pad_world: f64) -> bool {
+        let members: Vec<NodeId> = self
+            .selection
+            .node_ids
+            .iter()
+            .copied()
+            .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
+            .collect();
+        if members.is_empty() {
+            return false;
+        }
+        let mut corners = Vec::new();
+        for id in &self.selection.node_ids {
+            let Some(node) = self.nodes.get(id) else {
+                continue;
+            };
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            corners.push(Point::new(node.center.x - hw, node.center.y - hh));
+            corners.push(Point::new(node.center.x + hw, node.center.y + hh));
+        }
+        let Some(bounds) = world_box_from_points(&corners) else {
+            return false;
+        };
+        if !world_box_contains_point(inflate_world_box(bounds, pad_world), point) {
+            return false;
+        }
+        let primary_id = members
+            .iter()
+            .min_by(|a, b| {
+                let da = self.nodes.get(a).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
+                let db = self.nodes.get(b).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
+                da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .copied()
+            .unwrap_or(members[0]);
+        let Some(primary) = self.nodes.get(&primary_id) else {
+            return false;
+        };
+        self.drag_start_positions.clear();
+        for id in &members {
+            if let Some(node) = self.nodes.get(id) {
+                self.drag_start_positions.insert(*id, node.center);
+            }
+        }
+        self.interaction = InteractionMode::DragNodes {
+            primary_id,
+            offset: point - primary.center,
+        };
+        self.hover = None;
+        true
     }
 
     pub fn pointer_down_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, _alt: bool) {
@@ -1360,6 +1414,26 @@ mod tests {
         let edge = engine.edges.get(&100).unwrap();
         assert_eq!(edge.source, 1);
         assert_eq!(edge.target, 2);
+    }
+
+    #[test]
+    fn selection_union_drag_starts_inside_bounds_without_node_hit() {
+        use cavas::vello::kurbo::Point;
+
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
+        engine.create_rect_node(2, 200.0, 0.0, 80.0, 56.0, true);
+        engine.selection.node_ids.insert(1);
+        engine.selection.node_ids.insert(2);
+        let gap = Point::new(100.0, 0.0);
+        assert!(engine.try_begin_selection_union_drag_at(gap, 0.0));
+        assert!(matches!(engine.interaction, InteractionMode::DragNodes { .. }));
+        engine.pointer_move(150.0, 30.0);
+        engine.pointer_up(150.0, 30.0);
+        let a = engine.nodes.get(&1).unwrap().center;
+        let b = engine.nodes.get(&2).unwrap().center;
+        assert!((a.x - 50.0).abs() < 1e-3 && (a.y - 30.0).abs() < 1e-3);
+        assert!((b.x - 250.0).abs() < 1e-3 && (b.y - 30.0).abs() < 1e-3);
     }
 
     #[test]

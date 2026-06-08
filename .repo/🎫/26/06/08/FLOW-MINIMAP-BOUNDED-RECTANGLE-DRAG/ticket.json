@@ -1,0 +1,14 @@
+{
+  "title": "Flow Minimap Bounded Rectangle Drag",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "On flow minimap LOD, add bounded rectangle drag like puzzle 2d: dragging works from any point inside the selection bounding rectangle without hitting individual nodes.",
+  "summary": "Added minimap LOD bounded rectangle drag for flow DAG: pointer-down inside the padded union AABB of the current selection starts a group drag without requiring a discrete node hit, matching puzzle 2d. Introduced GraphEngine::try_begin_selection_union_drag_at and wired DagHost minimap pointer-down to call it before discrete hit testing. Added Rust unit tests in mathematical_graph and dag host.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1609"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪d3be1884536941e897e8d62acc65db11"
+  ]
+}

@@ -6034,6 +6034,7 @@ import {
   FLOW_PLAY_SURFACE_ID,
   FLOW_PLAY_WINDOW_KIND_ID,
   FlowPlayController,
+  buildFlowPlayCanvasContextMenu,
   buildFlowPlayExtensionsTree,
   buildFlowPlayKindsTree,
   registerFlowPlayDeclarativeBodies,
@@ -6107,15 +6108,23 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
     },
     [ctrl],
   );
+  const onCanvasCommand = reactHostPort.useCallback(
+    (command: string, args?: Record<string, unknown>) => {
+      ctrl?.run(command, args);
+    },
+    [ctrl],
+  );
   return (
     <FlowCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
       fixtureDragDrop
       reorganize={ctrl?.getReorganize()}
+      commandRequest={ctrl?.getCommandRequest()}
       extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
+      contextMenu={(ctx) => buildFlowPlayCanvasContextMenu(ctx, onCanvasCommand)}
       {...lodProps}
       onLodChange={onLodChange}
     />
@@ -6280,6 +6289,7 @@ import {
   PROCEDURAL_PLAY_SURFACE_ID,
   PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
   ProceduralPlayController,
+  buildProceduralPlayCanvasContextMenu,
   buildProceduralPlayExtensionsTree,
   buildProceduralPlayKindsTree,
   registerProceduralPlayDeclarativeBodies,
@@ -6378,7 +6388,7 @@ function ProceduralPlayToolbarHostBridge({ runtime }: { readonly runtime: Platfo
           console.log("[DEBUG] procedural play load rejected: not a flow fixture");
           return;
         }
-        ctrl.run("setFixtureJson", { json: text });
+        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
         console.log("[DEBUG] procedural play loaded fixture from file");
       });
     },
@@ -6467,10 +6477,23 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     },
     [ctrl],
   );
+  const onPreviewOffChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setPreviewOff", { ids: [...ids] });
+    },
+    [ctrl],
+  );
+  const onCanvasCommand = reactHostPort.useCallback(
+    (command: string, args?: Record<string, unknown>) => {
+      ctrl?.run(command, args);
+    },
+    [ctrl],
+  );
   return (
     <ProceduralFlowEditor
       fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
+      commandRequest={ctrl?.getCommandRequest()}
       extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
       onEvalOutputs={onEvalOutputs}
@@ -6479,6 +6502,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
       onSelectionChange={onSelectionChange}
       onPreselectChange={onPreselectChange}
       onHoverChange={onHoverChange}
+      onPreviewOffChange={onPreviewOffChange}
       selectedNodeIds={ctrl?.getSelectedNodeIds()}
       preselectNodeIds={ctrl?.getPreselectNodeIds()}
       preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
@@ -6486,6 +6510,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
       previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
       selectionMode={ctrl?.getSelectionMode()}
       selectionMethod={ctrl?.getSelectionMethod()}
+      contextMenu={(ctx) => buildProceduralPlayCanvasContextMenu(ctx, onCanvasCommand)}
       {...lodProps}
       onLodChange={onLodChange}
       className="h-full w-full"

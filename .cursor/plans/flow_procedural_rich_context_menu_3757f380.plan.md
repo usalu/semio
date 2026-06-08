@@ -4,22 +4,22 @@ overview: Add context-aware right-click menus to the flow canvas (shared by flow
 todos:
   - id: canvas
     content: "FlowCanvas: add FlowCanvasContextMenuContext, contextMenu builder prop, commandRequest effect, onPreviewOffChange, image-widget detection, select-hovered-on-right-click, shared buildFlowContextMenuItems helper + tests"
-    status: in_progress
+    status: completed
   - id: flow-play
     content: "flow/play: commandRequest epoch + canvasCommand dispatcher + buildFlowPlayCanvasContextMenu + tests"
-    status: pending
+    status: completed
   - id: proc-play
     content: "procedural/play: commandRequest epoch + dispatcher, previewOff mirror from onPreviewOffChange, buildProceduralPlayCanvasContextMenu with preview items + tests"
-    status: pending
+    status: completed
   - id: proc-react
     content: "ProceduralFlowEditor: forward contextMenu, commandRequest, onPreviewOffChange to FlowCanvas"
-    status: pending
+    status: completed
   - id: renderer
     content: "Playground renderer: wire contextMenu builder, commandRequest, and (procedural) onPreviewOffChange in flow + procedural surface hosts"
-    status: pending
+    status: completed
   - id: verify
     content: Run nx tests for the four packages and manually verify right-click actions mutate the graph
-    status: pending
+    status: completed
 isProject: false
 ---
 

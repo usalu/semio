@@ -7,7 +7,7 @@ pub use neural_engine as neural;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use dag::{
-    computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, preview_widget_size, slider_widget_height, slider_widget_width, would_create_cycle,
+    computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, would_create_cycle,
     DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
 };
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
@@ -258,7 +258,8 @@ fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo
             let output = IoPortSpec { id: "out".into(), label: "out".into() };
             (slider_widget_width(&label, &output), slider_widget_height())
         }
-        Widget::InputNote { .. } | Widget::OutputAction { .. } => (io_widget_width(&label), io_widget_height(&label)),
+        Widget::InputNote { text, .. } => note_widget_size(text),
+        Widget::OutputAction { .. } => (io_widget_width(&label), io_widget_height(&label)),
         Widget::InputImage { src, .. } => image_widget_size(src),
         Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), expanded),
         Widget::Neuron { neuronKind, input_ports, .. } => {
@@ -1347,6 +1348,8 @@ impl FlowHost {
                 }
             }
         }
+        self.sync_dag_display_from_widgets();
+        self.dag.fit_note_sizes();
         let _ = self.evaluate();
     }
 
@@ -1930,7 +1933,7 @@ mod tests {
         assert_eq!(slider.height, slider_widget_height());
         let add = host.dag.fixture.nodes.iter().find(|n| n.id == "add").expect("add");
         assert!(matches!(add.kind, DagNodeKind::Computation { .. }));
-        assert!(slider.width >= 68.0, "slider should use function IO column width");
+        assert!(slider.width >= 58.0, "slider should use function IO column width");
         assert!(slider.width <= add.width, "slider width should follow function sizing");
         let preview = host.dag.fixture.nodes.iter().find(|n| n.id == "preview").expect("preview");
         assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
@@ -2267,6 +2270,22 @@ mod tests {
             panic!("expected note node");
         };
         assert_eq!(dag_text, "some text");
+        assert!(node.width > 40.0);
+        assert!(node.height > 20.0);
+    }
+
+    #[test]
+    fn set_note_text_resizes_node() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
+        let short_w = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node").width;
+        host.set_note_text(&id, "a much longer note string");
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node");
+        let DagNodeKind::Note { text, .. } = &node.kind else {
+            panic!("expected note node");
+        };
+        assert_eq!(text, "a much longer note string");
+        assert!(node.width > short_w);
     }
 
     #[test]

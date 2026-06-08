@@ -1,0 +1,14 @@
+{
+  "title": "Flow Node Width Tighten",
+  "emoji": "📏",
+  "status": "closed",
+  "description": "Make flow node width a bit smaller because both input and output nodes are too wide.",
+  "summary": "Reduced flow/DAG node width by tightening shared IO column sizing: column min 32→28, max 44→38, IO widget padding 6→4, floor width 32→28. Affects sliders, input/output widgets, and computation node IO columns. All 60 DAG and 29 flow core tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1607"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪12f13c5227074d7f80280d5cde48974a"
+  ]
+}

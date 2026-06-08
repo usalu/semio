@@ -22,6 +22,8 @@ import {
 	FlowExtensionHost,
 	createFlowEvalBridge,
 	type CatalogueSection,
+	type FlowCanvasCommandRequest,
+	type FlowCanvasContextMenuContext,
 	type FlowExtensionEntry,
 	type FlowFixtureV1,
 	type FlowModuleCommandV1,
@@ -29,6 +31,7 @@ import {
 	type FlowModuleNeuronKindV1,
 	type FlowReorganizeRequest,
 } from "@flow/react";
+import type { ContextMenuItem } from "@ui/react";
 import {
 	applyOrbitProjectionToCameraState,
 	DEFAULT_LOD_GRID_FACTOR,
@@ -1541,6 +1544,9 @@ export interface ProceduralFlowEditorProps {
 	readonly previewOffNodeIds?: readonly string[];
 	readonly selectionMode?: ProceduralSelectionMode;
 	readonly selectionMethod?: ProceduralSelectionMethod;
+	readonly contextMenu?: (ctx: FlowCanvasContextMenuContext) => readonly ContextMenuItem[];
+	readonly commandRequest?: FlowCanvasCommandRequest;
+	readonly onPreviewOffChange?: (ids: readonly string[]) => void;
 	readonly automaticLod?: boolean;
 	readonly lod?: DagDrawLodKind;
 	readonly onLodChange?: (lod: DagDrawLodKind) => void;
@@ -1566,6 +1572,9 @@ export function ProceduralFlowEditor({
 	previewOffNodeIds,
 	selectionMode,
 	selectionMethod,
+	contextMenu,
+	commandRequest,
+	onPreviewOffChange,
 	automaticLod,
 	lod,
 	onLodChange,
@@ -1598,6 +1607,9 @@ export function ProceduralFlowEditor({
 			previewOffNodeIds={previewOffNodeIds}
 			selectionMode={selectionMode}
 			selectionMethod={selectionMethod}
+			contextMenu={contextMenu}
+			commandRequest={commandRequest}
+			onPreviewOffChange={onPreviewOffChange}
 			automaticLod={automaticLod}
 			lod={lod}
 			onLodChange={onLodChange}

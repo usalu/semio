@@ -37,10 +37,15 @@ import {
   type CatalogueSection,
   type DagDrawLodKind,
   type DagLodModeKind,
+  buildFlowContextMenuItems,
+  type FlowCanvasCommandRequest,
+  type FlowCanvasContextMenuContext,
+  type FlowContextMenuDispatch,
   type FlowExtensionEntry,
   type FlowFixtureV1,
   type FlowReorganizeRequest,
 } from "@flow/react";
+import type { ContextMenuItem } from "@ui/react";
 import type { WindowMeasure } from "@framework/playground/core";
 
 export const FLOW_PLAY_APP_ID = "flow-play";
@@ -134,6 +139,11 @@ function buildFlowLayoutOptionsJson(layerSpacing: number, siblingGap: number, or
   return JSON.stringify({ layerSpacing, siblingGap, orientation });
 }
 
+/** @emoji 🖱️ Flow play canvas right-click menu. */
+export function buildFlowPlayCanvasContextMenu(ctx: FlowCanvasContextMenuContext, dispatch: FlowContextMenuDispatch): ContextMenuItem[] {
+  return [...buildFlowContextMenuItems(ctx, dispatch)];
+}
+
 /** @emoji 🏷️ Workbench catalogue tab: module sections plus Inputs and Outputs. */
 export function buildFlowPlayKindsTree(sections: readonly CatalogueSection[]): UiNode {
   if (!sections.length) {
@@ -182,6 +192,8 @@ export class FlowPlayController extends Controller {
   private orientation: FlowLayoutOrientation = "leftRight";
   private reorganizeEpoch = 0;
   private reorganizeOptionsJson = buildFlowLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
+  private commandRequestEpoch = 0;
+  private commandRequestPayload: Omit<FlowCanvasCommandRequest, "epoch"> = { command: "" };
   private extensionRevision = 0;
   private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
   private lodModeByInstance: Record<string, DagLodModeKind> = {};
@@ -230,6 +242,10 @@ export class FlowPlayController extends Controller {
 
   getReorganize(): FlowReorganizeRequest {
     return { epoch: this.reorganizeEpoch, optionsJson: this.reorganizeOptionsJson };
+  }
+
+  getCommandRequest(): FlowCanvasCommandRequest {
+    return { epoch: this.commandRequestEpoch, ...this.commandRequestPayload };
   }
 
   lodModeForScope(scopeId: string): DagLodModeKind {
@@ -353,6 +369,15 @@ export class FlowPlayController extends Controller {
     }
     if (command === "reorganize") {
       this.triggerReorganize();
+      return;
+    }
+    if (command === "canvasCommand") {
+      const canvasCommand = (args as { command?: string; argsJson?: string }).command;
+      if (typeof canvasCommand !== "string" || !canvasCommand) return;
+      const argsJson = (args as { argsJson?: string }).argsJson;
+      this.commandRequestPayload = { command: canvasCommand, ...(argsJson !== undefined ? { argsJson } : {}) };
+      this.commandRequestEpoch += 1;
+      this.emit();
       return;
     }
     if (command === "setPreviewText") {
@@ -577,6 +602,33 @@ if (import.meta.vitest) {
       ctrl.run("reorganize");
       expect(ctrl.getReorganize().epoch).toBe(1);
       expect(ctrl.getReorganize().optionsJson).toContain("leftRight");
+    });
+
+    it("canvasCommand bumps command request epoch", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      expect(ctrl.getCommandRequest().epoch).toBe(0);
+      ctrl.run("canvasCommand", { command: "selectAll" });
+      expect(ctrl.getCommandRequest().epoch).toBe(1);
+      expect(ctrl.getCommandRequest().command).toBe("selectAll");
+    });
+
+    it("buildFlowPlayCanvasContextMenu delegates to flow context menu", () => {
+      const items = buildFlowPlayCanvasContextMenu(
+        {
+          hoveredNodeId: null,
+          selectedNodeIds: [],
+          isImageWidget: false,
+          isBackground: true,
+          previewOffNodeIds: [],
+          screen: { x: 0, y: 0 },
+          world: { x: 0, y: 0 },
+          clientX: 0,
+          clientY: 0,
+        },
+        () => {},
+      );
+      expect(items.some((item) => item.id === "flow.ctx.add")).toBe(true);
     });
 
     it("lod window measure lists automatic and tiers", () => {
