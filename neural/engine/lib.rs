@@ -239,6 +239,13 @@ impl Registry {
 // #endregion 🔖NeuronKind
 
 // #region 🔖Evaluator
+/// 📡 Resolved neuron inputs and outputs from one evaluation pass.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct EvalChannels {
+    pub outputs: HashMap<String, Dictionary>,
+    pub inputs: HashMap<String, Dictionary>,
+}
+
 /// 🔄 Topological evaluation over a neural tree.
 pub struct Evaluator<'a> {
     registry: &'a Registry,
@@ -250,12 +257,7 @@ impl<'a> Evaluator<'a> {
     }
 
     pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HashMap<String, Dictionary>, EvalError> {
-        self.evaluate_with(tree, seeds, &HashMap::new(), &mut |kind, input| {
-            self.registry
-                .get(kind)
-                .ok_or_else(|| EvalError::UnknownKind(kind.into()))?
-                .evaluate(input)
-        })
+        Ok(self.evaluate_channels(tree, seeds, &HashMap::new())?.outputs)
     }
 
     pub fn evaluate_with(
@@ -265,12 +267,38 @@ impl<'a> Evaluator<'a> {
         kind_infos: &HashMap<String, NeuronKindInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
     ) -> Result<HashMap<String, Dictionary>, EvalError> {
+        Ok(self.evaluate_channels_with(tree, seeds, kind_infos, dispatch)?.outputs)
+    }
+
+    pub fn evaluate_channels(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        kind_infos: &HashMap<String, NeuronKindInfo>,
+    ) -> Result<EvalChannels, EvalError> {
+        self.evaluate_channels_with(tree, seeds, kind_infos, &mut |kind, input| {
+            self.registry
+                .get(kind)
+                .ok_or_else(|| EvalError::UnknownKind(kind.into()))?
+                .evaluate(input)
+        })
+    }
+
+    pub fn evaluate_channels_with(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        kind_infos: &HashMap<String, NeuronKindInfo>,
+        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+    ) -> Result<EvalChannels, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
+        let mut inputs: HashMap<String, Dictionary> = HashMap::new();
         for neuron_id in order {
             let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
             let kind_info = kind_infos.get(&neuron.kind).or_else(|| self.registry.kind_info(&neuron.kind));
             let input = collect_neuron_input(tree, &outputs, &neuron_id, kind_info);
+            inputs.insert(neuron_id.clone(), input.clone());
             if let Some(seed) = seeds.get(&neuron_id) {
                 outputs.insert(neuron_id.clone(), seed.clone());
                 continue;
@@ -278,7 +306,7 @@ impl<'a> Evaluator<'a> {
             let out = dispatch(&neuron.kind, &input.merge(&neuron.params))?;
             outputs.insert(neuron_id.clone(), out);
         }
-        Ok(outputs)
+        Ok(EvalChannels { outputs, inputs })
     }
 }
 
@@ -497,6 +525,31 @@ mod tests {
         seeds.insert("a".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0))));
         let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
         assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
+    }
+
+    #[test]
+    fn evaluate_channels_returns_resolved_inputs_per_neuron() {
+        let mut reg = Registry::new();
+        reg.register(double_info(), Box::new(Double));
+        let tree = Tree {
+            neurons: vec![Neuron { id: "add".into(), kind: "double".into(), params: Dictionary::new() }],
+            synapses: vec![Synapse {
+                id: "s1".into(),
+                from: "slider".into(),
+                to: "add".into(),
+                from_port: "out".into(),
+                to_port: "number".into(),
+            }],
+        };
+        let mut seeds = HashMap::new();
+        seeds.insert("slider".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))));
+        let channels = Evaluator::new(&reg).evaluate_channels(&tree, &seeds, &HashMap::from([(double_info().id.clone(), double_info())])).unwrap();
+        let input = channels.inputs.get("add").expect("add input");
+        assert_eq!(input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        assert_eq!(
+            channels.outputs.get("add").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
+            Some(6.0)
+        );
     }
 
     #[test]

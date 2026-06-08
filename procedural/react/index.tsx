@@ -957,10 +957,107 @@ const PROCEDURAL_FLOW_STORE = createEphemeralFlowStore();
 // #endregion 🔖Fixture
 
 // #region 🔖ProceduralPreview
+export type ProceduralChannelDirection = "in" | "out";
+
+export interface ProceduralChannelRef {
+	readonly widgetId: string;
+	readonly port: string;
+	readonly direction: ProceduralChannelDirection;
+}
+
 export type ProceduralPreviewItem =
-	| { readonly widgetId: string; readonly kind: "geometry"; readonly handle: GeometryRef }
-	| { readonly widgetId: string; readonly kind: "point"; readonly position: Vec3 }
-	| { readonly widgetId: string; readonly kind: "vector"; readonly direction: Vec3 };
+	| { readonly widgetId: string; readonly port: string; readonly direction: ProceduralChannelDirection; readonly kind: "geometry"; readonly handle: GeometryRef }
+	| { readonly widgetId: string; readonly port: string; readonly direction: ProceduralChannelDirection; readonly kind: "point"; readonly position: Vec3 }
+	| { readonly widgetId: string; readonly port: string; readonly direction: ProceduralChannelDirection; readonly kind: "vector"; readonly directionVec: Vec3 };
+
+export interface ProceduralPreviewExtractContext {
+	readonly widgetId: string;
+	readonly port: string;
+	readonly direction: ProceduralChannelDirection;
+	readonly value: unknown;
+}
+
+export type ProceduralPreviewExtractor = (context: ProceduralPreviewExtractContext) => readonly ProceduralPreviewItem[];
+
+const proceduralPreviewExtractors: ProceduralPreviewExtractor[] = [];
+
+/** @emoji 📋 Registers a channel-value preview extractor for procedural flow eval. */
+export function registerPreviewExtractor(extractor: ProceduralPreviewExtractor): void {
+	proceduralPreviewExtractors.push(extractor);
+}
+
+function runPreviewExtractors(context: ProceduralPreviewExtractContext): ProceduralPreviewItem[] {
+	const items: ProceduralPreviewItem[] = [];
+	for (const extractor of proceduralPreviewExtractors) {
+		items.push(...extractor(context));
+	}
+	return items;
+}
+
+function previewItemsFromChannelValue(widgetId: string, port: string, direction: ProceduralChannelDirection, value: unknown): ProceduralPreviewItem[] {
+	if (value && typeof value === "object" && !Array.isArray(value) && typeof (value as Record<string, unknown>).error === "string") {
+		return [];
+	}
+	return runPreviewExtractors({ widgetId, port, direction, value });
+}
+
+function proceduralChannelMatches(item: ProceduralPreviewItem, channel: ProceduralChannelRef): boolean {
+	return item.widgetId === channel.widgetId && item.port === channel.port && item.direction === channel.direction;
+}
+
+export function filterVisiblePreviewItems(
+	items: readonly ProceduralPreviewItem[],
+	options: {
+		readonly showMode: ProceduralPreviewShowMode;
+		readonly selectedNodeIds: readonly string[];
+		readonly selectedChannels: readonly ProceduralChannelRef[];
+		readonly hoveredNodeId: string | null;
+		readonly hoveredChannel: ProceduralChannelRef | null;
+	},
+): ProceduralPreviewItem[] {
+	const { showMode, selectedNodeIds, selectedChannels, hoveredNodeId, hoveredChannel } = options;
+	if (hoveredChannel) {
+		return items.filter((entry) => proceduralChannelMatches(entry, hoveredChannel));
+	}
+	if (selectedChannels.length > 0) {
+		return items.filter((entry) => selectedChannels.some((channel) => proceduralChannelMatches(entry, channel)));
+	}
+	if (hoveredNodeId) {
+		return items.filter((entry) => entry.widgetId === hoveredNodeId);
+	}
+	if (showMode === "selected" && selectedNodeIds.length > 0) {
+		return items.filter((entry) => selectedNodeIds.includes(entry.widgetId));
+	}
+	return items.filter((entry) => entry.direction === "out");
+}
+
+registerPreviewExtractor((context) => {
+	const refs: GeometryRef[] = [];
+	collectGeometryRefsFromValue(context.value, refs);
+	return [...new Set(refs)].map((handle) => ({
+		widgetId: context.widgetId,
+		port: context.port,
+		direction: context.direction,
+		kind: "geometry" as const,
+		handle,
+	}));
+});
+
+registerPreviewExtractor((context) => {
+	if (!context.value || typeof context.value !== "object" || Array.isArray(context.value)) return [];
+	const dict = context.value as Record<string, unknown>;
+	const point = parsePreviewVec3(dict.point);
+	if (!point) return [];
+	return [{ widgetId: context.widgetId, port: context.port, direction: context.direction, kind: "point", position: point }];
+});
+
+registerPreviewExtractor((context) => {
+	if (!context.value || typeof context.value !== "object" || Array.isArray(context.value)) return [];
+	const dict = context.value as Record<string, unknown>;
+	const vector = parsePreviewVec3(dict.vector);
+	if (!vector) return [];
+	return [{ widgetId: context.widgetId, port: context.port, direction: context.direction, kind: "vector", directionVec: vector }];
+});
 
 export type ProceduralPreviewShowMode = "everything" | "selected";
 export type ProceduralSelectionMode = SelectionMergeMode;
@@ -1085,9 +1182,11 @@ function ProceduralPreviewGumball({
 export interface ProceduralPreviewProps {
 	readonly items: readonly ProceduralPreviewItem[];
 	readonly selectedNodeIds?: readonly string[];
+	readonly selectedChannels?: readonly ProceduralChannelRef[];
 	readonly preselectNodeIds?: readonly string[];
 	readonly preselectRemovedNodeIds?: readonly string[];
 	readonly hoveredNodeId?: string | null;
+	readonly hoveredChannel?: ProceduralChannelRef | null;
 	readonly previewOffNodeIds?: readonly string[];
 	readonly showMode?: ProceduralPreviewShowMode;
 	readonly selectionMode?: ProceduralSelectionMode;
@@ -1237,7 +1336,7 @@ function worldBoundsForPreviewItem(item: ProceduralPreviewItem, kernel: BrepKern
 		const [x, y, z] = item.position;
 		return { min: [x - pad, y - pad, z - pad], max: [x + pad, y + pad, z + pad] };
 	}
-	const [x, y, z] = item.direction;
+	const [x, y, z] = item.directionVec;
 	return {
 		min: [Math.min(0, x) - pad, Math.min(0, y) - pad, Math.min(0, z) - pad],
 		max: [Math.max(0, x) + pad, Math.max(0, y) + pad, Math.max(0, z) + pad],
@@ -1245,9 +1344,9 @@ function worldBoundsForPreviewItem(item: ProceduralPreviewItem, kernel: BrepKern
 }
 
 function previewItemKey(item: ProceduralPreviewItem): string {
-	if (item.kind === "geometry") return `${item.widgetId}:geometry:${item.handle}`;
-	if (item.kind === "point") return `${item.widgetId}:point`;
-	return `${item.widgetId}:vector`;
+	if (item.kind === "geometry") return `${item.widgetId}:${item.direction}:${item.port}:geometry:${item.handle}`;
+	if (item.kind === "point") return `${item.widgetId}:${item.direction}:${item.port}:point`;
+	return `${item.widgetId}:${item.direction}:${item.port}:vector`;
 }
 
 function BrepPreviewLayer({
@@ -1267,7 +1366,7 @@ function BrepPreviewLayer({
 	const geometryRef = item.kind === "geometry" ? item.handle : null;
 	const arrow = useMemo(() => {
 		if (item.kind !== "vector") return null;
-		const tip = new THREE.Vector3(item.direction[0], item.direction[1], item.direction[2]);
+		const tip = new THREE.Vector3(item.directionVec[0], item.directionVec[1], item.directionVec[2]);
 		const length = tip.length();
 		if (length < 1e-6) return null;
 		const unit = tip.clone().normalize();
@@ -1566,9 +1665,11 @@ function ProceduralPreviewMarqueeBridge({
 export function ProceduralPreview({
 	items,
 	selectedNodeIds = [],
+	selectedChannels = [],
 	preselectNodeIds = [],
 	preselectRemovedNodeIds = [],
 	hoveredNodeId = null,
+	hoveredChannel = null,
 	previewOffNodeIds = [],
 	showMode = "everything",
 	selectionMode = "default",
@@ -1615,8 +1716,17 @@ export function ProceduralPreview({
 		return () => obs.disconnect();
 	}, []);
 
-	const visibleItems =
-		showMode === "selected" ? items.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : items;
+	const visibleItems = useMemo(
+		() =>
+			filterVisiblePreviewItems(items, {
+				showMode,
+				selectedNodeIds,
+				selectedChannels,
+				hoveredNodeId,
+				hoveredChannel,
+			}),
+		[hoveredChannel, hoveredNodeId, items, selectedChannels, selectedNodeIds, showMode],
+	);
 
 	const gumballAnchorId = reactHostPort.useMemo(() => {
 		if (!onGumballTransform) return null;
@@ -1756,7 +1866,9 @@ export function ProceduralPreview({
 								const chrome: PreviewLayerChrome = {
 									selected: effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId),
 									highlighted: effectivePreselectRemoved.has(entry.widgetId),
-									hovered: hoveredNodeId === entry.widgetId,
+									hovered: hoveredChannel
+										? proceduralChannelMatches(entry, hoveredChannel)
+										: hoveredNodeId === entry.widgetId,
 									previewOff: previewOffNodeIds.includes(entry.widgetId),
 									locked,
 									interactionHighlighted,
@@ -1790,34 +1902,31 @@ export function ProceduralPreview({
 	);
 }
 
-/** @emoji 🔍 Collects geometry, point, and vector preview items from flow eval outputs. */
-export function extractPreviewItems(outputsJson: string): ProceduralPreviewItem[] {
+/** @emoji 🔍 Collects geometry, point, and vector preview items from channel-structured flow eval JSON. */
+export function extractChannelPreviewItems(channelJson: string): ProceduralPreviewItem[] {
 	const items: ProceduralPreviewItem[] = [];
 	try {
-		const parsed = JSON.parse(outputsJson) as unknown;
+		const parsed = JSON.parse(channelJson) as unknown;
 		if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return items;
 		if ("error" in (parsed as Record<string, unknown>) && Object.keys(parsed as object).length === 1) return items;
-		const outputs = parsed as Record<string, Record<string, unknown>>;
-		for (const [widgetId, dict] of Object.entries(outputs)) {
-			if (!dict || typeof dict !== "object" || Array.isArray(dict)) continue;
-			if (typeof dict.error === "string") continue;
-			const geometryRefs: GeometryRef[] = [];
-			collectGeometryRefsFromValue(dict.geometry, geometryRefs);
-			collectGeometryRefsFromValue(dict.brep, geometryRefs);
-			for (const value of Object.values(dict)) collectGeometryRefsFromValue(value, geometryRefs);
-			for (const handle of [...new Set(geometryRefs)]) {
-				items.push({ widgetId, kind: "geometry", handle });
+		for (const [widgetId, entry] of Object.entries(parsed as Record<string, unknown>)) {
+			if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+			const channels = entry as { in?: Record<string, unknown>; out?: Record<string, unknown> };
+			for (const [port, value] of Object.entries(channels.in ?? {})) {
+				items.push(...previewItemsFromChannelValue(widgetId, port, "in", value));
 			}
-			const point = parsePreviewVec3(dict.point);
-			if (point) items.push({ widgetId, kind: "point", position: point });
-			const vector = parsePreviewVec3(dict.vector);
-			if (vector) items.push({ widgetId, kind: "vector", direction: vector });
+			for (const [port, value] of Object.entries(channels.out ?? {})) {
+				items.push(...previewItemsFromChannelValue(widgetId, port, "out", value));
+			}
 		}
 	} catch {
 		/* ignore */
 	}
 	return items;
 }
+
+/** @emoji 🔍 Back-compat alias for channel preview extraction. */
+export const extractPreviewItems = extractChannelPreviewItems;
 // #endregion 🔖ProceduralPreview
 
 // #region 🔖ProceduralEditor
@@ -1834,10 +1943,14 @@ export interface ProceduralFlowEditorProps {
 	readonly onSelectionChange?: (ids: readonly string[]) => void;
 	readonly onPreselectChange?: (snapshot: { readonly ids: readonly string[]; readonly removedIds: readonly string[] }) => void;
 	readonly onHoverChange?: (id: string | null) => void;
+	readonly onChannelHoverChange?: (channel: ProceduralChannelRef | null) => void;
+	readonly onSelectedChannelsChange?: (channels: readonly ProceduralChannelRef[]) => void;
 	readonly selectedNodeIds?: readonly string[];
 	readonly preselectNodeIds?: readonly string[];
 	readonly preselectRemovedNodeIds?: readonly string[];
 	readonly hoveredNodeId?: string | null;
+	readonly hoveredChannel?: ProceduralChannelRef | null;
+	readonly selectedChannels?: readonly ProceduralChannelRef[];
 	readonly previewOffNodeIds?: readonly string[];
 	readonly selectionMode?: ProceduralSelectionMode;
 	readonly selectionMethod?: ProceduralSelectionMethod;
@@ -1862,10 +1975,14 @@ export function ProceduralFlowEditor({
 	onSelectionChange,
 	onPreselectChange,
 	onHoverChange,
+	onChannelHoverChange,
+	onSelectedChannelsChange,
 	selectedNodeIds,
 	preselectNodeIds,
 	preselectRemovedNodeIds,
 	hoveredNodeId,
+	hoveredChannel,
+	selectedChannels,
 	previewOffNodeIds,
 	selectionMode,
 	selectionMethod,
@@ -1898,6 +2015,8 @@ export function ProceduralFlowEditor({
 			onSelectionChange={onSelectionChange}
 			onPreselectChange={onPreselectChange}
 			onHoverChange={onHoverChange}
+			onChannelHoverChange={onChannelHoverChange}
+			onSelectedChannelsChange={onSelectedChannelsChange}
 			selectedNodeIds={selectedNodeIds}
 			preselectNodeIds={preselectNodeIds}
 			preselectRemovedNodeIds={preselectRemovedNodeIds}
@@ -1988,29 +2107,85 @@ if (import.meta.vitest) {
 			expect(parsed.number).toBeGreaterThan(3);
 		});
 
-		it("extractPreviewItems collects geometry, point, and vector outputs per widget id", () => {
+		it("extractChannelPreviewItems collects geometry, point, and vector outputs per channel", () => {
 			const items = extractPreviewItems(
 				JSON.stringify({
-					box: { geometry: "solid-1" },
-					line: { geometry: "edge-2" },
-					pt: { point: { x: 1, y: 2, z: 3 } },
-					vec: { vector: { x: 0, y: 0, z: 1 } },
+					box: { in: {}, out: { out: { geometry: "solid-1" } } },
+					line: { in: {}, out: { out: { geometry: "edge-2" } } },
+					pt: { in: {}, out: { out: { point: { x: 1, y: 2, z: 3 } } } },
+					vec: { in: {}, out: { out: { vector: { x: 0, y: 0, z: 1 } } } },
 				}),
 			);
 			expect(items).toEqual([
-				{ widgetId: "box", kind: "geometry", handle: "solid-1" },
-				{ widgetId: "line", kind: "geometry", handle: "edge-2" },
-				{ widgetId: "pt", kind: "point", position: [1, 2, 3] },
-				{ widgetId: "vec", kind: "vector", direction: [0, 0, 1] },
+				{ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: "solid-1" },
+				{ widgetId: "line", port: "out", direction: "out", kind: "geometry", handle: "edge-2" },
+				{ widgetId: "pt", port: "out", direction: "out", kind: "point", position: [1, 2, 3] },
+				{ widgetId: "vec", port: "out", direction: "out", kind: "vector", directionVec: [0, 0, 1] },
 			]);
+		});
+
+		it("extractChannelPreviewItems keeps input channels when output errors", () => {
+			const items = extractPreviewItems(
+				JSON.stringify({
+					offset: {
+						in: { geometry: "drawing-1", distance: 0.1 },
+						out: { out: { error: "brep: drawing-1 expected solid|face|wire, got drawing" } },
+						error: "brep: drawing-1 expected solid|face|wire, got drawing",
+					},
+				}),
+			);
+			expect(items).toContainEqual({
+				widgetId: "offset",
+				port: "geometry",
+				direction: "in",
+				kind: "geometry",
+				handle: "drawing-1",
+			});
+		});
+
+		it("filterVisiblePreviewItems isolates hovered channels", async () => {
+			const { filterVisiblePreviewItems: filter } = await import("./index.tsx");
+			const items = [
+				{ widgetId: "offset", port: "geometry", direction: "in" as const, kind: "geometry" as const, handle: "drawing-1" as const },
+				{ widgetId: "offset", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "wire-2" as const },
+			];
+			const visible = filter(items, {
+				showMode: "everything",
+				selectedNodeIds: [],
+				selectedChannels: [],
+				hoveredNodeId: null,
+				hoveredChannel: { widgetId: "offset", port: "geometry", direction: "in" },
+			});
+			expect(visible).toHaveLength(1);
+			expect(visible[0]?.port).toBe("geometry");
 		});
 
 		it("brep.point and brep.vector evaluate to previewable outputs", () => {
 			const pointOut = evaluateBrepFlowKind("brep.point", JSON.stringify({ x: 1, y: 2, z: 3 }), kernel);
 			const vectorOut = evaluateBrepFlowKind("brep.vector", JSON.stringify({ x: 0, y: 0, z: 5 }), kernel);
-			const items = extractPreviewItems(JSON.stringify({ pointNode: JSON.parse(pointOut), vectorNode: JSON.parse(vectorOut) }));
-			expect(items).toContainEqual({ widgetId: "pointNode", kind: "point", position: [1, 2, 3] });
-			expect(items).toContainEqual({ widgetId: "vectorNode", kind: "vector", direction: [0, 0, 5] });
+			const items = extractPreviewItems(
+				JSON.stringify({
+					pointNode: { in: {}, out: { out: JSON.parse(pointOut) } },
+					vectorNode: { in: {}, out: { out: JSON.parse(vectorOut) } },
+				}),
+			);
+			expect(items).toContainEqual({ widgetId: "pointNode", port: "out", direction: "out", kind: "point", position: [1, 2, 3] });
+			expect(items).toContainEqual({ widgetId: "vectorNode", port: "out", direction: "out", kind: "vector", directionVec: [0, 0, 5] });
+		});
+
+		it("brep.solid.offset offsets sketch and curve circles", () => {
+			for (const sketchKind of ["brep.sketch2d.circle", "brep.curve.circle"] as const) {
+				const sketch = evaluateBrepFlowKind(sketchKind, JSON.stringify({ radius: 2 }), kernel);
+				const sketchParsed = JSON.parse(sketch) as { geometry?: string };
+				const out = evaluateBrepFlowKind(
+					"brep.solid.offset",
+					JSON.stringify({ geometry: sketchParsed.geometry, distance: 0.25 }),
+					kernel,
+				);
+				const parsed = JSON.parse(out) as { geometry?: string; error?: string };
+				expect(parsed.error).toBeUndefined();
+				expect(parsed.geometry).toMatch(/^(wire|face|edge|drawing|solid)-/);
+			}
 		});
 
 		it("extractPreviewItems ignores top-level evaluate errors", () => {
@@ -2025,8 +2200,8 @@ if (import.meta.vitest) {
 				root.render(
 					<ProceduralPreview
 						items={[
-							{ widgetId: "pt", kind: "point", position: [1, 0, 0] },
-							{ widgetId: "vec", kind: "vector", direction: [0, 0, 2] },
+							{ widgetId: "pt", port: "out", direction: "out", kind: "point", position: [1, 0, 0] },
+							{ widgetId: "vec", port: "out", direction: "out", kind: "vector", directionVec: [0, 0, 2] },
 						]}
 					/>,
 				);

@@ -6485,7 +6485,19 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   );
   const onHoverChange = reactHostPort.useCallback(
     (id: string | null) => {
-      ctrl?.run("setHover", { id });
+      ctrl?.run("setHover", { id, channel: null });
+    },
+    [ctrl],
+  );
+  const onChannelHoverChange = reactHostPort.useCallback(
+    (channel: import("@procedural/react").ProceduralChannelRef | null) => {
+      ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
+    },
+    [ctrl],
+  );
+  const onSelectedChannelsChange = reactHostPort.useCallback(
+    (channels: readonly import("@procedural/react").ProceduralChannelRef[]) => {
+      ctrl?.run("setSelectedChannels", { channels: [...channels] });
     },
     [ctrl],
   );
@@ -6514,11 +6526,15 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
       onSelectionChange={onSelectionChange}
       onPreselectChange={onPreselectChange}
       onHoverChange={onHoverChange}
+      onChannelHoverChange={onChannelHoverChange}
+      onSelectedChannelsChange={onSelectedChannelsChange}
       onPreviewOffChange={onPreviewOffChange}
       selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      selectedChannels={ctrl?.getSelectedChannels()}
       preselectNodeIds={ctrl?.getPreselectNodeIds()}
       preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
       hoveredNodeId={ctrl?.getHoveredNodeId()}
+      hoveredChannel={ctrl?.getHoveredChannel()}
       previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
       selectionMode={ctrl?.getSelectionMode()}
       selectionMethod={ctrl?.getSelectionMethod()}
@@ -6536,7 +6552,7 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   void interactionRevision;
   const onHover = reactHostPort.useCallback(
     (id: string | null) => {
-      ctrl?.run("setHover", { id });
+      ctrl?.run("setHover", { id, channel: null });
     },
     [ctrl],
   );
@@ -6560,6 +6576,8 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
         preselectNodeIds={ctrl?.getPreselectNodeIds()}
         preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
         hoveredNodeId={ctrl?.getHoveredNodeId()}
+        hoveredChannel={ctrl?.getHoveredChannel()}
+        selectedChannels={ctrl?.getSelectedChannels()}
         previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
         showMode={ctrl?.getShowMode() ?? "everything"}
         selectionMode={ctrl?.getSelectionMode()}

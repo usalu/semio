@@ -693,6 +693,22 @@ pub mod vector_tiles {
         }
 
         #[test]
+        fn continent_water_filter_drops_small_inland_polygons() {
+            let extent = 4096;
+            let mut props = std::collections::BTreeMap::new();
+            props.insert("class".to_string(), "lake".to_string());
+            let small = vec![vec![(100.0, 100.0), (140.0, 100.0), (140.0, 130.0), (100.0, 130.0)]];
+            let large = vec![vec![(0.0, 0.0), (900.0, 0.0), (900.0, 900.0), (0.0, 900.0)]];
+            assert!(super::water_polygon_visible_for_lod(0, &props, &small, extent));
+            assert!(!super::water_polygon_visible_for_lod(1, &props, &small, extent));
+            assert!(super::water_polygon_visible_for_lod(1, &props, &large, extent));
+            props.insert("class".to_string(), "ocean".to_string());
+            assert!(super::water_polygon_visible_for_lod(1, &props, &small, extent));
+            assert!(!super::waterway_visible_for_lod(1));
+            assert!(super::waterway_visible_for_lod(2));
+        }
+
+        #[test]
         fn weighted_opaque_fill_keeps_alpha_solid() {
             let c = super::weighted_opaque_fill(crate::Color::from_rgba8(40, 50, 60, 128), 1.0);
             assert_eq!(c.to_rgba8().a, 255);
@@ -1162,6 +1178,61 @@ pub mod vector_tiles {
             && line
                 .iter()
                 .all(|&(x, y)| mvt_point_on_tile_bbox_edge(extent, x, y))
+    }
+
+    pub fn mvt_rings_bbox_area(rings: &[Vec<(f64, f64)>]) -> f64 {
+        if rings.is_empty() {
+            return 0.0;
+        }
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+        for ring in rings {
+            for &(x, y) in ring {
+                min_x = min_x.min(x);
+                min_y = min_y.min(y);
+                max_x = max_x.max(x);
+                max_y = max_y.max(y);
+            }
+        }
+        (max_x - min_x).max(0.0) * (max_y - min_y).max(0.0)
+    }
+
+    fn water_class_is_open_sea(class: &str) -> bool {
+        matches!(
+            class,
+            "ocean" | "sea" | "bay" | "strait" | "fjord" | "lagoon" | "sound" | "gulf"
+        )
+    }
+
+    /// @emoji 🌊 Drop continent-zoom river/lake speckle; keep oceans and large seas/lakes.
+    pub fn water_polygon_visible_for_lod(
+        lod_idx: usize,
+        properties: &std::collections::BTreeMap<String, String>,
+        rings: &[Vec<(f64, f64)>],
+        extent: u32,
+    ) -> bool {
+        if lod_idx == 0 {
+            return true;
+        }
+        if lod_idx != 1 {
+            return true;
+        }
+        let class = property_class(properties);
+        if water_class_is_open_sea(class) {
+            return true;
+        }
+        if property_flag(properties, "intermittent") {
+            return false;
+        }
+        let e = f64::from(extent.max(1));
+        let tile_area = e * e;
+        mvt_rings_bbox_area(rings) >= tile_area * 0.0015
+    }
+
+    pub fn waterway_visible_for_lod(lod_idx: usize) -> bool {
+        lod_idx >= 2
     }
 
     pub fn mvt_ring_is_tile_bbox_cover(extent: u32, ring: &[(f64, f64)]) -> bool {
@@ -2134,7 +2205,7 @@ impl MapHost {
         let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
         let mut path = vello::kurbo::BezPath::new();
         for ring in rings {
-            if ring.len() < 3 || vector_tiles::mvt_ring_is_tile_bbox_cover(extent, ring) {
+            if ring.len() < 3 {
                 continue;
             }
             Self::append_screen_ring(
@@ -2163,23 +2234,9 @@ impl MapHost {
         rings: &[Vec<(f64, f64)>],
         fill: Color,
     ) {
-        let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
-        for ring in rings {
-            if ring.len() < 3 || vector_tiles::mvt_ring_is_tile_bbox_cover(extent, ring) {
-                continue;
-            }
-            let mut path = vello::kurbo::BezPath::new();
-            Self::append_screen_ring(
-                &mut path,
-                ring,
-                |lx, ly| self.tile_local_to_screen(tz, tx, ty, extent, lx, ly),
-                jump,
-            );
-            if path.is_empty() {
-                continue;
-            }
-            scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &path);
-        }
+        self.append_vector_tile_polygon(
+            scene, tz, tx, ty, extent, rings, fill, Color::from_rgba8(0, 0, 0, 0), 0.0,
+        );
     }
 
     fn append_vector_tile_lines(
@@ -2369,38 +2426,37 @@ impl MapHost {
         let region_stroke = self.theme.region_stroke;
         let water_fill = vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.water);
         let building_fill = vector_tiles::color_with_alpha(land_fill, (220.0 * weights.buildings).clamp(32.0, 255.0) as u8);
-        let park_fill = vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.land);
         let line_scale = vector_tiles::vector_line_scale(span);
         let road_lod_scale = vector_tiles::transportation_stroke_lod_scale(span, forced_lod);
 
         let vis = self.layer_visibility;
         let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
-        let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
+        let lod_idx = resolve_detail_lod_index(span, forced_lod);
+        let fine_land_canvas = profile.draw_land_backdrop && vis.land;
+        let coarse_lod = lod_idx <= 2;
+        let land_canvas = vis.land && (fine_land_canvas || coarse_lod);
         let draw_coastline = profile.draw_coastline && vis.water;
-        let has_any_countries = draw.iter().any(|(_, _, _, tile)| {
-            tile.layers.iter().any(|l| {
-                l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty())
-            })
-        });
-        let coastline_countries = draw_coastline && has_any_countries;
-        let coastline_water_oceans = draw_coastline && !has_any_countries;
-        let skip_base_water_fill = coastline_countries;
-        let skip_base_landcover_fill = draw_land_backdrop;
-        let draw_countries_layer = profile.draw_landcover && vis.land && !draw_land_backdrop && has_any_countries;
-        if draw_land_backdrop {
-            self.append_viewport_fill(scene, land_fill);
-        } else if coastline_countries {
-            self.append_viewport_fill(scene, water_fill);
-        } else if coastline_water_oceans {
+        let park_fill = if fine_land_canvas {
+            vector_tiles::weighted_opaque_fill(self.theme.land_fill, (weights.land * 0.94).clamp(0.25, 1.0))
+        } else {
+            vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.land)
+        };
+        if land_canvas {
             self.append_viewport_fill(scene, land_fill);
         }
         for (tz, tx, ty, tile) in draw {
-            let draw_water = profile.draw_water && vis.water && !skip_base_water_fill;
+            let tile_has_countries = tile.layers.iter().any(|l| {
+                l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty())
+            });
+            let draw_water = profile.draw_water && vis.water;
             let draw_land = profile.draw_landcover && vis.land;
-            let draw_landcover = draw_land && !skip_base_landcover_fill && !draw_countries_layer;
+            let draw_tile_countries = draw_land && !fine_land_canvas && tile_has_countries;
+            let draw_landcover = draw_land
+                && !fine_land_canvas
+                && (!draw_tile_countries || lod_idx == 1);
             let draw_buildings = profile.draw_buildings && vis.buildings;
             let draw_roads = profile.draw_transportation && vis.roads;
-            let draw_borders = profile.draw_boundary && vis.borders && !draw_land_backdrop;
+            let draw_borders = profile.draw_boundary && vis.borders && !fine_land_canvas;
             let mut layers: Vec<_> = tile.layers.iter().collect();
             layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
 
@@ -2411,7 +2467,14 @@ impl MapHost {
                 for feat in &layer.features {
                     match lname {
                         "water" if draw_water => {
-                            if !feat.rings.is_empty() {
+                            if !feat.rings.is_empty()
+                                && vector_tiles::water_polygon_visible_for_lod(
+                                    lod_idx,
+                                    &feat.properties,
+                                    &feat.rings,
+                                    extent,
+                                )
+                            {
                                 self.append_vector_tile_polygon(
                                     scene,
                                     *tz,
@@ -2541,7 +2604,7 @@ impl MapHost {
                                 );
                             }
                         }
-                        "waterway" if draw_water => {
+                        "waterway" if draw_water && vector_tiles::waterway_visible_for_lod(lod_idx) => {
                             if !feat.lines.is_empty() {
                                 self.append_vector_tile_lines(
                                     scene,
@@ -2555,10 +2618,18 @@ impl MapHost {
                                 );
                             }
                         }
-                        "countries" if draw_countries_layer => {
+                        "countries" if draw_tile_countries => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon_rings_nonzero(
-                                    scene, *tz, *tx, *ty, extent, &feat.rings, land_fill,
+                                self.append_vector_tile_polygon(
+                                    scene,
+                                    *tz,
+                                    *tx,
+                                    *ty,
+                                    extent,
+                                    &feat.rings,
+                                    land_fill,
+                                    Color::from_rgba8(0, 0, 0, 0),
+                                    0.0,
                                 );
                             }
                         }
@@ -3355,6 +3426,8 @@ mod tests {
         assert_eq!(super::resolve_map_lod_index_from_span(span), 2);
         let profile = super::vector_tiles::vector_detail_profile(span, 7, None);
         assert!(profile.draw_boundary);
+        assert!(profile.draw_land_backdrop);
+        assert!(!profile.draw_landcover);
         assert_eq!(profile.max_admin_level, 2);
         assert!(super::vector_tiles::boundary_visible(2, span, 7, None));
         assert!(!super::vector_tiles::boundary_visible(4, span, 7, None));
@@ -3400,6 +3473,8 @@ mod tests {
         let region = super::vector_tiles::vector_detail_profile(span, 10, Some("region"));
         assert!(!country.draw_landcover);
         assert!(region.draw_landcover);
+        assert!(country.draw_land_backdrop);
+        assert!(region.draw_land_backdrop);
         assert!(!country.draw_transportation);
         assert!(region.draw_transportation);
         assert_eq!(country.max_admin_level, 2);

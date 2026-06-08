@@ -10,7 +10,7 @@ use dag::{
     computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width,
     normalize_node_display, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
 };
-use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
+use neural::{Atom, Dictionary, EvalChannels, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Widget
@@ -696,6 +696,87 @@ impl EvalBridge {
 }
 // #endregion 🔖EvalBridge
 
+// #region 🔖ChannelEval
+fn neural_value_to_json(value: &NeuralValue) -> serde_json::Value {
+    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+}
+
+fn dictionary_to_json_object(dict: &Dictionary) -> serde_json::Map<String, serde_json::Value> {
+    dict.keys()
+        .map(|key| (key.clone(), neural_value_to_json(dict.get(key).expect("key"))))
+        .collect()
+}
+
+fn input_ports_json(dict: &Dictionary, kind_info: Option<&NeuronKindInfo>) -> serde_json::Map<String, serde_json::Value> {
+    let mut ports = serde_json::Map::new();
+    if let Some(info) = kind_info {
+        if let Some(variadic) = &info.variadic_input {
+            if let Some(slots) = dict.get(&variadic.slot_key).and_then(|value| value.as_dictionary()) {
+                for key in slots.keys() {
+                    if let Some(value) = slots.get(key) {
+                        ports.insert(key.clone(), neural_value_to_json(value));
+                    }
+                }
+            }
+        }
+        for port in &info.inputs {
+            if port == "*" {
+                continue;
+            }
+            if let Some(value) = dict.get(port) {
+                ports.insert(port.clone(), neural_value_to_json(value));
+            }
+        }
+        return ports;
+    }
+    dictionary_to_json_object(dict)
+}
+
+fn output_ports_json(dict: &Dictionary) -> serde_json::Map<String, serde_json::Value> {
+    let mut ports = serde_json::Map::new();
+    ports.insert("out".into(), serde_json::to_value(dict).unwrap_or(serde_json::Value::Null));
+    ports
+}
+
+fn widget_kind_info<'a>(widget: &Widget, kind_infos: &'a HashMap<String, NeuronKindInfo>) -> Option<&'a NeuronKindInfo> {
+    match widget {
+        Widget::Neuron { neuronKind, .. } => kind_infos.get(neuronKind),
+        _ => None,
+    }
+}
+
+fn build_channel_eval_json(fixture: &FlowFixtureV1, channels: &EvalChannels, kind_infos: &HashMap<String, NeuronKindInfo>) -> String {
+    let mut widgets = serde_json::Map::new();
+    for widget in &fixture.widgets {
+        let id = widget_id_for(widget);
+        let kind_info = widget_kind_info(widget, kind_infos);
+        let input_dict = match widget {
+            Widget::Neuron { params, .. } => channels
+                .inputs
+                .get(id)
+                .cloned()
+                .unwrap_or_default()
+                .merge(params),
+            _ => channels.inputs.get(id).cloned().unwrap_or_default(),
+        };
+        let output_dict = channels.outputs.get(id);
+        let mut entry = serde_json::Map::new();
+        entry.insert("in".into(), serde_json::Value::Object(input_ports_json(&input_dict, kind_info)));
+        entry.insert(
+            "out".into(),
+            serde_json::Value::Object(output_dict.map(output_ports_json).unwrap_or_default()),
+        );
+        if let Some(output) = output_dict {
+            if let Some(error) = output.get("error").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
+                entry.insert("error".into(), serde_json::Value::String(error.to_string()));
+            }
+        }
+        widgets.insert(id.to_string(), serde_json::Value::Object(entry));
+    }
+    serde_json::to_string(&widgets).unwrap_or_else(|_| "{}".into())
+}
+// #endregion 🔖ChannelEval
+
 // #region History
 #[derive(Default)]
 struct FlowHistory {
@@ -1257,11 +1338,11 @@ impl FlowHost {
         let registry = neural::Registry::new();
         let evaluator = Evaluator::new(&registry);
         let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-        match evaluator.evaluate_with(&tree, &seeds, &self.kind_infos, &mut dispatch) {
-            Ok(outputs) => {
-                self.outputs = outputs.clone();
-                self.apply_preview_outputs(&outputs);
-                self.last_eval_json = serde_json::to_string(&outputs).unwrap_or_else(|_| "{}".into());
+        match evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &mut dispatch) {
+            Ok(channels) => {
+                self.outputs = channels.outputs.clone();
+                self.apply_preview_outputs(&channels.outputs);
+                self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
             }
             Err(err) => {
                 self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
@@ -1392,6 +1473,16 @@ impl FlowHost {
     /// 🖱️ Hovered widget id when the pointer is over a node or port handle.
     pub fn hovered_widget_id(&self) -> Option<String> {
         self.dag.hovered_node_id()
+    }
+
+    /// 🔌 Hovered widget channel when the pointer is over a port row or handle.
+    pub fn hovered_channel_json(&self) -> String {
+        self.dag.hovered_channel_json()
+    }
+
+    /// 🔌 Selected widget channels from handle picks.
+    pub fn selected_channels_json(&self) -> String {
+        self.dag.selected_channels_json()
     }
 
     /// ✅ Replaces selection from a JSON array of widget ids.
@@ -1866,6 +1957,16 @@ impl FlowSession {
         self.state.borrow().host.hovered_widget_id()
     }
 
+    #[wasm_bindgen(js_name = hoveredChannelJson)]
+    pub fn hovered_channel_json(&self) -> String {
+        self.state.borrow().host.hovered_channel_json()
+    }
+
+    #[wasm_bindgen(js_name = selectedChannelsJson)]
+    pub fn selected_channels_json(&self) -> String {
+        self.state.borrow().host.selected_channels_json()
+    }
+
     #[wasm_bindgen(js_name = previewOffWidgetIds)]
     pub fn preview_off_widget_ids(&self) -> String {
         serde_json::to_string(&self.state.borrow().host.preview_off_widget_ids()).unwrap_or_else(|_| "[]".into())
@@ -2318,6 +2419,16 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_slider_value("slider", 5.0);
         assert_eq!(host.preview_text(), "5");
+    }
+
+    #[test]
+    fn evaluate_emits_channel_structured_json() {
+        let host = host_with_test_bridge();
+        let parsed: serde_json::Value = serde_json::from_str(&host.last_eval_json).expect("json");
+        let add = parsed.get("add").and_then(|value| value.as_object()).expect("add channels");
+        assert!(add.get("in").and_then(|value| value.as_object()).is_some());
+        let out = add.get("out").and_then(|value| value.as_object()).expect("add out");
+        assert!(out.get("out").is_some());
     }
 
     #[test]

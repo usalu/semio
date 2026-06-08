@@ -977,6 +977,30 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	offsetSync(shape: GeometryRef, distance: number): GeometryRef {
+		const entry = this.registry.get(shape);
+		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
+		if (entry.profile?.kind === "circle") {
+			const radius = entry.profile.radius + distance;
+			if (radius <= 0) throw new Error("brep: offset collapses circle");
+			return this.register("drawing", drawCircle(radius), { kind: "circle", radius });
+		}
+		if (entry.profile?.kind === "rectangle") {
+			const width = entry.profile.width + distance * 2;
+			const height = entry.profile.height + distance * 2;
+			if (width <= 0 || height <= 0) throw new Error("brep: offset collapses rectangle");
+			return this.register("drawing", drawRectangle(width, height), { kind: "rectangle", width, height });
+		}
+		if (entry.kind === "drawing") {
+			const drawing = asDrawing(entry.shape);
+			if (typeof (drawing as Drawing).offset === "function") {
+				return this.register("drawing", (drawing as Drawing).offset(distance), entry.profile);
+			}
+			throw new Error("brep: drawing profile offset unsupported");
+		}
+		if (entry.kind === "wire") {
+			const result = offset(asShape1D(entry.shape), distance);
+			return this.register(inferKind(result), result);
+		}
 		const result = offset(asShape3D(this.require(shape, "solid", "face", "wire")), distance);
 		return this.register(inferKind(result), result);
 	}
@@ -1539,6 +1563,16 @@ if (import.meta.vitest) {
 				expect(kernel.getGeometryKind(solid)).toBe("solid");
 				const solidMesh = await kernel.tessellateGeometry(solid, 0.05);
 				expect(isRenderableMeshTransfer(solidMesh)).toBe(true);
+			}
+		});
+
+		it("offsetSync offsets sketch and curve circles", async () => {
+			await ensureBrepWasmLoaded();
+			for (const profile of [kernel.sketchCircleSync(2), kernel.circleCurveSync(2)]) {
+				const offset = kernel.offsetSync(profile, 0.25);
+				expect(["wire", "face", "edge", "drawing", "solid"]).toContain(kernel.getGeometryKind(offset));
+				const mesh = await kernel.tessellateGeometry(offset, 0.05);
+				expect(isRenderableMeshTransfer(mesh)).toBe(true);
 			}
 		});
 

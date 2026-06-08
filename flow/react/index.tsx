@@ -1920,6 +1920,49 @@ export interface FlowPreselectSnapshot {
   readonly removedIds: readonly string[];
 }
 
+export interface FlowChannelRef {
+  readonly widgetId: string;
+  readonly port: string;
+  readonly direction: "in" | "out";
+}
+
+type FlowSessionChannelApi = FlowSession & {
+  hoveredChannelJson(): string;
+  selectedChannelsJson(): string;
+};
+
+export function parseFlowChannelRef(json: string | null | undefined): FlowChannelRef | null {
+  if (!json || json === "null") return null;
+  try {
+    const parsed = JSON.parse(json) as FlowChannelRef;
+    if (parsed.direction !== "in" && parsed.direction !== "out") return null;
+    if (typeof parsed.widgetId !== "string" || typeof parsed.port !== "string") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function parseFlowChannelRefArray(json: string): FlowChannelRef[] {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => parseFlowChannelRef(JSON.stringify(entry)))
+      .filter((entry): entry is FlowChannelRef => entry != null);
+  } catch {
+    return [];
+  }
+}
+
+function readFlowSessionChannels(session: FlowSession): { hovered: FlowChannelRef | null; selected: FlowChannelRef[] } {
+  const api = session as FlowSessionChannelApi;
+  return {
+    hovered: parseFlowChannelRef(api.hoveredChannelJson?.()),
+    selected: parseFlowChannelRefArray(api.selectedChannelsJson?.() ?? "[]"),
+  };
+}
+
 export interface FlowCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
@@ -1936,6 +1979,8 @@ export interface FlowCanvasProps {
   readonly onSelectionChange?: (ids: readonly string[]) => void;
   readonly onPreselectChange?: (snapshot: FlowPreselectSnapshot) => void;
   readonly onHoverChange?: (id: string | null) => void;
+  readonly onChannelHoverChange?: (channel: FlowChannelRef | null) => void;
+  readonly onSelectedChannelsChange?: (channels: readonly FlowChannelRef[]) => void;
   readonly selectedNodeIds?: readonly string[];
   readonly hoveredNodeId?: string | null;
   readonly previewOffNodeIds?: readonly string[];
@@ -2022,6 +2067,8 @@ export function FlowCanvas({
   onSelectionChange,
   onPreselectChange,
   onHoverChange,
+  onChannelHoverChange,
+  onSelectedChannelsChange,
   selectedNodeIds,
   hoveredNodeId,
   previewOffNodeIds,
@@ -2051,6 +2098,8 @@ export function FlowCanvas({
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onPreselectChangeRef = useRef(onPreselectChange);
   const onHoverChangeRef = useRef(onHoverChange);
+  const onChannelHoverChangeRef = useRef(onChannelHoverChange);
+  const onSelectedChannelsChangeRef = useRef(onSelectedChannelsChange);
   const storeRef = useRef(store ?? createLocalFlowStore());
   const pointerRef = useRef({ active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false });
   const imageFileInputRef = useRef<HTMLInputElement>(null);
@@ -2136,6 +2185,14 @@ export function FlowCanvas({
   useEffect(() => {
     onHoverChangeRef.current = onHoverChange;
   }, [onHoverChange]);
+
+  useEffect(() => {
+    onChannelHoverChangeRef.current = onChannelHoverChange;
+  }, [onChannelHoverChange]);
+
+  useEffect(() => {
+    onSelectedChannelsChangeRef.current = onSelectedChannelsChange;
+  }, [onSelectedChannelsChange]);
 
   useEffect(() => {
     onContextMenuRef.current = onContextMenu;
@@ -2245,15 +2302,20 @@ export function FlowCanvas({
   const emitInteractionState = useCallback((session: FlowSession) => {
     const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
     const hovered = session.hoveredWidgetId() ?? null;
+    const channels = readFlowSessionChannels(session);
     const preselect = parseFlowPreselectJson(session.preselectWidgetIdsJson());
     const previewOff = parseFlowWidgetIdArray(session.previewOffWidgetIds());
     onSelectionChangeRef.current?.(selected);
     onPreselectChangeRef.current?.(preselect);
     onHoverChangeRef.current?.(hovered);
+    onChannelHoverChangeRef.current?.(channels.hovered);
+    onSelectedChannelsChangeRef.current?.(channels.selected);
     onPreviewOffChangeRef.current?.(previewOff);
     syncMarqueeOverlay(session);
     syncSelectionBoundsOverlay(session);
-    console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] preselect=[${preselect.ids.join(", ")}] hover=${hovered ?? "—"} previewOff=[${previewOff.join(", ")}]`);
+    console.log(
+      `[DEBUG] flow interaction selected=[${selected.join(", ")}] preselect=[${preselect.ids.join(", ")}] hover=${hovered ?? "—"} channel=${channels.hovered ? `${channels.hovered.widgetId}.${channels.hovered.direction}.${channels.hovered.port}` : "—"} previewOff=[${previewOff.join(", ")}]`,
+    );
   }, [syncMarqueeOverlay, syncSelectionBoundsOverlay]);
 
   const persistFixture = useCallback(() => {

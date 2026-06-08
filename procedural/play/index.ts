@@ -53,7 +53,7 @@ import {
 import type { ContextMenuItem } from "@ui/react";
 import type { WindowMeasure } from "@framework/playground/core";
 import {
-	extractPreviewItems,
+	extractChannelPreviewItems,
 	PROCEDURAL_DEFAULT_FIXTURE,
 	proceduralExtensionHost,
 	proceduralFixtureToJson,
@@ -62,6 +62,7 @@ import {
 	type ProceduralGumballTransformOp,
 	type ProceduralGumballTransformPhase,
 	type ProceduralGumballTransformRequest,
+	type ProceduralChannelRef,
 	type ProceduralPreviewItem,
 	type ProceduralPreviewShowMode,
 	type ProceduralTransformGranularity,
@@ -605,6 +606,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private preselectNodeIds: string[] = [];
 	private preselectRemovedNodeIds: string[] = [];
 	private hoveredNodeId: string | null = null;
+	private hoveredChannel: ProceduralChannelRef | null = null;
+	private selectedChannels: ProceduralChannelRef[] = [];
 	private previewOffNodeIds: string[] = [];
 	private showMode: ProceduralPreviewShowMode = "everything";
 	private selectionMode: ProceduralPlaySelectionMode = "default";
@@ -665,6 +668,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.preselectNodeIds = [];
 		this.preselectRemovedNodeIds = [];
 		this.hoveredNodeId = null;
+		this.hoveredChannel = null;
+		this.selectedChannels = [];
 		this.previewOffNodeIds = [];
 		this.previewItems = [];
 		this.gumballBindings.clear();
@@ -739,6 +744,14 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	getHoveredNodeId(): string | null {
 		return this.hoveredNodeId;
+	}
+
+	getHoveredChannel(): ProceduralChannelRef | null {
+		return this.hoveredChannel;
+	}
+
+	getSelectedChannels(): readonly ProceduralChannelRef[] {
+		return this.selectedChannels;
 	}
 
 	getPreviewOffNodeIds(): readonly string[] {
@@ -1264,7 +1277,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		if (command === "setEvalOutputs") {
 			const outputsJson = (args as { outputsJson?: string }).outputsJson;
 			if (typeof outputsJson === "string") {
-				this.previewItems = extractPreviewItems(outputsJson);
+				this.previewItems = extractChannelPreviewItems(outputsJson);
 				this.interactionRevision += 1;
 				this.notifySnapshot();
 				this.rebuildShellMode();
@@ -1281,6 +1294,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			const next = selectionMergeIds(mode, this.selectedNodeIds, ids);
 			if (JSON.stringify(next) === JSON.stringify(this.selectedNodeIds)) return;
 			this.selectedNodeIds = next;
+			this.selectedChannels = [];
 			this.preselectNodeIds = [];
 			this.preselectRemovedNodeIds = [];
 			this.interactionRevision += 1;
@@ -1340,9 +1354,23 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 		if (command === "setHover") {
 			const id = (args as { id?: string | null }).id;
+			const channel = (args as { channel?: ProceduralChannelRef | null }).channel ?? null;
 			const next = typeof id === "string" ? id : null;
-			if (next === this.hoveredNodeId) return;
+			const channelJson = channel ? JSON.stringify(channel) : "null";
+			const currentChannelJson = this.hoveredChannel ? JSON.stringify(this.hoveredChannel) : "null";
+			if (next === this.hoveredNodeId && channelJson === currentChannelJson) return;
 			this.hoveredNodeId = next;
+			this.hoveredChannel = channel;
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			return;
+		}
+		if (command === "setSelectedChannels") {
+			const channels = (args as { channels?: ProceduralChannelRef[] }).channels;
+			if (!Array.isArray(channels)) return;
+			const next = [...channels];
+			if (JSON.stringify(next) === JSON.stringify(this.selectedChannels)) return;
+			this.selectedChannels = next;
 			this.interactionRevision += 1;
 			this.notifySnapshot();
 			return;
@@ -1688,7 +1716,9 @@ if (import.meta.vitest) {
 		it("setFixtureJson sync preserves preview items after flow interaction", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
-			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({ box: { in: {}, out: { out: { geometry: "solid-1" } } } }),
+			});
 			const base = ctrl.getFixtureJson();
 			const interacted = JSON.stringify({
 				...JSON.parse(base),
@@ -1700,7 +1730,9 @@ if (import.meta.vitest) {
 				],
 			});
 			ctrl.run("setFixtureJson", { json: interacted });
-			expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", kind: "geometry", handle: "solid-1" }]);
+			expect(ctrl.getPreviewItems()).toEqual([
+				{ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: "solid-1" },
+			]);
 		});
 
 		it("setFixtureJson with resetInteraction clears preview items", () => {
@@ -1717,8 +1749,12 @@ if (import.meta.vitest) {
 		it("setEvalOutputs stores preview items per widget", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
-			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
-			expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", kind: "geometry", handle: "solid-1" }]);
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({ box: { in: {}, out: { out: { geometry: "solid-1" } } } }),
+			});
+			expect(ctrl.getPreviewItems()).toEqual([
+				{ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: "solid-1" },
+			]);
 		});
 
 		it("setEvalOutputs stores point and vector preview items", () => {
@@ -1726,13 +1762,13 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					pt: { point: { x: 1, y: 0, z: 0 } },
-					vec: { vector: { x: 0, y: 1, z: 0 } },
+					pt: { in: {}, out: { out: { point: { x: 1, y: 0, z: 0 } } } },
+					vec: { in: {}, out: { out: { vector: { x: 0, y: 1, z: 0 } } } },
 				}),
 			});
 			expect(ctrl.getPreviewItems()).toEqual([
-				{ widgetId: "pt", kind: "point", position: [1, 0, 0] },
-				{ widgetId: "vec", kind: "vector", direction: [0, 1, 0] },
+				{ widgetId: "pt", port: "out", direction: "out", kind: "point", position: [1, 0, 0] },
+				{ widgetId: "vec", port: "out", direction: "out", kind: "vector", directionVec: [0, 1, 0] },
 			]);
 		});
 
@@ -1757,6 +1793,13 @@ if (import.meta.vitest) {
 			expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
 			expect(ctrl.getHoveredNodeId()).toBe("box");
 			expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
+		});
+
+		it("setHover stores hovered channel", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setHover", { id: "offset", channel: { widgetId: "offset", port: "geometry", direction: "in" } });
+			expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "offset", port: "geometry", direction: "in" });
 		});
 
 		it("setSelection merges additively when mode is additive", () => {

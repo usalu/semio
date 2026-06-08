@@ -1529,6 +1529,27 @@ fn dag_debug_log(msg: &str) {
     eprintln!("{msg}");
 }
 
+// #region 🔖ChannelRef
+/// 🔌 Resolved fixture channel from a port handle hover or selection.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagChannelRef {
+    pub widget_id: String,
+    pub port: String,
+    pub direction: String,
+}
+
+impl DagChannelRef {
+    pub fn is_input(&self) -> bool {
+        self.direction == "in"
+    }
+
+    pub fn is_output(&self) -> bool {
+        self.direction == "out"
+    }
+}
+// #endregion 🔖ChannelRef
+
 // #region 🔖DagHost
 
 /// 🌳 Retained DAG host: typed nodes, edges, engine, camera.
@@ -1803,6 +1824,56 @@ impl DagHost {
             }
         }
         None
+    }
+
+    fn decode_channel_ref(&self, target: u64) -> Option<DagChannelRef> {
+        if self.node_id_map.contains_key(&target) {
+            return None;
+        }
+        let key = self.handle_key_map.get(&target)?;
+        let (node_id, port_id) = key.split_once(':')?;
+        let node = self.fixture.nodes.iter().find(|entry| entry.id == node_id)?;
+        let direction = if node.inputs().iter().any(|port| port.id == port_id) {
+            "in"
+        } else if node.outputs().iter().any(|port| port.id == port_id) {
+            "out"
+        } else {
+            return None;
+        };
+        Some(DagChannelRef {
+            widget_id: node_id.to_string(),
+            port: port_id.to_string(),
+            direction: direction.to_string(),
+        })
+    }
+
+    /// 🔌 Hovered fixture channel when the pointer is over a port row or handle.
+    pub fn hovered_channel(&self) -> Option<DagChannelRef> {
+        let hover = self.engine.hover?;
+        self.decode_channel_ref(hover)
+    }
+
+    /// 🔌 Selected fixture channels from handle picks in the current selection snapshot.
+    pub fn selected_channels(&self) -> Vec<DagChannelRef> {
+        self.engine
+            .selection
+            .handle_ids
+            .iter()
+            .filter_map(|&handle_id| self.decode_channel_ref(handle_id))
+            .collect()
+    }
+
+    /// 🔌 Selected fixture channels as JSON.
+    pub fn selected_channels_json(&self) -> String {
+        serde_json::to_string(&self.selected_channels()).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// 🔌 Hovered fixture channel as JSON, or `null`.
+    pub fn hovered_channel_json(&self) -> String {
+        match self.hovered_channel() {
+            Some(channel) => serde_json::to_string(&channel).unwrap_or_else(|_| "null".into()),
+            None => "null".into(),
+        }
     }
 
     /// ✅ Replaces node selection from fixture widget ids.
@@ -5021,6 +5092,28 @@ mod tests {
         let (hsx, hsy) = world_to_screen_px(&host, handle);
         host.pointer_down(hsx, hsy, false);
         assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
+    }
+
+    #[test]
+    fn hovered_channel_decodes_port_handle_at_detail_lod() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("detail");
+        let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+        let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
+        let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
+        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let (sx, sy) = world_to_screen_px(&host, row_center);
+        host.pointer_move_screen(sx, sy, false, false, false);
+        assert_eq!(
+            host.hovered_channel(),
+            Some(DagChannelRef {
+                widget_id: "combine".into(),
+                port: "b".into(),
+                direction: "in".into(),
+            })
+        );
     }
 
     #[test]
