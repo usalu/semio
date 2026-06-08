@@ -470,8 +470,14 @@ fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum WidgetDescriptor {
-    Neuron { neuronKind: String },
+    Neuron {
+        neuronKind: String,
+        #[serde(default)]
+        id: Option<String>,
+    },
     InputSlider {
+        #[serde(default)]
+        id: Option<String>,
         #[serde(default)]
         value: Option<f64>,
         #[serde(default)]
@@ -483,42 +489,89 @@ enum WidgetDescriptor {
     },
     InputNote {
         #[serde(default)]
+        id: Option<String>,
+        #[serde(default)]
         text: Option<String>,
     },
-    InputImage,
-    OutputPreview,
-    OutputAction { #[serde(default)] action: String },
+    InputImage {
+        #[serde(default)]
+        id: Option<String>,
+    },
+    OutputPreview {
+        #[serde(default)]
+        id: Option<String>,
+    },
+    OutputAction {
+        #[serde(default)]
+        id: Option<String>,
+        #[serde(default)]
+        action: String,
+    },
+}
+
+fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
+    let id = match descriptor {
+        WidgetDescriptor::Neuron { id, .. }
+        | WidgetDescriptor::InputSlider { id, .. }
+        | WidgetDescriptor::InputNote { id, .. }
+        | WidgetDescriptor::InputImage { id }
+        | WidgetDescriptor::OutputPreview { id }
+        | WidgetDescriptor::OutputAction { id, .. } => id.clone(),
+    }?;
+    let trimmed = id.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
 }
 
 fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HashMap<String, NeuronKindInfo>) -> Widget {
     match descriptor {
-        WidgetDescriptor::Neuron { neuronKind } => Widget::Neuron {
+        WidgetDescriptor::Neuron { neuronKind, .. } => Widget::Neuron {
             id,
             neuronKind: neuronKind.clone(),
             params: Dictionary::new(),
             input_ports: default_neuron_input_ports(neuronKind, &[], kind_infos),
             preview: true,
         },
-        WidgetDescriptor::InputSlider { value, min, max, step } => {
+        WidgetDescriptor::InputSlider { value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
             Widget::InputSlider { id, value, min, max, step }
         }
-        WidgetDescriptor::InputNote { text } => Widget::InputNote { id, text: text.clone().unwrap_or_default() },
-        WidgetDescriptor::InputImage => Widget::InputImage { id, src: String::new() },
-        WidgetDescriptor::OutputPreview => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: BTreeSet::new() },
-        WidgetDescriptor::OutputAction { action } => Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } },
+        WidgetDescriptor::InputNote { text, .. } => Widget::InputNote { id, text: text.clone().unwrap_or_default() },
+        WidgetDescriptor::InputImage { .. } => Widget::InputImage { id, src: String::new() },
+        WidgetDescriptor::OutputPreview { .. } => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: BTreeSet::new() },
+        WidgetDescriptor::OutputAction { action, .. } => {
+            Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } }
+        }
     }
 }
 // #endregion 🔖Widget
 
 // #region 🔖Catalogue
+/// 🌿 Nested catalogue group authored by neuron-kind module authors.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogueGroup {
+    pub id: String,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub items: Vec<CatalogueItem>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<CatalogueGroup>,
+}
+
 /// 📚 Catalogue section for drag-and-drop palette.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueSection {
     pub id: String,
     pub title: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<CatalogueItem>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<CatalogueGroup>,
 }
 
 /// 🧷 Draggable catalogue entry.
@@ -541,6 +594,7 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
         CatalogueSection {
             id: "inputs".into(),
             title: "Inputs".into(),
+            groups: vec![],
             items: vec![
                 CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), abbreviation: "Slider".into(), icon: "emoji:🎚️".into(), summary: "Number input".into() },
                 CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝".into(), summary: "Text input".into() },
@@ -550,6 +604,7 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
         CatalogueSection {
             id: "outputs".into(),
             title: "Outputs".into(),
+            groups: vec![],
             items: vec![
                 CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, name: "Preview".into(), abbreviation: "Preview".into(), icon: "emoji:👁️".into(), summary: "Preview dictionary".into() },
                 CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), name: "Action".into(), abbreviation: "Action".into(), icon: "emoji:⚡".into(), summary: "Side-effect action".into() },
@@ -787,7 +842,10 @@ impl FlowHost {
         self.begin_change();
         self.clear_ghost_widget();
         let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
-        let id = self.next_widget_id(&descriptor);
+        let id = descriptor_explicit_id(&descriptor).unwrap_or_else(|| self.next_widget_id(&descriptor));
+        if self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id) {
+            return Err(format!("widget id already exists: {id}"));
+        }
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         self.fixture.widgets.push(widget);
         self.fixture.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
@@ -961,6 +1019,105 @@ impl FlowHost {
         self.evaluate_internal();
         Ok(())
     }
+
+    // #region GumballEditing
+    /// 🔀 Splices `mid_id` between `anchor_id` and its downstream consumers on `anchor_out_port`.
+    pub fn insert_between(
+        &mut self,
+        anchor_id: &str,
+        anchor_out_port: &str,
+        mid_id: &str,
+        mid_in_port: &str,
+        mid_out_port: &str,
+    ) -> Result<(), String> {
+        self.begin_change();
+        if !self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == anchor_id) {
+            return Err(format!("unknown widget: {anchor_id}"));
+        }
+        if !self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == mid_id) {
+            return Err(format!("unknown widget: {mid_id}"));
+        }
+        if anchor_id == mid_id {
+            return Err("cannot insert widget between itself".into());
+        }
+        if !widget_has_output(anchor_id, &self.fixture.widgets, &self.kind_infos) {
+            return Err(format!("{anchor_id} has no output port"));
+        }
+        if !widget_has_input(mid_id, &self.fixture.widgets, &self.kind_infos) {
+            return Err(format!("{mid_id} has no input port"));
+        }
+        if !widget_has_output(mid_id, &self.fixture.widgets, &self.kind_infos) {
+            return Err(format!("{mid_id} has no output port"));
+        }
+        for synapse in &mut self.fixture.synapses {
+            if synapse.from == anchor_id && synapse.from_port == anchor_out_port {
+                synapse.from = mid_id.to_string();
+                synapse.from_port = mid_out_port.to_string();
+            }
+        }
+        let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.to.clone())).collect();
+        if would_create_cycle(&existing, anchor_id, mid_id) {
+            return Err("connection would create cycle".into());
+        }
+        if self.fixture.synapses.iter().any(|synapse| {
+            synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port
+        }) {
+            self.rebuild_dag();
+            self.evaluate_internal();
+            return Ok(());
+        }
+        self.next_synapse_serial += 1;
+        let synapse_id = format!("s{}", self.next_synapse_serial);
+        self.fixture.synapses.push(SynapseSpec {
+            id: synapse_id,
+            from: anchor_id.to_string(),
+            to: mid_id.to_string(),
+            from_port: anchor_out_port.to_string(),
+            to_port: mid_in_port.to_string(),
+        });
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(())
+    }
+
+    /// ↔️ Shifts widgets to the right of `anchor_id` to open layout space for inserted nodes.
+    pub fn make_space(&mut self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), String> {
+        self.begin_change();
+        let anchor_x = self
+            .fixture
+            .layout
+            .get(anchor_id)
+            .map(|layout| layout.x)
+            .ok_or_else(|| format!("unknown widget layout: {anchor_id}"))?;
+        for (widget_id, layout) in &mut self.fixture.layout {
+            if layout.x > anchor_x {
+                layout.x += dx;
+                layout.y += dy;
+            }
+            let _ = self.dag.set_widget_position(widget_id, layout.x, layout.y);
+        }
+        Ok(())
+    }
+
+    /// 🧬 Merges JSON params into a neuron widget for compact transform values.
+    pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), String> {
+        self.begin_change();
+        let patch: Dictionary = serde_json::from_str(params_json).map_err(|error| error.to_string())?;
+        let widget = self
+            .fixture
+            .widgets
+            .iter_mut()
+            .find(|widget| widget_id_for(widget) == widget_id)
+            .ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+        let Widget::Neuron { params, .. } = widget else {
+            return Err(format!("{widget_id} is not a neuron"));
+        };
+        *params = params.merge(&patch);
+        self.sync_dag_display_from_widgets();
+        self.evaluate_internal();
+        Ok(())
+    }
+    // #endregion GumballEditing
 
     /// 🌳 Recomputes widget positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts_json: &str) -> Result<(), String> {
@@ -1353,11 +1510,11 @@ impl FlowHost {
     fn next_widget_id(&mut self, descriptor: &WidgetDescriptor) -> String {
         self.next_widget_serial += 1;
         let prefix = match descriptor {
-            WidgetDescriptor::Neuron { neuronKind } => neuronKind.replace('.', "_"),
+            WidgetDescriptor::Neuron { neuronKind, .. } => neuronKind.replace('.', "_"),
             WidgetDescriptor::InputSlider { .. } => "slider".into(),
             WidgetDescriptor::InputNote { .. } => "note".into(),
-            WidgetDescriptor::InputImage => "image".into(),
-            WidgetDescriptor::OutputPreview => "preview".into(),
+            WidgetDescriptor::InputImage { .. } => "image".into(),
+            WidgetDescriptor::OutputPreview { .. } => "preview".into(),
             WidgetDescriptor::OutputAction { .. } => "action".into(),
         };
         format!("{prefix}_{}", self.next_widget_serial)
@@ -1366,8 +1523,14 @@ impl FlowHost {
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
         self.begin_change();
         for widget in &mut self.fixture.widgets {
-            if let Widget::InputSlider { id, value: v, min, max, .. } = widget {
+            if let Widget::InputSlider { id, value: v, min, max, step, .. } = widget {
                 if id == widget_id {
+                    if value < *min || value > *max {
+                        let (new_min, new_max, new_step) = sensible_slider_range(value);
+                        *min = new_min;
+                        *max = new_max;
+                        *step = new_step;
+                    }
                     *v = value.clamp(*min, *max);
                 }
             }
@@ -1739,6 +1902,40 @@ impl FlowSession {
         self.state.borrow_mut().host.move_widget(widget_id, x, y).map_err(|e| JsValue::from_str(&e))
     }
 
+    #[wasm_bindgen(js_name = insertBetween)]
+    pub fn insert_between(
+        &self,
+        anchor_id: &str,
+        anchor_out_port: &str,
+        mid_id: &str,
+        mid_in_port: &str,
+        mid_out_port: &str,
+    ) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .insert_between(anchor_id, anchor_out_port, mid_id, mid_in_port, mid_out_port)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    #[wasm_bindgen(js_name = makeSpace)]
+    pub fn make_space(&self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .make_space(anchor_id, dx, dy)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    #[wasm_bindgen(js_name = setNeuronParams)]
+    pub fn set_neuron_params(&self, widget_id: &str, params_json: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .set_neuron_params(widget_id, params_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
     #[wasm_bindgen(js_name = connect)]
     pub fn connect(&self, from_id: &str, to_id: &str) -> Result<String, JsValue> {
         self.state.borrow_mut().host.connect(from_id, to_id).map_err(|e| JsValue::from_str(&e))
@@ -2011,6 +2208,7 @@ mod tests {
         host.set_host_catalogue_json(&serde_json::to_string(&[CatalogueSection {
             id: "math".into(),
             title: "Math".into(),
+            groups: vec![],
             items: vec![
                 CatalogueItem {
                     kind: "neuron".into(),
@@ -2226,6 +2424,34 @@ mod tests {
         host.dag.vello_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
         host.rebuild_dag();
         assert_eq!(host.dag.vello_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
+    }
+
+    #[test]
+    fn catalogue_nested_groups_round_trip() {
+        let host_json = serde_json::to_string(&[CatalogueSection {
+            id: "brep".into(),
+            title: "Brep".into(),
+            items: vec![],
+            groups: vec![CatalogueGroup {
+                id: "brep.primitives-3d".into(),
+                title: "Primitives 3D".into(),
+                items: vec![CatalogueItem {
+                    kind: "neuron".into(),
+                    neuronKind: Some("brep.prim3d.box".into()),
+                    action: None,
+                    name: "Box".into(),
+                    abbreviation: "Box".into(),
+                    icon: "emoji:📦".into(),
+                    summary: "Axis-aligned box".into(),
+                }],
+                groups: vec![],
+            }],
+        }])
+        .unwrap();
+        let sections = merge_catalogue_sections(&host_json).unwrap();
+        let brep = sections.iter().find(|section| section.id == "brep").expect("brep section");
+        let prim3d = brep.groups.iter().find(|group| group.title == "Primitives 3D").expect("prim3d group");
+        assert_eq!(prim3d.items[0].neuronKind.as_deref(), Some("brep.prim3d.box"));
     }
 
     #[test]
@@ -2461,6 +2687,20 @@ mod tests {
     }
 
     #[test]
+    fn set_slider_value_expands_bounds_when_out_of_range() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputSlider","value":3.0,"min":0.0,"max":10.0,"step":1.0}"#, 0.0, 0.0).unwrap();
+        host.set_slider_value(&id, 12.0);
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputSlider { value, min, max, .. } = widget else {
+            panic!("expected slider widget");
+        };
+        assert!((value - 12.0).abs() < 1e-6);
+        assert!((min - 0.0).abs() < 1e-6);
+        assert!((max - 20.0).abs() < 1e-6);
+    }
+
+    #[test]
     fn ghost_widget_preview_and_clear() {
         let mut host = host_with_test_bridge();
         host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 42.0, 24.0).unwrap();
@@ -2587,6 +2827,60 @@ mod tests {
         let widget = host.fixture.widgets.iter().find(|widget| widget_id_for(widget) == merge_id).expect("merge");
         let Widget::Neuron { input_ports, .. } = widget else { panic!("neuron") };
         assert_eq!(input_ports.len(), 3);
+    }
+
+    #[test]
+    fn add_widget_with_explicit_id() {
+        let mut host = host_with_test_bridge();
+        let id = host
+            .add_widget(r#"{"kind":"inputSlider","id":"custom_slider","value":2.0}"#, 0.0, 0.0)
+            .unwrap();
+        assert_eq!(id, "custom_slider");
+    }
+
+    #[test]
+    fn insert_between_rewires_downstream_and_connects_anchor() {
+        let mut host = host_with_test_bridge();
+        let mid = host
+            .add_widget(r#"{"kind":"neuron","id":"mid","neuronKind":"math.passThrough"}"#, 120.0, 0.0)
+            .unwrap();
+        host.insert_between("slider", "out", &mid, "number", "out").unwrap();
+        assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "mid"));
+        assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "mid" && synapse.to == "add"));
+        assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "add" && synapse.to == "preview"));
+        assert!(!host.fixture.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "add"));
+    }
+
+    #[test]
+    fn make_space_shifts_widgets_right_of_anchor() {
+        let mut host = host_with_test_bridge();
+        host.fixture.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
+        host.fixture.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
+        host.fixture.layout.insert("preview".into(), WidgetLayout { x: 400.0, y: 0.0 });
+        host.rebuild_dag();
+        host.make_space("slider", 100.0, 0.0).unwrap();
+        assert!((host.fixture.layout.get("slider").expect("slider").x - 0.0).abs() < 1e-6);
+        assert!((host.fixture.layout.get("add").expect("add").x - 300.0).abs() < 1e-6);
+        assert!((host.fixture.layout.get("preview").expect("preview").x - 500.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn set_neuron_params_merges_into_eval_input() {
+        let mut host = host_with_test_bridge();
+        let preview_synapse = host
+            .fixture
+            .synapses
+            .iter()
+            .find(|synapse| synapse.from == "add" && synapse.to == "preview")
+            .map(|synapse| synapse.id.clone())
+            .expect("preview synapse");
+        host.disconnect(&preview_synapse).unwrap();
+        let id = host
+            .add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough"}"#, 100.0, 0.0)
+            .unwrap();
+        host.connect_ports(&id, "out", "preview", "in").unwrap();
+        host.set_neuron_params(&id, r#"{"number":7.5}"#).unwrap();
+        assert_eq!(host.preview_text(), "7.5");
     }
 }
 // #endregion 🔖Tests

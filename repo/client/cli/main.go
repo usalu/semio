@@ -22165,6 +22165,8 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 		}
 	}
 
+	postTicketPlanComment(ticket, noManagement)
+
 	if err := SaveTicket(ticket); err != nil {
 		return nil, err
 	}
@@ -22473,7 +22475,20 @@ func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 
 // 💬ghAddComment holds the data fields for a ghAddComment record.
 func ghAddComment(issueURL, comment string) error {
-	args := []string{"issue", "comment", issueURL, "--body", comment}
+	tmp, err := os.CreateTemp("", "gh-comment-*.md")
+	if err != nil {
+		return fmt.Errorf("create comment temp file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+	if _, err := tmp.WriteString(comment); err != nil {
+		tmp.Close()
+		return fmt.Errorf("write comment temp file: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("close comment temp file: %w", err)
+	}
+	args := []string{"issue", "comment", issueURL, "--body-file", tmpPath}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
 	if exitCode != 0 {
 		return fmt.Errorf("gh issue comment failed: %s", strings.TrimSpace(stderr))
@@ -24813,6 +24828,8 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 			fmt.Printf("Warning: Failed to add prompt comment to GitHub issue: %v\n", err)
 		}
 	}
+
+	postTicketPlanComment(ticket, noManagement)
 
 	if err := SaveTicket(ticket); err != nil {
 		return err
@@ -45348,6 +45365,109 @@ func moveTicketPlanIntoFolder(ticket *Ticket) error {
 	return nil
 }
 
+// #endregion 📦MoveTicketPlan
+
+// #region 📝TicketPlanComment
+// 📝stripPlanFrontmatter removes YAML frontmatter from plan markdown.
+func stripPlanFrontmatter(content string) string {
+	if !strings.HasPrefix(content, "---") {
+		return strings.TrimSpace(content)
+	}
+	end := strings.Index(content[3:], "\n---")
+	if end < 0 {
+		return strings.TrimSpace(content)
+	}
+	rest := content[3+end+4:]
+	if strings.HasPrefix(rest, "\r\n") {
+		rest = rest[2:]
+	} else if strings.HasPrefix(rest, "\n") {
+		rest = rest[1:]
+	}
+	return strings.TrimSpace(rest)
+}
+
+// 📝formatPlanFileSection formats one plan file as a collapsible GitHub markdown section.
+func formatPlanFileSection(path string) (string, error) {
+	raw, err := ReadTextFile(path)
+	if err != nil {
+		return "", err
+	}
+	body := stripPlanFrontmatter(raw)
+	if strings.TrimSpace(body) == "" {
+		return "", nil
+	}
+	name := filepath.Base(path)
+	return fmt.Sprintf("<details>\n<summary>%s</summary>\n\n%s\n\n</details>", name, body), nil
+}
+
+// 📝formatPlanComment builds a GitHub issue comment body from a bound plan or spec.
+func formatPlanComment(plan *TicketPlan, src string) (string, error) {
+	if plan == nil || strings.TrimSpace(src) == "" {
+		return "", nil
+	}
+	st, err := os.Stat(src)
+	if err != nil {
+		return "", err
+	}
+	var sections []string
+	if st.IsDir() {
+		matches, gerr := filepath.Glob(filepath.Join(src, "*.md"))
+		if gerr != nil {
+			return "", gerr
+		}
+		sort.Strings(matches)
+		for _, p := range matches {
+			sec, serr := formatPlanFileSection(p)
+			if serr != nil {
+				return "", serr
+			}
+			if sec != "" {
+				sections = append(sections, sec)
+			}
+		}
+	} else {
+		sec, serr := formatPlanFileSection(src)
+		if serr != nil {
+			return "", serr
+		}
+		if sec != "" {
+			sections = append(sections, sec)
+		}
+	}
+	if len(sections) == 0 {
+		return "", nil
+	}
+	return "# 📋 Plan\n\n" + strings.Join(sections, "\n\n"), nil
+}
+
+// 📝postTicketPlanComment posts the bound plan markdown to the ticket GitHub issue.
+func postTicketPlanComment(ticket *Ticket, noManagement bool) {
+	if noManagement || ticket == nil || ticket.Plan == nil {
+		return
+	}
+	src := strings.TrimSpace(ticket.Plan.Source)
+	if src == "" {
+		return
+	}
+	if ticket.Management == nil || strings.TrimSpace(ticket.Management.Issue) == "" {
+		return
+	}
+	body, err := formatPlanComment(ticket.Plan, src)
+	if err != nil {
+		fmt.Printf("Warning: Failed to format plan comment: %v\n", err)
+		return
+	}
+	if strings.TrimSpace(body) == "" {
+		return
+	}
+	issueURL := ticket.Management.Issue
+	if err := GetManagementProvider().AddComment(issueURL, body); err != nil {
+		fmt.Printf("Warning: Failed to add plan comment to GitHub issue: %v\n", err)
+	}
+}
+
+// #endregion 📝TicketPlanComment
+
 func copyDirTree(srcRoot, dstRoot string) error {
 	return filepath.WalkDir(srcRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -45370,8 +45490,6 @@ func copyDirTree(srcRoot, dstRoot string) error {
 		return CopyFile(path, target)
 	})
 }
-
-// #endregion 📦MoveTicketPlan
 
 // #region 🗣️McpDescriptions
 // 🗣️mcpDesc picks a when-to-use string for tools, prompts, and resource titles (no cross-IDE leakage).

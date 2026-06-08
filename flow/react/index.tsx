@@ -72,6 +72,7 @@ export interface FlowModuleNeuronKindV1 {
   readonly summary: string;
   readonly inputs: readonly string[];
   readonly outputs: readonly string[];
+  readonly group?: readonly string[];
   readonly variadicInput?: FlowModuleVariadicSpecV1;
   readonly variadicOutput?: FlowModuleVariadicSpecV1;
 }
@@ -277,16 +278,9 @@ export class FlowExtensionHost {
   catalogueSections(): CatalogueSection[] {
     const sections: CatalogueSection[] = [];
     for (const [id, entry] of this.active) {
-      const items = entry.manifest.contributes.neuronKinds.map((kind) => ({
-        kind: "neuron",
-        neuronKind: kind.id,
-        name: kind.name,
-        abbreviation: kind.abbreviation,
-        icon: kind.icon,
-        summary: kind.summary,
-      }));
-      if (items.length === 0) continue;
-      sections.push({ id, title: entry.manifest.name, items });
+      const section = nestNeuronKindsIntoCatalogueSection(id, entry.manifest.name, entry.manifest.contributes.neuronKinds);
+      if ((section.items ?? []).length === 0 && !(section.groups?.length ?? 0)) continue;
+      sections.push(section);
     }
     return sections;
   }
@@ -408,6 +402,17 @@ export function createLocalFlowStore(storage: Pick<Storage, "getItem" | "setItem
     },
   };
 }
+
+/** @emoji 🫥 In-memory flow store: no load, no save — host owns persistence. */
+export function createEphemeralFlowStore(): FlowStore {
+  return {
+    load(): string | null {
+      return null;
+    },
+    save(): void {},
+    clear(): void {},
+  };
+}
 // #endregion 🔖FlowStore
 
 // #region 🔖Catalogue
@@ -421,10 +426,210 @@ export interface CatalogueItem {
   readonly summary: string;
 }
 
+export interface CatalogueGroup {
+  readonly id: string;
+  readonly title: string;
+  readonly items: readonly CatalogueItem[];
+  readonly groups?: readonly CatalogueGroup[];
+}
+
 export interface CatalogueSection {
   readonly id: string;
   readonly title: string;
   readonly items: readonly CatalogueItem[];
+  readonly groups?: readonly CatalogueGroup[];
+}
+
+export interface CatalogueKindsTreeItem {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly defaultOpen?: boolean;
+  readonly draggable?: boolean;
+  readonly dragData?: Readonly<Record<string, string>>;
+  readonly items?: readonly CatalogueKindsTreeItem[];
+}
+
+export interface CatalogueKindsTreeSection {
+  readonly id: string;
+  readonly label: string;
+  readonly defaultOpen?: boolean;
+  readonly items: readonly CatalogueKindsTreeItem[];
+}
+
+function slugifyCatalogueGroupSegment(title: string): string {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug.length > 0 ? slug : "group";
+}
+
+function catalogueGroupIdFromPath(sectionId: string, titlePath: readonly string[]): string {
+  return `${sectionId}.${titlePath.map(slugifyCatalogueGroupSegment).join(".")}`;
+}
+
+/** @emoji 🧷 Maps a neuron kind manifest row to a draggable catalogue item. */
+export function neuronKindToCatalogueItem(kind: FlowModuleNeuronKindV1): CatalogueItem {
+  return {
+    kind: "neuron",
+    neuronKind: kind.id,
+    name: kind.name,
+    abbreviation: kind.abbreviation,
+    icon: kind.icon,
+    summary: kind.summary,
+  };
+}
+
+interface CatalogueGroupBuilder {
+  readonly title: string;
+  items: CatalogueItem[];
+  children: Map<string, CatalogueGroupBuilder>;
+}
+
+function getOrCreateCatalogueGroupBuilder(map: Map<string, CatalogueGroupBuilder>, title: string): CatalogueGroupBuilder {
+  let builder = map.get(title);
+  if (!builder) {
+    builder = { title, items: [], children: new Map() };
+    map.set(title, builder);
+  }
+  return builder;
+}
+
+function insertCatalogueItemIntoGroupTree(root: Map<string, CatalogueGroupBuilder>, groupPath: readonly string[], item: CatalogueItem): void {
+  let map = root;
+  let builder: CatalogueGroupBuilder | null = null;
+  for (const title of groupPath) {
+    builder = getOrCreateCatalogueGroupBuilder(builder === null ? map : builder.children, title);
+  }
+  builder?.items.push(item);
+}
+
+function buildCatalogueGroupsFromBuilders(
+  builders: Map<string, CatalogueGroupBuilder>,
+  sectionId: string,
+  titlePath: readonly string[],
+): CatalogueGroup[] {
+  const groups: CatalogueGroup[] = [];
+  for (const builder of builders.values()) {
+    const path = [...titlePath, builder.title];
+    const childGroups = buildCatalogueGroupsFromBuilders(builder.children, sectionId, path);
+    groups.push({
+      id: catalogueGroupIdFromPath(sectionId, path),
+      title: builder.title,
+      items: builder.items,
+      ...(childGroups.length ? { groups: childGroups } : {}),
+    });
+  }
+  return groups;
+}
+
+/** @emoji 🌳 Nests neuron kinds into a catalogue section using each kind's authored group path. */
+export function nestNeuronKindsIntoCatalogueSection(id: string, title: string, kinds: readonly FlowModuleNeuronKindV1[]): CatalogueSection {
+  const items: CatalogueItem[] = [];
+  const rootGroups = new Map<string, CatalogueGroupBuilder>();
+  for (const kind of kinds) {
+    const item = neuronKindToCatalogueItem(kind);
+    const groupPath = kind.group ?? [];
+    if (groupPath.length === 0) {
+      items.push(item);
+      continue;
+    }
+    insertCatalogueItemIntoGroupTree(rootGroups, groupPath, item);
+  }
+  const groups = buildCatalogueGroupsFromBuilders(rootGroups, id, []);
+  return {
+    id,
+    title,
+    items,
+    ...(groups.length ? { groups } : {}),
+  };
+}
+
+function normalizeCatalogueGroup(group: CatalogueGroup): CatalogueGroup {
+  return {
+    ...group,
+    items: group.items ?? [],
+    groups: (group.groups ?? []).map(normalizeCatalogueGroup),
+  };
+}
+
+/** @emoji 🧹 Ensures catalogue sections always expose array `items` and `groups` after JSON round-trips. */
+export function normalizeCatalogueSection(section: CatalogueSection): CatalogueSection {
+  return {
+    ...section,
+    items: section.items ?? [],
+    groups: (section.groups ?? []).map(normalizeCatalogueGroup),
+  };
+}
+
+function flattenCatalogueGroupItems(group: CatalogueGroup): CatalogueItem[] {
+  const nested = (group.groups ?? []).flatMap(flattenCatalogueGroupItems);
+  return [...(group.items ?? []), ...nested];
+}
+
+/** @emoji 📋 Flattens every draggable catalogue item from nested sections and groups. */
+export function flattenCatalogueItems(sections: readonly CatalogueSection[]): CatalogueItem[] {
+  return sections.flatMap((section) => [...(section.items ?? []), ...(section.groups ?? []).flatMap(flattenCatalogueGroupItems)]);
+}
+
+function catalogueItemsToKindsTreeItems(
+  items: readonly CatalogueItem[] | undefined,
+  idPrefix: string,
+  sectionId: string,
+  dragDataFn: (item: CatalogueItem) => Record<string, string>,
+  itemIndex: { value: number },
+): CatalogueKindsTreeItem[] {
+  return (items ?? []).map((item) => {
+    const index = itemIndex.value++;
+    return {
+      id: `${idPrefix}.${sectionId}.${index}.${item.neuronKind ?? item.kind}`,
+      label: item.name,
+      description: item.summary,
+      draggable: true,
+      dragData: dragDataFn(item),
+    };
+  });
+}
+
+function catalogueGroupsToKindsTreeItems(
+  groups: readonly CatalogueGroup[] | undefined,
+  idPrefix: string,
+  sectionId: string,
+  dragDataFn: (item: CatalogueItem) => Record<string, string>,
+  itemIndex: { value: number },
+): CatalogueKindsTreeItem[] {
+  return (groups ?? []).map((group) => ({
+    id: `${idPrefix}.${sectionId}.group.${group.id}`,
+    label: group.title,
+    defaultOpen: true,
+    items: [
+      ...catalogueItemsToKindsTreeItems(group.items, idPrefix, sectionId, dragDataFn, itemIndex),
+      ...catalogueGroupsToKindsTreeItems(group.groups, idPrefix, sectionId, dragDataFn, itemIndex),
+    ],
+  }));
+}
+
+/** @emoji 🌲 Builds recursive workbench tree sections from nested catalogue sections. */
+export function buildCatalogueKindsTreeSections(
+  sections: readonly CatalogueSection[],
+  idPrefix: string,
+  dragDataFn: (item: CatalogueItem) => Record<string, string> = flowPlayCatalogueItemDragData,
+): CatalogueKindsTreeSection[] {
+  return sections.map((section) => {
+    const normalized = normalizeCatalogueSection(section);
+    const itemIndex = { value: 0 };
+    return {
+      id: `${idPrefix}.${normalized.id}`,
+      label: normalized.title,
+      defaultOpen: true,
+      items: [
+        ...catalogueGroupsToKindsTreeItems(normalized.groups, idPrefix, normalized.id, dragDataFn, itemIndex),
+        ...catalogueItemsToKindsTreeItems(normalized.items, idPrefix, normalized.id, dragDataFn, itemIndex),
+      ],
+    };
+  });
 }
 
 export const FLOW_WIDGET_DRAG_V1_MIME = "application/x-flow-widget-v1";
@@ -481,16 +686,105 @@ export function flowPlayCatalogueItemDragData(item: CatalogueItem): Record<strin
 
 export const flowWidgetPaletteDragRef = { active: false };
 export const flowWidgetPalettePointerDragRef = { active: false, encoded: null as string | null };
+export const flowWidgetPaletteDragEncodedRef = { current: null as string | null };
+export const flowWidgetPaletteDragClientRef = { clientX: 0, clientY: 0 };
+export const flowWidgetPaletteDropCommittedRef = { current: false };
 export const flowWidgetDropPointerToWorldRef = {
   current: null as ((clientX: number, clientY: number) => { screen: { x: number; y: number }; world: { x: number; y: number } } | null) | null,
 };
+export const flowWidgetPaletteDragGhostRef = {
+  current: null as ((clientX: number, clientY: number, descriptor: string | null) => void) | null,
+};
+
+let flowPaletteDragPreviewRafId: number | null = null;
+
+function flowStopPaletteDragPreviewLoop(): void {
+  if (flowPaletteDragPreviewRafId !== null) {
+    globalThis.cancelAnimationFrame?.(flowPaletteDragPreviewRafId);
+    flowPaletteDragPreviewRafId = null;
+  }
+}
+
+function flowSyncPaletteDragGhostAtClient(clientX: number, clientY: number): void {
+  const sync = flowWidgetPaletteDragGhostRef.current;
+  if (!sync) {
+    return;
+  }
+  const encoded = flowReadActivePaletteDragEncoded();
+  if (!encoded) {
+    sync(clientX, clientY, null);
+    return;
+  }
+  sync(clientX, clientY, decodeFlowWidgetDescriptorFromDragV1(encoded));
+}
+
+function flowTickPaletteDragPreview(): void {
+  const encoded = flowReadActivePaletteDragEncoded();
+  if (!encoded) {
+    flowStopPaletteDragPreviewLoop();
+    return;
+  }
+  const { clientX, clientY } = flowWidgetPaletteDragClientRef;
+  flowSyncPaletteDragGhostAtClient(clientX, clientY);
+  const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+  if (!requestFrame) {
+    flowPaletteDragPreviewRafId = null;
+    return;
+  }
+  flowPaletteDragPreviewRafId = requestFrame(flowTickPaletteDragPreview);
+}
+
+function flowStartPaletteDragPreviewLoop(): void {
+  if (flowPaletteDragPreviewRafId !== null) {
+    return;
+  }
+  flowTickPaletteDragPreview();
+}
+
+/** @emoji 📦 Reads the encoded palette drag payload when a workbench widget drag is active. */
+export function flowReadActivePaletteDragEncoded(): string | null {
+  const pointer = flowWidgetPalettePointerDragRef.encoded?.trim();
+  if (pointer) {
+    return pointer;
+  }
+  const shared = flowWidgetPaletteDragEncodedRef.current?.trim();
+  return shared ? shared : null;
+}
+
+/** @emoji 👻 Notes palette-drag client coordinates and mirrors the WASM ghost on the flow canvas. */
+export function flowNotePaletteWidgetDragClient(clientX: number, clientY: number): void {
+  flowWidgetPaletteDragClientRef.clientX = clientX;
+  flowWidgetPaletteDragClientRef.clientY = clientY;
+  if (!flowReadActivePaletteDragEncoded()) {
+    return;
+  }
+  flowSyncPaletteDragGhostAtClient(clientX, clientY);
+  flowStartPaletteDragPreviewLoop();
+}
+
+/** @emoji ⎋ Aborts an in-flight workbench palette widget drag and clears the canvas ghost. */
+export function abortFlowWidgetPaletteDrag(): void {
+  const wasActive = flowWidgetPalettePointerDragRef.active || flowWidgetPaletteDragRef.active;
+  flowWidgetPalettePointerDragRef.active = false;
+  flowWidgetPalettePointerDragRef.encoded = null;
+  flowWidgetPaletteDragEncodedRef.current = null;
+  flowWidgetPaletteDragRef.active = false;
+  if (wasActive) {
+    window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: null }));
+  }
+  flowStopPaletteDragPreviewLoop();
+  flowWidgetPaletteDragGhostRef.current?.(flowWidgetPaletteDragClientRef.clientX, flowWidgetPaletteDragClientRef.clientY, null);
+}
 
 /** @emoji 🖱️ Begins pointer palette drag with an encoded widget descriptor. */
 export function beginFlowWidgetPalettePointerDrag(encoded: string): void {
+  flowWidgetPaletteDropCommittedRef.current = false;
   flowWidgetPalettePointerDragRef.active = true;
   flowWidgetPalettePointerDragRef.encoded = encoded;
+  flowWidgetPaletteDragEncodedRef.current = encoded;
   flowWidgetPaletteDragRef.active = true;
   window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: { encoded } }));
+  flowStartPaletteDragPreviewLoop();
 }
 
 /** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
@@ -500,7 +794,10 @@ export function cancelFlowWidgetPalettePointerDrag(): void {
   }
   flowWidgetPalettePointerDragRef.active = false;
   flowWidgetPalettePointerDragRef.encoded = null;
+  flowWidgetPaletteDragEncodedRef.current = null;
   flowWidgetPaletteDragRef.active = false;
+  flowStopPaletteDragPreviewLoop();
+  flowWidgetPaletteDragGhostRef.current?.(flowWidgetPaletteDragClientRef.clientX, flowWidgetPaletteDragClientRef.clientY, null);
   window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: null }));
 }
 
@@ -574,15 +871,24 @@ export function flowWidgetPaletteTreeDragController(
     },
     onDragStart: ({ sourceItem }) => {
       if (flowWidgetPalettePointerDragRef.active) return;
+      flowWidgetPaletteDropCommittedRef.current = false;
       flowWidgetPaletteDragRef.active = true;
       const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
       if (payload) {
+        flowWidgetPaletteDragEncodedRef.current = payload;
         window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: { encoded: payload } }));
+        flowStartPaletteDragPreviewLoop();
       }
     },
     onDragEnd: () => {
       if (flowWidgetPalettePointerDragRef.active) return;
+      flowWidgetPaletteDragEncodedRef.current = null;
       flowWidgetPaletteDragRef.active = false;
+      if (!flowWidgetPaletteDropCommittedRef.current) {
+        flowStopPaletteDragPreviewLoop();
+        flowWidgetPaletteDragGhostRef.current?.(flowWidgetPaletteDragClientRef.clientX, flowWidgetPaletteDragClientRef.clientY, null);
+      }
+      flowWidgetPaletteDropCommittedRef.current = false;
       window.dispatchEvent(new CustomEvent("flow-widget-drag-session", { detail: null }));
     },
   };
@@ -591,7 +897,7 @@ export function flowWidgetPaletteTreeDragController(
 export function parseFlowCatalogueSections(json: string): CatalogueSection[] {
   try {
     const parsed = JSON.parse(json) as CatalogueSection[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeCatalogueSection) : [];
   } catch {
     return [];
   }
@@ -615,7 +921,7 @@ function flowCatalogueItemRankScore(item: CatalogueItem, query: string): number 
 
 /** @emoji 🔍 Ranks catalogue items for flow canvas spotlight search. */
 export function flowRankCatalogueSuggestions(sections: readonly CatalogueSection[], query: string): CatalogueItem[] {
-  const items = sections.flatMap((section) => section.items);
+  const items = flattenCatalogueItems(sections);
   const trimmed = query.trim();
   if (!trimmed) {
     return [...items].sort((a, b) => {
@@ -640,6 +946,64 @@ export interface FlowCanvasCommandRequest {
   readonly epoch: number;
   readonly command: string;
   readonly argsJson?: string;
+}
+
+export type FlowGraphEditOp =
+  | { readonly op: "addWidget"; readonly descriptor: string; readonly x: number; readonly y: number }
+  | { readonly op: "connectPorts"; readonly from: string; readonly fromPort: string; readonly to: string; readonly toPort: string }
+  | { readonly op: "disconnect"; readonly synapseId: string }
+  | {
+      readonly op: "insertBetween";
+      readonly anchor: string;
+      readonly anchorOutPort: string;
+      readonly mid: string;
+      readonly midInPort: string;
+      readonly midOutPort: string;
+    }
+  | { readonly op: "moveWidget"; readonly id: string; readonly x: number; readonly y: number }
+  | { readonly op: "makeSpace"; readonly anchor: string; readonly dx: number; readonly dy?: number }
+  | { readonly op: "setPreviewOff"; readonly ids: readonly string[] }
+  | { readonly op: "setSliderValue"; readonly id: string; readonly value: number }
+  | { readonly op: "setNeuronParams"; readonly id: string; readonly paramsJson: string };
+
+/** @emoji 🔧 Applies a batched list of generic flow graph edit primitives. */
+export function runFlowGraphEdit(session: FlowSession, ops: readonly FlowGraphEditOp[]): void {
+  for (const entry of ops) {
+    switch (entry.op) {
+      case "addWidget":
+        session.addWidget(entry.descriptor, entry.x, entry.y);
+        break;
+      case "connectPorts":
+        session.connectPorts(entry.from, entry.fromPort, entry.to, entry.toPort);
+        break;
+      case "disconnect":
+        session.disconnect(entry.synapseId);
+        break;
+      case "insertBetween":
+        session.insertBetween(entry.anchor, entry.anchorOutPort, entry.mid, entry.midInPort, entry.midOutPort);
+        break;
+      case "moveWidget":
+        session.moveWidget(entry.id, entry.x, entry.y);
+        break;
+      case "makeSpace":
+        session.makeSpace(entry.anchor, entry.dx, entry.dy ?? 0);
+        break;
+      case "setPreviewOff": {
+        const current = parseFlowWidgetIdArray(session.previewOffWidgetIds());
+        const off = new Set([...current, ...entry.ids]);
+        session.setPreviewOff(JSON.stringify([...off]));
+        break;
+      }
+      case "setSliderValue":
+        session.setSliderValue(entry.id, entry.value);
+        break;
+      case "setNeuronParams":
+        session.setNeuronParams(entry.id, entry.paramsJson);
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 export interface FlowCanvasContextMenuContext {
@@ -751,6 +1115,21 @@ function flowSensibleSliderMax(value: number): number {
   return Math.max(nice * magnitude, v);
 }
 
+function flowSliderStepFromValue(value: number): number {
+  if (Number.isInteger(value)) return 1;
+  return flowSliderStepFromDecimalPlaces(flowDecimalPlacesFromNumberToken(String(value)));
+}
+
+/** @emoji 🎚️ Derives a tight min/max/step for a slider from its current value. */
+export function flowSensibleSliderRange(value: number): { readonly min: number; readonly max: number; readonly step: number } {
+  const step = flowSliderStepFromValue(value);
+  if (value < 0) {
+    const bound = flowSensibleSliderMax(value);
+    return { min: -bound, max: bound, step };
+  }
+  return { min: 0, max: flowSensibleSliderMax(value), step };
+}
+
 /** @emoji 🎚️ Parses flow spotlight input as a slider value or min..max range. */
 export function flowParseSpotlightSliderQuery(query: string): FlowSpotlightSliderSpec | null {
   const trimmed = query.trim();
@@ -770,12 +1149,8 @@ export function flowParseSpotlightSliderQuery(query: string): FlowSpotlightSlide
   if (!/^-?\d+(?:\.\d+)?$/.test(trimmed)) return null;
   const value = Number(trimmed);
   if (!Number.isFinite(value)) return null;
-  const step = flowSliderStepFromDecimalPlaces(flowDecimalPlacesFromNumberToken(trimmed));
-  if (value < 0) {
-    const bound = flowSensibleSliderMax(value);
-    return { value, min: -bound, max: bound, step, label: String(value) };
-  }
-  return { value, min: 0, max: flowSensibleSliderMax(value), step, label: String(value) };
+  const { min, max, step } = flowSensibleSliderRange(value);
+  return { value, min, max, step, label: String(value) };
 }
 
 /** @emoji 🎚️ Builds a flow widget descriptor for a spotlight slider spec. */
@@ -1183,7 +1558,15 @@ function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement,
 // #endregion 🔖TextOverlay
 
 // #region 🔖SelectionBounds
-export type FlowSelectionAlignMode = "alignLeft" | "alignRight" | "alignTop" | "alignBottom" | "distributeHorizontal" | "distributeVertical";
+export type FlowSelectionAlignMode =
+  | "alignLeft"
+  | "alignRight"
+  | "alignTop"
+  | "alignBottom"
+  | "alignHorizontal"
+  | "alignVertical"
+  | "distributeHorizontal"
+  | "distributeVertical";
 
 export interface FlowSelectionUnionBoundsScreen {
   readonly x: number;
@@ -1237,14 +1620,22 @@ export function flowSelectionAlignHitRegions(
     const topRowW = btn * 3 + gap * 2;
     const topStartX = rect.x + rect.width / 2 - topRowW / 2;
     regions.push({ mode: "alignLeft", rect: { x: topStartX, y: topY, width: btn, height: btn } });
-    regions.push({ mode: "distributeVertical", rect: { x: topStartX + btn + gap, y: topY, width: btn, height: btn } });
+    regions.push({ mode: "alignHorizontal", rect: { x: topStartX + btn + gap, y: topY, width: btn, height: btn } });
     regions.push({ mode: "alignRight", rect: { x: topStartX + (btn + gap) * 2, y: topY, width: btn, height: btn } });
     const rightX = rect.x + rect.width - inset - btn;
     const rightColH = btn * 3 + gap * 2;
     const rightStartY = rect.y + rect.height / 2 - rightColH / 2;
     regions.push({ mode: "alignTop", rect: { x: rightX, y: rightStartY, width: btn, height: btn } });
-    regions.push({ mode: "distributeHorizontal", rect: { x: rightX, y: rightStartY + btn + gap, width: btn, height: btn } });
+    regions.push({ mode: "alignVertical", rect: { x: rightX, y: rightStartY + btn + gap, width: btn, height: btn } });
     regions.push({ mode: "alignBottom", rect: { x: rightX, y: rightStartY + (btn + gap) * 2, width: btn, height: btn } });
+    if (selectionCount >= 3) {
+      const leftX = rect.x + inset;
+      const leftY = rect.y + rect.height / 2 - btn / 2;
+      regions.push({ mode: "distributeVertical", rect: { x: leftX, y: leftY, width: btn, height: btn } });
+      const bottomX = rect.x + rect.width / 2 - btn / 2;
+      const bottomY = rect.y + rect.height - inset - btn;
+      regions.push({ mode: "distributeHorizontal", rect: { x: bottomX, y: bottomY, width: btn, height: btn } });
+    }
   }
   return regions;
 }
@@ -1310,7 +1701,9 @@ function FlowSelectionBoundsOverlay({ rect, selectionCount, onAlign }: FlowSelec
   const distribute = selectionCount >= 3;
   const regions = showAlignControls ? flowSelectionAlignHitRegions(rect, selectionCount) : [];
   const topRow = regions.slice(0, 3);
-  const rightCol = regions.slice(3);
+  const rightCol = regions.slice(3, 6);
+  const leftBtn = regions[6];
+  const bottomBtn = regions[7];
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-visible" aria-hidden data-testid="flow-selection-bounds">
       <div
@@ -1321,20 +1714,96 @@ function FlowSelectionBoundsOverlay({ rect, selectionCount, onAlign }: FlowSelec
         <>
           <div className="pointer-events-none absolute flex gap-0.5" style={{ left: topRow[0]?.rect.x, top: topRow[0]?.rect.y }}>
             <FlowSelectionBoundsButton icon="arrow-left" label="Align left" onPress={() => onAlign("alignLeft")} />
-            <FlowSelectionBoundsButton icon="grip-vertical" label="Distribute vertically" disabled={!distribute} onPress={() => onAlign("distributeVertical")} />
+            <FlowSelectionBoundsButton icon="arrow-right-left" label="Align horizontal" onPress={() => onAlign("alignHorizontal")} />
             <FlowSelectionBoundsButton icon="arrow-right" label="Align right" onPress={() => onAlign("alignRight")} />
           </div>
           <div className="pointer-events-none absolute flex flex-col gap-0.5" style={{ left: rightCol[0]?.rect.x, top: rightCol[0]?.rect.y }}>
             <FlowSelectionBoundsButton icon="arrow-up" label="Align top" onPress={() => onAlign("alignTop")} />
-            <FlowSelectionBoundsButton icon="more-horizontal" label="Distribute horizontally" disabled={!distribute} onPress={() => onAlign("distributeHorizontal")} />
+            <FlowSelectionBoundsButton icon="chevrons-up-down" label="Align vertical" onPress={() => onAlign("alignVertical")} />
             <FlowSelectionBoundsButton icon="arrow-down" label="Align bottom" onPress={() => onAlign("alignBottom")} />
           </div>
+          {distribute && leftBtn ? (
+            <div className="pointer-events-none absolute" style={{ left: leftBtn.rect.x, top: leftBtn.rect.y }}>
+              <FlowSelectionBoundsButton icon="grip-vertical" label="Distribute vertically" onPress={() => onAlign("distributeVertical")} />
+            </div>
+          ) : null}
+          {distribute && bottomBtn ? (
+            <div className="pointer-events-none absolute" style={{ left: bottomBtn.rect.x, top: bottomBtn.rect.y }}>
+              <FlowSelectionBoundsButton icon="more-horizontal" label="Distribute horizontally" onPress={() => onAlign("distributeHorizontal")} />
+            </div>
+          ) : null}
         </>
       ) : null}
     </div>
   );
 }
 // #endregion 🔖SelectionBounds
+
+// #region 🔖WidgetPaletteDragPreview
+/** @emoji 📍 Window pointer moves and global dragover ticks for palette widget drop ghosts. */
+function FlowWidgetPaletteDragPreviewBridge(props: {
+  readonly canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  readonly containerRef: React.RefObject<HTMLDivElement | null>;
+  readonly enabled: boolean;
+  readonly setFixtureDragActive: (active: boolean) => void;
+}): null {
+  useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const onDragOver = (event: DragEvent): void => {
+      if (!flowWidgetDragAcceptsTransfer([...event.dataTransfer!.types]) && !flowReadActivePaletteDragEncoded()) {
+        return;
+      }
+      flowNotePaletteWidgetDragClient(event.clientX, event.clientY);
+    };
+    window.addEventListener("dragover", onDragOver);
+    return () => window.removeEventListener("dragover", onDragOver);
+  }, [props.enabled]);
+
+  useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const dropHost = (): HTMLElement | null => props.containerRef.current ?? props.canvasRef.current;
+
+    const onWindowPointerMove = (event: PointerEvent): void => {
+      if (!flowWidgetPalettePointerDragRef.active) {
+        return;
+      }
+      props.setFixtureDragActive(isClientPointOverFlowWidgetDropHost(event.clientX, event.clientY, dropHost()));
+      flowNotePaletteWidgetDragClient(event.clientX, event.clientY);
+    };
+
+    window.addEventListener("pointermove", onWindowPointerMove);
+    return () => window.removeEventListener("pointermove", onWindowPointerMove);
+  }, [props.canvasRef, props.containerRef, props.enabled, props.setFixtureDragActive]);
+
+  return null;
+}
+
+/** @emoji ⎋ Global Escape handler while a workbench palette widget drag is active. */
+function FlowWidgetPaletteDragEscapeBridge(props: { readonly enabled: boolean }): null {
+  useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") {
+        return;
+      }
+      if (!flowReadActivePaletteDragEncoded()) {
+        return;
+      }
+      event.preventDefault();
+      abortFlowWidgetPaletteDrag();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [props.enabled]);
+  return null;
+}
+// #endregion 🔖WidgetPaletteDragPreview
 
 // #region 🔖FlowCanvas
 export type FlowSelectionMode = "default" | "additive" | "subtractive" | "invertive";
@@ -1577,6 +2046,10 @@ export function FlowCanvas({
     if (store) storeRef.current = store;
   }, [store]);
 
+  useEffect(() => {
+    bootstrapFixtureJsonRef.current = fixtureJson;
+  }, [fixtureJson]);
+
   const syncLodMode = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
@@ -1710,6 +2183,21 @@ export function FlowCanvas({
     console.log(`[DEBUG] flow evaluate preview: ${text}`);
   }, []);
 
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || fixtureJson == null) return;
+    try {
+      const current = session.fixtureJson();
+      if (current === fixtureJson) return;
+      session.loadFixtureJson(fixtureJson);
+      emitInteractionState(session);
+      evaluate();
+      renderFrame();
+    } catch {
+      /* fixture not ready */
+    }
+  }, [fixtureJson, emitInteractionState, evaluate, renderFrame]);
+
   const alignSelection = useCallback(
     (mode: FlowSelectionAlignMode) => {
       const session = sessionRef.current;
@@ -1784,6 +2272,12 @@ export function FlowCanvas({
     (detail: FlowWidgetDropDetail) => {
       const session = sessionRef.current;
       if (!session) return false;
+      flowWidgetPaletteDropCommittedRef.current = true;
+      flowStopPaletteDragPreviewLoop();
+      flowWidgetPaletteDragEncodedRef.current = null;
+      flowWidgetPalettePointerDragRef.active = false;
+      flowWidgetPalettePointerDragRef.encoded = null;
+      flowWidgetPaletteDragRef.active = false;
       session.clearGhostWidget();
       const handler = onWidgetDropRef.current;
       if (handler) {
@@ -2113,6 +2607,16 @@ export function FlowCanvas({
           if (widgetId) openImagePicker(widgetId);
           break;
         }
+        case "graphEdit": {
+          const ops = Array.isArray(args.ops) ? (args.ops as FlowGraphEditOp[]) : [];
+          console.log(`[DEBUG] flow graphEdit ops=${ops.length}`);
+          runFlowGraphEdit(session, ops);
+          emitInteractionState(session);
+          evaluate();
+          persistFixture();
+          renderFrame();
+          break;
+        }
         default:
           console.log(`[DEBUG] flow canvas unknown command: ${commandRequest.command}`);
       }
@@ -2268,6 +2772,7 @@ export function FlowCanvas({
       if (!flowWidgetDragAcceptsTransfer([...e.dataTransfer.types])) return;
       fixtureDragDepthRef.current += 1;
       setFixtureDragActive(true);
+      flowNotePaletteWidgetDragClient(e.clientX, e.clientY);
     },
     [fixtureDragDrop],
   );
@@ -2292,6 +2797,7 @@ export function FlowCanvas({
       if (!flowWidgetDragAcceptsTransfer([...e.dataTransfer.types])) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
+      flowNotePaletteWidgetDragClient(e.clientX, e.clientY);
     },
     [fixtureDragDrop],
   );
@@ -2326,6 +2832,7 @@ export function FlowCanvas({
   useEffect(() => {
     if (!fixtureDragDrop) {
       flowWidgetDropPointerToWorldRef.current = null;
+      flowWidgetPaletteDragGhostRef.current = null;
       return;
     }
     flowWidgetDropPointerToWorldRef.current = (clientX, clientY) => {
@@ -2337,10 +2844,35 @@ export function FlowCanvas({
       const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
       return { screen, world };
     };
+    flowWidgetPaletteDragGhostRef.current = (clientX, clientY, descriptor) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      if (!descriptor) {
+        session.clearGhostWidget();
+        renderFrame();
+        return;
+      }
+      const mapped = flowWidgetDropPointerToWorldRef.current?.(clientX, clientY);
+      if (!mapped) {
+        session.clearGhostWidget();
+        renderFrame();
+        return;
+      }
+      try {
+        session.setGhostWidget(descriptor, mapped.world.x, mapped.world.y);
+        renderFrame();
+      } catch {
+        session.clearGhostWidget();
+        renderFrame();
+      }
+    };
     return () => {
       flowWidgetDropPointerToWorldRef.current = null;
+      flowWidgetPaletteDragGhostRef.current = null;
+      sessionRef.current?.clearGhostWidget();
+      renderFrame();
     };
-  }, [fixtureDragDrop]);
+  }, [fixtureDragDrop, renderFrame]);
 
   useEffect(() => {
     if (!fixtureDragDrop) return;
@@ -2403,6 +2935,17 @@ export function FlowCanvas({
         aria-hidden
         onChange={onImageFileChange}
       />
+      {fixtureDragDrop ? (
+        <>
+          <FlowWidgetPaletteDragPreviewBridge
+            canvasRef={canvasRef}
+            containerRef={containerRef}
+            enabled={fixtureDragDrop}
+            setFixtureDragActive={setFixtureDragActive}
+          />
+          <FlowWidgetPaletteDragEscapeBridge enabled={fixtureDragDrop} />
+        </>
+      ) : null}
       <ContextMenuController
         items={surfaceContextMenu?.items ?? []}
         onOpenChange={(open) => {
@@ -2471,6 +3014,14 @@ if (import.meta.vitest) {
   });
 
   describe("flow store", () => {
+    it("ephemeral store never loads or saves", () => {
+      const store = createEphemeralFlowStore();
+      store.save(flowFixtureToJson(FLOW_DEFAULT_FIXTURE));
+      expect(store.load()).toBeNull();
+      store.clear();
+      expect(store.load()).toBeNull();
+    });
+
     it("round-trips fixture json", () => {
       const backing = new Map<string, string>();
       const store = createLocalFlowStore({
@@ -2523,6 +3074,11 @@ if (import.meta.vitest) {
   });
 
   describe("flow spotlight slider query", () => {
+    it("derives drag-sized slider ranges from a value", () => {
+      expect(flowSensibleSliderRange(3)).toEqual({ min: 0, max: 10, step: 1 });
+      expect(flowSensibleSliderRange(-3)).toEqual({ min: -10, max: 10, step: 1 });
+    });
+
     it("parses a single number into a sensible slider range", () => {
       const spec = flowParseSpotlightSliderQuery("5");
       expect(spec).toEqual({ value: 5, min: 0, max: 10, step: 1, label: "5" });
@@ -2576,6 +3132,94 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("nestable catalogue", () => {
+    it("nests kinds by authored group path", () => {
+      const section = nestNeuronKindsIntoCatalogueSection("brep", "Brep", [
+        {
+          id: "brep.prim3d.box",
+          module: "brep",
+          name: "Box",
+          abbreviation: "Box",
+          icon: "emoji:📦",
+          summary: "Axis-aligned box",
+          inputs: [],
+          outputs: ["geometry"],
+          group: ["Primitives 3D"],
+        },
+        {
+          id: "brep.curve.line",
+          module: "brep",
+          name: "Line",
+          abbreviation: "Line",
+          icon: "emoji:〰️",
+          summary: "Line edge",
+          inputs: [],
+          outputs: ["geometry"],
+          group: ["Curves"],
+        },
+      ]);
+      expect(section.groups?.map((group) => group.title).sort()).toEqual(["Curves", "Primitives 3D"]);
+      expect(section.groups?.find((group) => group.title === "Primitives 3D")?.items[0]?.neuronKind).toBe("brep.prim3d.box");
+    });
+
+    it("flattens nested catalogue items for spotlight search", () => {
+      const sections: CatalogueSection[] = [
+        {
+          id: "brep",
+          title: "Brep",
+          items: [],
+          groups: [
+            {
+              id: "brep.primitives-3d",
+              title: "Primitives 3D",
+              items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box" }],
+            },
+          ],
+        },
+      ];
+      expect(flattenCatalogueItems(sections).map((item) => item.neuronKind)).toContain("brep.prim3d.box");
+    });
+
+    it("builds recursive workbench tree sections", () => {
+      const tree = buildCatalogueKindsTreeSections(
+        [
+          {
+            id: "brep",
+            title: "Brep",
+            items: [],
+            groups: [
+              {
+                id: "brep.primitives-3d",
+                title: "Primitives 3D",
+                items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box" }],
+              },
+            ],
+          },
+        ],
+        "test-kinds",
+      );
+      const group = tree[0]?.items[0];
+      expect(group?.label).toBe("Primitives 3D");
+      expect(group?.items?.[0]?.draggable).toBe(true);
+      expect(group?.items?.[0]?.dragData).toBeDefined();
+    });
+
+    it("tolerates omitted items arrays after wasm json round-trip", () => {
+      const parsed = parseFlowCatalogueSections(
+        JSON.stringify([
+          {
+            id: "brep",
+            title: "Brep",
+            groups: [{ id: "brep.solid", title: "Solid", items: [{ kind: "neuron", neuronKind: "brep.solid.extrude", name: "Extrude", abbreviation: "Ext", icon: "emoji:🧱", summary: "Extrude" }] }],
+          },
+        ]),
+      );
+      const tree = buildCatalogueKindsTreeSections(parsed, "test-kinds");
+      expect(tree[0]?.items[0]?.label).toBe("Solid");
+      expect(tree[0]?.items[0]?.items?.[0]?.label).toBe("Extrude");
+    });
+  });
+
   describe("flow catalogue suggestions", () => {
     const sections: CatalogueSection[] = [
       {
@@ -2583,7 +3227,7 @@ if (import.meta.vitest) {
         title: "Math",
         items: [
           { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum" },
-          { kind: "neuron", neuronKind: "math.multiply", name: "Multiply", summary: "Product" },
+          { kind: "neuron", neuronKind: "math.multiply", name: "Multiply", abbreviation: "Mul", icon: "emoji:✖️", summary: "Product" },
         ],
       },
       {
@@ -2619,6 +3263,36 @@ if (import.meta.vitest) {
       const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum" };
       const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
       expect(decodeFlowWidgetDescriptorFromDragV1(encoded)).toContain("math.add");
+    });
+  });
+
+  describe("flow widget palette drag preview", () => {
+    it("flowReadActivePaletteDragEncoded prefers pointer payload over html5 ref", () => {
+      flowWidgetPalettePointerDragRef.encoded = '{"kind":"neuron","neuronKind":"math.add"}';
+      flowWidgetPaletteDragEncodedRef.current = '{"kind":"inputSlider"}';
+      expect(flowReadActivePaletteDragEncoded()).toContain("math.add");
+      flowWidgetPalettePointerDragRef.encoded = null;
+      flowWidgetPaletteDragEncodedRef.current = null;
+    });
+
+    it("flowNotePaletteWidgetDragClient updates client ref and invokes ghost sync", () => {
+      const calls: Array<{ clientX: number; clientY: number; descriptor: string | null }> = [];
+      flowWidgetPaletteDragGhostRef.current = (clientX, clientY, descriptor) => {
+        calls.push({ clientX, clientY, descriptor });
+      };
+      beginFlowWidgetPalettePointerDrag('{"kind":"neuron","neuronKind":"math.add"}');
+      flowNotePaletteWidgetDragClient(48, 72);
+      expect(flowWidgetPaletteDragClientRef).toEqual({ clientX: 48, clientY: 72 });
+      expect(calls.at(-1)?.descriptor).toContain("math.add");
+      abortFlowWidgetPaletteDrag();
+      flowWidgetPaletteDragGhostRef.current = null;
+    });
+
+    it("abortFlowWidgetPaletteDrag clears active drag state", () => {
+      beginFlowWidgetPalettePointerDrag('{"kind":"neuron","neuronKind":"math.add"}');
+      abortFlowWidgetPaletteDrag();
+      expect(flowReadActivePaletteDragEncoded()).toBeNull();
+      expect(flowWidgetPaletteDragRef.active).toBe(false);
     });
   });
 
@@ -2687,9 +3361,21 @@ if (import.meta.vitest) {
       const rect = { x: 100, y: 80, width: 200, height: 120 };
       const regions = flowSelectionAlignHitRegions(rect, 2);
       expect(regions.length).toBe(6);
+      expect(regions.map((region) => region.mode)).toEqual([
+        "alignLeft",
+        "alignHorizontal",
+        "alignRight",
+        "alignTop",
+        "alignVertical",
+        "alignBottom",
+      ]);
       const left = regions[0]!.rect;
       expect(flowPointerHitsSelectionAlign(left.x + 4, left.y + 4, rect, 2)).toBe("alignLeft");
       expect(flowPointerHitsSelectionAlign(rect.x + rect.width / 2, rect.y + rect.height / 2, rect, 2)).toBeNull();
+      const distributeRegions = flowSelectionAlignHitRegions(rect, 3);
+      expect(distributeRegions.length).toBe(8);
+      expect(distributeRegions[6]!.mode).toBe("distributeVertical");
+      expect(distributeRegions[7]!.mode).toBe("distributeHorizontal");
     });
 
     it("aligns selected widgets through FlowSession wasm", async () => {
@@ -2781,6 +3467,31 @@ if (import.meta.vitest) {
     it("treats scroll wheel as zoom", () => {
       expect(flowWheelGestureIsZoom({ ctrlKey: false, metaKey: false })).toBe(true);
       expect(flowWheelGestureIsZoom({ ctrlKey: true, metaKey: false })).toBe(true);
+    });
+  });
+
+  describe("flow graph edit", () => {
+    it("runFlowGraphEdit dispatches primitive ops to session", () => {
+      const calls: string[] = [];
+      const session = {
+        addWidget: () => calls.push("addWidget"),
+        connectPorts: () => calls.push("connectPorts"),
+        disconnect: () => calls.push("disconnect"),
+        insertBetween: () => calls.push("insertBetween"),
+        moveWidget: () => calls.push("moveWidget"),
+        makeSpace: () => calls.push("makeSpace"),
+        previewOffWidgetIds: () => "[]",
+        setPreviewOff: () => calls.push("setPreviewOff"),
+        setSliderValue: () => calls.push("setSliderValue"),
+        setNeuronParams: () => calls.push("setNeuronParams"),
+      } as unknown as FlowSession;
+      runFlowGraphEdit(session, [
+        { op: "makeSpace", anchor: "a", dx: 120, dy: 0 },
+        { op: "addWidget", descriptor: "{}", x: 0, y: 0 },
+        { op: "insertBetween", anchor: "a", anchorOutPort: "out", mid: "b", midInPort: "geometry", midOutPort: "out" },
+        { op: "setNeuronParams", id: "b", paramsJson: "{}" },
+      ]);
+      expect(calls).toEqual(["makeSpace", "addWidget", "insertBetween", "setNeuronParams"]);
     });
   });
 }

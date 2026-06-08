@@ -22689,6 +22689,145 @@ func TestApplyTicketPlanFromIDsCursor(t *testing.T) {
 	}
 }
 
+func TestStripPlanFrontmatter(t *testing.T) {
+	raw := "---\nname: Test\noverview: x\n---\n\n# Body\n"
+	got := stripPlanFrontmatter(raw)
+	if got != "# Body" {
+		t.Fatalf("got %q", got)
+	}
+	if stripPlanFrontmatter("# No frontmatter") != "# No frontmatter" {
+		t.Fatal("expected unchanged content without frontmatter")
+	}
+}
+
+func TestFormatPlanCommentFile(t *testing.T) {
+	tmp := t.TempDir()
+	planPath := filepath.Join(tmp, "feature_abcd1234.plan.md")
+	if err := os.WriteFile(planPath, []byte("---\nname: Feature\n---\n\n## Steps\n\nDo work.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	body, err := formatPlanComment(&TicketPlan{Client: "cursor", ID: "abcd1234"}, planPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(body, "# 📋 Plan") {
+		t.Fatalf("missing heading: %q", body)
+	}
+	if !strings.Contains(body, "<details>") || !strings.Contains(body, "feature_abcd1234.plan.md") {
+		t.Fatalf("missing details block: %q", body)
+	}
+	if strings.Contains(body, "name: Feature") {
+		t.Fatalf("frontmatter should be stripped: %q", body)
+	}
+	if !strings.Contains(body, "## Steps") {
+		t.Fatalf("missing body: %q", body)
+	}
+}
+
+func TestFormatPlanCommentSpecDir(t *testing.T) {
+	tmp := t.TempDir()
+	specDir := filepath.Join(tmp, "my-spec")
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "b.md"), []byte("## B\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "a.md"), []byte("## A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	body, err := formatPlanComment(&TicketPlan{Client: "kiro", ID: "my-spec"}, specDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	aPos := strings.Index(body, "a.md")
+	bPos := strings.Index(body, "b.md")
+	if aPos < 0 || bPos < 0 || aPos > bPos {
+		t.Fatalf("expected sorted sections a before b: %q", body)
+	}
+}
+
+type captureCommentProvider struct {
+	NullManagementProvider
+	comments []struct {
+		url  string
+		body string
+	}
+}
+
+func (p *captureCommentProvider) AddComment(issueURL, comment string) error {
+	p.comments = append(p.comments, struct {
+		url  string
+		body string
+	}{issueURL, comment})
+	return nil
+}
+
+func TestPostTicketPlanComment(t *testing.T) {
+	tmp := t.TempDir()
+	planPath := filepath.Join(tmp, "task_abcd1234.plan.md")
+	if err := os.WriteFile(planPath, []byte("---\nname: Task\n---\n\n## Work\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	capture := &captureCommentProvider{}
+	old := mgmtProvider
+	mgmtProvider = capture
+	defer func() { mgmtProvider = old }()
+
+	ticket := &Ticket{
+		Management: &TicketManagementData{Issue: "https://github.com/example/repo/issues/1"},
+		Plan:       &TicketPlan{Source: planPath, Client: "cursor", ID: "abcd1234"},
+	}
+	postTicketPlanComment(ticket, false)
+	if len(capture.comments) != 1 {
+		t.Fatalf("expected 1 comment, got %d", len(capture.comments))
+	}
+	if !strings.Contains(capture.comments[0].body, "# 📋 Plan") {
+		t.Fatalf("missing plan heading: %q", capture.comments[0].body)
+	}
+	if !strings.Contains(capture.comments[0].body, "## Work") {
+		t.Fatalf("missing plan body: %q", capture.comments[0].body)
+	}
+	postTicketPlanComment(ticket, true)
+	if len(capture.comments) != 1 {
+		t.Fatalf("noManagement should skip comment, got %d", len(capture.comments))
+	}
+}
+
+func TestPostTicketPlanCommentLive(t *testing.T) {
+	if os.Getenv("REPO_LIVE_GH") != "1" {
+		t.Skip("set REPO_LIVE_GH=1 to run live GitHub plan comment test")
+	}
+	planFile := filepath.Join(rootDir, ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")
+	if _, err := os.Stat(planFile); err != nil {
+		t.Skip("plan file missing")
+	}
+	issueURL, err := ghCreateIssue("TEST Post Plan Comment", "# temp", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = ghCloseIssue(issueURL) })
+	ticket := &Ticket{
+		Management: &TicketManagementData{Issue: issueURL},
+		Plan:       &TicketPlan{Source: planFile, Client: "cursor", ID: "c256e28e"},
+	}
+	postTicketPlanComment(ticket, false)
+	issueNum := issueURL[strings.LastIndex(issueURL, "/")+1:]
+	if issueNum == "" {
+		t.Fatal("could not parse issue number")
+	}
+	stdout, stderr, code := ExecCommand("gh", []string{"api", "repos/{owner}/{repo}/issues/" + issueNum + "/comments", "--jq", ".[].body"}, "")
+	if code != 0 {
+		t.Fatalf("gh api comments failed: %s", stderr)
+	}
+	if !strings.Contains(stdout, "# 📋 Plan") {
+		t.Fatalf("issue comment missing plan heading: %q", stdout)
+	}
+	if !strings.Contains(stdout, "post_plan_to_issue_c256e28e.plan.md") {
+		t.Fatalf("issue comment missing plan filename: %q", stdout)
+	}
+}
+
 func TestLocCommand(t *testing.T) {
 	langs := locMakeLangSet([]string{"TypeScript", "Go", "C#", "Python", "Rust"})
 	num := locMakeNumstatLangSet([]string{"TypeScript", "Go", "C#", "Python", "Rust"})

@@ -18,7 +18,6 @@ import {
   type WindowBodyViewContext,
   type WindowEngagement,
   type UiNode,
-  type UiTreeItemNode,
   type UiTreeSectionNode,
 } from "@framework/playground/core";
 
@@ -33,7 +32,7 @@ import {
   flowPlayCatalogueItemDragData,
   isDagDrawLodKind,
   dagPlayLodTierMenuLabel,
-  type CatalogueItem,
+  buildCatalogueKindsTreeSections,
   type CatalogueSection,
   type DagDrawLodKind,
   type DagLodModeKind,
@@ -159,23 +158,8 @@ export function buildFlowPlayKindsTree(sections: readonly CatalogueSection[]): U
       ],
     };
   }
-  const treeSections: UiTreeSectionNode[] = sections.map((section) => ({
-    id: `flow-play-kinds.${section.id}`,
-    label: section.title,
-    defaultOpen: true,
-    items: section.items.map((item, index) => flowPlayKindsTreeItem(section.id, index, item)),
-  }));
+  const treeSections: UiTreeSectionNode[] = buildCatalogueKindsTreeSections(sections, "flow-play-kinds", flowPlayCatalogueItemDragData);
   return { type: "tree", sections: treeSections };
-}
-
-function flowPlayKindsTreeItem(sectionId: string, index: number, item: CatalogueItem): UiTreeItemNode {
-  return {
-    id: `flow-play-kinds.${sectionId}.${index}.${item.neuronKind ?? item.kind}`,
-    label: item.name,
-    description: item.summary,
-    draggable: true,
-    dragData: flowPlayCatalogueItemDragData(item),
-  };
 }
 
 /** @emoji 🎛 Flow play shell controller. */

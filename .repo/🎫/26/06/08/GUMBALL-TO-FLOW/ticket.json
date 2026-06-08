@@ -1,0 +1,21 @@
+{
+  "title": "Gumball To Flow",
+  "emoji": "🎛",
+  "status": "open",
+  "description": "Add gumball to procedural 3D preview. When moving/rotating/scaling, insert correct transform nodes in the flow graph (translate with sliders/vector, rotate, scale), rewire automatically, make incremental space, re-grab updates existing nodes, configurable transform detail granularity.",
+  "summary": "Fixed overlapping layout for gumball-inserted flow nodes. Column positions in buildGumballInsertOps now use edge-to-edge spacing from estimated node half-widths (slider, vector, transform) with layerSpacing/siblingGap-derived gaps. Full translate places sliders | vector | transform in distinct columns; makeSpace dx matches total inserted chain width instead of a single layerSpacing (120px). Added layout assertions to procedural play tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1616"
+  },
+  "goal": "🎯flow",
+  "plan": {
+    "client": "cursor",
+    "id": "9e9ce826",
+    "local": "gumball_to_flow_9e9ce826.plan.md"
+  },
+  "sessions": [
+    "⚪f47d40bece5a4cbabdc74e74b8b02c7f",
+    "⚪fb36d28622a64305be76d0ee2e260ffb",
+    "⚪6515f8276944454a82dc6c6a28f59ab0"
+  ]
+}

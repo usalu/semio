@@ -1878,6 +1878,7 @@ impl DagHost {
 
     /// 📐 Aligns or distributes the current multi-node selection.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
+        use cavas::vello::kurbo::Point;
         let mut selected = self.selected_fixture_nodes();
         if selected.is_empty() {
             return Ok(());
@@ -1917,6 +1918,42 @@ impl DagHost {
                 let max_bottom = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_y).fold(f64::NEG_INFINITY, f64::max);
                 for (_, node) in &mut selected {
                     node.y = max_bottom - node.height * 0.5;
+                }
+            }
+            "alignHorizontal" => {
+                if selected.len() < 2 {
+                    return Ok(());
+                }
+                let mut corners = Vec::new();
+                for (_, node) in &selected {
+                    let b = Self::dag_node_world_bounds(node);
+                    corners.push(Point::new(b.min_x, b.min_y));
+                    corners.push(Point::new(b.max_x, b.max_y));
+                }
+                let Some(union) = world_box_from_points(&corners) else {
+                    return Ok(());
+                };
+                let center_x = (union.min_x + union.max_x) * 0.5;
+                for (_, node) in &mut selected {
+                    node.x = center_x;
+                }
+            }
+            "alignVertical" => {
+                if selected.len() < 2 {
+                    return Ok(());
+                }
+                let mut corners = Vec::new();
+                for (_, node) in &selected {
+                    let b = Self::dag_node_world_bounds(node);
+                    corners.push(Point::new(b.min_x, b.min_y));
+                    corners.push(Point::new(b.max_x, b.max_y));
+                }
+                let Some(union) = world_box_from_points(&corners) else {
+                    return Ok(());
+                };
+                let center_y = (union.min_y + union.max_y) * 0.5;
+                for (_, node) in &mut selected {
+                    node.y = center_y;
                 }
             }
             "distributeHorizontal" => {
@@ -4304,6 +4341,19 @@ mod tests {
         host.pointer_up_screen(end_sx, end_sy, false, false, false);
         assert!(!host.selected_node_ids().is_empty(), "marquee drag should commit selection on release");
         assert!(host.preselect_widget_ids().is_empty(), "preselect should clear after commit");
+    }
+
+    #[test]
+    fn dag_host_align_selection_horizontal_and_vertical_center() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        host.set_selection(&["scale".into(), "combine".into(), "preview".into()]);
+        host.align_selection("alignHorizontal").unwrap();
+        let xs: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.x).collect();
+        assert!(xs.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
+        host.align_selection("alignVertical").unwrap();
+        let ys: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.y).collect();
+        assert!(ys.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
     }
 
     #[test]

@@ -1,0 +1,15 @@
+{
+  "title": "Procedural No Default Fixture",
+  "emoji": "🧪",
+  "status": "closed",
+  "description": "Procedural sketch should not persist by default. Add selectable fixture; by default no fixture is selected. Persistence only via save/load tools.",
+  "summary": "Fixed sketch persisting across refresh: FlowCanvas was auto-reading/writing shared localStorage key flow.fixture/v1. Procedural now passes createEphemeralFlowStore() so the canvas never persists to localStorage; only explicit Store/Load tools use procedural.fixture/v1. FlowCanvas also syncs external fixtureJson prop changes so fixture selection, reset, and restore still update the canvas.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1618"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪0e67a1653fb643c6bd9d8888f61d319e",
+    "⚪d9f1b57e63cf4079803f95dd89e953f3"
+  ]
+}

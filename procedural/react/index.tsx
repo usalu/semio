@@ -5,7 +5,16 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, sceneHostPort } from "@ui/react";
+import {
+	applyGumballPose,
+	gumballHandleKindToTransformMode,
+	gumballPointerConsumesCanvasEventRef,
+	reactHostPort,
+	sceneHostPort,
+	UnifiedGumball,
+	type GumballHandleKind,
+	type GumballPose,
+} from "@ui/react";
 import {
 	brepjsGeometryKernel,
 	BrepjsGeometryKernel,
@@ -18,6 +27,7 @@ import {
 } from "@geometry/brep/js";
 import {
 	FlowCanvas,
+	createEphemeralFlowStore,
 	type DagDrawLodKind,
 	FlowExtensionHost,
 	createFlowEvalBridge,
@@ -30,6 +40,7 @@ import {
 	type FlowModuleManifestV1,
 	type FlowModuleNeuronKindV1,
 	type FlowReorganizeRequest,
+	nestNeuronKindsIntoCatalogueSection,
 } from "@flow/react";
 import type { ContextMenuItem } from "@ui/react";
 import { meshStyleColors, resolveMeshStyle, type MeshStyleKind } from "@puzzle/3d/react";
@@ -113,197 +124,106 @@ function brepIcon(id: string): string {
 	return "emoji:🔷";
 }
 
-function brepKind(id: string, name: string, summary: string, inputs: readonly string[], outputs: readonly string[] = ["geometry"]): FlowModuleNeuronKindV1 {
+function brepKind(
+	id: string,
+	name: string,
+	summary: string,
+	inputs: readonly string[],
+	outputs: readonly string[] = ["geometry"],
+	group: readonly string[],
+): FlowModuleNeuronKindV1 {
 	const displayName = toPascalCase(name);
-	return { id: `brep.${id}`, module: "brep", name: displayName, abbreviation: brepAbbreviation(name), icon: brepIcon(id), summary, inputs, outputs };
+	return { id: `brep.${id}`, module: "brep", name: displayName, abbreviation: brepAbbreviation(name), icon: brepIcon(id), summary, inputs, outputs, group };
 }
 
-const BREP_CATALOGUE_SECTIONS: readonly { readonly id: string; readonly title: string; readonly kinds: readonly FlowModuleNeuronKindV1[] }[] = [
-	{
-		id: "brep-construct",
-		title: "Brep · Construct",
-		kinds: [
-			brepKind("point", "Point", "3D point from x,y,z", ["x", "y", "z"], ["point"]),
-			brepKind("vector", "Vector", "3D vector from x,y,z", ["x", "y", "z"], ["vector"]),
-		],
-	},
-	{
-		id: "brep-prim3d",
-		title: "Brep · Primitives 3D",
-		kinds: [
-			brepKind("prim3d.box", "Box", "Axis-aligned box", ["width", "depth", "height"]),
-			brepKind("prim3d.sphere", "Sphere", "Sphere solid", ["radius"]),
-			brepKind("prim3d.cylinder", "Cylinder", "Cylinder solid", ["radius", "height"]),
-			brepKind("prim3d.cone", "Cone", "Cone solid", ["radius", "height"]),
-			brepKind("prim3d.torus", "Torus", "Torus solid", ["major", "minor"]),
-			brepKind("prim3d.ellipsoid", "Ellipsoid", "Ellipsoid solid", ["rx", "ry", "rz"]),
-		],
-	},
-	{
-		id: "brep-draw2d",
-		title: "Brep · Draw 2D",
-		kinds: [
-			brepKind("draw2d.rectangle", "Draw Rectangle", "2D rectangle drawing", ["width", "height"]),
-			brepKind("draw2d.circle", "Draw Circle", "2D circle drawing", ["radius"]),
-			brepKind("draw2d.ellipse", "Draw Ellipse", "2D ellipse drawing", ["major", "minor"]),
-			brepKind("draw2d.roundedRectangle", "Draw Rounded Rect", "2D rounded rectangle", ["width", "height", "radius"]),
-			brepKind("draw2d.polysides", "Draw Polysides", "2D regular polygon", ["radius", "sides"]),
-			brepKind("sketch2d.circle", "Sketch Circle", "Sketched circle profile", ["radius"]),
-			brepKind("sketch2d.rectangle", "Sketch Rectangle", "Sketched rectangle profile", ["width", "height"]),
-		],
-	},
-	{
-		id: "brep-curves",
-		title: "Brep · Curves",
-		kinds: [
-			brepKind("curve.line", "Line", "Line edge", ["start", "end"]),
-			brepKind("curve.circle", "Circle", "Circle edge", ["radius"]),
-			brepKind("curve.ellipse", "Ellipse", "Ellipse edge", ["major", "minor"]),
-			brepKind("curve.helix", "Helix", "Helix edge", ["radius", "pitch", "height"]),
-			brepKind("curve.threePointArc", "Three Point Arc", "Arc through three points", ["a", "b", "c"]),
-			brepKind("curve.tangentArc", "Tangent Arc", "Tangent arc", ["start", "tangent", "end"]),
-			brepKind("curve.ellipseArc", "Ellipse Arc", "Elliptical arc", ["major", "minor", "startAngle", "endAngle"]),
-			brepKind("curve.interpolate", "Interpolate", "Interpolated curve", ["geometry"]),
-			brepKind("curve.wire", "Wire", "Wire from edges", ["geometry"]),
-			brepKind("curve.wireLoop", "Wire Loop", "Closed wire loop", ["geometry"]),
-		],
-	},
-	{
-		id: "brep-surfaces",
-		title: "Brep · Surfaces",
-		kinds: [
-			brepKind("surface.face", "Face", "Face from wires", ["geometry"]),
-			brepKind("surface.filledFace", "Filled Face", "Filled face from wire", ["geometry"]),
-			brepKind("surface.fill", "Fill", "Fill from edges", ["geometry"]),
-			brepKind("surface.offsetFace", "Offset Face", "Offset face", ["geometry", "distance"]),
-		],
-	},
-	{
-		id: "brep-solid",
-		title: "Brep · Solid Tools",
-		kinds: [
-			brepKind("solid.extrude", "Extrude", "Extrude profile", ["geometry", "distance"]),
-			brepKind("solid.revolve", "Revolve", "Revolve profile", ["geometry", "angle"]),
-			brepKind("solid.loft", "Loft", "Loft sections", ["a", "b"]),
-			brepKind("solid.sweep", "Sweep", "Sweep profile along path", ["profile", "path"]),
-			brepKind("solid.fillet", "Fillet", "Fillet solid", ["geometry", "radius"]),
-			brepKind("solid.chamfer", "Chamfer", "Chamfer solid", ["geometry", "distance"]),
-			brepKind("solid.shell", "Shell", "Shell solid", ["geometry", "thickness"]),
-			brepKind("solid.offset", "Offset", "Offset shape", ["geometry", "distance"]),
-			brepKind("solid.thicken", "Thicken", "Thicken face", ["geometry", "thickness"]),
-			brepKind("solid.hull", "Hull", "Convex hull of shapes", ["a", "b"]),
-			brepKind("solid.minkowski", "Minkowski", "Minkowski sum", ["a", "b"]),
-			brepKind("solid.convexHull", "Convex Hull", "Convex hull", ["geometry"]),
-		],
-	},
-	{
-		id: "brep-bool",
-		title: "Brep · Booleans",
-		kinds: [
-			brepKind("bool.fuse", "Fuse", "Boolean union", ["a", "b"]),
-			brepKind("bool.cut", "Cut", "Boolean difference", ["a", "b"]),
-			brepKind("bool.intersect", "Intersect", "Boolean intersection", ["a", "b"]),
-			brepKind("bool.fuseAll", "Fuse All", "Fuse multiple solids", ["a", "b"]),
-			brepKind("bool.fuse2d", "Fuse 2D", "2D boolean union", ["a", "b"]),
-			brepKind("bool.cut2d", "Cut 2D", "2D boolean cut", ["a", "b"]),
-			brepKind("bool.intersect2d", "Intersect 2D", "2D boolean intersect", ["a", "b"]),
-		],
-	},
-	{
-		id: "brep-xform",
-		title: "Brep · Transforms",
-		kinds: [
-			brepKind("xform.translate", "Translate", "Translate geometry", ["geometry", "offset"]),
-			brepKind("xform.rotate", "Rotate", "Rotate geometry", ["geometry", "angle"]),
-			brepKind("xform.mirror", "Mirror", "Mirror geometry", ["geometry"]),
-			brepKind("xform.scale", "Scale", "Scale geometry", ["geometry", "factor"]),
-			brepKind("xform.clone", "Clone", "Clone geometry", ["geometry"]),
-			brepKind("xform.linearPattern", "Linear Pattern", "Linear array", ["geometry", "count", "spacing"]),
-			brepKind("xform.circularPattern", "Circular Pattern", "Circular array", ["geometry", "count", "angle"]),
-			brepKind("xform.rectangularPattern", "Rect Pattern", "Rectangular array", ["geometry", "countA", "countB", "spacing"]),
-		],
-	},
-	{
-		id: "brep-intersect",
-		title: "Brep · Intersections",
-		kinds: [
-			brepKind("intersect.section", "Section", "Section two solids", ["a", "b"]),
-			brepKind("intersect.sectionToFace", "Section To Face", "Section as face", ["a", "b"]),
-			brepKind("intersect.slice", "Slice", "Slice solid by plane", ["geometry"]),
-			brepKind("intersect.check", "Check Interference", "Check interference", ["a", "b"], ["number"]),
-		],
-	},
-	{
-		id: "brep-eval",
-		title: "Brep · Evaluate",
-		kinds: [
-			brepKind("eval.pointOnCurve", "Point On Curve", "Evaluate point on curve", ["geometry", "t"], ["point"]),
-			brepKind("eval.tangentOnCurve", "Tangent On Curve", "Tangent on curve", ["geometry", "t"], ["vector"]),
-			brepKind("eval.curveLength", "Curve Length", "Curve length", ["geometry"], ["number"]),
-			brepKind("eval.pointOnSurface", "Point On Surface", "Point on surface", ["geometry", "u", "v"], ["point"]),
-			brepKind("eval.normalAt", "Normal At", "Surface normal", ["geometry", "u", "v"], ["vector"]),
-			brepKind("eval.faceCenter", "Face Center", "Face center point", ["geometry"], ["point"]),
-		],
-	},
-	{
-		id: "brep-measure",
-		title: "Brep · Measure",
-		kinds: [
-			brepKind("measure.volume", "Volume", "Solid volume", ["geometry"], ["number"]),
-			brepKind("measure.area", "Area", "Face/solid area", ["geometry"], ["number"]),
-			brepKind("measure.length", "Length", "Edge/wire length", ["geometry"], ["number"]),
-			brepKind("measure.distance", "Distance", "Distance between shapes", ["a", "b"], ["number"]),
-		],
-	},
-	{
-		id: "brep-query",
-		title: "Brep · Query",
-		kinds: [
-			brepKind("query.bounds", "Bounds", "Axis-aligned bounds", ["geometry"], ["dictionary"]),
-			brepKind("query.edges", "Edges", "List edges", ["geometry"], ["list"]),
-			brepKind("query.faces", "Faces", "List faces", ["geometry"], ["list"]),
-		],
-	},
-	{
-		id: "brep-repair",
-		title: "Brep · Repair",
-		kinds: [
-			brepKind("repair.heal", "Heal Solid", "Heal solid", ["geometry"]),
-			brepKind("repair.autoHeal", "Auto Heal", "Auto heal shape", ["geometry"]),
-			brepKind("repair.solidFromShell", "Solid From Shell", "Make solid from shell", ["geometry"]),
-		],
-	},
-	{
-		id: "brep-io",
-		title: "Brep · IO",
-		kinds: [
-			brepKind("io.exportStep", "Export STEP", "Export STEP bytes as base64", ["geometry"], ["text"]),
-			brepKind("io.exportStl", "Export STL", "Export STL bytes as base64", ["geometry"], ["text"]),
-		],
-	},
-	{
-		id: "brep-gear",
-		title: "Brep · Gears",
-		kinds: [
-			brepKind("gear.external", "External Gear", "Spur external gear", ["teeth", "module"]),
-			brepKind("gear.internal", "Internal Gear", "Spur internal gear", ["teeth", "module"]),
-		],
-	},
-	{
-		id: "brep-legacy",
-		title: "Brep · Legacy",
-		kinds: [
-			brepKind("box", "Box Corners", "Box from corners (legacy)", ["cornerA", "cornerB", "height"]),
-			brepKind("sphere", "Sphere Center", "Sphere from center (legacy)", ["center", "radius"]),
-			brepKind("cylinder", "Cylinder Base", "Cylinder from base (legacy)", ["base", "axis", "radius", "height"]),
-			brepKind("extrude", "Extrude Legacy", "Extrude solid (legacy)", ["geometry", "direction", "distance"]),
-			brepKind("translate", "Translate Legacy", "Translate solid (legacy)", ["geometry", "offset"]),
-			brepKind("union", "Union Legacy", "Boolean union (legacy)", ["a", "b"]),
-		],
-	},
+const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
+	brepKind("point", "Point", "3D point from x,y,z", ["x", "y", "z"], ["point"], ["Construct"]),
+	brepKind("vector", "Vector", "3D vector from x,y,z", ["x", "y", "z"], ["vector"], ["Construct"]),
+	brepKind("prim3d.box", "Box", "Axis-aligned box", ["width", "depth", "height"], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.sphere", "Sphere", "Sphere solid", ["radius"], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.cylinder", "Cylinder", "Cylinder solid", ["radius", "height"], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.cone", "Cone", "Cone solid", ["radius", "height"], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.torus", "Torus", "Torus solid", ["major", "minor"], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.ellipsoid", "Ellipsoid", "Ellipsoid solid", ["rx", "ry", "rz"], ["geometry"], ["Primitives 3D"]),
+	brepKind("draw2d.rectangle", "Draw Rectangle", "2D rectangle drawing", ["width", "height"], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.circle", "Draw Circle", "2D circle drawing", ["radius"], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.ellipse", "Draw Ellipse", "2D ellipse drawing", ["major", "minor"], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.roundedRectangle", "Draw Rounded Rect", "2D rounded rectangle", ["width", "height", "radius"], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.polysides", "Draw Polysides", "2D regular polygon", ["radius", "sides"], ["geometry"], ["Draw 2D"]),
+	brepKind("sketch2d.circle", "Sketch Circle", "Sketched circle profile", ["radius"], ["geometry"], ["Draw 2D"]),
+	brepKind("sketch2d.rectangle", "Sketch Rectangle", "Sketched rectangle profile", ["width", "height"], ["geometry"], ["Draw 2D"]),
+	brepKind("curve.line", "Line", "Line edge", ["start", "end"], ["geometry"], ["Curves"]),
+	brepKind("curve.circle", "Circle", "Circle edge", ["radius"], ["geometry"], ["Curves"]),
+	brepKind("curve.ellipse", "Ellipse", "Ellipse edge", ["major", "minor"], ["geometry"], ["Curves"]),
+	brepKind("curve.helix", "Helix", "Helix edge", ["radius", "pitch", "height"], ["geometry"], ["Curves"]),
+	brepKind("curve.threePointArc", "Three Point Arc", "Arc through three points", ["a", "b", "c"], ["geometry"], ["Curves"]),
+	brepKind("curve.tangentArc", "Tangent Arc", "Tangent arc", ["start", "tangent", "end"], ["geometry"], ["Curves"]),
+	brepKind("curve.ellipseArc", "Ellipse Arc", "Elliptical arc", ["major", "minor", "startAngle", "endAngle"], ["geometry"], ["Curves"]),
+	brepKind("curve.interpolate", "Interpolate", "Interpolated curve", ["geometry"], ["geometry"], ["Curves"]),
+	brepKind("curve.wire", "Wire", "Wire from edges", ["geometry"], ["geometry"], ["Curves"]),
+	brepKind("curve.wireLoop", "Wire Loop", "Closed wire loop", ["geometry"], ["geometry"], ["Curves"]),
+	brepKind("surface.face", "Face", "Face from wires", ["geometry"], ["geometry"], ["Surfaces"]),
+	brepKind("surface.filledFace", "Filled Face", "Filled face from wire", ["geometry"], ["geometry"], ["Surfaces"]),
+	brepKind("surface.fill", "Fill", "Fill from edges", ["geometry"], ["geometry"], ["Surfaces"]),
+	brepKind("surface.offsetFace", "Offset Face", "Offset face", ["geometry", "distance"], ["geometry"], ["Surfaces"]),
+	brepKind("solid.extrude", "Extrude", "Extrude profile", ["geometry", "distance"], ["geometry"], ["Solid"]),
+	brepKind("solid.revolve", "Revolve", "Revolve profile", ["geometry", "angle"], ["geometry"], ["Solid"]),
+	brepKind("solid.loft", "Loft", "Loft sections", ["a", "b"], ["geometry"], ["Solid"]),
+	brepKind("solid.sweep", "Sweep", "Sweep profile along path", ["profile", "path"], ["geometry"], ["Solid"]),
+	brepKind("solid.fillet", "Fillet", "Fillet solid", ["geometry", "radius"], ["geometry"], ["Solid"]),
+	brepKind("solid.chamfer", "Chamfer", "Chamfer solid", ["geometry", "distance"], ["geometry"], ["Solid"]),
+	brepKind("solid.shell", "Shell", "Shell solid", ["geometry", "thickness"], ["geometry"], ["Solid"]),
+	brepKind("solid.offset", "Offset", "Offset shape", ["geometry", "distance"], ["geometry"], ["Solid"]),
+	brepKind("solid.thicken", "Thicken", "Thicken face", ["geometry", "thickness"], ["geometry"], ["Solid"]),
+	brepKind("solid.hull", "Hull", "Convex hull of shapes", ["a", "b"], ["geometry"], ["Solid"]),
+	brepKind("solid.minkowski", "Minkowski", "Minkowski sum", ["a", "b"], ["geometry"], ["Solid"]),
+	brepKind("solid.convexHull", "Convex Hull", "Convex hull", ["geometry"], ["geometry"], ["Solid"]),
+	brepKind("bool.fuse", "Fuse", "Boolean union", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.cut", "Cut", "Boolean difference", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.intersect", "Intersect", "Boolean intersection", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.fuseAll", "Fuse All", "Fuse multiple solids", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.fuse2d", "Fuse 2D", "2D boolean union", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.cut2d", "Cut 2D", "2D boolean cut", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.intersect2d", "Intersect 2D", "2D boolean intersect", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("xform.translate", "Translate", "Translate geometry", ["geometry", "offset"], ["geometry"], ["Transforms"]),
+	brepKind("xform.rotate", "Rotate", "Rotate geometry", ["geometry", "angle"], ["geometry"], ["Transforms"]),
+	brepKind("xform.mirror", "Mirror", "Mirror geometry", ["geometry"], ["geometry"], ["Transforms"]),
+	brepKind("xform.scale", "Scale", "Scale geometry", ["geometry", "factor"], ["geometry"], ["Transforms"]),
+	brepKind("xform.clone", "Clone", "Clone geometry", ["geometry"], ["geometry"], ["Transforms"]),
+	brepKind("xform.linearPattern", "Linear Pattern", "Linear array", ["geometry", "count", "spacing"], ["geometry"], ["Transforms"]),
+	brepKind("xform.circularPattern", "Circular Pattern", "Circular array", ["geometry", "count", "angle"], ["geometry"], ["Transforms"]),
+	brepKind("xform.rectangularPattern", "Rect Pattern", "Rectangular array", ["geometry", "countA", "countB", "spacing"], ["geometry"], ["Transforms"]),
+	brepKind("intersect.section", "Section", "Section two solids", ["a", "b"], ["geometry"], ["Intersections"]),
+	brepKind("intersect.sectionToFace", "Section To Face", "Section as face", ["a", "b"], ["geometry"], ["Intersections"]),
+	brepKind("intersect.slice", "Slice", "Slice solid by plane", ["geometry"], ["geometry"], ["Intersections"]),
+	brepKind("intersect.check", "Check Interference", "Check interference", ["a", "b"], ["number"], ["Intersections"]),
+	brepKind("eval.pointOnCurve", "Point On Curve", "Evaluate point on curve", ["geometry", "t"], ["point"], ["Evaluate"]),
+	brepKind("eval.tangentOnCurve", "Tangent On Curve", "Tangent on curve", ["geometry", "t"], ["vector"], ["Evaluate"]),
+	brepKind("eval.curveLength", "Curve Length", "Curve length", ["geometry"], ["number"], ["Evaluate"]),
+	brepKind("eval.pointOnSurface", "Point On Surface", "Point on surface", ["geometry", "u", "v"], ["point"], ["Evaluate"]),
+	brepKind("eval.normalAt", "Normal At", "Surface normal", ["geometry", "u", "v"], ["vector"], ["Evaluate"]),
+	brepKind("eval.faceCenter", "Face Center", "Face center point", ["geometry"], ["point"], ["Evaluate"]),
+	brepKind("measure.volume", "Volume", "Solid volume", ["geometry"], ["number"], ["Measure"]),
+	brepKind("measure.area", "Area", "Face/solid area", ["geometry"], ["number"], ["Measure"]),
+	brepKind("measure.length", "Length", "Edge/wire length", ["geometry"], ["number"], ["Measure"]),
+	brepKind("measure.distance", "Distance", "Distance between shapes", ["a", "b"], ["number"], ["Measure"]),
+	brepKind("query.bounds", "Bounds", "Axis-aligned bounds", ["geometry"], ["dictionary"], ["Query"]),
+	brepKind("query.edges", "Edges", "List edges", ["geometry"], ["list"], ["Query"]),
+	brepKind("query.faces", "Faces", "List faces", ["geometry"], ["list"], ["Query"]),
+	brepKind("repair.heal", "Heal Solid", "Heal solid", ["geometry"], ["geometry"], ["Repair"]),
+	brepKind("repair.autoHeal", "Auto Heal", "Auto heal shape", ["geometry"], ["geometry"], ["Repair"]),
+	brepKind("repair.solidFromShell", "Solid From Shell", "Make solid from shell", ["geometry"], ["geometry"], ["Repair"]),
+	brepKind("io.exportStep", "Export STEP", "Export STEP bytes as base64", ["geometry"], ["text"], ["IO"]),
+	brepKind("io.exportStl", "Export STL", "Export STL bytes as base64", ["geometry"], ["text"], ["IO"]),
+	brepKind("gear.external", "External Gear", "Spur external gear", ["teeth", "module"], ["geometry"], ["Gears"]),
+	brepKind("gear.internal", "Internal Gear", "Spur internal gear", ["teeth", "module"], ["geometry"], ["Gears"]),
+	brepKind("box", "Box Corners", "Box from corners (legacy)", ["cornerA", "cornerB", "height"], ["geometry"], ["Legacy"]),
+	brepKind("sphere", "Sphere Center", "Sphere from center (legacy)", ["center", "radius"], ["geometry"], ["Legacy"]),
+	brepKind("cylinder", "Cylinder Base", "Cylinder from base (legacy)", ["base", "axis", "radius", "height"], ["geometry"], ["Legacy"]),
+	brepKind("extrude", "Extrude Legacy", "Extrude solid (legacy)", ["geometry", "direction", "distance"], ["geometry"], ["Legacy"]),
+	brepKind("translate", "Translate Legacy", "Translate solid (legacy)", ["geometry", "offset"], ["geometry"], ["Legacy"]),
+	brepKind("union", "Union Legacy", "Boolean union (legacy)", ["a", "b"], ["geometry"], ["Legacy"]),
 ];
-
-const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = BREP_CATALOGUE_SECTIONS.flatMap((section) => section.kinds);
 
 const BREP_MODULE_MANIFEST: FlowModuleManifestV1 = {
 	schema: "flow.module/v1",
@@ -744,22 +664,7 @@ export class ProceduralExtensionHost extends FlowExtensionHost {
 	}
 
 	override catalogueSections(): CatalogueSection[] {
-		const sections = [...super.catalogueSections()];
-		for (const section of BREP_CATALOGUE_SECTIONS) {
-			sections.push({
-				id: section.id,
-				title: section.title,
-				items: section.kinds.map((kind) => ({
-					kind: "neuron",
-					neuronKind: kind.id,
-					name: kind.name,
-					abbreviation: kind.abbreviation,
-					icon: kind.icon,
-					summary: kind.summary,
-				})),
-			});
-		}
-		return sections;
+		return [...super.catalogueSections(), nestNeuronKindsIntoCatalogueSection("brep", "Brep", BREP_FLOW_KINDS)];
 	}
 
 	override kindInfosJson(): string {
@@ -796,6 +701,8 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 export function proceduralFixtureToJson(fixture: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE): string {
 	return JSON.stringify(fixture);
 }
+
+const PROCEDURAL_FLOW_STORE = createEphemeralFlowStore();
 // #endregion 🔖Fixture
 
 // #region 🔖BrepViewport
@@ -810,6 +717,126 @@ export type ProceduralGeometryHandle = Extract<ProceduralPreviewItem, { kind: "g
 export type ProceduralPreviewShowMode = "everything" | "selected";
 export type ProceduralSelectionMode = SelectionMergeMode;
 export type ProceduralSelectionMethod = "rectangle" | "lasso";
+export type ProceduralTransformGranularity = "compact" | "full";
+export type ProceduralGumballTransformOp = "translate" | "rotate" | "scale";
+
+export type ProceduralGumballTransformDelta =
+	| { readonly op: "translate"; readonly offset: readonly [number, number, number] }
+	| { readonly op: "rotate"; readonly angle: number }
+	| { readonly op: "scale"; readonly factor: number };
+
+export interface ProceduralGumballTransformRequest {
+	readonly widgetId: string;
+	readonly delta: ProceduralGumballTransformDelta;
+	readonly granularity: ProceduralTransformGranularity;
+}
+
+function gumballDeltaFromPoses(
+	mode: ProceduralGumballTransformRequest["delta"]["op"],
+	before: GumballPose,
+	after: GumballPose,
+): ProceduralGumballTransformRequest["delta"] {
+	if (mode === "translate") {
+		return {
+			op: "translate",
+			offset: [
+				after.position[0] - before.position[0],
+				after.position[1] - before.position[1],
+				after.position[2] - before.position[2],
+			],
+		};
+	}
+	if (mode === "rotate") {
+		const qb = new THREE.Quaternion(...before.quaternion);
+		const qa = new THREE.Quaternion(...after.quaternion);
+		const eulerBefore = new THREE.Euler().setFromQuaternion(qb, "XYZ");
+		const eulerAfter = new THREE.Euler().setFromQuaternion(qa, "XYZ");
+		return { op: "rotate", angle: eulerAfter.z - eulerBefore.z };
+	}
+	const beforeScale = before.scale[0] || 1;
+	return { op: "scale", factor: after.scale[0] / beforeScale };
+}
+
+function ProceduralPreviewGumball({
+	item,
+	kernel,
+	transformGranularity,
+	onGumballTransform,
+	onInteractionChange,
+}: {
+	readonly item: Extract<ProceduralPreviewItem, { kind: "geometry" }>;
+	readonly kernel: BrepKernelType;
+	readonly transformGranularity: ProceduralTransformGranularity;
+	readonly onGumballTransform?: (request: ProceduralGumballTransformRequest) => void;
+	readonly onInteractionChange?: (widgetId: string | null) => void;
+}): ReactNode {
+	const [target, setTarget] = reactHostPort.useState<THREE.Object3D | null>(null);
+	const center = reactHostPort.useMemo(() => {
+		const bounds = worldBoundsForPreviewItem(item, kernel);
+		if (!bounds) return [0, 0, 0] as Vec3;
+		return [
+			(bounds.min[0] + bounds.max[0]) * 0.5,
+			(bounds.min[1] + bounds.max[1]) * 0.5,
+			(bounds.min[2] + bounds.max[2]) * 0.5,
+		] as Vec3;
+	}, [item, kernel]);
+	const setGumballInteractionActive = reactHostPort.useCallback(
+		(active: boolean) => {
+			proceduralGumballDragActiveRef.current = active;
+			gumballPointerConsumesCanvasEventRef.current = active;
+			onInteractionChange?.(active ? item.widgetId : null);
+		},
+		[item.widgetId, onInteractionChange],
+	);
+	if (!onGumballTransform) return null;
+	return (
+		<group position={center}>
+			<group ref={(node) => setTarget(node)} />
+			{target ? (
+				<UnifiedGumball
+					target={target}
+					onDragStart={() => {
+						setGumballInteractionActive(true);
+					}}
+					onDraggingChanged={(active) => {
+						setGumballInteractionActive(active);
+					}}
+					onDragEnd={(kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+						const mode = gumballHandleKindToTransformMode(kind);
+						const delta = gumballDeltaFromPoses(mode, before, after);
+						console.log(`[DEBUG] procedural gumball ${item.widgetId} ${mode}`, delta);
+						onGumballTransform({ widgetId: item.widgetId, delta, granularity: transformGranularity });
+						applyGumballPose(target, before);
+						setGumballInteractionActive(false);
+					}}
+				/>
+			) : null}
+		</group>
+	);
+}
+
+function ProceduralTransformDetailWindow({
+	granularity,
+	onGranularityChange,
+}: {
+	readonly granularity: ProceduralTransformGranularity;
+	readonly onGranularityChange?: (granularity: ProceduralTransformGranularity) => void;
+}): ReactNode {
+	if (!onGranularityChange) return null;
+	return (
+		<div className="pointer-events-auto absolute right-3 top-3 z-20 rounded-md border border-zinc-700 bg-zinc-950/90 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+			<div className="mb-1 font-medium">Transform Detail</div>
+			<select
+				className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1"
+				value={granularity}
+				onChange={(event) => onGranularityChange(event.target.value as ProceduralTransformGranularity)}
+			>
+				<option value="full">Full (sliders + vector)</option>
+				<option value="compact">Compact (node params)</option>
+			</select>
+		</div>
+	);
+}
 
 export interface ProceduralPreviewProps {
 	readonly items: readonly ProceduralPreviewItem[];
@@ -821,6 +848,9 @@ export interface ProceduralPreviewProps {
 	readonly showMode?: ProceduralPreviewShowMode;
 	readonly selectionMode?: ProceduralSelectionMode;
 	readonly selectionMethod?: ProceduralSelectionMethod;
+	readonly transformGranularity?: ProceduralTransformGranularity;
+	readonly onTransformGranularityChange?: (granularity: ProceduralTransformGranularity) => void;
+	readonly onGumballTransform?: (request: ProceduralGumballTransformRequest) => void;
 	readonly onHover?: (widgetId: string | null) => void;
 	readonly onSelect?: (widgetId: string) => void;
 	readonly onSelectionChange?: (ids: readonly string[], mode: ProceduralSelectionMode) => void;
@@ -830,6 +860,21 @@ export interface ProceduralPreviewProps {
 }
 
 const PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX = 4;
+
+/** @emoji 🎛 True while a procedural preview gumball drag is active (blocks marquee selection). */
+export const proceduralGumballDragActiveRef = { current: false };
+
+type PreviewLayerChrome = {
+	readonly selected: boolean;
+	readonly highlighted: boolean;
+	readonly hovered: boolean;
+	readonly previewOff: boolean;
+	readonly locked: boolean;
+	readonly interactionHighlighted: boolean;
+	readonly pickEnabled: boolean;
+	readonly onHover?: (widgetId: string | null) => void;
+	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
+};
 
 /** @deprecated Use {@link ProceduralPreview} with {@link ProceduralPreviewItem} entries. */
 export interface BrepViewportProps {
@@ -889,22 +934,26 @@ function collectGeometryRefsFromValue(value: unknown, refs: GeometryRef[]): void
 	}
 }
 
-function previewLayerPaint(
-	previewOff: boolean,
-	hovered: boolean,
-	selected: boolean,
-	highlighted: boolean,
-): {
+function previewLayerPaint(chrome: Pick<PreviewLayerChrome, "previewOff" | "hovered" | "selected" | "highlighted" | "locked" | "interactionHighlighted">): {
 	readonly renderMode: ReturnType<typeof worldEntityRenderMode>;
 	readonly style: MeshStyleKind;
 	readonly colors: NonNullable<ReturnType<typeof meshStyleColors>>;
 	readonly opacity: number;
 } {
-	const renderMode = worldEntityRenderMode({ hidden: previewOff }, { hovered, selected: selected || highlighted, revealed: hovered });
+	const interactionHighlighted = chrome.interactionHighlighted;
+	const locked = chrome.locked;
+	const renderMode = worldEntityRenderMode(
+		{ hidden: chrome.previewOff, locked },
+		{
+			hovered: chrome.hovered && !locked,
+			selected: chrome.selected || chrome.highlighted || interactionHighlighted,
+			revealed: chrome.hovered,
+		},
+	);
 	const style = resolveMeshStyle({
-		selected: renderMode.showSelectedOutline,
-		highlighted,
-		hovered: renderMode.asHover || hovered,
+		selected: renderMode.showSelectedOutline || interactionHighlighted,
+		highlighted: chrome.highlighted || interactionHighlighted,
+		hovered: renderMode.asHover || chrome.hovered || interactionHighlighted,
 	});
 	const colors = meshStyleColors(style) ?? meshStyleColors("neutral")!;
 	const opacity = colors.opacity * (renderMode.dim ? WORLD_LOCKED_OPACITY_SCALE : 1);
@@ -915,8 +964,9 @@ function createPreviewPointerHandlers(
 	widgetId: string,
 	onHover?: (widgetId: string | null) => void,
 	onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void,
+	pickEnabled = true,
 ) {
-	if (!onHover && !onPick) return {};
+	if (!pickEnabled || (!onHover && !onPick)) return {};
 	return {
 		onPointerDown: (event: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
 			if (event.nativeEvent.button !== 0) return;
@@ -967,27 +1017,16 @@ function previewItemKey(item: ProceduralPreviewItem): string {
 function BrepPointLayer({
 	widgetId,
 	position,
-	selected,
-	highlighted,
-	hovered,
-	previewOff,
-	onHover,
-	onPick,
+	...chrome
 }: {
 	readonly widgetId: string;
 	readonly position: Vec3;
-	readonly selected: boolean;
-	readonly highlighted: boolean;
-	readonly hovered: boolean;
-	readonly previewOff: boolean;
-	readonly onHover?: (widgetId: string | null) => void;
-	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
-}): ReactNode {
-	const { renderMode, colors, opacity } = previewLayerPaint(previewOff, hovered, selected, highlighted);
+} & PreviewLayerChrome): ReactNode {
+	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
 	if (!renderMode.visible) return null;
 	const radius = renderMode.asHover ? PROCEDURAL_PREVIEW_POINT_RADIUS * 1.25 : PROCEDURAL_PREVIEW_POINT_RADIUS;
 	return (
-		<group position={position} {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
+		<group position={position} {...createPreviewPointerHandlers(widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled)}>
 			<mesh>
 				<sphereGeometry args={[radius, 16, 12]} />
 				<meshStandardMaterial
@@ -1007,23 +1046,12 @@ function BrepPointLayer({
 function BrepVectorLayer({
 	widgetId,
 	direction,
-	selected,
-	highlighted,
-	hovered,
-	previewOff,
-	onHover,
-	onPick,
+	...chrome
 }: {
 	readonly widgetId: string;
 	readonly direction: Vec3;
-	readonly selected: boolean;
-	readonly highlighted: boolean;
-	readonly hovered: boolean;
-	readonly previewOff: boolean;
-	readonly onHover?: (widgetId: string | null) => void;
-	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
-}): ReactNode {
-	const { renderMode, colors, opacity } = previewLayerPaint(previewOff, hovered, selected, highlighted);
+} & PreviewLayerChrome): ReactNode {
+	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
 	const arrow = useMemo(() => {
 		const tip = new THREE.Vector3(direction[0], direction[1], direction[2]);
 		const length = tip.length();
@@ -1040,7 +1068,7 @@ function BrepVectorLayer({
 	}, [direction]);
 	if (!renderMode.visible || !arrow) return null;
 	return (
-		<group {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
+		<group {...createPreviewPointerHandlers(widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled)}>
 			<line geometry={arrow.shaft}>
 				<lineBasicMaterial color={colors.lineColor} linewidth={1} transparent={opacity < 1} opacity={opacity} />
 			</line>
@@ -1064,28 +1092,17 @@ function BrepGeometryLayer({
 	geometryId,
 	kernel,
 	tolerance,
-	selected,
-	highlighted,
-	hovered,
-	previewOff,
-	onHover,
-	onPick,
+	...chrome
 }: {
 	readonly widgetId: string;
 	readonly geometryId: string;
 	readonly kernel: BrepKernelType;
 	readonly tolerance: number;
-	readonly selected: boolean;
-	readonly highlighted: boolean;
-	readonly hovered: boolean;
-	readonly previewOff: boolean;
-	readonly onHover?: (widgetId: string | null) => void;
-	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
-}): ReactNode {
+} & PreviewLayerChrome): ReactNode {
 	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
 	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const ref = geometryId as GeometryRef;
-	const { renderMode, colors, opacity } = previewLayerPaint(previewOff, hovered, selected, highlighted);
+	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -1109,15 +1126,15 @@ function BrepGeometryLayer({
 	if (!renderMode.visible) return null;
 
 	return (
-		<group {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
+		<group {...createPreviewPointerHandlers(widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled)}>
 			{buffers.surface ? (
-				<mesh geometry={buffers.surface}>
+				<mesh geometry={buffers.surface} raycast={chrome.pickEnabled ? undefined : () => null}>
 					<meshStandardMaterial
 						color={colors.meshColor}
 						emissive={colors.emissiveColor}
 						emissiveIntensity={colors.emissiveIntensity}
-						metalness={0}
-						roughness={1}
+						metalness={chrome.locked ? 0.15 : 0}
+						roughness={chrome.locked ? 0.35 : 1}
 						transparent={opacity < 1}
 						opacity={opacity}
 						side={THREE.DoubleSide}
@@ -1258,8 +1275,10 @@ function ProceduralPreviewMarqueeBridge({
 			onMarqueeOverlayRef.current(null);
 			onLivePreselectRef.current({ ids: [], removedIds: [] });
 		};
+		const gumballBlocksSelection = () => gumballPointerConsumesCanvasEventRef.current || proceduralGumballDragActiveRef.current;
 		const onPointerDown = (event: PointerEvent) => {
 			if (event.button !== 0) return;
+			if (gumballBlocksSelection()) return;
 			if ((event.target as HTMLElement | null)?.closest("[data-world-projection-switch]")) return;
 			const point = clientToLocal(event.clientX, event.clientY);
 			marqueeRef.current = { tracking: true, active: false, start: point, points: [point], initial: [...selectedNodeIdsRef.current] };
@@ -1267,6 +1286,10 @@ function ProceduralPreviewMarqueeBridge({
 			onLivePreselectRef.current({ ids: [], removedIds: [] });
 		};
 		const onPointerMove = (event: PointerEvent) => {
+			if (gumballBlocksSelection()) {
+				if (marqueeRef.current.tracking) resetGesture();
+				return;
+			}
 			if (!marqueeRef.current.tracking) return;
 			const point = clientToLocal(event.clientX, event.clientY);
 			const start = marqueeRef.current.start;
@@ -1290,6 +1313,10 @@ function ProceduralPreviewMarqueeBridge({
 			invalidate();
 		};
 		const onPointerUp = (event: PointerEvent) => {
+			if (gumballBlocksSelection()) {
+				if (marqueeRef.current.tracking) resetGesture();
+				return;
+			}
 			if (!marqueeRef.current.tracking) return;
 			const point = clientToLocal(event.clientX, event.clientY);
 			const start = marqueeRef.current.start;
@@ -1306,7 +1333,7 @@ function ProceduralPreviewMarqueeBridge({
 			invalidate();
 		};
 		const bindings = new WorldEventBindingController();
-		bindings.listen(canvas, "pointerdown", onPointerDown as EventListener);
+		bindings.listen(canvas, "pointerdown", onPointerDown as EventListener, true);
 		bindings.listen(window, "pointermove", onPointerMove as EventListener);
 		bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
 		bindings.listen(window, "pointercancel", onPointerUp as EventListener, true);
@@ -1326,6 +1353,9 @@ export function ProceduralPreview({
 	showMode = "everything",
 	selectionMode = "default",
 	selectionMethod = "rectangle",
+	transformGranularity = "full",
+	onTransformGranularityChange,
+	onGumballTransform,
 	onHover,
 	onSelect,
 	onSelectionChange,
@@ -1348,9 +1378,16 @@ export function ProceduralPreview({
 		points?: readonly { x: number; y: number }[];
 	} | null>(null);
 	const [livePreselect, setLivePreselect] = useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
+	const [gumballInteractionWidgetId, setGumballInteractionWidgetId] = useState<string | null>(null);
 
 	const visibleItems =
 		showMode === "selected" ? items.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : items;
+
+	const gumballItem = reactHostPort.useMemo(() => {
+		if (selectedNodeIds.length !== 1 || !onGumballTransform) return null;
+		const selectedId = selectedNodeIds[0]!;
+		return visibleItems.find((entry): entry is Extract<ProceduralPreviewItem, { kind: "geometry" }> => entry.widgetId === selectedId && entry.kind === "geometry") ?? null;
+	}, [onGumballTransform, selectedNodeIds, visibleItems]);
 
 	const effectiveSelected = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
 	const effectivePreselect = useMemo(() => new Set(livePreselect.ids.length ? livePreselect.ids : preselectNodeIds), [livePreselect.ids, preselectNodeIds]);
@@ -1427,6 +1464,7 @@ export function ProceduralPreview({
 
 	return (
 		<div ref={containerRef} className={`absolute inset-0 min-h-0 min-w-0 bg-zinc-900 ${className ?? ""}`.trim()}>
+			<ProceduralTransformDetailWindow granularity={transformGranularity} onGranularityChange={onTransformGranularityChange} />
 			<WorldCanvas
 				className="h-full w-full"
 				frameloop="demand"
@@ -1463,11 +1501,16 @@ export function ProceduralPreview({
 						<directionalLight position={[12, 18, 10]} intensity={1.1} />
 						<WorldLayer order={10} name="procedural.preview">
 							{visibleItems.map((entry) => {
-								const chrome = {
+								const interactionHighlighted = gumballInteractionWidgetId === entry.widgetId;
+								const locked = gumballInteractionWidgetId !== null && !interactionHighlighted;
+								const chrome: PreviewLayerChrome = {
 									selected: effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId),
 									highlighted: effectivePreselectRemoved.has(entry.widgetId),
 									hovered: hoveredNodeId === entry.widgetId,
 									previewOff: previewOffNodeIds.includes(entry.widgetId),
+									locked,
+									interactionHighlighted,
+									pickEnabled: gumballInteractionWidgetId === null,
 									onHover,
 									onPick,
 								};
@@ -1488,6 +1531,15 @@ export function ProceduralPreview({
 									/>
 								);
 							})}
+							{gumballItem ? (
+								<ProceduralPreviewGumball
+									item={gumballItem}
+									kernel={kernel}
+									transformGranularity={transformGranularity}
+									onGumballTransform={onGumballTransform}
+									onInteractionChange={setGumballInteractionWidgetId}
+								/>
+							) : null}
 						</WorldLayer>
 					</WorldOrbitViewSnapGateProvider>
 				</WorldLodBridge>
@@ -1614,6 +1666,7 @@ export function ProceduralFlowEditor({
 	return (
 		<FlowCanvas
 			fixtureJson={fixtureJson}
+			store={PROCEDURAL_FLOW_STORE}
 			fixtureDragDrop
 			reorganize={reorganize}
 			extensionRevision={extensionRevision}
@@ -1753,17 +1806,19 @@ if (import.meta.vitest) {
 			host.remove();
 		});
 
-		it("procedural host includes multiple brep catalogue sections", async () => {
+		it("procedural host nests brep kinds into one authored tree section", async () => {
 			const host = new ProceduralExtensionHost(kernel);
 			await host.activateDefaults();
 			const sections = host.catalogueSections();
-			expect(sections.some((s) => s.id === "brep-prim3d")).toBe(true);
-			expect(sections.some((s) => s.id === "brep-curves")).toBe(true);
-			expect(sections.some((s) => s.id === "brep-solid")).toBe(true);
-			const brepItem = sections.find((s) => s.id === "brep-prim3d")?.items[0];
-			expect(brepItem?.abbreviation).toBeTruthy();
-			expect(brepItem?.icon).toBeTruthy();
-			expect(JSON.stringify(sections)).toContain('"abbreviation"');
+			const brep = sections.find((section) => section.id === "brep");
+			expect(brep?.title).toBe("Brep");
+			expect(brep?.groups?.some((group) => group.title === "Primitives 3D")).toBe(true);
+			expect(brep?.groups?.some((group) => group.title === "Curves")).toBe(true);
+			expect(brep?.groups?.some((group) => group.title === "Solid")).toBe(true);
+			const prim3d = brep?.groups?.find((group) => group.title === "Primitives 3D");
+			expect(prim3d?.items.some((item) => item.neuronKind === "brep.prim3d.box")).toBe(true);
+			expect(prim3d?.items[0]?.abbreviation).toBeTruthy();
+			expect(prim3d?.items[0]?.icon).toBeTruthy();
 		});
 
 		it("procedural preview default camera is z-up perspective", () => {

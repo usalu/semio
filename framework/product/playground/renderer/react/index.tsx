@@ -6283,7 +6283,7 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 //#region 🔖ProceduralPlayHost
 import {
   PROCEDURAL_PLAY_APP_ID,
-  PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON,
+  PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
   PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
   PROCEDURAL_PLAY_KINDS_TAB_ID,
   PROCEDURAL_PLAY_SURFACE_ID,
@@ -6370,7 +6370,7 @@ function ProceduralPlayToolbarHostBridge({ runtime }: { readonly runtime: Platfo
   const interactionRevision = useProceduralPlayInteractionRevision();
   const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
   const downloadFixture = reactHostPort.useCallback(async () => {
-    const json = ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
+    const json = ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON;
     try {
       await downloadProceduralFixtureJson("procedural.fixture.json", json);
       console.log("[DEBUG] procedural play downloaded fixture");
@@ -6491,7 +6491,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   );
   return (
     <ProceduralFlowEditor
-      fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON}
+      fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       commandRequest={ctrl?.getCommandRequest()}
       extensionRevision={extensionRevision}
@@ -6534,6 +6534,18 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
     },
     [ctrl],
   );
+  const onGumballTransform = reactHostPort.useCallback(
+    (request: import("@procedural/react").ProceduralGumballTransformRequest) => {
+      ctrl?.run("applyGumballTransform", request);
+    },
+    [ctrl],
+  );
+  const onTransformGranularityChange = reactHostPort.useCallback(
+    (granularity: import("@procedural/react").ProceduralTransformGranularity) => {
+      ctrl?.run("setTransformGranularity", { granularity });
+    },
+    [ctrl],
+  );
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
       <ProceduralPreview
@@ -6546,6 +6558,9 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
         showMode={ctrl?.getShowMode() ?? "everything"}
         selectionMode={ctrl?.getSelectionMode()}
         selectionMethod={ctrl?.getSelectionMethod()}
+        transformGranularity={ctrl?.getTransformGranularity() ?? "full"}
+        onTransformGranularityChange={onTransformGranularityChange}
+        onGumballTransform={onGumballTransform}
         onHover={onHover}
         onSelectionChange={onSelectionChange}
         kernel={proceduralExtensionHost.getBrepKernel()}

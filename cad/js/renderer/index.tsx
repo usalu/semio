@@ -2749,18 +2749,9 @@ export function SpatialPickGeometryLayer({
     selectedTargetKeys?.forEach((key) => keys.add(key));
     return keys;
   }, [hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
-  const objectIndex = reactHostPort.useMemo(() => {
-    if (!geometry) return new Map<string, string>();
-    const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
-    return model ? buildGeometryObjectIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId()) : new Map<string, string>();
-  }, [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
-  const revealedObjectIds = reactHostPort.useMemo(
-    () => revealedObjectIdsFromPickKeys(objectIndex, hoveredTargetKey, pinnedTargetKeys),
-    [objectIndex, hoveredTargetKey, pinnedTargetKeys],
-  );
   const renderedTargets = reactHostPort.useMemo(() => {
-    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId, objectIndex, revealedObjectIds);
-  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId, objectIndex, revealedObjectIds]);
+    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId);
+  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId]);
   const selectableTargets = reactHostPort.useMemo(
     () => filterSpatialPickTargetsForEntityFlags(filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles), resolvedEntityFlagsForId),
     [viewTargets, selectionAccept, selectionKindToggles, resolvedEntityFlagsForId],
@@ -3627,26 +3618,6 @@ export function InteractionSpatialView({
   );
   const scenePickGeometry = geometry ?? pickGeometryProp;
   const pickGeometryRevision = scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry ? Number((scenePickGeometry as { revision?: unknown }).revision) : 0;
-  const objectIndex = reactHostPort.useMemo(() => {
-    if (!scenePickGeometry) return new Map<string, string>();
-    const model = scenePickGeometry instanceof Model ? scenePickGeometry : parseModelJson(scenePickGeometry as ModelJson);
-    return model ? buildGeometryObjectIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId()) : new Map<string, string>();
-  }, [scenePickGeometry, geometryRevision, modelDefinitionRevision, activeModelDefinitionId]);
-  const revealedObjectIds = reactHostPort.useMemo(() => {
-    const pinned = new Set<string>();
-    if (hoveredTargetKey) pinned.add(hoveredTargetKey);
-    if (selectedTargetKey) pinned.add(selectedTargetKey);
-    selectedTargetKeys?.forEach((key) => pinned.add(key));
-    return revealedObjectIdsFromPickKeys(objectIndex, hoveredTargetKey, pinned);
-  }, [objectIndex, hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
-  const revealedMemberKeys = reactHostPort.useMemo(() => {
-    if (revealedObjectIds.size === 0) return new Set<string>();
-    const keys = new Set<string>();
-    for (const [memberKey, ownerId] of objectIndex) {
-      if (revealedObjectIds.has(ownerId)) keys.add(memberKey);
-    }
-    return keys;
-  }, [objectIndex, revealedObjectIds]);
   const styleForSolid = reactHostPort.useMemo(() => {
     if (!geometry || typeof geometry !== "object" || !("objects" in geometry)) return undefined;
     return createSolidTypologyStyleResolver(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId());
@@ -3717,7 +3688,7 @@ export function InteractionSpatialView({
           />
         </WorldLayer>
         <WorldLayer order={20} name="cad.factory-wireframe">
-          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} revealedMemberKeys={revealedMemberKeys} />
+          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
         </WorldLayer>
         <WorldLayer order={30} name="cad.pick">
           {showPickLayer ? (
@@ -7085,7 +7056,7 @@ if (import.meta.vitest) {
       expect(resolveSpatialPickTargetsToRender(targets, {}).map(spatialPickTargetKey).sort()).toEqual(["edge:e0", "vertex:v0"]);
     });
 
-    it("resolveSpatialPickTargetsToRender gates factory primitives until their object is revealed", () => {
+    it("resolveSpatialPickTargetsToRender draws factory primitives without hover reveal", () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const solidId = Object.keys(model.solids)[0]!;
@@ -7094,12 +7065,8 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box" as const,
         primitives: { solid: solidId },
       };
-      const objectIndex = buildGeometryObjectIndex(model, defaultModelDefinitionId());
       const targets = createSpatialPickTargets(model, defaultModelDefinitionId());
-      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({}), objectIndex, new Set()).map(spatialPickTargetKey)).toEqual([]);
-      const revealed = revealedObjectIdsFromPickKeys(objectIndex, `object:box-obj`, new Set());
-      expect(revealed.has("box-obj")).toBe(true);
-      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({}), objectIndex, revealed).some((row) => row.kind === "vertex")).toBe(true);
+      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({})).some((row) => row.kind === "vertex")).toBe(true);
     });
 
     it("revealedObjectIdsFromPickKeys expands solid and member picks to the owning object", () => {
