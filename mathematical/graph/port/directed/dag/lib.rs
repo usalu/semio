@@ -3197,9 +3197,9 @@ impl DagHost {
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
-        let ghost_stroke = theme.node_stroke_hovered;
-        let ghost_fill = vello_color_with_alpha(theme.node_fill_hovered, 128);
-        let label_fill = dag_node_label_fill(theme, false, false, false, true);
+        let ghost_stroke = dag_node_body_stroke(theme, false, false, true, false);
+        let ghost_fill = vello_color_with_alpha(dag_node_body_fill(theme, false, false, true, false), 128);
+        let label_fill = dag_node_label_fill(theme, false, false, true, false);
         let label_halo = theme.label_halo;
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
@@ -4241,7 +4241,7 @@ mod tests {
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
             nodes: vec![DagNodeSpec {
                 id: "box".into(),
-                name: "brep.box".into(),
+                name: "brep.prim3d.box".into(),
                 abbreviation: "box".into(),
                 icon: "emoji:📦".into(),
                 x: 0.0,
@@ -4250,8 +4250,8 @@ mod tests {
                 height: 42.0,
                 kind: DagNodeKind::Computation {
                     inputs: vec![
-                        IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-                        IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+                        IoPortSpec { id: "width".into(), label: "width".into() },
+                        IoPortSpec { id: "depth".into(), label: "depth".into() },
                     ],
                     outputs: vec![IoPortSpec { id: "out".into(), label: "geometry".into() }],
                     variadic_inputs: false,
@@ -4270,7 +4270,7 @@ mod tests {
             .filter(|row| row["align"].as_str().is_some())
             .collect();
         assert_eq!(port_labels.len(), 3, "expected input and output channel labels");
-        assert!(port_labels.iter().any(|row| row["text"] == "cornerA" && row["align"] == "left"));
+        assert!(port_labels.iter().any(|row| row["text"] == "width" && row["align"] == "left"));
         assert!(port_labels.iter().any(|row| row["text"] == "geometry" && row["align"] == "right"));
     }
 
@@ -4784,16 +4784,16 @@ mod tests {
     #[test]
     fn computation_node_size_fits_io_labels() {
         let inputs = vec![
-            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+            IoPortSpec { id: "width".into(), label: "width".into() },
+            IoPortSpec { id: "depth".into(), label: "depth".into() },
             IoPortSpec { id: "height".into(), label: "height".into() },
         ];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
-        let width = computation_node_width("brep.box", &inputs, &outputs);
+        let width = computation_node_width("brep.prim3d.box", &inputs, &outputs);
         let height = computation_node_height(3, 1, false, false);
         assert!(height <= 42.0, "expected compact height, got {height}");
         assert!(height < 96.0, "expected shorter than legacy 4-row layout");
-        assert!(width > 70.0 && width < 82.0, "expected balanced IO column width, got {width}");
+        assert!(width > 100.0 && width < 120.0, "expected balanced IO column width, got {width}");
     }
 
     #[test]

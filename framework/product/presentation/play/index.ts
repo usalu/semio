@@ -15,6 +15,8 @@ import {
 	ModeRuntime,
 	WindowKindRuntime,
 	buildPanelWindowBody,
+	createPlayAppRuntime,
+	createProductPlaygroundPlatform,
 	createStackLayout,
 	enforcePlaygroundWindowEngagementInput,
 	platformFromViewContext,
@@ -596,9 +598,7 @@ export function registerPresentationPlayDeclarativeBodies(): void {
 
 function buildPresentationPlayAppRuntime(controller: PresentationPlayController): AppRuntime {
 	const layout = createStackLayout(["tile-editor"], ["Tile editor"]);
-	const app = new AppRuntime(PRESENTATION_PLAY_APP_ID, "Presentation Tile Play", undefined, controller, layout, []);
-	app.defaultModeId = controller.mainMode.id;
-	app.addMode(controller.mainMode);
+	const app = createPlayAppRuntime(PRESENTATION_PLAY_APP_ID, "Presentation Tile Play", controller, layout, controller.mainMode);
 	app.panelTabs = [
 		{
 			id: `${PRESENTATION_PLAY_APP_ID}.hierarchy`,
@@ -637,7 +637,7 @@ export class PresentationPlay extends Playground {
 	];
 
 	createRuntime(): Platform {
-		const runtime = new Platform({ id: this.id });
+		const runtime = createProductPlaygroundPlatform(this.id);
 		const ctrl = new PresentationPlayController(runtime.commandBus, () => runtime.notify());
 		runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
 		return runtime;

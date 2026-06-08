@@ -1,5 +1,7 @@
 @import "../../../../ui/react/globals.css";
-@source "../../../../framework/playground/core";
+@source "../../../../framework/product/playground/core";
+@source "../../../../framework/product/playground/renderer/react";
+@source "../../../../framework/product/platform/renderer/react";
 @source "../../../../ui/react";
 @source "..";
 @source ".";

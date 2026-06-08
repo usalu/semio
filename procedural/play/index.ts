@@ -13,6 +13,8 @@ import {
 	buildFlowWindowBody,
 	buildPuzzle3dWindowBody,
 	createDefaultLayout,
+	createPlayAppRuntime,
+	createProductPlaygroundPlatform,
 	enforcePlaygroundWindowEngagementInput,
 	isPlaygroundNoFixtureId,
 	PLAYGROUND_NO_FIXTURE_ID,
@@ -58,6 +60,7 @@ import {
 	type FlowFixtureV1,
 	type ProceduralGumballTransformDelta,
 	type ProceduralGumballTransformOp,
+	type ProceduralGumballTransformPhase,
 	type ProceduralGumballTransformRequest,
 	type ProceduralPreviewItem,
 	type ProceduralPreviewShowMode,
@@ -94,7 +97,7 @@ export const PROCEDURAL_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
 
 export const PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
 
-export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Sketch extrude" }] as const;
+export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Circle extrude" }] as const;
 
 const PROCEDURAL_PLAY_STORE_KEY = "procedural.fixture/v1";
 
@@ -142,7 +145,13 @@ export type ProceduralPlaySelectionMethod = "rectangle" | "lasso";
 const DEFAULT_LAYER_SPACING = 120;
 const DEFAULT_SIBLING_GAP = 40;
 
-export type { ProceduralGumballTransformDelta, ProceduralGumballTransformOp, ProceduralGumballTransformRequest, ProceduralTransformGranularity } from "@procedural/react";
+export type {
+	ProceduralGumballTransformDelta,
+	ProceduralGumballTransformOp,
+	ProceduralGumballTransformPhase,
+	ProceduralGumballTransformRequest,
+	ProceduralTransformGranularity,
+} from "@procedural/react";
 
 interface GumballTransformBinding {
 	readonly sourceWidgetId: string;
@@ -152,6 +161,11 @@ interface GumballTransformBinding {
 	readonly valueWidgetIds: string[];
 	readonly vectorId?: string;
 	readonly values: { offset: [number, number, number]; angle: number; factor: number };
+}
+
+interface GumballDragSession {
+	readonly binding: GumballTransformBinding;
+	readonly baseValues: { offset: [number, number, number]; angle: number; factor: number };
 }
 
 const BREP_XFORM_NEURON_KIND: Record<ProceduralGumballTransformOp, string> = {
@@ -188,6 +202,51 @@ function widgetLayoutFromFixture(fixtureJson: string, widgetId: string): { x: nu
 	} catch {
 		return { x: 0, y: 0 };
 	}
+}
+
+function gumballZeroDelta(op: ProceduralGumballTransformOp): ProceduralGumballTransformDelta {
+	if (op === "translate") return { op: "translate", offset: [0, 0, 0] };
+	if (op === "rotate") return { op: "rotate", angle: 0 };
+	return { op: "scale", factor: 1 };
+}
+
+function copyGumballValues(binding: GumballTransformBinding): GumballDragSession["baseValues"] {
+	return {
+		offset: [binding.values.offset[0], binding.values.offset[1], binding.values.offset[2]],
+		angle: binding.values.angle,
+		factor: binding.values.factor,
+	};
+}
+
+function setGumballBindingValues(binding: GumballTransformBinding, values: GumballDragSession["baseValues"]): void {
+	binding.values.offset = [values.offset[0], values.offset[1], values.offset[2]];
+	binding.values.angle = values.angle;
+	binding.values.factor = values.factor;
+}
+
+function applyGumballDeltaToBase(
+	base: GumballDragSession["baseValues"],
+	op: ProceduralGumballTransformOp,
+	delta: ProceduralGumballTransformDelta,
+): GumballDragSession["baseValues"] {
+	if (op === "translate" && delta.op === "translate") {
+		return {
+			offset: [base.offset[0] + delta.offset[0], base.offset[1] + delta.offset[1], base.offset[2] + delta.offset[2]],
+			angle: base.angle,
+			factor: base.factor,
+		};
+	}
+	if (op === "rotate" && delta.op === "rotate") {
+		return { offset: base.offset, angle: base.angle + delta.angle, factor: base.factor };
+	}
+	if (op === "scale" && delta.op === "scale") {
+		return { offset: base.offset, angle: base.angle, factor: base.factor * delta.factor };
+	}
+	return base;
+}
+
+function gumballBindingNodeIds(binding: GumballTransformBinding): string[] {
+	return [...binding.valueWidgetIds, ...(binding.vectorId ? [binding.vectorId] : []), binding.transformId];
 }
 
 function accumulateGumballDelta(binding: GumballTransformBinding, delta: ProceduralGumballTransformDelta): void {
@@ -554,6 +613,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private transformGranularity: ProceduralTransformGranularity = "full";
 	private gumballBindings = new Map<string, GumballTransformBinding>();
 	private gumballBindingByTransformId = new Map<string, GumballTransformBinding>();
+	private gumballDragSession: GumballDragSession | null = null;
+	private gumballActiveWidgetIds: string[] = [];
+	private gumballPendingLive: ProceduralGumballTransformRequest | null = null;
+	private gumballLiveRaf: ReturnType<typeof requestAnimationFrame> | null = null;
 	private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
 	private lodModeByInstance: Record<string, DagLodModeKind> = {};
 	private effectiveLod: DagDrawLodKind = "normal";
@@ -608,6 +671,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.previewItems = [];
 		this.gumballBindings.clear();
 		this.gumballBindingByTransformId.clear();
+		this.clearGumballDrag();
 	}
 
 	private applyFixtureJson(json: string, resetInteraction = false): void {
@@ -695,6 +759,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return this.transformGranularity;
 	}
 
+	getGumballActiveWidgetIds(): readonly string[] {
+		return this.gumballActiveWidgetIds;
+	}
+
 	private gumballBindingKey(sourceWidgetId: string, op: ProceduralGumballTransformOp): string {
 		return `${sourceWidgetId}:${op}`;
 	}
@@ -717,11 +785,113 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return widgetId;
 	}
 
+	private clearGumballDrag(): void {
+		this.gumballDragSession = null;
+		this.gumballActiveWidgetIds = [];
+		this.gumballPendingLive = null;
+		if (this.gumballLiveRaf !== null) {
+			cancelAnimationFrame(this.gumballLiveRaf);
+			this.gumballLiveRaf = null;
+		}
+	}
+
+	private syncGumballActiveChrome(binding: GumballTransformBinding): void {
+		const nextActive = [binding.transformId, binding.sourceWidgetId];
+		if (JSON.stringify(nextActive) !== JSON.stringify(this.gumballActiveWidgetIds)) {
+			this.gumballActiveWidgetIds = nextActive;
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+		}
+	}
+
 	private dispatchGraphEdit(ops: readonly FlowGraphEditOp[], selectTransformId?: string): void {
 		this.run("canvasCommand", { command: "graphEdit", argsJson: JSON.stringify({ ops }) });
+		const binding = this.gumballDragSession?.binding;
+		if (binding) {
+			this.run("setSelection", { ids: gumballBindingNodeIds(binding), mode: "default" });
+			this.syncGumballActiveChrome(binding);
+			return;
+		}
 		if (selectTransformId) {
 			this.run("setSelection", { ids: [selectTransformId], mode: "default" });
 		}
+	}
+
+	private flushLiveGumballDrag(): void {
+		const pending = this.gumballPendingLive;
+		this.gumballPendingLive = null;
+		const session = this.gumballDragSession;
+		if (!pending || !session) return;
+		const values = applyGumballDeltaToBase(session.baseValues, session.binding.op, pending.delta);
+		setGumballBindingValues(session.binding, values);
+		this.dispatchGraphEdit(this.buildGumballUpdateOps(session.binding));
+	}
+
+	private scheduleLiveGumballDrag(request: ProceduralGumballTransformRequest): void {
+		this.gumballPendingLive = request;
+		if (this.gumballLiveRaf !== null) return;
+		this.gumballLiveRaf = requestAnimationFrame(() => {
+			this.gumballLiveRaf = null;
+			this.flushLiveGumballDrag();
+		});
+	}
+
+	private beginGumballDrag(request: ProceduralGumballTransformRequest): void {
+		const op = request.delta.op;
+		let binding = this.findGumballBinding(request.widgetId, op);
+		let insertOps: FlowGraphEditOp[] | null = null;
+		if (!binding) {
+			const sourceWidgetId = this.resolveGumballSourceWidgetId(request.widgetId, op);
+			const created = this.buildGumballInsertOps(sourceWidgetId, op, gumballZeroDelta(op), request.granularity);
+			this.registerGumballBinding(created.binding);
+			binding = created.binding;
+			insertOps = created.ops;
+			console.log(`[DEBUG] gumball insert ${binding.transformId} source=${sourceWidgetId} op=${op} granularity=${request.granularity}`);
+		}
+		this.gumballDragSession = { binding, baseValues: copyGumballValues(binding) };
+		const values = applyGumballDeltaToBase(this.gumballDragSession.baseValues, op, request.delta);
+		setGumballBindingValues(binding, values);
+		if (insertOps) {
+			this.dispatchGraphEdit(insertOps);
+			return;
+		}
+		this.dispatchGraphEdit(this.buildGumballUpdateOps(binding));
+	}
+
+	private finishGumballDrag(request: ProceduralGumballTransformRequest): void {
+		if (this.gumballLiveRaf !== null) {
+			cancelAnimationFrame(this.gumballLiveRaf);
+			this.gumballLiveRaf = null;
+		}
+		this.gumballPendingLive = null;
+		const session = this.gumballDragSession;
+		if (session) {
+			const values = applyGumballDeltaToBase(session.baseValues, session.binding.op, request.delta);
+			setGumballBindingValues(session.binding, values);
+			console.log(`[DEBUG] gumball end ${session.binding.transformId} op=${session.binding.op}`);
+			this.dispatchGraphEdit(this.buildGumballUpdateOps(session.binding));
+			this.clearGumballDrag();
+			return;
+		}
+		this.applyGumballTransformCommitted(request);
+	}
+
+	private applyGumballTransformCommitted(request: ProceduralGumballTransformRequest): void {
+		const op = request.delta.op;
+		const granularity = request.granularity;
+		const existing = this.findGumballBinding(request.widgetId, op);
+		if (existing) {
+			accumulateGumballDelta(existing, request.delta);
+			const ops = this.buildGumballUpdateOps(existing);
+			console.log(`[DEBUG] gumball update ${existing.transformId} op=${op} granularity=${granularity}`);
+			this.dispatchGraphEdit(ops, existing.transformId);
+			return;
+		}
+		const sourceWidgetId = this.resolveGumballSourceWidgetId(request.widgetId, op);
+		const { ops, binding } = this.buildGumballInsertOps(sourceWidgetId, op, request.delta, granularity);
+		this.registerGumballBinding(binding);
+		console.log(`[DEBUG] gumball insert ${binding.transformId} source=${sourceWidgetId} op=${op} granularity=${granularity}`);
+		this.dispatchGraphEdit(ops, binding.transformId);
 	}
 
 	private buildGumballUpdateOps(binding: GumballTransformBinding): FlowGraphEditOp[] {
@@ -840,21 +1010,16 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	/** @emoji 🎛 Inserts or updates gumball-driven transform nodes in the flow graph. */
 	applyGumballTransform(request: ProceduralGumballTransformRequest): void {
-		const op = request.delta.op;
-		const granularity = request.granularity;
-		const existing = this.findGumballBinding(request.widgetId, op);
-		if (existing) {
-			accumulateGumballDelta(existing, request.delta);
-			const ops = this.buildGumballUpdateOps(existing);
-			console.log(`[DEBUG] gumball update ${existing.transformId} op=${op} granularity=${granularity}`);
-			this.dispatchGraphEdit(ops, existing.transformId);
+		const phase: ProceduralGumballTransformPhase = request.phase ?? "end";
+		if (phase === "start") {
+			this.beginGumballDrag(request);
 			return;
 		}
-		const sourceWidgetId = this.resolveGumballSourceWidgetId(request.widgetId, op);
-		const { ops, binding } = this.buildGumballInsertOps(sourceWidgetId, op, request.delta, granularity);
-		this.registerGumballBinding(binding);
-		console.log(`[DEBUG] gumball insert ${binding.transformId} source=${sourceWidgetId} op=${op} granularity=${granularity}`);
-		this.dispatchGraphEdit(ops, binding.transformId);
+		if (phase === "live") {
+			this.scheduleLiveGumballDrag(request);
+			return;
+		}
+		this.finishGumballDrag(request);
 	}
 
 	lodModeForScope(scopeId: string): DagLodModeKind {
@@ -877,6 +1042,22 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	private flowWindowMeasures(): readonly WindowMeasure[] {
 		return [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID)];
+	}
+
+	private previewWindowMeasures(): readonly WindowMeasure[] {
+		return [
+			{
+				kind: "select",
+				id: `${PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW}-transform-granularity`,
+				label: "Transform Detail",
+				value: this.transformGranularity,
+				items: [
+					{ id: "full", value: "full", label: "Full (sliders + vector)" },
+					{ id: "compact", value: "compact", label: "Compact (node params)" },
+				],
+				onChange: { controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "setTransformGranularity" },
+			},
+		];
 	}
 
 	/** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
@@ -968,7 +1149,14 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private rebuildShellMode(): void {
 		this.mainMode.windowKinds = [
 			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Flow", PROCEDURAL_PLAY_BODY_KEY_MAIN, undefined, this.flowWindowMeasures(), this.flowWindowEngagement()),
-			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW, "Preview", PROCEDURAL_PLAY_BODY_KEY_PREVIEW, undefined, [], this.previewWindowEngagement()),
+			new WindowKindRuntime(
+				PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW,
+				"Preview",
+				PROCEDURAL_PLAY_BODY_KEY_PREVIEW,
+				undefined,
+				this.previewWindowMeasures(),
+				this.previewWindowEngagement(),
+			),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Procedural play window "${windowKind.id}"`);
@@ -1205,7 +1393,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			return;
 		}
 		if (command === "setTransformGranularity") {
-			const granularity = (args as { granularity?: ProceduralTransformGranularity }).granularity;
+			const granularity =
+				(args as { granularity?: ProceduralTransformGranularity }).granularity ??
+				(args as { value?: string }).value;
 			if (granularity !== "compact" && granularity !== "full") return;
 			if (this.transformGranularity === granularity) return;
 			this.transformGranularity = granularity;
@@ -1217,8 +1407,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			const widgetId = (args as { widgetId?: string }).widgetId;
 			const delta = (args as { delta?: ProceduralGumballTransformDelta }).delta;
 			const granularity = (args as { granularity?: ProceduralTransformGranularity }).granularity ?? this.transformGranularity;
+			const phase = (args as { phase?: ProceduralGumballTransformPhase }).phase;
 			if (typeof widgetId !== "string" || !delta) return;
-			this.applyGumballTransform({ widgetId, delta, granularity });
+			this.applyGumballTransform({ widgetId, delta, granularity, phase });
 			return;
 		}
 		if (command === "setCatalogueSections") {
@@ -1288,10 +1479,7 @@ export function registerProceduralPlayDeclarativeBodies(): void {
 }
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {
-	const app = new AppRuntime(PROCEDURAL_PLAY_APP_ID, "Procedural", undefined, controller, PROCEDURAL_PLAY_LAYOUT, []);
-	app.defaultModeId = controller.mainMode.id;
-	app.addMode(controller.mainMode);
-	return app;
+	return createPlayAppRuntime(PROCEDURAL_PLAY_APP_ID, "Procedural", controller, PROCEDURAL_PLAY_LAYOUT, controller.mainMode);
 }
 
 /** @emoji 🛝 Procedural playground app. */
@@ -1304,7 +1492,7 @@ export class PlaygroundProcedural extends Playground {
 	];
 
 	createRuntime(): Platform {
-		const runtime = new Platform({ id: this.id });
+		const runtime = createProductPlaygroundPlatform(this.id);
 		const ctrl = new ProceduralPlayController(runtime.commandBus, () => runtime.notify());
 		runtime.addApp(buildProceduralPlayAppRuntime(ctrl));
 		return runtime;
@@ -1435,6 +1623,20 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
 			expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
+		});
+
+		it("preview window exposes transform detail in shell measures", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			const measures = ctrl.mainMode.windowKinds[1]?.measures ?? [];
+			expect(measures.some((measure) => measure.kind === "select" && measure.label === "Transform Detail")).toBe(true);
+		});
+
+		it("setTransformGranularity accepts shell measure value", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setTransformGranularity", { value: "compact" });
+			expect(ctrl.getTransformGranularity()).toBe("compact");
 		});
 
 		it("setShowMode updates preview filter", () => {
@@ -1633,7 +1835,7 @@ if (import.meta.vitest) {
 			ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
 			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
 			ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
-			expect(ctrl.getFixtureJson()).toContain("brep.sketch2d.rectangle");
+			expect(ctrl.getFixtureJson()).toContain("brep.sketch2d.circle");
 		});
 
 		it("extensions tree lists installed modules", () => {
@@ -1648,7 +1850,7 @@ if (import.meta.vitest) {
 						version: "0.1.0",
 						activationEvents: ["onStartup"],
 						contributes: {
-							neuronKinds: [{ id: "brep.box", module: "brep", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box", inputs: [], outputs: ["brep"] }],
+							neuronKinds: [{ id: "brep.prim3d.box", module: "brep", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box", inputs: [], outputs: ["geometry"] }],
 							widgets: [],
 							commands: [],
 							settings: [],
@@ -1691,6 +1893,45 @@ if (import.meta.vitest) {
 			const update = ctrl.getCommandRequest();
 			const updateOps = JSON.parse(update.argsJson ?? "{}").ops as FlowGraphEditOp[];
 			expect(updateOps).toEqual([{ op: "setNeuronParams", id: "solid_gumball_translate", paramsJson: JSON.stringify({ offset: [1, 2, 0] }) }]);
+		});
+
+		it("applyGumballTransform live drag updates without accumulating per frame", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", {
+				json: JSON.stringify({
+					schema: "flow.fixture/v1",
+					camera: { x: 0, y: 0, zoom: 1 },
+					widgets: [{ kind: "neuron", id: "solid", neuronKind: "brep.prim3d.box" }],
+					synapses: [],
+					layout: { solid: { x: 100, y: 50 } },
+				}),
+			});
+			ctrl.applyGumballTransform({
+				widgetId: "solid",
+				granularity: "compact",
+				phase: "start",
+				delta: { op: "translate", offset: [0, 0, 0] },
+			});
+			expect(ctrl.getGumballActiveWidgetIds()).toEqual(["solid_gumball_translate", "solid"]);
+			ctrl.applyGumballTransform({
+				widgetId: "solid",
+				granularity: "compact",
+				phase: "live",
+				delta: { op: "translate", offset: [2, 0, 0] },
+			});
+			ctrl.applyGumballTransform({
+				widgetId: "solid",
+				granularity: "compact",
+				phase: "end",
+				delta: { op: "translate", offset: [3, 0, 0] },
+			});
+			const end = ctrl.getCommandRequest();
+			const endOps = JSON.parse(end.argsJson ?? "{}").ops as FlowGraphEditOp[];
+			expect(endOps).toEqual([
+				{ op: "setNeuronParams", id: "solid_gumball_translate", paramsJson: JSON.stringify({ offset: [3, 0, 0] }) },
+			]);
+			expect(ctrl.getGumballActiveWidgetIds()).toEqual([]);
 		});
 
 		it("applyGumballTransform full translate lays out value, vector, and transform columns without overlap", () => {

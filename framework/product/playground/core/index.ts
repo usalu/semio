@@ -20,6 +20,7 @@ import {
   mergeById,
   mergeNamedLayouts,
   Platform,
+  PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
   resolveMode,
   type AppTools,
   type CommandDescriptor,
@@ -478,6 +479,26 @@ export {
 export interface PlaygroundPanelVisibility {
   readonly leftSidePanel: boolean;
   readonly rightSidePanel: boolean;
+}
+
+/** @emoji 🖥️ Product/playground {@link Platform} with glass workbench panels open by default. */
+export function createProductPlaygroundPlatform(id: string, name?: string): Platform {
+  return new Platform({ id, name: name ?? id, initialPanelVisibility: PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY });
+}
+
+/** @emoji 🧩 Builds a playground {@link AppRuntime} with mode window kinds wired for golden windows. */
+export function createPlayAppRuntime(
+  id: string,
+  label: string,
+  controller: import("@framework/core").Controller,
+  layout: WindowLayout,
+  mode: ModeRuntime,
+  iconId?: string,
+): AppRuntime {
+  const app = new AppRuntime(id, label, iconId, controller, layout, mode.windowKinds);
+  app.defaultModeId = mode.id;
+  app.addMode(mode);
+  return app;
 }
 
 /** @emoji ⌨️ Document key routed to {@link CommandBus.dispatch} when focus is not in a field. */
@@ -1151,6 +1172,12 @@ if (import.meta.vitest) {
   });
 
   describe("registerPlaygroundDeclarativeBodies", () => {
+    it("createProductPlaygroundPlatform opens glass side panels by default", () => {
+      const platform = createProductPlaygroundPlatform("procedural-play", "Procedural");
+      expect(platform.initialPanelVisibility).toEqual(PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY);
+      expect(platform.panelVisibility).toEqual(PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY);
+    });
+
     it("registers puzzle3d main window and table side panels", () => {
       const bus = new CommandBus();
       const wb = new Platform();

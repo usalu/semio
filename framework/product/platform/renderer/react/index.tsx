@@ -55,6 +55,7 @@ import {
 	Controller,
 	Store,
 	Platform,
+	PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
 	resolveInitialPanelVisibility,
 	LEFT_PANEL_KINDS,
 	RIGHT_PANEL_KINDS,
@@ -3108,6 +3109,13 @@ function renderText(node: UiTextNode): React.ReactElement {
 
 function renderButton(node: UiButtonNode, commandBus: CommandBus): React.ReactElement {
 	const variant = node.style?.variant ?? "default";
+	if (variant === "default") {
+		return (
+			<Button type="button" id={node.id} variant="outline" size="sm" onClick={() => commandBus.dispatch(node.command.controllerId, node.command.command, node.command.args)}>
+				{node.label}
+			</Button>
+		);
+	}
 	return (
 		<button
 			type="button"
@@ -3117,7 +3125,6 @@ function renderButton(node: UiButtonNode, commandBus: CommandBus): React.ReactEl
 				variant === "danger" && "border-destructive text-destructive",
 				variant === "success" && "border-success text-success",
 				variant === "subtle" && "border-transparent bg-muted/60",
-				variant === "default" && "border-border bg-background",
 			)}
 			onClick={() => commandBus.dispatch(node.command.controllerId, node.command.command, node.command.args)}
 		>
@@ -4375,7 +4382,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
 	const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
 	const [panelVisibility, setPanelVisibilityState] = reactHostPort.useState<UIPanelVisibility>(() =>
-		resolveInitialPanelVisibility(initialPanelVisibility, platform),
+		resolveInitialPanelVisibility(initialPanelVisibility ?? PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY, platform),
 	);
 	const setPanelVisibility = reactHostPort.useCallback(
 		(next: UIPanelVisibility | ((prev: UIPanelVisibility) => UIPanelVisibility)) => {

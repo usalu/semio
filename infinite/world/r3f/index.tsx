@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@ui/react";
+import { cn, floatingToolbarSurfaceClass, menuListItemClassName, reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
@@ -1543,9 +1543,9 @@ export interface WorldOrbitProjectionSwitchProps {
 
 /** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports. */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
-  const shellClass = props.className ?? "pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex overflow-hidden rounded-md border border-border text-[10px] font-medium shadow-sm";
+  const shellClass = props.className ?? cn("pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex text-[10px] font-medium", floatingToolbarSurfaceClass);
   const buttonClass = (active: boolean) =>
-    `${active ? "bg-accent text-accent-foreground" : "bg-background/90 text-muted-foreground hover:text-emphasized"} px-2 py-1 transition-colors`;
+    cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
   return (
     <div className={shellClass} data-world-projection-switch>
       <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>

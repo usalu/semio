@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
+import { Button, borderNormalClass, canvasHostRootClass, cn, editorShellRootClass, ENGAGEMENT_USER, floatingFieldSurfaceClass, floatingMenuItemClass, floatingMenuSurfaceClass, floatingPanelAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -160,10 +160,11 @@ type FaceRecord = kernelGeometry.FaceRecord;
 type ShellRecord = kernelGeometry.ShellRecord;
 type VertexRecord = kernelGeometry.VertexRecord;
 type WireRecord = kernelGeometry.WireRecord;
+type WireRef = kernelGeometry.WireRef;
 type EdgeRef = kernelGeometry.EdgeRef;
 
 export type { SpatialComputeMode };
-import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
+import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
 
 // #region ⚡R3FPreviewKernel
 /** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
@@ -414,6 +415,12 @@ export function tryArchivedBoxFromContext(ctx: Record<string, unknown>): Archive
 /** @emoji 🧊 True when committed kernel solids own the scene (footprint box previews would duplicate meshes). */
 export function modelHasCommittedSolidsForDisplay(model: Model | null | undefined): boolean {
   return listModelSolidRefs(model).length > 0;
+}
+
+/** @emoji 🧊 True when typology objects expose standalone surface primitives for factory face shading. */
+export function modelHasFactoryFaceDisplay(model: Model | null | undefined, modelDefinitionId: string): boolean {
+  if (!model) return false;
+  return visibleFaceRefsForModelDefinition(model, modelDefinitionId).size > 0;
 }
 
 /** @emoji 📦 Drops axis-aligned footprint `box-preview` display items when kernel solids are present. */
@@ -1999,14 +2006,7 @@ function spatialSceneColorToHex(color: string): number {
   return new THREE.Color(color).getHex();
 }
 
-const cadChromePopoverClass = "border-border bg-popover text-popover-foreground shadow-md rounded-md border p-single";
-const cadChromeMenuButtonClass =
-  "flex w-full cursor-pointer items-center gap-single rounded-sm px-single py-half text-left text-xs text-element hover:bg-hover-interactive-fill hover:text-emphasized";
-const cadChromePanelAsideClass = "border-border bg-panel text-element flex shrink-0 flex-col gap-single overflow-auto border-l p-double relative z-[2]";
-const cadChromeTagClass = "border-border inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs";
-const cadChromeTagOnClass = "bg-accent text-accent-foreground";
-const cadChromeTagOffClass = "bg-muted text-muted-foreground";
-const cadFieldClass = "h-medium w-full";
+const cadFieldClass = "h-medium w-full bg-transparent text-element";
 // #endregion 🎨SpatialSceneColors
 
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
@@ -2969,6 +2969,79 @@ function collectVisibleSolidRefsForObject(
   }
 }
 
+function collectVisibleFaceRefsForObject(
+  model: Model,
+  row: SpatialObjectRecord,
+  flagsForId: (entityId: string) => SpatialEntityFlags,
+  out: Set<string>,
+): void {
+  for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
+    if (resolvePrimitiveRefKind(model, primitiveRef) !== "face") continue;
+    const faceId = String(primitiveRef);
+    if (flagsForId(faceId).hidden === true) continue;
+    out.add(faceId);
+  }
+}
+
+function orderedWireBoundaryPoints(vertices: Readonly<Record<string, VertexRecord>>, edges: Readonly<Record<string, EdgeRecord>>, wire: WireRecord): readonly Vec3[] {
+  const points: Vec3[] = [];
+  for (const edgeId of wire.edgeIds) {
+    const edge = edges[edgeId];
+    if (!edge) continue;
+    for (const sample of scenePreview().edgeSamplePoints(vertices, edge, 8)) {
+      const prev = points[points.length - 1];
+      if (!prev || Math.hypot(prev[0] - sample[0], prev[1] - sample[1], prev[2] - sample[2]) > 1e-9) points.push(sample);
+    }
+  }
+  if (points.length >= 2) {
+    const first = points[0]!;
+    const last = points[points.length - 1]!;
+    if (Math.hypot(first[0] - last[0], first[1] - last[1], first[2] - last[2]) < 1e-9) points.pop();
+  }
+  return points;
+}
+
+/** @emoji 🧊 Builds a shaded planar face mesh from factory topology (energy/structure surface primitives). */
+export function buildPlanarFaceMeshTransfer(model: Model, faceId: string): MeshTransfer | null {
+  const buckets = geometryBuckets(model);
+  const face = buckets.faces[faceId];
+  if (!face?.wireIds.length) return null;
+  const wire = buckets.wires[face.wireIds[0]!];
+  if (!wire) return null;
+  const boundary = orderedWireBoundaryPoints(buckets.vertices, buckets.edges, wire);
+  if (boundary.length < 3) return null;
+  const normal = faceNormal(model, face);
+  if (!normal) return null;
+  const position = new Float32Array(boundary.length * 3);
+  const normals = new Float32Array(boundary.length * 3);
+  for (let i = 0; i < boundary.length; i++) {
+    const p = boundary[i]!;
+    position[i * 3] = p[0];
+    position[i * 3 + 1] = p[1];
+    position[i * 3 + 2] = p[2];
+    normals[i * 3] = normal[0];
+    normals[i * 3 + 1] = normal[1];
+    normals[i * 3 + 2] = normal[2];
+  }
+  const triangleCount = boundary.length - 2;
+  const index = new Uint32Array(triangleCount * 3);
+  for (let i = 0; i < triangleCount; i++) {
+    index[i * 3] = 0;
+    index[i * 3 + 1] = i + 1;
+    index[i * 3 + 2] = i + 2;
+  }
+  return {
+    position,
+    normal: normals,
+    index,
+    edges: new Float32Array(0),
+    faceGroups: [{ start: 0, count: triangleCount * 3, entityId: faceId as kernelGeometry.FaceRef }],
+    edgeGroups: [],
+    faceInfos: [{ entityId: faceId as kernelGeometry.FaceRef, surfaceType: face.surface?.kind ?? "plane", area: 0, normal: [normal[0], normal[1], normal[2]] }],
+    edgeInfos: [],
+  };
+}
+
 /** @emoji 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
 export function visibleSolidRefsForModelDefinition(
   model: Model,
@@ -2997,6 +3070,53 @@ export function visibleSolidRefsForModelDefinition(
     out.add(solidId);
   }
   return out;
+}
+
+/** @emoji 👁️ Face ids eligible for factory surface shading under a model definition (typology surface primitives only). */
+export function visibleFaceRefsForModelDefinition(
+  model: Model,
+  modelDefinitionId: string,
+  options: CommittedMeshVisibilityOptions = {},
+): ReadonlySet<string> {
+  const flagsForId = options.flagsForId ?? (() => ({}));
+  const typologyToggles = options.typologyToggles ?? {};
+  const objectVisible = options.filterKindToggles?.object !== false;
+  const faceVisible = options.filterKindToggles?.face !== false;
+  const scoped = listModelObjectsForModelDefinition(model, modelDefinitionId);
+  const out = new Set<string>();
+  if (scoped.length === 0 || !objectVisible || !faceVisible) return out;
+  for (const row of scoped) {
+    const objectId = String(row.id);
+    if (flagsForId(objectId).hidden === true) continue;
+    if (typologyToggles[row.typology] === false) continue;
+    collectVisibleFaceRefsForObject(model, row, flagsForId, out);
+  }
+  return out;
+}
+
+export interface FactoryFaceMeshRow {
+  readonly faceId: string;
+  readonly mesh: MeshTransfer;
+  readonly style?: ResolvedTypologyStyle;
+}
+
+/** @emoji 🧊 Lists planar face meshes for typology-owned surface primitives (energy/structure panes). */
+export function listFactoryFaceMeshesForModelDefinition(
+  model: Model,
+  modelDefinitionId: string,
+  options: CommittedMeshVisibilityOptions = {},
+): readonly FactoryFaceMeshRow[] {
+  const allowed = visibleFaceRefsForModelDefinition(model, modelDefinitionId, options);
+  if (allowed.size === 0) return [];
+  const typologyIndex = buildGeometryTypologyIndex(model, modelDefinitionId);
+  const rows: FactoryFaceMeshRow[] = [];
+  for (const faceId of allowed) {
+    const mesh = buildPlanarFaceMeshTransfer(model, faceId);
+    if (!mesh || !isRenderableMeshTransfer(mesh)) continue;
+    const typology = typologyIndex.get(`face:${faceId}`);
+    rows.push({ faceId, mesh, style: typology ? resolveTypologyStyle(typology) : undefined });
+  }
+  return rows;
 }
 
 /** @emoji 👁️ Filters tessellated committed meshes to visible object-owned solids. */
@@ -3165,6 +3285,35 @@ function ChunkedCommitMeshRow(
 ): ReactNode {
   const { origin: _origin, rowKey: _rowKey, ...meshProps } = props;
   return <TessellatedCommitMesh {...meshProps} />;
+}
+
+/** @emoji 🧊 Renders typology-owned planar face surfaces (energy/structure surface primitives). */
+export function FactoryFaceSurfaceLayer({
+  faces,
+  modelRevision,
+  visible = true,
+}: {
+  readonly faces: readonly FactoryFaceMeshRow[];
+  readonly modelRevision?: number;
+  readonly visible?: boolean;
+}): ReactNode {
+  if (!visible || faces.length === 0) return null;
+  const rev = modelRevision ?? 0;
+  return (
+    <ViewRadiusLayer chunkSize={CAD_WORLD_CHUNK_SIZE} maxDistance={CAD_WORLD_MAX_DISTANCE}>
+      {faces.map((row, i) => (
+        <ChunkedCommitMeshRow
+          key={`face:${row.faceId}:r${rev}:${meshTransferContentKey(row.mesh, i)}`}
+          rowKey={`face:${row.faceId}:r${rev}:${meshTransferContentKey(row.mesh, i)}`}
+          origin={meshTransferOrigin(row.mesh)}
+          mesh={row.mesh}
+          style={row.style}
+          showFaces
+          showEdges={false}
+        />
+      ))}
+    </ViewRadiusLayer>
+  );
 }
 
 /** @emoji 🧊 Renders all committed document solids tessellated by the active kernel. */
@@ -3443,6 +3592,7 @@ export interface InteractionSpatialViewProps {
   readonly pickEnabled?: boolean;
   readonly committedMesh?: MeshTransfer | null;
   readonly committedMeshes?: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
+  readonly factoryFaceMeshes?: readonly FactoryFaceMeshRow[];
   readonly geometry?: SpatialPickGeometry | null;
   /** @emoji 🧲 Pick-target source; defaults to `geometry` (use spatial.shape geometry when the active model is typology-only). */
   readonly pickGeometry?: SpatialPickGeometry | null;
@@ -3521,6 +3671,7 @@ export function InteractionSpatialView({
   pickEnabled = true,
   committedMesh,
   committedMeshes,
+  factoryFaceMeshes = [],
   geometry,
   pickGeometry: pickGeometryProp,
   activeModelDefinitionId = defaultModelDefinitionId(),
@@ -3584,7 +3735,7 @@ export function InteractionSpatialView({
     if (committedMesh) return [{ solid: solidRef("committed"), mesh: committedMesh }];
     return [];
   }, [committedMeshes, committedMesh]);
-  const autoFitSources = reactHostPort.useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
+  const autoFitSources = reactHostPort.useMemo(() => [...layerMeshes.map((row) => row.mesh), ...factoryFaceMeshes.map((row) => row.mesh)], [factoryFaceMeshes, layerMeshes]);
   const ctx = snapshot.context;
   const geometryPreviewTransform = reactHostPort.useMemo(() => geometryPreviewTransformFromDisplay(displayModel ?? snapshot.display), [displayModel, snapshot.display]);
   const origin = vec3FromSnapshotContext(ctx, "origin") ?? vec3FromSnapshotContext(ctx, "prevPoint") ?? vec3FromSnapshotContext(ctx, "pointA");
@@ -3740,6 +3891,7 @@ export function InteractionSpatialView({
             onFacePointerDown={onCommittedFacePointerDown}
             onFacePointerMove={onCommittedFacePointerMove}
           />
+          <FactoryFaceSurfaceLayer faces={factoryFaceMeshes} modelRevision={geometry?.revision ?? 0} visible={sceneVisibility.showCommittedFaces} />
         </WorldLayer>
         <WorldLayer order={50} name="cad.display">
           <InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} renderItem={renderDisplayItem} />
@@ -4709,6 +4861,15 @@ export function InteractionRepl({
       filterKindToggles: sceneKindToggles,
     });
   }, [committedMeshes, entityFlagsForId, filterTypologyToggles, gumballPreviewModel, mdIdForView, sceneKindToggles]);
+  const factoryFaceMeshesForView = reactHostPort.useMemo(
+    () =>
+      listFactoryFaceMeshesForModelDefinition(gumballPreviewModel, mdIdForView, {
+        flagsForId: entityFlagsForId,
+        typologyToggles: filterTypologyToggles,
+        filterKindToggles: sceneKindToggles,
+      }),
+    [entityFlagsForId, filterTypologyToggles, gumballPreviewModel, mdIdForView, sceneKindToggles],
+  );
   const selectablePickTargets = reactHostPort.useMemo(() => {
     const filterPrimitives = filterSpatialPickTargetsForPrimitiveToggles(visiblePickTargets, selectionPrimitiveToggles);
     const typologyFiltered = filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
@@ -5640,7 +5801,7 @@ export function InteractionRepl({
 
   return (
     <div
-      className={cn("bg-background text-element flex min-h-0 w-full font-sans", fillHost ? "h-full flex-col" : "h-screen flex-row")}
+      className={fillHost ? canvasHostRootClass : editorShellRootClass}
       style={rootStyle}
     >
       <div className="relative min-h-0 min-w-0 flex-1">
@@ -5670,6 +5831,7 @@ export function InteractionRepl({
             geometry={viewGeometry}
             pickGeometry={pickSourceGeometry}
             committedMeshes={committedMeshesForView}
+            factoryFaceMeshes={factoryFaceMeshesForView}
             transformGumballModel={documentModel.model}
             onTransformGumballPreview={handleTransformGumballPreview}
             onTransformGumballPreviewEnd={handleTransformGumballPreviewEnd}
@@ -5725,7 +5887,7 @@ export function InteractionRepl({
         {selectionMenu ? (
           <div
             onPointerDown={(e) => e.stopPropagation()}
-            className={cn("fixed z-[10080] w-[220px] max-h-[210px] overflow-y-auto", cadChromePopoverClass)}
+            className={cn("fixed z-[10080] w-[220px] max-h-[210px] overflow-y-auto p-single", floatingMenuSurfaceClass)}
             style={{
               left: Math.min(selectionMenu.client.x + 8, window.innerWidth - 230),
               top: Math.min(selectionMenu.client.y + 8, window.innerHeight - 220),
@@ -5739,7 +5901,7 @@ export function InteractionRepl({
                 <button
                   key={key}
                   type="button"
-                  className={cn(cadChromeMenuButtonClass, active && "bg-accent text-accent-foreground")}
+                  className={cn(floatingMenuItemClass, active && "bg-active-base text-emphasized")}
                   onPointerEnter={() => setHoveredPickKey(effectiveSelectionKindToggles[target.kind] !== false ? key : null)}
                   onPointerLeave={() => setHoveredPickKey(null)}
                   onPointerDown={(e) => {
@@ -5758,7 +5920,7 @@ export function InteractionRepl({
       </div>
       {showAside ? (
         <aside
-          className={cn(cadChromePanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-[360px] shrink-0")}
+          className={cn(floatingPanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-[360px] shrink-0")}
           style={asideStyle}
         >
           <strong className="text-sm font-semibold">Editor</strong>
@@ -5769,7 +5931,7 @@ export function InteractionRepl({
               </Button>
             ))}
           </div>
-          <div className="border-border bg-background relative grid overflow-visible rounded-md border">
+          <div className={cn("relative grid overflow-visible", floatingFieldSurfaceClass)}>
             <Input
               ref={cmdRef}
               type="text"
@@ -5806,12 +5968,12 @@ export function InteractionRepl({
               </div>
             ) : null}
             {interactionMenuOpen ? (
-              <div onPointerDown={(e) => e.stopPropagation()} className={cn("absolute top-[calc(100%+6px)] right-0 z-[3] max-h-[220px] w-[280px] max-w-[calc(100vw-32px)] overflow-y-auto", cadChromePopoverClass)}>
+              <div onPointerDown={(e) => e.stopPropagation()} className={cn("absolute top-[calc(100%+6px)] right-0 z-[3] max-h-[220px] w-[280px] max-w-[calc(100vw-32px)] overflow-y-auto p-single", floatingMenuSurfaceClass)}>
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (
-                    <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={cadChromeMenuButtonClass} onClick={() => runSuggestion(suggestion)}>
+                    <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={floatingMenuItemClass} onClick={() => runSuggestion(suggestion)}>
                       <div className="flex items-center gap-single">
-                        <span className="border-border bg-muted text-element inline-flex min-w-6 items-center justify-center rounded-full border px-half py-0 text-2xs font-bold uppercase">{suggestion.key}</span>
+                        <span className={cn(floatingTagClass, floatingTagOffClass, "inline-flex min-w-6 items-center justify-center px-half py-0 text-2xs font-bold uppercase")}>{suggestion.key}</span>
                         <span>{suggestion.label}</span>
                       </div>
                       {suggestion.detail ? <div className="text-muted-foreground text-2xs">{suggestion.detail}</div> : null}
@@ -5847,7 +6009,7 @@ export function InteractionRepl({
                       setSelectionMenu(null);
                       setHoveredPickKey(null);
                     }}
-                    className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
+                    className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
                   >
                     {modelDefinitions.map((row) => (
                       <option key={row.id} value={row.id}>
@@ -5879,7 +6041,7 @@ export function InteractionRepl({
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
-                      className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
+                      className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
                     >
                       <option value="">Select incoming transformation…</option>
                       {transfersFrom.map((row) => (
@@ -5902,7 +6064,7 @@ export function InteractionRepl({
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
-                      className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
+                      className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
                     >
                       <option value="">Select outgoing transformation…</option>
                       {transfersTo.map((row) => (
@@ -5926,7 +6088,7 @@ export function InteractionRepl({
             </label>
             <div role="group" aria-label="Show primitives" className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
-                <label key={`show-primitive-${kind}`} className={cn(cadChromeTagClass, filterPrimitiveToggles[kind] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
+                <label key={`show-primitive-${kind}`} className={cn(floatingTagClass, filterPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
                   <input
                     type="checkbox"
                     checked={filterPrimitiveToggles[kind] !== false}
@@ -5961,7 +6123,7 @@ export function InteractionRepl({
             </label>
             <div role="group" aria-label="Filter primitives" className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
-                <label key={`filter-primitive-${kind}`} className={cn(cadChromeTagClass, selectionPrimitiveToggles[kind] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
+                <label key={`filter-primitive-${kind}`} className={cn(floatingTagClass, selectionPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
                   <input
                     type="checkbox"
                     checked={selectionPrimitiveToggles[kind] !== false}
@@ -5987,7 +6149,7 @@ export function InteractionRepl({
               {modelDefinitionScope.typologies.map((typology) => {
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
-                  <label key={`show-${typology.id}`} className={cn(cadChromeTagClass, filterTypologyToggles[typology.id] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
+                  <label key={`show-${typology.id}`} className={cn(floatingTagClass, filterTypologyToggles[typology.id] !== false ? floatingTagOnClass : floatingTagOffClass)}>
                     <input
                       type="checkbox"
                       checked={filterTypologyToggles[typology.id] !== false}
@@ -6025,7 +6187,7 @@ export function InteractionRepl({
               {modelDefinitionScope.typologies.map((typology) => {
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
-                  <label key={`select-${typology.id}`} className={cn(cadChromeTagClass, selectionTypologyToggles[typology.id] !== false ? cadChromeTagOnClass : cadChromeTagOffClass)}>
+                  <label key={`select-${typology.id}`} className={cn(floatingTagClass, selectionTypologyToggles[typology.id] !== false ? floatingTagOnClass : floatingTagOffClass)}>
                     <input
                       type="checkbox"
                       checked={selectionTypologyToggles[typology.id] !== false}
@@ -6151,7 +6313,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
                 if (!e.target.value) clearField(defn);
                 else setField(defn, e.target.value);
               }}
-                      className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
+                      className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
             >
               <option value="">—</option>
               {options.map((option) => (
@@ -7107,6 +7269,45 @@ if (import.meta.vitest) {
       expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })].sort()).toEqual(["solid-b"]);
       model.setEntityFlag("obj-b", "hidden", true);
       expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })]).toEqual([]);
+    });
+
+    it("buildPlanarFaceMeshTransfer shades typology surface primitives for energy models", () => {
+      const model = new Model();
+      const v0 = { id: "v0" as VertexRef, position: [0, 0, 0] as Vec3 };
+      const v1 = { id: "v1" as VertexRef, position: [1, 0, 0] as Vec3 };
+      const v2 = { id: "v2" as VertexRef, position: [0, 1, 0] as Vec3 };
+      const e0 = { id: "e0" as EdgeRef, vertexIds: [v0.id, v1.id] as [VertexRef, VertexRef] };
+      const e1 = { id: "e1" as EdgeRef, vertexIds: [v1.id, v2.id] as [VertexRef, VertexRef] };
+      const e2 = { id: "e2" as EdgeRef, vertexIds: [v2.id, v0.id] as [VertexRef, VertexRef] };
+      const wireId = "w0" as WireRef;
+      const faceId = "f0";
+      applyModelDiff(model, {
+        vertices: { added: [v0, v1, v2] },
+        edges: { added: [e0, e1, e2] },
+        wires: { added: [{ id: wireId, edgeIds: [e0.id, e1.id, e2.id] }] },
+        faces: {
+          added: [
+            {
+              id: faceId,
+              wireIds: [wireId],
+              surface: { kind: "plane", origin: [0, 0, 0], normal: [0, 0, 1] },
+            },
+          ],
+        },
+      });
+      model.objects["baseplate"] = {
+        id: "baseplate" as ObjectRef,
+        typology: "energy.energy.baseplate" as const,
+        primitives: { surface: faceId },
+      };
+      const mesh = buildPlanarFaceMeshTransfer(model, faceId);
+      expect(mesh).not.toBeNull();
+      expect(isRenderableMeshTransfer(mesh!)).toBe(true);
+      expect(mesh!.index.length).toBe(3);
+      const rows = listFactoryFaceMeshesForModelDefinition(model, "aec.building.energy");
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.faceId).toBe(faceId);
+      expect(rows[0]?.style?.color).toBeTruthy();
     });
 
     it("filterCommittedMeshesForModelDefinition drops meshes when all objects are hidden", () => {

@@ -60,7 +60,7 @@ import {
 	WindowKindRuntime,
 	AppRuntime,
 } from "@framework/platform/core";
-import type { NavigationDestination, NavigationLevel, SearchItemSpec } from "@framework/core";
+import { PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY, type NavigationDestination, type NavigationLevel, type SearchItemSpec } from "@framework/core";
 import {
 	type RelationshipKind,
 	type WiresFixtureV1,
@@ -15471,6 +15471,7 @@ const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
 	id: "semio.sketchpad",
 	name: "Semio Sketchpad",
 	defaultActiveAppId: SKETCHPAD_HOME_APP_ID,
+	initialPanelVisibility: PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
 };
 
 /** @emoji 🧱 Builds the sketchpad {@link Platform} (apps, window bodies, {@link Component} registry). */

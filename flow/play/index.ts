@@ -11,6 +11,8 @@ import {
   Playground,
   WindowKindRuntime,
   buildFlowWindowBody,
+  createPlayAppRuntime,
+  createProductPlaygroundPlatform,
   createStackLayout,
   enforcePlaygroundWindowEngagementInput,
   registerWindowBody,
@@ -470,17 +472,14 @@ export function registerFlowPlayDeclarativeBodies(): void {
 }
 
 export function buildFlowPlayAppRuntime(controller: FlowPlayController): AppRuntime {
-  const app = new AppRuntime(FLOW_PLAY_APP_ID, "Flow", undefined, controller, FLOW_PLAY_LAYOUT, []);
-  app.defaultModeId = controller.mainMode.id;
-  app.addMode(controller.mainMode);
-  return app;
+  return createPlayAppRuntime(FLOW_PLAY_APP_ID, "Flow", controller, FLOW_PLAY_LAYOUT, controller.mainMode);
 }
 
 export class PlaygroundFlow extends Playground {
   readonly id = FLOW_PLAY_APP_ID;
 
   createRuntime(): Platform {
-    const runtime = new Platform({ id: this.id });
+    const runtime = createProductPlaygroundPlatform(this.id);
     const ctrl = new FlowPlayController(runtime.commandBus, () => runtime.notify());
     runtime.addApp(buildFlowPlayAppRuntime(ctrl));
     return runtime;

@@ -15,6 +15,8 @@ import {
   ModeRuntime,
   WindowKindRuntime,
   buildMapWindowBody,
+  createPlayAppRuntime,
+  createProductPlaygroundPlatform,
   createStackLayout,
   registerWindowBody,
   type CommandDescriptor,
@@ -645,17 +647,14 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
 
 function buildMapPlayAppRuntime(ctrl: MapPlayController): AppRuntime {
   const layout = createStackLayout(["gis-map-main"], ["World Map"]);
-  const app = new AppRuntime(GIS_MAP_PLAY_APP_ID, "GIS Map", undefined, ctrl, layout, []);
-  app.defaultModeId = ctrl.mainMode.id;
-  app.addMode(ctrl.mainMode);
-  return app;
+  return createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "GIS Map", ctrl, layout, ctrl.mainMode);
 }
 
 export class PlaygroundMap extends Playground {
   readonly id = GIS_MAP_PLAY_APP_ID;
 
   createRuntime(): Platform {
-    const runtime = new Platform({ id: this.id });
+    const runtime = createProductPlaygroundPlatform(this.id);
     const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
     runtime.addApp(buildMapPlayAppRuntime(ctrl));
     return runtime;

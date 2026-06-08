@@ -36,31 +36,25 @@ if (import.meta.vitest) {
 			kernel.resetForTest();
 		});
 
-		it("createBoxFromCorners volume matches footprint×height", async () => {
+		it("boxSync volume matches width×depth×height", async () => {
 			await ensureBrepWasmLoaded();
-			const solid = await kernel.createBoxFromCorners({
-				cornerA: [0, 0, 0],
-				cornerB: [2, 3, 0],
-				height: 4,
-			});
-			const vol = await kernel.volume(solid);
-			expect(vol).toBeCloseTo(2 * 3 * 4, 1);
+			const solid = kernel.boxSync(2, 3, 4);
+			expect(kernel.measureVolumeSync(solid)).toBeCloseTo(2 * 3 * 4, 1);
 		});
 
-		it("tessellate returns renderable mesh", async () => {
+		it("tessellateGeometry returns renderable mesh", async () => {
 			await ensureBrepWasmLoaded();
-			const solid = await kernel.createSphere([0, 0, 0], 1);
-			const mesh = await kernel.tessellate(solid, 0.05);
+			const solid = kernel.spherePrimSync(1);
+			const mesh = await kernel.tessellateGeometry(solid, 0.05);
 			expect(isRenderableMeshTransfer(mesh)).toBe(true);
 		});
 
-		it("fuseSolids combines volumes", async () => {
+		it("fuseAllSync combines volumes", async () => {
 			await ensureBrepWasmLoaded();
-			const a = await kernel.createBoxFromCorners({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
-			const b = await kernel.createBoxFromCorners({ cornerA: [0.5, 0, 0], cornerB: [1.5, 1, 0], height: 1 });
-			const fused = await kernel.fuseSolids([a, b]);
-			const vol = await kernel.volume(fused);
-			expect(vol).toBeGreaterThan(1);
+			const a = kernel.boxSync(1, 1, 1);
+			const b = kernel.boxSync(1, 1, 1, [0.5, 0, 0]);
+			const fused = kernel.fuseAllSync([a, b]);
+			expect(kernel.measureVolumeSync(fused)).toBeGreaterThan(1);
 		});
 
 		it("line curve tessellates as edges", async () => {
@@ -86,17 +80,49 @@ if (import.meta.vitest) {
 			expect(pt[0]).toBeCloseTo(2, 1);
 		});
 
-		it("drawCircle registers drawing handle", async () => {
+		it("drawCircle registers previewable profile drawing", async () => {
 			await ensureBrepWasmLoaded();
-			const drawing = kernel.drawCircleSync(1);
-			expect(kernel.getGeometryKind(drawing)).toBe("drawing");
+			const profile = kernel.drawCircleSync(1);
+			expect(kernel.getGeometryKind(profile)).toBe("drawing");
+			const mesh = await kernel.tessellateGeometry(profile, 0.05);
+			expect(isRenderableMeshTransfer(mesh)).toBe(true);
+			expect(mesh.edges.length).toBeGreaterThan(0);
 		});
 
-		it("extrudeSync builds solid from sketch", async () => {
+		it("sketch rectangle and extrude share centered footprint in preview", async () => {
 			await ensureBrepWasmLoaded();
-			const face = kernel.sketchRectangleSync(2, 2);
-			const solid = kernel.extrudeSync(face, [0, 0, 1], 1);
+			const profile = kernel.sketchRectangleSync(4, 3);
+			expect(kernel.getGeometryKind(profile)).toBe("drawing");
+			const profileMesh = await kernel.tessellateGeometry(profile, 0.05);
+			expect(isRenderableMeshTransfer(profileMesh)).toBe(true);
+			expect(profileMesh.index.length).toBe(0);
+			expect(profileMesh.edges.length).toBeGreaterThan(0);
+			const profileBounds = kernel.getBoundsSync(profile);
+			const solid = kernel.extrudeSync(profile, [0, 0, 1], 5);
 			expect(kernel.getGeometryKind(solid)).toBe("solid");
+			const solidMesh = await kernel.tessellateGeometry(solid, 0.05);
+			expect(isRenderableMeshTransfer(solidMesh)).toBe(true);
+			const solidBounds = kernel.getBoundsSync(solid);
+			const prim = kernel.boxSync(4, 3, 5);
+			const primBounds = kernel.getBoundsSync(prim);
+			expect(profileBounds.min[0]).toBeCloseTo(solidBounds.min[0], 3);
+			expect(profileBounds.max[0]).toBeCloseTo(solidBounds.max[0], 3);
+			expect(profileBounds.min[1]).toBeCloseTo(solidBounds.min[1], 3);
+			expect(profileBounds.max[1]).toBeCloseTo(solidBounds.max[1], 3);
+			for (let axis = 0; axis < 3; axis += 1) {
+				expect(solidBounds.min[axis]).toBeCloseTo(primBounds.min[axis]!, 5);
+				expect(solidBounds.max[axis]).toBeCloseTo(primBounds.max[axis]!, 5);
+			}
+		});
+
+		it("sketch and curve circle extrude tessellate in preview", async () => {
+			await ensureBrepWasmLoaded();
+			for (const profile of [kernel.sketchCircleSync(2), kernel.circleCurveSync(2), kernel.drawCircleSync(1)]) {
+				const solid = kernel.extrudeSync(profile, [0, 0, 1], 5);
+				expect(kernel.getGeometryKind(solid)).toBe("solid");
+				const solidMesh = await kernel.tessellateGeometry(solid, 0.05);
+				expect(isRenderableMeshTransfer(solidMesh)).toBe(true);
+			}
 		});
 
 		it("makeExternalGear registers solid handle", async () => {

@@ -1064,6 +1064,12 @@ export interface PanelVisibility {
 	readonly rightSidePanel: boolean;
 }
 
+/** @emoji 🪟 Default open side panels for product/playground shells (glass workbench + details). */
+export const PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY: PanelVisibility = {
+	leftSidePanel: true,
+	rightSidePanel: true,
+};
+
 /** @emoji 📐 Resolves initial panel visibility: prop override, then platform spec; default both hidden. */
 export function resolveInitialPanelVisibility(
 	prop?: Partial<PanelVisibility>,

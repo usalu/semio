@@ -185,11 +185,48 @@ function toVec3Tuple(p: { x?: number; y?: number; z?: number } | readonly [numbe
 	return [Number(p.x) || 0, Number(p.y) || 0, Number(p.z) || 0];
 }
 
-function boundsToAabb(bounds: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } }): Aabb {
+function boundsToAabb(
+	bounds:
+		| { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } }
+		| { xMin: number; xMax: number; yMin: number; yMax: number; zMin: number; zMax: number },
+): Aabb {
+	if ("xMin" in bounds) {
+		return { min: [bounds.xMin, bounds.yMin, bounds.zMin], max: [bounds.xMax, bounds.yMax, bounds.zMax] };
+	}
 	return {
 		min: [bounds.min.x, bounds.min.y, bounds.min.z],
 		max: [bounds.max.x, bounds.max.y, bounds.max.z],
 	};
+}
+
+function extrudeDistanceAlongDirection(direction: Vec3, distance: number): number {
+	const len = Math.hypot(direction[0], direction[1], direction[2]);
+	if (len < 1e-9) return Math.abs(distance);
+	return Math.abs(distance);
+}
+
+function profileRectangleSolid(width: number, depth: number, height: number): ValidSolid {
+	return box(width, depth, height, { at: [0, 0, 0], centered: true }) as ValidSolid;
+}
+
+function profileCircleSolid(radius: number, height: number): ValidSolid {
+	return cylinder(radius, Math.max(height, 1e-6), { at: [0, 0, 0], axis: [0, 0, 1], centered: true }) as ValidSolid;
+}
+
+function profileSpecAabb(profile: ProfileSpec, kind: GeometryKind): Aabb | null {
+	const pad = 1e-7;
+	if (profile.kind === "rectangle") {
+		const hw = profile.width * 0.5;
+		const hd = profile.height * 0.5;
+		if (kind === "drawing") return { min: [-hw, -hd, -pad], max: [hw, hd, pad] };
+		return null;
+	}
+	if (profile.kind === "circle") {
+		const r = profile.radius;
+		if (kind === "drawing") return { min: [-r, -r, -pad], max: [r, r, pad] };
+		return null;
+	}
+	return null;
 }
 // #endregion 🧮Vec
 
@@ -222,7 +259,11 @@ export async function ensureBrepWasmLoaded(): Promise<void> {
 // #endregion 🧩OpenCascade
 
 // #region 🗄️Registry
-type RegistryEntry = { readonly kind: GeometryKind; readonly shape: unknown };
+type ProfileSpec =
+	| { readonly kind: "rectangle"; readonly width: number; readonly height: number }
+	| { readonly kind: "circle"; readonly radius: number };
+
+type RegistryEntry = { readonly kind: GeometryKind; readonly shape: unknown; readonly profile?: ProfileSpec };
 
 function inferKind(shape: unknown): GeometryKind {
 	if (shape && typeof shape === "object" && "drawing" in (shape as object)) return "drawing";
@@ -251,14 +292,31 @@ function asDrawing(shape: unknown): Drawing {
 // #endregion 🗄️Registry
 
 // #region 🖼️Tessellation
-function meshTransferFromShape(shape: AnyShape, tolerance: number, ref: GeometryRef, kind: GeometryKind): MeshTransfer {
+function profileDrawingWire(profile: ProfileSpec): unknown | null {
+	if (profile.kind === "rectangle") {
+		return (sketchRectangle(profile.width, profile.height) as { wire?: unknown }).wire ?? null;
+	}
+	if (profile.kind === "circle") {
+		return (sketchCircle(profile.radius) as { wire?: unknown }).wire ?? null;
+	}
+	return null;
+}
+
+function meshTransferFromShape(shape: AnyShape, tolerance: number, ref: GeometryRef, kind: GeometryKind, profile?: ProfileSpec): MeshTransfer {
 	const isVolume = kind === "solid" || kind === "shell" || kind === "face" || kind === "compound";
 	if (kind === "vertex") {
 		const pos = toVec3Tuple(vertexPosition(asShape(shape)));
 		return { ...emptyMeshTransfer(), points: new Float32Array(pos) };
 	}
 	if (kind === "drawing") {
-		const thinSolid = sketchExtrude(asDrawing(shape), [0, 0, 1], 0.001);
+		const drawing = asDrawing(shape);
+		const wire = (drawing as { wire?: unknown }).wire ?? (profile ? profileDrawingWire(profile) : null);
+		if (wire) {
+			const edgeMesh = meshEdges(wire, { tolerance, cache: true, angularTolerance: 0.2 });
+			const lineData = toLineGeometryData(edgeMesh);
+			return { ...emptyMeshTransfer(), edges: lineData.position };
+		}
+		const thinSolid = sketchExtrude(drawing, [0, 0, 1], 0.001);
 		return meshTransferFromShape(thinSolid as AnyShape, tolerance, ref, "solid");
 	}
 	if (isVolume) {
@@ -317,9 +375,9 @@ export class BrepjsGeometryKernel implements BrepKernel {
 		return geometryRef(`${kind}-${++this.seq}`);
 	}
 
-	private register(kind: GeometryKind, shape: unknown): GeometryRef {
+	private register(kind: GeometryKind, shape: unknown, profile?: ProfileSpec): GeometryRef {
 		const ref = this.nextRef(kind);
-		this.registry.set(ref, { kind, shape });
+		this.registry.set(ref, { kind, shape, ...(profile ? { profile } : {}) });
 		return ref;
 	}
 
@@ -379,7 +437,7 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	circleCurveSync(radius: number, at: Vec3 = [0, 0, 0], normal: Vec3 = [0, 0, 1]): GeometryRef {
-		return this.register("edge", circle(radius, { at: [at[0], at[1], at[2]], normal: vec3Normalize(normal) }));
+		return this.register("edge", circle(radius, { at: [at[0], at[1], at[2]], normal: vec3Normalize(normal) }), { kind: "circle", radius });
 	}
 
 	ellipseCurveSync(major: number, minor: number, at: Vec3 = [0, 0, 0], normal: Vec3 = [0, 0, 1]): GeometryRef {
@@ -460,11 +518,11 @@ export class BrepjsGeometryKernel implements BrepKernel {
 
 	// #region 🔖Draw2d
 	drawRectangleSync(width: number, height: number): GeometryRef {
-		return this.register("drawing", drawRectangle(width, height));
+		return this.register("drawing", drawRectangle(width, height), { kind: "rectangle", width, height });
 	}
 
 	drawCircleSync(radius: number): GeometryRef {
-		return this.register("drawing", drawCircle(radius));
+		return this.register("drawing", sketchCircle(radius), { kind: "circle", radius });
 	}
 
 	drawEllipseSync(major: number, minor: number): GeometryRef {
@@ -480,11 +538,11 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	sketchCircleSync(radius: number): GeometryRef {
-		return this.register("drawing", sketchCircle(radius));
+		return this.register("drawing", sketchCircle(radius), { kind: "circle", radius });
 	}
 
 	sketchRectangleSync(width: number, height: number): GeometryRef {
-		return this.register("drawing", sketchRectangle(width, height));
+		return this.register("drawing", sketchRectangle(width, height), { kind: "rectangle", width, height });
 	}
 	// #endregion 🔖Draw2d
 
@@ -492,8 +550,17 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	extrudeSync(shape: GeometryRef, direction: Vec3, distance: number): GeometryRef {
 		const entry = this.registry.get(shape);
 		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
+		const height = Math.abs(extrudeDistanceAlongDirection(direction, distance));
+		if (entry.profile?.kind === "rectangle") {
+			const { width, height: depth } = entry.profile;
+			return this.register("solid", profileRectangleSolid(width, depth, height), { kind: "rectangle", width, height: depth });
+		}
+		if (entry.profile?.kind === "circle") {
+			const { radius } = entry.profile;
+			return this.register("solid", profileCircleSolid(radius, height), { kind: "circle", radius });
+		}
 		if (entry.kind === "drawing") {
-			const result = sketchExtrude(entry.shape, direction, distance);
+			const result = sketchExtrude(asDrawing(entry.shape), direction, distance);
 			return this.register("solid", result);
 		}
 		const result = extrude(asShape3D(entry.shape), direction, distance);
@@ -725,7 +792,13 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	getBoundsSync(shape: GeometryRef): Aabb {
-		return boundsToAabb(getBounds(asShape(this.require(shape))));
+		const entry = this.registry.get(shape);
+		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
+		if (entry.profile) {
+			const profileAabb = profileSpecAabb(entry.profile, entry.kind);
+			if (profileAabb) return profileAabb;
+		}
+		return boundsToAabb(getBounds(asShape(entry.shape)));
 	}
 	// #endregion 🔖Evaluate
 
@@ -828,48 +901,6 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 	// #endregion 🔖Gears
 
-	// #region 🔖LegacySolid
-	createBoxFromCornersSync(input: { cornerA: Vec3; cornerB: Vec3; height: number }): SolidRef {
-		const ax = Math.min(input.cornerA[0], input.cornerB[0]);
-		const ay = Math.min(input.cornerA[1], input.cornerB[1]);
-		const bx = Math.max(input.cornerA[0], input.cornerB[0]);
-		const by = Math.max(input.cornerA[1], input.cornerB[1]);
-		const w = bx - ax;
-		const d = by - ay;
-		const h = input.height;
-		const minZ = Math.min(input.cornerA[2], input.cornerB[2]);
-		const cx = (ax + bx) / 2;
-		const cy = (ay + by) / 2;
-		const ref = this.boxSync(w, d, h, [cx, cy, minZ + h / 2]);
-		return ref as SolidRef;
-	}
-
-	createSphereSync(center: Vec3, radius: number): SolidRef {
-		return this.spherePrimSync(radius, center) as SolidRef;
-	}
-
-	createCylinderSync(base: Vec3, axis: Vec3, radius: number, height: number): SolidRef {
-		return this.cylinderPrimSync(radius, height, base, axis) as SolidRef;
-	}
-
-	extrudeSolidSync(solid: SolidRef, direction: Vec3, distance: number): SolidRef {
-		return this.extrudeSync(solid as GeometryRef, direction, distance) as SolidRef;
-	}
-
-	translateSolidSync(solid: SolidRef, offset: Vec3): SolidRef {
-		return this.translateGeomSync(solid as GeometryRef, offset) as SolidRef;
-	}
-
-	fuseSolidsSync(solids: readonly SolidRef[]): SolidRef {
-		return this.fuseAllSync(solids as readonly GeometryRef[]) as SolidRef;
-	}
-
-	getSolid(solid: SolidRef): ValidSolid | undefined {
-		const entry = this.registry.get(solid as GeometryRef);
-		return entry ? asSolid(entry.shape) : undefined;
-	}
-	// #endregion 🔖LegacySolid
-
 	// #region 🔖TessellateDispose
 	async tessellateGeometry(ref: GeometryRef, tolerance: number): Promise<MeshTransfer> {
 		await ensureBrepWasmLoaded();
@@ -878,7 +909,7 @@ export class BrepjsGeometryKernel implements BrepKernel {
 		const key = `${String(ref)}:${tolerance}`;
 		const cached = this.meshCache.get(key);
 		if (cached) return cached;
-		const transfer = meshTransferFromShape(asShape(entry.shape), tolerance, ref, entry.kind);
+		const transfer = meshTransferFromShape(asShape(entry.shape), tolerance, ref, entry.kind, entry.profile);
 		this.meshCache.set(key, transfer);
 		return transfer;
 	}
@@ -889,49 +920,6 @@ export class BrepjsGeometryKernel implements BrepKernel {
 			if (key.startsWith(prefix) || key.startsWith(String(ref))) this.meshCache.delete(key);
 		}
 		this.registry.delete(ref);
-	}
-
-	async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef> {
-		await ensureBrepWasmLoaded();
-		return this.createBoxFromCornersSync(input);
-	}
-
-	async createSphere(center: Vec3, radius: number): Promise<SolidRef> {
-		await ensureBrepWasmLoaded();
-		return this.createSphereSync(center, radius);
-	}
-
-	async createCylinder(base: Vec3, axis: Vec3, radius: number, height: number): Promise<SolidRef> {
-		await ensureBrepWasmLoaded();
-		return this.createCylinderSync(base, axis, radius, height);
-	}
-
-	async extrudeSolid(solid: SolidRef, direction: Vec3, distance: number): Promise<SolidRef> {
-		await ensureBrepWasmLoaded();
-		return this.extrudeSolidSync(solid, direction, distance);
-	}
-
-	async translateSolid(solid: SolidRef, offset: Vec3): Promise<SolidRef> {
-		await ensureBrepWasmLoaded();
-		return this.translateSolidSync(solid, offset);
-	}
-
-	async fuseSolids(solids: readonly SolidRef[]): Promise<SolidRef> {
-		await ensureBrepWasmLoaded();
-		return this.fuseSolidsSync(solids);
-	}
-
-	async volume(solid: SolidRef): Promise<number> {
-		await ensureBrepWasmLoaded();
-		return this.measureVolumeSync(solid as GeometryRef);
-	}
-
-	async tessellate(solid: SolidRef, tolerance: number): Promise<MeshTransfer> {
-		return this.tessellateGeometry(solid as GeometryRef, tolerance);
-	}
-
-	disposeSolid(solid: SolidRef): void {
-		this.disposeGeometry(solid as GeometryRef);
 	}
 
 	resetForTest(): void {

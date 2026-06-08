@@ -4,6 +4,7 @@
 
 // #region 🔌Adapters
 import {
+  Button,
   Input,
   Select,
   SelectContent,
@@ -32,6 +33,8 @@ import {
   navbarFillItem,
   PanelToggleGroup,
   type PanelToggleItem,
+  floatingFieldSurfaceClass,
+  floatingMenuSurfaceClass,
   shellChromeSectionTitleClassName,
   shellChromeTitleClassName,
   type SidePanelTabConfig,
@@ -43,7 +46,6 @@ import {
   type TreePanelDefinition,
   type TreePanelSource,
   reactHostPort,
-  Button,
   Icon,
   IconSelector,
   createIconComponent,
@@ -75,6 +77,7 @@ import {
   CommandBus,
   Expertise,
   Platform,
+  PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
   resolveInitialPanelVisibility,
   WindowKindRuntime,
   getSidePanelBodyFactory,
@@ -689,9 +692,9 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       return <span className="text-muted-foreground px-1 text-xs">{node.value}</span>;
     case "button":
       return (
-        <button type="button" className="rounded-md border border-border bg-background px-2 py-1 text-sm" onClick={() => commandBus.dispatch(node.command.controllerId, node.command.command, node.command.args)}>
+        <Button type="button" variant="outline" size="sm" onClick={() => commandBus.dispatch(node.command.controllerId, node.command.command, node.command.args)}>
           {node.label}
-        </button>
+        </Button>
       );
     case "separator":
       return <span role="separator" className="bg-border my-1 h-px w-full shrink-0" aria-hidden />;
@@ -708,7 +711,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "section": {
       const section = node as UiSectionNode;
       return (
-        <div className="border-normal/60 flex flex-col gap-single rounded-md border p-single" data-ui-section={section.id}>
+        <div className={cn("flex flex-col gap-single p-single", floatingFieldSurfaceClass)} data-ui-section={section.id}>
           {section.label ? <div className={shellChromeSectionTitleClassName}>{section.label}</div> : null}
           <div className="flex flex-col gap-single">
             {section.children.map((child, index) => (
@@ -1290,7 +1293,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
   const [rightPanelSize, setRightPanelSize] = reactHostPort.useState(300);
   const [panelVisibility, setPanelVisibilityState] = reactHostPort.useState<PlaygroundPanelVisibility>(() =>
-    resolveInitialPanelVisibility(initialPanelVisibility, runtime),
+    resolveInitialPanelVisibility(initialPanelVisibility ?? PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY, runtime),
   );
   const setPanelVisibility = reactHostPort.useCallback(
     (next: PlaygroundPanelVisibility | ((prev: PlaygroundPanelVisibility) => PlaygroundPanelVisibility)) => {
@@ -6540,12 +6543,6 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
     },
     [ctrl],
   );
-  const onTransformGranularityChange = reactHostPort.useCallback(
-    (granularity: import("@procedural/react").ProceduralTransformGranularity) => {
-      ctrl?.run("setTransformGranularity", { granularity });
-    },
-    [ctrl],
-  );
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
       <ProceduralPreview
@@ -6559,8 +6556,8 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
         selectionMode={ctrl?.getSelectionMode()}
         selectionMethod={ctrl?.getSelectionMethod()}
         transformGranularity={ctrl?.getTransformGranularity() ?? "full"}
-        onTransformGranularityChange={onTransformGranularityChange}
         onGumballTransform={onGumballTransform}
+        gumballActiveWidgetIds={ctrl?.getGumballActiveWidgetIds()}
         onHover={onHover}
         onSelectionChange={onSelectionChange}
         kernel={proceduralExtensionHost.getBrepKernel()}
@@ -6839,8 +6836,9 @@ function FigureSourcePicker(props: {
 	return (
 		<div
 			className={cn(
-				"border-border bg-muted/20 flex min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-md border border-dashed p-6 text-center",
-				dragActive && "border-primary bg-primary/5",
+				"flex min-h-0 flex-1 flex-col items-center justify-center gap-3 border-dashed p-6 text-center",
+				floatingFieldSurfaceClass,
+				dragActive && "border-primary",
 			)}
 			onDragLeave={onDragLeave}
 			onDragOver={onDragOver}
@@ -7239,7 +7237,7 @@ function FigureTilesSurfaceHost({ node }: { readonly node: UiPanelHostSurfaceNod
 								}}
 								onPointerDown={onTilePointerDown(tile.id, tile.crop)}
 							>
-								<span className="bg-background/80 pointer-events-none absolute left-0 top-0 max-w-full truncate px-1 text-[10px]">{tile.name}</span>
+								<span className={cn("pointer-events-none absolute left-0 top-0 max-w-full truncate px-1 text-[10px]", floatingMenuSurfaceClass)}>{tile.name}</span>
 								{selected
 									? PRESENTATION_TILE_HANDLES.map((handle) => (
 											<button

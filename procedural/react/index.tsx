@@ -7,6 +7,10 @@
 // #region 🔌Adapters
 import {
 	applyGumballPose,
+	borderNormalClass,
+	canvasHostRootClass,
+	canvasViewportClass,
+	cn,
 	gumballHandleKindToTransformMode,
 	gumballPointerConsumesCanvasEventRef,
 	reactHostPort,
@@ -15,6 +19,7 @@ import {
 	type GumballHandleKind,
 	type GumballPose,
 } from "@ui/react";
+import { clearColorResolveCache, resolveSemanticColorHex } from "@ui/styling";
 import {
 	brepjsGeometryKernel,
 	BrepjsGeometryKernel,
@@ -166,7 +171,7 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("surface.filledFace", "Filled Face", "Filled face from wire", ["geometry"], ["geometry"], ["Surfaces"]),
 	brepKind("surface.fill", "Fill", "Fill from edges", ["geometry"], ["geometry"], ["Surfaces"]),
 	brepKind("surface.offsetFace", "Offset Face", "Offset face", ["geometry", "distance"], ["geometry"], ["Surfaces"]),
-	brepKind("solid.extrude", "Extrude", "Extrude profile", ["geometry", "distance"], ["geometry"], ["Solid"]),
+	brepKind("solid.extrude", "Extrude", "Extrude profile", ["geometry", "vector"], ["geometry"], ["Solid"]),
 	brepKind("solid.revolve", "Revolve", "Revolve profile", ["geometry", "angle"], ["geometry"], ["Solid"]),
 	brepKind("solid.loft", "Loft", "Loft sections", ["a", "b"], ["geometry"], ["Solid"]),
 	brepKind("solid.sweep", "Sweep", "Sweep profile along path", ["profile", "path"], ["geometry"], ["Solid"]),
@@ -217,12 +222,6 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("io.exportStl", "Export STL", "Export STL bytes as base64", ["geometry"], ["text"], ["IO"]),
 	brepKind("gear.external", "External Gear", "Spur external gear", ["teeth", "module"], ["geometry"], ["Gears"]),
 	brepKind("gear.internal", "Internal Gear", "Spur internal gear", ["teeth", "module"], ["geometry"], ["Gears"]),
-	brepKind("box", "Box Corners", "Box from corners (legacy)", ["cornerA", "cornerB", "height"], ["geometry"], ["Legacy"]),
-	brepKind("sphere", "Sphere Center", "Sphere from center (legacy)", ["center", "radius"], ["geometry"], ["Legacy"]),
-	brepKind("cylinder", "Cylinder Base", "Cylinder from base (legacy)", ["base", "axis", "radius", "height"], ["geometry"], ["Legacy"]),
-	brepKind("extrude", "Extrude Legacy", "Extrude solid (legacy)", ["geometry", "direction", "distance"], ["geometry"], ["Legacy"]),
-	brepKind("translate", "Translate Legacy", "Translate solid (legacy)", ["geometry", "offset"], ["geometry"], ["Legacy"]),
-	brepKind("union", "Union Legacy", "Boolean union (legacy)", ["a", "b"], ["geometry"], ["Legacy"]),
 ];
 
 const BREP_MODULE_MANIFEST: FlowModuleManifestV1 = {
@@ -263,6 +262,15 @@ function vec3PortOut(port: "point" | "vector", vec: Vec3): Record<string, unknow
 function parseVec3Input(input: Record<string, unknown>, key: string, fallback: Vec3 = [0, 0, 0]): Vec3 {
 	const raw = input[key];
 	return parseVec3Loose(raw, fallback) ?? fallback;
+}
+
+const EXTRUDE_DEFAULT_VECTOR: Vec3 = [0, 0, 5];
+
+function extrudeFromVector(vec: Vec3): { direction: Vec3; distance: number } {
+	const [x, y, z] = vec;
+	const len = Math.hypot(x, y, z);
+	if (len < 1e-12) return extrudeFromVector(EXTRUDE_DEFAULT_VECTOR);
+	return { direction: [x / len, y / len, z / len], distance: len };
 }
 
 function parseGeometry(input: Record<string, unknown>, key: string): GeometryRef | null {
@@ -339,7 +347,8 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.solid.extrude": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.extrudeSync(shape, [0, 0, 1], parseNumber(input.distance, 1)));
+		const { direction, distance } = extrudeFromVector(parseVec3Input(input, "vector", EXTRUDE_DEFAULT_VECTOR));
+		return geoOut(k.extrudeSync(shape, direction, distance));
 	},
 	"brep.solid.revolve": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -601,25 +610,6 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	},
 	"brep.gear.external": (input, k) => geoOut(k.makeExternalGearSync(parseNumber(input.teeth, 20), parseNumber(input.module, 2))),
 	"brep.gear.internal": (input, k) => geoOut(k.makeInternalGearSync(parseNumber(input.teeth, 20), parseNumber(input.module, 2))),
-	"brep.box": (input, k) => geoOut(k.createBoxFromCornersSync({ cornerA: parseVec3(input.cornerA), cornerB: parseVec3(input.cornerB, [1, 1, 0]), height: parseNumber(input.height, 1) }) as GeometryRef),
-	"brep.sphere": (input, k) => geoOut(k.createSphereSync(parseVec3(input.center), parseNumber(input.radius, 1)) as GeometryRef),
-	"brep.cylinder": (input, k) => geoOut(k.createCylinderSync(parseVec3(input.base), parseVec3(input.axis, [0, 0, 1]), parseNumber(input.radius, 1), parseNumber(input.height, 1)) as GeometryRef),
-	"brep.extrude": (input, k) => {
-		const shape = parseGeometry(input, "geometry");
-		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.extrudeSync(shape, parseVec3(input.direction, [0, 0, 1]), parseNumber(input.distance, 1)));
-	},
-	"brep.translate": (input, k) => {
-		const shape = parseGeometry(input, "geometry");
-		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.translateGeomSync(shape, parseVec3(input.offset)));
-	},
-	"brep.union": (input, k) => {
-		const a = parseGeometry(input, "a");
-		const b = parseGeometry(input, "b");
-		if (!a || !b) throw new Error("missing union inputs");
-		return geoOut(k.fuseAllSync([a, b]));
-	},
 };
 
 /** @emoji 🧊 Synchronous brep neuron evaluation (requires pre-initialized WASM). */
@@ -688,13 +678,17 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 	schema: "flow.fixture/v1",
 	camera: { x: 0, y: 0, zoom: 1 },
 	widgets: [
-		{ kind: "neuron", id: "sketch", neuronKind: "brep.sketch2d.rectangle" },
+		{ kind: "neuron", id: "sketch", neuronKind: "brep.sketch2d.circle" },
+		{ kind: "inputSlider", id: "vz", value: 5, min: 0, max: 50, step: 0.5 },
+		{ kind: "neuron", id: "vector", neuronKind: "brep.vector" },
 		{ kind: "neuron", id: "solid", neuronKind: "brep.solid.extrude" },
 		{ kind: "outputPreview", id: "preview" },
 	],
 	synapses: [
-		{ id: "s1", from: "sketch", to: "solid", fromPort: "out", toPort: "in" },
-		{ id: "s2", from: "solid", to: "preview", fromPort: "out", toPort: "in" },
+		{ id: "s1", from: "sketch", to: "solid", fromPort: "out", toPort: "geometry" },
+		{ id: "s2", from: "vz", to: "vector", fromPort: "out", toPort: "z" },
+		{ id: "s3", from: "vector", to: "solid", fromPort: "out", toPort: "vector" },
+		{ id: "s4", from: "solid", to: "preview", fromPort: "out", toPort: "in" },
 	],
 };
 
@@ -705,14 +699,11 @@ export function proceduralFixtureToJson(fixture: FlowFixtureV1 = PROCEDURAL_DEFA
 const PROCEDURAL_FLOW_STORE = createEphemeralFlowStore();
 // #endregion 🔖Fixture
 
-// #region 🔖BrepViewport
+// #region 🔖ProceduralPreview
 export type ProceduralPreviewItem =
 	| { readonly widgetId: string; readonly kind: "geometry"; readonly handle: GeometryRef }
 	| { readonly widgetId: string; readonly kind: "point"; readonly position: Vec3 }
 	| { readonly widgetId: string; readonly kind: "vector"; readonly direction: Vec3 };
-
-/** @deprecated Use {@link ProceduralPreviewItem} with `kind: "geometry"`. */
-export type ProceduralGeometryHandle = Extract<ProceduralPreviewItem, { kind: "geometry" }>;
 
 export type ProceduralPreviewShowMode = "everything" | "selected";
 export type ProceduralSelectionMode = SelectionMergeMode;
@@ -725,10 +716,13 @@ export type ProceduralGumballTransformDelta =
 	| { readonly op: "rotate"; readonly angle: number }
 	| { readonly op: "scale"; readonly factor: number };
 
+export type ProceduralGumballTransformPhase = "start" | "live" | "end";
+
 export interface ProceduralGumballTransformRequest {
 	readonly widgetId: string;
 	readonly delta: ProceduralGumballTransformDelta;
 	readonly granularity: ProceduralTransformGranularity;
+	readonly phase?: ProceduralGumballTransformPhase;
 }
 
 function gumballDeltaFromPoses(
@@ -771,6 +765,7 @@ function ProceduralPreviewGumball({
 	readonly onInteractionChange?: (widgetId: string | null) => void;
 }): ReactNode {
 	const [target, setTarget] = reactHostPort.useState<THREE.Object3D | null>(null);
+	const dragBeforeRef = reactHostPort.useRef<GumballPose | null>(null);
 	const center = reactHostPort.useMemo(() => {
 		const bounds = worldBoundsForPreviewItem(item, kernel);
 		if (!bounds) return [0, 0, 0] as Vec3;
@@ -788,6 +783,15 @@ function ProceduralPreviewGumball({
 		},
 		[item.widgetId, onInteractionChange],
 	);
+	const emitGumballTransform = reactHostPort.useCallback(
+		(phase: ProceduralGumballTransformPhase, kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+			const mode = gumballHandleKindToTransformMode(kind);
+			const delta = gumballDeltaFromPoses(mode, before, after);
+			console.log(`[DEBUG] procedural gumball ${item.widgetId} ${mode} ${phase}`, delta);
+			onGumballTransform?.({ widgetId: item.widgetId, delta, granularity: transformGranularity, phase });
+		},
+		[item.widgetId, onGumballTransform, transformGranularity],
+	);
 	if (!onGumballTransform) return null;
 	return (
 		<group position={center}>
@@ -795,46 +799,29 @@ function ProceduralPreviewGumball({
 			{target ? (
 				<UnifiedGumball
 					target={target}
-					onDragStart={() => {
+					onDragStart={(kind: GumballHandleKind, pose: GumballPose) => {
+						dragBeforeRef.current = pose;
 						setGumballInteractionActive(true);
+						emitGumballTransform("start", kind, pose, pose);
 					}}
 					onDraggingChanged={(active) => {
 						setGumballInteractionActive(active);
 					}}
-					onDragEnd={(kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-						const mode = gumballHandleKindToTransformMode(kind);
-						const delta = gumballDeltaFromPoses(mode, before, after);
-						console.log(`[DEBUG] procedural gumball ${item.widgetId} ${mode}`, delta);
-						onGumballTransform({ widgetId: item.widgetId, delta, granularity: transformGranularity });
+					onDrag={(kind: GumballHandleKind, after: GumballPose) => {
+						const before = dragBeforeRef.current;
+						if (!before) return;
+						emitGumballTransform("live", kind, before, after);
 						applyGumballPose(target, before);
+					}}
+					onDragEnd={(kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+						emitGumballTransform("end", kind, before, after);
+						applyGumballPose(target, before);
+						dragBeforeRef.current = null;
 						setGumballInteractionActive(false);
 					}}
 				/>
 			) : null}
 		</group>
-	);
-}
-
-function ProceduralTransformDetailWindow({
-	granularity,
-	onGranularityChange,
-}: {
-	readonly granularity: ProceduralTransformGranularity;
-	readonly onGranularityChange?: (granularity: ProceduralTransformGranularity) => void;
-}): ReactNode {
-	if (!onGranularityChange) return null;
-	return (
-		<div className="pointer-events-auto absolute right-3 top-3 z-20 rounded-md border border-zinc-700 bg-zinc-950/90 px-3 py-2 text-xs text-zinc-100 shadow-lg">
-			<div className="mb-1 font-medium">Transform Detail</div>
-			<select
-				className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1"
-				value={granularity}
-				onChange={(event) => onGranularityChange(event.target.value as ProceduralTransformGranularity)}
-			>
-				<option value="full">Full (sliders + vector)</option>
-				<option value="compact">Compact (node params)</option>
-			</select>
-		</div>
 	);
 }
 
@@ -849,8 +836,8 @@ export interface ProceduralPreviewProps {
 	readonly selectionMode?: ProceduralSelectionMode;
 	readonly selectionMethod?: ProceduralSelectionMethod;
 	readonly transformGranularity?: ProceduralTransformGranularity;
-	readonly onTransformGranularityChange?: (granularity: ProceduralTransformGranularity) => void;
 	readonly onGumballTransform?: (request: ProceduralGumballTransformRequest) => void;
+	readonly gumballActiveWidgetIds?: readonly string[];
 	readonly onHover?: (widgetId: string | null) => void;
 	readonly onSelect?: (widgetId: string) => void;
 	readonly onSelectionChange?: (ids: readonly string[], mode: ProceduralSelectionMode) => void;
@@ -875,14 +862,6 @@ type PreviewLayerChrome = {
 	readonly onHover?: (widgetId: string | null) => void;
 	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
 };
-
-/** @deprecated Use {@link ProceduralPreview} with {@link ProceduralPreviewItem} entries. */
-export interface BrepViewportProps {
-	readonly geometryIds: readonly string[];
-	readonly kernel?: BrepKernelType;
-	readonly tolerance?: number;
-	readonly className?: string;
-}
 
 interface BrepMeshBuffers {
 	readonly surface: THREE.BufferGeometry | null;
@@ -1014,46 +993,24 @@ function previewItemKey(item: ProceduralPreviewItem): string {
 	return `${item.widgetId}:vector`;
 }
 
-function BrepPointLayer({
-	widgetId,
-	position,
+function BrepPreviewLayer({
+	item,
+	kernel,
+	tolerance,
 	...chrome
 }: {
-	readonly widgetId: string;
-	readonly position: Vec3;
+	readonly item: ProceduralPreviewItem;
+	readonly kernel: BrepKernelType;
+	readonly tolerance: number;
 } & PreviewLayerChrome): ReactNode {
 	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
-	if (!renderMode.visible) return null;
-	const radius = renderMode.asHover ? PROCEDURAL_PREVIEW_POINT_RADIUS * 1.25 : PROCEDURAL_PREVIEW_POINT_RADIUS;
-	return (
-		<group position={position} {...createPreviewPointerHandlers(widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled)}>
-			<mesh>
-				<sphereGeometry args={[radius, 16, 12]} />
-				<meshStandardMaterial
-					color={colors.meshColor}
-					emissive={colors.emissiveColor}
-					emissiveIntensity={colors.emissiveIntensity}
-					metalness={0}
-					roughness={1}
-					transparent={opacity < 1}
-					opacity={opacity}
-				/>
-			</mesh>
-		</group>
-	);
-}
-
-function BrepVectorLayer({
-	widgetId,
-	direction,
-	...chrome
-}: {
-	readonly widgetId: string;
-	readonly direction: Vec3;
-} & PreviewLayerChrome): ReactNode {
-	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
+	const handlers = createPreviewPointerHandlers(item.widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled);
+	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
+	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
+	const geometryRef = item.kind === "geometry" ? item.handle : null;
 	const arrow = useMemo(() => {
-		const tip = new THREE.Vector3(direction[0], direction[1], direction[2]);
+		if (item.kind !== "vector") return null;
+		const tip = new THREE.Vector3(item.direction[0], item.direction[1], item.direction[2]);
 		const length = tip.length();
 		if (length < 1e-6) return null;
 		const unit = tip.clone().normalize();
@@ -1065,50 +1022,14 @@ function BrepVectorLayer({
 		const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), unit);
 		const headPosition = unit.clone().multiplyScalar(length - headHeight * 0.5);
 		return { shaft, head, headPosition, quaternion };
-	}, [direction]);
-	if (!renderMode.visible || !arrow) return null;
-	return (
-		<group {...createPreviewPointerHandlers(widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled)}>
-			<line geometry={arrow.shaft}>
-				<lineBasicMaterial color={colors.lineColor} linewidth={1} transparent={opacity < 1} opacity={opacity} />
-			</line>
-			<mesh geometry={arrow.head} position={arrow.headPosition} quaternion={arrow.quaternion}>
-				<meshStandardMaterial
-					color={colors.meshColor}
-					emissive={colors.emissiveColor}
-					emissiveIntensity={colors.emissiveIntensity}
-					metalness={0}
-					roughness={1}
-					transparent={opacity < 1}
-					opacity={opacity}
-				/>
-			</mesh>
-		</group>
-	);
-}
-
-function BrepGeometryLayer({
-	widgetId,
-	geometryId,
-	kernel,
-	tolerance,
-	...chrome
-}: {
-	readonly widgetId: string;
-	readonly geometryId: string;
-	readonly kernel: BrepKernelType;
-	readonly tolerance: number;
-} & PreviewLayerChrome): ReactNode {
-	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
-	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
-	const ref = geometryId as GeometryRef;
-	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
+	}, [item]);
 
 	useEffect(() => {
+		if (!geometryRef) return;
 		let cancelled = false;
 		void (async () => {
 			await ensureBrepWasmLoaded();
-			const mesh = await kernel.tessellateGeometry(ref, tolerance);
+			const mesh = await kernel.tessellateGeometry(geometryRef, tolerance);
 			if (cancelled) return;
 			if (!isRenderableMeshTransfer(mesh)) {
 				setBuffers({ surface: null, lines: null, points: null });
@@ -1121,12 +1042,54 @@ function BrepGeometryLayer({
 		return () => {
 			cancelled = true;
 		};
-	}, [invalidate, kernel, ref, tolerance]);
+	}, [geometryRef, invalidate, kernel, tolerance]);
 
 	if (!renderMode.visible) return null;
 
+	if (item.kind === "point") {
+		const radius = renderMode.asHover ? PROCEDURAL_PREVIEW_POINT_RADIUS * 1.25 : PROCEDURAL_PREVIEW_POINT_RADIUS;
+		return (
+			<group position={item.position} {...handlers}>
+				<mesh>
+					<sphereGeometry args={[radius, 16, 12]} />
+					<meshStandardMaterial
+						color={colors.meshColor}
+						emissive={colors.emissiveColor}
+						emissiveIntensity={colors.emissiveIntensity}
+						metalness={0}
+						roughness={1}
+						transparent={opacity < 1}
+						opacity={opacity}
+					/>
+				</mesh>
+			</group>
+		);
+	}
+
+	if (item.kind === "vector") {
+		if (!arrow) return null;
+		return (
+			<group {...handlers}>
+				<line geometry={arrow.shaft}>
+					<lineBasicMaterial color={colors.lineColor} linewidth={1} transparent={opacity < 1} opacity={opacity} />
+				</line>
+				<mesh geometry={arrow.head} position={arrow.headPosition} quaternion={arrow.quaternion}>
+					<meshStandardMaterial
+						color={colors.meshColor}
+						emissive={colors.emissiveColor}
+						emissiveIntensity={colors.emissiveIntensity}
+						metalness={0}
+						roughness={1}
+						transparent={opacity < 1}
+						opacity={opacity}
+					/>
+				</mesh>
+			</group>
+		);
+	}
+
 	return (
-		<group {...createPreviewPointerHandlers(widgetId, chrome.onHover, chrome.onPick, chrome.pickEnabled)}>
+		<group {...handlers}>
 			{buffers.surface ? (
 				<mesh geometry={buffers.surface} raycast={chrome.pickEnabled ? undefined : () => null}>
 					<meshStandardMaterial
@@ -1354,8 +1317,8 @@ export function ProceduralPreview({
 	selectionMode = "default",
 	selectionMethod = "rectangle",
 	transformGranularity = "full",
-	onTransformGranularityChange,
 	onGumballTransform,
+	gumballActiveWidgetIds = [],
 	onHover,
 	onSelect,
 	onSelectionChange,
@@ -1379,6 +1342,21 @@ export function ProceduralPreview({
 	} | null>(null);
 	const [livePreselect, setLivePreselect] = useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
 	const [gumballInteractionWidgetId, setGumballInteractionWidgetId] = useState<string | null>(null);
+	const gumballHighlightIds = useMemo(() => new Set(gumballActiveWidgetIds), [gumballActiveWidgetIds]);
+	const gumballDragActive = gumballInteractionWidgetId !== null;
+	const [canvasBackground, setCanvasBackground] = useState(() => resolveSemanticColorHex("--canvas", "light-8-9"));
+
+	useEffect(() => {
+		if (typeof document === "undefined") return;
+		const sync = () => {
+			clearColorResolveCache();
+			setCanvasBackground(resolveSemanticColorHex("--canvas", "light-8-9"));
+		};
+		sync();
+		const obs = new MutationObserver(sync);
+		obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style", "data-theme", "data-ui-theme"] });
+		return () => obs.disconnect();
+	}, []);
 
 	const visibleItems =
 		showMode === "selected" ? items.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : items;
@@ -1463,12 +1441,11 @@ export function ProceduralPreview({
 	}, []);
 
 	return (
-		<div ref={containerRef} className={`absolute inset-0 min-h-0 min-w-0 bg-zinc-900 ${className ?? ""}`.trim()}>
-			<ProceduralTransformDetailWindow granularity={transformGranularity} onGranularityChange={onTransformGranularityChange} />
+		<div ref={containerRef} className={cn("absolute inset-0", canvasHostRootClass, className)}>
 			<WorldCanvas
 				className="h-full w-full"
-				frameloop="demand"
-				background="#18181b"
+				frameloop={gumballDragActive ? "always" : "demand"}
+				background={canvasBackground}
 				overlay={<WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />}
 			>
 				<WorldLodBridge
@@ -1501,8 +1478,8 @@ export function ProceduralPreview({
 						<directionalLight position={[12, 18, 10]} intensity={1.1} />
 						<WorldLayer order={10} name="procedural.preview">
 							{visibleItems.map((entry) => {
-								const interactionHighlighted = gumballInteractionWidgetId === entry.widgetId;
-								const locked = gumballInteractionWidgetId !== null && !interactionHighlighted;
+								const interactionHighlighted = gumballHighlightIds.has(entry.widgetId) || gumballInteractionWidgetId === entry.widgetId;
+								const locked = gumballDragActive && !interactionHighlighted;
 								const chrome: PreviewLayerChrome = {
 									selected: effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId),
 									highlighted: effectivePreselectRemoved.has(entry.widgetId),
@@ -1514,22 +1491,7 @@ export function ProceduralPreview({
 									onHover,
 									onPick,
 								};
-								if (entry.kind === "point") {
-									return <BrepPointLayer key={previewItemKey(entry)} widgetId={entry.widgetId} position={entry.position} {...chrome} />;
-								}
-								if (entry.kind === "vector") {
-									return <BrepVectorLayer key={previewItemKey(entry)} widgetId={entry.widgetId} direction={entry.direction} {...chrome} />;
-								}
-								return (
-									<BrepGeometryLayer
-										key={previewItemKey(entry)}
-										widgetId={entry.widgetId}
-										geometryId={entry.handle}
-										kernel={kernel}
-										tolerance={tolerance}
-										{...chrome}
-									/>
-								);
+								return <BrepPreviewLayer key={previewItemKey(entry)} item={entry} kernel={kernel} tolerance={tolerance} {...chrome} />;
 							})}
 							{gumballItem ? (
 								<ProceduralPreviewGumball
@@ -1551,17 +1513,6 @@ export function ProceduralPreview({
 				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
 			) : null}
 		</div>
-	);
-}
-
-export function BrepViewport({ geometryIds, kernel = brepjsGeometryKernel, tolerance = 0.02, className }: BrepViewportProps): ReactNode {
-	return (
-		<ProceduralPreview
-			items={geometryIds.map((handle, index) => ({ widgetId: `geometry-${index}`, kind: "geometry" as const, handle: handle as GeometryRef }))}
-			kernel={kernel}
-			tolerance={tolerance}
-			className={className}
-		/>
 	);
 }
 
@@ -1593,12 +1544,7 @@ export function extractPreviewItems(outputsJson: string): ProceduralPreviewItem[
 	}
 	return items;
 }
-
-/** @deprecated Use {@link extractPreviewItems}. */
-export function extractGeometryHandles(outputsJson: string): ProceduralGeometryHandle[] {
-	return extractPreviewItems(outputsJson).filter((item): item is ProceduralGeometryHandle => item.kind === "geometry");
-}
-// #endregion 🔖BrepViewport
+// #endregion 🔖ProceduralPreview
 
 // #region 🔖ProceduralEditor
 export interface ProceduralFlowEditorProps {
@@ -1696,14 +1642,6 @@ export function ProceduralFlowEditor({
 	);
 }
 
-/** @deprecated Use {@link ProceduralFlowEditor} and {@link ProceduralPreview} in separate playground windows. */
-export interface ProceduralEditorProps extends ProceduralFlowEditorProps {}
-
-/** @deprecated Use {@link ProceduralFlowEditor}. */
-export function ProceduralEditor(props: ProceduralEditorProps): ReactNode {
-	return <ProceduralFlowEditor {...props} />;
-}
-
 export { createFlowEvalBridge, type FlowModuleCommandV1, type FlowReorganizeRequest };
 // #endregion 🔖ProceduralEditor
 
@@ -1742,6 +1680,24 @@ if (import.meta.vitest) {
 			const out = evaluateBrepFlowKind("brep.prim3d.box", JSON.stringify({ width: 1, depth: 1, height: 1 }), kernel);
 			const parsed = JSON.parse(out) as { geometry?: string };
 			expect(parsed.geometry).toMatch(/^solid-/);
+		});
+
+		it("brep.solid.extrude extrudes sketch and curve circles by vector magnitude", async () => {
+			for (const sketchKind of ["brep.sketch2d.circle", "brep.curve.circle"] as const) {
+				const sketch = evaluateBrepFlowKind(sketchKind, JSON.stringify({ radius: 2 }), kernel);
+				const sketchParsed = JSON.parse(sketch) as { geometry?: string };
+				const tallOut = evaluateBrepFlowKind(
+					"brep.solid.extrude",
+					JSON.stringify({ geometry: sketchParsed.geometry, vector: { x: 0, y: 0, z: 5 } }),
+					kernel,
+				);
+				const tallParsed = JSON.parse(tallOut) as { geometry?: string };
+				expect(tallParsed.geometry).toMatch(/^solid-/);
+				const mesh = await kernel.tessellateGeometry(tallParsed.geometry as GeometryRef, 0.05);
+				expect(isRenderableMeshTransfer(mesh)).toBe(true);
+				const bounds = kernel.getBoundsSync(tallParsed.geometry as GeometryRef);
+				expect(bounds.max[2] - bounds.min[2]).toBeCloseTo(5, 4);
+			}
 		});
 
 		it("brep.curve.line evaluates to edge handle", () => {

@@ -11,6 +11,8 @@ import {
   Playground,
   WindowKindRuntime,
   buildDagWindowBody,
+  createPlayAppRuntime,
+  createProductPlaygroundPlatform,
   createStackLayout,
   enforcePlaygroundWindowEngagementInput,
   registerWindowBody,
@@ -284,17 +286,14 @@ export function registerDagPlayDeclarativeBodies(): void {
 }
 
 export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntime {
-  const app = new AppRuntime(DAG_PLAY_APP_ID, "DAG", undefined, controller, DAG_PLAY_LAYOUT, []);
-  app.defaultModeId = controller.mainMode.id;
-  app.addMode(controller.mainMode);
-  return app;
+  return createPlayAppRuntime(DAG_PLAY_APP_ID, "DAG", controller, DAG_PLAY_LAYOUT, controller.mainMode);
 }
 
 export class PlaygroundDag extends Playground {
   readonly id = DAG_PLAY_APP_ID;
 
   createRuntime(): Platform {
-    const runtime = new Platform({ id: this.id });
+    const runtime = createProductPlaygroundPlatform(this.id);
     const ctrl = new DagPlayController(runtime.commandBus, () => runtime.notify());
     runtime.addApp(buildDagPlayAppRuntime(ctrl));
     return runtime;

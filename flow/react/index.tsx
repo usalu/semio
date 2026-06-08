@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ContextMenuController, Icon, SelectionMarquee, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@ui/react";
+import { borderNormalBottomClass, canvasViewportClass, cn, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@ui/react";
 import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@ui/styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
@@ -1350,12 +1350,12 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   return (
     <div
       ref={rootRef}
-      className="absolute z-20 min-w-[14rem] max-w-[20rem] rounded-md border border-accent/50 bg-canvas shadow-lg ring-1 ring-accent/40"
+      className={cn("absolute z-20 min-w-[14rem] max-w-[20rem]", floatingMenuSurfaceClass)}
       style={{ left: anchor.screen.x, top: anchor.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
-      <div className="flex items-center gap-1 border-b border-accent/30 px-2 py-1.5">
+      <div className={cn("flex items-center gap-1 px-2 py-1.5", borderNormalBottomClass)}>
         <input
           ref={inputRef}
           type="text"
@@ -1387,7 +1387,7 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
               <li key={`${item.kind}-${item.neuronKind ?? item.action ?? item.name}`}>
                 <button
                   type="button"
-                  className={`flex w-full flex-col gap-0.5 px-3 py-1.5 text-left text-sm ${active ? "bg-accent/15 text-accent" : "text-foreground hover:bg-accent/10"}`}
+                  className={cn(floatingMenuItemClass, "flex-col gap-0.5 px-3 py-1.5 text-sm", active && "bg-active-base text-emphasized")}
                   onMouseEnter={() => setActiveIndex(globalIndex)}
                   onClick={() => commitItem(item)}
                 >
@@ -1682,7 +1682,7 @@ function FlowSelectionBoundsButton({
       aria-label={label}
       title={label}
       disabled={disabled}
-      className="pointer-events-auto flex h-6 w-6 items-center justify-center rounded border border-accent/40 bg-canvas text-foreground shadow-sm hover:bg-accent/10 disabled:pointer-events-none disabled:opacity-40"
+      className={cn("pointer-events-auto flex h-6 w-6 items-center justify-center p-0 disabled:pointer-events-none disabled:opacity-40", floatingToolbarSurfaceClass, menuListItemClassName)}
       onPointerDown={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -2901,7 +2901,7 @@ export function FlowCanvas({
     <div
       ref={containerRef}
       tabIndex={0}
-      className={className ?? `relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none${fixtureDragActive ? " ring-2 ring-inset ring-accent" : ""}`}
+      className={cn(canvasViewportClass, className, fixtureDragActive && "ring-2 ring-inset ring-accent")}
       onPointerDownCapture={onContainerPointerDownCapture}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}

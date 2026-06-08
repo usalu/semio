@@ -12,7 +12,9 @@ import {
   WindowKindRuntime,
   buildCadWindowBody,
   createNamedLayout,
+  createPlayAppRuntime,
   createWindowLayout,
+  PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
   namedLayoutsFromOrbitViewDescriptors,
   registerWindowBody,
   type AppTools,
@@ -921,9 +923,7 @@ export const buildCadPlayEnergyDeclarativeBody = buildCadPlayDeclarativeBodyForP
 export const buildCadPlayStructureClassicDeclarativeBody = buildCadPlayDeclarativeBodyForPane("structure-classic");
 
 export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppRuntime {
-  const app = new AppRuntime(CAD_PLAY_APP_ID, "CAD play", undefined, controller, CAD_PLAY_LAYOUT as never, controller.mainMode.windowKinds);
-  app.defaultModeId = controller.mainMode.id;
-  app.addMode(controller.mainMode);
+  const app = createPlayAppRuntime(CAD_PLAY_APP_ID, "CAD play", controller, CAD_PLAY_LAYOUT as never, controller.mainMode);
   app.panelTabs = [];
   app.onActiveWindowChange = (shellWindowId) => {
     const pane = cadPlayPaneFromShellWindowId(shellWindowId);
@@ -944,7 +944,7 @@ export function registerCadPlayDeclarativeBodies(): void {
 /** @emoji 🚀 Creates CAD play {@link Platform} with declarative viewport body registered. */
 export function buildCadPlayRuntime(): Platform {
   registerCadPlayDeclarativeBodies();
-  const runtime = new Platform();
+  const runtime = new Platform({ initialPanelVisibility: PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY });
   const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
   runtime.addApp(buildCadPlayAppRuntime(controller));
   return runtime;
@@ -954,6 +954,7 @@ export function buildCadPlayRuntime(): Platform {
 import "./globals.css";
 // #region 🔌Adapters
 import {
+  Button,
   Label,
   NavbarFixtureSelect,
   NAVBAR_NO_FIXTURE_ID,
@@ -1000,6 +1001,7 @@ import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
   InteractionRepl,
   modelHasCommittedSolidsForDisplay,
+  modelHasFactoryFaceDisplay,
   SelectionAttributesPanel,
   ModelStatsPanel,
   SelectionPropertiesPanel,
@@ -2453,16 +2455,16 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         <p>
           Unknown interaction <code className="text-foreground">{interactionId}</code>.
         </p>
-        <button type="button" className="w-fit rounded-md border border-border bg-background px-double py-single text-sm text-element hover:text-emphasized" onClick={() => onInteractionId("")}>
+        <Button type="button" variant="outline" size="sm" className="w-fit" onClick={() => onInteractionId("")}>
           Reset
-        </button>
+        </Button>
       </div>
     );
   }
 
   const mode = computeModeForPane(pane);
   const transformGumballConfig = transformGumballConfigForPane(pane);
-  const autoFitMeshes = modelHasCommittedSolidsForDisplay(viewModel);
+  const autoFitMeshes = modelHasCommittedSolidsForDisplay(viewModel) || modelHasFactoryFaceDisplay(viewModel, modelDefinitionId);
   const [worldReferences, setWorldReferences] = reactHostPort.useState(CAD_PLAY_DEFAULT_WORLD_REFERENCES);
   const [selectedReferenceIds, setSelectedReferenceIds] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
   const [hoveredReferenceId, setHoveredReferenceId] = reactHostPort.useState<string | null>(null);

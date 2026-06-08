@@ -4,7 +4,7 @@
 
 // #region 🔌Adapters
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Icon, type IconName } from "@ui/react";
+import { cn, floatingMenuSurfaceClass, Icon, type IconName } from "@ui/react";
 import initGisMapWasm, { MapSession } from "../rs/pkg/gis_map.js";
 
 if (import.meta.env.VITEST) {
@@ -1214,7 +1214,7 @@ export function MapCanvas({
       {selectedPositionId ? (
         <div
           ref={popupRef}
-          className="pointer-events-auto absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] rounded-md border border-border bg-popover px-2 py-1.5 text-popover-foreground shadow-md"
+          className={cn("pointer-events-auto absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)}
           style={{ left: 0, top: 0 }}
         >
           {(() => {

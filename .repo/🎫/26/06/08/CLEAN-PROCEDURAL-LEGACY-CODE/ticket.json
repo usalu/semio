@@ -1,0 +1,14 @@
+{
+  "title": "Clean Procedural Legacy Code",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Remove all legacy/deprecated code from procedural module - legacy brep flow kinds, deprecated APIs (BrepViewport, ProceduralEditor, extractGeometryHandles, ProceduralGeometryHandle), and clean refactor.",
+  "summary": "Removed all legacy procedural surface area: six duplicate brep flow kinds (brep.box/sphere/cylinder/extrude/translate/union) and their eval handlers; deprecated APIs (BrepViewport, ProceduralEditor, extractGeometryHandles, ProceduralGeometryHandle); renamed BrepViewport region to ProceduralPreview. Cleaned @geometry/brep/js by dropping LegacySolid wrappers (createBoxFromCorners*, fuseSolids*, etc.) from kernel and BrepKernel contract; tests now use boxSync/spherePrimSync/fuseAllSync/measureVolumeSync/tessellateGeometry. Updated procedural/play extension fixture test and DAG layout tests to brep.prim3d.box.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1622"
+  },
+  "goal": "🎯procedural",
+  "sessions": [
+    "⚪4ce209fe4f59448cab76d1a52322e773"
+  ]
+}

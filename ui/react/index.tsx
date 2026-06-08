@@ -3399,6 +3399,57 @@ export const panelChromeFrameLayerClass = cn(
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
+/** @emoji 🪟 Frosted floating menu/popover surface for technology renderer overlays. */
+export const floatingMenuSurfaceClass = cn(
+  glassMenuClass,
+  "overflow-hidden rounded-md border shadow-sm text-element",
+  borderNormalClass,
+);
+
+/** @emoji 🪟 Action row inside {@link floatingMenuSurfaceClass}. */
+export const floatingMenuItemClass = cn(
+  "relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-left text-xs text-element outline-none select-none",
+  menuListItemClassName,
+);
+
+/** @emoji 🪟 Frosted editor aside chrome for technology renderers. */
+export const floatingPanelAsideClass = cn(
+  "relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]",
+  panelGlassFrameClass,
+);
+
+/** @emoji 🪟 Frosted compact toolbar chrome (projection switch, align controls). */
+export const floatingToolbarSurfaceClass = cn(
+  glassToolbarClass,
+  "overflow-hidden rounded-md border shadow-sm text-element",
+  borderNormalClass,
+);
+
+/** @emoji 🪟 Frosted inline field/command shell inside editor asides. */
+export const floatingFieldSurfaceClass = cn(
+  glassMenuClass,
+  "relative overflow-visible rounded-md border",
+  borderNormalClass,
+);
+
+/** @emoji 🪟 Golden-window host root for technology canvases inside {@link ProductShell}. */
+export const canvasHostRootClass = "relative flex h-full min-h-0 w-full min-w-0 flex-col bg-canvas text-element font-sans";
+
+/** @emoji 🪟 Full-viewport standalone editor shell (outside golden windows). */
+export const editorShellRootClass = "bg-background text-element flex h-screen min-h-0 w-full flex-row font-sans";
+
+/** @emoji 🏷️ Toggle chip for layer/filter controls in technology renderers. */
+export const floatingTagClass = cn(
+  "inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs text-element",
+  borderNormalClass,
+);
+
+export const floatingTagOnClass = "bg-accent text-accent-foreground";
+export const floatingTagOffClass = "bg-transparent text-muted-foreground";
+
+/** @emoji 🪟 Canvas viewport surface inside a host root. */
+export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
+
 /** @emoji 📑 Panel tab strip — {@link borderNormalBottomClass} under tabs; outer outline is {@link panelChromeBorderClass}. */
 export const panelTabBarClass = cn("relative z-20 flex items-stretch shrink-0 overflow-x-auto", borderNormalBottomClass);
 
