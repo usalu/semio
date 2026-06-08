@@ -89,7 +89,7 @@ describe("bundle-script", () => {
   });
 
   test("gitRepoRoot uses monorepo toplevel from repo/lib/js/src", async () => {
-    const { gitRepoRoot } = await import("./uloc-metrics.ts");
+    const { gitRepoRoot } = await import("./index.ts");
     const { spawnSync } = await import("node:child_process");
     const top = gitRepoRoot(import.meta.dir);
     const n = Number(spawnSync("git", ["ls-files"], { cwd: top, encoding: "utf8" }).stdout?.split("\n").filter(Boolean).length ?? 0);
@@ -183,14 +183,14 @@ describe("ui scrollbar styling", () => {
 
 describe("micro-commit", () => {
   test("extractCounterFromSubject reads formatted subject lines", async () => {
-    const { extractCounterFromSubject } = await import("./micro-commit.ts");
+    const { extractCounterFromSubject } = await import("./index.ts");
     expect(extractCounterFromSubject("🧑ueli🎆26🌙06☀️02🚩009")).toEqual({ nnn: 9, line1Base: "🧑ueli🎆26🌙06☀️02" });
     expect(extractCounterFromSubject("33")).toBeNull();
     expect(extractCounterFromSubject("Merge branch foo")).toBeNull();
   });
 
   test("bumpCounterFromHistory uses max across formatted commits", async () => {
-    const { bumpCounterFromHistory } = await import("./micro-commit.ts");
+    const { bumpCounterFromHistory } = await import("./index.ts");
     const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli", email: "u@example.com" };
     const subjects = ["🐙ueli🎆26🌙06☀️02🚩033", "🐙ueli🎆26🌙06☀️02🚩032", "unrelated"];
     const bumped = bumpCounterFromHistory(subjects, contributor, new Date("2026-06-02T12:00:00"));
@@ -201,13 +201,13 @@ describe("micro-commit", () => {
   });
 
   test("normalizeBulletLines strips uloc block lines", async () => {
-    const { normalizeBulletLines } = await import("./micro-commit.ts");
+    const { normalizeBulletLines } = await import("./index.ts");
     const bullets = normalizeBulletLines("🎆Summary\n📊uloc➕1✏️1➖0🟰2\n🟦65k➕1✏️1➖0\n🐛Fix bug");
     expect(bullets).toEqual(["🎆Summary", "🐛Fix bug"]);
   });
 
   test("bulletEmojiValidationError rejects fireworks emoji on bullets", async () => {
-    const { bulletLeadEmoji, bulletEmojiValidationError } = await import("./micro-commit.ts");
+    const { bulletLeadEmoji, bulletEmojiValidationError } = await import("./index.ts");
     expect(bulletLeadEmoji("🎆Drop stacked intro")).toBe("🎆");
     expect(bulletEmojiValidationError(["🎆All bullets wrongly use fireworks"])).toContain("🎆");
     expect(bulletEmojiValidationError(["🐛Fix real bug"])).toBeNull();
@@ -216,14 +216,14 @@ describe("micro-commit", () => {
   });
 
   test("normalizeBulletLines enforces compact {emoji}{description} format", async () => {
-    const { normalizeBulletLines, formatMicroCommitBulletLine } = await import("./micro-commit.ts");
+    const { normalizeBulletLines, formatMicroCommitBulletLine } = await import("./index.ts");
     expect(formatMicroCommitBulletLine("- 🐛 Fix PDF")).toBe("🐛Fix PDF");
     expect(normalizeBulletLines("🐛 Fix PDF\n- 🖼️ Tweak UI")).toEqual(["🐛Fix PDF", "🖼️Tweak UI"]);
     expect(normalizeBulletLines(Array.from({ length: 10 }, (_, i) => `🎆item ${i}`).join("\n"))).toHaveLength(8);
   });
 
   test("buildMicroCommitMessage separates GitKraken summary and description", async () => {
-    const { buildMicroCommitMessage } = await import("./micro-commit.ts");
+    const { buildMicroCommitMessage } = await import("./index.ts");
     const root = process.cwd();
     const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     const msg = buildMicroCommitMessage(root, contributor, ["🎆LLM-authored change summary"], {
@@ -235,7 +235,7 @@ describe("micro-commit", () => {
     expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
     expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
     expect(lines.at(-2)).toBe("");
-    const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("./uloc-metrics.ts");
+    const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("./index.ts");
     const metricsIdx = lines.findIndex((l) => l.startsWith(ulocHeader));
     if (metricsIdx >= 0) {
       expect(lines[metricsIdx - 1]).toBe("");
@@ -250,7 +250,7 @@ describe("micro-commit", () => {
       formatMicroCommitMetricsLines,
       formatMetricLocCount,
       MICRO_COMMIT_ULOC_HEADER,
-    } = await import("./uloc-metrics.ts");
+    } = await import("./index.ts");
     expect(MICRO_COMMIT_ULOC_HEADER).toBe("📊uloc");
     expect(formatMetricLocCount(200_000)).toBe("200k");
     expect(formatMetricLocCount(500)).toBe("500");
@@ -273,7 +273,7 @@ describe("micro-commit", () => {
   });
 
   test("formatMicroCommitMetricsLines totals all languages on the first row", async () => {
-    const { formatMicroCommitMetricsLines } = await import("./uloc-metrics.ts");
+    const { formatMicroCommitMetricsLines } = await import("./index.ts");
     const lines = formatMicroCommitMetricsLines([
       { lang: "TypeScript", emoji: "🟦", code: 3000, edited: 10, added: 8, removed: 0 },
       { lang: "Markdown", emoji: "📝", code: 44, edited: 0, added: 0, removed: 0 },
@@ -284,7 +284,7 @@ describe("micro-commit", () => {
   });
 
   test("buildMicroCommitMetrics merges uloc and git numstat by language", async () => {
-    const { buildMicroCommitMetrics } = await import("./uloc-metrics.ts");
+    const { buildMicroCommitMetrics } = await import("./index.ts");
     const root = process.cwd();
     const metrics = buildMicroCommitMetrics(root, {
       countRepoByLanguage: () => ({ Rust: 100, TypeScript: 50, JSON: 20 }),
@@ -293,7 +293,7 @@ describe("micro-commit", () => {
   });
 
   test("isUlocCachePlausible rejects partial caches", async () => {
-    const { isUlocCachePlausible, gitRepoRoot } = await import("./uloc-metrics.ts");
+    const { isUlocCachePlausible, gitRepoRoot } = await import("./index.ts");
     const root = gitRepoRoot(process.cwd());
     expect(isUlocCachePlausible(root, { TypeScript: 3000, JavaScript: 78, Markdown: 44, JSON: 43 })).toBe(false);
     expect(
@@ -309,7 +309,7 @@ describe("micro-commit", () => {
   });
 
   test("shouldSkipPathForUloc skips dot paths license templates and .repo", async () => {
-    const { shouldSkipPathForUloc } = await import("./uloc-metrics.ts");
+    const { shouldSkipPathForUloc } = await import("./index.ts");
     const root = process.cwd();
     expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, ".agents/skills/micro-commit/SKILL.md")).toBe(true);
@@ -322,18 +322,18 @@ describe("micro-commit", () => {
   });
 
   test("countJsonKeys counts nested object keys", async () => {
-    const { countJsonKeys } = await import("./uloc-metrics.ts");
+    const { countJsonKeys } = await import("./index.ts");
     expect(countJsonKeys('{"a":1,"b":{"c":2}}')).toBe(3);
   });
 
   test("appendGitDeltaSuffix formats user example totals", async () => {
-    const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("./uloc-metrics.ts");
+    const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("./index.ts");
     expect(appendGitDeltaSuffix("🟦65k", { added: 700, edited: 200, removed: 10 })).toBe("🟦65k➕700✏️200➖10🟰910");
     expect(formatBundleUlocSuffix({ added: 700, edited: 200, removed: 10 })).toBe("📊uloc➕700✏️200➖10🟰910");
   });
 
   test("splitGitNumstatDelta separates replaced lines from net added and removed", async () => {
-    const { splitGitNumstatDelta } = await import("./uloc-metrics.ts");
+    const { splitGitNumstatDelta } = await import("./index.ts");
     expect(splitGitNumstatDelta(4, 2)).toEqual({ edited: 2, added: 2, removed: 0 });
     expect(splitGitNumstatDelta(2, 4)).toEqual({ edited: 2, added: 0, removed: 2 });
     expect(splitGitNumstatDelta(5, 5)).toEqual({ edited: 5, added: 0, removed: 0 });
@@ -342,13 +342,13 @@ describe("micro-commit", () => {
   });
 
   test("countUnifiedLocForFile uses physical lines for code and keys for json", async () => {
-    const { countUnifiedLocForFile } = await import("./uloc-metrics.ts");
+    const { countUnifiedLocForFile } = await import("./index.ts");
     expect(countUnifiedLocForFile("x.rs", "// c\nfn main() {}\n")).toBe(3);
     expect(countUnifiedLocForFile("x.json", '{"k":1}')).toBe(1);
   });
 
   test("uncoveredStagedAreas flags missing cursor-plans and product coverage", async () => {
-    const { uncoveredStagedAreas } = await import("./micro-commit.ts");
+    const { uncoveredStagedAreas } = await import("./index.ts");
     const staged = [".cursor/plans/brush_fix_cfd8a931.plan.md", "framework/product/playground/renderer/react/index.tsx"];
     expect(uncoveredStagedAreas(["🫡Only micro-commit skill wording"], staged)).toContain(".cursor/plans");
     expect(uncoveredStagedAreas(["🫡Only micro-commit skill wording"], staged)).toContain("product");
@@ -363,7 +363,7 @@ describe("micro-commit", () => {
   });
 
   test("validateBulletsAgainstStaged rejects bullets that ignore staged product code", async () => {
-    const { runMicroCommit } = await import("./micro-commit.ts");
+    const { runMicroCommit } = await import("./index.ts");
     const root = process.cwd();
     const prev = process.env.REPO_ROOT;
     process.env.REPO_ROOT = root;
@@ -381,7 +381,7 @@ describe("micro-commit", () => {
   });
 
   test("installMicroCommitGitHooks writes portable hooks and bun pin", async () => {
-    const { installMicroCommitGitHooks, renderMicroCommitGitHook } = await import("./micro-commit.ts");
+    const { installMicroCommitGitHooks, renderMicroCommitGitHook } = await import("./index.ts");
     const { mkdtempSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -402,7 +402,7 @@ describe("micro-commit", () => {
   });
 
   test("handlePrepareCommitMsg inactive does not clear commit message file", async () => {
-    const { handlePrepareCommitMsg } = await import("./micro-commit.ts");
+    const { handlePrepareCommitMsg } = await import("./index.ts");
     const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -420,7 +420,7 @@ describe("micro-commit", () => {
   });
 
   test("wipeAfterCommit clears all GK templates and prepare state", async () => {
-    const { wipeAfterCommit, writeMicroCommitTemplates, buildMicroCommitMessage } = await import("./micro-commit.ts");
+    const { wipeAfterCommit, writeMicroCommitTemplates, buildMicroCommitMessage } = await import("./index.ts");
     const { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -449,7 +449,7 @@ describe("micro-commit", () => {
   });
 
   test("writeMicroCommitTemplates uses single gkcommittemplate.txt", async () => {
-    const { writeMicroCommitTemplates, buildMicroCommitMessage } = await import("./micro-commit.ts");
+    const { writeMicroCommitTemplates, buildMicroCommitMessage } = await import("./index.ts");
     const { mkdtempSync, readdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -473,7 +473,7 @@ describe("micro-commit", () => {
   });
 
   test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {
-    const { digestMicroCommitMessage, shouldRefreshPreparedCommitMessage } = await import("./micro-commit.ts");
+    const { digestMicroCommitMessage, shouldRefreshPreparedCommitMessage } = await import("./index.ts");
     const prepared = "line1\nline2\n";
     const digest = digestMicroCommitMessage(prepared);
     expect(shouldRefreshPreparedCommitMessage(prepared, digest)).toBe(true);
@@ -516,7 +516,7 @@ describe("playground static sites", () => {
 
 describe("commit", () => {
   test("parseCommitBundleBody reads emoji scopes dates and bullets", async () => {
-    const { parseCommitBundleBody } = await import("./commit.ts");
+    const { parseCommitBundleBody } = await import("./index.ts");
     const bundles = parseCommitBundleBody(
       "🏘️semio✍️sketchpad\n🎆26🌙06☀️04\n🗺️Map work\n🎆26🌙06☀️03\n🧪Playground\n\n🖱️ui⚛️react\n🎆26🌙06☀️02\n🖥️Shell",
     );
@@ -527,7 +527,7 @@ describe("commit", () => {
   });
 
   test("parseCommitBundleBody rejects path prefixes and reserved emojis", async () => {
-    const { parseCommitBundleBody } = await import("./commit.ts");
+    const { parseCommitBundleBody } = await import("./index.ts");
     expect(() =>
       parseCommitBundleBody("semio/foo|🏘️semio\n🎆26🌙06☀️04\n🗺️Map work"),
     ).toThrow();
@@ -538,12 +538,12 @@ describe("commit", () => {
   });
 
   test("normalizeBundleScopeLabel strips reserved and uloc suffix", async () => {
-    const { normalizeBundleScopeLabel } = await import("./commit.ts");
+    const { normalizeBundleScopeLabel } = await import("./index.ts");
     expect(normalizeBundleScopeLabel("🏘️semio🔀📊uloc➕1")).toBe("🏘️semio");
   });
 
   test("isBundleScopeLine accepts area and technology root labels", async () => {
-    const { isBundleScopeLine } = await import("./commit.ts");
+    const { isBundleScopeLine } = await import("./index.ts");
     expect(isBundleScopeLine("🌐gis📍map")).toBe(true);
     expect(isBundleScopeLine("🖱️ui⚛️react")).toBe(true);
     expect(isBundleScopeLine("🥅framework")).toBe(true);
@@ -552,26 +552,26 @@ describe("commit", () => {
   });
 
   test("extractBundleDateLineFromSubject reads calendar day from micro-commit subject", async () => {
-    const { extractBundleDateLineFromSubject } = await import("./commit.ts");
+    const { extractBundleDateLineFromSubject } = await import("./index.ts");
     expect(extractBundleDateLineFromSubject("🐙ueli🎆26🌙06☀️04🚩012")).toBe("🎆26🌙06☀️04");
     expect(extractBundleDateLineFromSubject("unrelated")).toBeNull();
   });
 
   test("extractBundleDateLineFromCommit prefers body timestamp over subject checkpoint day", async () => {
-    const { extractBundleDateLineFromCommit, extractBundleDateLineFromCommitBody } = await import("./commit.ts");
+    const { extractBundleDateLineFromCommit, extractBundleDateLineFromCommitBody } = await import("./index.ts");
     const body = "🎆26🌙06☀️04⏰02⌚38⏱️38\n🗺️Map work\n";
     expect(extractBundleDateLineFromCommitBody(body)).toBe("🎆26🌙06☀️04");
     expect(extractBundleDateLineFromCommit("🐙ueli🎆26🌙06☀️02🚩084", body)).toBe("🎆26🌙06☀️04");
   });
 
   test("pathsFromNumstatRow expands rename paths", async () => {
-    const { pathsFromNumstatRow } = await import("./commit.ts");
+    const { pathsFromNumstatRow } = await import("./index.ts");
     expect(pathsFromNumstatRow("old/a.ts\tnew/b.ts")).toEqual(["old/a.ts", "new/b.ts"]);
     expect(pathsFromNumstatRow("dir/{old.ts => new.ts}")).toEqual(["old.ts", "new.ts"]);
   });
 
   test("pathMatchesBundleIndex does not treat empty prefix set as match-all", async () => {
-    const { pathMatchesBundleIndex } = await import("./commit.ts");
+    const { pathMatchesBundleIndex } = await import("./index.ts");
     const bundles = [
       { label: "🏘️semio✍️sketchpad", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["✍️x"] }] },
       { label: "🏘️semio🗃️fixtures", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["🗃️y"] }] },
@@ -582,19 +582,19 @@ describe("commit", () => {
   });
 
   test("formatBundleDateLine appends per-day uloc suffix", async () => {
-    const { formatBundleDateLine } = await import("./commit.ts");
+    const { formatBundleDateLine } = await import("./index.ts");
     expect(formatBundleDateLine("🎆26🌙06☀️04", { added: 700, edited: 200, removed: 10 })).toBe(
       "🎆26🌙06☀️04📊uloc➕700✏️200➖10🟰910",
     );
   });
 
   test("commitBundleBodyError rejects per-day uloc on stdin", async () => {
-    const { commitBundleBodyError } = await import("./commit.ts");
+    const { commitBundleBodyError } = await import("./index.ts");
     expect(commitBundleBodyError("🏘️semio\n🎆26🌙06☀️04📊uloc➕1\n🗺️Work")).toMatch(/per-day/);
   });
 
   test("validateMicroCommitLangMetricsDeltaSum passes when language rows sum to footer", async () => {
-    const { validateMicroCommitLangMetricsDeltaSum } = await import("./uloc-metrics.ts");
+    const { validateMicroCommitLangMetricsDeltaSum } = await import("./index.ts");
     expect(() =>
       validateMicroCommitLangMetricsDeltaSum([
         { lang: "TypeScript", emoji: "🟦", code: 100, edited: 5, added: 3, removed: 0 },
@@ -606,7 +606,7 @@ describe("commit", () => {
   test("validateBundleCommitAttribution requires bundle headers to sum to range total", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("./commit.ts");
+    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("./index.ts");
     const root = mkdtempSync(join(tmpdir(), "semio-commit-check-sum-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
@@ -638,7 +638,7 @@ describe("commit", () => {
   test("validateBundleCommitAttribution rejects listed days when micro-commit churn does not net to range", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("./commit.ts");
+    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("./index.ts");
     const root = mkdtempSync(join(tmpdir(), "semio-commit-churn-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
@@ -674,7 +674,7 @@ describe("commit", () => {
   });
 
   test("validateBundleDayDeltasAttribution rejects when listed days do not sum to bundle total", async () => {
-    const { validateBundleDayDeltasAttribution } = await import("./commit.ts");
+    const { validateBundleDayDeltasAttribution } = await import("./index.ts");
     const bundles = [
       {
         label: "📚repo🔧js",
@@ -702,7 +702,7 @@ describe("commit", () => {
   test("buildCommitMessage appends per-day uloc from micro-commit dates", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { buildCommitMessage, parseCommitBundleBody } = await import("./commit.ts");
+    const { buildCommitMessage, parseCommitBundleBody } = await import("./index.ts");
     const root = mkdtempSync(join(tmpdir(), "semio-commit-day-uloc-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
@@ -745,7 +745,7 @@ describe("commit", () => {
   test("sortCommitBundlesByEditTotal orders bundles by descending gitDeltaLineTotal", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
-    const { sortCommitBundlesByEditTotal } = await import("./commit.ts");
+    const { sortCommitBundlesByEditTotal } = await import("./index.ts");
     const mk = (label: string) => ({
       label,
       dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["🗺️change"] }],
@@ -781,7 +781,7 @@ describe("commit", () => {
   });
 
   test("buildCommitMessage renders bundle subject and footer", async () => {
-    const { buildCommitMessage, parseCommitBundleBody } = await import("./commit.ts");
+    const { buildCommitMessage, parseCommitBundleBody } = await import("./index.ts");
     const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     const bundles = parseCommitBundleBody("📚repo🔧js\n🎆26🌙06☀️04\n🔧Tooling");
     const msg = buildCommitMessage(
@@ -799,7 +799,7 @@ describe("commit", () => {
   });
 
   test("formatBundleTagName and formatBundleSubject use contributor date emojis", async () => {
-    const { formatBundleTagName, formatBundleSubject } = await import("./commit.ts");
+    const { formatBundleTagName, formatBundleSubject } = await import("./index.ts");
     const c = { alias: "ueli", emoji: "🐙", name: "U", email: "u@e.com" };
     const now = new Date("2026-06-04T12:00:00");
     expect(formatBundleTagName(c, now)).toBe("🐙ueli🎆26🌙06☀️04🚩");
@@ -807,7 +807,7 @@ describe("commit", () => {
   });
 
   test("formatCommitPrepareCommands emits four fenced git blocks", async () => {
-    const { formatCommitPrepareCommands } = await import("./commit.ts");
+    const { formatCommitPrepareCommands } = await import("./index.ts");
     const out = formatCommitPrepareCommands({
       tagName: "🐙ueli🎆26🌙06☀️04🚩",
       wipSha: "abc123def456",
@@ -821,7 +821,7 @@ describe("commit", () => {
   });
 
   test("formatCommitPrepareAgentReply ends with tag name and commit message blocks", async () => {
-    const { formatCommitPrepareAgentReply } = await import("./commit.ts");
+    const { formatCommitPrepareAgentReply } = await import("./index.ts");
     const commitMessage = "🐙ueli🎆26🌙06☀️04🔀\n\n🏘️semio✍️sketchpad📊uloc\n🎆26🌙06☀️04\n🗺️Work\n\n📊uloc➕1🟰1\n\nSigned-off-by: U <u@e.com>\n";
     const out = formatCommitPrepareAgentReply({
       tagName: "🐙ueli🎆26🌙06☀️04🚩",
@@ -835,13 +835,13 @@ describe("commit", () => {
   });
 
   test("parseCommitSteps treats cs as squash without tag", async () => {
-    const { parseCommitSteps } = await import("./commit.ts");
+    const { parseCommitSteps } = await import("./index.ts");
     expect(parseCommitSteps(["cs"])).toEqual({ tag: false, squash: true, push: false });
     expect(parseCommitSteps(["ct", "cs", "cp"])).toEqual({ tag: true, squash: true, push: true });
   });
 
   test("bulletMatchesCommitHistory detects verbatim prior commit lines", async () => {
-    const { bulletMatchesCommitHistory } = await import("./commit.ts");
+    const { bulletMatchesCommitHistory } = await import("./index.ts");
     const history = new Set(["🗺️copied line from an old micro-commit"]);
     expect(bulletMatchesCommitHistory("🗺️copied line from an old micro-commit", history)).toBe(true);
     expect(bulletMatchesCommitHistory("🗺️fresh summary written from git diff", history)).toBe(false);

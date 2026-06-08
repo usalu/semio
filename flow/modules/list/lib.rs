@@ -92,6 +92,47 @@ impl Function for Remove {
 }
 // #endregion 🔖Remove
 
+// #region 🔖Range
+/// 📈 Builds an arithmetic sequence list.
+pub struct Range;
+
+impl Function for Range {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let start = read_number(input, "start").unwrap_or(0.0);
+        let step = read_number(input, "step").unwrap_or(1.0);
+        let count = read_index(input, "count")?;
+        let mut list = Dictionary::new();
+        for index in 0..count {
+            list = list.insert(index.to_string(), Value::Atom(Atom::Decimal(start + step * index as f64)));
+        }
+        Ok(Dictionary::new().insert("list", Value::Dictionary(list)))
+    }
+}
+// #endregion 🔖Range
+
+// #region 🔖Reverse
+/// 🔁 Reverses indexed list elements.
+pub struct Reverse;
+
+impl Function for Reverse {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let list = read_list(input, "list")?;
+        let indices = list_indices(list);
+        let mut out = Dictionary::new();
+        for (next, index) in indices.iter().rev().enumerate() {
+            if let Some(value) = list.get(&index.to_string()) {
+                out = out.insert(next.to_string(), value.clone());
+            }
+        }
+        Ok(Dictionary::new().insert("list", Value::Dictionary(out)))
+    }
+}
+// #endregion 🔖Reverse
+
+fn read_number(input: &Dictionary, key: &str) -> Option<f64> {
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64())
+}
+
 fn list_indices(list: &Dictionary) -> Vec<usize> {
     let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
     indices.sort_unstable();
@@ -248,6 +289,34 @@ pub fn register(registry: &mut Registry) {
         },
         Box::new(Remove),
     );
+    registry.register(
+        NeuronKindInfo {
+            id: "list.range".into(),
+            module: "list".into(),
+            name: "Range".into(),
+            abbreviation: "Range".into(),
+            icon: "emoji:📈".into(),
+            summary: "Builds an arithmetic sequence list".into(),
+            inputs: vec!["start".into(), "step".into(), "count".into()],
+            outputs: vec!["list".into()],
+            ..Default::default()
+        },
+        Box::new(Range),
+    );
+    registry.register(
+        NeuronKindInfo {
+            id: "list.reverse".into(),
+            module: "list".into(),
+            name: "Reverse".into(),
+            abbreviation: "Rev".into(),
+            icon: "emoji:🔁".into(),
+            summary: "Reverses indexed list elements".into(),
+            inputs: vec!["list".into()],
+            outputs: vec!["list".into()],
+            ..Default::default()
+        },
+        Box::new(Reverse),
+    );
 }
 
 // #region 🔖Tests
@@ -310,11 +379,35 @@ mod tests {
     use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
 
     #[test]
+    fn range_builds_sequence() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let input = Dictionary::new()
+            .insert("start", Value::Atom(Atom::Decimal(0.0)))
+            .insert("step", Value::Atom(Atom::Decimal(2.0)))
+            .insert("count", Value::Atom(Atom::Decimal(3.0)));
+        let out = reg.get("list.range").unwrap().evaluate(&input).unwrap();
+        let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list");
+        assert_eq!(list.get("1").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
+    }
+
+    #[test]
+    fn reverse_reorders_list() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let input = Dictionary::new().insert("list", Value::Dictionary(sample_list()));
+        let out = reg.get("list.reverse").unwrap().evaluate(&input).unwrap();
+        let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list");
+        assert_eq!(list.get("0").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        assert_eq!(list.get("2").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
+    }
+
+    #[test]
     fn manifest_lists_list_kinds() {
         let json = build_manifest_json(
             "list",
             "List",
-            "0.1.0",
+            "0.2.0",
             &module_registry(),
             vec!["onStartup".into()],
             vec![],
@@ -322,6 +415,7 @@ mod tests {
             vec![],
         );
         assert!(json.contains("list.append"));
+        assert!(json.contains("list.range"));
     }
 
     #[test]
@@ -347,7 +441,7 @@ mod wasm_ext {
         build_manifest_json(
             "list",
             "List",
-            "0.1.0",
+            "0.2.0",
             &module_registry(),
             vec!["onStartup".into()],
             vec![],

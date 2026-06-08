@@ -13,19 +13,19 @@ todos:
     status: completed
   - id: ts-vscode
     content: Fold repo/client/vscode codegen/*.ts into extension.ts regions; update internal import
-    status: in_progress
+    status: completed
   - id: rust-graph
     content: Inline-fold mathematical/graph siblings (geometry, scene_json, types, board_host, fixture_layout) into respective lib.rs
-    status: pending
+    status: completed
   - id: rust-vello
     content: Inline-fold infinite/cavas/vello icon_codec.rs (preserve include!) and theme.rs into lib.rs
-    status: pending
+    status: completed
   - id: py-test
     content: Embed semio/client/lib/py store_test.py into main.py; delete store_test.py
-    status: pending
+    status: completed
   - id: verify
     content: Run nx test/build, cargo check/test, pytest for affected packages; confirm no runtime/bundle change; close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

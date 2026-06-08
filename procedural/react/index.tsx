@@ -150,6 +150,7 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("prim3d.cone", "Cone", "Cone solid", ["radius", "height"], ["geometry"], ["Primitives 3D"]),
 	brepKind("prim3d.torus", "Torus", "Torus solid", ["major", "minor"], ["geometry"], ["Primitives 3D"]),
 	brepKind("prim3d.ellipsoid", "Ellipsoid", "Ellipsoid solid", ["rx", "ry", "rz"], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.polyhedron", "Polyhedron", "Polyhedron from vertices and faces", ["vertices", "faces"], ["geometry"], ["Primitives 3D"]),
 	brepKind("draw2d.rectangle", "Draw Rectangle", "2D rectangle drawing", ["width", "height"], ["geometry"], ["Draw 2D"]),
 	brepKind("draw2d.circle", "Draw Circle", "2D circle drawing", ["radius"], ["geometry"], ["Draw 2D"]),
 	brepKind("draw2d.ellipse", "Draw Ellipse", "2D ellipse drawing", ["major", "minor"], ["geometry"], ["Draw 2D"]),
@@ -164,6 +165,11 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("curve.threePointArc", "Three Point Arc", "Arc through three points", ["a", "b", "c"], ["geometry"], ["Curves"]),
 	brepKind("curve.tangentArc", "Tangent Arc", "Tangent arc", ["start", "tangent", "end"], ["geometry"], ["Curves"]),
 	brepKind("curve.ellipseArc", "Ellipse Arc", "Elliptical arc", ["major", "minor", "startAngle", "endAngle"], ["geometry"], ["Curves"]),
+	brepKind("curve.bezier", "Bezier", "Bezier curve from poles", ["poles"], ["geometry"], ["Curves"]),
+	brepKind("curve.bspline", "B-Spline", "B-spline approximation", ["poles", "degree"], ["geometry"], ["Curves"]),
+	brepKind("curve.approximate", "Approximate Curve", "Approximate curve through points", ["points", "tolerance"], ["geometry"], ["Curves"]),
+	brepKind("curve.polygon", "Polygon", "Polygon wire from points", ["points"], ["geometry"], ["Curves"]),
+	brepKind("curve.reparametrize", "Reparametrize Curve", "Resample curve to unit domain", ["geometry", "samples"], ["geometry"], ["Curves"]),
 	brepKind("curve.interpolate", "Interpolate", "Interpolated curve", ["geometry"], ["geometry"], ["Curves"]),
 	brepKind("curve.wire", "Wire", "Wire from edges", ["geometry"], ["geometry"], ["Curves"]),
 	brepKind("curve.wireLoop", "Wire Loop", "Closed wire loop", ["geometry"], ["geometry"], ["Curves"]),
@@ -171,7 +177,13 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("surface.filledFace", "Filled Face", "Filled face from wire", ["geometry"], ["geometry"], ["Surfaces"]),
 	brepKind("surface.fill", "Fill", "Fill from edges", ["geometry"], ["geometry"], ["Surfaces"]),
 	brepKind("surface.offsetFace", "Offset Face", "Offset face", ["geometry", "distance"], ["geometry"], ["Surfaces"]),
+	brepKind("surface.subFace", "Sub Face", "Face with hole wire", ["geometry", "wire"], ["geometry"], ["Surfaces"]),
+	brepKind("surface.fromGrid", "Surface From Grid", "NURBS surface from point grid", ["grid"], ["geometry"], ["Surfaces"]),
+	brepKind("surface.reparametrize", "Reparametrize Surface", "Resample face to unit UV domain", ["geometry", "uSamples", "vSamples"], ["geometry"], ["Surfaces"]),
 	brepKind("solid.extrude", "Extrude", "Extrude profile", ["geometry", "vector"], ["geometry"], ["Solid"]),
+	brepKind("solid.supportExtrude", "Support Extrude", "Support extrude", ["geometry", "vector"], ["geometry"], ["Solid"]),
+	brepKind("solid.twistExtrude", "Twist Extrude", "Twist extrude profile", ["geometry", "vector", "angle"], ["geometry"], ["Solid"]),
+	brepKind("solid.draft", "Draft", "Draft solid faces", ["geometry", "angle"], ["geometry"], ["Solid"]),
 	brepKind("solid.revolve", "Revolve", "Revolve profile", ["geometry", "angle"], ["geometry"], ["Solid"]),
 	brepKind("solid.loft", "Loft", "Loft sections", ["a", "b"], ["geometry"], ["Solid"]),
 	brepKind("solid.sweep", "Sweep", "Sweep profile along path", ["profile", "path"], ["geometry"], ["Solid"]),
@@ -190,6 +202,7 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("bool.fuse2d", "Fuse 2D", "2D boolean union", ["a", "b"], ["geometry"], ["Booleans"]),
 	brepKind("bool.cut2d", "Cut 2D", "2D boolean cut", ["a", "b"], ["geometry"], ["Booleans"]),
 	brepKind("bool.intersect2d", "Intersect 2D", "2D boolean intersect", ["a", "b"], ["geometry"], ["Booleans"]),
+	brepKind("bool.cutAll", "Cut All", "Cut solid with multiple cutters", ["geometry", "cutters"], ["geometry"], ["Booleans"]),
 	brepKind("xform.translate", "Translate", "Translate geometry", ["geometry", "offset"], ["geometry"], ["Transforms"]),
 	brepKind("xform.rotate", "Rotate", "Rotate geometry", ["geometry", "angle"], ["geometry"], ["Transforms"]),
 	brepKind("xform.mirror", "Mirror", "Mirror geometry", ["geometry"], ["geometry"], ["Transforms"]),
@@ -202,12 +215,19 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("intersect.sectionToFace", "Section To Face", "Section as face", ["a", "b"], ["geometry"], ["Intersections"]),
 	brepKind("intersect.slice", "Slice", "Slice solid by plane", ["geometry"], ["geometry"], ["Intersections"]),
 	brepKind("intersect.check", "Check Interference", "Check interference", ["a", "b"], ["number"], ["Intersections"]),
+	brepKind("intersect.split", "Split", "Split solid by tool", ["geometry", "tool"], ["list"], ["Intersections"]),
 	brepKind("eval.pointOnCurve", "Point On Curve", "Evaluate point on curve", ["geometry", "t"], ["point"], ["Evaluate"]),
 	brepKind("eval.tangentOnCurve", "Tangent On Curve", "Tangent on curve", ["geometry", "t"], ["vector"], ["Evaluate"]),
 	brepKind("eval.curveLength", "Curve Length", "Curve length", ["geometry"], ["number"], ["Evaluate"]),
 	brepKind("eval.pointOnSurface", "Point On Surface", "Point on surface", ["geometry", "u", "v"], ["point"], ["Evaluate"]),
 	brepKind("eval.normalAt", "Normal At", "Surface normal", ["geometry", "u", "v"], ["vector"], ["Evaluate"]),
 	brepKind("eval.faceCenter", "Face Center", "Face center point", ["geometry"], ["point"], ["Evaluate"]),
+	brepKind("eval.curveStart", "Curve Start", "Curve start point", ["geometry"], ["point"], ["Evaluate"]),
+	brepKind("eval.curveEnd", "Curve End", "Curve end point", ["geometry"], ["point"], ["Evaluate"]),
+	brepKind("eval.curveClosed", "Curve Closed", "Whether curve is closed", ["geometry"], ["number"], ["Evaluate"]),
+	brepKind("eval.uvBounds", "UV Bounds", "Face UV parameter bounds", ["geometry"], ["dictionary"], ["Evaluate"]),
+	brepKind("eval.vertexPosition", "Vertex Position", "Vertex position", ["geometry"], ["point"], ["Evaluate"]),
+	brepKind("eval.divideCurve", "Divide Curve", "Divide curve into points", ["geometry", "count"], ["list"], ["Evaluate"]),
 	brepKind("measure.volume", "Volume", "Solid volume", ["geometry"], ["number"], ["Measure"]),
 	brepKind("measure.area", "Area", "Face/solid area", ["geometry"], ["number"], ["Measure"]),
 	brepKind("measure.length", "Length", "Edge/wire length", ["geometry"], ["number"], ["Measure"]),
@@ -215,11 +235,17 @@ const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	brepKind("query.bounds", "Bounds", "Axis-aligned bounds", ["geometry"], ["dictionary"], ["Query"]),
 	brepKind("query.edges", "Edges", "List edges", ["geometry"], ["list"], ["Query"]),
 	brepKind("query.faces", "Faces", "List faces", ["geometry"], ["list"], ["Query"]),
+	brepKind("query.wires", "Wires", "List wires", ["geometry"], ["list"], ["Query"]),
+	brepKind("query.vertices", "Vertices", "List vertices", ["geometry"], ["list"], ["Query"]),
 	brepKind("repair.heal", "Heal Solid", "Heal solid", ["geometry"], ["geometry"], ["Repair"]),
+	brepKind("repair.healFace", "Heal Face", "Heal face", ["geometry"], ["geometry"], ["Repair"]),
+	brepKind("repair.sewShells", "Sew Shells", "Sew faces into shell", ["faces"], ["geometry"], ["Repair"]),
 	brepKind("repair.autoHeal", "Auto Heal", "Auto heal shape", ["geometry"], ["geometry"], ["Repair"]),
 	brepKind("repair.solidFromShell", "Solid From Shell", "Make solid from shell", ["geometry"], ["geometry"], ["Repair"]),
 	brepKind("io.exportStep", "Export STEP", "Export STEP bytes as base64", ["geometry"], ["text"], ["IO"]),
 	brepKind("io.exportStl", "Export STL", "Export STL bytes as base64", ["geometry"], ["text"], ["IO"]),
+	brepKind("io.importStep", "Import STEP", "Import STEP from base64", ["text"], ["geometry"], ["IO"]),
+	brepKind("io.importStl", "Import STL", "Import STL from base64", ["text"], ["geometry"], ["IO"]),
 	brepKind("gear.external", "External Gear", "Spur external gear", ["teeth", "module"], ["geometry"], ["Gears"]),
 	brepKind("gear.internal", "Internal Gear", "Spur internal gear", ["teeth", "module"], ["geometry"], ["Gears"]),
 ];
@@ -228,7 +254,7 @@ const BREP_MODULE_MANIFEST: FlowModuleManifestV1 = {
 	schema: "flow.module/v1",
 	id: "brep",
 	name: "Brep",
-	version: "0.2.0",
+	version: "0.3.0",
 	activationEvents: ["onStartup"],
 	contributes: { neuronKinds: BREP_FLOW_KINDS, widgets: [], commands: [], settings: [] },
 };
@@ -288,6 +314,100 @@ function bytesToBase64(bytes: Uint8Array): string {
 	return btoa(binary);
 }
 
+function base64ToBytes(text: string): Uint8Array {
+	const binary = atob(text);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+	return bytes;
+}
+
+function listDictIndices(dict: Record<string, unknown>): number[] {
+	return Object.keys(dict)
+		.filter((key) => /^\d+$/.test(key))
+		.map((key) => Number(key))
+		.sort((a, b) => a - b);
+}
+
+function parseVec3List(input: Record<string, unknown>, key: string): Vec3[] {
+	const raw = input[key];
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+	const dict = raw as Record<string, unknown>;
+	const points: Vec3[] = [];
+	for (const index of listDictIndices(dict)) {
+		const vec = parseVec3Loose(dict[String(index)]);
+		if (vec) points.push(vec);
+	}
+	return points;
+}
+
+function parseGeometryList(input: Record<string, unknown>, key: string): GeometryRef[] {
+	const raw = input[key];
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+		const single = parseGeometry(input, key);
+		return single ? [single] : [];
+	}
+	const dict = raw as Record<string, unknown>;
+	const refs: GeometryRef[] = [];
+	for (const index of listDictIndices(dict)) {
+		const item = dict[String(index)];
+		if (typeof item === "string" && item.length > 0) refs.push(item as GeometryRef);
+	}
+	return refs;
+}
+
+function parseNestedVec3Grid(input: Record<string, unknown>, key: string): Vec3[][] {
+	const raw = input[key];
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+	const dict = raw as Record<string, unknown>;
+	const rows: Vec3[][] = [];
+	for (const rowIndex of listDictIndices(dict)) {
+		const rowRaw = dict[String(rowIndex)];
+		if (!rowRaw || typeof rowRaw !== "object" || Array.isArray(rowRaw)) continue;
+		const rowDict = rowRaw as Record<string, unknown>;
+		const row: Vec3[] = [];
+		for (const colIndex of listDictIndices(rowDict)) {
+			const vec = parseVec3Loose(rowDict[String(colIndex)]);
+			if (vec) row.push(vec);
+		}
+		if (row.length > 0) rows.push(row);
+	}
+	return rows;
+}
+
+function parseFaceIndexLists(input: Record<string, unknown>, key: string): number[][] {
+	const raw = input[key];
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+	const dict = raw as Record<string, unknown>;
+	const faces: number[][] = [];
+	for (const faceIndex of listDictIndices(dict)) {
+		const faceRaw = dict[String(faceIndex)];
+		if (!faceRaw || typeof faceRaw !== "object" || Array.isArray(faceRaw)) continue;
+		const faceDict = faceRaw as Record<string, unknown>;
+		const indices: number[] = [];
+		for (const vertexIndex of listDictIndices(faceDict)) {
+			indices.push(parseNumber(faceDict[String(vertexIndex)]));
+		}
+		if (indices.length > 0) faces.push(indices);
+	}
+	return faces;
+}
+
+function geometryListOut(refs: readonly GeometryRef[]): Record<string, unknown> {
+	const list: Record<string, string> = {};
+	refs.forEach((ref, index) => {
+		list[String(index)] = String(ref);
+	});
+	return { list };
+}
+
+function vec3ListOut(points: readonly Vec3[]): Record<string, unknown> {
+	const list: Record<string, { x: number; y: number; z: number }> = {};
+	points.forEach((point, index) => {
+		list[String(index)] = { x: point[0], y: point[1], z: point[2] };
+	});
+	return { list };
+}
+
 type BrepEvalFn = (input: Record<string, unknown>, kernel: BrepKernelType) => Record<string, unknown>;
 
 const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
@@ -299,6 +419,12 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.prim3d.cone": (input, k) => geoOut(k.coneSync(parseNumber(input.radius, 1), parseNumber(input.height, 1))),
 	"brep.prim3d.torus": (input, k) => geoOut(k.torusSync(parseNumber(input.major, 2), parseNumber(input.minor, 0.5))),
 	"brep.prim3d.ellipsoid": (input, k) => geoOut(k.ellipsoidSync(parseNumber(input.rx, 1), parseNumber(input.ry, 1), parseNumber(input.rz, 1))),
+	"brep.prim3d.polyhedron": (input, k) => {
+		const vertices = parseVec3List(input, "vertices");
+		const faces = parseFaceIndexLists(input, "faces");
+		if (vertices.length < 4 || faces.length === 0) throw new Error("missing polyhedron vertices or faces");
+		return geoOut(k.polyhedronSync(vertices, faces));
+	},
 	"brep.draw2d.rectangle": (input, k) => geoOut(k.drawRectangleSync(parseNumber(input.width, 2), parseNumber(input.height, 1))),
 	"brep.draw2d.circle": (input, k) => geoOut(k.drawCircleSync(parseNumber(input.radius, 1))),
 	"brep.draw2d.ellipse": (input, k) => geoOut(k.drawEllipseSync(parseNumber(input.major, 1), parseNumber(input.minor, 0.5))),
@@ -313,6 +439,31 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.curve.threePointArc": (input, k) => geoOut(k.threePointArcSync(parseVec3Input(input, "a"), parseVec3Input(input, "b", [1, 0, 0]), parseVec3Input(input, "c", [1, 1, 0]))),
 	"brep.curve.tangentArc": (input, k) => geoOut(k.tangentArcSync(parseVec3Input(input, "start"), parseVec3Input(input, "tangent", [1, 0, 0]), parseVec3Input(input, "end", [1, 1, 0]))),
 	"brep.curve.ellipseArc": (input, k) => geoOut(k.ellipseArcSync(parseNumber(input.major, 1), parseNumber(input.minor, 0.5), parseNumber(input.startAngle), parseNumber(input.endAngle, Math.PI))),
+	"brep.curve.bezier": (input, k) => {
+		const poles = parseVec3List(input, "poles");
+		if (poles.length < 2) throw new Error("missing bezier poles");
+		return geoOut(k.bezierSync(poles));
+	},
+	"brep.curve.bspline": (input, k) => {
+		const poles = parseVec3List(input, "poles");
+		if (poles.length < 2) throw new Error("missing bspline poles");
+		return geoOut(k.bsplineApproxSync(poles, parseNumber(input.degree, 3)));
+	},
+	"brep.curve.approximate": (input, k) => {
+		const points = parseVec3List(input, "points");
+		if (points.length < 2) throw new Error("missing approximate points");
+		return geoOut(k.approximateCurveSync(points, parseNumber(input.tolerance, 0.01)));
+	},
+	"brep.curve.polygon": (input, k) => {
+		const points = parseVec3List(input, "points");
+		if (points.length < 3) throw new Error("missing polygon points");
+		return geoOut(k.polygonSync(points));
+	},
+	"brep.curve.reparametrize": (input, k) => {
+		const curve = parseGeometry(input, "geometry");
+		if (!curve) throw new Error("missing geometry");
+		return geoOut(k.reparametrizeCurveSync(curve, parseNumber(input.samples, 64)));
+	},
 	"brep.curve.interpolate": (input, k) => geoOut(k.interpolateCurveSync([parseVec3Input(input, "geometry", [0, 0, 0]), [1, 0, 0], [1, 1, 0]])),
 	"brep.curve.wire": (input, k) => {
 		const edge = parseGeometry(input, "geometry");
@@ -343,6 +494,22 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		const face = parseGeometry(input, "geometry");
 		if (!face) throw new Error("missing geometry");
 		return geoOut(k.offsetFaceSync(face, parseNumber(input.distance, 0.1)));
+	},
+	"brep.surface.subFace": (input, k) => {
+		const face = parseGeometry(input, "geometry");
+		const wire = parseGeometry(input, "wire");
+		if (!face || !wire) throw new Error("missing subFace inputs");
+		return geoOut(k.subFaceSync(face, wire));
+	},
+	"brep.surface.fromGrid": (input, k) => {
+		const grid = parseNestedVec3Grid(input, "grid");
+		if (grid.length < 2 || grid[0]!.length < 2) throw new Error("missing surface grid");
+		return geoOut(k.surfaceFromGridSync(grid));
+	},
+	"brep.surface.reparametrize": (input, k) => {
+		const face = parseGeometry(input, "geometry");
+		if (!face) throw new Error("missing geometry");
+		return geoOut(k.reparametrizeSurfaceSync(face, parseNumber(input.uSamples, 12), parseNumber(input.vSamples, 12)));
 	},
 	"brep.solid.extrude": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -409,6 +576,23 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		if (!shape) throw new Error("missing geometry");
 		return geoOut(k.convexHullSync([shape]));
 	},
+	"brep.solid.supportExtrude": (input, k) => {
+		const shape = parseGeometry(input, "geometry");
+		if (!shape) throw new Error("missing geometry");
+		const { direction, distance } = extrudeFromVector(parseVec3Input(input, "vector", EXTRUDE_DEFAULT_VECTOR));
+		return geoOut(k.supportExtrudeSync(shape, direction, distance));
+	},
+	"brep.solid.twistExtrude": (input, k) => {
+		const shape = parseGeometry(input, "geometry");
+		if (!shape) throw new Error("missing geometry");
+		const { direction, distance } = extrudeFromVector(parseVec3Input(input, "vector", EXTRUDE_DEFAULT_VECTOR));
+		return geoOut(k.twistExtrudeSync(shape, direction, distance, parseNumber(input.angle, Math.PI / 4)));
+	},
+	"brep.solid.draft": (input, k) => {
+		const shape = parseGeometry(input, "geometry");
+		if (!shape) throw new Error("missing geometry");
+		return geoOut(k.draftSync(shape, parseNumber(input.angle, Math.PI / 12), [0, 0, 1]));
+	},
 	"brep.bool.fuse": (input, k) => {
 		const a = parseGeometry(input, "a");
 		const b = parseGeometry(input, "b");
@@ -450,6 +634,12 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		const b = parseGeometry(input, "b");
 		if (!a || !b) throw new Error("missing intersect2d inputs");
 		return geoOut(k.intersect2DSync(a, b));
+	},
+	"brep.bool.cutAll": (input, k) => {
+		const base = parseGeometry(input, "geometry");
+		const cutters = parseGeometryList(input, "cutters");
+		if (!base || cutters.length === 0) throw new Error("missing cutAll inputs");
+		return geoOut(k.cutAllSync(base, cutters));
 	},
 	"brep.xform.translate": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -514,6 +704,12 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		if (!a || !b) throw new Error("missing interference inputs");
 		return { number: k.checkInterferenceSync(a, b) ? 1 : 0 };
 	},
+	"brep.intersect.split": (input, k) => {
+		const shape = parseGeometry(input, "geometry");
+		const tool = parseGeometry(input, "tool");
+		if (!shape || !tool) throw new Error("missing split inputs");
+		return geometryListOut(k.splitSync(shape, tool));
+	},
 	"brep.eval.pointOnCurve": (input, k) => {
 		const curve = parseGeometry(input, "geometry");
 		if (!curve) throw new Error("missing geometry");
@@ -543,6 +739,37 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		const face = parseGeometry(input, "geometry");
 		if (!face) throw new Error("missing geometry");
 		return vec3PortOut("point", k.faceCenterSync(face));
+	},
+	"brep.eval.curveStart": (input, k) => {
+		const curve = parseGeometry(input, "geometry");
+		if (!curve) throw new Error("missing geometry");
+		return vec3PortOut("point", k.curveStartPointSync(curve));
+	},
+	"brep.eval.curveEnd": (input, k) => {
+		const curve = parseGeometry(input, "geometry");
+		if (!curve) throw new Error("missing geometry");
+		return vec3PortOut("point", k.curveEndPointSync(curve));
+	},
+	"brep.eval.curveClosed": (input, k) => {
+		const curve = parseGeometry(input, "geometry");
+		if (!curve) throw new Error("missing geometry");
+		return { number: k.curveIsClosedSync(curve) ? 1 : 0 };
+	},
+	"brep.eval.uvBounds": (input, k) => {
+		const face = parseGeometry(input, "geometry");
+		if (!face) throw new Error("missing geometry");
+		const bounds = k.uvBoundsSync(face);
+		return { dictionary: bounds };
+	},
+	"brep.eval.vertexPosition": (input, k) => {
+		const vertex = parseGeometry(input, "geometry");
+		if (!vertex) throw new Error("missing geometry");
+		return vec3PortOut("point", k.vertexPositionSync(vertex));
+	},
+	"brep.eval.divideCurve": (input, k) => {
+		const curve = parseGeometry(input, "geometry");
+		if (!curve) throw new Error("missing geometry");
+		return vec3ListOut(k.divideCurveSync(curve, parseNumber(input.count, 5)));
 	},
 	"brep.measure.volume": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -579,7 +806,17 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.query.faces": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return { list: k.getFacesSync(shape).map(String) };
+		return geometryListOut(k.getFacesSync(shape));
+	},
+	"brep.query.wires": (input, k) => {
+		const shape = parseGeometry(input, "geometry");
+		if (!shape) throw new Error("missing geometry");
+		return geometryListOut(k.getWiresSync(shape));
+	},
+	"brep.query.vertices": (input, k) => {
+		const shape = parseGeometry(input, "geometry");
+		if (!shape) throw new Error("missing geometry");
+		return geometryListOut(k.getVerticesSync(shape));
 	},
 	"brep.repair.heal": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -596,6 +833,16 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		if (!shape) throw new Error("missing geometry");
 		return geoOut(k.solidFromShellSync(shape));
 	},
+	"brep.repair.healFace": (input, k) => {
+		const face = parseGeometry(input, "geometry");
+		if (!face) throw new Error("missing geometry");
+		return geoOut(k.healFaceSync(face));
+	},
+	"brep.repair.sewShells": (input, k) => {
+		const faces = parseGeometryList(input, "faces");
+		if (faces.length === 0) throw new Error("missing faces");
+		return geoOut(k.sewShellsSync(faces));
+	},
 	"brep.io.exportStep": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
@@ -607,6 +854,16 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 		if (!shape) throw new Error("missing geometry");
 		const bytes = k.exportStlSync(shape);
 		return { text: bytesToBase64(bytes) };
+	},
+	"brep.io.importStep": (input, k) => {
+		const text = input.text;
+		if (typeof text !== "string" || text.length === 0) throw new Error("missing text");
+		return geoOut(k.importStepSync(base64ToBytes(text)));
+	},
+	"brep.io.importStl": (input, k) => {
+		const text = input.text;
+		if (typeof text !== "string" || text.length === 0) throw new Error("missing text");
+		return geoOut(k.importStlSync(base64ToBytes(text)));
 	},
 	"brep.gear.external": (input, k) => geoOut(k.makeExternalGearSync(parseNumber(input.teeth, 20), parseNumber(input.module, 2))),
 	"brep.gear.internal": (input, k) => geoOut(k.makeInternalGearSync(parseNumber(input.teeth, 20), parseNumber(input.module, 2))),
@@ -1809,6 +2066,31 @@ if (import.meta.vitest) {
 			expect(proceduralPreviewCameraSeed(1)).toBe("1");
 			const ortho = applyOrbitProjectionToCameraState(PROCEDURAL_PREVIEW_DEFAULT_CAMERA, "orthographic");
 			expect(ortho.projection).toBe("orthographic");
+		});
+
+		it("brep.eval.divideCurve returns indexed point list", () => {
+			const line = evaluateBrepFlowKind("brep.curve.line", JSON.stringify({ start: [0, 0, 0], end: [4, 0, 0] }), kernel);
+			const lineParsed = JSON.parse(line) as { geometry?: string };
+			const out = evaluateBrepFlowKind(
+				"brep.eval.divideCurve",
+				JSON.stringify({ geometry: lineParsed.geometry, count: 3 }),
+				kernel,
+			);
+			const parsed = JSON.parse(out) as { list?: Record<string, { x: number }> };
+			expect(parsed.list?.["0"]?.x).toBeCloseTo(0, 3);
+			expect(parsed.list?.["2"]?.x).toBeCloseTo(4, 3);
+		});
+
+		it("brep.curve.reparametrize rebuilds curve geometry", () => {
+			const line = evaluateBrepFlowKind("brep.curve.line", JSON.stringify({ start: [0, 0, 0], end: [2, 0, 0] }), kernel);
+			const lineParsed = JSON.parse(line) as { geometry?: string };
+			const out = evaluateBrepFlowKind(
+				"brep.curve.reparametrize",
+				JSON.stringify({ geometry: lineParsed.geometry, samples: 16 }),
+				kernel,
+			);
+			const parsed = JSON.parse(out) as { geometry?: string };
+			expect(parsed.geometry).toMatch(/^edge-/);
 		});
 
 		it("procedural preview mounts the infinite-world viewport stack", async () => {

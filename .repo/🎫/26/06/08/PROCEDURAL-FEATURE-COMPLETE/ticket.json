@@ -1,0 +1,7 @@
+{
+  "title": "Procedural Feature Complete",
+  "emoji": "🔧",
+  "status": "open",
+  "description": "Make procedural feature-complete: expose all brep kernel ops as flow nodes, add reparametrize/divide utilities, extend math/list flow modules with seeded random and series.",
+  "goal": "🎯flow"
+}

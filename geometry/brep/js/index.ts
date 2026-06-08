@@ -341,6 +341,9 @@ export interface BrepKernel extends BrepPreviewKernel {
 	curveEndPointSync(curve: GeometryRef): Vec3;
 	curveLengthSync(curve: GeometryRef): number;
 	curveIsClosedSync(curve: GeometryRef): boolean;
+	divideCurveSync(curve: GeometryRef, count: number): readonly Vec3[];
+	reparametrizeCurveSync(curve: GeometryRef, samples?: number): GeometryRef;
+	reparametrizeSurfaceSync(face: GeometryRef, uSamples?: number, vSamples?: number): GeometryRef;
 	pointOnSurfaceSync(face: GeometryRef, u: number, v: number): Vec3;
 	normalAtSync(face: GeometryRef, u: number, v: number): Vec3;
 	uvBoundsSync(face: GeometryRef): { uMin: number; uMax: number; vMin: number; vMax: number };
@@ -373,6 +376,118 @@ export interface BrepKernel extends BrepPreviewKernel {
 // #region 🧭Kernel
 // #region 🔌Adapters
 import openCascadeWasmBundledUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
+import {
+	approximateCurve,
+	autoHeal,
+	bezier,
+	box,
+	bsplineApprox,
+	chamfer,
+	checkInterference,
+	circle,
+	clone,
+	cone,
+	convexHull,
+	curveEndPoint,
+	curveIsClosed,
+	curveLength,
+	curvePointAt,
+	curveStartPoint,
+	curveTangentAt,
+	cut,
+	cut2D,
+	cutAll,
+	cylinder,
+	draft,
+	drawCircle,
+	drawEllipse,
+	drawPolysides,
+	drawRectangle,
+	drawRoundedRectangle,
+	ellipse,
+	ellipseArc,
+	extrude,
+	face,
+	faceCenter,
+	filledFace,
+	fill,
+	fuse2D,
+	fuseAll,
+	getBounds,
+	getEdges,
+	getFaces,
+	getVertices,
+	getWires,
+	healFace,
+	healSolid,
+	helix,
+	hull,
+	importSTEP,
+	importSTL,
+	initFromOC,
+	interpolateCurve,
+	intersect,
+	intersect2D,
+	isOk,
+	linearPattern,
+	line,
+	loft,
+	makeExternalGear,
+	makeInternalGear,
+	measureArea,
+	measureDistance,
+	measureLength,
+	measureVolume,
+	mesh,
+	meshEdges,
+	minkowski,
+	mirror,
+	normalAt,
+	offset,
+	offsetFace,
+	pointOnSurface,
+	polyhedron,
+	polygon,
+	rectangularPattern,
+	revolve,
+	rotate,
+	scale,
+	section,
+	sectionToFace,
+	sewShells,
+	shell,
+	sketchCircle,
+	sketchExtrude,
+	sketchRectangle,
+	slice,
+	solidFromShell,
+	sphere,
+	split,
+	subFace,
+	supportExtrude,
+	surfaceFromGrid,
+	sweep,
+	tangentArc,
+	thicken,
+	threePointArc,
+	toGroupedBufferGeometryData,
+	toLineGeometryData,
+	translate,
+	torus,
+	twistExtrude,
+	unwrap,
+	uvBounds,
+	vertex,
+	vertexPosition,
+	wire,
+	wireLoop,
+	fillet,
+	circularPattern,
+	exportSTEP,
+	exportSTL,
+} from "brepjs";
+import type { AnyShape, Drawing, Shape1D, Shape3D, ValidSolid } from "brepjs";
+import initOpenCascade from "brepjs-opencascade";
 // #endregion 🔌Adapters
 
 // #region 🧮Vec
@@ -1010,6 +1125,49 @@ export class BrepjsGeometryKernel implements BrepKernel {
 		return curveIsClosed(asShape1D(this.require(curve, "edge", "wire")));
 	}
 
+	divideCurveSync(curve: GeometryRef, count: number): readonly Vec3[] {
+		const n = Math.max(1, Math.round(count));
+		const shape = asShape1D(this.require(curve, "edge", "wire"));
+		const points: Vec3[] = [];
+		for (let i = 0; i < n; i++) {
+			const t = n <= 1 ? 0 : i / (n - 1);
+			points.push(toVec3Tuple(curvePointAt(shape, t)));
+		}
+		return points;
+	}
+
+	reparametrizeCurveSync(curve: GeometryRef, samples = 64): GeometryRef {
+		const n = Math.max(2, Math.round(samples));
+		const shape = asShape1D(this.require(curve, "edge", "wire"));
+		const closed = curveIsClosed(shape);
+		const points: [number, number, number][] = [];
+		for (let i = 0; i < n; i++) {
+			const t = i / (n - 1);
+			const p = curvePointAt(shape, t);
+			points.push([p.x ?? 0, p.y ?? 0, p.z ?? 0]);
+		}
+		return this.register("edge", interpolateCurve(points, { closed }));
+	}
+
+	reparametrizeSurfaceSync(face: GeometryRef, uSamples = 12, vSamples = 12): GeometryRef {
+		const shape = asShape(this.require(face, "face"));
+		const bounds = uvBounds(shape);
+		const uN = Math.max(2, Math.round(uSamples));
+		const vN = Math.max(2, Math.round(vSamples));
+		const grid: [number, number, number][][] = [];
+		for (let vi = 0; vi < vN; vi++) {
+			const v = bounds.vMin + (bounds.vMax - bounds.vMin) * (vi / (vN - 1));
+			const row: [number, number, number][] = [];
+			for (let ui = 0; ui < uN; ui++) {
+				const u = bounds.uMin + (bounds.uMax - bounds.uMin) * (ui / (uN - 1));
+				const p = pointOnSurface(shape, u, v);
+				row.push([p.x ?? 0, p.y ?? 0, p.z ?? 0]);
+			}
+			grid.push(row);
+		}
+		return this.register("face", surfaceFromGrid(grid));
+	}
+
 	pointOnSurfaceSync(face: GeometryRef, u: number, v: number): Vec3 {
 		return toVec3Tuple(pointOnSurface(asShape(this.require(face, "face")), u, v));
 	}
@@ -1361,6 +1519,37 @@ if (import.meta.vitest) {
 			const gear = kernel.makeExternalGearSync(20, 3);
 			expect(String(gear).startsWith("solid-")).toBe(true);
 			expect(kernel.getGeometryKind(gear)).toBe("solid");
+		});
+
+		it("divideCurveSync samples evenly spaced points", async () => {
+			await ensureBrepWasmLoaded();
+			const line = kernel.lineSync([0, 0, 0], [4, 0, 0]);
+			const points = kernel.divideCurveSync(line, 3);
+			expect(points).toHaveLength(3);
+			expect(points[0]![0]).toBeCloseTo(0, 3);
+			expect(points[1]![0]).toBeCloseTo(2, 3);
+			expect(points[2]![0]).toBeCloseTo(4, 3);
+		});
+
+		it("reparametrizeCurveSync rebuilds edge from samples", async () => {
+			await ensureBrepWasmLoaded();
+			const line = kernel.lineSync([0, 0, 0], [3, 0, 0]);
+			const rebuilt = kernel.reparametrizeCurveSync(line, 8);
+			expect(kernel.getGeometryKind(rebuilt)).toBe("edge");
+			const pt = kernel.curvePointAtSync(rebuilt, 0.5);
+			expect(pt[0]).toBeCloseTo(1.5, 1);
+		});
+
+		it("reparametrizeSurfaceSync rebuilds face from uv grid", async () => {
+			await ensureBrepWasmLoaded();
+			const profile = kernel.sketchRectangleSync(2, 2);
+			const solid = kernel.extrudeSync(profile, [0, 0, 1], 1);
+			const faces = kernel.getFacesSync(solid);
+			expect(faces.length).toBeGreaterThan(0);
+			const rebuilt = kernel.reparametrizeSurfaceSync(faces[0]!, 6, 6);
+			expect(kernel.getGeometryKind(rebuilt)).toBe("face");
+			const center = kernel.faceCenterSync(rebuilt);
+			expect(center[2]).toBeGreaterThan(0);
 		});
 	});
 }

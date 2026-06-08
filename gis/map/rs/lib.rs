@@ -672,6 +672,23 @@ pub mod vector_tiles {
         }
 
         #[test]
+        fn mvt_segment_is_tile_seam_on_extent_bbox() {
+            let extent = 4096;
+            assert!(super::mvt_segment_is_tile_seam(extent, (0.0, 0.0), (4096.0, 0.0)));
+            assert!(super::mvt_segment_is_tile_seam(extent, (4096.0, 100.0), (4096.0, 900.0)));
+            assert!(!super::mvt_segment_is_tile_seam(extent, (0.0, 0.0), (100.0, 100.0)));
+            assert!(!super::mvt_segment_is_tile_seam(extent, (100.0, 200.0), (300.0, 400.0)));
+            assert!(super::mvt_segment_touches_tile_bbox(extent, (0.0, 0.0), (100.0, 100.0)));
+            assert!(!super::mvt_segment_touches_tile_bbox(extent, (100.0, 200.0), (300.0, 400.0)));
+        }
+
+        #[test]
+        fn weighted_opaque_fill_keeps_alpha_solid() {
+            let c = super::weighted_opaque_fill(crate::Color::from_rgba8(40, 50, 60, 128), 1.0);
+            assert_eq!(c.to_rgba8().a, 255);
+        }
+
+        #[test]
         fn linestring_moveto_starts_new_part() {
             let geometry = vec![
                 (1 << 3) | 1,
@@ -1095,6 +1112,51 @@ pub mod vector_tiles {
     pub fn color_with_alpha(color: Color, alpha: u8) -> Color {
         let rgba = color.to_rgba8();
         Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
+    }
+
+    /// @emoji 🎨 Opaque land/water base fill; weight scales RGB only so tile composites do not seam.
+    pub fn weighted_opaque_fill(color: Color, weight: f64) -> Color {
+        let w = super::clamp_map_layer_weight(weight).clamp(0.25, 1.0);
+        let rgba = color.to_rgba8();
+        let scale = |c: u8| ((f64::from(c) * w).round() as u8).min(255);
+        Color::from_rgba8(scale(rgba.r), scale(rgba.g), scale(rgba.b), 255)
+    }
+
+    fn mvt_point_on_tile_bbox_edge(extent: u32, x: f64, y: f64) -> bool {
+        const EPS: f64 = 1.0;
+        let e = f64::from(extent);
+        x.abs() <= EPS || y.abs() <= EPS || (x - e).abs() <= EPS || (y - e).abs() <= EPS
+    }
+
+    pub fn mvt_segment_is_tile_seam(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
+        mvt_point_on_tile_bbox_edge(extent, a.0, a.1) && mvt_point_on_tile_bbox_edge(extent, b.0, b.1)
+    }
+
+    pub fn mvt_segment_touches_tile_bbox(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
+        mvt_point_on_tile_bbox_edge(extent, a.0, a.1) || mvt_point_on_tile_bbox_edge(extent, b.0, b.1)
+    }
+
+    pub fn mvt_polyline_is_tile_bbox_artifact(extent: u32, line: &[(f64, f64)]) -> bool {
+        line.len() >= 2
+            && line
+                .iter()
+                .all(|&(x, y)| mvt_point_on_tile_bbox_edge(extent, x, y))
+    }
+}
+
+/// @emoji ✂️ How aggressively MVT line work drops tile-clip seam segments.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TileSeamCull {
+    BothEndpoints,
+    EitherEndpoint,
+}
+
+impl TileSeamCull {
+    fn drop(self, extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
+        match self {
+            Self::BothEndpoints => vector_tiles::mvt_segment_is_tile_seam(extent, a, b),
+            Self::EitherEndpoint => vector_tiles::mvt_segment_touches_tile_bbox(extent, a, b),
+        }
     }
 }
 // #endregion 🔖VectorTiles
@@ -1980,7 +2042,7 @@ impl MapHost {
                 map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y0)),
                 map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y0)),
             ],
-            1.0,
+            2.0,
         );
         let mut path = vello::kurbo::BezPath::new();
         path.move_to(corners[0]);
@@ -2096,8 +2158,9 @@ impl MapHost {
         lines: &[Vec<(f64, f64)>],
         stroke: Color,
         width: f64,
+        seam_cull: TileSeamCull,
     ) {
-        if lines.is_empty() {
+        if lines.is_empty() || stroke.to_rgba8().a <= 5 || width <= 0.0 {
             return;
         }
         let to_screen = |lx: f64, ly: f64| self.tile_local_to_screen(tz, tx, ty, extent, lx, ly);
@@ -2105,12 +2168,31 @@ impl MapHost {
             if line.len() < 2 {
                 continue;
             }
-            let mut path = vello::kurbo::BezPath::new();
-            path.move_to(to_screen(line[0].0, line[0].1));
-            for &(lx, ly) in &line[1..] {
-                path.line_to(to_screen(lx, ly));
+            if seam_cull == TileSeamCull::EitherEndpoint
+                && vector_tiles::mvt_polyline_is_tile_bbox_artifact(extent, line)
+            {
+                continue;
             }
-            scene.stroke(&Stroke::new(width), Affine::IDENTITY, stroke, None, &path);
+            let mut path = vello::kurbo::BezPath::new();
+            let mut have_subpath = false;
+            for window in line.windows(2) {
+                let a = (window[0].0, window[0].1);
+                let b = (window[1].0, window[1].1);
+                if seam_cull.drop(extent, a, b) {
+                    have_subpath = false;
+                    continue;
+                }
+                let sa = to_screen(a.0, a.1);
+                let sb = to_screen(b.0, b.1);
+                if !have_subpath {
+                    path.move_to(sa);
+                    have_subpath = true;
+                }
+                path.line_to(sb);
+            }
+            if have_subpath {
+                scene.stroke(&Stroke::new(width), Affine::IDENTITY, stroke, None, &path);
+            }
         }
     }
 
@@ -2246,17 +2328,11 @@ impl MapHost {
         forced_lod: Option<&str>,
     ) {
         let weights = self.layer_stroke_scale;
-        let land_fill = vector_tiles::color_with_alpha(
-            self.theme.land_fill,
-            (220.0 * weights.land).clamp(32.0, 255.0) as u8,
-        );
+        let land_fill = vector_tiles::weighted_opaque_fill(self.theme.land_fill, weights.land);
         let border_stroke = self.theme.land_stroke;
         let road_stroke = self.theme.route_stroke;
         let region_stroke = self.theme.region_stroke;
-        let water_fill = vector_tiles::color_with_alpha(
-            self.theme.region_fill,
-            (200.0 * weights.water).clamp(32.0, 255.0) as u8,
-        );
+        let water_fill = vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.water);
         let building_fill = vector_tiles::color_with_alpha(land_fill, (220.0 * weights.buildings).clamp(32.0, 255.0) as u8);
         let park_fill = vector_tiles::color_with_alpha(
             self.theme.region_fill,
@@ -2271,6 +2347,7 @@ impl MapHost {
         let draw_coastline = profile.draw_coastline && vis.water;
         let skip_base_water_fill = draw_coastline && !draw_land_backdrop;
         let skip_base_landcover_fill = draw_land_backdrop;
+        let draw_countries_layer = profile.draw_landcover && vis.land && !draw_land_backdrop;
         if draw_land_backdrop {
             self.append_viewport_fill(scene, land_fill);
         } else if draw_coastline {
@@ -2279,7 +2356,7 @@ impl MapHost {
         for (tz, tx, ty, tile) in draw {
             let draw_water = profile.draw_water && vis.water && !skip_base_water_fill;
             let draw_land = profile.draw_landcover && vis.land;
-            let draw_landcover = draw_land && !skip_base_landcover_fill;
+            let draw_landcover = draw_land && !skip_base_landcover_fill && !draw_countries_layer;
             let draw_buildings = profile.draw_buildings && vis.buildings;
             let draw_roads = profile.draw_transportation && vis.roads;
             let draw_borders = profile.draw_boundary && vis.borders;
@@ -2360,7 +2437,17 @@ impl MapHost {
                                 let w = vector_tiles::transportation_stroke_width(class, line_scale)
                                     * road_lod_scale
                                     * weights.roads;
-                                self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, road_stroke, w);
+                                self.append_vector_tile_lines(
+                                    scene,
+                                    *tz,
+                                    *tx,
+                                    *ty,
+                                    extent,
+                                    &feat.lines,
+                                    road_stroke,
+                                    w,
+                                    TileSeamCull::BothEndpoints,
+                                );
                             }
                         }
                         "boundary" | "geolines" if draw_borders || draw_coastline => {
@@ -2377,6 +2464,7 @@ impl MapHost {
                                         &feat.lines,
                                         border_stroke,
                                         w,
+                                        TileSeamCull::EitherEndpoint,
                                     );
                                 }
                                 continue;
@@ -2393,6 +2481,7 @@ impl MapHost {
                                         &feat.lines,
                                         border_stroke,
                                         w,
+                                        TileSeamCull::EitherEndpoint,
                                     );
                                 }
                                 continue;
@@ -2402,7 +2491,17 @@ impl MapHost {
                             };
                             if vector_tiles::boundary_visible(admin, span, *tz, forced_lod) && !feat.lines.is_empty() {
                                 let w = vector_tiles::boundary_stroke_width(admin, line_scale) * weights.borders;
-                                self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, region_stroke, w);
+                                self.append_vector_tile_lines(
+                                    scene,
+                                    *tz,
+                                    *tx,
+                                    *ty,
+                                    extent,
+                                    &feat.lines,
+                                    region_stroke,
+                                    w,
+                                    TileSeamCull::EitherEndpoint,
+                                );
                             }
                         }
                         "waterway" if draw_water => {
@@ -2416,21 +2515,14 @@ impl MapHost {
                                     &feat.lines,
                                     water_fill,
                                     (1.0 * line_scale * weights.water).clamp(0.5, 6.0),
+                                    TileSeamCull::EitherEndpoint,
                                 );
                             }
                         }
-                        "countries" if draw_land && !draw_land_backdrop => {
+                        "countries" if draw_countries_layer => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon(
-                                    scene,
-                                    *tz,
-                                    *tx,
-                                    *ty,
-                                    extent,
-                                    &feat.rings,
-                                    land_fill,
-                                    Color::from_rgba8(0, 0, 0, 0),
-                                    0.0,
+                                self.append_vector_tile_polygon_rings_nonzero(
+                                    scene, *tz, *tx, *ty, extent, &feat.rings, land_fill,
                                 );
                             }
                         }

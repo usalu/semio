@@ -3,13 +3,15 @@
   "emoji": "🐛",
   "status": "open",
   "description": "At city LOD, vector tiles show visible quadrant/tile edges. Enable land backdrop fill at city and finer LOD bands to hide tile seams.",
-  "summary": "City and finer vector-tile LOD bands (city, district, street, building) now enable `draw_land_backdrop` so each tile is filled with `land_fill` before landcover polygons are drawn. This hides visible tile-quadrant seams that appeared when only sparse landcover geometry was painted over the canvas clear color. Added `city_lod_fills_tile_backdrop_to_hide_seams` regression test; `cargo test -p gis_map city_lod` passes.",
+  "summary": "Light-cyan grid was `region_stroke` (secondary/teal) boundary and teal waterway segments clipped to MVT tile bbox edges — visible on water/park surfaces, nearly invisible on dark land. Extended seam culling: boundary/geolines/waterway drop segments touching any tile edge (`EitherEndpoint`); roads keep `BothEndpoints`. Polygon fills skip ring edges lying on tile bbox to remove teal AA fringe on water. WASM rebuilt.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1628"
   },
   "goal": "🎯gis🎯map",
   "sessions": [
     "⚪d8939972d4b24dbb93697253dce1bd53",
-    "⚪f7350ac3c4c248bcb70c4b1b77b27b22"
+    "⚪f7350ac3c4c248bcb70c4b1b77b27b22",
+    "⚪5fff71e4598e406c8d48a870af924178",
+    "⚪d407e07513564982b45d8f722effae48"
   ]
 }
