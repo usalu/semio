@@ -16,7 +16,7 @@ import {
   dependencyBoundaryBreachesForFile,
   isAdapterBoundaryFile,
   parseTsImportSpecs,
-} from "./dependency-boundary.ts";
+} from "./index.ts";
 import {
   PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,

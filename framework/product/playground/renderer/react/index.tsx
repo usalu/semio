@@ -6042,7 +6042,14 @@ import {
   buildFlowPlayKindsTree,
   registerFlowPlayDeclarativeBodies,
 } from "@flow/play";
-import { DAG_LOD_MODE_AUTOMATIC, FLOW_WIDGET_DRAG_V1_MIME, FlowCanvas, dagLodCanvasProps, flowWidgetPaletteTreeDragController } from "@flow/react";
+import {
+  DAG_LOD_MODE_AUTOMATIC,
+  FLOW_DEFAULT_PROXIMITY_DISTANCE,
+  FLOW_WIDGET_DRAG_V1_MIME,
+  FlowCanvas,
+  dagLodCanvasProps,
+  flowWidgetPaletteTreeDragController,
+} from "@flow/react";
 import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
 
 let flowPlayChromeRegistered = false;
@@ -6086,6 +6093,7 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
   const extensionRevision = useFlowPlayExtensionRevision();
   const scopeId = node.paneId ?? FLOW_PLAY_WINDOW_KIND_ID;
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
+  const proximityDistance = ctrl?.proximityDistanceValue() ?? FLOW_DEFAULT_PROXIMITY_DISTANCE;
   const onLodChange = reactHostPort.useCallback(
     (lod: import("@flow/react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
@@ -6130,6 +6138,7 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
       contextMenu={(ctx) => buildFlowPlayCanvasContextMenu(ctx, onCanvasCommand)}
       {...lodProps}
       onLodChange={onLodChange}
+      proximityDistance={proximityDistance}
     />
   );
 }

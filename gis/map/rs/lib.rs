@@ -849,7 +849,7 @@ pub mod vector_tiles {
             },
             4 => VectorDetailProfile {
                 draw_water: true,
-                draw_land_backdrop: false,
+                draw_land_backdrop: true,
                 draw_landcover: true,
                 draw_transportation: true,
                 draw_buildings: false,
@@ -859,7 +859,7 @@ pub mod vector_tiles {
             },
             5 | 6 => VectorDetailProfile {
                 draw_water: true,
-                draw_land_backdrop: false,
+                draw_land_backdrop: true,
                 draw_landcover: true,
                 draw_transportation: true,
                 draw_buildings: false,
@@ -869,7 +869,7 @@ pub mod vector_tiles {
             },
             _ => VectorDetailProfile {
                 draw_water: true,
-                draw_land_backdrop: false,
+                draw_land_backdrop: true,
                 draw_landcover: true,
                 draw_transportation: true,
                 draw_buildings: span_deg < super::GIS_MAP_LOD_MAX_SPAN_DEG[4] && tile_z >= 13,
@@ -1555,7 +1555,10 @@ impl MapHost {
         let mut next = self.theme;
         Self::apply_theme_field(&mut next, &v, "surfaceClear", |t, c| t.surface_clear = c);
         Self::apply_theme_field(&mut next, &v, "landFill", |t, c| t.land_fill = c);
-        Self::apply_theme_field(&mut next, &v, "landStroke", |t, c| t.land_stroke = c);
+        Self::apply_theme_field(&mut next, &v, "landStroke", |t, c| {
+            let rgba = c.to_rgba8();
+            t.land_stroke = Color::from_rgba8(rgba.r, rgba.g, rgba.b, 0);
+        });
         Self::apply_theme_field(&mut next, &v, "labelFill", |t, c| t.label_fill = c);
         Self::apply_theme_field(&mut next, &v, "labelHalo", |t, c| t.label_halo = c);
         Self::apply_theme_field(&mut next, &v, "regionFill", |t, c| t.region_fill = c);
@@ -1927,14 +1930,58 @@ impl MapHost {
         nw.distance(se) * 1.2
     }
 
+    fn bleed_screen_quad_corners(corners: [Point; 4], bleed: f64) -> [Point; 4] {
+        let cx = corners.iter().map(|p| p.x).sum::<f64>() / 4.0;
+        let cy = corners.iter().map(|p| p.y).sum::<f64>() / 4.0;
+        std::array::from_fn(|i| {
+            let p = corners[i];
+            let dx = p.x - cx;
+            let dy = p.y - cy;
+            let len = (dx * dx + dy * dy).sqrt();
+            if len < 1e-9 {
+                return p;
+            }
+            let scale = (len + bleed) / len;
+            Point::new(cx + dx * scale, cy + dy * scale)
+        })
+    }
+
+    fn append_viewport_fill(&self, scene: &mut Scene, fill: Color) {
+        let w = self.viewport.width as f64;
+        let h = self.viewport.height as f64;
+        if w <= 0.0 || h <= 0.0 {
+            return;
+        }
+        let bleed = 1.0;
+        let corners = Self::bleed_screen_quad_corners(
+            [
+                Point::new(0.0, 0.0),
+                Point::new(w, 0.0),
+                Point::new(w, h),
+                Point::new(0.0, h),
+            ],
+            bleed,
+        );
+        let mut path = vello::kurbo::BezPath::new();
+        path.move_to(corners[0]);
+        for p in &corners[1..] {
+            path.line_to(*p);
+        }
+        path.close_path();
+        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &path);
+    }
+
     fn append_vector_tile_quad_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
         let rect = projection::tile_world_rect(z, x, y);
-        let corners = [
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y1)),
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y1)),
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y0)),
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y0)),
-        ];
+        let corners = Self::bleed_screen_quad_corners(
+            [
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y1)),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y1)),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y0)),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y0)),
+            ],
+            1.0,
+        );
         let mut path = vello::kurbo::BezPath::new();
         path.move_to(corners[0]);
         for p in &corners[1..] {
@@ -1945,10 +1992,6 @@ impl MapHost {
     }
 
     fn append_vector_tile_land_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
-        self.append_vector_tile_quad_backdrop(scene, z, x, y, fill);
-    }
-
-    fn append_vector_tile_ocean_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
         self.append_vector_tile_quad_backdrop(scene, z, x, y, fill);
     }
 
@@ -2097,16 +2140,16 @@ impl MapHost {
         draw.sort_by_key(|(tz, tx, ty, _)| (*tz, *tx, *ty));
 
         match self.vector_style {
-            MapVectorStyle::Colored => self.append_vector_tiles_colored(scene, &draw, span, forced_lod),
+            MapVectorStyle::Colored => self.append_vector_tiles_colored(scene, &draw, render_z, span, forced_lod),
             MapVectorStyle::FigureGround => {
                 let ink = self.theme.label_fill;
                 let paper = self.theme.surface_clear;
-                self.append_vector_tiles_figure(scene, &draw, span, forced_lod, ink, paper);
+                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, ink, paper);
             }
             MapVectorStyle::InvertedFigure => {
                 let ink = self.theme.surface_clear;
                 let paper = self.theme.label_fill;
-                self.append_vector_tiles_figure(scene, &draw, span, forced_lod, ink, paper);
+                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, ink, paper);
             }
         }
         if self.layer_visibility.labels {
@@ -2198,6 +2241,7 @@ impl MapHost {
         &self,
         scene: &mut Scene,
         draw: &[(u32, u32, u32, &vector_tiles::VectorTile)],
+        render_z: u32,
         span: f64,
         forced_lod: Option<&str>,
     ) {
@@ -2222,20 +2266,23 @@ impl MapHost {
         let road_lod_scale = vector_tiles::transportation_stroke_lod_scale(span, forced_lod);
 
         let vis = self.layer_visibility;
+        let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
+        let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
+        let draw_coastline = profile.draw_coastline && vis.water;
+        let skip_base_water_fill = draw_coastline && !draw_land_backdrop;
+        let skip_base_landcover_fill = draw_land_backdrop;
+        if draw_land_backdrop {
+            self.append_viewport_fill(scene, land_fill);
+        } else if draw_coastline {
+            self.append_viewport_fill(scene, water_fill);
+        }
         for (tz, tx, ty, tile) in draw {
-            let profile = vector_tiles::vector_detail_profile(span, *tz, forced_lod);
-            let draw_water = profile.draw_water && vis.water;
+            let draw_water = profile.draw_water && vis.water && !skip_base_water_fill;
             let draw_land = profile.draw_landcover && vis.land;
-            let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
+            let draw_landcover = draw_land && !skip_base_landcover_fill;
             let draw_buildings = profile.draw_buildings && vis.buildings;
             let draw_roads = profile.draw_transportation && vis.roads;
             let draw_borders = profile.draw_boundary && vis.borders;
-            let draw_coastline = profile.draw_coastline && vis.water;
-            if draw_coastline && !draw_land_backdrop {
-                self.append_vector_tile_ocean_backdrop(scene, *tz, *tx, *ty, water_fill);
-            } else if draw_land_backdrop {
-                self.append_vector_tile_land_backdrop(scene, *tz, *tx, *ty, land_fill);
-            }
             let mut layers: Vec<_> = tile.layers.iter().collect();
             layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
 
@@ -2247,16 +2294,6 @@ impl MapHost {
                     match lname {
                         "water" if draw_water => {
                             if !feat.rings.is_empty() {
-                                let coast_stroke = if draw_coastline {
-                                    border_stroke
-                                } else {
-                                    Color::from_rgba8(0, 0, 0, 0)
-                                };
-                                let coast_w = if draw_coastline {
-                                    vector_tiles::coastline_stroke_width(line_scale) * weights.water
-                                } else {
-                                    0.0
-                                };
                                 self.append_vector_tile_polygon(
                                     scene,
                                     *tz,
@@ -2265,12 +2302,12 @@ impl MapHost {
                                     extent,
                                     &feat.rings,
                                     water_fill,
-                                    coast_stroke,
-                                    coast_w,
+                                    Color::from_rgba8(0, 0, 0, 0),
+                                    0.0,
                                 );
                             }
                         }
-                        "landcover" | "landuse" if draw_land => {
+                        "landcover" | "landuse" if draw_landcover => {
                             if !feat.rings.is_empty() {
                                 self.append_vector_tile_polygon(
                                     scene,
@@ -2408,6 +2445,7 @@ impl MapHost {
         &self,
         scene: &mut Scene,
         draw: &[(u32, u32, u32, &vector_tiles::VectorTile)],
+        render_z: u32,
         span: f64,
         forced_lod: Option<&str>,
         ink: Color,
@@ -2415,14 +2453,23 @@ impl MapHost {
     ) {
         let vis = self.layer_visibility;
         let transparent_stroke = Color::from_rgba8(0, 0, 0, 0);
+        let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
+        let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
+        let draw_coastline = profile.draw_coastline && vis.water;
+        let draw_buildings = profile.draw_buildings && vis.buildings;
+        if draw_buildings {
+            self.append_viewport_fill(scene, paper);
+        } else if draw_land_backdrop {
+            self.append_viewport_fill(scene, ink);
+        } else if draw_coastline {
+            self.append_viewport_fill(scene, paper);
+        } else {
+            self.append_viewport_fill(scene, paper);
+        }
 
         for (tz, tx, ty, tile) in draw {
-            let profile = vector_tiles::vector_detail_profile(span, *tz, forced_lod);
             let draw_water = profile.draw_water && vis.water;
             let draw_land = profile.draw_landcover && vis.land;
-            let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
-            let draw_buildings = profile.draw_buildings && vis.buildings;
-            let draw_coastline = profile.draw_coastline && vis.water;
             let draw_countries = draw_land && !draw_land_backdrop;
             let has_countries = tile.layers.iter().any(|l| {
                 l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty())
@@ -2434,7 +2481,6 @@ impl MapHost {
             layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
 
             if draw_buildings {
-                self.append_vector_tile_land_backdrop(scene, *tz, *tx, *ty, paper);
                 for layer in &layers {
                     if layer.name.as_str() != "building" {
                         continue;
@@ -2461,10 +2507,6 @@ impl MapHost {
 
             if use_land_mass_silhouette {
                 self.append_vector_tile_land_backdrop(scene, *tz, *tx, *ty, ink);
-            } else if draw_coastline {
-                self.append_vector_tile_ocean_backdrop(scene, *tz, *tx, *ty, paper);
-            } else {
-                self.append_vector_tile_land_backdrop(scene, *tz, *tx, *ty, paper);
             }
 
             for layer in &layers {
@@ -3208,6 +3250,16 @@ mod tests {
     }
 
     #[test]
+    fn city_lod_fills_tile_backdrop_to_hide_seams() {
+        let span = 2.0;
+        assert_eq!(super::resolve_map_lod_index_from_span(span), 4);
+        let profile = super::vector_tiles::vector_detail_profile(span, 10, None);
+        assert!(profile.draw_land_backdrop);
+        assert!(profile.draw_landcover);
+        assert!(profile.draw_transportation);
+    }
+
+    #[test]
     fn region_lod_exceeds_country_detail() {
         let span = 8.0;
         let country = super::vector_tiles::vector_detail_profile(span, 10, Some("country"));
@@ -3449,6 +3501,14 @@ mod tests {
         let json = r#"{"surfaceClear":[1,2,3,255]}"#;
         host.set_map_theme_from_json(json).expect("theme json");
         assert_eq!(host.theme.surface_clear.to_rgba8(), super::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
+    }
+
+    #[test]
+    fn set_map_theme_from_json_zeros_land_stroke_alpha() {
+        let mut host = super::MapHost::new();
+        host.set_map_theme_from_json(r#"{"landStroke":[51,64,65,107]}"#)
+            .expect("theme json");
+        assert_eq!(host.theme.land_stroke.to_rgba8().a, 0);
     }
 
     #[test]

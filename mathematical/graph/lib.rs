@@ -496,6 +496,7 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     area_points: Vec<Point>,
     area_screen_points: Vec<Point>,
     drag_start_positions: BTreeMap<NodeId, Point>,
+    proximity_connection: Option<ProximityConnection>,
     next_edge_id: u64,
     _directedness: std::marker::PhantomData<D>,
     _port: std::marker::PhantomData<P>,
@@ -517,6 +518,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             preselect_removed: Selection::default(),
             selection_options: EngineSelectionOptions::default(),
             handle_pointer_picking: true,
+            proximity_distance_world: DEFAULT_PROXIMITY_DISTANCE_WORLD,
             node_body_hit_excluded: BTreeSet::new(),
             selection_preview_points: Vec::new(),
             selection_preview_crossing: false,
@@ -524,6 +526,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             area_points: Vec::new(),
             area_screen_points: Vec::new(),
             drag_start_positions: BTreeMap::new(),
+            proximity_connection: None,
             next_edge_id: 1000,
             _directedness: std::marker::PhantomData,
             _port: std::marker::PhantomData,
@@ -757,7 +760,110 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         true
     }
 
+    /// @emoji 🫳 Starts dragging a selected draggable node (or its multi-selection group) from `point`.
+    pub fn try_begin_selected_node_drag_at(&mut self, node_id: NodeId, point: Point) -> bool {
+        if !self.selection.node_ids.contains(&node_id) {
+            return false;
+        }
+        let Some(node) = self.nodes.get(&node_id) else {
+            return false;
+        };
+        if !node.draggable {
+            return false;
+        }
+        let members: Vec<NodeId> = self
+            .selection
+            .node_ids
+            .iter()
+            .copied()
+            .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
+            .collect();
+        let drag_group = members.contains(&node_id) && members.len() > 1;
+        self.drag_start_positions.clear();
+        for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
+            if let Some(n) = self.nodes.get(id) {
+                self.drag_start_positions.insert(*id, n.center);
+            }
+        }
+        if drag_group {
+            self.interaction = InteractionMode::DragNodes {
+                primary_id: node_id,
+                offset: point - node.center,
+            };
+        } else {
+            self.interaction = InteractionMode::DragNode {
+                node_id,
+                offset: point - node.center,
+            };
+        }
+        self.hover = None;
+        true
+    }
+
+    /// @emoji 🫳 Selects a draggable node and starts moving it from `point`.
+    pub fn pointer_down_on_draggable_node_at(&mut self, node_id: NodeId, point: Point, shift: bool, ctrl_or_meta: bool) {
+        let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+        let merge_from_modifiers = ctrl_or_meta || shift;
+        let members_before: Vec<NodeId> = self
+            .selection
+            .node_ids
+            .iter()
+            .copied()
+            .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
+            .collect();
+        let drag_group_before = members_before.contains(&node_id) && members_before.len() > 1;
+        let force_pick_merge = (merge_mode == "replace" && !drag_group_before)
+            || merge_mode == "subtractive"
+            || (merge_mode == "invertive" && merge_from_modifiers);
+        if !drag_group_before || force_pick_merge {
+            self.apply_pick_with_mode(HitObject::Node(node_id), merge_mode.as_str());
+        }
+        if let Some(node) = self.nodes.get(&node_id) {
+            if node.draggable {
+                let members: Vec<NodeId> = self
+                    .selection
+                    .node_ids
+                    .iter()
+                    .copied()
+                    .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
+                    .collect();
+                let drag_group = members.contains(&node_id) && members.len() > 1;
+                self.drag_start_positions.clear();
+                for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
+                    if let Some(n) = self.nodes.get(id) {
+                        self.drag_start_positions.insert(*id, n.center);
+                    }
+                }
+                if drag_group {
+                    self.interaction = InteractionMode::DragNodes {
+                        primary_id: node_id,
+                        offset: point - node.center,
+                    };
+                } else {
+                    self.interaction = InteractionMode::DragNode {
+                        node_id,
+                        offset: point - node.center,
+                    };
+                }
+            }
+        }
+        self.update_hover(Some(node_id));
+    }
+
+    /// @emoji 🪝 Merges a handle into the engine selection without starting edge draw.
+    pub fn select_handle_with_mode(&mut self, handle_id: HandleId, mode: &str) {
+        if !self.selection_options.select_handles || !P::HAS_PORTS {
+            return;
+        }
+        let current: BTreeSet<String> = self.selection.handle_ids.iter().map(|id| id.to_string()).collect();
+        let next = merge_pick_into_selection(&current, &handle_id.to_string(), mode);
+        self.selection.handle_ids = next.iter().filter_map(|s| s.parse().ok()).collect();
+        self.clear_preselect();
+        self.push_selection_event();
+    }
+
     pub fn pointer_down_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, _alt: bool) {
+        self.proximity_connection = None;
         self.selection_preview_points.clear();
         self.selection_preview_crossing = false;
         let point = Point::new(world_x, world_y);
@@ -844,6 +950,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     node.center = point - offset;
                     self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
                 }
+                self.update_node_drag_proximity(&[node_id]);
                 self.interaction = InteractionMode::DragNode { node_id, offset };
             }
             InteractionMode::DragNodes { primary_id, offset } => {
@@ -855,12 +962,14 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let ny = point.y - offset.y;
                 let dx = nx - px0;
                 let dy = ny - py0;
+                let dragged_ids: Vec<NodeId> = self.drag_start_positions.keys().copied().collect();
                 for (id, start) in &self.drag_start_positions {
                     if let Some(node) = self.nodes.get_mut(id) {
                         node.center = Point::new(start.x + dx, start.y + dy);
                         self.events.push(BoardEvent::NodeMoved { id: *id, x: node.center.x, y: node.center.y });
                     }
                 }
+                self.update_node_drag_proximity(&dragged_ids);
                 self.interaction = InteractionMode::DragNodes { primary_id, offset };
             }
             InteractionMode::DrawEdge {
@@ -945,6 +1054,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let point = Point::new(world_x, world_y);
         let screen = Point::new(screen_x, screen_y);
         let grabbed = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
+        let node_drag_proximity = self.proximity_connection.take();
         match grabbed {
             InteractionMode::DrawEdge {
                 anchor_handle,
@@ -968,24 +1078,15 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     } else {
                         (hit_hid, anchor_handle)
                     };
-                    if self.is_valid_connection(source_hid, target_handle, reconnecting) {
-                        let new_id = reconnecting.unwrap_or_else(|| {
-                            let id = self.next_edge_id;
-                            self.next_edge_id += 1;
-                            id
-                        });
-                        if let Some(old_id) = reconnecting {
-                            self.edges.remove(&old_id);
-                            self.selection.edge_ids.remove(&old_id);
-                        }
-                        if let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_handle)) {
-                            self.create_edge(new_id, src_ep, tgt_ep);
-                            self.events.push(BoardEvent::EdgeConnected { id: new_id, source: source_hid, target: target_handle });
-                        }
-                    }
+                    let allow_replace = snap_target.is_some();
+                    self.try_connect_handles(source_hid, target_handle, reconnecting, allow_replace);
                 }
             }
-            InteractionMode::DragNodes { .. } | InteractionMode::DragNode { .. } => {}
+            InteractionMode::DragNodes { .. } | InteractionMode::DragNode { .. } => {
+                if let Some(conn) = node_drag_proximity {
+                    self.try_connect_handles(conn.source, conn.target, None, true);
+                }
+            }
             InteractionMode::SelectionPending { start, start_screen } => {
                 let merge_from_modifiers = ctrl_or_meta || shift;
                 if !merge_from_modifiers {
@@ -1053,6 +1154,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         } = self.interaction
         {
             snapshot.pending_edge = self.draw_edge_preview_curve(anchor_handle, anchor_is_source, fixed_target, cursor, snap_target);
+        } else if let Some(conn) = self.proximity_connection {
+            snapshot.pending_edge = self.proximity_preview_curve(conn);
         }
         let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
         let _ = _stroke_scene.encoding().path_tags.len();
@@ -1133,12 +1236,21 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }
     }
 
+    fn proximity_enabled(&self) -> bool {
+        self.proximity_distance_world > 0.0
+    }
+
     fn wire_snap_drag_tolerance_world(&self, handle_radius: f64) -> f64 {
-        let zoom = self.camera.zoom.max(1e-9);
-        (WIRE_SNAP_HIT_TOLERANCE_PX + WIRE_SNAP_EXTRA_PX + handle_radius * zoom) / zoom
+        if !self.proximity_enabled() {
+            return 0.0;
+        }
+        self.proximity_distance_world + handle_radius
     }
 
     fn wire_snap_still_active(&self, handle_id: HandleId, cursor: Point) -> bool {
+        if !self.proximity_enabled() {
+            return false;
+        }
         let Some(handle) = self.handles.get(&handle_id) else {
             return false;
         };
@@ -1157,7 +1269,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         reconnecting: Option<EdgeId>,
         cursor: Point,
     ) -> Option<HandleId> {
-        if !P::HAS_PORTS {
+        if !P::HAS_PORTS || !self.proximity_enabled() {
             return None;
         }
         let mut best: Option<(f64, HandleId)> = None;
@@ -1177,7 +1289,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             } else {
                 (candidate, anchor_handle)
             };
-            if !self.is_valid_connection(source_hid, target_hid, reconnecting) {
+            if !self.is_valid_connection(source_hid, target_hid, reconnecting, true) {
                 continue;
             }
             let Some(node) = self.nodes.get(&handle.node_id) else {
@@ -1444,7 +1556,13 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             .map(|edge| edge.id)
     }
 
-    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {
+    fn is_valid_connection(
+        &self,
+        source_hid: HandleId,
+        target_hid: HandleId,
+        reconnecting: Option<EdgeId>,
+        allow_target_replace: bool,
+    ) -> bool {
         if source_hid == target_hid {
             return false;
         }
@@ -1468,7 +1586,12 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }) {
             return false;
         }
-        if self.edges.values().any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid) {
+        if !allow_target_replace
+            && self
+                .edges
+                .values()
+                .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid)
+        {
             return false;
         }
         if self.enforce_acyclic {
@@ -1479,6 +1602,124 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         true
+    }
+
+    fn incoming_edge_on_target(&self, target_hid: HandleId, excluding: Option<EdgeId>) -> Option<EdgeId> {
+        self.edges
+            .values()
+            .find(|e| Some(e.id) != excluding && P::endpoint_as_u64(e.target) == target_hid)
+            .map(|e| e.id)
+    }
+
+    fn try_connect_handles(
+        &mut self,
+        source_hid: HandleId,
+        target_hid: HandleId,
+        reconnecting: Option<EdgeId>,
+        allow_target_replace: bool,
+    ) -> bool {
+        if !self.is_valid_connection(source_hid, target_hid, reconnecting, allow_target_replace) {
+            return false;
+        }
+        if allow_target_replace {
+            if let Some(existing) = self.incoming_edge_on_target(target_hid, reconnecting) {
+                self.remove_edge(existing);
+            }
+        }
+        let new_id = reconnecting.unwrap_or_else(|| {
+            let id = self.next_edge_id;
+            self.next_edge_id += 1;
+            id
+        });
+        if let Some(old_id) = reconnecting {
+            self.edges.remove(&old_id);
+            self.selection.edge_ids.remove(&old_id);
+        }
+        let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_hid)) else {
+            return false;
+        };
+        self.create_edge(new_id, src_ep, tgt_ep);
+        self.events.push(BoardEvent::EdgeConnected {
+            id: new_id,
+            source: source_hid,
+            target: target_hid,
+        });
+        true
+    }
+
+    fn connection_pairs_for_handles(&self, a: &Handle, b: &Handle) -> Vec<(HandleId, HandleId)> {
+        let mut pairs = Vec::new();
+        match (a.role, b.role) {
+            (HandleRole::Source, HandleRole::Target) => pairs.push((a.id, b.id)),
+            (HandleRole::Target, HandleRole::Source) => pairs.push((b.id, a.id)),
+            (HandleRole::Source, HandleRole::Any) => pairs.push((a.id, b.id)),
+            (HandleRole::Any, HandleRole::Source) => pairs.push((b.id, a.id)),
+            (HandleRole::Target, HandleRole::Any) => pairs.push((b.id, a.id)),
+            (HandleRole::Any, HandleRole::Target) => pairs.push((a.id, b.id)),
+            (HandleRole::Any, HandleRole::Any) => {
+                pairs.push((a.id, b.id));
+                pairs.push((b.id, a.id));
+            }
+            _ => {}
+        }
+        pairs
+    }
+
+    fn update_node_drag_proximity(&mut self, dragged_ids: &[NodeId]) {
+        self.proximity_connection = None;
+        if !self.proximity_enabled() || !P::HAS_PORTS {
+            return;
+        }
+        let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+        let mut best: Option<(f64, ProximityConnection)> = None;
+        for dragged_handle in self.handles.values().filter(|h| dragged.contains(&h.node_id)) {
+            for other_handle in self.handles.values().filter(|h| !dragged.contains(&h.node_id)) {
+                for (source_hid, target_hid) in self.connection_pairs_for_handles(dragged_handle, other_handle) {
+                    if !self.is_valid_connection(source_hid, target_hid, None, true) {
+                        continue;
+                    }
+                    let Some(source_handle) = self.handles.get(&source_hid) else {
+                        continue;
+                    };
+                    let Some(target_handle) = self.handles.get(&target_hid) else {
+                        continue;
+                    };
+                    let Some(source_node) = self.nodes.get(&source_handle.node_id) else {
+                        continue;
+                    };
+                    let Some(target_node) = self.nodes.get(&target_handle.node_id) else {
+                        continue;
+                    };
+                    let src_pos = handle_position(source_node, source_handle);
+                    let tgt_pos = handle_position(target_node, target_handle);
+                    let d = distance(src_pos, tgt_pos);
+                    let tol = self.proximity_distance_world + source_handle.radius + target_handle.radius;
+                    if d <= tol && best.as_ref().map(|(best_d, _)| d < *best_d).unwrap_or(true) {
+                        let replacing = self.incoming_edge_on_target(target_hid, None);
+                        best = Some((d, ProximityConnection { source: source_hid, target: target_hid, replacing }));
+                    }
+                }
+            }
+        }
+        if let Some((_, conn)) = best {
+            self.proximity_connection = Some(conn);
+            self.update_hover(Some(conn.target));
+        }
+    }
+
+    fn proximity_preview_curve(&self, conn: ProximityConnection) -> Option<CubicBez> {
+        let source_handle = self.handles.get(&conn.source)?;
+        let target_handle = self.handles.get(&conn.target)?;
+        let source_node = self.nodes.get(&source_handle.node_id)?;
+        let target_node = self.nodes.get(&target_handle.node_id)?;
+        let source_position = handle_position(source_node, source_handle);
+        let target_position = handle_position(target_node, target_handle);
+        Some(self.wire_bezier_between(
+            source_position,
+            target_position,
+            Some(source_node),
+            Some(target_node),
+        ))
     }
 
     fn would_create_cycle_between_nodes(&self, source: NodeId, target: NodeId, excluding: Option<EdgeId>) -> bool {
@@ -1699,6 +1940,7 @@ mod tests {
         }
 
         let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.proximity_distance_world = 0.0;
         engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
         engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
         engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
@@ -1751,7 +1993,7 @@ mod tests {
     }
 
     #[test]
-    fn wire_snap_ignores_incompatible_or_occupied_handles() {
+    fn wire_snap_replaces_occupied_compatible_target() {
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.enforce_acyclic = true;
         engine.set_camera(0.0, 0.0, 1.0);
@@ -1771,7 +2013,75 @@ mod tests {
         let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
             panic!("expected draw-edge interaction");
         };
+        assert_eq!(snap_target, Some(11));
+        engine.pointer_up(occupied.x + 8.0, occupied.y);
+        assert_eq!(engine.edges.len(), 1);
+        let edge = engine.edges.values().next().expect("edge");
+        assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
+        assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
+    }
+
+    #[test]
+    fn wire_snap_ignores_incompatible_handles() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.set_camera(0.0, 0.0, 1.0);
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 2, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(12, HandleRole::Source);
+        let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        let other_out = handle_position_on_rectangle(Point::new(280.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(out.x, out.y, false);
+        engine.pointer_move(other_out.x + 8.0, other_out.y);
+        let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
+            panic!("expected draw-edge interaction");
+        };
         assert!(snap_target.is_none());
+    }
+
+    #[test]
+    fn proximity_zero_disables_wire_snap() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.proximity_distance_world = 0.0;
+        engine.enforce_acyclic = true;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        let inp = handle_position_on_rectangle(Point::new(280.0, 0.0), 160.0, 72.0, std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(out.x, out.y, false);
+        engine.pointer_move(inp.x + 8.0, inp.y);
+        let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
+            panic!("expected draw-edge interaction");
+        };
+        assert!(snap_target.is_none());
+    }
+
+    #[test]
+    fn node_drag_proximity_connects_compatible_channels() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.proximity_distance_world = 80.0;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 200.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.pointer_down(0.0, 0.0, false);
+        engine.pointer_move(40.0, 0.0);
+        assert!(engine.render_snapshot().pending_edge.is_some());
+        engine.pointer_up(40.0, 0.0);
+        assert_eq!(engine.edges.len(), 1);
+        let edge = engine.edges.values().next().expect("edge");
+        assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
+        assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
     }
 
     #[test]

@@ -1191,50 +1191,2499 @@ export function scriptPathFromUrl(scriptUrl: string): string {
 //#endregion 🔖Process
 //#endregion 🔖bundle-script
 
-export {
-  bumpCounterFromHistory,
-  bumpCounterFromSubject,
-  buildMicroCommitMessage,
-  digestMicroCommitMessage,
-  extractCounterFromSubject,
-  installMicroCommitGitHooks,
-  normalizeBulletLines,
-  resetMicroCommitTemplates,
-  runMicroCommit,
-  shouldRefreshPreparedCommitMessage,
-  writeMicroCommitTemplates,
-} from "./micro-commit.ts";
-export type { MicroCommitLevel } from "./micro-commit.ts";
+//#region 🔖uloc-metrics
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 
-export {
-  BUNDLE_DATE_SECTION_RE,
-  BUNDLE_WIP_SUBJECT_RE,
-  buildCommitMessage,
-  findLastBundleWipCommit,
-  formatBundleSubject,
-  formatBundleTagName,
-  bulletMatchesCommitHistory,
-  bundleScopeLabelError,
-  commitBundleBodyError,
-  commitHistoryCompareLines,
-  emitCommitDiff,
-  emitCommitLog,
-  formatCommitPrepareAgentReply,
-  formatCommitPrepareCommands,
-  formatGitSignedTagCommand,
-  resolveCommitBundleRange,
-  validateBundleBulletsFresh,
-  validateBundleCommitAttribution,
-  validateBundleDayDeltasAttribution,
-  partitionRangeDeltasByBundle,
-  isBundleScopeLine,
-  isCommitPrepareOnly,
-  labelPathTokens,
-  leadingEmojiClusterCount,
-  normalizeBundleScopeLabel,
-  parseCommitBundleBody,
-  parseCommitSteps,
-  runCommit,
-} from "./commit.ts";
-export type { CommitBundleDateSection, CommitBundleSection, CommitLevel, CommitSteps } from "./commit.ts";
+//#region Types
+export type MicroCommitLangMetrics = {
+  lang: string;
+  emoji: string;
+  code: number;
+  edited: number;
+  added: number;
+  removed: number;
+};
 
+export type UlocByLanguage = Record<string, number>;
+
+/** 📊Repo-wide unified LOC per language (tracked git files; JSON uses key count). */
+export type UlocRunner = {
+  countRepoByLanguage(root: string): UlocByLanguage;
+};
+//#endregion Types
+
+//#region Constants
+const METRICS_LOCK_FILES = new Set([
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "go.sum",
+  "uv.lock",
+  "bun.lockb",
+  "cargo.lock",
+]);
+
+const METRICS_LICENSE_TEMPLATE_BASENAMES = new Set([
+  "LICENSE",
+  "LICENSE.md",
+  "LICENSE.txt",
+  "COPYING",
+  "COPYING.md",
+  "NOTICE",
+  "NOTICE.md",
+  "UNLICENSE",
+  "UNLICENSE.md",
+]);
+
+const LANG_EMOJI: Record<string, string> = {
+  TypeScript: "🟦",
+  JavaScript: "🟨",
+  Go: "🔵",
+  "C#": "🟣",
+  Python: "🐍",
+  Rust: "🦀",
+  Shell: "🐚",
+  Dockerfile: "🐳",
+  Makefile: "🔧",
+  CSS: "🎨",
+  SQL: "🛢️",
+  HTML: "🌐",
+  Markdown: "📝",
+  JSON: "🧾",
+  YAML: "📋",
+  TOML: "⚙️",
+  XML: "📄",
+  CSV: "📑",
+  "Bourne Shell": "🐚",
+  "Bourne Again Shell": "🐚",
+  PowerShell: "💠",
+  Docker: "🐳",
+};
+
+const ULOC_EXCLUDE_DIRS = [
+  ".repo",
+  "node_modules",
+  "dist",
+  "build",
+  "target",
+  ".git",
+  ".nx",
+  "coverage",
+  ".cache",
+  ".turbo",
+  ".next",
+  "out",
+  "vendor",
+  "third_party",
+  "Carthage",
+];
+
+const MAX_METRICS_FILE_BYTES = 8 * 1024 * 1024;
+//#endregion Constants
+
+//#region Path rules
+function normalizeRepoPath(path: string): string {
+  return path.replace(/\\/g, "/").replace(/^\.\//, "");
+}
+
+function metricsPathBasename(rel: string): string {
+  return rel.slice(rel.lastIndexOf("/") + 1);
+}
+
+function hasHiddenDotPathSegment(rel: string): boolean {
+  for (const seg of rel.split("/")) {
+    if (!seg || seg === "." || seg === "..") continue;
+    if (seg.startsWith(".")) return true;
+  }
+  return false;
+}
+
+function isMetricsLockOrGenerated(rel: string): boolean {
+  const base = metricsPathBasename(rel);
+  if (METRICS_LOCK_FILES.has(base)) return true;
+  if (base.endsWith(".generated.go") || base.endsWith(".pb.go")) return true;
+  return false;
+}
+
+function isMetricsLicenseTemplateFile(rel: string): boolean {
+  const base = metricsPathBasename(rel);
+  if (METRICS_LICENSE_TEMPLATE_BASENAMES.has(base)) return true;
+  if (base.startsWith("LICENSE.")) return true;
+  return false;
+}
+
+/** 🗂️Whether paths must be excluded from uloc/metrics (dot paths, license templates, vendor, lockfiles). */
+export function shouldSkipPathForUloc(root: string, relPath: string): boolean {
+  const rel = normalizeRepoPath(relPath);
+  if (!rel || rel === ".repo" || rel.startsWith(".repo/")) return true;
+  if (hasHiddenDotPathSegment(rel)) return true;
+  if (isMetricsLicenseTemplateFile(rel)) return true;
+  if (isMetricsLockOrGenerated(rel)) return true;
+  const ignored = spawnSync("git", ["check-ignore", "-q", "--", rel], { cwd: gitRepoRoot(root) });
+  if (ignored.status === 0) return true;
+  for (const dir of ULOC_EXCLUDE_DIRS) {
+    if (rel === dir || rel.startsWith(`${dir}/`)) return true;
+  }
+  return false;
+}
+
+/** 🏷️Maps a repo path to a metrics language bucket (code langs + JSON/YAML/… formats). */
+export function classifyPathForMetrics(path: string): string {
+  const rel = normalizeRepoPath(path);
+  const base = rel.slice(rel.lastIndexOf("/") + 1).toLowerCase();
+  if (base === "dockerfile" || base.startsWith("dockerfile.")) return "Dockerfile";
+  if (base === "makefile" || base === "justfile") return "Makefile";
+  const ext = rel.slice(rel.lastIndexOf(".")).toLowerCase();
+  switch (ext) {
+    case ".ts":
+    case ".tsx":
+    case ".cts":
+    case ".mts":
+    case ".mtsx":
+      return "TypeScript";
+    case ".js":
+    case ".mjs":
+    case ".cjs":
+      return "JavaScript";
+    case ".go":
+      return "Go";
+    case ".cs":
+      return "C#";
+    case ".py":
+      return "Python";
+    case ".rs":
+      return "Rust";
+    case ".sh":
+    case ".bash":
+    case ".zsh":
+      return "Shell";
+    case ".ps1":
+      return "PowerShell";
+    case ".css":
+    case ".scss":
+    case ".sass":
+      return "CSS";
+    case ".sql":
+      return "SQL";
+    case ".html":
+    case ".htm":
+    case ".xhtml":
+      return "HTML";
+    case ".md":
+    case ".markdown":
+    case ".mdown":
+    case ".mkd":
+    case ".mdx":
+    case ".mdc":
+    case ".svx":
+      return "Markdown";
+    case ".json":
+    case ".jsonc":
+      return "JSON";
+    case ".yaml":
+    case ".yml":
+      return "YAML";
+    case ".toml":
+      return "TOML";
+    case ".csv":
+      return "CSV";
+    case ".xml":
+      return "XML";
+    default:
+      return "";
+  }
+}
+
+/** 🎨Emoji for a metrics language row. */
+export function langMetricsEmoji(lang: string): string {
+  return LANG_EMOJI[lang] ?? "📎";
+}
+
+/** 🌳Resolves the git worktree root (never a subdirectory of the monorepo). */
+export function gitRepoRoot(start: string): string {
+  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8" });
+  if (r.status === 0) {
+    const top = (r.stdout ?? "").trim();
+    if (top) return top;
+  }
+  return start;
+}
+
+function gitTrackedPaths(root: string): string[] {
+  const repoRoot = gitRepoRoot(root);
+  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 256 * 1024 * 1024 });
+  if (r.status !== 0) return [];
+  return (r.stdout ?? Buffer.alloc(0))
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean);
+}
+//#endregion Path rules
+
+//#region Uloc counting
+function countJsonKeysValue(v: unknown): number {
+  if (v === null || typeof v !== "object") return 0;
+  if (Array.isArray(v)) {
+    let n = 0;
+    for (const item of v) n += countJsonKeysValue(item);
+    return n;
+  }
+  const o = v as Record<string, unknown>;
+  let n = Object.keys(o).length;
+  for (const vv of Object.values(o)) n += countJsonKeysValue(vv);
+  return n;
+}
+
+/** 🧮Counts JSON object keys recursively (aligned with repo `loc` Data JSON rules). */
+export function countJsonKeys(text: string): number {
+  const t = text.trim();
+  if (!t) return 0;
+  try {
+    return countJsonKeysValue(JSON.parse(t));
+  } catch {
+    return 0;
+  }
+}
+
+function physicalLineCount(text: string): number {
+  if (!text.length) return 0;
+  return text.split(/\r?\n/).length;
+}
+
+/** 📏LOC for one tracked file body (JSON key count when applicable). */
+export function countUnifiedLocForFile(rel: string, data: string): number {
+  const ext = rel.slice(rel.lastIndexOf(".")).toLowerCase();
+  if (ext === ".json" || ext === ".jsonc") {
+    const keys = countJsonKeys(data);
+    if (keys > 0) return keys;
+    if (!data.trim()) return 0;
+    return physicalLineCount(data);
+  }
+  return physicalLineCount(data);
+}
+
+function gitDir(root: string): string {
+  const repoRoot = gitRepoRoot(root);
+  const r = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8" });
+  if (r.status !== 0) return join(repoRoot, ".git");
+  const dir = (r.stdout ?? "").trim();
+  return dir.startsWith("/") ? dir : join(repoRoot, dir);
+}
+
+const ULOC_CACHE_VERSION = 3;
+
+type UlocCacheFile = {
+  version: number;
+  head: string;
+  trackedFiles: number;
+  totalLoc: number;
+  langCount: number;
+  counts: UlocByLanguage;
+};
+
+function ulocCachePath(root: string): string {
+  return join(gitDir(root), "semio-uloc-cache.json");
+}
+
+function ulocCacheStats(counts: UlocByLanguage): { totalLoc: number; langCount: number } {
+  let totalLoc = 0;
+  let langCount = 0;
+  for (const n of Object.values(counts)) {
+    if (n > 0) {
+      totalLoc += n;
+      langCount++;
+    }
+  }
+  return { totalLoc, langCount };
+}
+
+/** 🧪Whether cached uloc looks like a complete repo scan (rejects partial/stale caches). */
+export function isUlocCachePlausible(root: string, counts: UlocByLanguage): boolean {
+  const { totalLoc, langCount } = ulocCacheStats(counts);
+  if (totalLoc <= 0 || langCount === 0) return false;
+  const tracked = gitTrackedPaths(root).length;
+  if (tracked === 0) return true;
+  if (tracked < 100) return totalLoc > 0 && (langCount >= 2 || totalLoc >= 50);
+  if (langCount < 6 && tracked >= 300) return false;
+  if (totalLoc < tracked * 3) return false;
+  return true;
+}
+
+function readUlocCache(root: string): UlocByLanguage | null {
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
+  if (head.status !== 0) return null;
+  const h = (head.stdout ?? "").trim();
+  if (!h) return null;
+  try {
+    const raw = readFileSync(ulocCachePath(root), "utf8");
+    const parsed = JSON.parse(raw) as Partial<UlocCacheFile>;
+    if (parsed.version !== ULOC_CACHE_VERSION) return null;
+    if (parsed.head !== h || !parsed.counts || typeof parsed.counts !== "object") return null;
+    const tracked = gitTrackedPaths(root).length;
+    if (typeof parsed.trackedFiles === "number" && Math.abs(tracked - parsed.trackedFiles) > 50) return null;
+    if (!isUlocCachePlausible(root, parsed.counts)) return null;
+    const stats = ulocCacheStats(parsed.counts);
+    if (typeof parsed.totalLoc === "number" && parsed.totalLoc !== stats.totalLoc) return null;
+    if (typeof parsed.langCount === "number" && parsed.langCount !== stats.langCount) return null;
+    return parsed.counts;
+  } catch {
+    return null;
+  }
+}
+
+function writeUlocCache(root: string, counts: UlocByLanguage): void {
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
+  if (head.status !== 0) return;
+  const h = (head.stdout ?? "").trim();
+  if (!h) return;
+  const { totalLoc, langCount } = ulocCacheStats(counts);
+  const payload: UlocCacheFile = {
+    version: ULOC_CACHE_VERSION,
+    head: h,
+    trackedFiles: gitTrackedPaths(root).length,
+    totalLoc,
+    langCount,
+    counts,
+  };
+  writeFileSync(ulocCachePath(root), JSON.stringify(payload));
+}
+
+/** 📊Scans all git-tracked paths and sums unified LOC per language bucket. */
+export function scanRepoUnifiedLocUncached(root: string): UlocByLanguage {
+  const repoRoot = gitRepoRoot(root);
+  const out: UlocByLanguage = {};
+  for (const rel of gitTrackedPaths(root)) {
+    if (shouldSkipPathForUloc(repoRoot, rel)) continue;
+    const lang = classifyPathForMetrics(rel);
+    if (!lang) continue;
+    const fp = join(repoRoot, rel);
+    if (!existsSync(fp)) continue;
+    try {
+      const st = statSync(fp);
+      if (!st.isFile() || st.size > MAX_METRICS_FILE_BYTES) continue;
+    } catch {
+      continue;
+    }
+    let data: string;
+    try {
+      const buf = readFileSync(fp);
+      if (buf.includes(0)) continue;
+      data = buf.toString("utf8");
+    } catch {
+      continue;
+    }
+    const loc = countUnifiedLocForFile(rel, data);
+    if (loc <= 0) continue;
+    out[lang] = (out[lang] ?? 0) + loc;
+  }
+  return out;
+}
+
+/** 📊Repo uloc with per-HEAD cache under `.git/semio-uloc-cache.json`. */
+export function scanRepoUnifiedLoc(root: string): UlocByLanguage {
+  const cached = readUlocCache(root);
+  if (cached) return cached;
+  const counts = scanRepoUnifiedLocUncached(root);
+  writeUlocCache(root, counts);
+  return counts;
+}
+
+/** 📊Default uloc runner (tracked-file unified scan). */
+export function createDefaultUlocRunner(): UlocRunner {
+  return { countRepoByLanguage: scanRepoUnifiedLoc };
+}
+//#endregion Uloc counting
+
+//#region Git deltas
+/** ✂️Splits git numstat into replaced (edited), net added, and net removed lines. */
+export function splitGitNumstatDelta(
+  added: number,
+  removed: number,
+): { edited: number; added: number; removed: number } {
+  const a = Math.max(0, added);
+  const r = Math.max(0, removed);
+  const edited = Math.min(a, r);
+  return { edited, added: a - edited, removed: r - edited };
+}
+
+function parseGitNumstatZ(stdout: Buffer | string): { path: string; added: number; removed: number }[] {
+  const raw = typeof stdout === "string" ? stdout : stdout.toString("utf8");
+  if (!raw) return [];
+  const out: { path: string; added: number; removed: number }[] = [];
+  for (const entry of raw.split("\0")) {
+    if (!entry) continue;
+    const parts = entry.split("\t");
+    if (parts.length < 3) continue;
+    const added = parts[0] === "-" ? 0 : Number(parts[0]) || 0;
+    const removed = parts[1] === "-" ? 0 : Number(parts[1]) || 0;
+    out.push({ path: parts.slice(2).join("\t"), added, removed });
+  }
+  return out;
+}
+
+function gitCachedNumstat(root: string): { path: string; added: number; removed: number }[] {
+  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root) });
+  if (r.status !== 0) return [];
+  return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
+}
+
+/** 📂Whether a repo-relative path lies under any normalized prefix. */
+export function pathUnderPrefixes(rel: string, prefixes: string[]): boolean {
+  if (prefixes.length === 0) return true;
+  const n = normalizeRepoPath(rel);
+  for (const raw of prefixes) {
+    const p = normalizeRepoPath(raw).replace(/\/$/, "");
+    if (!p) continue;
+    if (n === p || n.startsWith(`${p}/`)) return true;
+  }
+  return false;
+}
+
+/** 📈Git numstat between two revisions. */
+export function gitRangeNumstat(root: string, base: string, head: string): { path: string; added: number; removed: number }[] {
+  const repoRoot = gitRepoRoot(root);
+  const r = spawnSync("git", ["diff", "--numstat", "-z", `${base}..${head}`], {
+    cwd: repoRoot,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  if (r.status !== 0) return [];
+  return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
+}
+
+/** ➕Accumulates per-language git deltas from numstat rows (optional path prefixes). */
+export function accumulateGitDeltasFromNumstat(
+  root: string,
+  rows: { path: string; added: number; removed: number }[],
+  pathPrefixes?: string[],
+): Map<string, { added: number; removed: number; edited: number }> {
+  const m = new Map<string, { added: number; removed: number; edited: number }>();
+  for (const { path, added, removed } of rows) {
+    if (shouldSkipPathForUloc(root, path)) continue;
+    if (pathPrefixes && !pathUnderPrefixes(path, pathPrefixes)) continue;
+    const lang = classifyPathForMetrics(path);
+    if (!lang) continue;
+    const d = splitGitNumstatDelta(added, removed);
+    const row = m.get(lang) ?? { added: 0, removed: 0, edited: 0 };
+    row.edited += d.edited;
+    row.added += d.added;
+    row.removed += d.removed;
+    m.set(lang, row);
+  }
+  return m;
+}
+
+function accumulateGitDeltas(root: string): Map<string, { added: number; removed: number; edited: number }> {
+  return accumulateGitDeltasFromNumstat(root, gitCachedNumstat(root));
+}
+
+/** ➕Sums git delta counters across all languages. */
+export function sumGitLangDeltas(deltas: Map<string, { added: number; removed: number; edited: number }>): {
+  added: number;
+  removed: number;
+  edited: number;
+} {
+  let added = 0;
+  let removed = 0;
+  let edited = 0;
+  for (const d of deltas.values()) {
+    added += d.added;
+    removed += d.removed;
+    edited += d.edited;
+  }
+  return { added, removed, edited };
+}
+
+/** 🟰Sum of net added, edited (replaced), and removed line counts from git numstat. */
+export function gitDeltaLineTotal(d: { added: number; removed: number; edited: number }): number {
+  return d.added + d.edited + d.removed;
+}
+
+/** 📊Appends `➕` `✏️` `➖` and total `🟰` (sum of the three) when non-zero. */
+export function appendGitDeltaSuffix(line: string, d: { added: number; removed: number; edited: number }): string {
+  if (d.added > 0) line += `➕${d.added}`;
+  if (d.edited > 0) line += `✏️${d.edited}`;
+  if (d.removed > 0) line += `➖${d.removed}`;
+  const sum = gitDeltaLineTotal(d);
+  if (sum > 0) line += `🟰${sum}`;
+  return line;
+}
+
+/** 📊Compact `📊uloc➕…✏️…➖…🟰…` suffix from git deltas (bundle header). */
+export function formatBundleUlocSuffix(d: { added: number; removed: number; edited: number }): string {
+  return appendGitDeltaSuffix("📊uloc", d);
+}
+//#endregion Git deltas
+
+//#region Format
+/** 🔢Formats uncommented LOC counts (e.g. 200000 → 200k). */
+export function formatMetricLocCount(n: number): string {
+  const v = Math.max(0, Math.round(n));
+  if (v >= 1000) return `${Math.round(v / 1000)}k`;
+  return String(v);
+}
+
+function sortMetricLanguages(codeByLang: UlocByLanguage, deltas: Map<string, { edited: number }>): string[] {
+  const langs = new Set<string>();
+  for (const [lang, n] of Object.entries(codeByLang)) {
+    if (n > 0) langs.add(lang);
+  }
+  for (const lang of deltas.keys()) langs.add(lang);
+  return [...langs].sort((a, b) => (codeByLang[b] ?? 0) - (codeByLang[a] ?? 0) || a.localeCompare(b));
+}
+
+function buildMicroCommitMetricsFromDeltas(
+  codeByLang: UlocByLanguage,
+  deltas: Map<string, { added: number; removed: number; edited: number }>,
+): MicroCommitLangMetrics[] {
+  const rows: MicroCommitLangMetrics[] = [];
+  for (const lang of sortMetricLanguages(codeByLang, deltas)) {
+    const d = deltas.get(lang) ?? { added: 0, removed: 0, edited: 0 };
+    const code = codeByLang[lang] ?? 0;
+    if (code === 0 && d.edited === 0 && d.added === 0 && d.removed === 0) continue;
+    rows.push({
+      lang,
+      emoji: langMetricsEmoji(lang),
+      code,
+      edited: d.edited,
+      added: d.added,
+      removed: d.removed,
+    });
+  }
+  return rows;
+}
+
+/** 📊Builds micro-commit metrics: repo uloc per language + staged git deltas. */
+export function buildMicroCommitMetrics(root: string, ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
+  const repoRoot = gitRepoRoot(root);
+  const deltas = accumulateGitDeltas(repoRoot);
+  const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
+  return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
+}
+
+/** 📊Builds uloc metrics for a git revision range (optional path prefixes). */
+export function buildMicroCommitMetricsForRange(
+  root: string,
+  base: string,
+  head = "HEAD",
+  pathPrefixes?: string[],
+  ulocRunner: UlocRunner = createDefaultUlocRunner(),
+): MicroCommitLangMetrics[] {
+  const repoRoot = gitRepoRoot(root);
+  const deltas = accumulateGitDeltasFromNumstat(repoRoot, gitRangeNumstat(repoRoot, base, head), pathPrefixes);
+  const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
+  return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
+}
+
+/** 📊Micro-commit metrics block header (unified repo LOC). */
+export const MICRO_COMMIT_ULOC_HEADER = "📊uloc";
+
+/** 🔢Emoji for the aggregate total row (first line after the header). */
+export const MICRO_COMMIT_ULOC_TOTAL_EMOJI = "🔢";
+
+/** 📊Sums per-language uloc rows into one total. */
+export function sumMicroCommitLangMetrics(metrics: MicroCommitLangMetrics[]): MicroCommitLangMetrics {
+  const total: MicroCommitLangMetrics = {
+    lang: "Total",
+    emoji: MICRO_COMMIT_ULOC_TOTAL_EMOJI,
+    code: 0,
+    edited: 0,
+    added: 0,
+    removed: 0,
+  };
+  for (const m of metrics) {
+    total.code += m.code;
+    total.edited += m.edited;
+    total.added += m.added;
+    total.removed += m.removed;
+  }
+  return total;
+}
+
+/** 📊Formats one uloc row; omits zero ➕✏️➖; appends 🟰 sum when any delta is non-zero. */
+export function formatMicroCommitMetricLine(m: MicroCommitLangMetrics): string {
+  return appendGitDeltaSuffix(`${m.emoji}${formatMetricLocCount(m.code)}`, m);
+}
+
+/** 📊Renders the unified LOC block: `📊uloc➕…✏️…➖…🟰…` total, then per-language rows. */
+export function formatMicroCommitMetricsLines(metrics: MicroCommitLangMetrics[]): string[] {
+  if (metrics.length === 0) return [];
+  const total = sumMicroCommitLangMetrics(metrics);
+  const header = formatBundleUlocSuffix({ added: total.added, edited: total.edited, removed: total.removed });
+  return [header, ...metrics.map(formatMicroCommitMetricLine)];
+}
+
+/** ✅Whether two git delta sums match on ➕ ✏️ ➖ (🟰 follows). */
+export function gitDeltaSumsEqual(
+  a: { added: number; removed: number; edited: number },
+  b: { added: number; removed: number; edited: number },
+): boolean {
+  return a.added === b.added && a.edited === b.edited && a.removed === b.removed;
+}
+
+/** 🚫Per-language ➕✏️➖ must sum to the footer `📊uloc` total line. */
+export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangMetrics[]): void {
+  if (metrics.length === 0) return;
+  const total = sumMicroCommitLangMetrics(metrics);
+  let added = 0;
+  let edited = 0;
+  let removed = 0;
+  for (const m of metrics) {
+    added += m.added;
+    edited += m.edited;
+    removed += m.removed;
+  }
+  if (!gitDeltaSumsEqual({ added, edited, removed }, total)) {
+    throw new Error(
+      `commit: per-language 📊uloc deltas do not sum to the footer total — languages ➕${added}✏️${edited}➖${removed}🟰${gitDeltaLineTotal({ added, edited, removed })} vs footer ➕${total.added}✏️${total.edited}➖${total.removed}🟰${gitDeltaLineTotal(total)}`,
+    );
+  }
+}
+//#endregion Format
+
+//#endregion 🔖uloc-metrics
+
+//#region 🔖micro-commit
+import { createHash } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+
+export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-and-commit-and-push";
+
+type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
+
+const COUNTER_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩(\d+)$/;
+const TICKET_JSON_RE = /^\.repo\/🎫\/.+\/ticket\.json$/;
+export function digestMicroCommitMessage(message: string): string {
+  return createHash("sha256").update(message.replace(/\r\n/g, "\n").trimEnd()).digest("hex");
+}
+
+function preparedDigestPath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-digest");
+}
+
+function preparedActivePath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-active");
+}
+
+function markPrepareActive(root: string): void {
+  writeFileSync(preparedActivePath(root), "1\n");
+}
+
+function isPrepareActive(root: string): boolean {
+  return existsSync(preparedActivePath(root));
+}
+
+const GK_TEMPLATE_BASENAME = "gkcommittemplate";
+const GK_COMMIT_TEMPLATE_FILE = `${GK_TEMPLATE_BASENAME}.txt`;
+
+const MICRO_COMMIT_POST_WIPE_HOOKS = ["post-commit", "post-checkout", "post-merge", "post-rewrite"] as const;
+
+function git(root: string, args: string[]): { ok: boolean; out: string } {
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+  if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
+  return { ok: true, out: (r.stdout ?? "").trim() };
+}
+
+function gitCachedNames(root: string, extra: string[] = []): string[] {
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root });
+  if (r.status !== 0) return [];
+  const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
+  if (!raw) return [];
+  return raw.split("\0").filter(Boolean);
+}
+
+function branchAllowed(root: string): boolean {
+  const b = git(root, ["branch", "--show-current"]).out;
+  return b.includes("⛳wip") || b.includes("🏗️dev");
+}
+
+function gitEmail(root: string): string {
+  return git(root, ["config", "user.email"]).out;
+}
+
+function findContributor(root: string): Contributor | null {
+  const email = gitEmail(root).toLowerCase();
+  if (!email) return null;
+  const dir = join(root, ".repo", "🧑‍💻");
+  if (!existsSync(dir)) return null;
+  for (const name of readdirSync(dir, { withFileTypes: true })) {
+    if (!name.isDirectory()) continue;
+    const path = join(dir, name.name, "contributor.json");
+    if (!existsSync(path)) continue;
+    const c = JSON.parse(readFileSync(path, "utf8")) as Contributor & { emails?: string[] };
+    const emails = [c.email, ...(c.emails ?? [])].filter((e): e is string => typeof e === "string" && e.length > 0).map((e) => e.toLowerCase());
+    if (emails.includes(email)) return c;
+  }
+  return null;
+}
+
+function loadLevel(root: string, contributor: Contributor, segments: string[]): MicroCommitLevel {
+  const token = segments.join(" ").toLowerCase();
+  if (/\b(gp|gpush|push!|\+push)\b/.test(token)) return "prepare-and-commit-and-push";
+  if (/\b(gc|commit!|\+commit)\b/.test(token)) return "prepare-and-commit";
+  if (/\b(g\.|gprepare|prepare!|\+prepare)\b/.test(token)) return "prepare-only";
+  const path = join(root, ".repo", "🧑‍💻", contributor.alias, "micro-commit.json");
+  if (existsSync(path)) {
+    const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
+    if (j.level === "prepare-and-commit" || j.level === "prepare-and-commit-and-push" || j.level === "prepare-only") {
+      return j.level;
+    }
+  }
+  return "prepare-only";
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function pad3(n: number): string {
+  return String(n).padStart(3, "0");
+}
+
+const COUNTER_LOG_DEPTH = 40;
+
+/** 🔢Reads micro-commit counter from subject line `…🚩NNN`. */
+export function extractCounterFromSubject(subject: string): { nnn: number; line1Base: string } | null {
+  const s = subject.trim();
+  const formatted = COUNTER_RE.exec(s);
+  if (!formatted) return null;
+  return { nnn: Number.parseInt(formatted[2], 10), line1Base: formatted[1] };
+}
+
+/** 🎆Bumps counter from recent `…🚩NNN` subjects (newest first). */
+export function bumpCounterFromHistory(
+  subjectsNewestFirst: string[],
+  contributor: Contributor,
+  now = new Date(),
+): { line1Base: string; nnn: string } {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  const fresh = `${contributor.emoji}${contributor.alias}🎆${yy}🌙${mm}☀️${dd}`;
+  let max = 0;
+  let line1Base: string | null = null;
+  for (const subject of subjectsNewestFirst) {
+    const hit = extractCounterFromSubject(subject);
+    if (!hit) continue;
+    max = Math.max(max, hit.nnn);
+    if (!line1Base) line1Base = hit.line1Base;
+  }
+  if (max > 0) return { line1Base: line1Base ?? fresh, nnn: pad3(max + 1) };
+  return { line1Base: fresh, nnn: "001" };
+}
+
+export function bumpCounterFromSubject(
+  subject: string,
+  contributor: Contributor,
+  now = new Date(),
+): { line1Base: string; nnn: string } {
+  return bumpCounterFromHistory([subject], contributor, now);
+}
+
+function nextCounter(root: string, contributor: Contributor): { line1Base: string; nnn: string } {
+  const log = git(root, ["log", "--format=%s", `-${COUNTER_LOG_DEPTH}`]).out;
+  const subjects = log ? log.split("\n").filter(Boolean) : [];
+  return bumpCounterFromHistory(subjects, contributor);
+}
+
+function formatSecond(now: Date): string {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  const hh = pad2(now.getHours());
+  const min = pad2(now.getMinutes());
+  const ss = pad2(now.getSeconds());
+  return `🎆${yy}🌙${mm}☀️${dd}⏰${hh}⌚${min}⏱️${ss}`;
+}
+
+function preparedBulletsPath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-bullets");
+}
+
+const EMOJI_LEAD_RE = /^((?:\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)+)/u;
+const MICRO_COMMIT_BULLET_RE = /^(?:\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)+\S/u;
+const TIMESTAMP_LINE_RE = /^🎆\d{2}🌙\d{2}☀️\d{2}/u;
+const RESERVED_BULLET_LEAD_EMOJIS = new Set(["🎆", "📊", "🔢", "🚩"]);
+
+/** 🏷️Leading emoji grapheme on a bullet line, or "" if none. */
+export function bulletLeadEmoji(line: string): string {
+  const m = EMOJI_LEAD_RE.exec(line.trim());
+  return m?.[1] ?? "";
+}
+
+/** 📝Formats one bullet as `{emoji}{description}` (line starts with emoji, no leading `-`). */
+export function formatMicroCommitBulletLine(line: string): string {
+  let body = line.trim().replace(/^-+\s*/, "");
+  return body.replace(new RegExp(`^${EMOJI_LEAD_RE.source}\\s+`, "u"), "$1");
+}
+
+const MICRO_COMMIT_ULOC_ROW_RE =
+  /^[\p{Extended_Pictographic}][\dk]+(?:➕\d+)?(?:✏️\d+)?(?:➖\d+)?(?:🟰\d+)?$/u;
+
+function isMicroCommitUlocLine(line: string): boolean {
+  const t = line.trim();
+  if (t.startsWith(MICRO_COMMIT_ULOC_HEADER)) return true;
+  return MICRO_COMMIT_ULOC_ROW_RE.test(t);
+}
+
+/** 📝Normalizes LLM-authored bullet lines to `{emoji}{description}`. */
+export function normalizeBulletLines(text: string): string[] {
+  return text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#") && !isMicroCommitUlocLine(l))
+    .map(formatMicroCommitBulletLine)
+    .filter((l) => l.length > 1)
+    .slice(0, 8);
+}
+
+function validateBulletSpacing(bullets: string[]): void {
+  for (const b of bullets) {
+    if (MICRO_COMMIT_BULLET_RE.test(b)) continue;
+    console.error(`micro-commit: bullet must start with {emoji} then description (no '-' prefix, no space after emoji): ${b}`);
+    process.exit(1);
+  }
+}
+
+/** 🚫Returns an error when a bullet uses reserved or timestamp emojis. */
+export function bulletEmojiValidationError(bullets: string[]): string | null {
+  for (const b of bullets) {
+    const lead = bulletLeadEmoji(b);
+    if (RESERVED_BULLET_LEAD_EMOJIS.has(lead)) {
+      return `micro-commit: ${lead} is reserved for subject/timestamp/uloc — start each bullet with the emoji that best matches that line's description`;
+    }
+    if (TIMESTAMP_LINE_RE.test(b.trim())) {
+      return "micro-commit: bullet must not copy the 🎆YY🌙MM☀️DD timestamp pattern — use one leading emoji that fits the change, not the calendar line";
+    }
+  }
+  return null;
+}
+
+function validateBulletEmojis(bullets: string[]): void {
+  const err = bulletEmojiValidationError(bullets);
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+}
+
+function writePreparedBullets(root: string, bullets: string[]): void {
+  writeFileSync(preparedBulletsPath(root), `${bullets.join("\n")}\n`);
+}
+
+function readPreparedBullets(root: string): string[] {
+  const path = preparedBulletsPath(root);
+  if (!existsSync(path)) return [];
+  return normalizeBulletLines(readFileSync(path, "utf8"));
+}
+
+const GIT_COMMIT_DRAFT_FILES = ["COMMIT_EDITMSG", "MERGE_MSG", "SQUASH_MSG"] as const;
+
+const STAGED_CHANGE_AREAS = [
+  { id: ".cursor/plans", match: (p: string) => p.startsWith(".cursor/plans/"), keywords: ["plan"] },
+  { id: ".agents", match: (p: string) => p.startsWith(".agents/") && !p.endsWith("SKILL.md"), keywords: ["skill", "agent"] },
+  { id: "repo", match: (p: string) => p.startsWith("repo/"), keywords: ["hook", "micro-commit"] },
+  { id: ".devcontainer", match: (p: string) => p.startsWith(".devcontainer/"), keywords: ["devcontainer"] },
+  {
+    id: "product",
+    match: (p: string) => /^(framework|puzzle|semio|cad|ui|mathematical|infinite|elements|coda|reuse)\//.test(p),
+    keywords: [],
+  },
+] as const;
+
+function isInsignificantStagedPath(path: string): boolean {
+  return /\/micro-commit\.ts$/.test(path) || /\/index\.test\.ts$/.test(path) || path.endsWith("SKILL.md");
+}
+
+/** 🔤Path tokens used to check whether bullets mention a staged file. */
+export function pathTokensForBulletCoverage(filePath: string): string[] {
+  return [...new Set(filePath.toLowerCase().split(/[/._-]+/).filter((s) => s.length >= 4))];
+}
+
+function bulletsMentionPathTokens(text: string, paths: string[]): boolean {
+  const tokens = paths.flatMap(pathTokensForBulletCoverage);
+  return tokens.some((t) => text.includes(t));
+}
+
+function bulletsCoverArea(text: string, paths: string[], keywords: readonly string[]): boolean {
+  if (keywords.some((k) => text.includes(k))) return true;
+  return bulletsMentionPathTokens(text, paths);
+}
+
+/** 🧪Returns staged area ids not reflected in bullets (empty = ok). */
+export function uncoveredStagedAreas(bullets: string[], staged: string[]): string[] {
+  const significant = staged.filter((p) => !isInsignificantStagedPath(p));
+  if (significant.length === 0) return [];
+  const text = bullets.join("\n").toLowerCase();
+  const missed: string[] = [];
+  const matched = new Set<string>();
+  for (const area of STAGED_CHANGE_AREAS) {
+    const files = significant.filter((p) => {
+      if (!area.match(p)) return false;
+      matched.add(p);
+      return true;
+    });
+    if (files.length === 0) continue;
+    if (!bulletsCoverArea(text, files, area.keywords)) missed.push(area.id);
+  }
+  const other = significant.filter((p) => !matched.has(p));
+  if (other.length > 0 && !bulletsMentionPathTokens(text, other)) missed.push("other staged paths");
+  return missed;
+}
+
+function validateBulletsAgainstStaged(bullets: string[], staged: string[]): void {
+  const missed = uncoveredStagedAreas(bullets, staged);
+  if (missed.length === 0) return;
+  console.error(`micro-commit: bullets must cover every staged area — missing: ${missed.join(", ")}`);
+  console.error("micro-commit: read `micro-commit diff` again (include .cursor/plans, product code, repo, …)");
+  for (const p of staged) console.error(`  ${p}`);
+  process.exit(1);
+}
+
+function readDiffBulletsInput(root: string, bulletsFile: string | null): string[] {
+  if (bulletsFile) {
+    const path = bulletsFile.startsWith("/") ? bulletsFile : join(root, bulletsFile);
+    return normalizeBulletLines(readFileSync(path, "utf8"));
+  }
+  if (!process.stdin.isTTY) {
+    return normalizeBulletLines(readFileSync(0, "utf8"));
+  }
+  return [];
+}
+
+function listCachedPaths(root: string): string[] {
+  return gitCachedNames(root);
+}
+
+function listAddedTicketPaths(root: string): string[] {
+  return gitCachedNames(root, ["--diff-filter=A"]).filter((p) => TICKET_JSON_RE.test(p));
+}
+
+function ticketBullets(root: string): string[] {
+  const bullets: string[] = [];
+  for (const rel of listAddedTicketPaths(root)) {
+    const path = join(root, rel);
+    const t = JSON.parse(readFileSync(path, "utf8")) as { emoji?: string; title?: string };
+    if (!t.emoji || !t.title) continue;
+    bullets.push(`${t.emoji}${t.title}`);
+  }
+  return bullets;
+}
+
+export function buildMicroCommitMessage(
+  root: string,
+  contributor: Contributor,
+  diffBullets: string[] = [],
+  ulocRunner?: UlocRunner,
+): string {
+  root = gitRepoRoot(root);
+  const { line1Base, nnn } = nextCounter(root, contributor);
+  const now = new Date();
+  const authored = diffBullets.length > 0 ? normalizeBulletLines(diffBullets.join("\n")) : readPreparedBullets(root);
+  const bullets = [...ticketBullets(root), ...authored].slice(0, 8);
+  if (bullets.length === 0) {
+    throw new Error("micro-commit: at least one description bullet is required");
+  }
+  const metrics = formatMicroCommitMetricsLines(buildMicroCommitMetrics(root, ulocRunner));
+  const lines = [`${line1Base}🚩${nnn}`, formatSecond(now), ...bullets];
+  if (metrics.length > 0) lines.push("", ...metrics);
+  lines.push("", `Signed-off-by: ${contributor.name} <${contributor.email}>`);
+  return `${lines.join("\n")}\n`;
+}
+
+function gitDir(root: string): string {
+  const out = git(root, ["rev-parse", "--git-dir"]).out;
+  return out.startsWith("/") ? out : join(root, out);
+}
+
+export function writeMicroCommitTemplates(root: string, message: string): void {
+  const dir = gitDir(root);
+  const gkCommitTemplate = join(dir, GK_COMMIT_TEMPLATE_FILE);
+  removeGitKrakenTemplateFiles(root);
+  writeFileSync(gkCommitTemplate, message);
+  for (const name of GIT_COMMIT_DRAFT_FILES) {
+    writeFileSync(join(dir, name), message);
+  }
+  git(root, ["config", "--local", "commit.template", gkCommitTemplate]);
+  writeFileSync(preparedDigestPath(root), `${digestMicroCommitMessage(message)}\n`);
+  markPrepareActive(root);
+}
+
+export function shouldRefreshPreparedCommitMessage(current: string, preparedDigest: string | null): boolean {
+  const trimmed = current.trim();
+  if (!trimmed) return true;
+  if (!preparedDigest) return false;
+  return digestMicroCommitMessage(current) === preparedDigest.trim();
+}
+
+function removeGitDirPrefixed(root: string, prefix: string): void {
+  const dir = gitDir(root);
+  for (const name of readdirSync(dir)) {
+    if (name.startsWith(prefix)) {
+      try {
+        rmSync(join(dir, name), { force: true });
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+function removeGitKrakenTemplateFiles(root: string): void {
+  const dir = gitDir(root);
+  for (const name of readdirSync(dir)) {
+    if (!name.startsWith(GK_TEMPLATE_BASENAME)) continue;
+    try {
+      rmSync(join(dir, name), { force: true });
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** 🧹Clears GitKraken templates, git draft messages, and micro-commit prepare state. */
+export function clearGitCommitDraftState(root: string): void {
+  const dir = gitDir(root);
+  removeGitKrakenTemplateFiles(root);
+  const gkCommitTemplate = join(dir, GK_COMMIT_TEMPLATE_FILE);
+  writeFileSync(gkCommitTemplate, "");
+  git(root, ["config", "--local", "commit.template", gkCommitTemplate]);
+  for (const name of GIT_COMMIT_DRAFT_FILES) {
+    try {
+      writeFileSync(join(dir, name), "");
+    } catch {
+      /* ignore */
+    }
+  }
+  removeGitDirPrefixed(root, "semio-micro-commit");
+}
+
+export function clearMicroCommitTemplatesOnly(root: string): void {
+  clearGitCommitDraftState(root);
+}
+
+function clearStaleTemplatesBeforePrepare(root: string): void {
+  if (!isPrepareActive(root)) clearGitCommitDraftState(root);
+}
+
+/** 🧹Removes prepare state and resets GK/git templates to empty after a commit. */
+export function wipeAfterCommit(root: string): void {
+  clearGitCommitDraftState(root);
+}
+
+export function handlePrepareCommitMsg(root: string, msgFile: string, source: string): void {
+  if (!isPrepareActive(root)) {
+    clearMicroCommitTemplatesOnly(root);
+    return;
+  }
+  if (!branchAllowed(root)) return;
+  const contributor = findContributor(root);
+  if (!contributor) return;
+  if (source === "merge" || source === "squash") return;
+  const preparedBullets = readPreparedBullets(root);
+  const newTickets = listAddedTicketPaths(root);
+  if (preparedBullets.length === 0 && newTickets.length === 0) {
+    const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
+    if (current.trim()) return;
+    return;
+  }
+  const digestPath = preparedDigestPath(root);
+  const preparedDigest = existsSync(digestPath) ? readFileSync(digestPath, "utf8") : null;
+  const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
+  if (!shouldRefreshPreparedCommitMessage(current, preparedDigest)) return;
+  const message = buildMicroCommitMessage(root, contributor, preparedBullets);
+  writeFileSync(msgFile, message);
+  writeMicroCommitTemplates(root, message);
+}
+
+const MICRO_COMMIT_BUN_PIN = "semio-micro-commit-bun";
+
+/** 🥖Resolves the Bun executable for git hooks (GUI git often has a minimal PATH). */
+export function resolveMicroCommitBunBin(root: string): string {
+  const fromEnv = process.env.SEMIO_BUN?.trim();
+  if (fromEnv) return fromEnv;
+  const argv0 = process.argv[0] ?? "";
+  if (/bun(\.exe)?$/i.test(argv0)) return argv0;
+  const win = process.platform === "win32";
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
+  const bunInstall = process.env.BUN_INSTALL ?? join(home, ".bun");
+  const candidates = [
+    join(root, "node_modules", ".bin", win ? "bun.cmd" : "bun"),
+    join(root, "node_modules", ".bin", "bun.exe"),
+    join(bunInstall, "bin", win ? "bun.exe" : "bun"),
+    join(bunInstall, "bin", "bun"),
+  ];
+  for (const c of candidates) {
+    if (c && existsSync(c)) return c;
+  }
+  const which = spawnSync(win ? "where" : "which", ["bun"], { encoding: "utf8", shell: win });
+  if (which.status === 0) {
+    const first = (which.stdout ?? "").split(/\r?\n/).map((l) => l.trim()).find(Boolean);
+    if (first && existsSync(first)) return first;
+  }
+  return win ? "bun.exe" : "bun";
+}
+
+const MICRO_COMMIT_SEED_EMPTY_GK_SH = `semio_micro_commit_seed_empty_gk() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  GK_TEMPLATE="$GIT_DIR/${GK_COMMIT_TEMPLATE_FILE}"
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/gkcommittemplate*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+  : >"$GK_TEMPLATE" 2>/dev/null || true
+  git config --local commit.template "$GK_TEMPLATE" 2>/dev/null || true
+}`;
+
+const MICRO_COMMIT_WIPE_FULL_SH = `${MICRO_COMMIT_SEED_EMPTY_GK_SH}
+semio_micro_commit_wipe() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  semio_micro_commit_seed_empty_gk
+  for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
+    if [ -f "$GIT_DIR/$msg" ]; then
+      : >"$GIT_DIR/$msg" 2>/dev/null || true
+    fi
+  done
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/semio-micro-commit-*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+}`;
+
+const MICRO_COMMIT_RESOLVE_BUN_SH = `semio_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$SEMIO_BUN" ] && [ -x "$SEMIO_BUN" ]; then
+    echo "$SEMIO_BUN"
+    return
+  fi
+  if [ -f "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" ]; then
+    B=$(head -n 1 "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" | tr -d '\\r')
+    if [ -n "$B" ] && [ -x "$B" ]; then
+      echo "$B"
+      return
+    fi
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun" ]; then
+    echo "$BUN_INSTALL/bin/bun"
+    return
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun.exe" ]; then
+    echo "$BUN_INSTALL/bin/bun.exe"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun" ]; then
+    echo "$ROOT/node_modules/.bin/bun"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.cmd" ]; then
+    echo "$ROOT/node_modules/.bin/bun.cmd"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.exe" ]; then
+    echo "$ROOT/node_modules/.bin/bun.exe"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    echo "$HOME/.bun/bin/bun"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun.exe" ]; then
+    echo "$HOME/.bun/bin/bun.exe"
+    return
+  fi
+  B=$(command -v bun 2>/dev/null || true)
+  if [ -n "$B" ]; then
+    echo "$B"
+  fi
+}`;
+
+/** 🪝Renders a portable `sh` git hook (LF, inline wipe; Bun only when needed). */
+export function renderMicroCommitGitHook(
+  name: "prepare-commit-msg" | (typeof MICRO_COMMIT_POST_WIPE_HOOKS)[number],
+): string {
+  const isPostWipe = (MICRO_COMMIT_POST_WIPE_HOOKS as readonly string[]).includes(name);
+  const lines = [
+    "#!/usr/bin/env sh",
+    isPostWipe ? MICRO_COMMIT_WIPE_FULL_SH : MICRO_COMMIT_SEED_EMPTY_GK_SH,
+    'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0',
+    'cd "$ROOT" || exit 0',
+    'GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0',
+  ];
+  if (isPostWipe) {
+    lines.push(
+      MICRO_COMMIT_RESOLVE_BUN_SH,
+      'BUN=$(semio_resolve_bun "$ROOT")',
+      '[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true',
+      "semio_micro_commit_wipe",
+      "exit 0",
+    );
+  } else {
+    lines.push(
+      MICRO_COMMIT_RESOLVE_BUN_SH,
+      '[ ! -f "$GIT_DIR/semio-micro-commit-active" ] && {',
+      "  semio_micro_commit_seed_empty_gk",
+      "  exit 0",
+      "}",
+      'BUN=$(semio_resolve_bun "$ROOT")',
+      '[ -z "$BUN" ] && exit 0',
+      'exec "$BUN" ./script.ts micro-commit prepare-commit-msg "$1" "$2"',
+    );
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function writeMicroCommitHookFile(path: string, body: string): void {
+  writeFileSync(path, body.replace(/\r\n/g, "\n"), "utf8");
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    /* windows */
+  }
+}
+
+export function installMicroCommitGitHooks(root: string): void {
+  const bunBin = resolveMicroCommitBunBin(root).replace(/\r/g, "");
+  mkdirSync(join(root, ".repo"), { recursive: true });
+  writeFileSync(join(root, ".repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
+  const hooksDir = join(root, ".git", "hooks");
+  const repoHooksDir = join(root, "repo", "hooks");
+  mkdirSync(hooksDir, { recursive: true });
+  mkdirSync(repoHooksDir, { recursive: true });
+  for (const name of [...MICRO_COMMIT_POST_WIPE_HOOKS, "prepare-commit-msg"] as const) {
+    const body = renderMicroCommitGitHook(name);
+    writeMicroCommitHookFile(join(repoHooksDir, name), body);
+    writeMicroCommitHookFile(join(hooksDir, name), body);
+  }
+  const stalePreCommit = join(hooksDir, "pre-commit");
+  if (existsSync(stalePreCommit)) rmSync(stalePreCommit, { force: true });
+  const repoPreCommit = join(repoHooksDir, "pre-commit");
+  if (existsSync(repoPreCommit)) rmSync(repoPreCommit, { force: true });
+}
+
+export function resetMicroCommitTemplates(root: string): void {
+  wipeAfterCommit(root);
+}
+
+function emitPrepareStdout(message: string): void {
+  process.stdout.write(message.endsWith("\n") ? message : `${message}\n`);
+}
+
+export function runMicroCommit(root: string, segments: string[]): void {
+  root = gitRepoRoot(root);
+  const cmd = segments[0] ?? "prepare";
+  if (cmd === "reset") {
+    resetMicroCommitTemplates(root);
+    process.exit(0);
+  }
+  if (cmd === "install-hooks") {
+    installMicroCommitGitHooks(root);
+    process.exit(0);
+  }
+  if (cmd === "prepare-commit-msg") {
+    const msgFile = segments[1];
+    if (!msgFile) process.exit(1);
+    handlePrepareCommitMsg(root, msgFile, segments[2] ?? "");
+    process.exit(0);
+  }
+  if (!branchAllowed(root)) {
+    console.error("micro-commit: branch must contain ⛳wip or 🏗️dev");
+    process.exit(1);
+  }
+  const contributor = findContributor(root);
+  if (!contributor) {
+    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    process.exit(1);
+  }
+  if (cmd === "stage") {
+    clearStaleTemplatesBeforePrepare(root);
+    const staged = git(root, ["add", "-A"]);
+    if (!staged.ok) {
+      console.error(staged.out || "git add -A failed");
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+  if (cmd === "diff") {
+    const patch = git(root, ["diff", "--cached"]);
+    if (!patch.ok) {
+      console.error(patch.out || "git diff --cached failed");
+      process.exit(1);
+    }
+    process.stdout.write(patch.out ? `${patch.out}\n` : "");
+    process.exit(0);
+  }
+  if (cmd !== "prepare") {
+    console.error(
+      "[micro-commit] usage: bun ./script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]",
+    );
+    process.exit(1);
+  }
+
+  const dash = segments.indexOf("--");
+  const levelSegments = dash >= 0 ? segments.slice(1, dash) : segments.slice(1);
+  const bulletsFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
+
+  const level = loadLevel(root, contributor, levelSegments);
+  clearStaleTemplatesBeforePrepare(root);
+  const staged = git(root, ["add", "-A"]);
+  if (!staged.ok) {
+    console.error(staged.out || "git add -A failed");
+    process.exit(1);
+  }
+
+  const stagedPaths = listCachedPaths(root);
+  const diffBullets = readDiffBulletsInput(root, bulletsFile);
+  if (diffBullets.length === 0) {
+    for (const p of stagedPaths) console.error(p);
+    console.error("");
+    const patch = git(root, ["diff", "--cached"]);
+    if (patch.out) console.error(patch.out);
+    console.error(
+      "\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{emoji}{description}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆 📊 🔢 🚩)",
+    );
+    process.exit(1);
+  }
+
+  validateBulletSpacing(diffBullets);
+  validateBulletEmojis(diffBullets);
+  validateBulletsAgainstStaged(diffBullets, stagedPaths);
+  writePreparedBullets(root, diffBullets);
+  let message: string;
+  try {
+    message = buildMicroCommitMessage(root, contributor, diffBullets);
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e));
+    process.exit(1);
+  }
+  writeMicroCommitTemplates(root, message);
+  emitPrepareStdout(message);
+
+  if (level === "prepare-only") process.exit(0);
+
+  const dir = gitDir(root);
+  const commit = spawnSync("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8" });
+  if (commit.status !== 0) {
+    console.error((commit.stderr ?? commit.stdout ?? "git commit failed").trim());
+    process.exit(commit.status ?? 1);
+  }
+  wipeAfterCommit(root);
+  if (level === "prepare-and-commit") process.exit(0);
+
+  const push = spawnSync("git", ["push"], { cwd: root, encoding: "utf8" });
+  if (push.status !== 0) {
+    console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
+    process.exit(push.status ?? 1);
+  }
+  process.exit(0);
+}
+
+//#endregion 🔖micro-commit
+
+//#region 🔖commit
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+export type CommitLevel =
+  | "prepare-only"
+  | "prepare-and-tag"
+  | "prepare-and-tag-and-squash"
+  | "prepare-and-tag-and-squash-and-push";
+
+export type CommitSteps = { tag: boolean; squash: boolean; push: boolean };
+
+export type CommitBundleDateSection = { dateLine: string; bullets: string[] };
+export type CommitBundleSection = { label: string; dates: CommitBundleDateSection[] };
+
+export const BUNDLE_WIP_SUBJECT_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🔀$/u;
+export const BUNDLE_DATE_SECTION_RE = /^🎆\d{2}🌙\d{2}☀️\d{2}$/u;
+const EMOJI_CLUSTER_RE = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u;
+const BUNDLE_SCOPE_RESERVED_RE = /🔀|🚩|📊uloc|🔢/u;
+const LABEL_TOKEN_BLOCKLIST = new Set(["uloc", "repo", "the", "and"]);
+
+/** 🧭Parses explicit `ct` / `cs` / `cp` step flags from argv segments. */
+export function parseCommitSteps(segments: string[]): CommitSteps {
+  const token = segments.join(" ").toLowerCase();
+  return {
+    tag: /\b(ct|ctag|tag!|\+tag)\b/.test(token),
+    squash: /\b(cs|csquash|squash!|\+squash)\b/.test(token),
+    push: /\b(cp|cpush|push!|\+push)\b/.test(token),
+  };
+}
+
+function commitStepsFromLevel(level: CommitLevel): CommitSteps {
+  switch (level) {
+    case "prepare-and-tag":
+      return { tag: true, squash: false, push: false };
+    case "prepare-and-tag-and-squash":
+      return { tag: true, squash: true, push: false };
+    case "prepare-and-tag-and-squash-and-push":
+      return { tag: true, squash: true, push: true };
+    default:
+      return { tag: false, squash: false, push: false };
+  }
+}
+
+function loadCommitSteps(root: string, contributor: Contributor, segments: string[]): CommitSteps {
+  const explicit = parseCommitSteps(segments);
+  if (explicit.tag || explicit.squash || explicit.push) return explicit;
+  const path = join(root, ".repo", "🧑‍💻", contributor.alias, "commit.json");
+  if (existsSync(path)) {
+    const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
+    const allowed: CommitLevel[] = [
+      "prepare-only",
+      "prepare-and-tag",
+      "prepare-and-tag-and-squash",
+      "prepare-and-tag-and-squash-and-push",
+    ];
+    if (allowed.includes(j.level as CommitLevel)) return commitStepsFromLevel(j.level as CommitLevel);
+  }
+  return { tag: false, squash: false, push: false };
+}
+
+export function isCommitPrepareOnly(segments: string[]): boolean {
+  const token = segments.join(" ").toLowerCase();
+  if (/\b(c\.|cprepare|prepare!|\+prepare)\b/.test(token)) return true;
+  const steps = parseCommitSteps(segments);
+  return !steps.tag && !steps.squash && !steps.push;
+}
+
+function shSingleQuote(s: string): string {
+  return `'${s.replace(/'/g, `'\"'\"'`)}'`;
+}
+
+function formatCommitPrepareCommandBlock(command: string): string {
+  return `\`\`\`\n${command}\n\`\`\``;
+}
+
+/** 🏷️GPG-signed annotated tag; tag object name and `-m` message are the same (`…🚩`). */
+export function formatGitSignedTagCommand(tagName: string, head = "HEAD"): string {
+  const q = shSingleQuote(tagName);
+  return `git tag -s -m ${q} ${q} ${head}`;
+}
+
+/** 📋Four copy-paste ``` blocks: signed tag, squash, push, all-in-one. */
+export function formatCommitPrepareCommands(opts: {
+  tagName: string;
+  wipSha: string;
+  messageFile?: string;
+}): string {
+  const msg = opts.messageFile ?? ".git/semio-commit-message";
+  const tag = formatGitSignedTagCommand(opts.tagName);
+  const squash = `git reset --soft ${opts.wipSha} && git commit -S -F ${shSingleQuote(msg)}`;
+  const push = `git push --follow-tags`;
+  const all = `${tag} && git reset --soft ${opts.wipSha} && git commit -S -F ${shSingleQuote(msg)} && git push --follow-tags`;
+  return `${[tag, squash, push, all].map(formatCommitPrepareCommandBlock).join("\n\n")}\n`;
+}
+
+/** 📋Prepare-only agent reply: four `git` blocks, then tag name, then full commit message. */
+export function formatCommitPrepareAgentReply(opts: {
+  tagName: string;
+  wipSha: string;
+  messageFile?: string;
+  commitMessage: string;
+}): string {
+  const commands = formatCommitPrepareCommands({
+    tagName: opts.tagName,
+    wipSha: opts.wipSha,
+    messageFile: opts.messageFile,
+  });
+  const tagNameBlock = formatCommitPrepareCommandBlock(opts.tagName.trim());
+  const messageBlock = formatCommitPrepareCommandBlock(opts.commitMessage.trimEnd());
+  return `${commands}${tagNameBlock}\n\n${messageBlock}\n`;
+}
+
+/** 🔀Finds the newest commit whose subject is a bundle/WIP marker (`…🔀`). */
+export function findLastBundleWipCommit(root: string): { sha: string; subject: string } | null {
+  root = gitRepoRoot(root);
+  const r = spawnSync("git", ["log", "--format=%H%x00%s%x00", "-n", "500"], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (r.status !== 0) return null;
+  const parts = (r.stdout ?? "").split("\0").filter(Boolean);
+  for (let i = 0; i + 1 < parts.length; i += 2) {
+    const sha = parts[i]!.trim();
+    const subject = parts[i + 1]!.trim();
+    if (BUNDLE_WIP_SUBJECT_RE.test(subject)) return { sha, subject };
+  }
+  return null;
+}
+
+/** 🏷️Signed tag name for the micro-commit tip before squash (`…🚩`). */
+export function formatBundleTagName(contributor: Contributor, now = new Date()): string {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  return `${contributor.emoji}${contributor.alias}🎆${yy}🌙${mm}☀️${dd}🚩`;
+}
+
+/** 🔀Bundle squash commit subject (`…🔀`). */
+export function formatBundleSubject(contributor: Contributor, now = new Date()): string {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  return `${contributor.emoji}${contributor.alias}🎆${yy}🌙${mm}☀️${dd}🔀`;
+}
+
+/** 🔢Leading emoji clusters on a line. */
+export function leadingEmojiClusterCount(line: string): number {
+  let n = 0;
+  let rest = line.trim();
+  while (true) {
+    const m = EMOJI_CLUSTER_RE.exec(rest);
+    if (!m) break;
+    n++;
+    rest = rest.slice(m[0].length);
+  }
+  return n;
+}
+
+/** 🔢Emoji clusters anywhere on a line (bundle labels interleave emoji + text). */
+export function emojiClusterCountInLine(line: string): number {
+  const re = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu;
+  return [...line.matchAll(re)].length;
+}
+
+/** 🧹Strips hand-written uloc and reserved bundle/tag emojis from a scope line. */
+export function normalizeBundleScopeLabel(line: string): string {
+  return line
+    .trim()
+    .replace(/📊uloc.*$/u, "")
+    .replace(/🔀|🚩/gu, "")
+    .trim();
+}
+
+/** 🏷️ASCII tokens from a bundle emoji label (for matching git paths internally). */
+export function labelPathTokens(label: string): string[] {
+  const text = normalizeBundleScopeLabel(label).replace(/\p{Extended_Pictographic}/gu, " ").trim().toLowerCase();
+  return text.split(/[^a-z0-9]+/).filter((t) => t.length >= 2 && !LABEL_TOKEN_BLOCKLIST.has(t));
+}
+
+/** 🚫Validates bundle scope label before parse. */
+export function bundleScopeLabelError(line: string): string | null {
+  const raw = line.trim();
+  if (raw.includes("|") || raw.includes("/")) {
+    return "commit: bundle scope must be emoji + area name only — no paths or `|`";
+  }
+  if (BUNDLE_SCOPE_RESERVED_RE.test(raw)) {
+    return "commit: bundle scope must not include 🔀 🚩 📊uloc or 🔢 — script adds subject and uloc";
+  }
+  const norm = normalizeBundleScopeLabel(raw);
+  if (!norm) return "commit: empty bundle scope after removing reserved emojis";
+  const tokens = labelPathTokens(norm);
+  if (tokens.length === 0) {
+    return "commit: bundle scope needs an area name after emojis (e.g. 🏘️semio✍️sketchpad, 🥅framework, 🖱️ui⚛️react)";
+  }
+  if (!isBundleScopeLine(norm)) {
+    return `commit: invalid bundle scope: ${raw}`;
+  }
+  return null;
+}
+
+function changedPathsInRange(root: string, base: string, head: string): string[] {
+  const r = git(root, ["diff", "--name-only", `${base}..${head}`]);
+  if (!r.ok || !r.out) return [];
+  return r.out.split("\n").filter(Boolean);
+}
+
+function longestCommonPathPrefix(paths: string[]): string {
+  if (paths.length === 0) return "";
+  const split = paths.map((p) => p.split("/"));
+  const first = split[0]!;
+  let len = 0;
+  for (let i = 0; i < first.length; i++) {
+    const seg = first[i]!;
+    if (split.every((parts) => parts[i] === seg)) len = i + 1;
+    else break;
+  }
+  if (len === 0) return paths[0]!.split("/")[0] ?? "";
+  return first.slice(0, len).join("/");
+}
+
+/** 📂Infers repo path prefixes for a bundle label from the revision range (not shown in messages). */
+export function inferPathPrefixesForBundleLabel(
+  root: string,
+  base: string,
+  head: string,
+  label: string,
+  assignedPaths?: string[],
+): string[] {
+  const tokens = labelPathTokens(label);
+  if (tokens.length === 0) return [];
+  const pool = assignedPaths ?? changedPathsInRange(root, base, head);
+  const matched = pool.filter((p) => {
+    const pl = p.toLowerCase();
+    return tokens.every((t) => pl.includes(t));
+  });
+  if (matched.length === 0) return [];
+  const prefix = longestCommonPathPrefix(matched);
+  return prefix ? [prefix] : [];
+}
+
+function assignPathToBundleIndex(bundles: CommitBundleSection[], path: string): number {
+  const pl = path.toLowerCase();
+  let best = -1;
+  let bestScore = 0;
+  for (let i = 0; i < bundles.length; i++) {
+    const tokens = labelPathTokens(bundles[i]!.label);
+    if (tokens.length === 0) continue;
+    if (!tokens.every((t) => pl.includes(t))) continue;
+    const score = tokens.length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = i;
+    }
+  }
+  return best;
+}
+
+function assignChangedPathsToBundles(
+  root: string,
+  base: string,
+  head: string,
+  bundles: CommitBundleSection[],
+): string[][] {
+  const paths = changedPathsInRange(root, base, head);
+  const assigned = bundles.map(() => [] as string[]);
+  for (const p of paths) {
+    const bi = assignPathToBundleIndex(bundles, p);
+    if (bi >= 0) assigned[bi]!.push(p);
+  }
+  return assigned;
+}
+
+type GitDeltaSum = { added: number; removed: number; edited: number };
+
+function addGitDeltaSums(a: GitDeltaSum, b: GitDeltaSum): GitDeltaSum {
+  return { added: a.added + b.added, removed: a.removed + b.removed, edited: a.edited + b.edited };
+}
+
+const BUNDLE_COMMIT_TIMESTAMP_LINE_RE = /^🎆\d{2}🌙\d{2}☀️\d{2}⏰/u;
+
+/** 🎆Calendar day from a micro-commit subject (`🎆YY🌙MM☀️DD`). */
+export function extractBundleDateLineFromSubject(subject: string): string | null {
+  const m = /🎆\d{2}🌙\d{2}☀️\d{2}/u.exec(subject.trim());
+  return m?.[0] ?? null;
+}
+
+/** 🎆Calendar day from the micro-commit body timestamp line (`🎆YY🌙MM☀️DD⏰…`). */
+export function extractBundleDateLineFromCommitBody(body: string): string | null {
+  for (const raw of body.split("\n")) {
+    const line = raw.trim();
+    if (!BUNDLE_COMMIT_TIMESTAMP_LINE_RE.test(line)) continue;
+    const m = /^🎆\d{2}🌙\d{2}☀️\d{2}/u.exec(line);
+    return m?.[0] ?? null;
+  }
+  return null;
+}
+
+/** 🎆Calendar day for bundle per-day uloc (body timestamp, else subject). */
+export function extractBundleDateLineFromCommit(subject: string, body: string): string | null {
+  return extractBundleDateLineFromCommitBody(body) ?? extractBundleDateLineFromSubject(subject);
+}
+
+/** 📂Paths from one numstat row (rename rows may join old/new with tabs or `=>`). */
+export function pathsFromNumstatRow(pathField: string): string[] {
+  const parts = pathField
+    .split("\t")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return [];
+  const out = new Set<string>();
+  for (const part of parts) {
+    const brace = /^(.*)\{(.+?)\s*=>\s*(.+?)\}(.*)$/u.exec(part);
+    if (brace) {
+      const a = brace[2]!.trim();
+      const b = brace[3]!.trim();
+      if (a) out.add(a);
+      if (b) out.add(b);
+      continue;
+    }
+    const arrow = /\s*=>\s*/u.exec(part);
+    if (arrow) {
+      const [from, to] = part.split(/\s*=>\s*/u);
+      if (from?.trim()) out.add(from.trim());
+      if (to?.trim()) out.add(to.trim());
+      continue;
+    }
+    out.add(part);
+  }
+  return [...out];
+}
+
+/** 📂Prefix set for a bundle: all range paths, inferred roots, and token-matching parents (renames). */
+export function buildBundlePathPrefixSets(
+  root: string,
+  base: string,
+  head: string,
+  bundles: CommitBundleSection[],
+): string[][] {
+  const assignments = assignChangedPathsToBundles(root, base, head, bundles);
+  return bundles.map((bundle, i) => {
+    const assigned = assignments[i] ?? [];
+    const prefixes = new Set<string>();
+    const tokens = labelPathTokens(bundle.label);
+    for (const p of assigned) {
+      prefixes.add(p);
+      if (tokens.length === 0) continue;
+      const segments = p.split("/");
+      let acc = "";
+      for (const seg of segments) {
+        acc = acc ? `${acc}/${seg}` : seg;
+        const pl = acc.toLowerCase();
+        if (tokens.every((t) => pl.includes(t))) prefixes.add(acc);
+      }
+    }
+    return [...prefixes];
+  });
+}
+
+/** 📂Whether a path belongs to a bundle (assigned path prefixes, else label token scoring). */
+export function pathMatchesBundleIndex(
+  path: string,
+  bundleIndex: number,
+  prefixSets: string[][],
+  bundles: CommitBundleSection[],
+): boolean {
+  const prefixes = prefixSets[bundleIndex] ?? [];
+  if (prefixes.length > 0) return pathUnderPrefixes(path, prefixes);
+  return assignPathToBundleIndex(bundles, path) === bundleIndex;
+}
+
+/** 🧹Strips hand-written per-day uloc from a date section line. */
+export function normalizeBundleDateLine(line: string): string {
+  return line.trim().replace(/📊uloc.*$/u, "").trim();
+}
+
+/** 🎆Bundle squash only: `🎆YY🌙MM☀️DD` + per-day git delta suffix (micro-commit uses timestamp + footer uloc only). */
+export function formatBundleDateLine(dateLine: string, d: GitDeltaSum): string {
+  return `${normalizeBundleDateLine(dateLine)}${formatBundleUlocSuffix(d)}`;
+}
+
+export type BundleDateDeltasMap = Map<number, Map<string, GitDeltaSum>>;
+
+function gitCommitShasInRange(root: string, base: string, head: string): string[] {
+  const r = git(root, ["rev-list", "--reverse", `${base}..${head}`]);
+  if (!r.ok || !r.out) return [];
+  return r.out.split("\n").filter(Boolean);
+}
+
+function addNumstatRowToBundleDateMap(
+  map: BundleDateDeltasMap,
+  row: { path: string; added: number; removed: number },
+  dateLine: string,
+  bi: number,
+  root: string,
+): void {
+  const chunk = sumGitLangDeltas(
+    accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]),
+  );
+  if (gitDeltaLineTotal(chunk) === 0) return;
+  const bundleMap = map.get(bi)!;
+  const prev = bundleMap.get(dateLine) ?? { added: 0, removed: 0, edited: 0 };
+  bundleMap.set(dateLine, addGitDeltaSums(prev, chunk));
+}
+
+/** 📊Per-bundle per-day git deltas: sum each micro-commit parent..sha row on its body 🎆 day (sums to range partition). */
+export function buildBundleDateDeltasMap(
+  root: string,
+  base: string,
+  head: string,
+  bundles: CommitBundleSection[],
+): BundleDateDeltasMap {
+  root = gitRepoRoot(root);
+  const map: BundleDateDeltasMap = new Map();
+  for (let i = 0; i < bundles.length; i++) map.set(i, new Map());
+  const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
+  for (const sha of gitCommitShasInRange(root, base, head)) {
+    const parent = `${sha}^`;
+    const subject = git(root, ["log", "-1", "--format=%s", sha]).out;
+    const body = git(root, ["log", "-1", "--format=%B", sha]).out;
+    const dateLine = extractBundleDateLineFromCommit(subject, body);
+    if (!dateLine) continue;
+    for (const row of gitRangeNumstat(root, parent, sha)) {
+      const rowPaths = pathsFromNumstatRow(row.path);
+      if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
+      const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
+      if (owners.length === 0) {
+        throw new Error(
+          `commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`,
+        );
+      }
+      if (owners.length > 1) {
+        const names = owners.map((i) => bundles[i]!.label).join(", ");
+        throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+      }
+      addNumstatRowToBundleDateMap(map, row, dateLine, owners[0]!, root);
+    }
+  }
+  return map;
+}
+
+function bundleGitDeltasForPaths(
+  root: string,
+  base: string,
+  head: string,
+  pathPrefixes: string[],
+): { added: number; removed: number; edited: number } {
+  const rows = gitRangeNumstat(root, base, head);
+  const assigned =
+    pathPrefixes.length > 0
+      ? rows.filter((r) => pathsFromNumstatRow(r.path).some((p) => pathUnderPrefixes(p, pathPrefixes)))
+      : [];
+  return sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, assigned));
+}
+
+function formatBundleHeaderLine(label: string, total: GitDeltaSum): string {
+  return `${normalizeBundleScopeLabel(label)}${formatBundleUlocSuffix(total)}`;
+}
+
+/** 📊Orders bundles by descending 🟰 (➕+✏️+➖) from assigned path diffs. */
+export function sortCommitBundlesByEditTotal(
+  root: string,
+  base: string,
+  head: string,
+  bundles: CommitBundleSection[],
+  pathAssignments: string[][],
+): { bundles: CommitBundleSection[]; pathAssignments: string[][]; pathPrefixSets: string[][] } {
+  const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
+  const ranked = bundles.map((bundle, i) => ({
+    bundle,
+    paths: pathAssignments[i] ?? [],
+    prefixes: prefixSets[i] ?? [],
+    total: gitDeltaLineTotal(bundleGitDeltasForPaths(root, base, head, prefixSets[i] ?? [])),
+  }));
+  ranked.sort((a, b) => b.total - a.total);
+  return {
+    bundles: ranked.map((r) => r.bundle),
+    pathAssignments: ranked.map((r) => r.paths),
+    pathPrefixSets: ranked.map((r) => r.prefixes),
+  };
+}
+
+/** 🏷️Bundle scope line: two+ emojis, or one emoji + lowercase technology slug (`🥅framework`). */
+export function isBundleScopeLine(line: string): boolean {
+  const t = normalizeBundleScopeLabel(line);
+  if (!t || BUNDLE_DATE_SECTION_RE.test(t)) return false;
+  if (t.includes("/") || t.includes("|")) return false;
+  if (BUNDLE_SCOPE_RESERVED_RE.test(t)) return false;
+  if (emojiClusterCountInLine(t) >= 2) return true;
+  if (emojiClusterCountInLine(t) !== 1) return false;
+  const after = t.replace(/^\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/u, "");
+  return /^[a-z][a-z0-9]{2,24}$/u.test(after);
+}
+
+/** 🚫Validates stdin is bundle body only, not a full commit message. */
+export function commitBundleBodyError(text: string): string | null {
+  const first = text.trim().split("\n").find((l) => l.trim().length > 0)?.trim() ?? "";
+  if (BUNDLE_WIP_SUBJECT_RE.test(first)) {
+    return "commit: stdin must not include the bundle subject (…🔀) — script adds it";
+  }
+  if (/^🐙|^🧑/.test(first) && first.includes("🚩")) {
+    return "commit: stdin must not include micro-commit subject lines";
+  }
+  if (/^📊uloc/m.test(text) || /^🔢[\dk]/m.test(text)) {
+    return "commit: stdin must not include the 📊uloc footer — script adds it";
+  }
+  if (/^🎆\d{2}🌙\d{2}☀️\d{2}📊uloc/m.test(text)) {
+    return "commit: stdin must not include per-day 📊uloc — script adds it to each 🎆 line";
+  }
+  return null;
+}
+
+function validateBulletLine(b: string): void {
+  if (!MICRO_COMMIT_BULLET_RE.test(b)) {
+    throw new Error(`commit: bullet must start with {emoji} then description (no space after emoji): ${b}`);
+  }
+  const err = bulletEmojiValidationError([b]);
+  if (err) throw new Error(err.replace(/^micro-commit:/, "commit:"));
+  if (BUNDLE_DATE_SECTION_RE.test(b.trim())) {
+    throw new Error("commit: use a date section line `🎆YY🌙MM☀️DD` on its own, not as a bullet");
+  }
+}
+
+/** 📦Parses LLM bundle body (emoji-only scope lines, dates, bullets). */
+export function parseCommitBundleBody(text: string): CommitBundleSection[] {
+  const bundles: CommitBundleSection[] = [];
+  let current: CommitBundleSection | null = null;
+  let dateSection: CommitBundleDateSection | null = null;
+
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("📊uloc") || line.startsWith("🔢") || line.startsWith("Signed-off-by:")) continue;
+
+    const dateCandidate = normalizeBundleDateLine(line);
+    if (BUNDLE_DATE_SECTION_RE.test(dateCandidate)) {
+      if (!current) throw new Error(`commit: date section before bundle scope: ${line}`);
+      if (dateSection) current.dates.push(dateSection);
+      dateSection = { dateLine: dateCandidate, bullets: [] };
+      continue;
+    }
+
+    if (dateSection) {
+      if (isBundleScopeLine(line)) {
+        const scopeErr = bundleScopeLabelError(line);
+        if (scopeErr) throw new Error(scopeErr);
+        current.dates.push(dateSection);
+        bundles.push(current);
+        current = { label: normalizeBundleScopeLabel(line), dates: [] };
+        dateSection = null;
+        continue;
+      }
+      validateBulletLine(line);
+      dateSection.bullets.push(line);
+      continue;
+    }
+
+    if (isBundleScopeLine(line)) {
+      const scopeErr = bundleScopeLabelError(line);
+      if (scopeErr) throw new Error(scopeErr);
+      if (current) bundles.push(current);
+      current = { label: normalizeBundleScopeLabel(line), dates: [] };
+      continue;
+    }
+
+    if (!current) throw new Error(`commit: expected emoji bundle scope (two+ emojis, no paths), got: ${line}`);
+    throw new Error(`commit: expected 🎆YY🌙MM☀️DD date section before bullet: ${line}`);
+  }
+
+  if (current) {
+    if (dateSection) current.dates.push(dateSection);
+    bundles.push(current);
+  }
+  if (bundles.length === 0) throw new Error("commit: at least one emoji bundle scope is required");
+  for (const b of bundles) {
+    if (b.dates.length === 0) throw new Error(`commit: bundle ${b.label} needs at least one date section`);
+    for (const d of b.dates) {
+      if (d.bullets.length === 0) throw new Error(`commit: ${d.dateLine} in ${b.label} needs at least one bullet`);
+    }
+  }
+  return bundles;
+}
+
+function formatGitDeltaSumBrief(d: GitDeltaSum): string {
+  return `➕${d.added}✏️${d.edited}➖${d.removed}🟰${gitDeltaLineTotal(d)}`;
+}
+
+function assertGitDeltaSumsEqual(a: GitDeltaSum, b: GitDeltaSum, message: string): void {
+  if (gitDeltaSumsEqual(a, b)) return;
+  throw new Error(`${message} — ${formatGitDeltaSumBrief(a)} vs ${formatGitDeltaSumBrief(b)}`);
+}
+
+/** 📂Bundle indices that own a numstat row (0 or 1 after validation). */
+export function resolveBundleIndicesForNumstatRow(
+  pathField: string,
+  prefixSets: string[][],
+  bundles: CommitBundleSection[],
+): number[] {
+  const matched = new Set<number>();
+  for (const path of pathsFromNumstatRow(pathField)) {
+    for (let bi = 0; bi < bundles.length; bi++) {
+      if (pathMatchesBundleIndex(path, bi, prefixSets, bundles)) matched.add(bi);
+    }
+  }
+  return [...matched];
+}
+
+function rangeGitDeltaTotal(root: string, base: string, head: string): GitDeltaSum {
+  return sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, gitRangeNumstat(root, base, head)));
+}
+
+/** 📊Partition WIP-range numstat across bundles (one bundle per row). */
+export function partitionRangeDeltasByBundle(
+  root: string,
+  base: string,
+  head: string,
+  bundles: CommitBundleSection[],
+  prefixSets: string[][],
+): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
+  const bundleTotals = bundles.map(() => ({ added: 0, removed: 0, edited: 0 }));
+  let rangeTotal: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+  for (const row of gitRangeNumstat(root, base, head)) {
+    const rowPaths = pathsFromNumstatRow(row.path);
+    if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
+    const chunk = sumGitLangDeltas(
+      accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]),
+    );
+    if (gitDeltaLineTotal(chunk) === 0) continue;
+    rangeTotal = addGitDeltaSums(rangeTotal, chunk);
+    const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
+    if (owners.length === 0) {
+      throw new Error(
+        `commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`,
+      );
+    }
+    if (owners.length > 1) {
+      const names = owners.map((i) => bundles[i]!.label).join(", ");
+      throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+    }
+    const bi = owners[0]!;
+    bundleTotals[bi] = addGitDeltaSums(bundleTotals[bi]!, chunk);
+  }
+  return { bundleTotals, rangeTotal };
+}
+
+/** 🚫Per-day uloc must sum to bundle header totals; missing/extra dates imply attribution mistakes. */
+export function validateBundleDayDeltasAttribution(
+  bundles: CommitBundleSection[],
+  prefixSets: string[][],
+  dateDeltas: BundleDateDeltasMap,
+  bundleTotals: GitDeltaSum[],
+): void {
+  for (let bi = 0; bi < bundles.length; bi++) {
+    const bundle = bundles[bi]!;
+    const total = bundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 };
+    const listedDates = new Set(bundle.dates.map((s) => s.dateLine));
+    let daySum: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+    for (const dateLine of listedDates) {
+      const d = dateDeltas.get(bi)?.get(dateLine) ?? { added: 0, removed: 0, edited: 0 };
+      daySum = addGitDeltaSums(daySum, d);
+    }
+    const perDay = dateDeltas.get(bi);
+    if (perDay) {
+      for (const [dateLine, d] of perDay) {
+        if (listedDates.has(dateLine)) continue;
+        if (gitDeltaLineTotal(d) === 0) continue;
+        throw new Error(
+          `commit: ${bundle.label} has micro-commit changes on ${dateLine} (${formatGitDeltaSumBrief(d)}) but that day is missing from your bundle body — add a 🎆 section or fix attribution`,
+        );
+      }
+    }
+    if (
+      daySum.added !== total.added ||
+      daySum.edited !== total.edited ||
+      daySum.removed !== total.removed
+    ) {
+      throw new Error(
+        `commit: per-day 📊uloc for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`,
+      );
+    }
+  }
+}
+
+/** 🚫All bundle-commit uloc constraints (days→bundle, bundles→range, languages→range). */
+export function validateBundleCommitAttribution(
+  root: string,
+  base: string,
+  head: string,
+  bundles: CommitBundleSection[],
+  ulocRunner?: UlocRunner,
+): void {
+  root = gitRepoRoot(root);
+  const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
+  const { bundleTotals: partitioned, rangeTotal } = partitionRangeDeltasByBundle(root, base, head, bundles, prefixSets);
+  const dateDeltas = buildBundleDateDeltasMap(root, base, head, bundles);
+  validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, partitioned);
+  for (let bi = 0; bi < bundles.length; bi++) {
+    let allDays: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+    const perDay = dateDeltas.get(bi);
+    if (perDay) {
+      for (const d of perDay.values()) allDays = addGitDeltaSums(allDays, d);
+    }
+    assertGitDeltaSumsEqual(
+      allDays,
+      partitioned[bi] ?? { added: 0, removed: 0, edited: 0 },
+      `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle total`,
+    );
+  }
+  let bundleSum: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+  for (const t of partitioned) bundleSum = addGitDeltaSums(bundleSum, t);
+  assertGitDeltaSumsEqual(
+    bundleSum,
+    rangeTotal,
+    "commit: all bundle header totals do not add up to the WIP range 📊uloc — fix bundle attribution",
+  );
+  const metrics = buildMicroCommitMetricsForRange(root, base, head, undefined, ulocRunner);
+  validateMicroCommitLangMetricsDeltaSum(metrics);
+  const langTotal = sumMicroCommitLangMetrics(metrics);
+  assertGitDeltaSumsEqual(
+    { added: langTotal.added, edited: langTotal.edited, removed: langTotal.removed },
+    rangeTotal,
+    "commit: footer per-language 📊uloc does not add up to the WIP range total",
+  );
+}
+
+export function buildCommitMessage(
+  root: string,
+  contributor: Contributor,
+  bundles: CommitBundleSection[],
+  wipSha: string,
+  head = "HEAD",
+  ulocRunner?: UlocRunner,
+  now = new Date(),
+): string {
+  root = gitRepoRoot(root);
+  const pathAssignments = assignChangedPathsToBundles(root, wipSha, head, bundles);
+  const sorted = sortCommitBundlesByEditTotal(root, wipSha, head, bundles, pathAssignments);
+  bundles = sorted.bundles;
+  validateBundleCommitAttribution(root, wipSha, head, bundles, ulocRunner);
+  const prefixSets = buildBundlePathPrefixSets(root, wipSha, head, bundles);
+  const { bundleTotals } = partitionRangeDeltasByBundle(root, wipSha, head, bundles, prefixSets);
+  const dateDeltas = buildBundleDateDeltasMap(root, wipSha, head, bundles);
+  const lines: string[] = [formatBundleSubject(contributor, now), ""];
+  for (let bi = 0; bi < bundles.length; bi++) {
+    const bundle = bundles[bi]!;
+    lines.push(formatBundleHeaderLine(bundle.label, bundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 }));
+    const perDay = dateDeltas.get(bi);
+    for (const section of bundle.dates) {
+      const dayDelta = perDay?.get(section.dateLine) ?? { added: 0, removed: 0, edited: 0 };
+      lines.push(formatBundleDateLine(section.dateLine, dayDelta));
+      lines.push(...section.bullets);
+    }
+    if (bi < bundles.length - 1) lines.push("");
+  }
+  const metrics = formatMicroCommitMetricsLines(buildMicroCommitMetricsForRange(root, wipSha, head, undefined, ulocRunner));
+  if (metrics.length > 0) lines.push(...metrics, "");
+  lines.push(`Signed-off-by: ${contributor.name} <${contributor.email}>`);
+  return `${lines.join("\n")}\n`;
+}
+
+function readBodyInput(root: string, file: string | null): string {
+  if (file) {
+    const path = file.startsWith("/") ? file : join(root, file);
+    return readFileSync(path, "utf8");
+  }
+  if (process.stdin.isTTY) return "";
+  return readFileSync(0, "utf8");
+}
+
+function assertCleanWorktree(root: string): void {
+  const st = git(root, ["status", "--porcelain"]);
+  if (!st.ok) return;
+  if (st.out.trim()) {
+    console.error("commit: working tree must be clean before tag/squash/push");
+    process.exit(1);
+  }
+}
+
+function emitStdout(message: string): void {
+  process.stdout.write(message.endsWith("\n") ? message : `${message}\n`);
+}
+
+const COMMIT_DIFF_MAX_BYTES = 1_500_000;
+
+export type CommitBundleRange = { wip: { sha: string; subject: string }; range: string };
+
+/** 🔀Resolves last bundle WIP and revision range for analysis. */
+export function resolveCommitBundleRange(root: string): CommitBundleRange | null {
+  root = gitRepoRoot(root);
+  const wip = findLastBundleWipCommit(root);
+  if (!wip) return null;
+  return { wip, range: `${wip.sha}..HEAD` };
+}
+
+function normalizeCompareLine(s: string): string {
+  return s.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/** 📜Collects comparable lines from commit bodies in range (for copy detection). */
+export function commitHistoryCompareLines(root: string, base: string, head: string): Set<string> {
+  const r = spawnSync("git", ["log", `--format=%B%x00`, `${base}..${head}`], {
+    cwd: gitRepoRoot(root),
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const lines = new Set<string>();
+  if (r.status !== 0) return lines;
+  for (const body of (r.stdout ?? "").split("\0")) {
+    if (!body.trim()) continue;
+    for (const raw of body.split("\n")) {
+      const line = raw.trim();
+      if (line.length < 12) continue;
+      if (BUNDLE_WIP_SUBJECT_RE.test(line)) continue;
+      if (BUNDLE_DATE_SECTION_RE.test(normalizeBundleDateLine(line))) continue;
+      if (line.startsWith("📊uloc") || line.startsWith("🔢")) continue;
+      if (line.startsWith("Signed-off-by:")) continue;
+      if (/^🎆\d{2}🌙\d{2}☀️\d{2}⏰/u.test(line)) continue;
+      lines.add(normalizeCompareLine(line));
+    }
+  }
+  return lines;
+}
+
+/** 🚫Whether a bullet verbatim-matches a line from a prior commit body in the range. */
+export function bulletMatchesCommitHistory(bullet: string, history: Set<string>): boolean {
+  return history.has(normalizeCompareLine(bullet));
+}
+
+/** 🚫Ensures bullets are newly written from diff analysis, not pasted from prior commits. */
+export function validateBundleBulletsFresh(root: string, base: string, head: string, bundles: CommitBundleSection[]): void {
+  const history = commitHistoryCompareLines(root, base, head);
+  for (const bundle of bundles) {
+    for (const section of bundle.dates) {
+      for (const bullet of section.bullets) {
+        if (bulletMatchesCommitHistory(bullet, history)) {
+          throw new Error(
+            `commit: bullet copies a prior commit message line — rewrite from git diff only: ${bullet}`,
+          );
+        }
+      }
+    }
+  }
+}
+
+function emitCommitBundleAttributionNote(): void {
+  console.error(
+    "commit: bundles and file→bundle mapping are NOT automatic — folder layout and bundle boundaries change between WIPs",
+  );
+  console.error(
+    "commit: you must (1) read log for last bundle/WIP state, (2) read diff --stat + full diff for every path, (3) decide scopes/dates/bullets, then prepare stdin",
+  );
+  console.error(
+    "commit: script only adds subject, uloc suffixes, sort order, footer, Signed-off-by — never invents bundles or bullets",
+  );
+  console.error(
+    "commit: prepare/check fail unless days→bundle, bundles→range, and languages→range (all ➕✏️➖🟰); run: bun ./script.ts commit check",
+  );
+}
+
+function emitCommitAnalysisHint(): void {
+  console.error("commit: write NEW bundle scopes, dates, and bullets on prepare stdin after log + diff attribution");
+}
+
+/** 📜Prior commit messages since last WIP (context for dates only — not for copying bullets). */
+export function emitCommitLog(root: string): void {
+  root = gitRepoRoot(root);
+  const resolved = resolveCommitBundleRange(root);
+  if (!resolved) {
+    console.error("commit: no prior bundle WIP commit (subject …🔀) found in recent history");
+    process.exit(1);
+  }
+  const { wip, range } = resolved;
+  console.error(`Last bundle WIP: ${wip.subject} (${wip.sha.slice(0, 7)})`);
+  console.error(`Range: ${range}\n`);
+  emitCommitBundleAttributionNote();
+  console.error("\n=== prior commit messages (context only — do not copy bullets; old format may be wrong) ===\n");
+  const log = git(root, ["log", `--format=commit %h%n%s%n%b%n---`, range]);
+  if (log.ok && log.out) console.error(log.out);
+  emitCommitAnalysisHint();
+}
+
+/** 📊Git diff since last WIP (primary source for new bundle summaries). */
+export function emitCommitDiff(root: string): void {
+  root = gitRepoRoot(root);
+  const resolved = resolveCommitBundleRange(root);
+  if (!resolved) {
+    console.error("commit: no prior bundle WIP commit (subject …🔀) found in recent history");
+    process.exit(1);
+  }
+  const { wip, range } = resolved;
+  console.error(`Last bundle WIP: ${wip.subject} (${wip.sha.slice(0, 7)})`);
+  console.error(`Range: ${range}\n`);
+  const stat = git(root, ["diff", "--stat", range]);
+  emitCommitBundleAttributionNote();
+  console.error("\n=== git diff --stat (overview) ===\n");
+  if (stat.ok && stat.out) console.error(`${stat.out}\n`);
+  const patch = git(root, ["diff", range]);
+  console.error("=== git diff (write bullets from this — not from prior commit text) ===\n");
+  if (!patch.ok || !patch.out) {
+    console.error(patch.out || "(empty diff)\n");
+    emitCommitAnalysisHint();
+    return;
+  }
+  const bytes = Buffer.byteLength(patch.out, "utf8");
+  if (bytes > COMMIT_DIFF_MAX_BYTES) {
+    console.error(patch.out.slice(0, COMMIT_DIFF_MAX_BYTES));
+    console.error(`\n[commit diff truncated at ${COMMIT_DIFF_MAX_BYTES} bytes of ${bytes} — inspect locally: git diff ${range}]\n`);
+  } else {
+    console.error(`${patch.out}\n`);
+  }
+  emitCommitAnalysisHint();
+}
+
+function emitCommitAnalysis(root: string): void {
+  emitCommitLog(root);
+  console.error("\n");
+  emitCommitDiff(root);
+}
+
+export function runCommit(root: string, segments: string[]): void {
+  root = gitRepoRoot(root);
+  const cmd = segments[0] ?? "prepare";
+  if (!branchAllowed(root)) {
+    console.error("commit: branch must contain ⛳wip or 🏗️dev");
+    process.exit(1);
+  }
+  const contributor = findContributor(root);
+  if (!contributor) {
+    console.error(`commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    process.exit(1);
+  }
+
+  if (cmd === "log") {
+    emitCommitLog(root);
+    process.exit(0);
+  }
+
+  if (cmd === "diff") {
+    emitCommitDiff(root);
+    process.exit(0);
+  }
+
+  if (cmd === "analyze") {
+    emitCommitAnalysis(root);
+    process.exit(0);
+  }
+
+  if (cmd === "check") {
+    const dash = segments.indexOf("--");
+    const bodyFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
+    const body = readBodyInput(root, bodyFile);
+    if (!body.trim()) {
+      console.error("commit check: pass bundle body on stdin or after -- body.txt");
+      process.exit(1);
+    }
+    const bodyErr = commitBundleBodyError(body);
+    if (bodyErr) {
+      console.error(bodyErr);
+      process.exit(1);
+    }
+    const wip = findLastBundleWipCommit(root);
+    if (!wip) {
+      console.error("commit: no prior bundle WIP commit (subject …🔀) found");
+      process.exit(1);
+    }
+    const ahead = git(root, ["rev-list", "--count", `${wip.sha}..HEAD`]);
+    if (!ahead.ok || Number(ahead.out) === 0) {
+      console.error("commit: no commits after last bundle WIP — nothing to check");
+      process.exit(1);
+    }
+    try {
+      const bundles = parseCommitBundleBody(body);
+      validateBundleBulletsFresh(root, wip.sha, "HEAD", bundles);
+      validateBundleCommitAttribution(root, wip.sha, "HEAD", bundles);
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : String(e));
+      process.exit(1);
+    }
+    const range = rangeGitDeltaTotal(root, wip.sha, "HEAD");
+    console.error(`commit check: OK — ${formatGitDeltaSumBrief(range)}`);
+    console.error("commit check: per-bundle days → bundle headers → WIP range total; per-language footer → same total");
+    process.exit(0);
+  }
+
+  if (cmd !== "prepare") {
+    console.error("[commit] usage: bun ./script.ts commit <log|diff|analyze|check|prepare> [ct|cs|cp|…] [-- body.txt]");
+    process.exit(1);
+  }
+
+  const dash = segments.indexOf("--");
+  const levelSegments = dash >= 0 ? segments.slice(1, dash) : segments.slice(1);
+  const bodyFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
+  const steps = loadCommitSteps(root, contributor, levelSegments);
+  const prepareOnly = isCommitPrepareOnly(levelSegments);
+  const messagePath = join(gitDir(root), "semio-commit-message");
+
+  const wip = findLastBundleWipCommit(root);
+  if (!wip) {
+    console.error("commit: no prior bundle WIP commit (subject …🔀) found");
+    process.exit(1);
+  }
+
+  const ahead = git(root, ["rev-list", "--count", `${wip.sha}..HEAD`]);
+  if (!ahead.ok || Number(ahead.out) === 0) {
+    console.error("commit: no commits after last bundle WIP — nothing to bundle");
+    process.exit(1);
+  }
+
+  const body = readBodyInput(root, bodyFile);
+  let message: string;
+  if (body.trim()) {
+    const bodyErr = commitBundleBodyError(body);
+    if (bodyErr) {
+      console.error(bodyErr);
+      process.exit(1);
+    }
+    let bundles: CommitBundleSection[];
+    try {
+      bundles = parseCommitBundleBody(body);
+      validateBundleBulletsFresh(root, wip.sha, "HEAD", bundles);
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : String(e));
+      process.exit(1);
+    }
+    try {
+      message = buildCommitMessage(root, contributor, bundles, wip.sha);
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : String(e));
+      process.exit(1);
+    }
+    writeFileSync(messagePath, message);
+  } else if (existsSync(messagePath)) {
+    message = readFileSync(messagePath, "utf8");
+    if (!message.trim()) {
+      console.error("commit: semio-commit-message is empty — run prepare with bundle body first");
+      process.exit(1);
+    }
+  } else {
+    emitCommitAnalysis(root);
+    process.exit(1);
+  }
+
+  if (prepareOnly) {
+    if (!body.trim()) {
+      emitCommitAnalysis(root);
+      process.exit(1);
+    }
+    const tagName = formatBundleTagName(contributor);
+    emitStdout(
+      formatCommitPrepareAgentReply({
+        tagName,
+        wipSha: wip.sha,
+        messageFile: ".git/semio-commit-message",
+        commitMessage: message,
+      }),
+    );
+    process.exit(0);
+  }
+
+  if (steps.tag || steps.squash || steps.push) assertCleanWorktree(root);
+
+  if (steps.tag) {
+    const tagName = formatBundleTagName(contributor);
+    const tag = spawnSync("git", ["tag", "-s", "-m", tagName, tagName, "HEAD"], { cwd: root, encoding: "utf8" });
+    if (tag.status !== 0) {
+      console.error((tag.stderr ?? tag.stdout ?? "git tag failed").trim());
+      process.exit(tag.status ?? 1);
+    }
+  }
+
+  if (steps.squash) {
+    const reset = spawnSync("git", ["reset", "--soft", wip.sha], { cwd: root, encoding: "utf8" });
+    if (reset.status !== 0) {
+      console.error((reset.stderr ?? reset.stdout ?? "git reset --soft failed").trim());
+      process.exit(reset.status ?? 1);
+    }
+    writeFileSync(join(gitDir(root), "COMMIT_EDITMSG"), message);
+    const commit = spawnSync("git", ["commit", "-S", "-F", join(gitDir(root), "COMMIT_EDITMSG")], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    if (commit.status !== 0) {
+      console.error((commit.stderr ?? commit.stdout ?? "git commit failed").trim());
+      process.exit(commit.status ?? 1);
+    }
+  }
+
+  if (steps.push) {
+    const push = spawnSync("git", ["push", "--follow-tags"], { cwd: root, encoding: "utf8" });
+    if (push.status !== 0) {
+      console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
+      process.exit(push.status ?? 1);
+    }
+  }
+
+  emitStdout(message);
+  process.exit(0);
+}
+
+//#endregion 🔖commit

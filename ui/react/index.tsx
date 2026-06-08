@@ -4366,7 +4366,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
 
   if (labelLayoutKind === "treeGroupHeader") {
     const treeGroupHeaderLabel = (
-      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-element group-hover:text-emphasized h-[22px]" style={treeItemLabelStyle}>
+      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate h-[22px]" style={treeItemLabelStyle}>
         {displayLabel}
       </span>
     );
@@ -4402,7 +4402,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   const propertyLabelElement = isTree ? (
     <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
       <div className="inline-flex min-w-0 h-[22px]">
-        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-[22px] pl-[4px]">
+        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors h-[22px] pl-[4px]">
           {resolvedLabel}
         </span>
       </div>
@@ -8657,7 +8657,6 @@ const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 1
 const treeRowHeightPx = 24;
 const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
 const treeRowShellClassName = "relative h-[24px] min-h-[24px] max-h-[24px] select-none overflow-hidden min-w-0";
-const treeRowInteractiveClassName = "hover:bg-hover-interactive-fill hover:text-emphasized group";
 const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
 const treeRowContentClassName = "min-w-0 h-full flex items-center";
 const detailPanelPropertyLabelColumnWidthPx = 96;
@@ -8683,10 +8682,10 @@ const treeSubtreeGapPx = 0;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
 const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150";
-const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none text-element group-hover:text-emphasized select-text";
+const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";
 const treeItemSecondaryTextClassName = "text-[10px] leading-none text-muted-foreground";
-const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element group-hover:text-emphasized transition-colors select-text";
-const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-element group-hover:text-emphasized transition-colors";
+const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide transition-colors select-text";
+const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 transition-colors";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
 const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName) => (
@@ -9473,16 +9472,16 @@ const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="t
 
 const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]`;
 
-/** @emoji 🎨 Tree row background from committed selection vs pointer-driven {@link TreeRootProps.highlightedIds}. */
-function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
+/** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
+function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
   const hiddenClass = isHidden ? "opacity-50 text-muted-foreground" : "";
   if (isSelected) {
-    return cn("bg-active-base text-active-foreground", hiddenClass);
+    return cn("group", interactiveActiveFillClass, hiddenClass);
   }
   if (isHighlighted) {
-    return cn("bg-hover-interactive-fill text-emphasized", hiddenClass);
+    return cn("group", "bg-hover-interactive-fill text-emphasized", hiddenClass);
   }
-  return hiddenClass;
+  return cn("group", "text-element", interactiveControlTransitionClass, interactiveHoverClass, hiddenClass);
 }
 
 const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuItem[]; readonly children: React.ReactNode }> = ({ items, children }) => {
@@ -9557,7 +9556,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     !onDragOver &&
     !onDragLeave &&
     !onDrop;
-  const rowClassName = cn(treeRowShellClassName, treeRowInteractiveClassName, isExpandable ? "cursor-foldable" : "cursor-selectable", className);
+  const rowClassName = cn(treeRowShellClassName, treeRowChromeClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", className);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
@@ -9704,10 +9703,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 
   const itemClasses = cn(
     treeRowShellClassName,
-    treeRowInteractiveClassName,
+    treeRowChromeClasses(isSelected, isHighlighted),
     "w-full",
     hasChildren ? "cursor-foldable" : "cursor-selectable",
-    treeRowStateClasses(isSelected, isHighlighted),
     className,
   );
 
@@ -10058,11 +10056,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const isExpandable = expandable ?? hasChildren;
   const itemClasses = cn(
     treeRowShellClassName,
-    treeRowInteractiveClassName,
+    treeRowChromeClasses(isSelected, isHighlighted, isHidden),
     "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable ? "cursor-grab active:cursor-grabbing" : "",
-    treeRowStateClasses(isSelected, isHighlighted, isHidden),
     className,
   );
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
@@ -10077,7 +10074,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         role="treeitem"
         id={id}
         data-state={open ? "open" : "closed"}
-        className={cn("group min-w-0 w-full", className)}
+        className={cn("min-w-0 w-full", treeRowChromeClasses(isSelected, isHighlighted, isHidden), className)}
         draggable={draggable}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
@@ -10126,7 +10123,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               <span
                 data-slot="tree-label"
                 title={controlHint}
-                className={cn(treeItemLabelSlotClassName, "font-medium transition-colors hover:bg-hover-interactive-fill hover:text-emphasized", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                className={cn(treeItemLabelSlotClassName, "font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                 style={treeItemLabelStyle}
                 onClick={(event) => {
                   if (event.detail > 1) return;
@@ -10468,7 +10465,7 @@ const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
 
   return (
     <span className="min-w-0 truncate leading-none">
-      <span className="text-element group-hover:text-emphasized">{item.label}</span> <span className={treeItemSecondaryTextClassName}>{item.description}</span>
+      <span className="min-w-0 truncate">{item.label}</span> <span className={treeItemSecondaryTextClassName}>{item.description}</span>
     </span>
   );
 };
@@ -21953,13 +21950,28 @@ if (treeVitest) {
       expect(shouldDispatchTreeRowPointerLeave(gap)).toBe(false);
     });
 
-    it("treeRowStateClasses uses hover tokens for highlight and active tokens for selection", () => {
-      expect(treeRowStateClasses(false, false)).toBe("");
-      expect(treeRowStateClasses(false, true)).toContain("bg-hover-interactive-fill");
-      expect(treeRowStateClasses(true, true)).toContain("bg-active-base");
-      expect(treeRowStateClasses(true, false)).toContain("bg-active-base");
-      expect(treeRowStateClasses(false, false, true)).toContain("opacity-50");
-      expect(treeRowStateClasses(true, false, true)).toContain("opacity-50");
+    it("treeRowChromeClasses uses hover tokens for highlight and active tokens for selection", () => {
+      expect(treeRowChromeClasses(false, false)).toContain("text-element");
+      expect(treeRowChromeClasses(false, true)).toContain("bg-hover-interactive-fill");
+      expect(treeRowChromeClasses(false, true)).toContain("text-emphasized");
+      expect(treeRowChromeClasses(true, true)).toContain("bg-active-base");
+      expect(treeRowChromeClasses(true, false)).toContain("bg-active-base");
+      expect(treeRowChromeClasses(true, false)).toContain("text-emphasized");
+      expect(treeRowChromeClasses(true, false)).not.toContain("bg-hover-interactive-fill");
+      expect(treeRowChromeClasses(false, false, true)).toContain("opacity-50");
+      expect(treeRowChromeClasses(true, false, true)).toContain("opacity-50");
+    });
+
+    it("renders selected tree item rows with emphasized text instead of hover gray", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeItem id="tooltip.alpha" label="Alpha" isSelected />
+        </TreeContext.Provider>,
+      );
+      expect(markup).toContain("bg-active-base");
+      expect(markup).toContain("text-emphasized");
+      expect(markup).not.toContain("text-active-foreground");
+      expect(markup).not.toMatch(/data-slot="tree-label"[^>]*text-element/);
     });
 
     it("tree selection store notifies subscribers only when selection changes", () => {

@@ -3,7 +3,7 @@
   "emoji": "📐",
   "status": "closed",
   "description": "Add bounding rectangle to flow display with alignment buttons on top (left align, vertical equal spacing, right align) and right side (top align, horizontal equal spacing, bottom align).",
-  "summary": "Moved selection align/distribute button hit regions outside the bounding rectangle: top row above, right column to the right, distribute vertical on the left edge, distribute horizontal on the bottom edge. Added overflow-visible on FlowCanvas container so outside buttons are not clipped. Updated tests to assert outside placement.",
+  "summary": "Removed extra vertical outset on top/bottom align chrome so buttons sit flush against the bounding rectangle (stack gap 0px). Horizontal left/right edges keep 4px outset.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1610"
   },
@@ -13,6 +13,8 @@
     "⚪eda0fff0911a496e9c523ecb466491a6",
     "⚪b0580940d6a145a796ced6428801b085",
     "⚪8778b0ffd2f541bc85806cb4796de015",
-    "⚪4b7be58d737644f7bc60816c1ca6e577"
+    "⚪4b7be58d737644f7bc60816c1ca6e577",
+    "⚪97c36b93a14a4cdbb1df8ba7601a5558",
+    "⚪fdb48a6327434e6e8eaef721fcb0a60e"
   ]
 }

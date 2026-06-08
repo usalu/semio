@@ -1,0 +1,15 @@
+{
+  "title": "Fix City Lod Vector Tile Quadrant Edges",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "At city LOD, vector tiles show visible quadrant/tile edges. Enable land backdrop fill at city and finer LOD bands to hide tile seams.",
+  "summary": "City and finer vector-tile LOD bands (city, district, street, building) now enable `draw_land_backdrop` so each tile is filled with `land_fill` before landcover polygons are drawn. This hides visible tile-quadrant seams that appeared when only sparse landcover geometry was painted over the canvas clear color. Added `city_lod_fills_tile_backdrop_to_hide_seams` regression test; `cargo test -p gis_map city_lod` passes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1628"
+  },
+  "goal": "🎯gis🎯map",
+  "sessions": [
+    "⚪d8939972d4b24dbb93697253dce1bd53",
+    "⚪f7350ac3c4c248bcb70c4b1b77b27b22"
+  ]
+}

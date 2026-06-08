@@ -12834,9 +12834,7 @@ export function sketchpadApplyPuzzle2dSelection(
 	const ctrl = controller ?? getSketchpadShellController();
 	if (!ctrl || !scope.kitId) return;
 	if (scope.pane === "kit-wires") {
-		const nextSelection = { ...ctrl.routeSelection, kitWiresNodeIds: [...puzzle2dIds] };
-		ctrl.setRouteSelection(nextSelection);
-		ctrl.syncKitWiresSelectionToVfs(scope.kitId, nextSelection.kitWiresNodeIds);
+		ctrl.setRouteSelection({ ...ctrl.routeSelection, kitWiresNodeIds: [...puzzle2dIds] });
 		return;
 	}
 	if (scope.pane === "diagram" || scope.pane === "scene") {
@@ -13784,9 +13782,19 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 	}
 }
 
+function sketchpadSameStringIds(left: readonly string[] | undefined, right: readonly string[]): boolean {
+	const a = left ?? [];
+	if (a.length !== right.length) return false;
+	for (let index = 0; index < a.length; index += 1) {
+		if (a[index] !== right[index]) return false;
+	}
+	return true;
+}
+
 /** @emoji 📁 Per-app virtual file system surface backed by {@link SketchpadShellController}. */
 class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFileSystemModel> {
 	private readonly detachKitWiresHover?: () => void;
+	private readonly detachKitWiresSelection?: () => void;
 
 	constructor(
 		readonly vfsAppId: string,
@@ -13795,17 +13803,25 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 		super("virtualFileSystem", virtualFileSystemSurfaceId(vfsAppId), SKETCHPAD_SHELL_CONTROLLER_ID, { rows: [] }, platform);
 		if (vfsAppId !== SKETCHPAD_KIT_APP_ID) return;
 		const ctrl = getSketchpadShellController();
-		if (!ctrl) return;
+		const shellStore = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
+		if (!ctrl || !shellStore) return;
 		this.detachKitWiresHover = ctrl.kitWiresHoverStore.subscribe(() => {
 			const hoveredRowId = ctrl.kitWiresHoverStore.getSnapshot();
 			const snap = this.getSnapshot();
 			if (snap.hoveredRowId === hoveredRowId) return;
 			this.setSnapshot({ ...snap, hoveredRowId });
 		});
+		this.detachKitWiresSelection = shellStore.subscribe(() => {
+			const selectedRowIds = [...shellStore.getSnapshot().routeSelection.kitWiresNodeIds];
+			const snap = this.getSnapshot();
+			if (sketchpadSameStringIds(snap.selectedRowIds, selectedRowIds)) return;
+			this.setSnapshot({ ...snap, selectedRowIds });
+		});
 	}
 
 	override dispose(): void {
 		this.detachKitWiresHover?.();
+		this.detachKitWiresSelection?.();
 		super.dispose();
 	}
 
@@ -16808,6 +16824,28 @@ if (import.meta.vitest) {
 			expect(ctrl.navigationPath).toBe(
 				`/kits/${kitId}${sketchpadRouteSelectionUriFilters({ pieceIds: [], connectionIds: [], kitWiresNodeIds: [typeId], kitWiresHoveredNodeId: null })}`,
 			);
+			ctrl.dispose();
+		});
+
+		it("syncs kit wires selection to vfs component snapshot without manual refresh", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({ id: kitId, name: "K", types: [{ id: typeId, name: "Column" }], designs: [] } as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			platform.uri = `/kits/${kitId}`;
+			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
+			const vfs = platform.getComponent(virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID));
+			expect(vfs?.getSnapshot().selectedRowIds ?? []).toEqual([]);
+			platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dSelection", {
+				instanceId: sketchpadKitWiresInstanceId(kitId),
+				puzzle2dIds: [typeId],
+			});
+			expect(vfs?.getSnapshot().selectedRowIds).toEqual([typeId]);
 			ctrl.dispose();
 		});
 

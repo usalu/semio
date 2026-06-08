@@ -1115,19 +1115,22 @@ function flowSensibleSliderMax(value: number): number {
   return Math.max(nice * magnitude, v);
 }
 
-function flowSliderStepFromValue(value: number): number {
-  if (Number.isInteger(value)) return 1;
-  return flowSliderStepFromDecimalPlaces(flowDecimalPlacesFromNumberToken(String(value)));
-}
-
-/** @emoji 🎚️ Derives a tight min/max/step for a slider from its current value. */
-export function flowSensibleSliderRange(value: number): { readonly min: number; readonly max: number; readonly step: number } {
-  const step = flowSliderStepFromValue(value);
+/** @emoji 🎚️ Derives a tight min/max/step for a slider from a typed number token. */
+export function flowSensibleSliderRangeFromToken(
+  token: string,
+  value: number,
+): { readonly min: number; readonly max: number; readonly step: number } {
+  const step = flowSliderStepFromDecimalPlaces(flowDecimalPlacesFromNumberToken(token));
   if (value < 0) {
     const bound = flowSensibleSliderMax(value);
     return { min: -bound, max: bound, step };
   }
   return { min: 0, max: flowSensibleSliderMax(value), step };
+}
+
+/** @emoji 🎚️ Derives a tight min/max/step for a slider from its current value. */
+export function flowSensibleSliderRange(value: number): { readonly min: number; readonly max: number; readonly step: number } {
+  return flowSensibleSliderRangeFromToken(String(value), value);
 }
 
 /** @emoji 🎚️ Parses flow spotlight input as a slider value or min..max range. */
@@ -1149,8 +1152,8 @@ export function flowParseSpotlightSliderQuery(query: string): FlowSpotlightSlide
   if (!/^-?\d+(?:\.\d+)?$/.test(trimmed)) return null;
   const value = Number(trimmed);
   if (!Number.isFinite(value)) return null;
-  const { min, max, step } = flowSensibleSliderRange(value);
-  return { value, min, max, step, label: String(value) };
+  const { min, max, step } = flowSensibleSliderRangeFromToken(trimmed, value);
+  return { value, min, max, step, label: trimmed };
 }
 
 /** @emoji 🎚️ Builds a flow widget descriptor for a spotlight slider spec. */
@@ -1610,38 +1613,80 @@ export function flowSelectionUnionBoundsEqual(
 const FLOW_SELECTION_ALIGN_BUTTON_PX = 24;
 const FLOW_SELECTION_ALIGN_BUTTON_GAP_PX = 2;
 const FLOW_SELECTION_ALIGN_EDGE_OUTSET_PX = 4;
+const FLOW_SELECTION_ALIGN_EDGE_STACK_GAP_PX = 0;
+
+interface FlowSelectionAlignChromeLayout {
+  readonly topRow: readonly ScreenRect[];
+  readonly rightCol: readonly ScreenRect[];
+  readonly leftDistribute: ScreenRect | null;
+  readonly bottomDistribute: ScreenRect | null;
+  readonly topAnchor: { readonly x: number; readonly y: number };
+  readonly rightAnchor: { readonly x: number; readonly y: number };
+  readonly leftAnchor: { readonly x: number; readonly y: number } | null;
+  readonly bottomAnchor: { readonly x: number; readonly y: number } | null;
+  readonly gapPx: number;
+}
+
+/** @emoji 📐 Shared anchor layout for selection align chrome and pointer hit testing. */
+export function flowSelectionAlignChromeLayout(
+  rect: FlowSelectionUnionBoundsScreen,
+  selectionCount: number,
+): FlowSelectionAlignChromeLayout | null {
+  if (selectionCount < 2) return null;
+  const btn = FLOW_SELECTION_ALIGN_BUTTON_PX;
+  const gap = FLOW_SELECTION_ALIGN_BUTTON_GAP_PX;
+  const outset = FLOW_SELECTION_ALIGN_EDGE_OUTSET_PX;
+  const stackGap = FLOW_SELECTION_ALIGN_EDGE_STACK_GAP_PX;
+  const centerX = rect.x + rect.width / 2;
+  const centerY = rect.y + rect.height / 2;
+  const topRowW = btn * 3 + gap * 2;
+  const rightColH = btn * 3 + gap * 2;
+  const topY = rect.y - stackGap - btn;
+  const topStartX = centerX - topRowW / 2;
+  const rightX = rect.x + rect.width + outset;
+  const rightStartY = centerY - rightColH / 2;
+  const topRow: ScreenRect[] = [
+    { x: topStartX, y: topY, width: btn, height: btn },
+    { x: topStartX + btn + gap, y: topY, width: btn, height: btn },
+    { x: topStartX + (btn + gap) * 2, y: topY, width: btn, height: btn },
+  ];
+  const rightCol: ScreenRect[] = [
+    { x: rightX, y: rightStartY, width: btn, height: btn },
+    { x: rightX, y: rightStartY + btn + gap, width: btn, height: btn },
+    { x: rightX, y: rightStartY + (btn + gap) * 2, width: btn, height: btn },
+  ];
+  return {
+    topRow,
+    rightCol,
+    leftDistribute:
+      selectionCount >= 3 ? { x: rect.x - outset - btn, y: centerY - btn / 2, width: btn, height: btn } : null,
+    bottomDistribute:
+      selectionCount >= 3 ? { x: centerX - btn / 2, y: rect.y + rect.height + stackGap, width: btn, height: btn } : null,
+    topAnchor: { x: centerX, y: topY },
+    rightAnchor: { x: rightX, y: centerY },
+    leftAnchor: selectionCount >= 3 ? { x: rect.x - outset, y: centerY } : null,
+    bottomAnchor: selectionCount >= 3 ? { x: centerX, y: rect.y + rect.height + stackGap } : null,
+    gapPx: gap,
+  };
+}
 
 /** @emoji 🎯 Screen-space hit regions for selection align controls (container-relative coords). */
 export function flowSelectionAlignHitRegions(
   rect: FlowSelectionUnionBoundsScreen,
   selectionCount: number,
 ): readonly { readonly mode: FlowSelectionAlignMode; readonly rect: ScreenRect }[] {
-  const btn = FLOW_SELECTION_ALIGN_BUTTON_PX;
-  const gap = FLOW_SELECTION_ALIGN_BUTTON_GAP_PX;
-  const outset = FLOW_SELECTION_ALIGN_EDGE_OUTSET_PX;
-  const regions: { mode: FlowSelectionAlignMode; rect: ScreenRect }[] = [];
-  if (selectionCount >= 2) {
-    const topY = rect.y - outset - btn;
-    const topRowW = btn * 3 + gap * 2;
-    const topStartX = rect.x + rect.width / 2 - topRowW / 2;
-    regions.push({ mode: "alignLeft", rect: { x: topStartX, y: topY, width: btn, height: btn } });
-    regions.push({ mode: "alignHorizontal", rect: { x: topStartX + btn + gap, y: topY, width: btn, height: btn } });
-    regions.push({ mode: "alignRight", rect: { x: topStartX + (btn + gap) * 2, y: topY, width: btn, height: btn } });
-    const rightX = rect.x + rect.width + outset;
-    const rightColH = btn * 3 + gap * 2;
-    const rightStartY = rect.y + rect.height / 2 - rightColH / 2;
-    regions.push({ mode: "alignTop", rect: { x: rightX, y: rightStartY, width: btn, height: btn } });
-    regions.push({ mode: "alignVertical", rect: { x: rightX, y: rightStartY + btn + gap, width: btn, height: btn } });
-    regions.push({ mode: "alignBottom", rect: { x: rightX, y: rightStartY + (btn + gap) * 2, width: btn, height: btn } });
-    if (selectionCount >= 3) {
-      const leftX = rect.x - outset - btn;
-      const leftY = rect.y + rect.height / 2 - btn / 2;
-      regions.push({ mode: "distributeVertical", rect: { x: leftX, y: leftY, width: btn, height: btn } });
-      const bottomX = rect.x + rect.width / 2 - btn / 2;
-      const bottomY = rect.y + rect.height + outset;
-      regions.push({ mode: "distributeHorizontal", rect: { x: bottomX, y: bottomY, width: btn, height: btn } });
-    }
-  }
+  const layout = flowSelectionAlignChromeLayout(rect, selectionCount);
+  if (!layout) return [];
+  const regions: { mode: FlowSelectionAlignMode; rect: ScreenRect }[] = [
+    { mode: "alignLeft", rect: layout.topRow[0]! },
+    { mode: "alignHorizontal", rect: layout.topRow[1]! },
+    { mode: "alignRight", rect: layout.topRow[2]! },
+    { mode: "alignTop", rect: layout.rightCol[0]! },
+    { mode: "alignVertical", rect: layout.rightCol[1]! },
+    { mode: "alignBottom", rect: layout.rightCol[2]! },
+  ];
+  if (layout.leftDistribute) regions.push({ mode: "distributeVertical", rect: layout.leftDistribute });
+  if (layout.bottomDistribute) regions.push({ mode: "distributeHorizontal", rect: layout.bottomDistribute });
   return regions;
 }
 
@@ -1702,38 +1747,44 @@ function FlowSelectionBoundsButton({
 
 /** @emoji 📐 Selection union bounding rectangle with edge alignment controls. */
 function FlowSelectionBoundsOverlay({ rect, selectionCount, onAlign }: FlowSelectionBoundsOverlayProps): React.JSX.Element {
-  const showAlignControls = selectionCount >= 2;
-  const distribute = selectionCount >= 3;
-  const regions = showAlignControls ? flowSelectionAlignHitRegions(rect, selectionCount) : [];
-  const topRow = regions.slice(0, 3);
-  const rightCol = regions.slice(3, 6);
-  const leftBtn = regions[6];
-  const bottomBtn = regions[7];
+  const layout = flowSelectionAlignChromeLayout(rect, selectionCount);
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-visible" aria-hidden data-testid="flow-selection-bounds">
       <div
         className="pointer-events-none absolute border border-emphasized"
         style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
       />
-      {showAlignControls ? (
+      {layout ? (
         <>
-          <div className="pointer-events-none absolute flex gap-0.5" style={{ left: topRow[0]?.rect.x, top: topRow[0]?.rect.y }}>
+          <div
+            className="pointer-events-none absolute flex -translate-x-1/2"
+            style={{ left: layout.topAnchor.x, top: layout.topAnchor.y, gap: layout.gapPx }}
+          >
             <FlowSelectionBoundsButton icon="arrow-left" label="Align left" onPress={() => onAlign("alignLeft")} />
             <FlowSelectionBoundsButton icon="arrow-right-left" label="Align horizontal" onPress={() => onAlign("alignHorizontal")} />
             <FlowSelectionBoundsButton icon="arrow-right" label="Align right" onPress={() => onAlign("alignRight")} />
           </div>
-          <div className="pointer-events-none absolute flex flex-col gap-0.5" style={{ left: rightCol[0]?.rect.x, top: rightCol[0]?.rect.y }}>
+          <div
+            className="pointer-events-none absolute flex flex-col -translate-y-1/2"
+            style={{ left: layout.rightAnchor.x, top: layout.rightAnchor.y, gap: layout.gapPx }}
+          >
             <FlowSelectionBoundsButton icon="arrow-up" label="Align top" onPress={() => onAlign("alignTop")} />
             <FlowSelectionBoundsButton icon="chevrons-up-down" label="Align vertical" onPress={() => onAlign("alignVertical")} />
             <FlowSelectionBoundsButton icon="arrow-down" label="Align bottom" onPress={() => onAlign("alignBottom")} />
           </div>
-          {distribute && leftBtn ? (
-            <div className="pointer-events-none absolute" style={{ left: leftBtn.rect.x, top: leftBtn.rect.y }}>
+          {layout.leftAnchor ? (
+            <div
+              className="pointer-events-none absolute -translate-x-full -translate-y-1/2"
+              style={{ left: layout.leftAnchor.x, top: layout.leftAnchor.y }}
+            >
               <FlowSelectionBoundsButton icon="grip-vertical" label="Distribute vertically" onPress={() => onAlign("distributeVertical")} />
             </div>
           ) : null}
-          {distribute && bottomBtn ? (
-            <div className="pointer-events-none absolute" style={{ left: bottomBtn.rect.x, top: bottomBtn.rect.y }}>
+          {layout.bottomAnchor ? (
+            <div
+              className="pointer-events-none absolute -translate-x-1/2"
+              style={{ left: layout.bottomAnchor.x, top: layout.bottomAnchor.y }}
+            >
               <FlowSelectionBoundsButton icon="more-horizontal" label="Distribute horizontally" onPress={() => onAlign("distributeHorizontal")} />
             </div>
           ) : null}
@@ -1847,7 +1898,10 @@ export interface FlowCanvasProps {
   readonly automaticLod?: boolean;
   readonly lod?: DagDrawLodKind;
   readonly onLodChange?: (lod: DagDrawLodKind) => void;
+  readonly proximityDistance?: number;
 }
+
+export const FLOW_DEFAULT_PROXIMITY_DISTANCE = 48;
 
 export function parseFlowPreselectJson(json: string): FlowPreselectSnapshot {
   try {
@@ -1930,6 +1984,7 @@ export function FlowCanvas({
   automaticLod = true,
   lod,
   onLodChange,
+  proximityDistance = FLOW_DEFAULT_PROXIMITY_DISTANCE,
 }: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1955,6 +2010,7 @@ export function FlowCanvas({
   const onPreviewOffChangeRef = useRef(onPreviewOffChange);
   const onLodChangeRef = useRef(onLodChange);
   const lastAutomaticLodRef = useRef<boolean | null>(null);
+  const lastProximityDistanceRef = useRef<number | null>(null);
   const lastForcedLodRef = useRef<string | null>(null);
   const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
   const [surfaceContextMenu, setSurfaceContextMenu] = useState<{
@@ -2070,6 +2126,16 @@ export function FlowCanvas({
     }
   }, [automaticLod, lod]);
 
+  const syncProximityDistance = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const next = Math.max(0, proximityDistance ?? FLOW_DEFAULT_PROXIMITY_DISTANCE);
+    if (lastProximityDistanceRef.current !== next) {
+      session.setProximityDistance(next);
+      lastProximityDistanceRef.current = next;
+    }
+  }, [proximityDistance]);
+
   const reportDrawLod = useCallback(() => {
     const session = sessionRef.current;
     if (!session || !onLodChangeRef.current) return;
@@ -2155,6 +2221,7 @@ export function FlowCanvas({
   const renderFrame = useCallback(() => {
     try {
       syncLodMode();
+      syncProximityDistance();
       syncVelloTheme();
       const session = sessionRef.current;
       session?.renderFrame();
@@ -2170,13 +2237,14 @@ export function FlowCanvas({
     } catch {
       /* gpu not ready */
     }
-  }, [reportDrawLod, syncLodMode, syncSelectionBoundsOverlay, syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncProximityDistance, syncSelectionBoundsOverlay, syncVelloTheme]);
 
   useEffect(() => {
     lastAutomaticLodRef.current = null;
+    lastProximityDistanceRef.current = null;
     lastForcedLodRef.current = null;
     renderFrame();
-  }, [automaticLod, lod, renderFrame]);
+  }, [automaticLod, lod, proximityDistance, renderFrame]);
 
   const evaluate = useCallback(() => {
     const session = sessionRef.current;
@@ -3026,6 +3094,12 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("flow proximity connect", () => {
+    it("exports default proximity distance for window options", () => {
+      expect(FLOW_DEFAULT_PROXIMITY_DISTANCE).toBe(48);
+    });
+  });
+
   describe("flow store", () => {
     it("ephemeral store never loads or saves", () => {
       const store = createEphemeralFlowStore();
@@ -3098,11 +3172,21 @@ if (import.meta.vitest) {
     });
 
     it("parses decimal single numbers with matching step", () => {
+      const spec = flowParseSpotlightSliderQuery("1.3");
+      expect(spec).toEqual({ value: 1.3, min: 0, max: 10, step: 0.1, label: "1.3" });
+    });
+
+    it("parses decimal single numbers with wider sensible max", () => {
       const spec = flowParseSpotlightSliderQuery("10.2");
       expect(spec?.value).toBe(10.2);
       expect(spec?.min).toBe(0);
       expect(spec?.max).toBe(20);
       expect(spec?.step).toBe(0.1);
+    });
+
+    it("preserves typed decimal precision for trailing zeros", () => {
+      const spec = flowParseSpotlightSliderQuery("1.30");
+      expect(spec).toEqual({ value: 1.3, min: 0, max: 10, step: 0.01, label: "1.30" });
     });
 
     it("parses min..max range with decimal precision", () => {
@@ -3382,8 +3466,14 @@ if (import.meta.vitest) {
         "alignVertical",
         "alignBottom",
       ]);
-      expect(regions[0]!.rect.y + regions[0]!.rect.height).toBeLessThanOrEqual(rect.y);
+      expect(regions[0]!.rect.y + regions[0]!.rect.height).toBeCloseTo(rect.y, 5);
       expect(regions[3]!.rect.x).toBeGreaterThanOrEqual(rect.x + rect.width);
+      const centerX = rect.x + rect.width / 2;
+      const centerY = rect.y + rect.height / 2;
+      const topRowMidX = (regions[0]!.rect.x + regions[2]!.rect.x + regions[2]!.rect.width) / 2;
+      const rightColMidY = (regions[3]!.rect.y + regions[5]!.rect.y + regions[5]!.rect.height) / 2;
+      expect(topRowMidX).toBeCloseTo(centerX, 5);
+      expect(rightColMidY).toBeCloseTo(centerY, 5);
       const left = regions[0]!.rect;
       expect(flowPointerHitsSelectionAlign(left.x + 4, left.y + 4, rect, 2)).toBe("alignLeft");
       expect(flowPointerHitsSelectionAlign(rect.x + rect.width / 2, rect.y + rect.height / 2, rect, 2)).toBeNull();
@@ -3391,8 +3481,10 @@ if (import.meta.vitest) {
       expect(distributeRegions.length).toBe(8);
       expect(distributeRegions[6]!.mode).toBe("distributeVertical");
       expect(distributeRegions[6]!.rect.x + distributeRegions[6]!.rect.width).toBeLessThanOrEqual(rect.x);
+      expect(distributeRegions[6]!.rect.y + distributeRegions[6]!.rect.height / 2).toBeCloseTo(centerY, 5);
       expect(distributeRegions[7]!.mode).toBe("distributeHorizontal");
-      expect(distributeRegions[7]!.rect.y).toBeGreaterThanOrEqual(rect.y + rect.height);
+      expect(distributeRegions[7]!.rect.y).toBeCloseTo(rect.y + rect.height, 5);
+      expect(distributeRegions[7]!.rect.x + distributeRegions[7]!.rect.width / 2).toBeCloseTo(centerX, 5);
     });
 
     it("aligns selected widgets through FlowSession wasm", async () => {

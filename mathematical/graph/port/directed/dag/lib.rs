@@ -61,6 +61,11 @@ const DAG_SLIDER_KNOB_SCREEN_PX: f64 = 8.0;
 const DAG_LABEL_SCREEN_PX: f64 = 11.0;
 const DAG_LABEL_COMPACT_SCREEN_PX: f64 = 10.0;
 
+enum ComputationChannelRowSide {
+    Input,
+    Output,
+}
+
 /// 🔢 Row count for a computation node body from its IO and variadic flags.
 pub fn computation_io_row_count(input_count: usize, output_count: usize, variadic_inputs: bool, variadic_outputs: bool) -> usize {
     let input_rows = input_count + usize::from(variadic_inputs);
@@ -158,7 +163,7 @@ fn input_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f
         return None;
     }
     let (x0, x1) = if matches!(node.kind, DagNodeKind::Computation { .. }) {
-        computation_input_column_x_bounds(node)?
+        computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Input)
     } else {
         let hw = node.width * 0.5;
         (node.x - hw, node.x)
@@ -179,7 +184,7 @@ fn output_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(
         return None;
     }
     let (x0, x1) = if matches!(node.kind, DagNodeKind::Computation { .. }) {
-        computation_output_column_x_bounds(node)?
+        computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Output)
     } else {
         let hw = node.width * 0.5;
         (node.x, node.x + hw)
@@ -779,11 +784,6 @@ fn computation_io_side_row_counts(node: &DagNodeSpec) -> (usize, usize) {
 fn channel_row_divider_y(node_y: f64, node_height: f64, after_row_index: usize) -> f64 {
     let hh = node_height * 0.5;
     node_y - hh + after_row_index as f64 * DAG_CHANNEL_ROW_HEIGHT
-}
-
-enum ComputationChannelRowSide {
-    Input,
-    Output,
 }
 
 fn computation_channel_row_divider_x_span(node: &DagNodeSpec, side: ComputationChannelRowSide) -> (f64, f64) {
@@ -2230,6 +2230,11 @@ impl DagHost {
         }
     }
 
+    /// 🔗 World-space proximity radius for channel auto-connect; `0` disables snapping.
+    pub fn set_proximity_distance(&mut self, world: f64) {
+        self.engine.proximity_distance_world = world.max(0.0);
+    }
+
     /// 📶 Pins WASM draw LOD when {@link DagHost::set_automatic_lod} is false; pass an empty label to follow zoom bands.
     pub fn set_forced_draw_lod_label(&mut self, label: &str) {
         let trimmed = label.trim();
@@ -2482,12 +2487,51 @@ impl DagHost {
     }
 
     fn channel_row_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
-        let lod = self.draw_lod_for_frame();
-        if lod.uses_input_row_connection_hitbox() {
-            return self.port_row_handle_hit(world_x, world_y, true, false);
+        if !self.draw_lod_for_frame().uses_channel_row_pick() {
+            return None;
         }
-        if lod.uses_channel_row_pick() {
-            return self.port_row_handle_hit(world_x, world_y, true, true);
+        self.port_row_handle_hit(world_x, world_y, true, true)
+    }
+
+    fn handle_anchor_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
+        if !self.draw_lod_for_frame().allows_connection_hit_picking() {
+            return None;
+        }
+        use cavas::vello::kurbo::Point;
+        let p = Point::new(world_x, world_y);
+        for (&hid, handle) in self.engine.handles.iter().rev() {
+            let Some(node) = self.engine.nodes.get(&handle.node_id) else {
+                continue;
+            };
+            let pos = handle_position(node, handle);
+            let dx = p.x - pos.x;
+            let dy = p.y - pos.y;
+            let tol = handle.radius + 6.0;
+            if dx * dx + dy * dy <= tol * tol {
+                return Some(hid);
+            }
+        }
+        None
+    }
+
+    fn fixture_draggable_node_hit(&self, world_x: f64, world_y: f64) -> Option<NodeId> {
+        for idx in (0..self.fixture.nodes.len()).rev() {
+            let node = &self.fixture.nodes[idx];
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            if world_x < node.x - hw
+                || world_x > node.x + hw
+                || world_y < node.y - hh
+                || world_y > node.y + hh
+            {
+                continue;
+            }
+            let Some(nid) = self.engine_node_id_for_index(idx) else {
+                continue;
+            };
+            if self.engine.nodes.get(&nid).is_some_and(|n| n.draggable) {
+                return Some(nid);
+            }
         }
         None
     }
@@ -2508,7 +2552,7 @@ impl DagHost {
     }
 
     fn connection_hit_world(&self, world_x: f64, world_y: f64) -> (f64, f64) {
-        let Some(hid) = self.channel_row_handle_hit(world_x, world_y) else {
+        let Some(hid) = self.handle_anchor_hit(world_x, world_y) else {
             return (world_x, world_y);
         };
         let Some(handle) = self.engine.handles.get(&hid) else {
@@ -2522,24 +2566,42 @@ impl DagHost {
     }
 
     fn world_hits_handle(&self, world_x: f64, world_y: f64) -> bool {
-        if !self.draw_lod_for_frame().allows_connection_hit_picking() {
+        self.handle_anchor_hit(world_x, world_y).is_some()
+    }
+
+    fn sync_channel_row_pointer_hover(&mut self, world_x: f64, world_y: f64) {
+        if !self.draw_lod_for_frame().uses_channel_row_pick() {
+            return;
+        }
+        if !matches!(self.engine.interaction, InteractionMode::Idle) {
+            return;
+        }
+        if self.handle_anchor_hit(world_x, world_y).is_some() {
+            return;
+        }
+        self.engine.hover = self.channel_row_handle_hit(world_x, world_y);
+    }
+
+    fn try_node_rectangle_pointer_down(&mut self, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) -> bool {
+        if button != 0 || alt {
             return false;
         }
-        if self.channel_row_handle_hit(world_x, world_y).is_some() {
-            return true;
-        }
+        let Some(node_id) = self.fixture_draggable_node_hit(world_x, world_y) else {
+            return false;
+        };
         use cavas::vello::kurbo::Point;
-        let p = Point::new(world_x, world_y);
-        let snap = self.engine.render_snapshot();
-        for (_, center, radius) in &snap.handles {
-            let dx = p.x - center.x;
-            let dy = p.y - center.y;
-            let tol = radius + 6.0;
-            if dx * dx + dy * dy <= tol * tol {
-                return true;
+        use graph::pick_merge_mode_for_modifiers;
+
+        let point = Point::new(world_x, world_y);
+        self.engine.pointer_down_on_draggable_node_at(node_id, point, shift, ctrl_or_meta);
+        if self.draw_lod_for_frame().uses_channel_row_pick() {
+            if let Some(hid) = self.channel_row_handle_hit(world_x, world_y) {
+                let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.engine.selection_options.mode.as_str());
+                self.engine.select_handle_with_mode(hid, merge_mode.as_str());
+                self.engine.hover = Some(hid);
             }
         }
-        false
+        true
     }
 
     fn widget_hit_at(&self, world_x: f64, world_y: f64) -> Option<(usize, WidgetPointerKind)> {
@@ -2668,6 +2730,7 @@ impl DagHost {
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.sync_connection_hit_picking_for_lod();
+        self.sync_detail_lod_node_body_hit_exclusion();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
@@ -2676,7 +2739,18 @@ impl DagHost {
             return;
         }
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
-        if !self.world_hits_handle(hit_x, hit_y) && self.try_widget_pointer_down(world.x, world.y) {
+        if self.world_hits_handle(hit_x, hit_y) {
+            self.engine.pointer_down_screen(sx, sy, hit_x, hit_y, button, shift, ctrl_or_meta, alt);
+            self.process_engine_events();
+            self.sync_camera_from_engine();
+            return;
+        }
+        if self.try_widget_pointer_down(world.x, world.y) {
+            return;
+        }
+        if self.try_node_rectangle_pointer_down(world.x, world.y, button, shift, ctrl_or_meta, alt) {
+            self.process_engine_events();
+            self.sync_camera_from_engine();
             return;
         }
         let merge_from_modifiers = ctrl_or_meta || shift;
@@ -2718,6 +2792,7 @@ impl DagHost {
         }
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
         self.engine.pointer_move_screen(sx, sy, hit_x, hit_y, shift, ctrl_or_meta, alt);
+        self.sync_channel_row_pointer_hover(world.x, world.y);
         self.sync_minimap_pointer_hover(world.x, world.y);
         if matches!(
             self.engine.interaction,
@@ -3154,23 +3229,19 @@ impl DagHost {
         aff: &cavas::vello::kurbo::Affine,
         node: &DagNodeSpec,
         theme: &VelloThemePalette,
+        is_dimmed: bool,
     ) {
         use cavas::vello::kurbo::Rect;
         use cavas::vello::peniko::Fill;
-        let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, hovered: bool| {
-            if !selected && !hovered {
+        let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, highlighted: bool, hovered: bool| {
+            if !selected && !highlighted && !hovered {
                 return;
             }
-            let fill = if selected {
-                theme.handle_fill_selected
-            } else {
-                theme.handle_fill_hovered
-            };
-            let alpha = if selected { 56 } else { 36 };
+            let fill = dag_handle_body_fill(theme, is_dimmed, selected, highlighted, hovered);
             scene.fill(
                 Fill::NonZero,
                 *aff,
-                vello_color_with_alpha(fill, alpha),
+                fill,
                 None,
                 &Rect::new(x0, y0, x1, y1),
             );
@@ -3182,8 +3253,8 @@ impl DagHost {
             let Some(hid) = self.handle_id_for_port(&node.id, &port.id) else {
                 continue;
             };
-            let (selected, _, hovered) = self.handle_interaction_chrome(hid);
-            paint_bounds(bounds, selected, hovered);
+            let (selected, highlighted, hovered) = self.handle_interaction_chrome(hid);
+            paint_bounds(bounds, selected, highlighted, hovered);
         }
         for (port_idx, port) in node.outputs().iter().enumerate() {
             let Some(bounds) = output_port_row_hit_bounds(node, port_idx) else {
@@ -3192,8 +3263,8 @@ impl DagHost {
             let Some(hid) = self.handle_id_for_port(&node.id, &port.id) else {
                 continue;
             };
-            let (selected, _, hovered) = self.handle_interaction_chrome(hid);
-            paint_bounds(bounds, selected, hovered);
+            let (selected, highlighted, hovered) = self.handle_interaction_chrome(hid);
+            paint_bounds(bounds, selected, highlighted, hovered);
         }
     }
 
@@ -3552,7 +3623,7 @@ impl DagHost {
                     if lod.shows_computation_layout() {
                         let channel_row_pick = lod.uses_channel_row_pick();
                         if channel_row_pick {
-                            self.paint_computation_channel_row_highlights(scene, aff, node, theme);
+                            self.paint_computation_channel_row_highlights(scene, aff, node, theme, chrome.is_dimmed);
                         }
                         Self::paint_computation_column_divider(scene, *aff, node, chrome_stroke, internal_chrome_stroke);
                         self.paint_computation_channel_row_dividers(
@@ -4805,6 +4876,123 @@ mod tests {
     }
 
     #[test]
+    fn dag_host_node_drag_proximity_preview_and_connects() {
+        let inputs = vec![IoPortSpec { id: "in".into(), label: "in".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let src_w = computation_node_width("Src", &[], &outputs);
+        let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
+        let src_h = computation_node_height(0, 1, false, false);
+        let tgt_h = computation_node_height(1, 1, false, false);
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                DagNodeSpec::computation(
+                    "src".into(),
+                    "Src".into(),
+                    "Src".into(),
+                    "emoji:🔢".into(),
+                    vec![],
+                    outputs.clone(),
+                    false,
+                    false,
+                    0.0,
+                    0.0,
+                    src_w,
+                    src_h,
+                ),
+                DagNodeSpec::computation(
+                    "tgt".into(),
+                    "Tgt".into(),
+                    "Tgt".into(),
+                    "emoji:🔢".into(),
+                    inputs,
+                    outputs,
+                    false,
+                    false,
+                    220.0,
+                    0.0,
+                    tgt_w,
+                    tgt_h,
+                ),
+            ],
+            edges: vec![],
+        });
+        host.set_viewport(1280, 800, 1.0);
+        host.set_proximity_distance(120.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("normal");
+        let src_center = cavas::vello::kurbo::Point::new(0.0, 0.0);
+        let (sx, sy) = world_to_screen_px(&host, src_center);
+        host.pointer_down_screen(sx, sy, 0, false, false, false);
+        host.pointer_move_screen(sx + 200.0, sy, false, false, false);
+        assert!(host.engine.render_snapshot().pending_edge.is_some(), "proximity drag should preview edge");
+        host.pointer_up_screen(sx + 200.0, sy, false, false, false);
+        assert!(
+            host.fixture
+                .edges
+                .iter()
+                .any(|edge| edge.source == "src:out" && edge.target == "tgt:in"),
+            "proximity drag should commit edge"
+        );
+    }
+
+    #[test]
+    fn dag_host_proximity_zero_disables_node_drag_connect() {
+        let inputs = vec![IoPortSpec { id: "in".into(), label: "in".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let src_w = computation_node_width("Src", &[], &outputs);
+        let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
+        let src_h = computation_node_height(0, 1, false, false);
+        let tgt_h = computation_node_height(1, 1, false, false);
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                DagNodeSpec::computation(
+                    "src".into(),
+                    "Src".into(),
+                    "Src".into(),
+                    "emoji:🔢".into(),
+                    vec![],
+                    outputs.clone(),
+                    false,
+                    false,
+                    0.0,
+                    0.0,
+                    src_w,
+                    src_h,
+                ),
+                DagNodeSpec::computation(
+                    "tgt".into(),
+                    "Tgt".into(),
+                    "Tgt".into(),
+                    "emoji:🔢".into(),
+                    inputs,
+                    outputs,
+                    false,
+                    false,
+                    220.0,
+                    0.0,
+                    tgt_w,
+                    tgt_h,
+                ),
+            ],
+            edges: vec![],
+        });
+        host.set_viewport(1280, 800, 1.0);
+        host.set_proximity_distance(0.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("normal");
+        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new(0.0, 0.0));
+        host.pointer_down_screen(sx, sy, 0, false, false, false);
+        host.pointer_move_screen(sx + 200.0, sy, false, false, false);
+        assert!(host.engine.render_snapshot().pending_edge.is_none());
+        host.pointer_up_screen(sx + 200.0, sy, false, false, false);
+        assert!(host.fixture.edges.is_empty());
+    }
+
+    #[test]
     fn hidden_lod_connection_hit_picking_disabled() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
@@ -4835,7 +5023,7 @@ mod tests {
     }
 
     #[test]
-    fn normal_lod_input_row_hitbox_starts_edge_draw() {
+    fn normal_lod_input_row_drags_node_handle_anchor_starts_edge_draw() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
@@ -4851,6 +5039,13 @@ mod tests {
         );
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_down(sx, sy, false);
+        assert!(
+            matches!(host.engine.interaction, InteractionMode::DragNode { .. }),
+            "interior rectangle drag should move the node"
+        );
+        host.pointer_up(sx, sy);
+        let (hsx, hsy) = world_to_screen_px(&host, handle);
+        host.pointer_down(hsx, hsy, false);
         assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
     }
 
@@ -4876,12 +5071,17 @@ mod tests {
         let title_probe = cavas::vello::kurbo::Point::new(divider_x, (header_top + header_bottom) * 0.5);
         let (body_sx, body_sy) = world_to_screen_px(&host, title_probe);
         host.pointer_move_screen(body_sx, body_sy, false, false, false);
+        assert!(host.hovered_node_id().as_deref() == Some("combine"));
+        assert!(host.engine.hover.is_some());
+        let (name_x, name_y) = computation_name_world_center(&combine, &combine.name, dag_label_paint_px(1.0, 0), 1.0);
+        let (clear_sx, clear_sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new(name_x, name_y));
+        host.pointer_move_screen(clear_sx, clear_sy, false, false, false);
         assert!(host.hovered_node_id().is_none());
         assert!(host.engine.hover.is_none());
     }
 
     #[test]
-    fn detail_lod_output_row_hitbox_starts_edge_draw() {
+    fn visible_handle_lod_row_center_does_not_start_edge_draw() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
@@ -4894,40 +5094,50 @@ mod tests {
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_down(sx, sy, false);
+        assert!(
+            !matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }),
+            "visible handles require anchor hit for wire draw"
+        );
+        let (hsx, hsy) = world_to_screen_px(&host, handle);
+        host.pointer_down(hsx, hsy, false);
         assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
     }
 
     #[test]
-    fn output_port_row_hit_bounds_span_output_column() {
-        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
-        let outputs = vec![
-            IoPortSpec { id: "x".into(), label: "x".into() },
-            IoPortSpec { id: "y".into(), label: "y".into() },
-        ];
-        let width = computation_node_width("Node", &inputs, &outputs);
-        let height = computation_node_height(1, 2, false, false);
-        let node = DagNodeSpec::computation(
-            "n".into(),
-            "Node".into(),
-            "Node".into(),
-            "emoji:🔢".into(),
-            inputs,
-            outputs,
-            false,
-            false,
-            0.0,
-            0.0,
-            width,
-            height,
-        );
-        let (col_left, col_right) = computation_output_column_x_bounds(&node).expect("output column");
-        let (x0, _, x1, _) = output_port_row_hit_bounds(&node, 1).expect("row");
-        assert!((x0 - col_left).abs() < 1e-9);
-        assert!((x1 - col_right).abs() < 1e-9);
+    fn detail_lod_channel_row_drags_node_without_prior_selection() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("micro");
+        let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+        let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
+        let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
+        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let handle = handle_world(&host, "combine:b");
+        assert!((row_center.x - handle.x).abs() > 4.0);
+        let (sx, sy) = world_to_screen_px(&host, row_center);
+        host.pointer_down(sx, sy, false);
+        assert!(matches!(host.engine.interaction, InteractionMode::DragNode { .. }));
+        assert!(host.selected_node_ids().contains(&"combine".to_string()));
     }
 
     #[test]
-    fn input_port_row_hit_bounds_span_input_column() {
+    fn detail_lod_title_row_drags_node() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("detail");
+        let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+        let port_idx = combine.inputs().iter().position(|p| p.id == "a").expect("port a");
+        let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
+        let title_probe = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let (sx, sy) = world_to_screen_px(&host, title_probe);
+        host.pointer_down(sx, sy, false);
+        assert!(matches!(host.engine.interaction, InteractionMode::DragNode { .. }));
+    }
+
+    #[test]
+    fn input_port_row_hit_bounds_span_input_channel() {
         let inputs = vec![
             IoPortSpec { id: "a".into(), label: "a".into() },
             IoPortSpec { id: "b".into(), label: "b".into() },
@@ -4949,10 +5159,41 @@ mod tests {
             width,
             height,
         );
-        let (col_left, col_right) = computation_input_column_x_bounds(&node).expect("input column");
+        let hw = width * 0.5;
+        let divider_x = computation_column_divider_x(&node).expect("divider");
         let (x0, _, x1, _) = input_port_row_hit_bounds(&node, 1).expect("row");
-        assert!((x0 - col_left).abs() < 1e-9);
-        assert!((x1 - col_right).abs() < 1e-9);
+        assert!((x0 - (node.x - hw)).abs() < 1e-9);
+        assert!((x1 - divider_x).abs() < 1e-9);
+    }
+
+    #[test]
+    fn output_port_row_hit_bounds_span_output_channel() {
+        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
+        let outputs = vec![
+            IoPortSpec { id: "x".into(), label: "x".into() },
+            IoPortSpec { id: "y".into(), label: "y".into() },
+        ];
+        let width = computation_node_width("Node", &inputs, &outputs);
+        let height = computation_node_height(1, 2, false, false);
+        let node = DagNodeSpec::computation(
+            "n".into(),
+            "Node".into(),
+            "Node".into(),
+            "emoji:🔢".into(),
+            inputs,
+            outputs,
+            false,
+            false,
+            0.0,
+            0.0,
+            width,
+            height,
+        );
+        let hw = width * 0.5;
+        let divider_x = computation_column_divider_x(&node).expect("divider");
+        let (x0, _, x1, _) = output_port_row_hit_bounds(&node, 1).expect("row");
+        assert!((x0 - divider_x).abs() < 1e-9);
+        assert!((x1 - (node.x + hw)).abs() < 1e-9);
     }
 
     #[test]

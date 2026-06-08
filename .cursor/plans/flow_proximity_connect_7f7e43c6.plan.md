@@ -4,25 +4,25 @@ overview: "Add proximity-based auto-connect to the flow DAG: while dragging a no
 todos:
   - id: engine-distance
     content: Add proximity_distance_world to GraphEngine and make wire-snap tolerance world-based (0 disables) in mathematical/graph/lib.rs
-    status: in_progress
+    status: completed
   - id: engine-replace
     content: Add allow_target_replace to is_valid_connection and remove existing target edge on commit (1-to-1 replace)
-    status: pending
+    status: completed
   - id: engine-nodedrag
     content: Implement node-drag proximity detection, pending_edge preview, hover highlight, and commit in pointer_move/up
-    status: pending
+    status: completed
   - id: plumb-rust
     content: Add set_proximity_distance to DagHost, FlowState, and FlowSession (setProximityDistance wasm method)
-    status: pending
+    status: completed
   - id: canvas-prop
     content: Add proximityDistance prop to FlowCanvas and apply it to session via effect (mirror automaticLod)
-    status: pending
+    status: completed
   - id: window-option
     content: Add Proximity slider WindowMeasure + setProximityDistance command in FlowPlayController and pass prop from FlowPlayPaneSurfaceHost
-    status: pending
+    status: completed
   - id: tests
     content: Extend engine, DAG host, and flow tests for proximity connect, replace semantics, and 0-disables
-    status: pending
+    status: completed
 isProject: false
 ---
 

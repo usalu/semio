@@ -39,6 +39,7 @@ import {
   type DagDrawLodKind,
   type DagLodModeKind,
   buildFlowContextMenuItems,
+  FLOW_DEFAULT_PROXIMITY_DISTANCE,
   type FlowCanvasCommandRequest,
   type FlowCanvasContextMenuContext,
   type FlowContextMenuDispatch,
@@ -184,6 +185,7 @@ export class FlowPlayController extends Controller {
   private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
   private lodModeByInstance: Record<string, DagLodModeKind> = {};
   private effectiveLod: DagDrawLodKind = "normal";
+  private proximityDistance = FLOW_DEFAULT_PROXIMITY_DISTANCE;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -238,6 +240,10 @@ export class FlowPlayController extends Controller {
     return this.lodModeByInstance[scopeId] ?? this.lodMode;
   }
 
+  proximityDistanceValue(): number {
+    return this.proximityDistance;
+  }
+
   private lodMeasure(scopeId: string): WindowMeasure {
     return {
       kind: "select",
@@ -252,8 +258,21 @@ export class FlowPlayController extends Controller {
     };
   }
 
+  private proximityMeasure(): WindowMeasure {
+    return {
+      kind: "slider",
+      id: "flow-proximity-distance",
+      label: "Proximity",
+      value: this.proximityDistance,
+      min: 0,
+      max: 240,
+      step: 4,
+      onChange: { controllerId: FLOW_PLAY_CONTROLLER_ID, command: "setProximityDistance" },
+    };
+  }
+
   private windowMeasures(): readonly WindowMeasure[] {
-    return [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID)];
+    return [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID), this.proximityMeasure()];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -412,6 +431,16 @@ export class FlowPlayController extends Controller {
       if (scopeId !== FLOW_PLAY_WINDOW_KIND_ID) return;
       if (this.effectiveLod === lod) return;
       this.effectiveLod = lod;
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (command === "setProximityDistance") {
+      const value = (args as { value?: number }).value;
+      if (typeof value !== "number" || !Number.isFinite(value)) return;
+      const next = Math.max(0, value);
+      if (this.proximityDistance === next) return;
+      this.proximityDistance = next;
       this.rebuildShellMode();
       this.emit();
       return;
@@ -634,6 +663,25 @@ if (import.meta.vitest) {
       const lodSelect = measures.find((measure) => measure.kind === "select" && measure.label === "LOD");
       const automatic = lodSelect?.kind === "select" ? lodSelect.items.find((item) => item.value === DAG_LOD_MODE_AUTOMATIC) : undefined;
       expect(automatic?.label).toContain("Detail");
+    });
+
+    it("proximity window measure defaults and updates via command", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      expect(ctrl.proximityDistanceValue()).toBe(FLOW_DEFAULT_PROXIMITY_DISTANCE);
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const proximity = measures.find((measure) => measure.kind === "slider" && measure.label === "Proximity");
+      expect(proximity?.kind).toBe("slider");
+      if (proximity?.kind === "slider") {
+        expect(proximity.value).toBe(FLOW_DEFAULT_PROXIMITY_DISTANCE);
+      }
+      ctrl.run("setProximityDistance", { value: 0 });
+      expect(ctrl.proximityDistanceValue()).toBe(0);
+      const updated = ctrl.mainMode.windowKinds[0]?.measures?.find((measure) => measure.kind === "slider" && measure.label === "Proximity");
+      expect(updated?.kind).toBe("slider");
+      if (updated?.kind === "slider") {
+        expect(updated.value).toBe(0);
+      }
     });
   });
 }

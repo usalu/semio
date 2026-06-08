@@ -401,8 +401,25 @@ fn sensible_slider_max(value: f64) -> f64 {
     (nice * magnitude).max(v)
 }
 
+fn decimal_places_from_f64(value: f64) -> u32 {
+    if (value - value.round()).abs() < 1e-9 {
+        return 0;
+    }
+    for places in 1..=12 {
+        let step = 10f64.powi(-(places as i32));
+        if ((value / step).round() * step - value).abs() < 1e-9 {
+            return places;
+        }
+    }
+    1
+}
+
+fn slider_step_from_decimal_places(places: u32) -> f64 {
+    if places == 0 { 1.0 } else { 10f64.powi(-(places as i32)) }
+}
+
 fn sensible_slider_range(value: f64) -> (f64, f64, f64) {
-    let step = if (value - value.round()).abs() < 1e-9 { 1.0 } else { 0.1 };
+    let step = slider_step_from_decimal_places(decimal_places_from_f64(value));
     if value < 0.0 {
         let bound = sensible_slider_max(value);
         return (-bound, bound, step);
@@ -1608,6 +1625,10 @@ impl FlowHost {
         self.dag.set_automatic_lod(enabled);
     }
 
+    pub fn set_proximity_distance(&mut self, world: f64) {
+        self.dag.set_proximity_distance(world);
+    }
+
     pub fn set_forced_draw_lod_label(&mut self, label: &str) {
         self.dag.set_forced_draw_lod_label(label);
     }
@@ -2011,6 +2032,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = setAutomaticLod)]
     pub fn set_automatic_lod(&self, enabled: bool) {
         self.state.borrow_mut().host.set_automatic_lod(enabled);
+    }
+
+    #[wasm_bindgen(js_name = setProximityDistance)]
+    pub fn set_proximity_distance(&self, world: f64) {
+        self.state.borrow_mut().host.set_proximity_distance(world);
     }
 
     #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
@@ -2700,6 +2726,39 @@ mod tests {
         assert!((min - 0.0).abs() < 1e-6);
         assert!((max - 10.0).abs() < 1e-6);
         assert!((step - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn add_slider_widget_with_decimal_value_uses_matching_step() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputSlider","value":1.3}"#, 0.0, 0.0).unwrap();
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputSlider { value, min, max, step, .. } = widget else {
+            panic!("expected slider widget");
+        };
+        assert!((value - 1.3).abs() < 1e-6);
+        assert!((min - 0.0).abs() < 1e-6);
+        assert!((max - 10.0).abs() < 1e-6);
+        assert!((step - 0.1).abs() < 1e-6);
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node");
+        let DagNodeKind::Slider { min: dag_min, max: dag_max, step: dag_step, value: dag_value, .. } = &node.kind else {
+            panic!("expected slider node");
+        };
+        assert!((dag_min - 0.0).abs() < 1e-6);
+        assert!((dag_max - 10.0).abs() < 1e-6);
+        assert!((dag_step - 0.1).abs() < 1e-6);
+        assert!((dag_value - 1.3).abs() < 1e-6);
+    }
+
+    #[test]
+    fn add_slider_widget_with_two_decimal_places_uses_finer_step() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputSlider","value":1.25}"#, 0.0, 0.0).unwrap();
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputSlider { step, .. } = widget else {
+            panic!("expected slider widget");
+        };
+        assert!((step - 0.01).abs() < 1e-6);
     }
 
     #[test]
