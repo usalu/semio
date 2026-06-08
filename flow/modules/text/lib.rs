@@ -1,6 +1,6 @@
 //! 📝 Flow text module: neuron kinds for strings.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
 
 // #region 🔖Concat
 /// 🔗 Joins two text inputs.
@@ -52,7 +52,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Concat".into(),
             icon: "emoji:🔗".into(),
             summary: "Joins two text values".into(),
-            inputs: vec!["a".into(), "b".into()],
+            inputs: vec![InputSpec::text_default("a", ""), InputSpec::text_default("b", "")],
             outputs: vec!["text".into()],
             ..Default::default()
         },
@@ -66,7 +66,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Upper".into(),
             icon: "emoji:🔠".into(),
             summary: "Uppercases text".into(),
-            inputs: vec!["text".into()],
+            inputs: vec![InputSpec::text_default("text", "")],
             outputs: vec!["text".into()],
             ..Default::default()
         },

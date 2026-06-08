@@ -1,6 +1,6 @@
 //! 🔌 Shared wasm extension glue for flow modules.
 
-use neural_engine::{Dictionary, EvalError, NeuronKindInfo, Registry};
+use neural_engine::{inject_input_defaults, Dictionary, EvalError, NeuronKindInfo, Registry};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Manifest
@@ -93,10 +93,16 @@ pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> St
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
     };
     match registry.get(kind_id) {
-        Some(kind) => match kind.evaluate(&input) {
+        Some(kind) => {
+            let input = match registry.kind_info(kind_id) {
+                Some(info) => inject_input_defaults(input, info),
+                None => input,
+            };
+            match kind.evaluate(&input) {
             Ok(out) => serde_json::to_string(&out).unwrap_or_else(|_| "{}".into()),
             Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
-        },
+            }
+        }
         None => serde_json::json!({ "error": EvalError::UnknownKind(kind_id.into()).to_string() }).to_string(),
     }
 }
@@ -113,7 +119,7 @@ pub fn command_json(command_id: &str, args_json: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neural_engine::{Atom, Function, Value};
+    use neural_engine::{Atom, Function, InputSpec, Value};
 
     struct Echo;
 
@@ -134,7 +140,7 @@ mod tests {
                 abbreviation: "Echo".into(),
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
-                inputs: vec!["x".into()],
+                inputs: vec![InputSpec::value("x")],
                 outputs: vec!["x".into()],
                 ..Default::default()
             },
@@ -156,7 +162,7 @@ mod tests {
                 abbreviation: "Echo".into(),
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
-                inputs: vec!["x".into()],
+                inputs: vec![InputSpec::value("x")],
                 outputs: vec!["x".into()],
                 ..Default::default()
             },

@@ -2392,7 +2392,8 @@ impl BoardHost {
             return;
         }
         let preserve_original_style = false;
-        let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(icon_kind, stroke_c, fill, preserve_original_style) else {
+        let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
+        let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(icon_kind, icon_fg, icon_bg, preserve_original_style) else {
             return;
         };
         let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
@@ -4173,7 +4174,8 @@ impl BoardHost {
         if paint_icons {
             if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                 let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
-                if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
+                let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
+                if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
                     let fit_inset = 0.62;
                     let s = self.draw_space_len(radius_world, world_space) * fit_inset;
                     let cx = bx + bw * 0.5;
@@ -4325,9 +4327,10 @@ impl BoardHost {
     ) {
         if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
             let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
-            if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
-                let clip_inset = 0.88;
-                let fit_inset = 0.76;
+            let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
+            if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
+                let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
+                let fit_inset = ui_styling::metrics::icon::FIT_INSET;
                 let (sx_half, sy_half) = match n.shape {
                     NodeShape::Circle => {
                         let s = self.draw_space_len(self.scaled_node_radius(n), world_space) * fit_inset;

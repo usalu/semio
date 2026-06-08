@@ -131,7 +131,7 @@ pub fn io_widget_height(name: &str) -> f64 {
 
 /// 📐 Slider track width aligned with computation nodes (both IO columns, name and value sit outside).
 pub fn slider_widget_width(name: &str, output: &IoPortSpec) -> f64 {
-    let input = IoPortSpec { id: "in".into(), label: "in".into() };
+    let input = IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() };
     computation_node_width(name, std::slice::from_ref(&input), std::slice::from_ref(output))
 }
 
@@ -218,11 +218,29 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 }
 
 /// 🪝 Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
     pub label: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub value_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connected: Option<bool>,
+}
+
+impl IoPortSpec {
+    pub fn simple(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            ..Default::default()
+        }
+    }
 }
 
 /// 🖼 Screen media payload for output nodes.
@@ -3102,6 +3120,59 @@ impl DagHost {
         rows
     }
 
+    fn is_editable_input_port(port: &IoPortSpec) -> bool {
+        port.connected == Some(false)
+            && matches!(port.value_type.as_deref(), Some("number" | "integer" | "text" | "boolean"))
+    }
+
+    fn param_overlay_rows_for_node(node: &DagNodeSpec) -> Vec<serde_json::Value> {
+        let DagNodeKind::Computation { inputs, .. } = &node.kind else {
+            return Vec::new();
+        };
+        let mut rows = Vec::new();
+        let hw = node.width * 0.5;
+        let editor_w = (hw - DAG_NODE_EDGE_INSET).max(24.0);
+        for (index, port) in inputs.iter().enumerate() {
+            if !Self::is_editable_input_port(port) {
+                continue;
+            }
+            let world_y = computation_port_center_y(node, index);
+            let world_x = node.x - hw + DAG_NODE_EDGE_INSET + editor_w * 0.5;
+            rows.push(serde_json::json!({
+                "nodeId": node.id,
+                "portId": port.id,
+                "type": port.value_type,
+                "value": port.value,
+                "default": port.default,
+                "x": world_x,
+                "y": world_y,
+                "w": editor_w,
+                "h": DAG_CHANNEL_ROW_HEIGHT,
+            }));
+        }
+        rows
+    }
+
+    /// 🎛️ Inline default editor anchors for unconnected primitive neuron inputs.
+    pub fn param_overlay_paint_state_json(&self) -> Result<String, String> {
+        let cam = &self.fixture.camera;
+        let mut editors = Vec::new();
+        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
+            let node = self.node_spec_for_paint(idx, fixture_node);
+            editors.extend(Self::param_overlay_rows_for_node(node.as_ref()));
+        }
+        if let Some(ghost) = self.ghost_node.as_ref() {
+            editors.extend(Self::param_overlay_rows_for_node(ghost));
+        }
+        serde_json::to_string(&serde_json::json!({
+            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
+            "width": self.width,
+            "height": self.height,
+            "editors": editors,
+        }))
+        .map_err(|err| err.to_string())
+    }
+
     /// 🏷️ Camera, draw LOD, and node label anchors for the JS canvas text overlay (must match the last GPU frame).
     pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
         let lod = self.draw_lod_for_frame();
@@ -4172,7 +4243,7 @@ mod tests {
                     "A".into(),
                     "emoji:🔷".into(),
                     vec![],
-                    vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+                    vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }],
                     false,
                     false,
                     0.0,
@@ -4185,8 +4256,8 @@ mod tests {
                     "B".into(),
                     "B".into(),
                     "emoji:🔷".into(),
-                    vec![IoPortSpec { id: "in".into(), label: "in".into() }],
-                    vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+                    vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }],
+                    vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }],
                     false,
                     false,
                     200.0,
@@ -4280,8 +4351,8 @@ mod tests {
                 "C".into(),
                 "C".into(),
                 "emoji:🔷".into(),
-                vec![IoPortSpec { id: "in".into(), label: "in".into() }],
-                vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+                vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }],
+                vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }],
                 false,
                 false,
                 0.0,
@@ -4298,7 +4369,7 @@ mod tests {
                 y: 2.0,
                 width: 180.0,
                 height: 80.0,
-                kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 3.0, output: IoPortSpec { id: "out".into(), label: "value".into() } },
+                kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 3.0, output: IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() } },
             },
             DagNodeSpec {
                 id: "m".into(),
@@ -4309,7 +4380,7 @@ mod tests {
                 y: 0.0,
                 width: 180.0,
                 height: 80.0,
-                kind: DagNodeKind::Select { options: vec!["A".into(), "B".into()], selected: 1, output: IoPortSpec { id: "out".into(), label: "mode".into() } },
+                kind: DagNodeKind::Select { options: vec!["A".into(), "B".into()], selected: 1, output: IoPortSpec { id: "out".into(), label: "mode".into() , ..Default::default() } },
             },
             DagNodeSpec {
                 id: "p".into(),
@@ -4322,7 +4393,7 @@ mod tests {
                 height: 140.0,
                 kind: DagNodeKind::Screen {
                     media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,test".into() }),
-                    input: IoPortSpec { id: "in".into(), label: "result".into() },
+                    input: IoPortSpec { id: "in".into(), label: "result".into() , ..Default::default() },
                 },
             },
         ];
@@ -4343,8 +4414,8 @@ mod tests {
                 "Merge".into(),
                 "M".into(),
                 "emoji:🔀".into(),
-                vec![IoPortSpec { id: "0".into(), label: "0".into() }],
-                vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+                vec![IoPortSpec { id: "0".into(), label: "0".into() , ..Default::default() }],
+                vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }],
                 false,
                 false,
                 0.0,
@@ -4403,7 +4474,7 @@ mod tests {
             y: 0.0,
             width: 180.0,
             height: 80.0,
-            kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec { id: "out".into(), label: "value".into() } },
+            kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() } },
         };
         assert!(slider.inputs().is_empty());
         assert_eq!(slider.outputs().len(), 1);
@@ -4416,7 +4487,7 @@ mod tests {
             y: 0.0,
             width: 200.0,
             height: 140.0,
-            kind: DagNodeKind::Screen { media: None, input: IoPortSpec { id: "in".into(), label: "in".into() } },
+            kind: DagNodeKind::Screen { media: None, input: IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() } },
         };
         assert_eq!(screen.inputs().len(), 1);
         assert!(screen.outputs().is_empty());
@@ -4428,9 +4499,9 @@ mod tests {
             schema: "dag.fixture/v1".into(),
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() }], false, false, 100.0, 200.0, 160.0, 56.0),
-                DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![IoPortSpec { id: "out".into(), label: "out".into() }], false, false, 400.0, 500.0, 160.0, 56.0),
-                DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
+                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
+                DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }], vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }], false, false, 400.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
             edges: vec![
                 DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() },
@@ -4454,8 +4525,8 @@ mod tests {
             schema: "dag.fixture/v1".into(),
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() }], false, false, 500.0, 500.0, 160.0, 56.0),
-                DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
             ],
             edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() }],
         });
@@ -4476,7 +4547,7 @@ mod tests {
 
     #[test]
     fn slider_track_bounds_stay_inside_node_rect() {
-        let output = IoPortSpec { id: "out".into(), label: "value".into() };
+        let output = IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() };
         let node = DagNodeSpec {
             id: "slider".into(),
             name: "Amount".into(),
@@ -4506,7 +4577,7 @@ mod tests {
 
     #[test]
     fn dag_host_slider_drag_mutates_value() {
-        let output = IoPortSpec { id: "out".into(), label: "value".into() };
+        let output = IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() };
         let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
             schema: "dag.fixture/v1".into(),
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -4537,7 +4608,7 @@ mod tests {
 
     #[test]
     fn dag_host_slider_drag_ignored_when_controls_hidden() {
-        let output = IoPortSpec { id: "out".into(), label: "value".into() };
+        let output = IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() };
         let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
             schema: "dag.fixture/v1".into(),
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -4582,7 +4653,7 @@ mod tests {
                 y: 0.0,
                 width: 180.0,
                 height: 80.0,
-                kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 0, output: IoPortSpec { id: "out".into(), label: "mode".into() } },
+                kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 0, output: IoPortSpec { id: "out".into(), label: "mode".into() , ..Default::default() } },
             }],
             edges: vec![],
         });
@@ -4628,7 +4699,7 @@ mod tests {
                     max: 10.0,
                     step: 0.5,
                     value: 3.0,
-                    output: IoPortSpec { id: "out".into(), label: "value".into() },
+                    output: IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() },
                 },
             }],
             edges: vec![],
@@ -4657,10 +4728,10 @@ mod tests {
                 height: 28.0,
                 kind: DagNodeKind::Computation {
                     inputs: vec![
-                        IoPortSpec { id: "a".into(), label: "a".into() },
-                        IoPortSpec { id: "b".into(), label: "b".into() },
+                        IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() },
+                        IoPortSpec { id: "b".into(), label: "b".into() , ..Default::default() },
                     ],
-                    outputs: vec![IoPortSpec { id: "out".into(), label: "merged".into() }],
+                    outputs: vec![IoPortSpec { id: "out".into(), label: "merged".into() , ..Default::default() }],
                     variadic_inputs: false,
                     variadic_outputs: false,
                 },
@@ -4699,10 +4770,10 @@ mod tests {
                 height: 42.0,
                 kind: DagNodeKind::Computation {
                     inputs: vec![
-                        IoPortSpec { id: "width".into(), label: "width".into() },
-                        IoPortSpec { id: "depth".into(), label: "depth".into() },
+                        IoPortSpec { id: "width".into(), label: "width".into() , ..Default::default() },
+                        IoPortSpec { id: "depth".into(), label: "depth".into() , ..Default::default() },
                     ],
-                    outputs: vec![IoPortSpec { id: "out".into(), label: "geometry".into() }],
+                    outputs: vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }],
                     variadic_inputs: false,
                     variadic_outputs: false,
                 },
@@ -4739,7 +4810,7 @@ mod tests {
                 height: 140.0,
                 kind: DagNodeKind::Screen {
                     media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,test".into() }),
-                    input: IoPortSpec { id: "in".into(), label: "result".into() },
+                    input: IoPortSpec { id: "in".into(), label: "result".into() , ..Default::default() },
                 },
             }],
             edges: vec![],
@@ -4922,8 +4993,8 @@ mod tests {
 
     #[test]
     fn dag_host_node_drag_proximity_preview_and_connects() {
-        let inputs = vec![IoPortSpec { id: "in".into(), label: "in".into() }];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let inputs = vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
         let src_w = computation_node_width("Src", &[], &outputs);
         let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
         let src_h = computation_node_height(0, 1, false, false);
@@ -4984,8 +5055,8 @@ mod tests {
 
     #[test]
     fn dag_host_proximity_zero_disables_node_drag_connect() {
-        let inputs = vec![IoPortSpec { id: "in".into(), label: "in".into() }];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let inputs = vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
         let src_w = computation_node_width("Src", &[], &outputs);
         let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
         let src_h = computation_node_height(0, 1, false, false);
@@ -5204,10 +5275,10 @@ mod tests {
     #[test]
     fn input_port_row_hit_bounds_span_input_channel() {
         let inputs = vec![
-            IoPortSpec { id: "a".into(), label: "a".into() },
-            IoPortSpec { id: "b".into(), label: "b".into() },
+            IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() },
+            IoPortSpec { id: "b".into(), label: "b".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
         let width = computation_node_width("Node", &inputs, &outputs);
         let height = computation_node_height(2, 1, false, false);
         let node = DagNodeSpec::computation(
@@ -5233,10 +5304,10 @@ mod tests {
 
     #[test]
     fn output_port_row_hit_bounds_span_output_channel() {
-        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
+        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() }];
         let outputs = vec![
-            IoPortSpec { id: "x".into(), label: "x".into() },
-            IoPortSpec { id: "y".into(), label: "y".into() },
+            IoPortSpec { id: "x".into(), label: "x".into() , ..Default::default() },
+            IoPortSpec { id: "y".into(), label: "y".into() , ..Default::default() },
         ];
         let width = computation_node_width("Node", &inputs, &outputs);
         let height = computation_node_height(1, 2, false, false);
@@ -5264,10 +5335,10 @@ mod tests {
     #[test]
     fn variadic_plus_hit_maps_insert_index() {
         let inputs = vec![
-            IoPortSpec { id: "0".into(), label: "0".into() },
-            IoPortSpec { id: "1".into(), label: "1".into() },
+            IoPortSpec { id: "0".into(), label: "0".into() , ..Default::default() },
+            IoPortSpec { id: "1".into(), label: "1".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
         let width = computation_node_width("dictionary.merge", &inputs, &outputs);
         let height = computation_node_height(2, 1, true, false);
         let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
@@ -5301,24 +5372,24 @@ mod tests {
     #[test]
     fn computation_node_width_uses_two_io_columns_without_name_strip() {
         let inputs = vec![
-            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
-            IoPortSpec { id: "height".into(), label: "height".into() },
+            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
+            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() , ..Default::default() },
+            IoPortSpec { id: "height".into(), label: "height".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         assert!(width > 70.0 && width < 82.0, "two IO columns should fit port labels, got {width}");
     }
 
     #[test]
     fn computation_io_columns_clamp_port_label_width() {
-        let inputs_short = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
+        let inputs_short = vec![IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() }];
         let inputs_long = vec![
-            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
+            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() , ..Default::default() },
         ];
-        let outputs_short = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
-        let outputs_long = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let outputs_short = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
+        let outputs_long = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let short = computation_node_width("n", &inputs_short, &outputs_short);
         let long = computation_node_width("n", &inputs_long, &outputs_long);
         assert!(short >= 50.0, "IO columns should not collapse below minimum, got {short}");
@@ -5329,10 +5400,10 @@ mod tests {
     #[test]
     fn computation_column_divider_splits_io_columns() {
         let inputs = vec![
-            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
+            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(2, 1, false, false);
         let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
@@ -5344,8 +5415,8 @@ mod tests {
 
     #[test]
     fn computation_name_sits_above_rectangle_centered() {
-        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(1, 1, false, false);
         let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
@@ -5370,8 +5441,8 @@ mod tests {
 
     #[test]
     fn slider_widget_size_matches_function_row_metrics() {
-        let input = IoPortSpec { id: "in".into(), label: "in".into() };
-        let output = IoPortSpec { id: "out".into(), label: "value".into() };
+        let input = IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() };
+        let output = IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() };
         let width = slider_widget_width("Amount", &output);
         let height = slider_widget_height();
         assert_eq!(width, computation_node_width("Amount", &[input], &[output]));
@@ -5387,11 +5458,11 @@ mod tests {
             "Box".into(),
             "emoji:📦".into(),
             vec![
-                IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-                IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
-                IoPortSpec { id: "height".into(), label: "height".into() },
+                IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
+                IoPortSpec { id: "cornerB".into(), label: "cornerB".into() , ..Default::default() },
+                IoPortSpec { id: "height".into(), label: "height".into() , ..Default::default() },
             ],
-            vec![IoPortSpec { id: "out".into(), label: "geometry".into() }],
+            vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }],
             false,
             false,
             0.0,
@@ -5405,17 +5476,17 @@ mod tests {
     #[test]
     fn computation_channel_row_dividers_stop_at_last_port_on_shorter_side() {
         let three_inputs = vec![
-            IoPortSpec { id: "a".into(), label: "cornerA".into() },
-            IoPortSpec { id: "b".into(), label: "cornerB".into() },
-            IoPortSpec { id: "c".into(), label: "height".into() },
+            IoPortSpec { id: "a".into(), label: "cornerA".into() , ..Default::default() },
+            IoPortSpec { id: "b".into(), label: "cornerB".into() , ..Default::default() },
+            IoPortSpec { id: "c".into(), label: "height".into() , ..Default::default() },
         ];
-        let one_output = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let one_output = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let three_outputs = vec![
-            IoPortSpec { id: "outA".into(), label: "geometry".into() },
-            IoPortSpec { id: "outB".into(), label: "mesh".into() },
-            IoPortSpec { id: "outC".into(), label: "curve".into() },
+            IoPortSpec { id: "outA".into(), label: "geometry".into() , ..Default::default() },
+            IoPortSpec { id: "outB".into(), label: "mesh".into() , ..Default::default() },
+            IoPortSpec { id: "outC".into(), label: "curve".into() , ..Default::default() },
         ];
-        let one_input = vec![IoPortSpec { id: "a".into(), label: "cornerA".into() }];
+        let one_input = vec![IoPortSpec { id: "a".into(), label: "cornerA".into() , ..Default::default() }];
         let more_inputs = DagNodeSpec::computation(
             "more-in".into(),
             "Box".into(),
@@ -5457,13 +5528,13 @@ mod tests {
     #[test]
     fn computation_channel_row_dividers_align_with_row_bounds() {
         let inputs = vec![
-            IoPortSpec { id: "a".into(), label: "cornerA".into() },
-            IoPortSpec { id: "b".into(), label: "cornerB".into() },
-            IoPortSpec { id: "c".into(), label: "height".into() },
+            IoPortSpec { id: "a".into(), label: "cornerA".into() , ..Default::default() },
+            IoPortSpec { id: "b".into(), label: "cornerB".into() , ..Default::default() },
+            IoPortSpec { id: "c".into(), label: "height".into() , ..Default::default() },
         ];
         let outputs = vec![
-            IoPortSpec { id: "outA".into(), label: "geometry".into() },
-            IoPortSpec { id: "outB".into(), label: "mesh".into() },
+            IoPortSpec { id: "outA".into(), label: "geometry".into() , ..Default::default() },
+            IoPortSpec { id: "outB".into(), label: "mesh".into() , ..Default::default() },
         ];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(3, 2, false, false);
@@ -5495,11 +5566,11 @@ mod tests {
     #[test]
     fn computation_node_size_fits_io_labels() {
         let inputs = vec![
-            IoPortSpec { id: "width".into(), label: "width".into() },
-            IoPortSpec { id: "depth".into(), label: "depth".into() },
-            IoPortSpec { id: "height".into(), label: "height".into() },
+            IoPortSpec { id: "width".into(), label: "width".into() , ..Default::default() },
+            IoPortSpec { id: "depth".into(), label: "depth".into() , ..Default::default() },
+            IoPortSpec { id: "height".into(), label: "height".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let width = computation_node_width("brep.prim3d.box", &inputs, &outputs);
         let height = computation_node_height(3, 1, false, false);
         assert!(height <= 42.0, "expected compact height, got {height}");
@@ -5512,10 +5583,10 @@ mod tests {
         use cavas::vello::kurbo::Point;
         use graph::handle_position_on_rectangle;
         let inputs = vec![
-            IoPortSpec { id: "a".into(), label: "a".into() },
-            IoPortSpec { id: "b".into(), label: "b".into() },
+            IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() },
+            IoPortSpec { id: "b".into(), label: "b".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }];
         let width = computation_node_width("node", &inputs, &outputs);
         let height = computation_node_height(2, 1, false, false);
         let hw = width * 0.5;
@@ -5534,10 +5605,10 @@ mod tests {
         use cavas::vello::kurbo::{Point, Shape};
         use graph::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
         let inputs = vec![
-            IoPortSpec { id: "0".into(), label: "0".into() },
-            IoPortSpec { id: "1".into(), label: "1".into() },
+            IoPortSpec { id: "0".into(), label: "0".into() , ..Default::default() },
+            IoPortSpec { id: "1".into(), label: "1".into() , ..Default::default() },
         ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "dictionary".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "dictionary".into() , ..Default::default() }];
         let width = computation_node_width("Merge", &inputs, &outputs);
         let height = computation_node_height(2, 1, true, false);
         let center = Point::new(100.0, 50.0);
@@ -5800,7 +5871,7 @@ mod tests {
                 y: 0.0,
                 width: 80.0,
                 height: 80.0,
-                kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
+                kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() } },
             }],
             edges: vec![],
         });
@@ -5828,7 +5899,7 @@ mod tests {
                 y: 0.0,
                 width: note_widget_size("hello").0,
                 height: note_widget_size("hello").1,
-                kind: DagNodeKind::Note { text: "hello".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
+                kind: DagNodeKind::Note { text: "hello".into(), output: IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() } },
             }],
             edges: vec![],
         });
@@ -5849,7 +5920,7 @@ mod tests {
             y: 0.0,
             width: note_widget_size("hi").0,
             height: note_widget_size("hi").1,
-            kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
+            kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() } },
         };
         assert!(note.inputs().is_empty());
         assert_eq!(note.outputs().len(), 1);
@@ -5865,7 +5936,7 @@ mod tests {
             kind: DagNodeKind::Preview {
                 content: DagPreviewContent::Scalar { text: "3".into() },
                 expanded: BTreeSet::new(),
-                input: IoPortSpec { id: "in".into(), label: "in".into() },
+                input: IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() },
             },
         };
         assert_eq!(preview.inputs().len(), 1);
@@ -5897,8 +5968,8 @@ mod tests {
             "Add".into(),
             "Add".into(),
             "emoji:➕".into(),
-            vec![IoPortSpec { id: "a".into(), label: "a".into() }],
-            vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+            vec![IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() }],
+            vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }],
             false,
             false,
             0.0,
@@ -5919,7 +5990,7 @@ mod tests {
             "pass".into(),
             "emoji:➡️".into(),
             vec![],
-            vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+            vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }],
             false,
             false,
             0.0,
@@ -5952,7 +6023,7 @@ mod tests {
                 kind: DagNodeKind::Preview {
                     content: DagPreviewContent::Tree { json },
                     expanded: BTreeSet::new(),
-                    input: IoPortSpec { id: "in".into(), label: "in".into() },
+                    input: IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() },
                 },
             }],
             edges: vec![],

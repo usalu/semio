@@ -1,6 +1,6 @@
 //! ➕ Flow math module: neuron kinds for arithmetic.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
 use std::cell::Cell;
 
 // #region 🔖Add
@@ -366,7 +366,7 @@ fn register_kind(
     abbreviation: &str,
     icon: &str,
     summary: &str,
-    inputs: Vec<String>,
+    inputs: Vec<InputSpec>,
     function: Box<dyn Function>,
 ) {
     registry.register(
@@ -393,7 +393,16 @@ fn module_registry() -> Registry {
 
 /// 📦 Registers all math neuron kinds on the registry.
 pub fn register(registry: &mut Registry) {
-    register_kind(registry, "math.add", "Add", "Add", "emoji:➕", "Sums two numbers", vec!["a".into(), "b".into()], Box::new(Add));
+    register_kind(
+        registry,
+        "math.add",
+        "Add",
+        "Add",
+        "emoji:➕",
+        "Sums two numbers",
+        vec![InputSpec::number("a"), InputSpec::number_default("b", 0.0)],
+        Box::new(Add),
+    );
     register_kind(
         registry,
         "math.subtract",
@@ -401,7 +410,7 @@ pub fn register(registry: &mut Registry) {
         "Sub",
         "emoji:➖",
         "Subtracts b from a",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number("a"), InputSpec::number_default("b", 0.0)],
         Box::new(Subtract),
     );
     register_kind(
@@ -411,7 +420,7 @@ pub fn register(registry: &mut Registry) {
         "Mul",
         "emoji:✖️",
         "Multiplies two numbers",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
         Box::new(Multiply),
     );
     register_kind(
@@ -421,7 +430,7 @@ pub fn register(registry: &mut Registry) {
         "Div",
         "emoji:➗",
         "Divides a by b",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
         Box::new(Divide),
     );
     register_kind(
@@ -431,7 +440,7 @@ pub fn register(registry: &mut Registry) {
         "Pow",
         "emoji:⚡",
         "Raises a to the power of b",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
         Box::new(Power),
     );
     register_kind(
@@ -441,7 +450,7 @@ pub fn register(registry: &mut Registry) {
         "Mod",
         "emoji:🧮",
         "Remainder of a divided by b",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
         Box::new(Modulo),
     );
     register_kind(
@@ -451,11 +460,29 @@ pub fn register(registry: &mut Registry) {
         "Neg",
         "emoji:↔️",
         "Negates a number",
-        vec!["number".into()],
+        vec![InputSpec::number_default("number", 0.0)],
         Box::new(Negate),
     );
-    register_kind(registry, "math.abs", "Abs", "Abs", "emoji:📏", "Absolute value", vec!["number".into()], Box::new(Abs));
-    register_kind(registry, "math.sqrt", "Sqrt", "Sqrt", "emoji:√", "Square root", vec!["number".into()], Box::new(Sqrt));
+    register_kind(
+        registry,
+        "math.abs",
+        "Abs",
+        "Abs",
+        "emoji:📏",
+        "Absolute value",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Abs),
+    );
+    register_kind(
+        registry,
+        "math.sqrt",
+        "Sqrt",
+        "Sqrt",
+        "emoji:√",
+        "Square root",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Sqrt),
+    );
     register_kind(
         registry,
         "math.min",
@@ -463,7 +490,7 @@ pub fn register(registry: &mut Registry) {
         "Min",
         "emoji:⬇️",
         "Minimum of two numbers",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 0.0)],
         Box::new(Min),
     );
     register_kind(
@@ -473,15 +500,69 @@ pub fn register(registry: &mut Registry) {
         "Max",
         "emoji:⬆️",
         "Maximum of two numbers",
-        vec!["a".into(), "b".into()],
+        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 0.0)],
         Box::new(Max),
     );
-    register_kind(registry, "math.floor", "Floor", "Flr", "emoji:⬇️", "Floor of a number", vec!["number".into()], Box::new(Floor));
-    register_kind(registry, "math.ceil", "Ceil", "Ceil", "emoji:⬆️", "Ceiling of a number", vec!["number".into()], Box::new(Ceil));
-    register_kind(registry, "math.round", "Round", "Rnd", "emoji:⭕", "Rounds a number", vec!["number".into()], Box::new(Round));
-    register_kind(registry, "math.sin", "Sin", "Sin", "emoji:〰️", "Sine in radians", vec!["number".into()], Box::new(Sin));
-    register_kind(registry, "math.cos", "Cos", "Cos", "emoji:〰️", "Cosine in radians", vec!["number".into()], Box::new(Cos));
-    register_kind(registry, "math.tan", "Tan", "Tan", "emoji:〰️", "Tangent in radians", vec!["number".into()], Box::new(Tan));
+    register_kind(
+        registry,
+        "math.floor",
+        "Floor",
+        "Flr",
+        "emoji:⬇️",
+        "Floor of a number",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Floor),
+    );
+    register_kind(
+        registry,
+        "math.ceil",
+        "Ceil",
+        "Ceil",
+        "emoji:⬆️",
+        "Ceiling of a number",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Ceil),
+    );
+    register_kind(
+        registry,
+        "math.round",
+        "Round",
+        "Rnd",
+        "emoji:⭕",
+        "Rounds a number",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Round),
+    );
+    register_kind(
+        registry,
+        "math.sin",
+        "Sin",
+        "Sin",
+        "emoji:〰️",
+        "Sine in radians",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Sin),
+    );
+    register_kind(
+        registry,
+        "math.cos",
+        "Cos",
+        "Cos",
+        "emoji:〰️",
+        "Cosine in radians",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Cos),
+    );
+    register_kind(
+        registry,
+        "math.tan",
+        "Tan",
+        "Tan",
+        "emoji:〰️",
+        "Tangent in radians",
+        vec![InputSpec::number_default("number", 0.0)],
+        Box::new(Tan),
+    );
     register_kind(
         registry,
         "math.remap",
@@ -489,7 +570,13 @@ pub fn register(registry: &mut Registry) {
         "Map",
         "emoji:🗺️",
         "Remaps a value from one range to another",
-        vec!["value".into(), "fromMin".into(), "fromMax".into(), "toMin".into(), "toMax".into()],
+        vec![
+            InputSpec::number_default("value", 0.0),
+            InputSpec::number_default("fromMin", 0.0),
+            InputSpec::number_default("fromMax", 1.0),
+            InputSpec::number_default("toMin", 0.0),
+            InputSpec::number_default("toMax", 1.0),
+        ],
         Box::new(Remap),
     );
     register_kind(
@@ -499,7 +586,11 @@ pub fn register(registry: &mut Registry) {
         "Rnd",
         "emoji:🎲",
         "Random number in range with optional seed",
-        vec!["seed".into(), "min".into(), "max".into()],
+        vec![
+            InputSpec::number_default("seed", 0.0),
+            InputSpec::number_default("min", 0.0),
+            InputSpec::number_default("max", 1.0),
+        ],
         Box::new(Random),
     );
     register_kind(
@@ -509,7 +600,7 @@ pub fn register(registry: &mut Registry) {
         "Pass",
         "emoji:➡️",
         "Forwards a number",
-        vec!["number".into()],
+        vec![InputSpec::number_default("number", 0.0)],
         Box::new(PassThrough),
     );
     register_kind(
@@ -519,7 +610,7 @@ pub fn register(registry: &mut Registry) {
         "Sum",
         "emoji:🔢",
         "Sums numbers in a list dictionary",
-        vec!["list".into()],
+        vec![InputSpec::list("list")],
         Box::new(Sum),
     );
 }

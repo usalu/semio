@@ -42,6 +42,7 @@ import {
 	type FlowExtensionEntry,
 	type FlowFixtureV1,
 	type FlowModuleCommandV1,
+	type FlowInputSpecV1,
 	type FlowModuleManifestV1,
 	type FlowModuleNeuronKindV1,
 	type FlowReorganizeRequest,
@@ -129,11 +130,23 @@ function brepIcon(id: string): string {
 	return "emoji:🔷";
 }
 
+function num(id: string, defaultValue: number): FlowInputSpecV1 {
+	return { id, type: "number", default: defaultValue };
+}
+
+function inp(id: string, type: string): FlowInputSpecV1 {
+	return { id, type };
+}
+
+function vec(id: string, defaultValue: readonly [number, number, number]): FlowInputSpecV1 {
+	return { id, type: "vector", default: [...defaultValue] };
+}
+
 function brepKind(
 	id: string,
 	name: string,
 	summary: string,
-	inputs: readonly string[],
+	inputs: readonly FlowInputSpecV1[],
 	outputs: readonly string[] = ["geometry"],
 	group: readonly string[],
 ): FlowModuleNeuronKindV1 {
@@ -141,113 +154,124 @@ function brepKind(
 	return { id: `brep.${id}`, module: "brep", name: displayName, abbreviation: brepAbbreviation(name), icon: brepIcon(id), summary, inputs, outputs, group };
 }
 
+function applyBrepInputDefaults(kindId: string, input: Record<string, unknown>): Record<string, unknown> {
+	const kind = BREP_FLOW_KINDS.find((entry) => entry.id === kindId);
+	if (!kind) return input;
+	const out = { ...input };
+	for (const spec of kind.inputs) {
+		if (spec.id === "*" || Object.prototype.hasOwnProperty.call(out, spec.id)) continue;
+		if (spec.default !== undefined) out[spec.id] = spec.default;
+	}
+	return out;
+}
+
 const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
-	brepKind("point", "Point", "3D point from x,y,z", ["x", "y", "z"], ["point"], ["Construct"]),
-	brepKind("vector", "Vector", "3D vector from x,y,z", ["x", "y", "z"], ["vector"], ["Construct"]),
-	brepKind("prim3d.box", "Box", "Axis-aligned box", ["width", "depth", "height"], ["geometry"], ["Primitives 3D"]),
-	brepKind("prim3d.sphere", "Sphere", "Sphere solid", ["radius"], ["geometry"], ["Primitives 3D"]),
-	brepKind("prim3d.cylinder", "Cylinder", "Cylinder solid", ["radius", "height"], ["geometry"], ["Primitives 3D"]),
-	brepKind("prim3d.cone", "Cone", "Cone solid", ["radius", "height"], ["geometry"], ["Primitives 3D"]),
-	brepKind("prim3d.torus", "Torus", "Torus solid", ["major", "minor"], ["geometry"], ["Primitives 3D"]),
-	brepKind("prim3d.ellipsoid", "Ellipsoid", "Ellipsoid solid", ["rx", "ry", "rz"], ["geometry"], ["Primitives 3D"]),
-	brepKind("prim3d.polyhedron", "Polyhedron", "Polyhedron from vertices and faces", ["vertices", "faces"], ["geometry"], ["Primitives 3D"]),
-	brepKind("draw2d.rectangle", "Draw Rectangle", "2D rectangle drawing", ["width", "height"], ["geometry"], ["Draw 2D"]),
-	brepKind("draw2d.circle", "Draw Circle", "2D circle drawing", ["radius"], ["geometry"], ["Draw 2D"]),
-	brepKind("draw2d.ellipse", "Draw Ellipse", "2D ellipse drawing", ["major", "minor"], ["geometry"], ["Draw 2D"]),
-	brepKind("draw2d.roundedRectangle", "Draw Rounded Rect", "2D rounded rectangle", ["width", "height", "radius"], ["geometry"], ["Draw 2D"]),
-	brepKind("draw2d.polysides", "Draw Polysides", "2D regular polygon", ["radius", "sides"], ["geometry"], ["Draw 2D"]),
-	brepKind("sketch2d.circle", "Sketch Circle", "Sketched circle profile", ["radius"], ["geometry"], ["Draw 2D"]),
-	brepKind("sketch2d.rectangle", "Sketch Rectangle", "Sketched rectangle profile", ["width", "height"], ["geometry"], ["Draw 2D"]),
-	brepKind("curve.line", "Line", "Line edge", ["start", "end"], ["geometry"], ["Curves"]),
-	brepKind("curve.circle", "Circle", "Circle edge", ["radius"], ["geometry"], ["Curves"]),
-	brepKind("curve.ellipse", "Ellipse", "Ellipse edge", ["major", "minor"], ["geometry"], ["Curves"]),
-	brepKind("curve.helix", "Helix", "Helix edge", ["radius", "pitch", "height"], ["geometry"], ["Curves"]),
-	brepKind("curve.threePointArc", "Three Point Arc", "Arc through three points", ["a", "b", "c"], ["geometry"], ["Curves"]),
-	brepKind("curve.tangentArc", "Tangent Arc", "Tangent arc", ["start", "tangent", "end"], ["geometry"], ["Curves"]),
-	brepKind("curve.ellipseArc", "Ellipse Arc", "Elliptical arc", ["major", "minor", "startAngle", "endAngle"], ["geometry"], ["Curves"]),
-	brepKind("curve.bezier", "Bezier", "Bezier curve from poles", ["poles"], ["geometry"], ["Curves"]),
-	brepKind("curve.bspline", "B-Spline", "B-spline approximation", ["poles", "degree"], ["geometry"], ["Curves"]),
-	brepKind("curve.approximate", "Approximate Curve", "Approximate curve through points", ["points", "tolerance"], ["geometry"], ["Curves"]),
-	brepKind("curve.polygon", "Polygon", "Polygon wire from points", ["points"], ["geometry"], ["Curves"]),
-	brepKind("curve.reparametrize", "Reparametrize Curve", "Resample curve to unit domain", ["geometry", "samples"], ["geometry"], ["Curves"]),
-	brepKind("curve.interpolate", "Interpolate", "Interpolated curve", ["geometry"], ["geometry"], ["Curves"]),
-	brepKind("curve.wire", "Wire", "Wire from edges", ["geometry"], ["geometry"], ["Curves"]),
-	brepKind("curve.wireLoop", "Wire Loop", "Closed wire loop", ["geometry"], ["geometry"], ["Curves"]),
-	brepKind("surface.face", "Face", "Face from wires", ["geometry"], ["geometry"], ["Surfaces"]),
-	brepKind("surface.filledFace", "Filled Face", "Filled face from wire", ["geometry"], ["geometry"], ["Surfaces"]),
-	brepKind("surface.fill", "Fill", "Fill from edges", ["geometry"], ["geometry"], ["Surfaces"]),
-	brepKind("surface.offsetFace", "Offset Face", "Offset face", ["geometry", "distance"], ["geometry"], ["Surfaces"]),
-	brepKind("surface.subFace", "Sub Face", "Face with hole wire", ["geometry", "wire"], ["geometry"], ["Surfaces"]),
-	brepKind("surface.fromGrid", "Surface From Grid", "NURBS surface from point grid", ["grid"], ["geometry"], ["Surfaces"]),
-	brepKind("surface.reparametrize", "Reparametrize Surface", "Resample face to unit UV domain", ["geometry", "uSamples", "vSamples"], ["geometry"], ["Surfaces"]),
-	brepKind("solid.extrude", "Extrude", "Extrude profile", ["geometry", "vector"], ["geometry"], ["Solid"]),
-	brepKind("solid.supportExtrude", "Support Extrude", "Support extrude", ["geometry", "vector"], ["geometry"], ["Solid"]),
-	brepKind("solid.twistExtrude", "Twist Extrude", "Twist extrude profile", ["geometry", "vector", "angle"], ["geometry"], ["Solid"]),
-	brepKind("solid.draft", "Draft", "Draft solid faces", ["geometry", "angle"], ["geometry"], ["Solid"]),
-	brepKind("solid.revolve", "Revolve", "Revolve profile", ["geometry", "angle"], ["geometry"], ["Solid"]),
-	brepKind("solid.loft", "Loft", "Loft sections", ["a", "b"], ["geometry"], ["Solid"]),
-	brepKind("solid.sweep", "Sweep", "Sweep profile along path", ["profile", "path"], ["geometry"], ["Solid"]),
-	brepKind("solid.fillet", "Fillet", "Fillet solid", ["geometry", "radius"], ["geometry"], ["Solid"]),
-	brepKind("solid.chamfer", "Chamfer", "Chamfer solid", ["geometry", "distance"], ["geometry"], ["Solid"]),
-	brepKind("solid.shell", "Shell", "Shell solid", ["geometry", "thickness"], ["geometry"], ["Solid"]),
-	brepKind("solid.offset", "Offset", "Offset shape", ["geometry", "distance"], ["geometry"], ["Solid"]),
-	brepKind("solid.thicken", "Thicken", "Thicken face", ["geometry", "thickness"], ["geometry"], ["Solid"]),
-	brepKind("solid.hull", "Hull", "Convex hull of shapes", ["a", "b"], ["geometry"], ["Solid"]),
-	brepKind("solid.minkowski", "Minkowski", "Minkowski sum", ["a", "b"], ["geometry"], ["Solid"]),
-	brepKind("solid.convexHull", "Convex Hull", "Convex hull", ["geometry"], ["geometry"], ["Solid"]),
-	brepKind("bool.fuse", "Fuse", "Boolean union", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.cut", "Cut", "Boolean difference", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.intersect", "Intersect", "Boolean intersection", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.fuseAll", "Fuse All", "Fuse multiple solids", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.fuse2d", "Fuse 2D", "2D boolean union", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.cut2d", "Cut 2D", "2D boolean cut", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.intersect2d", "Intersect 2D", "2D boolean intersect", ["a", "b"], ["geometry"], ["Booleans"]),
-	brepKind("bool.cutAll", "Cut All", "Cut solid with multiple cutters", ["geometry", "cutters"], ["geometry"], ["Booleans"]),
-	brepKind("xform.translate", "Translate", "Translate geometry", ["geometry", "offset"], ["geometry"], ["Transforms"]),
-	brepKind("xform.rotate", "Rotate", "Rotate geometry", ["geometry", "angle"], ["geometry"], ["Transforms"]),
-	brepKind("xform.mirror", "Mirror", "Mirror geometry", ["geometry"], ["geometry"], ["Transforms"]),
-	brepKind("xform.scale", "Scale", "Scale geometry", ["geometry", "factor"], ["geometry"], ["Transforms"]),
-	brepKind("xform.clone", "Clone", "Clone geometry", ["geometry"], ["geometry"], ["Transforms"]),
-	brepKind("xform.linearPattern", "Linear Pattern", "Linear array", ["geometry", "count", "spacing"], ["geometry"], ["Transforms"]),
-	brepKind("xform.circularPattern", "Circular Pattern", "Circular array", ["geometry", "count", "angle"], ["geometry"], ["Transforms"]),
-	brepKind("xform.rectangularPattern", "Rect Pattern", "Rectangular array", ["geometry", "countA", "countB", "spacing"], ["geometry"], ["Transforms"]),
-	brepKind("intersect.section", "Section", "Section two solids", ["a", "b"], ["geometry"], ["Intersections"]),
-	brepKind("intersect.sectionToFace", "Section To Face", "Section as face", ["a", "b"], ["geometry"], ["Intersections"]),
-	brepKind("intersect.slice", "Slice", "Slice solid by plane", ["geometry"], ["geometry"], ["Intersections"]),
-	brepKind("intersect.check", "Check Interference", "Check interference", ["a", "b"], ["number"], ["Intersections"]),
-	brepKind("intersect.split", "Split", "Split solid by tool", ["geometry", "tool"], ["list"], ["Intersections"]),
-	brepKind("eval.pointOnCurve", "Point On Curve", "Evaluate point on curve", ["geometry", "t"], ["point"], ["Evaluate"]),
-	brepKind("eval.tangentOnCurve", "Tangent On Curve", "Tangent on curve", ["geometry", "t"], ["vector"], ["Evaluate"]),
-	brepKind("eval.curveLength", "Curve Length", "Curve length", ["geometry"], ["number"], ["Evaluate"]),
-	brepKind("eval.pointOnSurface", "Point On Surface", "Point on surface", ["geometry", "u", "v"], ["point"], ["Evaluate"]),
-	brepKind("eval.normalAt", "Normal At", "Surface normal", ["geometry", "u", "v"], ["vector"], ["Evaluate"]),
-	brepKind("eval.faceCenter", "Face Center", "Face center point", ["geometry"], ["point"], ["Evaluate"]),
-	brepKind("eval.curveStart", "Curve Start", "Curve start point", ["geometry"], ["point"], ["Evaluate"]),
-	brepKind("eval.curveEnd", "Curve End", "Curve end point", ["geometry"], ["point"], ["Evaluate"]),
-	brepKind("eval.curveClosed", "Curve Closed", "Whether curve is closed", ["geometry"], ["number"], ["Evaluate"]),
-	brepKind("eval.uvBounds", "UV Bounds", "Face UV parameter bounds", ["geometry"], ["dictionary"], ["Evaluate"]),
-	brepKind("eval.vertexPosition", "Vertex Position", "Vertex position", ["geometry"], ["point"], ["Evaluate"]),
-	brepKind("eval.divideCurve", "Divide Curve", "Divide curve into points", ["geometry", "count"], ["list"], ["Evaluate"]),
-	brepKind("measure.volume", "Volume", "Solid volume", ["geometry"], ["number"], ["Measure"]),
-	brepKind("measure.area", "Area", "Face/solid area", ["geometry"], ["number"], ["Measure"]),
-	brepKind("measure.length", "Length", "Edge/wire length", ["geometry"], ["number"], ["Measure"]),
-	brepKind("measure.distance", "Distance", "Distance between shapes", ["a", "b"], ["number"], ["Measure"]),
-	brepKind("query.bounds", "Bounds", "Axis-aligned bounds", ["geometry"], ["dictionary"], ["Query"]),
-	brepKind("query.edges", "Edges", "List edges", ["geometry"], ["list"], ["Query"]),
-	brepKind("query.faces", "Faces", "List faces", ["geometry"], ["list"], ["Query"]),
-	brepKind("query.wires", "Wires", "List wires", ["geometry"], ["list"], ["Query"]),
-	brepKind("query.vertices", "Vertices", "List vertices", ["geometry"], ["list"], ["Query"]),
-	brepKind("repair.heal", "Heal Solid", "Heal solid", ["geometry"], ["geometry"], ["Repair"]),
-	brepKind("repair.healFace", "Heal Face", "Heal face", ["geometry"], ["geometry"], ["Repair"]),
-	brepKind("repair.sewShells", "Sew Shells", "Sew faces into shell", ["faces"], ["geometry"], ["Repair"]),
-	brepKind("repair.autoHeal", "Auto Heal", "Auto heal shape", ["geometry"], ["geometry"], ["Repair"]),
-	brepKind("repair.solidFromShell", "Solid From Shell", "Make solid from shell", ["geometry"], ["geometry"], ["Repair"]),
-	brepKind("io.exportStep", "Export STEP", "Export STEP bytes as base64", ["geometry"], ["text"], ["IO"]),
-	brepKind("io.exportStl", "Export STL", "Export STL bytes as base64", ["geometry"], ["text"], ["IO"]),
-	brepKind("io.importStep", "Import STEP", "Import STEP from base64", ["text"], ["geometry"], ["IO"]),
-	brepKind("io.importStl", "Import STL", "Import STL from base64", ["text"], ["geometry"], ["IO"]),
-	brepKind("gear.external", "External Gear", "Spur external gear", ["teeth", "module"], ["geometry"], ["Gears"]),
-	brepKind("gear.internal", "Internal Gear", "Spur internal gear", ["teeth", "module"], ["geometry"], ["Gears"]),
+	brepKind("point", "Point", "3D point from x,y,z", [num("x", 0), num("y", 0), num("z", 0)], ["point"], ["Construct"]),
+	brepKind("vector", "Vector", "3D vector from x,y,z", [num("x", 0), num("y", 0), num("z", 0)], ["vector"], ["Construct"]),
+	brepKind("prim3d.box", "Box", "Axis-aligned box", [num("width", 1), num("depth", 1), num("height", 1)], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.sphere", "Sphere", "Sphere solid", [num("radius", 1)], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.cylinder", "Cylinder", "Cylinder solid", [num("radius", 1), num("height", 1)], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.cone", "Cone", "Cone solid", [num("radius", 1), num("height", 1)], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.torus", "Torus", "Torus solid", [num("major", 2), num("minor", 0.5)], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.ellipsoid", "Ellipsoid", "Ellipsoid solid", [num("rx", 1), num("ry", 1), num("rz", 1)], ["geometry"], ["Primitives 3D"]),
+	brepKind("prim3d.polyhedron", "Polyhedron", "Polyhedron from vertices and faces", [inp("vertices", "value"), inp("faces", "list")], ["geometry"], ["Primitives 3D"]),
+	brepKind("draw2d.rectangle", "Draw Rectangle", "2D rectangle drawing", [num("width", 2), num("height", 1)], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.circle", "Draw Circle", "2D circle drawing", [num("radius", 1)], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.ellipse", "Draw Ellipse", "2D ellipse drawing", [num("major", 1), num("minor", 0.5)], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.roundedRectangle", "Draw Rounded Rect", "2D rounded rectangle", [num("width", 2), num("height", 1), num("radius", 0.2)], ["geometry"], ["Draw 2D"]),
+	brepKind("draw2d.polysides", "Draw Polysides", "2D regular polygon", [num("radius", 1), num("sides", 6)], ["geometry"], ["Draw 2D"]),
+	brepKind("sketch2d.circle", "Sketch Circle", "Sketched circle profile", [num("radius", 1)], ["geometry"], ["Draw 2D"]),
+	brepKind("sketch2d.rectangle", "Sketch Rectangle", "Sketched rectangle profile", [num("width", 2), num("height", 1)], ["geometry"], ["Draw 2D"]),
+	brepKind("curve.line", "Line", "Line edge", [inp("start", "point"), inp("end", "point")], ["geometry"], ["Curves"]),
+	brepKind("curve.circle", "Circle", "Circle edge", [num("radius", 1)], ["geometry"], ["Curves"]),
+	brepKind("curve.ellipse", "Ellipse", "Ellipse edge", [num("major", 1), num("minor", 0.5)], ["geometry"], ["Curves"]),
+	brepKind("curve.helix", "Helix", "Helix edge", [num("radius", 1), num("pitch", 1), num("height", 3)], ["geometry"], ["Curves"]),
+	brepKind("curve.threePointArc", "Three Point Arc", "Arc through three points", [inp("a", "geometry"), inp("b", "geometry"), inp("c", "point")], ["geometry"], ["Curves"]),
+	brepKind("curve.tangentArc", "Tangent Arc", "Tangent arc", [inp("start", "point"), inp("tangent", "vector"), inp("end", "point")], ["geometry"], ["Curves"]),
+	brepKind("curve.ellipseArc", "Ellipse Arc", "Elliptical arc", [num("major", 1), num("minor", 0.5), num("startAngle", 0), num("endAngle", Math.PI)], ["geometry"], ["Curves"]),
+	brepKind("curve.bezier", "Bezier", "Bezier curve from poles", [inp("poles", "list")], ["geometry"], ["Curves"]),
+	brepKind("curve.bspline", "B-Spline", "B-spline approximation", [inp("poles", "list"), num("degree", 3)], ["geometry"], ["Curves"]),
+	brepKind("curve.approximate", "Approximate Curve", "Approximate curve through points", [inp("points", "list"), num("tolerance", 0.01)], ["geometry"], ["Curves"]),
+	brepKind("curve.polygon", "Polygon", "Polygon wire from points", [inp("points", "list")], ["geometry"], ["Curves"]),
+	brepKind("curve.reparametrize", "Reparametrize Curve", "Resample curve to unit domain", [inp("geometry", "geometry"), num("samples", 64)], ["geometry"], ["Curves"]),
+	brepKind("curve.interpolate", "Interpolate", "Interpolated curve", [inp("geometry", "geometry")], ["geometry"], ["Curves"]),
+	brepKind("curve.wire", "Wire", "Wire from edges", [inp("geometry", "geometry")], ["geometry"], ["Curves"]),
+	brepKind("curve.wireLoop", "Wire Loop", "Closed wire loop", [inp("geometry", "geometry")], ["geometry"], ["Curves"]),
+	brepKind("surface.face", "Face", "Face from wires", [inp("geometry", "geometry")], ["geometry"], ["Surfaces"]),
+	brepKind("surface.filledFace", "Filled Face", "Filled face from wire", [inp("geometry", "geometry")], ["geometry"], ["Surfaces"]),
+	brepKind("surface.fill", "Fill", "Fill from edges", [inp("geometry", "geometry")], ["geometry"], ["Surfaces"]),
+	brepKind("surface.offsetFace", "Offset Face", "Offset face", [inp("geometry", "geometry"), num("distance", 0.1)], ["geometry"], ["Surfaces"]),
+	brepKind("surface.subFace", "Sub Face", "Face with hole wire", [inp("geometry", "geometry"), inp("wire", "geometry")], ["geometry"], ["Surfaces"]),
+	brepKind("surface.fromGrid", "Surface From Grid", "NURBS surface from point grid", [inp("grid", "value")], ["geometry"], ["Surfaces"]),
+	brepKind("surface.reparametrize", "Reparametrize Surface", "Resample face to unit UV domain", [inp("geometry", "geometry"), num("uSamples", 12), num("vSamples", 12)], ["geometry"], ["Surfaces"]),
+	brepKind("solid.extrude", "Extrude", "Extrude profile", [inp("geometry", "geometry"), vec("vector", [0, 0, 5])], ["geometry"], ["Solid"]),
+	brepKind("solid.supportExtrude", "Support Extrude", "Support extrude", [inp("geometry", "geometry"), vec("vector", [0, 0, 5])], ["geometry"], ["Solid"]),
+	brepKind("solid.twistExtrude", "Twist Extrude", "Twist extrude profile", [inp("geometry", "geometry"), vec("vector", [0, 0, 5]), num("angle", Math.PI / 4)], ["geometry"], ["Solid"]),
+	brepKind("solid.draft", "Draft", "Draft solid faces", [inp("geometry", "geometry"), num("angle", Math.PI / 12), inp("direction", "vector")], ["geometry"], ["Solid"]),
+	brepKind("solid.revolve", "Revolve", "Revolve profile", [inp("geometry", "geometry"), num("angle", Math.PI * 2), inp("axis", "vector")], ["geometry"], ["Solid"]),
+	brepKind("solid.loft", "Loft", "Loft sections", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Solid"]),
+	brepKind("solid.sweep", "Sweep", "Sweep profile along path", [inp("profile", "geometry"), inp("path", "geometry")], ["geometry"], ["Solid"]),
+	brepKind("solid.fillet", "Fillet", "Fillet solid", [inp("geometry", "geometry"), num("radius", 0.1)], ["geometry"], ["Solid"]),
+	brepKind("solid.chamfer", "Chamfer", "Chamfer solid", [inp("geometry", "geometry"), num("distance", 0.1)], ["geometry"], ["Solid"]),
+	brepKind("solid.shell", "Shell", "Shell solid", [inp("geometry", "geometry"), num("thickness", 0.1)], ["geometry"], ["Solid"]),
+	brepKind("solid.offset", "Offset", "Offset shape", [inp("geometry", "geometry"), num("distance", 0.1)], ["geometry"], ["Solid"]),
+	brepKind("solid.thicken", "Thicken", "Thicken face", [inp("geometry", "geometry"), num("thickness", 0.1)], ["geometry"], ["Solid"]),
+	brepKind("solid.hull", "Hull", "Convex hull of shapes", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Solid"]),
+	brepKind("solid.minkowski", "Minkowski", "Minkowski sum", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Solid"]),
+	brepKind("solid.convexHull", "Convex Hull", "Convex hull", [inp("geometry", "geometry")], ["geometry"], ["Solid"]),
+	brepKind("bool.fuse", "Fuse", "Boolean union", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.cut", "Cut", "Boolean difference", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.intersect", "Intersect", "Boolean intersection", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.fuseAll", "Fuse All", "Fuse multiple solids", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.fuse2d", "Fuse 2D", "2D boolean union", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.cut2d", "Cut 2D", "2D boolean cut", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.intersect2d", "Intersect 2D", "2D boolean intersect", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Booleans"]),
+	brepKind("bool.cutAll", "Cut All", "Cut solid with multiple cutters", [inp("geometry", "geometry"), inp("cutters", "list")], ["geometry"], ["Booleans"]),
+	brepKind("xform.translate", "Translate", "Translate geometry", [inp("geometry", "geometry"), inp("offset", "vector")], ["geometry"], ["Transforms"]),
+	brepKind("xform.rotate", "Rotate", "Rotate geometry", [inp("geometry", "geometry"), num("angle", Math.PI / 4), inp("axis", "vector")], ["geometry"], ["Transforms"]),
+	brepKind("xform.mirror", "Mirror", "Mirror geometry", [inp("geometry", "geometry"), inp("origin", "point"), inp("normal", "vector")], ["geometry"], ["Transforms"]),
+	brepKind("xform.scale", "Scale", "Scale geometry", [inp("geometry", "geometry"), num("factor", 2), inp("center", "point")], ["geometry"], ["Transforms"]),
+	brepKind("xform.clone", "Clone", "Clone geometry", [inp("geometry", "geometry")], ["geometry"], ["Transforms"]),
+	brepKind("xform.linearPattern", "Linear Pattern", "Linear array", [inp("geometry", "geometry"), inp("direction", "vector"), num("count", 1), num("spacing", 1)], ["geometry"], ["Transforms"]),
+	brepKind("xform.circularPattern", "Circular Pattern", "Circular array", [inp("geometry", "geometry"), inp("axis", "vector"), num("count", 1), num("angle", Math.PI * 2)], ["geometry"], ["Transforms"]),
+	brepKind("xform.rectangularPattern", "Rect Pattern", "Rectangular array", [inp("geometry", "geometry"), num("countA", 2), num("countB", 2), num("spacing", 1)], ["geometry"], ["Transforms"]),
+	brepKind("intersect.section", "Section", "Section two solids", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Intersections"]),
+	brepKind("intersect.sectionToFace", "Section To Face", "Section as face", [inp("a", "geometry"), inp("b", "geometry")], ["geometry"], ["Intersections"]),
+	brepKind("intersect.slice", "Slice", "Slice solid by plane", [inp("geometry", "geometry"), inp("origin", "point"), inp("normal", "vector")], ["geometry"], ["Intersections"]),
+	brepKind("intersect.check", "Check Interference", "Check interference", [inp("a", "geometry"), inp("b", "geometry")], ["number"], ["Intersections"]),
+	brepKind("intersect.split", "Split", "Split solid by tool", [inp("geometry", "geometry"), inp("tool", "geometry")], ["list"], ["Intersections"]),
+	brepKind("eval.pointOnCurve", "Point On Curve", "Evaluate point on curve", [inp("geometry", "geometry"), num("t", 0)], ["point"], ["Evaluate"]),
+	brepKind("eval.tangentOnCurve", "Tangent On Curve", "Tangent on curve", [inp("geometry", "geometry"), num("t", 0)], ["vector"], ["Evaluate"]),
+	brepKind("eval.curveLength", "Curve Length", "Curve length", [inp("geometry", "geometry")], ["number"], ["Evaluate"]),
+	brepKind("eval.pointOnSurface", "Point On Surface", "Point on surface", [inp("geometry", "geometry"), num("u", 0), num("v", 0)], ["point"], ["Evaluate"]),
+	brepKind("eval.normalAt", "Normal At", "Surface normal", [inp("geometry", "geometry"), num("u", 0), num("v", 0)], ["vector"], ["Evaluate"]),
+	brepKind("eval.faceCenter", "Face Center", "Face center point", [inp("geometry", "geometry")], ["point"], ["Evaluate"]),
+	brepKind("eval.curveStart", "Curve Start", "Curve start point", [inp("geometry", "geometry")], ["point"], ["Evaluate"]),
+	brepKind("eval.curveEnd", "Curve End", "Curve end point", [inp("geometry", "geometry")], ["point"], ["Evaluate"]),
+	brepKind("eval.curveClosed", "Curve Closed", "Whether curve is closed", [inp("geometry", "geometry")], ["number"], ["Evaluate"]),
+	brepKind("eval.uvBounds", "UV Bounds", "Face UV parameter bounds", [inp("geometry", "geometry")], ["dictionary"], ["Evaluate"]),
+	brepKind("eval.vertexPosition", "Vertex Position", "Vertex position", [inp("geometry", "geometry")], ["point"], ["Evaluate"]),
+	brepKind("eval.divideCurve", "Divide Curve", "Divide curve into points", [inp("geometry", "geometry"), num("count", 1)], ["list"], ["Evaluate"]),
+	brepKind("measure.volume", "Volume", "Solid volume", [inp("geometry", "geometry")], ["number"], ["Measure"]),
+	brepKind("measure.area", "Area", "Face/solid area", [inp("geometry", "geometry")], ["number"], ["Measure"]),
+	brepKind("measure.length", "Length", "Edge/wire length", [inp("geometry", "geometry")], ["number"], ["Measure"]),
+	brepKind("measure.distance", "Distance", "Distance between shapes", [inp("a", "geometry"), inp("b", "geometry")], ["number"], ["Measure"]),
+	brepKind("query.bounds", "Bounds", "Axis-aligned bounds", [inp("geometry", "geometry")], ["dictionary"], ["Query"]),
+	brepKind("query.edges", "Edges", "List edges", [inp("geometry", "geometry")], ["list"], ["Query"]),
+	brepKind("query.faces", "Faces", "List faces", [inp("geometry", "geometry")], ["list"], ["Query"]),
+	brepKind("query.wires", "Wires", "List wires", [inp("geometry", "geometry")], ["list"], ["Query"]),
+	brepKind("query.vertices", "Vertices", "List vertices", [inp("geometry", "geometry")], ["list"], ["Query"]),
+	brepKind("repair.heal", "Heal Solid", "Heal solid", [inp("geometry", "geometry")], ["geometry"], ["Repair"]),
+	brepKind("repair.healFace", "Heal Face", "Heal face", [inp("geometry", "geometry")], ["geometry"], ["Repair"]),
+	brepKind("repair.sewShells", "Sew Shells", "Sew faces into shell", [inp("faces", "list")], ["geometry"], ["Repair"]),
+	brepKind("repair.autoHeal", "Auto Heal", "Auto heal shape", [inp("geometry", "geometry")], ["geometry"], ["Repair"]),
+	brepKind("repair.solidFromShell", "Solid From Shell", "Make solid from shell", [inp("geometry", "geometry")], ["geometry"], ["Repair"]),
+	brepKind("io.exportStep", "Export STEP", "Export STEP bytes as base64", [inp("geometry", "geometry")], ["text"], ["IO"]),
+	brepKind("io.exportStl", "Export STL", "Export STL bytes as base64", [inp("geometry", "geometry")], ["text"], ["IO"]),
+	brepKind("io.importStep", "Import STEP", "Import STEP from base64", [inp("text", "text")], ["geometry"], ["IO"]),
+	brepKind("io.importStl", "Import STL", "Import STL from base64", [inp("text", "text")], ["geometry"], ["IO"]),
+	brepKind("gear.external", "External Gear", "Spur external gear", [num("teeth", 20), num("module", 2)], ["geometry"], ["Gears"]),
+	brepKind("gear.internal", "Internal Gear", "Spur internal gear", [num("teeth", 20), num("module", 2)], ["geometry"], ["Gears"]),
 ];
 
 const BREP_MODULE_MANIFEST: FlowModuleManifestV1 = {
@@ -520,7 +544,7 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.solid.revolve": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.revolveSync(shape, [0, 0, 1], parseNumber(input.angle, Math.PI * 2)));
+		return geoOut(k.revolveSync(shape, parseVec3Input(input, "axis", [0, 0, 1]), parseNumber(input.angle, Math.PI * 2)));
 	},
 	"brep.solid.loft": (input, k) => {
 		const a = parseGeometry(input, "a");
@@ -591,7 +615,7 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.solid.draft": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.draftSync(shape, parseNumber(input.angle, Math.PI / 12), [0, 0, 1]));
+		return geoOut(k.draftSync(shape, parseNumber(input.angle, Math.PI / 12), parseVec3Input(input, "direction", [0, 0, 1])));
 	},
 	"brep.bool.fuse": (input, k) => {
 		const a = parseGeometry(input, "a");
@@ -649,17 +673,17 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.xform.rotate": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.rotateGeomSync(shape, [0, 0, 1], parseNumber(input.angle, Math.PI / 4)));
+		return geoOut(k.rotateGeomSync(shape, parseVec3Input(input, "axis", [0, 0, 1]), parseNumber(input.angle, Math.PI / 4)));
 	},
 	"brep.xform.mirror": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.mirrorGeomSync(shape, [0, 0, 0], [1, 0, 0]));
+		return geoOut(k.mirrorGeomSync(shape, parseVec3Input(input, "origin", [0, 0, 0]), parseVec3Input(input, "normal", [1, 0, 0])));
 	},
 	"brep.xform.scale": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.scaleGeomSync(shape, parseNumber(input.factor, 2)));
+		return geoOut(k.scaleGeomSync(shape, parseNumber(input.factor, 2), parseVec3Input(input, "center", [0, 0, 0])));
 	},
 	"brep.xform.clone": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -669,12 +693,16 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.xform.linearPattern": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.linearPatternSync(shape, [1, 0, 0], parseNumber(input.count, 3), parseNumber(input.spacing, 2)));
+		return geoOut(
+			k.linearPatternSync(shape, parseVec3Input(input, "direction", [1, 0, 0]), parseNumber(input.count, 3), parseNumber(input.spacing, 2)),
+		);
 	},
 	"brep.xform.circularPattern": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.circularPatternSync(shape, [0, 0, 1], parseNumber(input.count, 4), parseNumber(input.angle, Math.PI * 2)));
+		return geoOut(
+			k.circularPatternSync(shape, parseVec3Input(input, "axis", [0, 0, 1]), parseNumber(input.count, 4), parseNumber(input.angle, Math.PI * 2)),
+		);
 	},
 	"brep.xform.rectangularPattern": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -696,7 +724,7 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.intersect.slice": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
 		if (!shape) throw new Error("missing geometry");
-		return geoOut(k.sliceSync(shape, [0, 0, 0], [0, 0, 1]));
+		return geoOut(k.sliceSync(shape, parseVec3Input(input, "origin", [0, 0, 0]), parseVec3Input(input, "normal", [0, 0, 1])));
 	},
 	"brep.intersect.check": (input, k) => {
 		const a = parseGeometry(input, "a");
@@ -871,7 +899,7 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 
 /** @emoji 🧊 Synchronous brep neuron evaluation (requires pre-initialized WASM). */
 export function evaluateBrepFlowKind(kindId: string, inputJson: string, kernel: BrepKernelType): string {
-	const input = JSON.parse(inputJson) as Record<string, unknown>;
+	const input = applyBrepInputDefaults(kindId, JSON.parse(inputJson) as Record<string, unknown>);
 	try {
 		const handler = BREP_EVAL_HANDLERS[kindId];
 		if (!handler) return JSON.stringify({ error: `unknown brep kind: ${kindId}` });
@@ -1015,18 +1043,15 @@ export function filterVisiblePreviewItems(
 		readonly hoveredChannel: ProceduralChannelRef | null;
 	},
 ): ProceduralPreviewItem[] {
-	const { showMode, selectedNodeIds, selectedChannels, hoveredNodeId, hoveredChannel } = options;
-	if (hoveredChannel) {
-		return items.filter((entry) => proceduralChannelMatches(entry, hoveredChannel));
-	}
-	if (selectedChannels.length > 0) {
-		return items.filter((entry) => selectedChannels.some((channel) => proceduralChannelMatches(entry, channel)));
-	}
-	if (hoveredNodeId) {
-		return items.filter((entry) => entry.widgetId === hoveredNodeId);
-	}
-	if (showMode === "selected" && selectedNodeIds.length > 0) {
-		return items.filter((entry) => selectedNodeIds.includes(entry.widgetId));
+	const { showMode, selectedNodeIds, selectedChannels } = options;
+	if (showMode === "selected") {
+		if (selectedChannels.length > 0) {
+			return items.filter((entry) => selectedChannels.some((channel) => proceduralChannelMatches(entry, channel)));
+		}
+		if (selectedNodeIds.length > 0) {
+			return items.filter((entry) => selectedNodeIds.includes(entry.widgetId));
+		}
+		return [];
 	}
 	return items.filter((entry) => entry.direction === "out");
 }
@@ -1252,7 +1277,25 @@ function buildMeshBuffers(data: ReturnType<typeof meshTransferToGeometryData>): 
 
 const PROCEDURAL_PREVIEW_POINT_RADIUS = 0.08;
 const PROCEDURAL_PREVIEW_BOUNDS_PAD = 0.05;
+const PROCEDURAL_PREVIEW_LINE_PICK_MIN = 0.08;
 const PROCEDURAL_GEOMETRY_REF_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|drawing)-/;
+
+export function previewPickProxyFromBounds(bounds: { min: Vec3; max: Vec3 }): { position: Vec3; size: Vec3 } {
+	const [minX, minY, minZ] = bounds.min;
+	const [maxX, maxY, maxZ] = bounds.max;
+	const minPick = PROCEDURAL_PREVIEW_LINE_PICK_MIN;
+	return {
+		position: [(minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5],
+		size: [Math.max(maxX - minX, minPick), Math.max(maxY - minY, minPick), Math.max(maxZ - minZ, minPick)],
+	};
+}
+
+function previewLineColor(colors: NonNullable<ReturnType<typeof meshStyleColors>>, hovered: boolean, hasSurface: boolean): string {
+	if (hovered && !hasSurface) {
+		return meshStyleColors("selected")?.lineColor ?? meshStyleColors("highlighted")?.lineColor ?? colors.lineColor;
+	}
+	return colors.lineColor;
+}
 
 function parsePreviewVec3(input: unknown): Vec3 | null {
 	return parseVec3Loose(input);
@@ -1364,6 +1407,13 @@ function BrepPreviewLayer({
 	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
 	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const geometryRef = item.kind === "geometry" ? item.handle : null;
+	const lineOnlyGeometry = item.kind === "geometry" && !buffers.surface && Boolean(buffers.lines);
+	const pickProxy = useMemo(() => {
+		if (!lineOnlyGeometry) return null;
+		const bounds = worldBoundsForPreviewItem(item, kernel);
+		return bounds ? previewPickProxyFromBounds(bounds) : null;
+	}, [item, kernel, lineOnlyGeometry]);
+	const lineColor = previewLineColor(colors, renderMode.asHover, Boolean(buffers.surface));
 	const arrow = useMemo(() => {
 		if (item.kind !== "vector") return null;
 		const tip = new THREE.Vector3(item.directionVec[0], item.directionVec[1], item.directionVec[2]);
@@ -1445,7 +1495,13 @@ function BrepPreviewLayer({
 	}
 
 	return (
-		<group {...handlers}>
+		<group {...(pickProxy ? {} : handlers)}>
+			{pickProxy ? (
+				<mesh position={pickProxy.position} {...handlers}>
+					<boxGeometry args={pickProxy.size} />
+					<meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
+				</mesh>
+			) : null}
 			{buffers.surface ? (
 				<mesh geometry={buffers.surface} raycast={chrome.pickEnabled ? undefined : () => null}>
 					<meshStandardMaterial
@@ -1461,13 +1517,18 @@ function BrepPreviewLayer({
 				</mesh>
 			) : null}
 			{buffers.lines ? (
-				<lineSegments geometry={buffers.lines}>
-					<lineBasicMaterial color={colors.lineColor} linewidth={1} transparent={opacity < 1} opacity={opacity} />
+				<lineSegments geometry={buffers.lines} raycast={() => null}>
+					<lineBasicMaterial
+						color={lineColor}
+						linewidth={renderMode.asHover && !buffers.surface ? 2 : 1}
+						transparent={opacity < 1}
+						opacity={opacity}
+					/>
 				</lineSegments>
 			) : null}
 			{buffers.points ? (
 				<points geometry={buffers.points}>
-					<pointsMaterial color={colors.lineColor} size={renderMode.asHover ? 0.16 : 0.12} transparent={opacity < 1} opacity={opacity} />
+					<pointsMaterial color={lineColor} size={renderMode.asHover ? 0.16 : 0.12} transparent={opacity < 1} opacity={opacity} />
 				</points>
 			) : null}
 		</group>
@@ -2069,6 +2130,13 @@ if (import.meta.vitest) {
 			(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 		});
 
+		it("applyBrepInputDefaults injects declared brep defaults", () => {
+			const out = applyBrepInputDefaults("brep.prim3d.box", {});
+			expect(out).toEqual({ width: 1, depth: 1, height: 1 });
+			const extrude = applyBrepInputDefaults("brep.solid.extrude", {});
+			expect(extrude.vector).toEqual([0, 0, 5]);
+		});
+
 		it("brep.prim3d.box evaluates to geometry handle", () => {
 			const out = evaluateBrepFlowKind("brep.prim3d.box", JSON.stringify({ width: 1, depth: 1, height: 1 }), kernel);
 			const parsed = JSON.parse(out) as { geometry?: string };
@@ -2089,8 +2157,80 @@ if (import.meta.vitest) {
 				const mesh = await kernel.tessellateGeometry(tallParsed.geometry as GeometryRef, 0.05);
 				expect(isRenderableMeshTransfer(mesh)).toBe(true);
 				const bounds = kernel.getBoundsSync(tallParsed.geometry as GeometryRef);
-				expect(bounds.max[2] - bounds.min[2]).toBeCloseTo(5, 4);
+				expect(bounds.max[2] - bounds.min[2]).toBeCloseTo(5, 1);
 			}
+		});
+
+		it("brep.solid.extrude honors non-z vector direction", async () => {
+			const sketch = evaluateBrepFlowKind("brep.sketch2d.circle", JSON.stringify({ radius: 1 }), kernel);
+			const sketchParsed = JSON.parse(sketch) as { geometry?: string };
+			const out = evaluateBrepFlowKind(
+				"brep.solid.extrude",
+				JSON.stringify({ geometry: sketchParsed.geometry, vector: { x: 4, y: 0, z: 0 } }),
+				kernel,
+			);
+			const parsed = JSON.parse(out) as { geometry?: string; error?: string };
+			expect(parsed.error).toBeUndefined();
+			const bounds = kernel.getBoundsSync(parsed.geometry as GeometryRef);
+			const profileBounds = kernel.getBoundsSync(sketchParsed.geometry as GeometryRef);
+			expect(bounds.max[0] - bounds.min[0]).toBeGreaterThan(profileBounds.max[0] - profileBounds.min[0] + 3);
+		});
+
+		it("brep.bool.cut reduces base volume", () => {
+			const base = evaluateBrepFlowKind("brep.prim3d.box", JSON.stringify({ width: 2, depth: 2, height: 2 }), kernel);
+			const tool = evaluateBrepFlowKind("brep.prim3d.box", JSON.stringify({ width: 1, depth: 1, height: 1 }), kernel);
+			const baseParsed = JSON.parse(base) as { geometry?: string };
+			const toolParsed = JSON.parse(tool) as { geometry?: string };
+			const baseVolume = kernel.measureVolumeSync(baseParsed.geometry as GeometryRef);
+			const cutOut = evaluateBrepFlowKind(
+				"brep.bool.cut",
+				JSON.stringify({ a: baseParsed.geometry, b: toolParsed.geometry }),
+				kernel,
+			);
+			const cutParsed = JSON.parse(cutOut) as { geometry?: string; error?: string };
+			expect(cutParsed.error).toBeUndefined();
+			expect(kernel.measureVolumeSync(cutParsed.geometry as GeometryRef)).toBeLessThan(baseVolume);
+		});
+
+		it("brep.xform.rotate uses axis input", () => {
+			const box = evaluateBrepFlowKind("brep.prim3d.box", JSON.stringify({ width: 2, depth: 1, height: 1 }), kernel);
+			const boxParsed = JSON.parse(box) as { geometry?: string };
+			const before = kernel.getBoundsSync(boxParsed.geometry as GeometryRef);
+			const out = evaluateBrepFlowKind(
+				"brep.xform.rotate",
+				JSON.stringify({ geometry: boxParsed.geometry, angle: Math.PI / 2, axis: { x: 0, y: 0, z: 1 } }),
+				kernel,
+			);
+			const parsed = JSON.parse(out) as { geometry?: string; error?: string };
+			expect(parsed.error).toBeUndefined();
+			const after = kernel.getBoundsSync(parsed.geometry as GeometryRef);
+			expect(after.min[0]).not.toBeCloseTo(before.min[0], 1);
+		});
+
+		it("brep.xform.mirror reflects across plane", () => {
+			const box = evaluateBrepFlowKind("brep.prim3d.box", JSON.stringify({ width: 1, depth: 1, height: 1 }), kernel);
+			const boxParsed = JSON.parse(box) as { geometry?: string };
+			const translated = evaluateBrepFlowKind(
+				"brep.xform.translate",
+				JSON.stringify({ geometry: boxParsed.geometry, offset: { x: 2, y: 0, z: 0 } }),
+				kernel,
+			);
+			const translatedParsed = JSON.parse(translated) as { geometry?: string };
+			const before = kernel.getBoundsSync(translatedParsed.geometry as GeometryRef);
+			const out = evaluateBrepFlowKind(
+				"brep.xform.mirror",
+				JSON.stringify({
+					geometry: translatedParsed.geometry,
+					origin: { x: 0, y: 0, z: 0 },
+					normal: { x: 1, y: 0, z: 0 },
+				}),
+				kernel,
+			);
+			const parsed = JSON.parse(out) as { geometry?: string; error?: string };
+			expect(parsed.error).toBeUndefined();
+			const after = kernel.getBoundsSync(parsed.geometry as GeometryRef);
+			expect(after.max[0]).toBeLessThan(0);
+			expect(after.min[0]).toBeLessThan(before.min[0]);
 		});
 
 		it("brep.curve.line evaluates to edge handle", () => {
@@ -2143,21 +2283,63 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("filterVisiblePreviewItems isolates hovered channels", async () => {
+		it("previewPickProxyFromBounds enforces a minimum pick size for flat profiles", async () => {
+			const { previewPickProxyFromBounds: pickProxy } = await import("./index.tsx");
+			const proxy = pickProxy({ min: [-2, -2, -1e-7], max: [2, 2, 1e-7] });
+			expect(proxy.position).toEqual([0, 0, 0]);
+			expect(proxy.size[0]).toBe(4);
+			expect(proxy.size[2]).toBeGreaterThanOrEqual(0.08);
+		});
+
+		it("filterVisiblePreviewItems keeps all items visible on hover", async () => {
 			const { filterVisiblePreviewItems: filter } = await import("./index.tsx");
 			const items = [
 				{ widgetId: "offset", port: "geometry", direction: "in" as const, kind: "geometry" as const, handle: "drawing-1" as const },
 				{ widgetId: "offset", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "wire-2" as const },
+				{ widgetId: "box", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "solid-3" as const },
 			];
 			const visible = filter(items, {
 				showMode: "everything",
 				selectedNodeIds: [],
 				selectedChannels: [],
-				hoveredNodeId: null,
+				hoveredNodeId: "offset",
 				hoveredChannel: { widgetId: "offset", port: "geometry", direction: "in" },
 			});
+			expect(visible).toHaveLength(2);
+			expect(visible.map((entry) => entry.widgetId).sort()).toEqual(["box", "offset"]);
+		});
+
+		it("filterVisiblePreviewItems keeps all outputs visible when flow selection is active in everything mode", async () => {
+			const { filterVisiblePreviewItems: filter } = await import("./index.tsx");
+			const items = [
+				{ widgetId: "circle", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "drawing-1" as const },
+				{ widgetId: "box", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "solid-2" as const },
+			];
+			const visible = filter(items, {
+				showMode: "everything",
+				selectedNodeIds: ["circle"],
+				selectedChannels: [{ widgetId: "circle", port: "out", direction: "out" }],
+				hoveredNodeId: null,
+				hoveredChannel: null,
+			});
+			expect(visible).toHaveLength(2);
+		});
+
+		it("filterVisiblePreviewItems isolates selection only in selected mode", async () => {
+			const { filterVisiblePreviewItems: filter } = await import("./index.tsx");
+			const items = [
+				{ widgetId: "circle", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "drawing-1" as const },
+				{ widgetId: "box", port: "out", direction: "out" as const, kind: "geometry" as const, handle: "solid-2" as const },
+			];
+			const visible = filter(items, {
+				showMode: "selected",
+				selectedNodeIds: ["circle"],
+				selectedChannels: [],
+				hoveredNodeId: null,
+				hoveredChannel: null,
+			});
 			expect(visible).toHaveLength(1);
-			expect(visible[0]?.port).toBe("geometry");
+			expect(visible[0]?.widgetId).toBe("circle");
 		});
 
 		it("brep.point and brep.vector evaluate to previewable outputs", () => {

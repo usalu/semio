@@ -386,6 +386,7 @@ import {
 	checkInterference,
 	circle,
 	clone,
+	complexExtrude,
 	cone,
 	convexHull,
 	curveEndPoint,
@@ -445,6 +446,7 @@ import {
 	normalAt,
 	offset,
 	offsetFace,
+	offsetWire2D,
 	pointOnSurface,
 	polyhedron,
 	polygon,
@@ -464,7 +466,6 @@ import {
 	sphere,
 	split,
 	subFace,
-	supportExtrude,
 	surfaceFromGrid,
 	sweep,
 	tangentArc,
@@ -486,7 +487,7 @@ import {
 	exportSTEP,
 	exportSTL,
 } from "brepjs";
-import type { AnyShape, Drawing, Shape1D, Shape3D, ValidSolid } from "brepjs";
+import type { AnyShape, Drawing, Shape1D, Shape2D, Shape3D, ValidSolid, Wire } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 // #endregion 🔌Adapters
 
@@ -560,12 +561,64 @@ function extrudeDistanceAlongDirection(direction: Vec3, distance: number): numbe
 	return Math.abs(distance);
 }
 
-function profileRectangleSolid(width: number, depth: number, height: number): ValidSolid {
-	return box(width, depth, height, { at: [0, 0, 0], centered: true }) as ValidSolid;
+function extrusionVector(direction: Vec3, distance: number): Vec3 {
+	const dist = extrudeDistanceAlongDirection(direction, distance);
+	return vec3Scale(vec3Normalize(direction), dist);
 }
 
-function profileCircleSolid(radius: number, height: number): ValidSolid {
-	return cylinder(radius, Math.max(height, 1e-6), { at: [0, 0, 0], axis: [0, 0, 1], centered: true }) as ValidSolid;
+function radiansToDegrees(radians: number): number {
+	return radians * (180 / Math.PI);
+}
+
+function requireBrepResult<T>(result: unknown, op: string): T {
+	if (!isOk(result as Parameters<typeof isOk>[0])) throw new Error(`brep: ${op} failed`);
+	return unwrap(result as Parameters<typeof unwrap>[0]) as T;
+}
+
+function sketchInterface(shape: unknown): { extrude(distance: number, config?: { extrusionDirection?: Vec3 }): unknown; face(): unknown } | null {
+	if (!shape || typeof shape !== "object") return null;
+	const candidate = shape as { extrude?: unknown; face?: unknown };
+	if (typeof candidate.extrude !== "function" || typeof candidate.face !== "function") return null;
+	return candidate as { extrude(distance: number, config?: { extrusionDirection?: Vec3 }): unknown; face(): unknown };
+}
+
+function drawingBlueprint(shape: unknown): { sketchOnPlane(plane?: string): unknown } | null {
+	if (!shape || typeof shape !== "object" || !("blueprint" in shape)) return null;
+	const blueprint = (shape as { blueprint: { sketchOnPlane(plane?: string): unknown } }).blueprint;
+	if (!blueprint || typeof blueprint.sketchOnPlane !== "function") return null;
+	return blueprint;
+}
+
+function sketchDataWire(data: unknown): Wire | null {
+	const resolved = Array.isArray(data) ? data[0] : data;
+	if (!resolved || typeof resolved !== "object" || !("wire" in resolved)) return null;
+	return (resolved as { wire: Wire }).wire;
+}
+
+function blueprintToFace(blueprint: Shape2D): unknown {
+	if (!blueprint) throw new Error("brep: empty 2D boolean result");
+	const sketchable = blueprint as { sketchOnPlane(plane?: string): unknown };
+	const wire = sketchDataWire(sketchable.sketchOnPlane("XY"));
+	if (!wire) throw new Error("brep: blueprint sketchOnPlane failed");
+	return requireBrepResult(filledFace(wire), "filledFace");
+}
+
+function closedWireFromShape(shape: unknown): Wire {
+	const sketch = sketchInterface(shape);
+	if (sketch) return sketch.face() as Wire;
+	const blueprint = drawingBlueprint(shape);
+	if (blueprint) {
+		const wire = sketchDataWire(blueprint.sketchOnPlane("XY"));
+		if (wire) return wire;
+	}
+	return asShape1D(shape) as Wire;
+}
+
+function shape2DFromShape(shape: unknown): Shape2D {
+	if (shape && typeof shape === "object" && "blueprint" in shape) {
+		return (shape as Drawing).blueprint as Shape2D;
+	}
+	throw new Error("brep: expected 2D drawing for boolean");
 }
 
 function profileSpecAabb(profile: ProfileSpec, kind: GeometryKind): Aabb | null {
@@ -671,7 +724,7 @@ function meshTransferFromShape(shape: AnyShape, tolerance: number, ref: Geometry
 			const lineData = toLineGeometryData(edgeMesh);
 			return { ...emptyMeshTransfer(), edges: lineData.position };
 		}
-		const thinSolid = sketchExtrude(drawing, [0, 0, 1], 0.001);
+		const thinSolid = sketchInterface(drawing)?.extrude(0.001, { extrusionDirection: [0, 0, 1] }) ?? sketchExtrude(drawing as never, 0.001, { extrusionDirection: [0, 0, 1] });
 		return meshTransferFromShape(thinSolid as AnyShape, tolerance, ref, "solid");
 	}
 	if (isVolume) {
@@ -778,11 +831,16 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	polyhedronSync(vertices: readonly Vec3[], faces: readonly (readonly number[])[]): GeometryRef {
-		return this.register("solid", polyhedron(vertices.map((v) => [v[0], v[1], v[2]]), faces.map((f) => [...f])));
+		const result = polyhedron(
+			vertices.map((v) => [v[0], v[1], v[2]]),
+			faces.map((f) => [...f]),
+		);
+		return this.register("solid", requireBrepResult(result, "polyhedron"));
 	}
 
 	polygonSync(points: readonly Vec3[]): GeometryRef {
-		return this.register("wire", polygon(points.map((p) => [p[0], p[1], p[2]])));
+		const result = polygon(points.map((p) => [p[0], p[1], p[2]]));
+		return this.register("face", requireBrepResult(result, "polygon"));
 	}
 	// #endregion 🔖Prim3d
 
@@ -872,7 +930,8 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	offsetFaceSync(faceRef: GeometryRef, distance: number): GeometryRef {
-		return this.register("face", offsetFace(asShape(this.require(faceRef, "face")), distance));
+		const result = offsetFace(asShape(this.require(faceRef, "face")), distance);
+		return this.register("face", requireBrepResult(result, "offsetFace"));
 	}
 
 	surfaceFromGridSync(grid: readonly (readonly Vec3[])[], uClosed = false, vClosed = false): GeometryRef {
@@ -917,63 +976,83 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	extrudeSync(shape: GeometryRef, direction: Vec3, distance: number): GeometryRef {
 		const entry = this.registry.get(shape);
 		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
-		const height = Math.abs(extrudeDistanceAlongDirection(direction, distance));
-		if (entry.profile?.kind === "rectangle") {
-			const { width, height: depth } = entry.profile;
-			return this.register("solid", profileRectangleSolid(width, depth, height), { kind: "rectangle", width, height: depth });
-		}
-		if (entry.profile?.kind === "circle") {
-			const { radius } = entry.profile;
-			return this.register("solid", profileCircleSolid(radius, height), { kind: "circle", radius });
+		const dist = extrudeDistanceAlongDirection(direction, distance);
+		const extrusionVec = extrusionVector(direction, distance);
+		const sketch = sketchInterface(entry.shape);
+		if (sketch) {
+			return this.register("solid", sketch.extrude(dist, { extrusionDirection: direction }));
 		}
 		if (entry.kind === "drawing") {
-			const result = sketchExtrude(asDrawing(entry.shape), direction, distance);
-			return this.register("solid", result);
+			const faceShape = blueprintToFace(shape2DFromShape(entry.shape));
+			return this.register("solid", requireBrepResult(extrude(faceShape as never, extrusionVec), "extrude"));
 		}
-		const result = extrude(asShape3D(entry.shape), direction, distance);
-		return this.register(inferKind(result), result);
+		if (entry.kind === "face") {
+			return this.register("solid", requireBrepResult(extrude(asShape(entry.shape) as never, extrusionVec), "extrude"));
+		}
+		if (entry.kind === "wire" || entry.kind === "edge") {
+			const faceShape = requireBrepResult(filledFace(asShape1D(entry.shape)), "filledFace");
+			return this.register("solid", requireBrepResult(extrude(faceShape as never, extrusionVec), "extrude"));
+		}
+		return this.register("solid", requireBrepResult(extrude(asShape3D(entry.shape) as never, extrusionVec), "extrude"));
 	}
 
 	revolveSync(shape: GeometryRef, axis: Vec3, angle: number): GeometryRef {
-		const src = asShape3D(this.require(shape, "solid", "face", "wire"));
-		const result = revolve(src, axis, angle);
-		return this.register(inferKind(result), result);
+		const entry = this.registry.get(shape);
+		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
+		const sketch = sketchInterface(entry.shape);
+		const faceShape = sketch ? sketch.face() : asShape(this.require(shape, "face", "wire", "solid"));
+		const result = revolve(faceShape as never, { axis: vec3Normalize(axis), angle: radiansToDegrees(angle) });
+		return this.register("solid", requireBrepResult(result, "revolve"));
 	}
 
 	loftSync(sections: readonly GeometryRef[]): GeometryRef {
 		const shapes = sections.map((s) => asShape1D(this.require(s, "wire", "face", "edge")));
-		const result = loft(shapes);
-		return this.register(inferKind(result), result);
+		return this.register("solid", requireBrepResult(loft(shapes), "loft"));
 	}
 
 	sweepSync(profile: GeometryRef, path: GeometryRef): GeometryRef {
-		const result = sweep(asShape1D(this.require(profile, "wire", "face", "edge")), asShape1D(this.require(path, "wire", "edge")));
-		return this.register(inferKind(result), result);
+		const profileEntry = this.registry.get(profile);
+		if (!profileEntry) throw new Error(`brep: unknown geometry ${String(profile)}`);
+		const profileWire = closedWireFromShape(profileEntry.shape);
+		const pathWire = asShape1D(this.require(path, "wire", "edge"));
+		const result = sweep(profileWire as never, pathWire);
+		return this.register("solid", requireBrepResult(result, "sweep"));
 	}
 
 	supportExtrudeSync(shape: GeometryRef, direction: Vec3, distance: number): GeometryRef {
-		const result = supportExtrude(asShape3D(this.require(shape, "solid", "face")), direction, distance);
-		return this.register(inferKind(result), result);
+		const entry = this.registry.get(shape);
+		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
+		const wire = closedWireFromShape(entry.shape);
+		const normal = extrusionVector(direction, distance);
+		const result = complexExtrude(wire as never, [0, 0, 0], normal);
+		return this.register("solid", requireBrepResult(result, "supportExtrude"));
 	}
 
 	twistExtrudeSync(shape: GeometryRef, direction: Vec3, distance: number, angle: number): GeometryRef {
-		const result = twistExtrude(asShape3D(this.require(shape, "solid", "face")), direction, distance, angle);
-		return this.register(inferKind(result), result);
+		const entry = this.registry.get(shape);
+		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
+		const wire = closedWireFromShape(entry.shape);
+		const normal = extrusionVector(direction, distance);
+		const result = twistExtrude(wire as never, radiansToDegrees(angle), [0, 0, 0], normal);
+		return this.register("solid", requireBrepResult(result, "twistExtrude"));
 	}
 
 	filletSync(shape: GeometryRef, radius: number): GeometryRef {
 		const result = fillet(asShape3D(this.require(shape, "solid")), radius);
-		return this.register("solid", result);
+		return this.register("solid", requireBrepResult(result, "fillet"));
 	}
 
 	chamferSync(shape: GeometryRef, distance: number): GeometryRef {
 		const result = chamfer(asShape3D(this.require(shape, "solid")), distance);
-		return this.register("solid", result);
+		return this.register("solid", requireBrepResult(result, "chamfer"));
 	}
 
 	shellSync(shape: GeometryRef, thickness: number): GeometryRef {
-		const result = shell(asShape3D(this.require(shape, "solid")), thickness);
-		return this.register("solid", result);
+		const solid = asShape3D(this.require(shape, "solid"));
+		const faces = getFaces(solid);
+		if (!faces.length) throw new Error("brep: shell requires faces");
+		const result = shell(solid, [faces[0]!], thickness);
+		return this.register("solid", requireBrepResult(result, "shell"));
 	}
 
 	offsetSync(shape: GeometryRef, distance: number): GeometryRef {
@@ -998,35 +1077,49 @@ export class BrepjsGeometryKernel implements BrepKernel {
 			throw new Error("brep: drawing profile offset unsupported");
 		}
 		if (entry.kind === "wire") {
-			const result = offset(asShape1D(entry.shape), distance);
-			return this.register(inferKind(result), result);
+			const result = offsetWire2D(asShape1D(entry.shape), distance);
+			return this.register("wire", requireBrepResult(result, "offsetWire2D"));
 		}
 		const result = offset(asShape3D(this.require(shape, "solid", "face", "wire")), distance);
-		return this.register(inferKind(result), result);
+		return this.register("solid", requireBrepResult(result, "offset"));
 	}
 
 	thickenSync(shape: GeometryRef, thickness: number): GeometryRef {
-		const result = thicken(asShape3D(this.require(shape, "face")), thickness);
-		return this.register("solid", result);
+		const result = thicken(asShape(this.require(shape, "face")), thickness);
+		return this.register("solid", requireBrepResult(result, "thicken"));
 	}
 
 	draftSync(shape: GeometryRef, angle: number, direction: Vec3): GeometryRef {
-		const result = draft(asShape3D(this.require(shape, "solid")), angle, direction);
-		return this.register("solid", result);
+		const solid = asShape3D(this.require(shape, "solid"));
+		const faces = getFaces(solid);
+		if (!faces.length) throw new Error("brep: draft requires faces");
+		const result = draft(solid, faces, {
+			pullDirection: vec3Normalize(direction),
+			neutralPlane: [0, 0, 0],
+			angle: radiansToDegrees(angle),
+		});
+		return this.register("solid", requireBrepResult(result, "draft"));
 	}
 
 	hullSync(shapes: readonly GeometryRef[]): GeometryRef {
-		const src = shapes.map((s) => asShape3D(this.require(s, "solid", "vertex")));
-		return this.register("solid", hull(src));
+		const src = shapes.map((s) => asShape(this.require(s, "solid", "vertex")));
+		return this.register("solid", requireBrepResult(hull(src), "hull"));
 	}
 
 	minkowskiSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("solid", minkowski(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid"))));
+		const result = minkowski(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid")));
+		return this.register("solid", requireBrepResult(result, "minkowski"));
 	}
 
 	convexHullSync(shapes: readonly GeometryRef[]): GeometryRef {
-		const src = shapes.map((s) => asShape3D(this.require(s, "solid", "vertex")));
-		return this.register("solid", convexHull(src));
+		const points: Vec3[] = [];
+		for (const ref of shapes) {
+			for (const vertex of getVertices(asShape(this.require(ref, "solid", "vertex")))) {
+				points.push(toVec3Tuple(vertexPosition(vertex)));
+			}
+		}
+		if (points.length < 4) throw new Error("brep: convexHull requires vertices");
+		return this.register("solid", requireBrepResult(convexHull(points), "convexHull"));
 	}
 	// #endregion 🔖SolidTools
 
@@ -1036,11 +1129,13 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	cutSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("solid", cut(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid"))));
+		const result = cut(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid")));
+		return this.register("solid", requireBrepResult(result, "cut"));
 	}
 
 	intersectSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("solid", intersect(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid"))));
+		const result = intersect(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid")));
+		return this.register("solid", requireBrepResult(result, "intersect"));
 	}
 
 	fuseAllSync(shapes: readonly GeometryRef[]): GeometryRef {
@@ -1061,15 +1156,18 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	fuse2DSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("face", fuse2D(asShape(this.require(a, "drawing", "face")), asShape(this.require(b, "drawing", "face"))));
+		const result = fuse2D(shape2DFromShape(this.require(a, "drawing")), shape2DFromShape(this.require(b, "drawing")));
+		return this.register("face", blueprintToFace(result));
 	}
 
 	cut2DSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("face", cut2D(asShape(this.require(a, "drawing", "face")), asShape(this.require(b, "drawing", "face"))));
+		const result = cut2D(shape2DFromShape(this.require(a, "drawing")), shape2DFromShape(this.require(b, "drawing")));
+		return this.register("face", blueprintToFace(result));
 	}
 
 	intersect2DSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("face", intersect2D(asShape(this.require(a, "drawing", "face")), asShape(this.require(b, "drawing", "face"))));
+		const result = intersect2D(shape2DFromShape(this.require(a, "drawing")), shape2DFromShape(this.require(b, "drawing")));
+		return this.register("face", blueprintToFace(result));
 	}
 	// #endregion 🔖Booleans
 
@@ -1080,12 +1178,12 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	rotateGeomSync(shape: GeometryRef, axis: Vec3, angle: number, center: Vec3 = [0, 0, 0]): GeometryRef {
-		const result = rotate(asShape(this.require(shape)), axis, angle, { center });
+		const result = rotate(asShape(this.require(shape)), radiansToDegrees(angle), { axis: vec3Normalize(axis), at: center });
 		return this.register(this.getGeometryKind(shape) ?? inferKind(result), result);
 	}
 
 	mirrorGeomSync(shape: GeometryRef, planeOrigin: Vec3, planeNormal: Vec3): GeometryRef {
-		const result = mirror(asShape(this.require(shape)), planeNormal, { origin: planeOrigin });
+		const result = mirror(asShape(this.require(shape)), { normal: vec3Normalize(planeNormal), at: planeOrigin });
 		return this.register(this.getGeometryKind(shape) ?? inferKind(result), result);
 	}
 
@@ -1097,38 +1195,70 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	cloneGeomSync(shape: GeometryRef): GeometryRef {
 		const entry = this.registry.get(shape);
 		if (!entry) throw new Error(`brep: unknown geometry ${String(shape)}`);
-		return this.register(entry.kind, clone(asShape(entry.shape)));
+		return this.register(entry.kind, requireBrepResult(clone(asShape(entry.shape)), "clone"));
 	}
 
 	linearPatternSync(shape: GeometryRef, direction: Vec3, count: number, spacing: number): GeometryRef {
-		return this.register("compound", linearPattern(asShape3D(this.require(shape, "solid")), direction, count, spacing));
+		const result = linearPattern(asShape3D(this.require(shape, "solid")), direction, count, spacing);
+		return this.register("solid", requireBrepResult(result, "linearPattern"));
 	}
 
 	circularPatternSync(shape: GeometryRef, axis: Vec3, count: number, angle: number): GeometryRef {
-		return this.register("compound", circularPattern(asShape3D(this.require(shape, "solid")), axis, count, angle));
+		const result = circularPattern(asShape3D(this.require(shape, "solid")), vec3Normalize(axis), count, radiansToDegrees(angle));
+		return this.register("solid", requireBrepResult(result, "circularPattern"));
 	}
 
 	rectangularPatternSync(shape: GeometryRef, dirA: Vec3, countA: number, dirB: Vec3, countB: number, spacing: number): GeometryRef {
-		return this.register("compound", rectangularPattern(asShape3D(this.require(shape, "solid")), dirA, countA, dirB, countB, spacing));
+		const result = rectangularPattern(asShape3D(this.require(shape, "solid")), {
+			xDir: dirA,
+			xCount: countA,
+			xSpacing: spacing,
+			yDir: dirB,
+			yCount: countB,
+			ySpacing: spacing,
+		});
+		return this.register("solid", requireBrepResult(result, "rectangularPattern"));
 	}
 	// #endregion 🔖Transforms
 
 	// #region 🔖Intersections
 	sectionSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("wire", section(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid"))));
+		const shapeA = asShape3D(this.require(a, "solid"));
+		const boundsB = getBounds(asShape3D(this.require(b, "solid")));
+		const origin: Vec3 = [
+			(boundsB.min.x + boundsB.max.x) * 0.5,
+			(boundsB.min.y + boundsB.max.y) * 0.5,
+			(boundsB.min.z + boundsB.max.z) * 0.5,
+		];
+		const result = section(shapeA, { origin, normal: [0, 0, 1] });
+		return this.register("wire", requireBrepResult(result, "section"));
 	}
 
 	sectionToFaceSync(a: GeometryRef, b: GeometryRef): GeometryRef {
-		return this.register("face", sectionToFace(asShape3D(this.require(a, "solid")), asShape3D(this.require(b, "solid"))));
+		const shapeA = asShape3D(this.require(a, "solid"));
+		const boundsB = getBounds(asShape3D(this.require(b, "solid")));
+		const origin: Vec3 = [
+			(boundsB.min.x + boundsB.max.x) * 0.5,
+			(boundsB.min.y + boundsB.max.y) * 0.5,
+			(boundsB.min.z + boundsB.max.z) * 0.5,
+		];
+		const result = sectionToFace(shapeA, { origin, normal: [0, 0, 1] });
+		return this.register("face", requireBrepResult(result, "sectionToFace"));
 	}
 
 	splitSync(shape: GeometryRef, tool: GeometryRef): readonly GeometryRef[] {
-		const parts = split(asShape3D(this.require(shape, "solid")), asShape3D(this.require(tool, "solid")));
+		const parts = requireBrepResult(split(asShape3D(this.require(shape, "solid")), [asShape3D(this.require(tool, "solid"))]), "split");
 		return parts.map((p) => this.register("solid", p));
 	}
 
 	sliceSync(shape: GeometryRef, planeOrigin: Vec3, planeNormal: Vec3): GeometryRef {
-		return this.register("wire", slice(asShape3D(this.require(shape, "solid")), planeNormal, { origin: planeOrigin }));
+		const parts = requireBrepResult(
+			slice(asShape3D(this.require(shape, "solid")), [{ origin: planeOrigin, normal: vec3Normalize(planeNormal) }]),
+			"slice",
+		);
+		const first = parts[0];
+		if (!first) throw new Error("brep: slice produced no sections");
+		return this.register("wire", first);
 	}
 
 	checkInterferenceSync(a: GeometryRef, b: GeometryRef): boolean {
@@ -1290,24 +1420,29 @@ export class BrepjsGeometryKernel implements BrepKernel {
 
 	// #region 🔖Repair
 	healSolidSync(shape: GeometryRef): GeometryRef {
-		return this.register("solid", healSolid(asSolid(this.require(shape, "solid"))));
+		const result = healSolid(asSolid(this.require(shape, "solid")));
+		return this.register("solid", requireBrepResult(result, "healSolid"));
 	}
 
 	healFaceSync(face: GeometryRef): GeometryRef {
-		return this.register("face", healFace(asShape(this.require(face, "face"))));
+		const result = healFace(asShape(this.require(face, "face")));
+		return this.register("face", requireBrepResult(result, "healFace"));
 	}
 
 	autoHealSync(shape: GeometryRef): GeometryRef {
-		return this.register(inferKind(healSolid(asSolid(this.require(shape, "solid")))), autoHeal(asShape3D(this.require(shape, "solid"))));
+		const result = autoHeal(asShape(this.require(shape, "solid", "face", "wire")));
+		const healed = requireBrepResult(result, "autoHeal");
+		return this.register(this.getGeometryKind(shape) ?? inferKind(healed.shape), healed.shape);
 	}
 
 	sewShellsSync(faces: readonly GeometryRef[]): GeometryRef {
 		const src = faces.map((f) => asShape(this.require(f, "face")));
-		return this.register("shell", sewShells(src));
+		return this.register("shell", requireBrepResult(sewShells(src), "sewShells"));
 	}
 
 	solidFromShellSync(shellRef: GeometryRef): GeometryRef {
-		return this.register("solid", solidFromShell(asShape(this.require(shellRef, "shell"))));
+		const result = solidFromShell(asShape(this.require(shellRef, "shell")));
+		return this.register("solid", requireBrepResult(result, "solidFromShell"));
 	}
 	// #endregion 🔖Repair
 
@@ -1530,30 +1665,61 @@ if (import.meta.vitest) {
 			expect(mesh.edges.length).toBeGreaterThan(0);
 		});
 
-		it("sketch rectangle and extrude share centered footprint in preview", async () => {
+		it("sketch rectangle extrude preserves footprint and stacks along direction", async () => {
 			await ensureBrepWasmLoaded();
 			const profile = kernel.sketchRectangleSync(4, 3);
 			expect(kernel.getGeometryKind(profile)).toBe("drawing");
-			const profileMesh = await kernel.tessellateGeometry(profile, 0.05);
-			expect(isRenderableMeshTransfer(profileMesh)).toBe(true);
-			expect(profileMesh.index.length).toBe(0);
-			expect(profileMesh.edges.length).toBeGreaterThan(0);
 			const profileBounds = kernel.getBoundsSync(profile);
 			const solid = kernel.extrudeSync(profile, [0, 0, 1], 5);
 			expect(kernel.getGeometryKind(solid)).toBe("solid");
 			const solidMesh = await kernel.tessellateGeometry(solid, 0.05);
 			expect(isRenderableMeshTransfer(solidMesh)).toBe(true);
 			const solidBounds = kernel.getBoundsSync(solid);
-			const prim = kernel.boxSync(4, 3, 5);
-			const primBounds = kernel.getBoundsSync(prim);
-			expect(profileBounds.min[0]).toBeCloseTo(solidBounds.min[0], 3);
-			expect(profileBounds.max[0]).toBeCloseTo(solidBounds.max[0], 3);
-			expect(profileBounds.min[1]).toBeCloseTo(solidBounds.min[1], 3);
-			expect(profileBounds.max[1]).toBeCloseTo(solidBounds.max[1], 3);
-			for (let axis = 0; axis < 3; axis += 1) {
-				expect(solidBounds.min[axis]).toBeCloseTo(primBounds.min[axis]!, 5);
-				expect(solidBounds.max[axis]).toBeCloseTo(primBounds.max[axis]!, 5);
-			}
+			expect(profileBounds.min[0]).toBeCloseTo(solidBounds.min[0], 2);
+			expect(profileBounds.max[0]).toBeCloseTo(solidBounds.max[0], 2);
+			expect(profileBounds.min[1]).toBeCloseTo(solidBounds.min[1], 2);
+			expect(profileBounds.max[1]).toBeCloseTo(solidBounds.max[1], 2);
+			expect(solidBounds.max[2] - solidBounds.min[2]).toBeCloseTo(5, 1);
+			expect(solidBounds.min[2]).toBeCloseTo(profileBounds.min[2], 2);
+		});
+
+		it("extrudeSync honors non-z direction", async () => {
+			await ensureBrepWasmLoaded();
+			const profile = kernel.sketchCircleSync(1);
+			const alongZ = kernel.getBoundsSync(kernel.extrudeSync(profile, [0, 0, 1], 4));
+			const alongX = kernel.getBoundsSync(kernel.extrudeSync(kernel.sketchCircleSync(1), [1, 0, 0], 4));
+			expect(alongX.max[0] - alongX.min[0]).toBeGreaterThan(alongZ.max[0] - alongZ.min[0]);
+			expect(alongX.max[2] - alongX.min[2]).toBeLessThan(alongZ.max[2] - alongZ.min[2]);
+		});
+
+		it("cutSync subtracts tool volume", async () => {
+			await ensureBrepWasmLoaded();
+			const base = kernel.boxSync(2, 2, 2);
+			const tool = kernel.boxSync(1, 1, 1);
+			const baseVolume = kernel.measureVolumeSync(base);
+			const cutSolid = kernel.cutSync(base, tool);
+			expect(kernel.measureVolumeSync(cutSolid)).toBeLessThan(baseVolume);
+			const mesh = await kernel.tessellateGeometry(cutSolid, 0.05);
+			expect(isRenderableMeshTransfer(mesh)).toBe(true);
+		});
+
+		it("intersectSync keeps only shared volume", async () => {
+			await ensureBrepWasmLoaded();
+			const a = kernel.boxSync(2, 2, 2);
+			const b = kernel.boxSync(2, 2, 2, [1, 0, 0]);
+			const intersection = kernel.intersectSync(a, b);
+			expect(kernel.measureVolumeSync(intersection)).toBeGreaterThan(0);
+			expect(kernel.measureVolumeSync(intersection)).toBeLessThan(kernel.measureVolumeSync(a));
+		});
+
+		it("rotateGeomSync moves bounds around axis", async () => {
+			await ensureBrepWasmLoaded();
+			const box = kernel.boxSync(2, 1, 1, [2, 0, 0]);
+			const before = kernel.getBoundsSync(box);
+			const rotated = kernel.rotateGeomSync(box, [0, 0, 1], Math.PI / 2);
+			const after = kernel.getBoundsSync(rotated);
+			expect(after.min[0]).not.toBeCloseTo(before.min[0], 1);
+			expect(after.max[1]).not.toBeCloseTo(before.max[1], 1);
 		});
 
 		it("sketch and curve circle extrude tessellate in preview", async () => {

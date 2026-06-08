@@ -888,7 +888,7 @@ export class Puzzle2dPlayShellController extends Controller {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.hostChromeNotify = hostChromeNotify;
 		this.lodModeByPane = {
-			"2d-detail": PUZZLE_2D_LOD_MODE_AUTOMATIC,
+			"2d-detail": "detail",
 			"2d-overview": PUZZLE_2D_LOD_MODE_AUTOMATIC,
 			"2d-selection": PUZZLE_2D_LOD_MODE_AUTOMATIC,
 		};
@@ -1685,7 +1685,7 @@ if (import.meta.vitest) {
 			ctrl.run("setLodModeForPane", { pane: "2d-detail", value: "overview", instanceId: "win-2d-detail-b" });
 			expect(ctrl.lodModeForScope("win-2d-detail-a", "2d-detail")).toBe("detail");
 			expect(ctrl.lodModeForScope("win-2d-detail-b", "2d-detail")).toBe("overview");
-			expect(ctrl.lodModeForScope("2d-detail", "2d-detail")).toBe(PUZZLE_2D_LOD_MODE_AUTOMATIC);
+			expect(ctrl.lodModeForScope("2d-detail", "2d-detail")).toBe("detail");
 		});
 
 		it("requires engagement.input on every window kind", () => {

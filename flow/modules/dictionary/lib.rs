@@ -1,6 +1,6 @@
 //! 📚 Flow dictionary module: neuron kinds for dictionary manipulation.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value, VariadicSpec};
+use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value, VariadicSpec};
 
 // #region 🔖Pack
 /// 📦 Wraps the entire input dictionary under a single dictionary value.
@@ -185,7 +185,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Pack".into(),
             icon: "emoji:📦".into(),
             summary: "Wraps input as a nested dictionary".into(),
-            inputs: vec!["*".into()],
+            inputs: vec![InputSpec::wildcard()],
             outputs: vec!["dictionary".into()],
             ..Default::default()
         },
@@ -199,7 +199,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Unpack".into(),
             icon: "emoji:📤".into(),
             summary: "Flattens a nested dictionary to top-level keys".into(),
-            inputs: vec!["dictionary".into()],
+            inputs: vec![InputSpec::dictionary("dictionary")],
             outputs: vec!["*".into()],
             ..Default::default()
         },
@@ -213,7 +213,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Get".into(),
             icon: "emoji:🔍".into(),
             summary: "Reads a value by key".into(),
-            inputs: vec!["dictionary".into(), "key".into()],
+            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", "")],
             outputs: vec!["value".into()],
             ..Default::default()
         },
@@ -227,7 +227,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Set".into(),
             icon: "emoji:✏️".into(),
             summary: "Inserts or replaces a key".into(),
-            inputs: vec!["dictionary".into(), "key".into(), "value".into()],
+            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", ""), InputSpec::value("value")],
             outputs: vec!["dictionary".into()],
             ..Default::default()
         },
@@ -241,7 +241,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Remove".into(),
             icon: "emoji:🗑️".into(),
             summary: "Removes a key".into(),
-            inputs: vec!["dictionary".into(), "key".into()],
+            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", "")],
             outputs: vec!["dictionary".into()],
             ..Default::default()
         },
@@ -255,7 +255,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Has".into(),
             icon: "emoji:❓".into(),
             summary: "Checks whether a key exists".into(),
-            inputs: vec!["dictionary".into(), "key".into()],
+            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", "")],
             outputs: vec!["number".into()],
             ..Default::default()
         },
@@ -269,7 +269,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Keys".into(),
             icon: "emoji:🔑".into(),
             summary: "Lists keys as comma-separated text".into(),
-            inputs: vec!["dictionary".into()],
+            inputs: vec![InputSpec::dictionary("dictionary")],
             outputs: vec!["text".into()],
             ..Default::default()
         },
@@ -283,7 +283,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Size".into(),
             icon: "emoji:📏".into(),
             summary: "Reports the number of keys".into(),
-            inputs: vec!["dictionary".into()],
+            inputs: vec![InputSpec::dictionary("dictionary")],
             outputs: vec!["number".into()],
             ..Default::default()
         },

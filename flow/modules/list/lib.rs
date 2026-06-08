@@ -1,6 +1,6 @@
 //! 📋 Flow list module: index-keyed dictionaries as lists.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
 
 // #region 🔖Empty
 /// 🆕 Creates an empty list dictionary.
@@ -31,7 +31,9 @@ pub struct Get;
 impl Function for Get {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
-        let index = read_index(input, "index")?;
+        let len = list_len(list);
+        let wrap = read_bool(input, "wrap");
+        let index = resolve_list_index(input, "index", len, wrap)?;
         let key = index.to_string();
         let value = list.get(&key).cloned().ok_or_else(|| EvalError::MissingInput(key))?;
         Ok(Dictionary::new().insert("value", value))
@@ -154,13 +156,36 @@ fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, Eva
         .ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
+fn read_bool(input: &Dictionary, key: &str) -> bool {
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).unwrap_or(false)
+}
+
 fn read_index(input: &Dictionary, key: &str) -> Result<usize, EvalError> {
-    input
+    let raw = input
         .get(key)
         .and_then(|v| v.as_atom())
         .and_then(|a| a.as_f64())
-        .map(|n| n as usize)
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+        .ok_or_else(|| EvalError::MissingInput(key.into()))?;
+    Ok(raw as usize)
+}
+
+fn resolve_list_index(input: &Dictionary, key: &str, len: usize, wrap: bool) -> Result<usize, EvalError> {
+    let raw = input
+        .get(key)
+        .and_then(|v| v.as_atom())
+        .and_then(|a| a.as_f64())
+        .ok_or_else(|| EvalError::MissingInput(key.into()))?;
+    if len == 0 {
+        return Err(EvalError::InvalidInput("empty list".into()));
+    }
+    if wrap {
+        return Ok((raw.floor() as i64).rem_euclid(len as i64) as usize);
+    }
+    let index = raw as usize;
+    if index >= len {
+        return Err(EvalError::MissingInput(index.to_string()));
+    }
+    Ok(index)
 }
 
 fn read_value(input: &Dictionary, key: &str) -> Result<Value, EvalError> {
@@ -213,7 +238,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Pack".into(),
             icon: "emoji:📦".into(),
             summary: "Wraps input as a list dictionary".into(),
-            inputs: vec!["*".into()],
+            inputs: vec![InputSpec::wildcard()],
             outputs: vec!["list".into()],
             ..Default::default()
         },
@@ -227,7 +252,11 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Get".into(),
             icon: "emoji:🔍".into(),
             summary: "Reads a value by index".into(),
-            inputs: vec!["list".into(), "index".into()],
+            inputs: vec![
+                InputSpec::list("list"),
+                InputSpec::number_default("index", 0.0),
+                InputSpec::boolean_default("wrap", false),
+            ],
             outputs: vec!["value".into()],
             ..Default::default()
         },
@@ -241,7 +270,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Set".into(),
             icon: "emoji:✏️".into(),
             summary: "Replaces a value at an index".into(),
-            inputs: vec!["list".into(), "index".into(), "value".into()],
+            inputs: vec![InputSpec::list("list"), InputSpec::number_default("index", 0.0), InputSpec::value("value")],
             outputs: vec!["list".into()],
             ..Default::default()
         },
@@ -255,7 +284,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Append".into(),
             icon: "emoji:➕".into(),
             summary: "Appends a value at the next index".into(),
-            inputs: vec!["list".into(), "value".into()],
+            inputs: vec![InputSpec::list("list"), InputSpec::value("value")],
             outputs: vec!["list".into()],
             ..Default::default()
         },
@@ -269,7 +298,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Size".into(),
             icon: "emoji:📏".into(),
             summary: "Reports the number of indexed elements".into(),
-            inputs: vec!["list".into()],
+            inputs: vec![InputSpec::list("list")],
             outputs: vec!["number".into()],
             ..Default::default()
         },
@@ -283,7 +312,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Remove".into(),
             icon: "emoji:🗑️".into(),
             summary: "Removes an index and reindexes".into(),
-            inputs: vec!["list".into(), "index".into()],
+            inputs: vec![InputSpec::list("list"), InputSpec::number_default("index", 0.0)],
             outputs: vec!["list".into()],
             ..Default::default()
         },
@@ -297,7 +326,11 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Range".into(),
             icon: "emoji:📈".into(),
             summary: "Builds an arithmetic sequence list".into(),
-            inputs: vec!["start".into(), "step".into(), "count".into()],
+            inputs: vec![
+                InputSpec::number_default("start", 0.0),
+                InputSpec::number_default("step", 1.0),
+                InputSpec::number_default("count", 1.0),
+            ],
             outputs: vec!["list".into()],
             ..Default::default()
         },
@@ -311,7 +344,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Rev".into(),
             icon: "emoji:🔁".into(),
             summary: "Reverses indexed list elements".into(),
-            inputs: vec!["list".into()],
+            inputs: vec![InputSpec::list("list")],
             outputs: vec!["list".into()],
             ..Default::default()
         },
@@ -323,6 +356,7 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use neural_engine::inject_input_defaults;
 
     fn sample_list() -> Dictionary {
         Dictionary::new()
@@ -337,6 +371,35 @@ mod tests {
         register(&mut reg);
         let out = reg.get("list.empty").unwrap().evaluate(&Dictionary::new()).unwrap();
         assert!(out.get("list").and_then(|v| v.as_dictionary()).is_some());
+    }
+
+    #[test]
+    fn get_defaults_index_zero() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let kind = reg.kind_info("list.get").expect("kind");
+        let input = inject_input_defaults(
+            Dictionary::new().insert("list", Value::Dictionary(sample_list())),
+            kind,
+        );
+        let out = reg.get("list.get").unwrap().evaluate(&input).unwrap();
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
+    }
+
+    #[test]
+    fn get_wraps_out_of_range_index() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let kind = reg.kind_info("list.get").expect("kind");
+        let input = inject_input_defaults(
+            Dictionary::new()
+                .insert("list", Value::Dictionary(sample_list()))
+                .insert("index", Value::Atom(Atom::Decimal(5.0)))
+                .insert("wrap", Value::Atom(Atom::Boolean(true))),
+            kind,
+        );
+        let out = reg.get("list.get").unwrap().evaluate(&input).unwrap();
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
     }
 
     #[test]

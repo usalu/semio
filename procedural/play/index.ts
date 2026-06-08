@@ -1044,6 +1044,17 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return [
 			{
 				kind: "select",
+				id: `${PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW}-show`,
+				label: "Show",
+				value: this.showMode,
+				items: [
+					{ id: "everything", value: "everything", label: "Everything" },
+					{ id: "selected", value: "selected", label: "Selected" },
+				],
+				onChange: { controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "setShowMode" },
+			},
+			{
+				kind: "select",
 				id: `${PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW}-transform-granularity`,
 				label: "Transform Detail",
 				value: this.transformGranularity,
@@ -1406,10 +1417,11 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			return;
 		}
 		if (command === "setShowMode") {
-			const id = (args as { id?: string }).id;
+			const id = (args as { id?: string }).id ?? (args as { value?: string }).value;
 			if (id !== "everything" && id !== "selected") return;
 			if (this.showMode === id) return;
 			this.showMode = id;
+			this.interactionRevision += 1;
 			this.rebuildShellMode();
 			this.emit();
 			return;
@@ -1659,10 +1671,12 @@ if (import.meta.vitest) {
 			expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
 		});
 
-		it("preview window exposes transform detail in shell measures", () => {
+		it("preview window exposes show mode and transform detail in shell measures", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			const measures = ctrl.mainMode.windowKinds[1]?.measures ?? [];
+			const show = measures.find((measure) => measure.kind === "select" && measure.label === "Show");
+			expect(show?.kind === "select" && show.value).toBe("everything");
 			expect(measures.some((measure) => measure.kind === "select" && measure.label === "Transform Detail")).toBe(true);
 		});
 
@@ -1676,8 +1690,18 @@ if (import.meta.vitest) {
 		it("setShowMode updates preview filter", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
+			expect(ctrl.getShowMode()).toBe("everything");
 			ctrl.run("setShowMode", { id: "selected" });
 			expect(ctrl.getShowMode()).toBe("selected");
+		});
+
+		it("setShowMode accepts shell measure value", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setShowMode", { value: "selected" });
+			expect(ctrl.getShowMode()).toBe("selected");
+			ctrl.run("setShowMode", { value: "everything" });
+			expect(ctrl.getShowMode()).toBe("everything");
 		});
 
 		it("canvasCommand bumps command request epoch", () => {

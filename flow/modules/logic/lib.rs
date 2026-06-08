@@ -1,6 +1,6 @@
 //! 🔀 Flow logic module: neuron kinds for boolean comparisons.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
 
 // #region 🔖Greater
 /// 📈 Compares two numbers; outputs 1 when a > b else 0.
@@ -53,7 +53,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Gt".into(),
             icon: "emoji:📈".into(),
             summary: "True when a > b".into(),
-            inputs: vec!["a".into(), "b".into()],
+            inputs: vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 0.0)],
             outputs: vec!["number".into()],
             ..Default::default()
         },
@@ -67,7 +67,7 @@ pub fn register(registry: &mut Registry) {
             abbreviation: "Not".into(),
             icon: "emoji:🔄".into(),
             summary: "Inverts boolean number".into(),
-            inputs: vec!["number".into()],
+            inputs: vec![InputSpec::number_default("number", 0.0)],
             outputs: vec!["number".into()],
             ..Default::default()
         },

@@ -735,6 +735,18 @@ impl IconPaintCache {
         }
         scene.pop_layer();
     }
+
+    /// @emoji 🎨 Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
+    pub fn board_icon_paint_colors(vello_theme: &VelloThemePalette) -> (Color, Color) {
+        let rgba = vello_theme.raster_clear.to_rgba8();
+        let lum = f64::from(rgba.r) * 0.299 + f64::from(rgba.g) * 0.587 + f64::from(rgba.b) * 0.114;
+        let canvas = if lum < 128.0 {
+            &ui_styling::CANVAS_DARK
+        } else {
+            &ui_styling::CANVAS_LIGHT
+        };
+        (Color::new(canvas.icon_fg), Color::new(canvas.icon_bg))
+    }
 }
 // #endregion 🔖Icons
 
@@ -1647,6 +1659,15 @@ mod quadrant_tests {
         assert_eq!(p.raster_clear, Color::new(t.raster_clear));
         assert_eq!(p.edge_stroke_selected, Color::new(t.edge_stroke_selected));
         assert_eq!(p.handle_fill.to_rgba8().a, Color::new(t.handle_fill).to_rgba8().a);
+    }
+
+    #[test]
+    fn board_icon_paint_colors_use_canvas_tokens_not_node_chrome() {
+        let theme = VelloThemePalette::default();
+        let (fg, bg) = IconPaintCache::board_icon_paint_colors(&theme);
+        assert_eq!(fg, Color::new(ui_styling::CANVAS_LIGHT.icon_fg));
+        assert_eq!(bg, Color::new(ui_styling::CANVAS_LIGHT.icon_bg));
+        assert_ne!(fg.to_rgba8(), theme.node_stroke.to_rgba8());
     }
 
     #[test]

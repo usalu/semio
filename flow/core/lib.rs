@@ -10,7 +10,7 @@ use dag::{
     computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width,
     normalize_node_display, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
 };
-use neural::{Atom, Dictionary, EvalChannels, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
+use neural::{Atom, Dictionary, EvalChannels, EvalError, Evaluator, InputSpec, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Widget
@@ -177,6 +177,27 @@ fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, NeuronKindI
     }
 }
 
+fn neural_value_to_json_value(value: &NeuralValue) -> serde_json::Value {
+    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+}
+
+fn is_port_connected(synapses: &[SynapseSpec], neuron_id: &str, port_id: &str) -> bool {
+    synapses.iter().any(|syn| syn.to == neuron_id && syn.to_port == port_id)
+}
+
+fn input_spec_to_port(spec: &InputSpec, params: &Dictionary, connected: bool) -> IoPortSpec {
+    let label = spec.label.clone().unwrap_or_else(|| spec.id.clone());
+    let value = params.get(&spec.id).or(spec.default.as_ref()).map(neural_value_to_json_value);
+    IoPortSpec {
+        id: spec.id.clone(),
+        label,
+        value_type: Some(spec.value_type.clone()),
+        default: spec.default.as_ref().map(neural_value_to_json_value),
+        value,
+        connected: Some(connected),
+    }
+}
+
 fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &HashMap<String, NeuronKindInfo>) -> Vec<String> {
     if !input_ports.is_empty() {
         return input_ports.to_vec();
@@ -185,65 +206,64 @@ fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &H
         return (0..spec.min).map(|index| index.to_string()).collect();
     }
     if let Some(info) = kind_infos.get(kind) {
-        if !info.inputs.is_empty() && info.inputs[0] != "*" {
-            return info.inputs.clone();
+        if !info.inputs.is_empty() && info.inputs[0].id != "*" {
+            return info.inputs.iter().map(|entry| entry.id.clone()).collect();
         }
     }
     vec!["in".into()]
 }
 
 fn neuron_io_layout(
+    neuron_id: &str,
     neuron_kind: &str,
     input_ports: &[String],
+    params: &Dictionary,
+    synapses: &[SynapseSpec],
     kind_infos: &HashMap<String, NeuronKindInfo>,
 ) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     let info = kind_infos.get(neuron_kind);
     let output_label = info.and_then(|entry| entry.outputs.first()).cloned().unwrap_or_else(|| "out".into());
-    let outputs = vec![IoPortSpec { id: "out".into(), label: output_label }];
+    let outputs = vec![IoPortSpec::simple("out", output_label)];
     if let Some(_spec) = info.and_then(|entry| entry.variadic_input.as_ref()) {
         let ports = default_neuron_input_ports(neuron_kind, input_ports, kind_infos);
         let inputs = ports
             .iter()
-            .map(|port_id| IoPortSpec {
-                id: port_id.clone(),
-                label: port_id.clone(),
-            })
+            .map(|port_id| IoPortSpec::simple(port_id.clone(), port_id.clone()))
             .collect();
         let variadic_outputs = info.and_then(|entry| entry.variadic_output.as_ref()).is_some();
         return (inputs, outputs, true, variadic_outputs);
     }
     if let Some(entry) = info {
-        if !entry.inputs.is_empty() && entry.inputs[0] != "*" {
+        if !entry.inputs.is_empty() && entry.inputs[0].id != "*" {
             let inputs = entry
                 .inputs
                 .iter()
-                .map(|key| IoPortSpec {
-                    id: key.clone(),
-                    label: key.clone(),
-                })
+                .map(|spec| input_spec_to_port(spec, params, is_port_connected(synapses, neuron_id, &spec.id)))
                 .collect();
             return (inputs, outputs, false, false);
         }
     }
     (
-        vec![IoPortSpec { id: "in".into(), label: "in".into() }],
+        vec![IoPortSpec::simple("in", "in")],
         outputs,
         false,
         false,
     )
 }
 
-fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
+fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, NeuronKindInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     match widget {
-        Widget::Neuron { neuronKind, input_ports, .. } => neuron_io_layout(neuronKind, input_ports, kind_infos),
+        Widget::Neuron { id, neuronKind, params, input_ports, .. } => {
+            neuron_io_layout(id, neuronKind, input_ports, params, synapses, kind_infos)
+        }
         Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } => (
             vec![],
-            vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+            vec![IoPortSpec::simple("out", "out")],
             false,
             false,
         ),
         Widget::OutputPreview { .. } | Widget::OutputAction { .. } => (
-            vec![IoPortSpec { id: "in".into(), label: "in".into() }],
+            vec![IoPortSpec::simple("in", "in")],
             vec![],
             false,
             false,
@@ -251,19 +271,20 @@ fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>
     }
 }
 
-fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
+fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
     let label = widget_label(widget);
     match widget {
         Widget::InputSlider { .. } => {
-            let output = IoPortSpec { id: "out".into(), label: "out".into() };
+            let output = IoPortSpec::simple("out", "out");
             (slider_widget_width(&label, &output), slider_widget_height())
         }
         Widget::InputNote { text, .. } => note_widget_size(text),
         Widget::OutputAction { .. } => (io_widget_width(&label), io_widget_height(&label)),
         Widget::InputImage { src, .. } => image_widget_size(src),
         Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), expanded),
-        Widget::Neuron { neuronKind, input_ports, .. } => {
-            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
+        Widget::Neuron { id, neuronKind, params, input_ports, .. } => {
+            let (inputs, outputs, variadic_inputs, variadic_outputs) =
+                neuron_io_layout(id, neuronKind, input_ports, params, synapses, kind_infos);
             let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
             let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
             (
@@ -274,7 +295,13 @@ fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo
     }
 }
 
-fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, kind_infos: &HashMap<String, NeuronKindInfo>) -> DagNodeSpec {
+fn widget_to_dag_node(
+    widget: &Widget,
+    index: usize,
+    layout: &BTreeMap<String, WidgetLayout>,
+    synapses: &[SynapseSpec],
+    kind_infos: &HashMap<String, NeuronKindInfo>,
+) -> DagNodeSpec {
     let id = match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -283,12 +310,13 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
         | Widget::OutputPreview { id, .. }
         | Widget::OutputAction { id, .. } => id.clone(),
     };
-    let (width, height) = widget_node_size(widget, kind_infos);
+    let (width, height) = widget_node_size(widget, synapses, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
     let (name, abbreviation, icon) = widget_display_meta(widget, kind_infos);
     match widget {
-        Widget::Neuron { neuronKind, input_ports, .. } => {
-            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
+        Widget::Neuron { id: neuron_id, neuronKind, params, input_ports, .. } => {
+            let (inputs, outputs, variadic_inputs, variadic_outputs) =
+                neuron_io_layout(neuron_id, neuronKind, input_ports, params, synapses, kind_infos);
             DagNodeSpec::computation(id, name, abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
         }
         Widget::InputSlider { value, min, max, step, .. } => DagNodeSpec {
@@ -305,7 +333,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
                 max: *max,
                 step: *step,
                 value: *value,
-                output: IoPortSpec { id: "out".into(), label: "out".into() },
+                output: IoPortSpec::simple("out", "out"),
             },
         },
         Widget::InputNote { text, .. } => DagNodeSpec {
@@ -319,7 +347,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             height,
             kind: DagNodeKind::Note {
                 text: text.clone(),
-                output: IoPortSpec { id: "out".into(), label: "out".into() },
+                output: IoPortSpec::simple("out", "out"),
             },
         },
         Widget::InputImage { src, .. } => DagNodeSpec {
@@ -333,7 +361,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             height,
             kind: DagNodeKind::Image {
                 src: src.clone(),
-                output: IoPortSpec { id: "out".into(), label: "out".into() },
+                output: IoPortSpec::simple("out", "out"),
             },
         },
         Widget::OutputPreview { preview, expanded, .. } => DagNodeSpec {
@@ -348,7 +376,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             kind: DagNodeKind::Preview {
                 content: dag_preview_content_from_dict(preview),
                 expanded: expanded.clone(),
-                input: IoPortSpec { id: "in".into(), label: "in".into() },
+                input: IoPortSpec::simple("in", "in"),
             },
         },
         Widget::OutputAction { action, .. } => DagNodeSpec {
@@ -362,7 +390,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             height,
             kind: DagNodeKind::Action {
                 label: action.clone(),
-                input: IoPortSpec { id: "in".into(), label: "in".into() },
+                input: IoPortSpec::simple("in", "in"),
             },
         },
     }
@@ -720,11 +748,11 @@ fn input_ports_json(dict: &Dictionary, kind_info: Option<&NeuronKindInfo>) -> se
             }
         }
         for port in &info.inputs {
-            if port == "*" {
+            if port.id == "*" {
                 continue;
             }
-            if let Some(value) = dict.get(port) {
-                ports.insert(port.clone(), neural_value_to_json(value));
+            if let Some(value) = dict.get(&port.id) {
+                ports.insert(port.id.clone(), neural_value_to_json(value));
             }
         }
         return ports;
@@ -930,7 +958,7 @@ impl FlowHost {
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         let mut layout = BTreeMap::new();
         layout.insert(id, WidgetLayout { x: world_x, y: world_y });
-        let mut node = widget_to_dag_node(&widget, 0, &layout, &self.kind_infos);
+        let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &self.kind_infos);
         fit_node_size(&mut node);
         self.ghost_node = Some(node.clone());
         self.dag.set_ghost_node(Some(node));
@@ -990,10 +1018,10 @@ impl FlowHost {
         if from_id == to_id {
             return Err("cannot connect widget to itself".into());
         }
-        if !widget_has_output(from_id, &self.fixture.widgets, &self.kind_infos) {
+        if !widget_has_output(from_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
             return Err(format!("{from_id} has no output port"));
         }
-        if !widget_has_input(to_id, &self.fixture.widgets, &self.kind_infos) {
+        if !widget_has_input(to_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
             return Err(format!("{to_id} has no input port"));
         }
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
@@ -1144,13 +1172,13 @@ impl FlowHost {
         if anchor_id == mid_id {
             return Err("cannot insert widget between itself".into());
         }
-        if !widget_has_output(anchor_id, &self.fixture.widgets, &self.kind_infos) {
+        if !widget_has_output(anchor_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
             return Err(format!("{anchor_id} has no output port"));
         }
-        if !widget_has_input(mid_id, &self.fixture.widgets, &self.kind_infos) {
+        if !widget_has_input(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
             return Err(format!("{mid_id} has no input port"));
         }
-        if !widget_has_output(mid_id, &self.fixture.widgets, &self.kind_infos) {
+        if !widget_has_output(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
             return Err(format!("{mid_id} has no output port"));
         }
         for synapse in &mut self.fixture.synapses {
@@ -1608,7 +1636,7 @@ impl FlowHost {
             .iter()
             .enumerate()
             .filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string()))
-            .map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout, &self.kind_infos))
+            .map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout, &self.fixture.synapses, &self.kind_infos))
             .collect();
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         let edges: Vec<DagFixtureEdgeV1> = self
@@ -1732,6 +1760,10 @@ impl FlowHost {
         self.dag.label_overlay_paint_state_json()
     }
 
+    pub fn param_overlay_paint_state_json(&self) -> Result<String, String> {
+        self.dag.param_overlay_paint_state_json()
+    }
+
     // #region History
     fn content_changed(a: &FlowFixtureV1, b: &FlowFixtureV1) -> bool {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
@@ -1809,12 +1841,12 @@ fn widget_id_for(widget: &Widget) -> &str {
     }
 }
 
-fn widget_has_output(widget_id: &str, widgets: &[Widget], kind_infos: &HashMap<String, NeuronKindInfo>) -> bool {
-    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, kind_infos).1.is_empty())
+fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, NeuronKindInfo>) -> bool {
+    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, synapses, kind_infos).1.is_empty())
 }
 
-fn widget_has_input(widget_id: &str, widgets: &[Widget], kind_infos: &HashMap<String, NeuronKindInfo>) -> bool {
-    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, kind_infos).0.is_empty())
+fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, NeuronKindInfo>) -> bool {
+    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, synapses, kind_infos).0.is_empty())
 }
 // #endregion 🔖FlowHost
 
@@ -2159,6 +2191,15 @@ impl FlowSession {
             .map_err(|e| JsValue::from_str(&e))
     }
 
+    #[wasm_bindgen(js_name = paramOverlayPaintStateJson)]
+    pub fn param_overlay_paint_state_json(&self) -> Result<String, JsValue> {
+        self.state
+            .borrow()
+            .host
+            .param_overlay_paint_state_json()
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
     #[wasm_bindgen(js_name = attachCanvas)]
     pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
@@ -2325,7 +2366,7 @@ mod tests {
                 abbreviation: "Add".into(),
                 icon: "emoji:➕".into(),
                 summary: "Sums two numbers".into(),
-                inputs: vec!["a".into(), "b".into()],
+                inputs: vec![InputSpec::number("a"), InputSpec::number_default("b", 0.0)],
                 outputs: vec!["number".into()],
                 ..Default::default()
             },
@@ -2336,7 +2377,7 @@ mod tests {
                 abbreviation: "Pass".into(),
                 icon: "emoji:➡️".into(),
                 summary: "Forwards a number".into(),
-                inputs: vec!["number".into()],
+                inputs: vec![InputSpec::number_default("number", 0.0)],
                 outputs: vec!["number".into()],
                 ..Default::default()
             },
@@ -2897,7 +2938,7 @@ mod tests {
                 abbreviation: "Circle".into(),
                 icon: "emoji:⚪".into(),
                 summary: "Sketched circle profile".into(),
-                inputs: vec!["radius".into()],
+                inputs: vec![InputSpec::number_default("radius", 1.0)],
                 outputs: vec!["geometry".into()],
                 ..Default::default()
             }])
@@ -2944,7 +2985,7 @@ mod tests {
                 abbreviation: "Circle".into(),
                 icon: "emoji:⚪".into(),
                 summary: "Sketched circle profile".into(),
-                inputs: vec!["radius".into()],
+                inputs: vec![InputSpec::number_default("radius", 1.0)],
                 outputs: vec!["geometry".into()],
                 ..Default::default()
             }])
@@ -2977,7 +3018,7 @@ mod tests {
             );
             let mut layout = BTreeMap::new();
             layout.insert("placed".into(), WidgetLayout { x: 80.0, y: 80.0 });
-            let mut node = widget_to_dag_node(&widget, 0, &layout, &host.kind_infos);
+            let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &host.kind_infos);
             fit_node_size(&mut node);
             node
         };
@@ -3004,7 +3045,7 @@ mod tests {
                 abbreviation: "Circle".into(),
                 icon: "emoji:⚪".into(),
                 summary: "Sketched circle profile".into(),
-                inputs: vec!["radius".into()],
+                inputs: vec![InputSpec::number_default("radius", 1.0)],
                 outputs: vec!["geometry".into()],
                 ..Default::default()
             }])

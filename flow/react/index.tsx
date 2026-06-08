@@ -63,6 +63,13 @@ export interface FlowModuleVariadicSpecV1 {
   readonly max?: number;
 }
 
+export interface FlowInputSpecV1 {
+  readonly id: string;
+  readonly type: string;
+  readonly default?: unknown;
+  readonly label?: string;
+}
+
 export interface FlowModuleNeuronKindV1 {
   readonly id: string;
   readonly module: string;
@@ -70,7 +77,7 @@ export interface FlowModuleNeuronKindV1 {
   readonly abbreviation: string;
   readonly icon: string;
   readonly summary: string;
-  readonly inputs: readonly string[];
+  readonly inputs: readonly FlowInputSpecV1[];
   readonly outputs: readonly string[];
   readonly group?: readonly string[];
   readonly variadicInput?: FlowModuleVariadicSpecV1;
@@ -1481,6 +1488,25 @@ interface FlowLabelOverlayPaintState {
   readonly labels: readonly FlowLabelOverlayRow[];
 }
 
+interface FlowParamOverlayEditor {
+  readonly nodeId: string;
+  readonly portId: string;
+  readonly type?: string;
+  readonly value?: unknown;
+  readonly default?: unknown;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+interface FlowParamOverlayPaintState {
+  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly width: number;
+  readonly height: number;
+  readonly editors: readonly FlowParamOverlayEditor[];
+}
+
 function flowWorldToScreen(
   point: { readonly x: number; readonly y: number },
   camera: { readonly x: number; readonly y: number; readonly zoom: number },
@@ -1551,6 +1577,84 @@ function flowOverlayLabelFill(
     return resolveSemanticColorHex("border-emphasized-color", "dark");
   }
   return resolveSemanticColorHex("border-element-color", "gray");
+}
+
+function paramEditorScalar(editor: FlowParamOverlayEditor): string | number | boolean {
+  const raw = editor.value ?? editor.default;
+  if (editor.type === "boolean") return Boolean(raw);
+  if (editor.type === "text") return typeof raw === "string" ? raw : String(raw ?? "");
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function FlowParamOverlay({
+  state,
+  width,
+  height,
+  onParamChange,
+}: {
+  readonly state: FlowParamOverlayPaintState | null;
+  readonly width: number;
+  readonly height: number;
+  readonly onParamChange: (nodeId: string, portId: string, value: unknown) => void;
+}): React.ReactElement | null {
+  if (!state) return null;
+  const camera = {
+    x: Number(state.camera?.x) || 0,
+    y: Number(state.camera?.y) || 0,
+    zoom: Math.max(0.05, Number(state.camera?.zoom) || 1),
+  };
+  const viewportW = Number(state.width) || width;
+  const viewportH = Number(state.height) || height;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-visible" data-testid="flow-param-overlay">
+      {state.editors.map((editor) => {
+        const screen = flowWorldToScreen({ x: editor.x, y: editor.y }, camera, viewportW, viewportH);
+        const w = Math.max(28, editor.w * camera.zoom);
+        const h = Math.max(14, editor.h * camera.zoom);
+        const left = screen.x - w * 0.5;
+        const top = screen.y - h * 0.5;
+        const key = `${editor.nodeId}:${editor.portId}`;
+        if (editor.type === "boolean") {
+          const checked = Boolean(paramEditorScalar(editor));
+          return (
+            <label
+              key={key}
+              className="pointer-events-auto absolute flex items-center gap-1 rounded border border-border bg-background/90 px-1 text-[10px] text-foreground shadow-sm"
+              style={{ left, top, width: w, height: h }}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(event) => onParamChange(editor.nodeId, editor.portId, event.target.checked)}
+              />
+              <span>{editor.portId}</span>
+            </label>
+          );
+        }
+        const value = paramEditorScalar(editor);
+        return (
+          <input
+            key={key}
+            className="pointer-events-auto absolute rounded border border-border bg-background/90 px-1 text-[10px] text-foreground shadow-sm"
+            style={{ left, top, width: w, height: h }}
+            type={editor.type === "text" ? "text" : "number"}
+            value={typeof value === "string" ? value : String(value)}
+            step={editor.type === "integer" ? 1 : "any"}
+            onChange={(event) => {
+              const next =
+                editor.type === "text"
+                  ? event.target.value
+                  : editor.type === "integer"
+                    ? Number.parseInt(event.target.value, 10) || 0
+                    : Number.parseFloat(event.target.value) || 0;
+              onParamChange(editor.nodeId, editor.portId, next);
+            }}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement, width: number, height: number, dpr: number): void {
@@ -2130,6 +2234,7 @@ export function FlowCanvas({
   } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<FlowSelectionUnionBoundsScreen | null>(null);
   const [selectionBoundsCount, setSelectionBoundsCount] = useState(0);
+  const [paramOverlayState, setParamOverlayState] = useState<FlowParamOverlayPaintState | null>(null);
   const selectionBoundsRef = useRef<FlowSelectionUnionBoundsScreen | null>(null);
   const selectionBoundsCountRef = useRef(0);
   const alignSelectionRef = useRef<(mode: FlowSelectionAlignMode) => void>(() => {});
@@ -2343,6 +2448,12 @@ export function FlowCanvas({
         paintFlowLabelOverlays(session, overlay, width, height, dpr);
       }
       if (session) {
+        try {
+          const next = JSON.parse(session.paramOverlayPaintStateJson()) as FlowParamOverlayPaintState;
+          setParamOverlayState((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+        } catch {
+          setParamOverlayState((prev) => (prev === null ? prev : null));
+        }
         syncSelectionBoundsOverlay(session);
       }
       reportDrawLod();
@@ -2404,6 +2515,28 @@ export function FlowCanvas({
   useEffect(() => {
     alignSelectionRef.current = alignSelection;
   }, [alignSelection]);
+
+  const onNeuronParamChange = useCallback(
+    (nodeId: string, portId: string, value: unknown) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      const atom =
+        typeof value === "boolean"
+          ? value
+          : typeof value === "string"
+            ? value
+            : typeof value === "number"
+              ? value
+              : value;
+      runFlowGraphEdit(session, [{ op: "setNeuronParams", id: nodeId, paramsJson: JSON.stringify({ [portId]: atom }) }]);
+      emitInteractionState(session);
+      evaluate();
+      persistFixture();
+      renderFrame();
+      console.log(`[DEBUG] flow neuron param ${nodeId}.${portId}=${String(value)}`);
+    },
+    [emitInteractionState, evaluate, persistFixture, renderFrame],
+  );
 
   const onContainerPointerDownCapture = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
@@ -3118,6 +3251,12 @@ export function FlowCanvas({
         className="pointer-events-none absolute inset-0 block h-full w-full"
         data-testid="flow-text-overlay"
       />
+      <FlowParamOverlay
+        state={paramOverlayState}
+        width={viewportRef.current.width}
+        height={viewportRef.current.height}
+        onParamChange={onNeuronParamChange}
+      />
       <input
         ref={imageFileInputRef}
         type="file"
@@ -3250,7 +3389,7 @@ if (import.meta.vitest) {
           version: "0.1.0",
           activationEvents: ["onStartup"],
           contributes: {
-            neuronKinds: [{ id: "math.add", module: "math", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum", inputs: ["a"], outputs: ["number"] }],
+            neuronKinds: [{ id: "math.add", module: "math", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum", inputs: [{ id: "a", type: "number" }, { id: "b", type: "number", default: 0 }], outputs: ["number"] }],
             widgets: [],
             commands: [],
             settings: [],

@@ -78,14 +78,25 @@ impl Value {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Atom {
+    Boolean(bool),
     Integer(i64),
     Decimal(f64),
     String(String),
 }
 
 impl Atom {
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Atom::Boolean(b) => Some(*b),
+            Atom::Integer(i) => Some(*i != 0),
+            Atom::Decimal(d) => Some(*d != 0.0),
+            _ => None,
+        }
+    }
+
     pub fn as_f64(&self) -> Option<f64> {
         match self {
+            Atom::Boolean(b) => Some(if *b { 1.0 } else { 0.0 }),
             Atom::Integer(i) => Some(*i as f64),
             Atom::Decimal(d) => Some(*d),
             _ => None,
@@ -178,6 +189,76 @@ pub struct VariadicSpec {
     pub max: Option<usize>,
 }
 
+/// 🔌 Declared neuron input port with type and optional default.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InputSpec {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub value_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+impl InputSpec {
+    pub fn new(id: impl Into<String>, value_type: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            value_type: value_type.into(),
+            default: None,
+            label: None,
+        }
+    }
+
+    pub fn with_default(mut self, default: Value) -> Self {
+        self.default = Some(default);
+        self
+    }
+
+    pub fn with_label(mut self, label: impl Into<String>) -> Self {
+        self.label = Some(label.into());
+        self
+    }
+
+    pub fn number(id: impl Into<String>) -> Self {
+        Self::new(id, "number")
+    }
+
+    pub fn number_default(id: impl Into<String>, default: f64) -> Self {
+        Self::number(id).with_default(Value::Atom(Atom::Decimal(default)))
+    }
+
+    pub fn integer_default(id: impl Into<String>, default: i64) -> Self {
+        Self::new(id, "integer").with_default(Value::Atom(Atom::Integer(default)))
+    }
+
+    pub fn boolean_default(id: impl Into<String>, default: bool) -> Self {
+        Self::new(id, "boolean").with_default(Value::Atom(Atom::Boolean(default)))
+    }
+
+    pub fn text_default(id: impl Into<String>, default: impl Into<String>) -> Self {
+        Self::new(id, "text").with_default(Value::Atom(Atom::String(default.into())))
+    }
+
+    pub fn list(id: impl Into<String>) -> Self {
+        Self::new(id, "list")
+    }
+
+    pub fn dictionary(id: impl Into<String>) -> Self {
+        Self::new(id, "dictionary")
+    }
+
+    pub fn value(id: impl Into<String>) -> Self {
+        Self::new(id, "value")
+    }
+
+    pub fn wildcard() -> Self {
+        Self::new("*", "value")
+    }
+}
+
 /// 📇 Catalogue metadata for a neuron kind.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -188,7 +269,7 @@ pub struct NeuronKindInfo {
     pub abbreviation: String,
     pub icon: String,
     pub summary: String,
-    pub inputs: Vec<String>,
+    pub inputs: Vec<InputSpec>,
     pub outputs: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub variadic_input: Option<VariadicSpec>,
@@ -340,6 +421,27 @@ fn insert_fixed_port(acc: Dictionary, port_key: &str, value: Value) -> Dictionar
     }
 }
 
+/// 💉 Fills missing declared input keys from neuron kind defaults.
+pub fn inject_input_defaults(acc: Dictionary, kind_info: &NeuronKindInfo) -> Dictionary {
+    let mut acc = acc;
+    for spec in &kind_info.inputs {
+        if spec.id == "*" || acc.get(&spec.id).is_some() {
+            continue;
+        }
+        if let Some(default) = &spec.default {
+            acc = acc.insert(spec.id.clone(), default.clone());
+        }
+    }
+    acc
+}
+
+fn inject_input_defaults_for_kind(acc: Dictionary, kind_info: Option<&NeuronKindInfo>) -> Dictionary {
+    match kind_info {
+        Some(info) => inject_input_defaults(acc, info),
+        None => acc,
+    }
+}
+
 fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, kind_info: Option<&NeuronKindInfo>) -> Dictionary {
     let mut acc = Dictionary::new();
     let variadic = kind_info.and_then(|info| info.variadic_input.as_ref());
@@ -362,7 +464,7 @@ fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neur
         }
         acc = insert_fixed_port(acc, &syn.to_port, value);
     }
-    acc
+    inject_input_defaults_for_kind(acc, kind_info)
 }
 
 fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
@@ -440,7 +542,7 @@ mod tests {
             abbreviation: "Echo".into(),
             icon: "emoji:📣".into(),
             summary: "Forwards input".into(),
-            inputs: vec!["x".into()],
+            inputs: vec![InputSpec::value("x")],
             outputs: vec!["x".into()],
             ..Default::default()
         }
@@ -454,7 +556,7 @@ mod tests {
             abbreviation: "Dbl".into(),
             icon: "emoji:✖️".into(),
             summary: "Doubles number".into(),
-            inputs: vec!["number".into()],
+            inputs: vec![InputSpec::number("number")],
             outputs: vec!["number".into()],
             ..Default::default()
         }
@@ -627,6 +729,32 @@ mod tests {
         let items = input.get("items").and_then(|v| v.as_dictionary()).expect("items");
         assert!(items.get("0").is_some());
         assert!(items.get("1").is_some());
+    }
+
+    #[test]
+    fn collect_injects_declared_defaults_for_unconnected_inputs() {
+        let kind = NeuronKindInfo {
+            id: "list.get".into(),
+            module: "list".into(),
+            name: "Get".into(),
+            abbreviation: "Get".into(),
+            icon: "emoji:🔍".into(),
+            summary: "Get".into(),
+            inputs: vec![
+                InputSpec::list("list"),
+                InputSpec::number_default("index", 0.0),
+                InputSpec::boolean_default("wrap", false),
+            ],
+            outputs: vec!["value".into()],
+            ..Default::default()
+        };
+        let tree = Tree {
+            neurons: vec![Neuron { id: "get".into(), kind: "list.get".into(), params: Dictionary::new() }],
+            synapses: vec![],
+        };
+        let input = collect_neuron_input(&tree, &HashMap::new(), "get", Some(&kind));
+        assert_eq!(input.get("index").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
+        assert_eq!(input.get("wrap").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(false));
     }
 }
 // #endregion 🔖Tests
