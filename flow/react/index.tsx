@@ -361,7 +361,7 @@ export interface FlowFixtureV1 {
 
 export type FlowWidgetV1 =
   | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[] }
-  | { readonly kind: "inputSlider"; readonly id: string; readonly value: number }
+  | { readonly kind: "inputSlider"; readonly id: string; readonly value: number; readonly min?: number; readonly max?: number; readonly step?: number }
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
   | { readonly kind: "inputImage"; readonly id: string; readonly src?: string }
   | { readonly kind: "outputPreview"; readonly id: string; readonly expanded?: readonly string[] }
@@ -636,7 +636,194 @@ export interface FlowReorganizeRequest {
   readonly optionsJson: string;
 }
 
+export interface FlowCanvasCommandRequest {
+  readonly epoch: number;
+  readonly command: string;
+  readonly argsJson?: string;
+}
+
+export interface FlowCanvasContextMenuContext {
+  readonly hoveredNodeId: string | null;
+  readonly selectedNodeIds: readonly string[];
+  readonly isImageWidget: boolean;
+  readonly isBackground: boolean;
+  readonly previewOffNodeIds: readonly string[];
+  readonly screen: { readonly x: number; readonly y: number };
+  readonly world: { readonly x: number; readonly y: number };
+  readonly clientX: number;
+  readonly clientY: number;
+}
+
+export type FlowContextMenuDispatch = (command: string, args?: Record<string, unknown>) => void;
+
+/** @emoji 🖱️ Context-aware flow canvas right-click menu entries. */
+export function buildFlowContextMenuItems(ctx: FlowCanvasContextMenuContext, dispatch: FlowContextMenuDispatch): ContextMenuItem[] {
+  const targetIds = ctx.selectedNodeIds.length > 0 ? [...ctx.selectedNodeIds] : ctx.hoveredNodeId ? [ctx.hoveredNodeId] : [];
+  const previewOff = new Set(ctx.previewOffNodeIds);
+  const allPreviewOff = targetIds.length > 0 && targetIds.every((id) => previewOff.has(id));
+  const items: ContextMenuItem[] = [];
+  if (ctx.isBackground) {
+    items.push({
+      id: "flow.ctx.add",
+      label: "Add node…",
+      icon: "plus",
+      onSelect: () => dispatch("canvasCommand", { command: "openSpotlight", argsJson: JSON.stringify({ screen: ctx.screen, world: ctx.world }) }),
+    });
+    items.push({ id: "flow.ctx.sep.bg-1", separator: true });
+  }
+  if (targetIds.length > 0) {
+    items.push({
+      id: "flow.ctx.delete",
+      label: targetIds.length === 1 ? "Delete" : `Delete (${targetIds.length})`,
+      icon: "trash-2",
+      destructive: true,
+      shortcut: "⌫",
+      onSelect: () => dispatch("canvasCommand", { command: "deleteSelection" }),
+    });
+    items.push({
+      id: "flow.ctx.preview",
+      label: allPreviewOff ? "Show in preview" : "Hide from preview",
+      icon: allPreviewOff ? "eye" : "eye-off",
+      checked: allPreviewOff,
+      onSelect: () => dispatch("canvasCommand", { command: "togglePreview", argsJson: JSON.stringify({ ids: targetIds }) }),
+    });
+    if (ctx.isImageWidget && ctx.hoveredNodeId) {
+      items.push({
+        id: "flow.ctx.replaceImage",
+        label: "Replace image…",
+        icon: "image",
+        onSelect: () => dispatch("canvasCommand", { command: "replaceImage", argsJson: JSON.stringify({ widgetId: ctx.hoveredNodeId }) }),
+      });
+    }
+    if (ctx.selectedNodeIds.length > 0) {
+      items.push({
+        id: "flow.ctx.clearSelection",
+        label: "Clear selection",
+        icon: "x",
+        onSelect: () => dispatch("canvasCommand", { command: "clearSelection" }),
+      });
+    }
+    items.push({ id: "flow.ctx.sep.node-1", separator: true });
+  }
+  items.push({
+    id: "flow.ctx.selectAll",
+    label: "Select all",
+    icon: "check-square",
+    shortcut: "⌘A",
+    onSelect: () => dispatch("canvasCommand", { command: "selectAll" }),
+  });
+  items.push({
+    id: "flow.ctx.reorganize",
+    label: "Reorganize",
+    icon: "layout-grid",
+    onSelect: () => dispatch("reorganize"),
+  });
+  return items;
+}
+
 // #region 🔖Spotlight
+export interface FlowSpotlightSliderSpec {
+  readonly value: number;
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+  readonly label: string;
+}
+
+function flowDecimalPlacesFromNumberToken(token: string): number {
+  const dot = token.trim().indexOf(".");
+  if (dot < 0) return 0;
+  return token.trim().length - dot - 1;
+}
+
+function flowSliderStepFromDecimalPlaces(places: number): number {
+  if (places <= 0) return 1;
+  return 10 ** -places;
+}
+
+function flowSensibleSliderMax(value: number): number {
+  const v = Math.abs(value);
+  if (v <= 1) return 1;
+  if (v <= 10) return 10;
+  const magnitude = 10 ** Math.floor(Math.log10(v));
+  const normalized = v / magnitude;
+  const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return Math.max(nice * magnitude, v);
+}
+
+/** @emoji 🎚️ Parses flow spotlight input as a slider value or min..max range. */
+export function flowParseSpotlightSliderQuery(query: string): FlowSpotlightSliderSpec | null {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+  const rangeMatch = /^(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)$/.exec(trimmed);
+  if (rangeMatch) {
+    const minToken = rangeMatch[1]!;
+    const maxToken = rangeMatch[2]!;
+    let min = Number(minToken);
+    let max = Number(maxToken);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
+    if (min > max) [min, max] = [max, min];
+    const places = Math.max(flowDecimalPlacesFromNumberToken(minToken), flowDecimalPlacesFromNumberToken(maxToken));
+    const step = flowSliderStepFromDecimalPlaces(places);
+    return { value: min, min, max, step, label: `${min}–${max}` };
+  }
+  if (!/^-?\d+(?:\.\d+)?$/.test(trimmed)) return null;
+  const value = Number(trimmed);
+  if (!Number.isFinite(value)) return null;
+  const step = flowSliderStepFromDecimalPlaces(flowDecimalPlacesFromNumberToken(trimmed));
+  if (value < 0) {
+    const bound = flowSensibleSliderMax(value);
+    return { value, min: -bound, max: bound, step, label: String(value) };
+  }
+  return { value, min: 0, max: flowSensibleSliderMax(value), step, label: String(value) };
+}
+
+/** @emoji 🎚️ Builds a flow widget descriptor for a spotlight slider spec. */
+export function flowSpotlightSliderDescriptor(spec: FlowSpotlightSliderSpec): string {
+  return JSON.stringify({ kind: "inputSlider", value: spec.value, min: spec.min, max: spec.max, step: spec.step });
+}
+
+export interface FlowSpotlightNoteSpec {
+  readonly text: string;
+  readonly label: string;
+}
+
+function flowSpotlightNoteSummary(text: string): string {
+  const compact = text.replace(/\s+/g, " ").trim();
+  if (compact.length <= 48) return compact;
+  return `${compact.slice(0, 45)}…`;
+}
+
+/** @emoji 📝 Parses flow spotlight input as note text when it is not numeric and has no catalogue match. */
+export function flowParseSpotlightNoteQuery(query: string, sections: readonly CatalogueSection[]): FlowSpotlightNoteSpec | null {
+  const trimmed = query.trim();
+  if (!trimmed || flowParseSpotlightSliderQuery(trimmed)) return null;
+  const matches = flowRankCatalogueSuggestions(sections, trimmed);
+  if (matches.length > 0 && flowCatalogueItemRankScore(matches[0]!, trimmed) >= 0) return null;
+  return { text: trimmed, label: flowSpotlightNoteSummary(trimmed) };
+}
+
+/** @emoji 📝 Builds a flow widget descriptor for a spotlight note spec. */
+export function flowSpotlightNoteDescriptor(spec: FlowSpotlightNoteSpec): string {
+  return JSON.stringify({ kind: "inputNote", text: spec.text });
+}
+
+const FLOW_SPOTLIGHT_SLIDER_ITEM: CatalogueItem = {
+  kind: "inputSlider",
+  name: "Slider",
+  abbreviation: "Slider",
+  icon: "emoji:🎚️",
+  summary: "Number input",
+};
+
+const FLOW_SPOTLIGHT_NOTE_ITEM: CatalogueItem = {
+  kind: "inputNote",
+  name: "Note",
+  abbreviation: "Note",
+  icon: "emoji:📝",
+  summary: "Text input",
+};
+
 interface FlowSpotlightAnchor {
   readonly screen: { readonly x: number; readonly y: number };
   readonly world: { readonly x: number; readonly y: number };
@@ -657,12 +844,38 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const suggestions = flowRankCatalogueSuggestions(sections, query);
+  const sliderSpec = flowParseSpotlightSliderQuery(query);
+  const noteSpec = sliderSpec ? null : flowParseSpotlightNoteQuery(query, sections);
+  const spotlightWidget = sliderSpec ? ("slider" as const) : noteSpec ? ("note" as const) : null;
+  const catalogueSuggestions = flowRankCatalogueSuggestions(sections, spotlightWidget ? "" : query);
+  const suggestions = sliderSpec
+    ? [{ ...FLOW_SPOTLIGHT_SLIDER_ITEM, summary: `${sliderSpec.label} · ${sliderSpec.min}–${sliderSpec.max}` }]
+    : noteSpec
+      ? [{ ...FLOW_SPOTLIGHT_NOTE_ITEM, summary: noteSpec.label }]
+      : catalogueSuggestions;
   const visible = expanded ? suggestions : suggestions.slice(0, 1);
-  const hasMore = suggestions.length > 1;
+  const hasMore = !spotlightWidget && suggestions.length > 1;
 
   const syncGhost = useCallback(
-    (item: CatalogueItem | undefined) => {
+    (item: CatalogueItem | undefined, slider: FlowSpotlightSliderSpec | null, note: FlowSpotlightNoteSpec | null) => {
+      if (slider) {
+        try {
+          session.setGhostWidget(flowSpotlightSliderDescriptor(slider), anchor.world.x, anchor.world.y);
+          renderFrame();
+        } catch {
+          session.clearGhostWidget();
+        }
+        return;
+      }
+      if (note) {
+        try {
+          session.setGhostWidget(flowSpotlightNoteDescriptor(note), anchor.world.x, anchor.world.y);
+          renderFrame();
+        } catch {
+          session.clearGhostWidget();
+        }
+        return;
+      }
       if (!item) {
         session.clearGhostWidget();
         renderFrame();
@@ -678,14 +891,20 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
     [anchor.world.x, anchor.world.y, renderFrame, session],
   );
 
-  const commitItem = useCallback(
-    (item: CatalogueItem) => {
-      const descriptor = flowCatalogueItemDescriptor(item);
+  const commitDescriptor = useCallback(
+    (descriptor: string) => {
       session.clearGhostWidget();
       onCommit({ descriptor, screen: anchor.screen, world: anchor.world });
       onClose();
     },
     [anchor.screen, anchor.world, onClose, onCommit, session],
+  );
+
+  const commitItem = useCallback(
+    (item: CatalogueItem) => {
+      commitDescriptor(flowCatalogueItemDescriptor(item));
+    },
+    [commitDescriptor],
   );
 
   useEffect(() => {
@@ -697,8 +916,8 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   }, [query]);
 
   useEffect(() => {
-    syncGhost(suggestions[activeIndex]);
-  }, [activeIndex, suggestions, syncGhost]);
+    syncGhost(suggestions[activeIndex], sliderSpec, noteSpec);
+  }, [activeIndex, noteSpec, sliderSpec, suggestions, syncGhost]);
 
   useEffect(() => {
     return () => {
@@ -740,6 +959,14 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
     }
     if (event.key === "Enter") {
       event.preventDefault();
+      if (sliderSpec) {
+        commitDescriptor(flowSpotlightSliderDescriptor(sliderSpec));
+        return;
+      }
+      if (noteSpec) {
+        commitDescriptor(flowSpotlightNoteDescriptor(noteSpec));
+        return;
+      }
       const item = suggestions[activeIndex];
       if (item) commitItem(item);
     }
@@ -758,7 +985,7 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
           ref={inputRef}
           type="text"
           value={query}
-          placeholder="Add function…"
+          placeholder="Add function, number, or text…"
           className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onInputKeyDown}
@@ -861,17 +1088,31 @@ function flowClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targe
   return best;
 }
 
+/** @emoji 🎯 Committed selection vs area-select preview chrome for flow label overlays. */
+export function flowElementInteractionChrome(
+  selectionIds: Iterable<string>,
+  preselection: FlowPreselectSnapshot,
+): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
+  if (!preselection.ids.length && !preselection.removedIds.length) {
+    return { selectedIds: new Set(selectionIds), highlightedIds: new Set() };
+  }
+  return { selectedIds: new Set(preselection.ids), highlightedIds: new Set(preselection.removedIds) };
+}
+
 function flowOverlayLabelFill(
   nodeId: string,
   hoveredId: string | null,
-  selectedIds: readonly string[],
+  chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> },
   previewOffIds: readonly string[],
 ): string {
   if (previewOffIds.includes(nodeId)) {
     return resolveSemanticColorHex("border-element-color", "gray");
   }
-  if (selectedIds.includes(nodeId)) {
-    return resolveColorHex(tokenVar("primary"), "primary");
+  if (chrome.selectedIds.has(nodeId)) {
+    return resolveSemanticColorHex("border-emphasized-color", "dark");
+  }
+  if (chrome.highlightedIds.has(nodeId)) {
+    return resolveSemanticColorHex("border-emphasized-color", "dark");
   }
   if (hoveredId === nodeId) {
     return resolveSemanticColorHex("border-emphasized-color", "dark");
@@ -906,6 +1147,8 @@ function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement,
   const viewportH = Number(state.height) || height;
   const hoveredId = session.hoveredWidgetId() ?? null;
   const selectedIds = parseFlowWidgetIdArray(session.selectedWidgetIds());
+  const preselect = parseFlowPreselectJson(session.preselectWidgetIdsJson());
+  const chrome = flowElementInteractionChrome(selectedIds, preselect);
   const previewOffIds = parseFlowWidgetIdArray(session.previewOffWidgetIds());
   const inset = 0.88;
   for (const row of state.labels ?? []) {
@@ -918,7 +1161,7 @@ function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement,
     const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : FLOW_LABEL_SCREEN_PX;
     const fontPx = flowClampLabelFontPx(ctx, text, targetPx, maxW, maxH);
     ctx.font = `${fontPx}px ${FLOW_LABEL_FONT_FAMILY}`;
-    ctx.fillStyle = flowOverlayLabelFill(row.id, hoveredId, selectedIds, previewOffIds);
+    ctx.fillStyle = flowOverlayLabelFill(row.id, hoveredId, chrome, previewOffIds);
     ctx.globalAlpha = previewOffIds.includes(row.id) ? 0.5 : 1;
     if (row.layout === "vertical") {
       ctx.save();
@@ -969,8 +1212,10 @@ export interface FlowCanvasProps {
   readonly previewOffNodeIds?: readonly string[];
   readonly selectionMode?: FlowSelectionMode;
   readonly selectionMethod?: FlowSelectionMethod;
-  readonly contextMenu?: readonly ContextMenuItem[];
+  readonly contextMenu?: (ctx: FlowCanvasContextMenuContext) => readonly ContextMenuItem[];
   readonly onContextMenu?: (detail: { readonly clientX: number; readonly clientY: number; readonly hoveredNodeId: string | null }) => void;
+  readonly commandRequest?: FlowCanvasCommandRequest;
+  readonly onPreviewOffChange?: (ids: readonly string[]) => void;
   readonly automaticLod?: boolean;
   readonly lod?: DagDrawLodKind;
   readonly onLodChange?: (lod: DagDrawLodKind) => void;
@@ -1052,6 +1297,8 @@ export function FlowCanvas({
   selectionMethod = "rectangle",
   contextMenu,
   onContextMenu,
+  commandRequest,
+  onPreviewOffChange,
   automaticLod = true,
   lod,
   onLodChange,
@@ -1076,6 +1323,8 @@ export function FlowCanvas({
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const pendingImageWidgetIdRef = useRef<string | null>(null);
   const onContextMenuRef = useRef(onContextMenu);
+  const contextMenuRef = useRef(contextMenu);
+  const onPreviewOffChangeRef = useRef(onPreviewOffChange);
   const onLodChangeRef = useRef(onLodChange);
   const lastAutomaticLodRef = useRef<boolean | null>(null);
   const lastForcedLodRef = useRef<string | null>(null);
@@ -1154,6 +1403,14 @@ export function FlowCanvas({
   }, [onContextMenu]);
 
   useEffect(() => {
+    contextMenuRef.current = contextMenu;
+  }, [contextMenu]);
+
+  useEffect(() => {
+    onPreviewOffChangeRef.current = onPreviewOffChange;
+  }, [onPreviewOffChange]);
+
+  useEffect(() => {
     onLodChangeRef.current = onLodChange;
   }, [onLodChange]);
 
@@ -1214,11 +1471,13 @@ export function FlowCanvas({
     const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
     const hovered = session.hoveredWidgetId() ?? null;
     const preselect = parseFlowPreselectJson(session.preselectWidgetIdsJson());
+    const previewOff = parseFlowWidgetIdArray(session.previewOffWidgetIds());
     onSelectionChangeRef.current?.(selected);
     onPreselectChangeRef.current?.(preselect);
     onHoverChangeRef.current?.(hovered);
+    onPreviewOffChangeRef.current?.(previewOff);
     syncMarqueeOverlay(session);
-    console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] preselect=[${preselect.ids.join(", ")}] hover=${hovered ?? "—"}`);
+    console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] preselect=[${preselect.ids.join(", ")}] hover=${hovered ?? "—"} previewOff=[${previewOff.join(", ")}]`);
   }, [syncMarqueeOverlay]);
 
   const persistFixture = useCallback(() => {
@@ -1561,6 +1820,64 @@ export function FlowCanvas({
     imageFileInputRef.current?.click();
   }, []);
 
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || !commandRequest || commandRequest.epoch <= 0) return;
+    const args = commandRequest.argsJson ? (JSON.parse(commandRequest.argsJson) as Record<string, unknown>) : {};
+    try {
+      switch (commandRequest.command) {
+        case "openSpotlight": {
+          const screen = args.screen as { x: number; y: number } | undefined;
+          const world = args.world as { x: number; y: number } | undefined;
+          if (screen && world) setSpotlight({ screen, world });
+          break;
+        }
+        case "selectAll":
+          session.selectAll();
+          emitInteractionState(session);
+          evaluate();
+          persistFixture();
+          renderFrame();
+          break;
+        case "clearSelection":
+          session.setSelection(JSON.stringify([]));
+          emitInteractionState(session);
+          renderFrame();
+          break;
+        case "deleteSelection":
+          session.deleteSelection();
+          emitInteractionState(session);
+          evaluate();
+          persistFixture();
+          renderFrame();
+          break;
+        case "togglePreview": {
+          const ids = Array.isArray(args.ids) ? args.ids.filter((value): value is string => typeof value === "string") : [];
+          const current = parseFlowWidgetIdArray(session.previewOffWidgetIds());
+          const off = new Set(current);
+          for (const id of ids) {
+            if (off.has(id)) off.delete(id);
+            else off.add(id);
+          }
+          session.setPreviewOff(JSON.stringify([...off]));
+          emitInteractionState(session);
+          evaluate();
+          renderFrame();
+          break;
+        }
+        case "replaceImage": {
+          const widgetId = typeof args.widgetId === "string" ? args.widgetId : null;
+          if (widgetId) openImagePicker(widgetId);
+          break;
+        }
+        default:
+          console.log(`[DEBUG] flow canvas unknown command: ${commandRequest.command}`);
+      }
+    } catch (err) {
+      console.log(`[DEBUG] flow canvas command failed: ${String(err)}`);
+    }
+  }, [commandRequest?.epoch, commandRequest?.command, commandRequest?.argsJson, emitInteractionState, evaluate, openImagePicker, persistFixture, renderFrame]);
+
   const onImageFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const session = sessionRef.current;
@@ -1655,14 +1972,46 @@ export function FlowCanvas({
       }
       e.preventDefault();
       const session = sessionRef.current;
-      const hoveredNodeId = session?.hoveredWidgetId() ?? null;
+      if (!session) return;
+      const hoveredNodeId = session.hoveredWidgetId() ?? null;
+      const selectedNodeIds = parseFlowWidgetIdArray(session.selectedWidgetIds());
+      const previewOffNodeIds = parseFlowWidgetIdArray(session.previewOffWidgetIds());
+      if (hoveredNodeId && !selectedNodeIds.includes(hoveredNodeId)) {
+        session.setSelection(JSON.stringify([hoveredNodeId]));
+        emitInteractionState(session);
+        renderFrame();
+      }
+      const screen = clientToCanvas(e.clientX, e.clientY);
+      const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
+      let isImageWidget = false;
+      if (hoveredNodeId) {
+        try {
+          const fixture = JSON.parse(session.fixtureJson()) as FlowFixtureV1;
+          const widget = fixture.widgets.find((entry) => entry.id === hoveredNodeId);
+          isImageWidget = widget?.kind === "inputImage";
+        } catch {
+          /* fixture not ready */
+        }
+      }
+      const menuCtx: FlowCanvasContextMenuContext = {
+        hoveredNodeId,
+        selectedNodeIds: hoveredNodeId && !selectedNodeIds.includes(hoveredNodeId) ? [hoveredNodeId] : selectedNodeIds,
+        isImageWidget,
+        isBackground: !hoveredNodeId,
+        previewOffNodeIds,
+        screen,
+        world,
+        clientX: e.clientX,
+        clientY: e.clientY,
+      };
       onContextMenuRef.current?.({ clientX: e.clientX, clientY: e.clientY, hoveredNodeId });
-      const items = contextMenu ?? [];
+      const buildMenu = contextMenuRef.current;
+      const items = buildMenu ? buildMenu(menuCtx) : [];
       if (items.length > 0) {
         setSurfaceContextMenu({ clientX: e.clientX, clientY: e.clientY, items });
       }
     },
-    [contextMenu],
+    [clientToCanvas, emitInteractionState, renderFrame],
   );
 
   const resetFixtureDragDepth = useCallback(() => {
@@ -1849,14 +2198,17 @@ if (import.meta.vitest) {
       expect(screen).toEqual({ x: 400, y: 300 });
     });
 
-    it("flowOverlayLabelFill uses element, primary when selected, emphasized when hovered", () => {
+    it("flowOverlayLabelFill uses element default, emphasized when selected or hovered", () => {
       const element = resolveSemanticColorHex("border-element-color", "gray");
       const emphasized = resolveSemanticColorHex("border-emphasized-color", "dark");
-      const primary = resolveColorHex(tokenVar("primary"), "primary");
-      expect(flowOverlayLabelFill("node-a", null, [], [])).toBe(element);
-      expect(flowOverlayLabelFill("node-a", "node-a", [], [])).toBe(emphasized);
-      expect(flowOverlayLabelFill("node-a", null, ["node-a"], [])).toBe(primary);
-      expect(flowOverlayLabelFill("node-a", null, [], ["node-a"])).toBe(element);
+      const idle = flowElementInteractionChrome([], { ids: [], removedIds: [] });
+      const selected = flowElementInteractionChrome(["node-a"], { ids: [], removedIds: [] });
+      const preview = flowElementInteractionChrome([], { ids: ["node-a"], removedIds: [] });
+      expect(flowOverlayLabelFill("node-a", null, idle, [])).toBe(element);
+      expect(flowOverlayLabelFill("node-a", "node-a", idle, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, selected, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, preview, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, idle, ["node-a"])).toBe(element);
     });
   });
 
@@ -1917,6 +2269,60 @@ if (import.meta.vitest) {
       expect(JSON.stringify(sections)).toContain("math.add");
       await host.deactivate("math");
       expect(host.catalogueSections().some((section) => section.id === "math")).toBe(false);
+    });
+  });
+
+  describe("flow spotlight slider query", () => {
+    it("parses a single number into a sensible slider range", () => {
+      const spec = flowParseSpotlightSliderQuery("5");
+      expect(spec).toEqual({ value: 5, min: 0, max: 10, step: 1, label: "5" });
+    });
+
+    it("parses decimal single numbers with matching step", () => {
+      const spec = flowParseSpotlightSliderQuery("10.2");
+      expect(spec?.value).toBe(10.2);
+      expect(spec?.min).toBe(0);
+      expect(spec?.max).toBe(20);
+      expect(spec?.step).toBe(0.1);
+    });
+
+    it("parses min..max range with decimal precision", () => {
+      const spec = flowParseSpotlightSliderQuery("10.2..15");
+      expect(spec).toEqual({ value: 10.2, min: 10.2, max: 15, step: 0.1, label: "10.2–15" });
+    });
+
+    it("builds slider descriptor json", () => {
+      const spec = flowParseSpotlightSliderQuery("10.2..15");
+      expect(spec).not.toBeNull();
+      expect(flowSpotlightSliderDescriptor(spec!)).toBe('{"kind":"inputSlider","value":10.2,"min":10.2,"max":15,"step":0.1}');
+    });
+
+    it("ignores non-numeric spotlight queries", () => {
+      expect(flowParseSpotlightSliderQuery("mul")).toBeNull();
+    });
+  });
+
+  describe("flow spotlight note query", () => {
+    const sections: CatalogueSection[] = [
+      {
+        id: "math",
+        title: "Math",
+        items: [{ kind: "neuron", neuronKind: "math.multiply", name: "Multiply", abbreviation: "Mul", icon: "emoji:✖️", summary: "Product" }],
+      },
+    ];
+
+    it("parses free text into a note spec", () => {
+      expect(flowParseSpotlightNoteQuery("some text", sections)).toEqual({ text: "some text", label: "some text" });
+    });
+
+    it("defers to catalogue matches for function search", () => {
+      expect(flowParseSpotlightNoteQuery("mul", sections)).toBeNull();
+    });
+
+    it("builds note descriptor json", () => {
+      const spec = flowParseSpotlightNoteQuery("some text", sections);
+      expect(spec).not.toBeNull();
+      expect(flowSpotlightNoteDescriptor(spec!)).toBe('{"kind":"inputNote","text":"some text"}');
     });
   });
 
@@ -1981,6 +2387,15 @@ if (import.meta.vitest) {
       const snap = parseFlowPreselectJson(JSON.stringify({ ids: ["a"], removedIds: ["b"] }));
       expect(snap.ids).toEqual(["a"]);
       expect(snap.removedIds).toEqual(["b"]);
+    });
+
+    it("maps preselect preview chrome for label overlays", () => {
+      const idle = flowElementInteractionChrome(["committed"], { ids: [], removedIds: [] });
+      expect([...idle.selectedIds]).toEqual(["committed"]);
+      expect([...idle.highlightedIds]).toEqual([]);
+      const live = flowElementInteractionChrome(["committed"], { ids: ["preview"], removedIds: ["exit"] });
+      expect([...live.selectedIds]).toEqual(["preview"]);
+      expect([...live.highlightedIds]).toEqual(["exit"]);
     });
 
     it("parses selection preview points", () => {

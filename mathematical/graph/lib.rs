@@ -114,7 +114,7 @@ pub struct RenderSnapshot {
     pub edges: Vec<CubicBez>,
     pub handles: Vec<(HandleId, Point, f64)>,
     pub nodes: Vec<(NodeId, Point, f64)>,
-    pub pending_edge: Option<(Point, Point)>,
+    pub pending_edge: Option<CubicBez>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -930,17 +930,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, .. } = self.interaction {
-            if let Some(fixed_tgt) = fixed_target {
-                if let Some(tgt_h) = self.handles.get(&fixed_tgt) {
-                    if let Some(tn) = self.nodes.get(&tgt_h.node_id) {
-                        let to = handle_position(tn, tgt_h);
-                        snapshot.pending_edge = Some((cursor, to));
-                    }
-                }
-            } else if let Some(anchor) = self.handles.get(&anchor_handle).and_then(|h| self.nodes.get(&h.node_id).map(|n| (n, h))) {
-                let anchor_point = handle_position(anchor.0, anchor.1);
-                snapshot.pending_edge = Some(if anchor_is_source { (anchor_point, cursor) } else { (cursor, anchor_point) });
-            }
+            snapshot.pending_edge = self.draw_edge_preview_curve(anchor_handle, anchor_is_source, fixed_target, cursor);
         }
         let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
         let _ = _stroke_scene.encoding().path_tags.len();
@@ -955,6 +945,31 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let edge = self.edges.get(&edge_id)?;
         let (source_position, target_position, source_center, target_center) = self.endpoint_positions(edge)?;
         Some(compute_edge_bezier_points(source_position, target_position, source_center, target_center))
+    }
+
+    fn draw_edge_preview_curve(
+        &self,
+        anchor_handle: HandleId,
+        anchor_is_source: bool,
+        fixed_target: Option<HandleId>,
+        cursor: Point,
+    ) -> Option<CubicBez> {
+        if let Some(fixed_tgt) = fixed_target {
+            let tgt_h = self.handles.get(&fixed_tgt)?;
+            let tgt_node = self.nodes.get(&tgt_h.node_id)?;
+            let target_point = handle_position(tgt_node, tgt_h);
+            let target_center = tgt_node.center;
+            return Some(compute_edge_bezier_points(cursor, target_point, cursor, target_center));
+        }
+        let anchor = self.handles.get(&anchor_handle)?;
+        let anchor_node = self.nodes.get(&anchor.node_id)?;
+        let anchor_point = handle_position(anchor_node, anchor);
+        let anchor_center = anchor_node.center;
+        Some(if anchor_is_source {
+            compute_edge_bezier_points(anchor_point, cursor, anchor_center, cursor)
+        } else {
+            compute_edge_bezier_points(cursor, anchor_point, cursor, anchor_center)
+        })
     }
 
     fn endpoint_positions(&self, edge: &GraphEdge<P::Endpoint>) -> Option<(Point, Point, Point, Point)> {
@@ -1399,6 +1414,46 @@ mod tests {
         let edge = engine.edges.values().next().unwrap();
         assert_eq!(edge.source, 10);
         assert_eq!(edge.target, 12);
+    }
+
+    #[test]
+    fn draw_edge_preview_uses_bezier_from_source_and_target() {
+        use cavas::vello::kurbo::{ParamCurve, Point};
+
+        fn midpoint_bulge(curve: CubicBez) -> f64 {
+            let p0 = curve.p0;
+            let p3 = curve.p3;
+            let mid = curve.eval(0.5);
+            let chord = p3 - p0;
+            let len = chord.hypot();
+            if len <= f64::EPSILON {
+                return 0.0;
+            }
+            let t = ((mid - p0).dot(chord)) / (len * len);
+            let proj = p0 + chord * t;
+            (mid - proj).hypot()
+        }
+
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        let cursor = Point::new(220.0, 40.0);
+        engine.pointer_down(out.x, out.y, false);
+        engine.pointer_move(cursor.x, cursor.y);
+        let from_source = engine.render_snapshot().pending_edge.expect("source drag preview");
+        assert!(midpoint_bulge(from_source) > 1.0, "source-anchored preview should bow away from chord");
+        engine.pointer_up(cursor.x, cursor.y);
+
+        let inp = handle_position_on_rectangle(Point::new(280.0, 0.0), 160.0, 72.0, std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(inp.x, inp.y, false);
+        engine.pointer_move(cursor.x, cursor.y);
+        let from_target = engine.render_snapshot().pending_edge.expect("target drag preview");
+        assert!(midpoint_bulge(from_target) > 1.0, "target-anchored preview should bow away from chord");
     }
 
     #[test]

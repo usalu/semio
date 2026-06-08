@@ -770,6 +770,13 @@ fn computation_channel_row_divider_x_span(node: &DagNodeSpec, side: ComputationC
     }
 }
 
+fn computation_io_side_row_divider_indices(side_rows: usize, grid_rows: usize) -> std::ops::Range<usize> {
+    if side_rows == 0 || grid_rows <= 1 {
+        return 0..0;
+    }
+    1..side_rows + usize::from(side_rows < grid_rows)
+}
+
 fn computation_name_world_center(node: &DagNodeSpec, label: &str, paint_px: f64, zoom: f64) -> (f64, f64) {
     use cavas::text::label_extent;
     let hh = node.height * 0.5;
@@ -1248,13 +1255,13 @@ pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selec
     }
 }
 
-/// @emoji 🧱 Internal column/row chrome inside a node body; hover matches label emphasis.
+/// @emoji 🧱 Internal column/row chrome inside a node body; selection/hover matches label emphasis.
 pub(crate) fn dag_node_internal_chrome_stroke(
     body_stroke: cavas::vello::peniko::Color,
     label_fill: cavas::vello::peniko::Color,
-    hovered: bool,
+    emphasized: bool,
 ) -> cavas::vello::peniko::Color {
-    if hovered {
+    if emphasized {
         label_fill
     } else {
         body_stroke
@@ -1638,6 +1645,42 @@ impl DagHost {
 
     fn is_node_preselect_removed(&self, node_id: NodeId) -> bool {
         self.engine.preselect_removed.node_ids.contains(&node_id)
+    }
+
+    fn is_preselect_active(&self) -> bool {
+        matches!(
+            self.engine.interaction,
+            InteractionMode::SelectionPending { .. } | InteractionMode::AreaSelect { .. }
+        ) || !self.engine.preselect.node_ids.is_empty()
+            || !self.engine.preselect.handle_ids.is_empty()
+            || !self.engine.preselect.edge_ids.is_empty()
+    }
+
+    fn node_interaction_chrome(&self, node_id: NodeId) -> (bool, bool) {
+        if self.is_preselect_active() {
+            return (self.is_node_preselected(node_id), self.is_node_preselect_removed(node_id));
+        }
+        (self.is_node_selected(node_id), self.is_node_hovered(node_id))
+    }
+
+    fn handle_interaction_chrome(&self, handle_id: HandleId) -> (bool, bool) {
+        if self.is_preselect_active() {
+            return (
+                self.engine.preselect.handle_ids.contains(&handle_id),
+                self.engine.preselect_removed.handle_ids.contains(&handle_id),
+            );
+        }
+        (self.engine.selection.handle_ids.contains(&handle_id), self.engine.hover == Some(handle_id))
+    }
+
+    fn edge_interaction_chrome(&self, edge_id: EdgeId) -> (bool, bool) {
+        if self.is_preselect_active() {
+            return (
+                self.engine.preselect.edge_ids.contains(&edge_id),
+                self.engine.preselect_removed.edge_ids.contains(&edge_id),
+            );
+        }
+        (self.engine.selection.edge_ids.contains(&edge_id), self.engine.hover == Some(edge_id))
     }
 
     fn sync_camera_from_engine(&mut self) {
@@ -2633,9 +2676,9 @@ impl DagHost {
         }
         let (input_rows, output_rows) = computation_io_side_row_counts(node);
         let stroke_style = Stroke::new(chrome_stroke);
-        if input_rows > 0 && computation_input_column_x_bounds(node).is_some() {
+        if computation_input_column_x_bounds(node).is_some() {
             let (left, right) = computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Input);
-            for row in 1..grid_rows {
+            for row in computation_io_side_row_divider_indices(input_rows, grid_rows) {
                 let y = channel_row_divider_y(node.y, node.height, row);
                 scene.stroke(
                     &stroke_style,
@@ -2646,9 +2689,9 @@ impl DagHost {
                 );
             }
         }
-        if output_rows > 0 && computation_output_column_x_bounds(node).is_some() {
+        if computation_output_column_x_bounds(node).is_some() {
             let (left, right) = computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Output);
-            for row in 1..grid_rows {
+            for row in computation_io_side_row_divider_indices(output_rows, grid_rows) {
                 let y = channel_row_divider_y(node.y, node.height, row);
                 scene.stroke(
                     &stroke_style,
@@ -2950,14 +2993,12 @@ impl DagHost {
         let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
         for (&eid, _edge) in &self.engine.edges {
             if let Some(curve) = self.engine.edge_curve(eid) {
-                let is_selected = self.engine.selection.edge_ids.contains(&eid);
-                let is_hovered = self.engine.hover == Some(eid);
+                let (is_selected, is_hovered) = self.edge_interaction_chrome(eid);
                 let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_hovered);
                 scene.stroke(&Stroke::new(edge_stroke), aff, stroke_c, None, &curve);
             }
         }
-        if let Some((a, b)) = snap.pending_edge {
-            let preview = compute_edge_bezier_points(a, b, a, b);
+        if let Some(preview) = snap.pending_edge {
             scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false), None, &preview);
         }
         if lod.shows_handles() {
@@ -2965,8 +3006,7 @@ impl DagHost {
             for (hid, center, _radius) in &snap.handles {
                 let node_id = self.engine.handles.get(hid).map(|handle| handle.node_id);
                 let is_dimmed = node_id.is_some_and(|nid| self.dimmed.contains(&nid));
-                let is_selected = self.engine.selection.handle_ids.contains(hid);
-                let is_hovered = self.engine.hover == Some(*hid);
+                let (is_selected, is_hovered) = self.handle_interaction_chrome(*hid);
                 let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_hovered);
                 let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_hovered);
                 let chrome = is_dimmed || is_selected || is_hovered;
@@ -3004,8 +3044,9 @@ impl DagHost {
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let is_selected = engine_nid.is_some_and(|nid| self.is_node_selected(nid));
-            let is_hovered = engine_nid.is_some_and(|nid| self.is_node_hovered(nid));
+            let (is_selected, is_hovered) = engine_nid
+                .map(|nid| self.node_interaction_chrome(nid))
+                .unwrap_or((false, false));
             if let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_hovered) {
                 scene.fill(Fill::NonZero, aff, fill, None, &rect);
             }
@@ -3013,14 +3054,20 @@ impl DagHost {
         if lod == DagDrawLod::Minimap {
             for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
                 let engine_nid = self.engine_node_id_for_index(idx);
-                let chrome = engine_nid.is_some_and(|nid| self.is_node_selected(nid) || self.is_node_hovered(nid));
+                let chrome = engine_nid.is_some_and(|nid| {
+                    let (selected, hovered) = self.node_interaction_chrome(nid);
+                    selected || hovered
+                });
                 if !chrome {
                     paint_minimap_node(scene, idx, fixture_node);
                 }
             }
             for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
                 let engine_nid = self.engine_node_id_for_index(idx);
-                let chrome = engine_nid.is_some_and(|nid| self.is_node_selected(nid) || self.is_node_hovered(nid));
+                let chrome = engine_nid.is_some_and(|nid| {
+                    let (selected, hovered) = self.node_interaction_chrome(nid);
+                    selected || hovered
+                });
                 if chrome {
                     paint_minimap_node(scene, idx, fixture_node);
                 }
@@ -3035,12 +3082,13 @@ impl DagHost {
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let is_selected = engine_nid.is_some_and(|nid| self.is_node_selected(nid));
-            let is_hovered = engine_nid.is_some_and(|nid| self.is_node_hovered(nid));
+            let (is_selected, is_hovered) = engine_nid
+                .map(|nid| self.node_interaction_chrome(nid))
+                .unwrap_or((false, false));
             let fill = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_hovered);
             let stroke = dag_node_body_stroke(theme, is_dimmed, is_selected, is_hovered);
             let label_fill = dag_node_label_fill(theme, is_dimmed, is_selected, is_hovered);
-            let internal_chrome_stroke = dag_node_internal_chrome_stroke(stroke, label_fill, is_hovered);
+            let internal_chrome_stroke = dag_node_internal_chrome_stroke(stroke, label_fill, is_hovered || is_selected);
             let stroke_screen_px = dag_node_stroke_screen_px(is_dimmed, is_selected, is_hovered);
             if let Some(fill) = fill {
                 scene.fill(Fill::NonZero, aff, fill, None, &rect);
@@ -3094,10 +3142,16 @@ impl DagHost {
                         let span = (max - min).max(1e-6);
                         let t = ((*value - *min) / span).clamp(0.0, 1.0);
                         let thumb_x = x0 + t * (x1 - x0);
+                        let knob_dragging = self.widget_drag == Some(idx);
+                        let knob_fill = if knob_dragging {
+                            theme.handle_fill_selected
+                        } else {
+                            label_fill
+                        };
                         scene.fill(
                             Fill::NonZero,
                             aff,
-                            label_fill,
+                            knob_fill,
                             None,
                             &Circle::new(Point::new(thumb_x, track_y), DAG_SLIDER_KNOB_SCREEN_PX / cam.zoom.max(0.05)),
                         );
@@ -4010,6 +4064,29 @@ mod tests {
     }
 
     #[test]
+    fn dag_host_area_select_previews_preselect_before_commit() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        let start_sx = 24.0;
+        let start_sy = 24.0;
+        let end_sx = 1100.0;
+        let end_sy = 700.0;
+        host.pointer_down_screen(start_sx, start_sy, 0, false, false, false);
+        host.pointer_move_screen(end_sx, end_sy, false, false, false);
+        assert!(
+            matches!(host.engine.interaction, InteractionMode::AreaSelect { .. }),
+            "expected area-select after marquee threshold"
+        );
+        let preselect = host.preselect_widget_ids();
+        assert!(!preselect.is_empty(), "marquee drag should preview widget ids before commit");
+        let preview_points: Vec<[f64; 2]> = serde_json::from_str(&host.selection_preview_points_json()).unwrap();
+        assert!(preview_points.len() >= 2, "marquee overlay points should be published during drag");
+        host.pointer_up_screen(end_sx, end_sy, false, false, false);
+        assert!(!host.selected_node_ids().is_empty(), "marquee drag should commit selection on release");
+        assert!(host.preselect_widget_ids().is_empty(), "preselect should clear after commit");
+    }
+
+    #[test]
     fn dag_host_drags_node_in_world_space() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
@@ -4276,7 +4353,7 @@ mod tests {
     }
 
     #[test]
-    fn computation_channel_row_dividers_span_full_grid_when_io_rows_differ() {
+    fn computation_channel_row_dividers_stop_at_last_port_on_shorter_side() {
         let three_inputs = vec![
             IoPortSpec { id: "a".into(), label: "cornerA".into() },
             IoPortSpec { id: "b".into(), label: "cornerB".into() },
@@ -4317,10 +4394,14 @@ mod tests {
             computation_node_width("Box", &one_input, &three_outputs),
             computation_node_height(1, 3, false, false),
         );
-        assert_eq!(computation_channel_row_count(&more_inputs), 3);
+        let grid = computation_channel_row_count(&more_inputs);
+        assert_eq!(grid, 3);
         assert_eq!(computation_io_side_row_counts(&more_inputs), (3, 1));
+        assert_eq!(computation_io_side_row_divider_indices(3, grid).collect::<Vec<_>>(), vec![1, 2]);
+        assert_eq!(computation_io_side_row_divider_indices(1, grid).collect::<Vec<_>>(), vec![1]);
         assert_eq!(computation_io_side_row_counts(&more_outputs), (1, 3));
-        assert_eq!(computation_channel_row_count(&more_outputs), 3);
+        assert_eq!(computation_io_side_row_divider_indices(1, grid).collect::<Vec<_>>(), vec![1]);
+        assert_eq!(computation_io_side_row_divider_indices(3, grid).collect::<Vec<_>>(), vec![1, 2]);
     }
 
     #[test]
@@ -4585,6 +4666,16 @@ mod tests {
         assert_eq!(
             dag_node_internal_chrome_stroke(body, label, false).to_rgba8(),
             body.to_rgba8()
+        );
+        let body_selected = dag_node_body_stroke(&theme, false, true, false);
+        let label_selected = dag_node_label_fill(&theme, false, true, false);
+        assert_eq!(
+            dag_node_internal_chrome_stroke(body_selected, label_selected, true).to_rgba8(),
+            label_selected.to_rgba8()
+        );
+        assert_eq!(
+            dag_node_internal_chrome_stroke(body_selected, label_selected, false).to_rgba8(),
+            body_selected.to_rgba8()
         );
     }
 

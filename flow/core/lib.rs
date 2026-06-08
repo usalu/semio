@@ -28,7 +28,17 @@ pub enum Widget {
         #[serde(default = "default_neuron_preview")]
         preview: bool,
     },
-    InputSlider { id: String, #[serde(default = "default_slider_value")] value: f64 },
+    InputSlider {
+        id: String,
+        #[serde(default = "default_slider_value")]
+        value: f64,
+        #[serde(default = "default_slider_min")]
+        min: f64,
+        #[serde(default = "default_slider_max")]
+        max: f64,
+        #[serde(default = "default_slider_step")]
+        step: f64,
+    },
     InputNote { id: String, #[serde(default)] text: String },
     InputImage { id: String, #[serde(default)] src: String },
     OutputPreview { id: String, #[serde(default)] preview: Dictionary, #[serde(default)] expanded: BTreeSet<String> },
@@ -37,6 +47,18 @@ pub enum Widget {
 
 fn default_slider_value() -> f64 {
     3.0
+}
+
+fn default_slider_min() -> f64 {
+    FLOW_SLIDER_MIN
+}
+
+fn default_slider_max() -> f64 {
+    FLOW_SLIDER_MAX
+}
+
+fn default_slider_step() -> f64 {
+    FLOW_SLIDER_STEP
 }
 
 fn default_neuron_preview() -> bool {
@@ -95,7 +117,7 @@ impl Default for FlowFixtureV1 {
             schema: "flow.fixture/v1".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
-                Widget::InputSlider { id: "slider".into(), value: 3.0 },
+                Widget::InputSlider { id: "slider".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
                 Widget::Neuron {
                     id: "add".into(),
                     neuronKind: "math.add".into(),
@@ -266,7 +288,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
             DagNodeSpec::computation(id, name, abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
         }
-        Widget::InputSlider { value, .. } => DagNodeSpec {
+        Widget::InputSlider { value, min, max, step, .. } => DagNodeSpec {
             id,
             name,
             abbreviation,
@@ -276,9 +298,9 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             width,
             height,
             kind: DagNodeKind::Slider {
-                min: FLOW_SLIDER_MIN,
-                max: FLOW_SLIDER_MAX,
-                step: FLOW_SLIDER_STEP,
+                min: *min,
+                max: *max,
+                step: *step,
                 value: *value,
                 output: IoPortSpec { id: "out".into(), label: "out".into() },
             },
@@ -354,6 +376,49 @@ const FLOW_SLIDER_MIN: f64 = 0.0;
 const FLOW_SLIDER_MAX: f64 = 10.0;
 const FLOW_SLIDER_STEP: f64 = 0.1;
 
+fn sensible_slider_max(value: f64) -> f64 {
+    let v = value.abs();
+    if v <= 1.0 {
+        return 1.0;
+    }
+    if v <= 10.0 {
+        return 10.0;
+    }
+    let magnitude = 10f64.powi(v.log10().floor() as i32);
+    let normalized = v / magnitude;
+    let nice = if normalized <= 1.0 {
+        1.0
+    } else if normalized <= 2.0 {
+        2.0
+    } else if normalized <= 5.0 {
+        5.0
+    } else {
+        10.0
+    };
+    (nice * magnitude).max(v)
+}
+
+fn sensible_slider_range(value: f64) -> (f64, f64, f64) {
+    let step = if (value - value.round()).abs() < 1e-9 { 1.0 } else { 0.1 };
+    if value < 0.0 {
+        let bound = sensible_slider_max(value);
+        return (-bound, bound, step);
+    }
+    (0.0, sensible_slider_max(value), step)
+}
+
+fn resolve_input_slider_fields(value: Option<f64>, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (f64, f64, f64, f64) {
+    if let (Some(value), Some(min), Some(max), Some(step)) = (value, min, max, step) {
+        let (min, max) = if min <= max { (min, max) } else { (max, min) };
+        return (value.clamp(min, max), min, max, step.max(1e-9));
+    }
+    if let Some(value) = value {
+        let (min, max, step) = sensible_slider_range(value);
+        return (value.clamp(min, max), min, max, step);
+    }
+    (default_slider_value(), FLOW_SLIDER_MIN, FLOW_SLIDER_MAX, FLOW_SLIDER_STEP)
+}
+
 fn format_preview_number(n: f64) -> String {
     if (n - n.round()).abs() < 0.05 {
         format!("{}", n.round() as i64)
@@ -405,8 +470,20 @@ fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum WidgetDescriptor {
     Neuron { neuronKind: String },
-    InputSlider,
-    InputNote,
+    InputSlider {
+        #[serde(default)]
+        value: Option<f64>,
+        #[serde(default)]
+        min: Option<f64>,
+        #[serde(default)]
+        max: Option<f64>,
+        #[serde(default)]
+        step: Option<f64>,
+    },
+    InputNote {
+        #[serde(default)]
+        text: Option<String>,
+    },
     InputImage,
     OutputPreview,
     OutputAction { #[serde(default)] action: String },
@@ -421,8 +498,11 @@ fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos:
             input_ports: default_neuron_input_ports(neuronKind, &[], kind_infos),
             preview: true,
         },
-        WidgetDescriptor::InputSlider => Widget::InputSlider { id, value: 3.0 },
-        WidgetDescriptor::InputNote => Widget::InputNote { id, text: String::new() },
+        WidgetDescriptor::InputSlider { value, min, max, step } => {
+            let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
+            Widget::InputSlider { id, value, min, max, step }
+        }
+        WidgetDescriptor::InputNote { text } => Widget::InputNote { id, text: text.clone().unwrap_or_default() },
         WidgetDescriptor::InputImage => Widget::InputImage { id, src: String::new() },
         WidgetDescriptor::OutputPreview => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: BTreeSet::new() },
         WidgetDescriptor::OutputAction { action } => Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } },
@@ -1016,7 +1096,7 @@ impl FlowHost {
         let mut seeds = HashMap::new();
         for widget in &self.fixture.widgets {
             match widget {
-                Widget::InputSlider { id, value } => {
+                Widget::InputSlider { id, value, .. } => {
                     seeds.insert(id.clone(), Dictionary::new().insert("number", NeuralValue::Atom(Atom::Decimal(*value))));
                 }
                 Widget::InputNote { id, text } => {
@@ -1238,8 +1318,8 @@ impl FlowHost {
         self.next_widget_serial += 1;
         let prefix = match descriptor {
             WidgetDescriptor::Neuron { neuronKind } => neuronKind.replace('.', "_"),
-            WidgetDescriptor::InputSlider => "slider".into(),
-            WidgetDescriptor::InputNote => "note".into(),
+            WidgetDescriptor::InputSlider { .. } => "slider".into(),
+            WidgetDescriptor::InputNote { .. } => "note".into(),
             WidgetDescriptor::InputImage => "image".into(),
             WidgetDescriptor::OutputPreview => "preview".into(),
             WidgetDescriptor::OutputAction { .. } => "action".into(),
@@ -1249,12 +1329,13 @@ impl FlowHost {
 
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
         for widget in &mut self.fixture.widgets {
-            if let Widget::InputSlider { id, value: v } = widget {
+            if let Widget::InputSlider { id, value: v, min, max, .. } = widget {
                 if id == widget_id {
-                    *v = value.clamp(FLOW_SLIDER_MIN, FLOW_SLIDER_MAX);
+                    *v = value.clamp(*min, *max);
                 }
             }
         }
+        self.sync_dag_display_from_widgets();
         let _ = self.evaluate();
     }
 
@@ -1926,7 +2007,7 @@ mod tests {
             .widgets
             .iter()
             .find_map(|w| match w {
-                Widget::InputSlider { id, value } if id == "slider" => Some(*value),
+                Widget::InputSlider { id, value, .. } if id == "slider" => Some(*value),
                 _ => None,
             })
             .unwrap();
@@ -1957,7 +2038,7 @@ mod tests {
             .widgets
             .iter()
             .find_map(|w| match w {
-                Widget::InputSlider { id, value } if id == "slider" => Some(*value),
+                Widget::InputSlider { id, value, .. } if id == "slider" => Some(*value),
                 _ => None,
             })
             .unwrap();
@@ -1977,7 +2058,7 @@ mod tests {
             .widgets
             .iter()
             .find_map(|w| match w {
-                Widget::InputSlider { id, value } if id == "slider" => Some(*value),
+                Widget::InputSlider { id, value, .. } if id == "slider" => Some(*value),
                 _ => None,
             })
             .unwrap();
@@ -2066,8 +2147,8 @@ mod tests {
             schema: "flow.fixture/v1".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
-                Widget::InputSlider { id: "a".into(), value: 1.0 },
-                Widget::InputSlider { id: "b".into(), value: 2.0 },
+                Widget::InputSlider { id: "a".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+                Widget::InputSlider { id: "b".into(), value: 2.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
                 Widget::Neuron {
                     id: "merge".into(),
                     neuronKind: "dictionary.merge".into(),
@@ -2146,6 +2227,60 @@ mod tests {
         assert_eq!(node.name, "Add");
         assert_eq!(node.abbreviation, "Add");
         assert_eq!(node.icon, "emoji:➕");
+    }
+
+    #[test]
+    fn add_slider_widget_with_explicit_range() {
+        let mut host = host_with_test_bridge();
+        let id = host
+            .add_widget(r#"{"kind":"inputSlider","value":10.2,"min":10.2,"max":15.0,"step":0.1}"#, 0.0, 0.0)
+            .unwrap();
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputSlider { value, min, max, step, .. } = widget else {
+            panic!("expected slider widget");
+        };
+        assert!((value - 10.2).abs() < 1e-6);
+        assert!((min - 10.2).abs() < 1e-6);
+        assert!((max - 15.0).abs() < 1e-6);
+        assert!((step - 0.1).abs() < 1e-6);
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node");
+        let DagNodeKind::Slider { min: dag_min, max: dag_max, step: dag_step, value: dag_value, .. } = &node.kind else {
+            panic!("expected slider node");
+        };
+        assert!((dag_min - 10.2).abs() < 1e-6);
+        assert!((dag_max - 15.0).abs() < 1e-6);
+        assert!((dag_step - 0.1).abs() < 1e-6);
+        assert!((dag_value - 10.2).abs() < 1e-6);
+    }
+
+    #[test]
+    fn add_note_widget_with_text() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputNote","text":"some text"}"#, 0.0, 0.0).unwrap();
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputNote { text, .. } = widget else {
+            panic!("expected note widget");
+        };
+        assert_eq!(text, "some text");
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node");
+        let DagNodeKind::Note { text: dag_text, .. } = &node.kind else {
+            panic!("expected note node");
+        };
+        assert_eq!(dag_text, "some text");
+    }
+
+    #[test]
+    fn add_slider_widget_with_single_value_uses_sensible_range() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputSlider","value":5.0}"#, 0.0, 0.0).unwrap();
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputSlider { value, min, max, step, .. } = widget else {
+            panic!("expected slider widget");
+        };
+        assert!((value - 5.0).abs() < 1e-6);
+        assert!((min - 0.0).abs() < 1e-6);
+        assert!((max - 10.0).abs() < 1e-6);
+        assert!((step - 1.0).abs() < 1e-6);
     }
 
     #[test]

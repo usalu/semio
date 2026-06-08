@@ -6512,7 +6512,7 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
       <ProceduralPreview
-        handles={ctrl?.getGeometryHandles() ?? []}
+        items={ctrl?.getPreviewItems() ?? []}
         selectedNodeIds={ctrl?.getSelectedNodeIds()}
         preselectNodeIds={ctrl?.getPreselectNodeIds()}
         preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}

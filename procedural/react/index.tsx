@@ -319,12 +319,25 @@ function parseVec3(input: unknown, fallback: Vec3 = [0, 0, 0]): Vec3 {
 	return [parseNumber(input[0], fallback[0]), parseNumber(input[1], fallback[1]), parseNumber(input[2], fallback[2])];
 }
 
+function parseVec3Loose(input: unknown, fallback: Vec3 = [0, 0, 0]): Vec3 | null {
+	if (Array.isArray(input)) return parseVec3(input, fallback);
+	if (!input || typeof input !== "object") return null;
+	const record = input as Record<string, unknown>;
+	if ("x" in record || "y" in record || "z" in record) {
+		return [parseNumber(record.x, fallback[0]), parseNumber(record.y, fallback[1]), parseNumber(record.z, fallback[2])];
+	}
+	if ("point" in record) return parseVec3Loose(record.point, fallback);
+	if ("vector" in record) return parseVec3Loose(record.vector, fallback);
+	return null;
+}
+
+function vec3PortOut(port: "point" | "vector", vec: Vec3): Record<string, unknown> {
+	return { [port]: { x: vec[0], y: vec[1], z: vec[2] } };
+}
+
 function parseVec3Input(input: Record<string, unknown>, key: string, fallback: Vec3 = [0, 0, 0]): Vec3 {
 	const raw = input[key];
-	if (Array.isArray(raw)) return parseVec3(raw, fallback);
-	if (raw && typeof raw === "object" && "point" in (raw as object)) return parseVec3((raw as { point: unknown }).point, fallback);
-	if (raw && typeof raw === "object" && "vector" in (raw as object)) return parseVec3((raw as { vector: unknown }).vector, fallback);
-	return fallback;
+	return parseVec3Loose(raw, fallback) ?? fallback;
 }
 
 function parseGeometry(input: Record<string, unknown>, key: string): GeometryRef | null {
@@ -345,8 +358,8 @@ function bytesToBase64(bytes: Uint8Array): string {
 type BrepEvalFn = (input: Record<string, unknown>, kernel: BrepKernelType) => Record<string, unknown>;
 
 const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
-	"brep.point": (input) => ({ point: [parseNumber(input.x), parseNumber(input.y), parseNumber(input.z)] }),
-	"brep.vector": (input) => ({ vector: [parseNumber(input.x), parseNumber(input.y), parseNumber(input.z)] }),
+	"brep.point": (input) => vec3PortOut("point", [parseNumber(input.x), parseNumber(input.y), parseNumber(input.z)]),
+	"brep.vector": (input) => vec3PortOut("vector", [parseNumber(input.x), parseNumber(input.y), parseNumber(input.z)]),
 	"brep.prim3d.box": (input, k) => geoOut(k.boxSync(parseNumber(input.width, 1), parseNumber(input.depth, 1), parseNumber(input.height, 1))),
 	"brep.prim3d.sphere": (input, k) => geoOut(k.spherePrimSync(parseNumber(input.radius, 1))),
 	"brep.prim3d.cylinder": (input, k) => geoOut(k.cylinderPrimSync(parseNumber(input.radius, 1), parseNumber(input.height, 1))),
@@ -570,12 +583,12 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.eval.pointOnCurve": (input, k) => {
 		const curve = parseGeometry(input, "geometry");
 		if (!curve) throw new Error("missing geometry");
-		return { point: k.curvePointAtSync(curve, parseNumber(input.t, 0.5)) };
+		return vec3PortOut("point", k.curvePointAtSync(curve, parseNumber(input.t, 0.5)));
 	},
 	"brep.eval.tangentOnCurve": (input, k) => {
 		const curve = parseGeometry(input, "geometry");
 		if (!curve) throw new Error("missing geometry");
-		return { vector: k.curveTangentAtSync(curve, parseNumber(input.t, 0.5)) };
+		return vec3PortOut("vector", k.curveTangentAtSync(curve, parseNumber(input.t, 0.5)));
 	},
 	"brep.eval.curveLength": (input, k) => {
 		const curve = parseGeometry(input, "geometry");
@@ -585,17 +598,17 @@ const BREP_EVAL_HANDLERS: Record<string, BrepEvalFn> = {
 	"brep.eval.pointOnSurface": (input, k) => {
 		const face = parseGeometry(input, "geometry");
 		if (!face) throw new Error("missing geometry");
-		return { point: k.pointOnSurfaceSync(face, parseNumber(input.u, 0.5), parseNumber(input.v, 0.5)) };
+		return vec3PortOut("point", k.pointOnSurfaceSync(face, parseNumber(input.u, 0.5), parseNumber(input.v, 0.5)));
 	},
 	"brep.eval.normalAt": (input, k) => {
 		const face = parseGeometry(input, "geometry");
 		if (!face) throw new Error("missing geometry");
-		return { vector: k.normalAtSync(face, parseNumber(input.u, 0.5), parseNumber(input.v, 0.5)) };
+		return vec3PortOut("vector", k.normalAtSync(face, parseNumber(input.u, 0.5), parseNumber(input.v, 0.5)));
 	},
 	"brep.eval.faceCenter": (input, k) => {
 		const face = parseGeometry(input, "geometry");
 		if (!face) throw new Error("missing geometry");
-		return { point: k.faceCenterSync(face) };
+		return vec3PortOut("point", k.faceCenterSync(face));
 	},
 	"brep.measure.volume": (input, k) => {
 		const shape = parseGeometry(input, "geometry");
@@ -781,17 +794,20 @@ export function proceduralFixtureToJson(fixture: FlowFixtureV1 = PROCEDURAL_DEFA
 // #endregion 🔖Fixture
 
 // #region 🔖BrepViewport
-export interface ProceduralGeometryHandle {
-	readonly widgetId: string;
-	readonly handle: string;
-}
+export type ProceduralPreviewItem =
+	| { readonly widgetId: string; readonly kind: "geometry"; readonly handle: GeometryRef }
+	| { readonly widgetId: string; readonly kind: "point"; readonly position: Vec3 }
+	| { readonly widgetId: string; readonly kind: "vector"; readonly direction: Vec3 };
+
+/** @deprecated Use {@link ProceduralPreviewItem} with `kind: "geometry"`. */
+export type ProceduralGeometryHandle = Extract<ProceduralPreviewItem, { kind: "geometry" }>;
 
 export type ProceduralPreviewShowMode = "everything" | "selected";
 export type ProceduralSelectionMode = SelectionMergeMode;
 export type ProceduralSelectionMethod = "rectangle" | "lasso";
 
 export interface ProceduralPreviewProps {
-	readonly handles: readonly ProceduralGeometryHandle[];
+	readonly items: readonly ProceduralPreviewItem[];
 	readonly selectedNodeIds?: readonly string[];
 	readonly preselectNodeIds?: readonly string[];
 	readonly preselectRemovedNodeIds?: readonly string[];
@@ -810,7 +826,7 @@ export interface ProceduralPreviewProps {
 
 const PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX = 4;
 
-/** @deprecated Use {@link ProceduralPreview} with {@link ProceduralGeometryHandle} entries. */
+/** @deprecated Use {@link ProceduralPreview} with {@link ProceduralPreviewItem} entries. */
 export interface BrepViewportProps {
 	readonly geometryIds: readonly string[];
 	readonly kernel?: BrepKernelType;
@@ -849,6 +865,175 @@ function buildMeshBuffers(data: ReturnType<typeof meshTransferToGeometryData>): 
 	return { surface, lines, points };
 }
 
+const PROCEDURAL_PREVIEW_POINT_RADIUS = 0.08;
+const PROCEDURAL_PREVIEW_BOUNDS_PAD = 0.05;
+const PROCEDURAL_GEOMETRY_REF_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|drawing)-/;
+
+function parsePreviewVec3(input: unknown): Vec3 | null {
+	return parseVec3Loose(input);
+}
+
+function collectGeometryRefsFromValue(value: unknown, refs: GeometryRef[]): void {
+	if (typeof value === "string" && PROCEDURAL_GEOMETRY_REF_PATTERN.test(value)) {
+		refs.push(value as GeometryRef);
+		return;
+	}
+	if (!value || typeof value !== "object" || Array.isArray(value)) return;
+	for (const nested of Object.values(value as Record<string, unknown>)) {
+		collectGeometryRefsFromValue(nested, refs);
+	}
+}
+
+function previewLayerChrome(
+	previewOff: boolean,
+	hovered: boolean,
+	selected: boolean,
+	highlighted: boolean,
+): { readonly renderMode: ReturnType<typeof worldEntityRenderMode>; readonly opacity: number; readonly emissive: string; readonly emissiveIntensity: number } {
+	const renderMode = worldEntityRenderMode({ hidden: previewOff }, { hovered, selected: selected || highlighted, revealed: hovered });
+	const opacity = renderMode.dim ? 0.35 : renderMode.asHover ? 0.95 : 0.85;
+	const emissive = highlighted ? "#a78bfa" : renderMode.showSelectedOutline ? "#3b82f6" : renderMode.asHover ? "#60a5fa" : "#000000";
+	const emissiveIntensity = highlighted ? 0.28 : renderMode.showSelectedOutline ? 0.35 : renderMode.asHover ? 0.2 : 0;
+	return { renderMode, opacity, emissive, emissiveIntensity };
+}
+
+function createPreviewPointerHandlers(
+	widgetId: string,
+	onHover?: (widgetId: string | null) => void,
+	onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void,
+) {
+	if (!onHover && !onPick) return {};
+	return {
+		onPointerDown: (event: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
+			if (event.nativeEvent.button !== 0) return;
+			event.stopPropagation();
+		},
+		onPointerOver: (event: { stopPropagation: () => void }) => {
+			event.stopPropagation();
+			onHover?.(widgetId);
+		},
+		onPointerOut: (event: { stopPropagation: () => void }) => {
+			event.stopPropagation();
+			onHover?.(null);
+		},
+		onClick: (event: { stopPropagation: () => void; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+			event.stopPropagation();
+			const mode = marqueeModeFromModifiers(event);
+			onPick?.(widgetId, mode);
+		},
+	};
+}
+
+function worldBoundsForPreviewItem(item: ProceduralPreviewItem, kernel: BrepKernelType): { min: Vec3; max: Vec3 } | null {
+	const pad = PROCEDURAL_PREVIEW_BOUNDS_PAD;
+	if (item.kind === "geometry") {
+		try {
+			return kernel.getBoundsSync(item.handle);
+		} catch {
+			return null;
+		}
+	}
+	if (item.kind === "point") {
+		const [x, y, z] = item.position;
+		return { min: [x - pad, y - pad, z - pad], max: [x + pad, y + pad, z + pad] };
+	}
+	const [x, y, z] = item.direction;
+	return {
+		min: [Math.min(0, x) - pad, Math.min(0, y) - pad, Math.min(0, z) - pad],
+		max: [Math.max(0, x) + pad, Math.max(0, y) + pad, Math.max(0, z) + pad],
+	};
+}
+
+function previewItemKey(item: ProceduralPreviewItem): string {
+	if (item.kind === "geometry") return `${item.widgetId}:geometry:${item.handle}`;
+	if (item.kind === "point") return `${item.widgetId}:point`;
+	return `${item.widgetId}:vector`;
+}
+
+function BrepPointLayer({
+	widgetId,
+	position,
+	color,
+	selected,
+	highlighted,
+	hovered,
+	previewOff,
+	onHover,
+	onPick,
+}: {
+	readonly widgetId: string;
+	readonly position: Vec3;
+	readonly color: string;
+	readonly selected: boolean;
+	readonly highlighted: boolean;
+	readonly hovered: boolean;
+	readonly previewOff: boolean;
+	readonly onHover?: (widgetId: string | null) => void;
+	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
+}): ReactNode {
+	const { renderMode, opacity, emissive, emissiveIntensity } = previewLayerChrome(previewOff, hovered, selected, highlighted);
+	if (!renderMode.visible) return null;
+	const radius = renderMode.asHover ? PROCEDURAL_PREVIEW_POINT_RADIUS * 1.25 : PROCEDURAL_PREVIEW_POINT_RADIUS;
+	return (
+		<group position={position} {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
+			<mesh>
+				<sphereGeometry args={[radius, 16, 12]} />
+				<meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissiveIntensity} metalness={0.1} roughness={0.5} transparent opacity={opacity} />
+			</mesh>
+		</group>
+	);
+}
+
+function BrepVectorLayer({
+	widgetId,
+	direction,
+	color,
+	selected,
+	highlighted,
+	hovered,
+	previewOff,
+	onHover,
+	onPick,
+}: {
+	readonly widgetId: string;
+	readonly direction: Vec3;
+	readonly color: string;
+	readonly selected: boolean;
+	readonly highlighted: boolean;
+	readonly hovered: boolean;
+	readonly previewOff: boolean;
+	readonly onHover?: (widgetId: string | null) => void;
+	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
+}): ReactNode {
+	const { renderMode, opacity, emissive, emissiveIntensity } = previewLayerChrome(previewOff, hovered, selected, highlighted);
+	const arrow = useMemo(() => {
+		const tip = new THREE.Vector3(direction[0], direction[1], direction[2]);
+		const length = tip.length();
+		if (length < 1e-6) return null;
+		const unit = tip.clone().normalize();
+		const shaftEnd = unit.clone().multiplyScalar(length * 0.85);
+		const shaft = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), shaftEnd]);
+		const headHeight = length * 0.15;
+		const headRadius = headHeight * 0.35;
+		const head = new THREE.ConeGeometry(headRadius, headHeight, 10);
+		const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), unit);
+		const headPosition = unit.clone().multiplyScalar(length - headHeight * 0.5);
+		return { shaft, head, headPosition, quaternion };
+	}, [direction]);
+	if (!renderMode.visible || !arrow) return null;
+	const lineColor = renderMode.asHover ? "#93c5fd" : "#e2e8f0";
+	return (
+		<group {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
+			<line geometry={arrow.shaft}>
+				<lineBasicMaterial color={lineColor} linewidth={1} transparent opacity={opacity} />
+			</line>
+			<mesh geometry={arrow.head} position={arrow.headPosition} quaternion={arrow.quaternion}>
+				<meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissiveIntensity} metalness={0.1} roughness={0.5} transparent opacity={opacity} />
+			</mesh>
+		</group>
+	);
+}
+
 function BrepGeometryLayer({
 	widgetId,
 	geometryId,
@@ -875,55 +1060,33 @@ function BrepGeometryLayer({
 	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
 }): ReactNode {
 	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
+	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const ref = geometryId as GeometryRef;
-	const renderMode = worldEntityRenderMode({ hidden: previewOff }, { hovered, selected: selected || highlighted, revealed: hovered });
+	const { renderMode, opacity, emissive, emissiveIntensity } = previewLayerChrome(previewOff, hovered, selected, highlighted);
 
 	useEffect(() => {
 		let cancelled = false;
 		void (async () => {
 			await ensureBrepWasmLoaded();
 			const mesh = await kernel.tessellateGeometry(ref, tolerance);
-			if (cancelled || !isRenderableMeshTransfer(mesh)) {
+			if (cancelled) return;
+			if (!isRenderableMeshTransfer(mesh)) {
 				setBuffers({ surface: null, lines: null, points: null });
+				invalidate();
 				return;
 			}
 			setBuffers(buildMeshBuffers(meshTransferToGeometryData(mesh)));
+			invalidate();
 		})();
 		return () => {
 			cancelled = true;
 		};
-	}, [kernel, ref, tolerance]);
+	}, [invalidate, kernel, ref, tolerance]);
 
 	if (!renderMode.visible) return null;
 
-	const opacity = renderMode.dim ? 0.35 : renderMode.asHover ? 0.95 : 0.85;
-	const emissive = highlighted ? "#a78bfa" : renderMode.showSelectedOutline ? "#3b82f6" : renderMode.asHover ? "#60a5fa" : "#000000";
-	const emissiveIntensity = highlighted ? 0.28 : renderMode.showSelectedOutline ? 0.35 : renderMode.asHover ? 0.2 : 0;
-	const pointerHandlers =
-		onHover || onPick
-			? {
-					onPointerDown: (event: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
-						if (event.nativeEvent.button !== 0) return;
-						event.stopPropagation();
-					},
-					onPointerOver: (event: { stopPropagation: () => void }) => {
-						event.stopPropagation();
-						onHover?.(widgetId);
-					},
-					onPointerOut: (event: { stopPropagation: () => void }) => {
-						event.stopPropagation();
-						onHover?.(null);
-					},
-					onClick: (event: { stopPropagation: () => void; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-						event.stopPropagation();
-						const mode = marqueeModeFromModifiers(event);
-						onPick?.(widgetId, mode);
-					},
-				}
-			: {};
-
 	return (
-		<group {...pointerHandlers}>
+		<group {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
 			{buffers.surface ? (
 				<mesh geometry={buffers.surface}>
 					<meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissiveIntensity} metalness={0.1} roughness={0.6} transparent opacity={opacity} side={THREE.DoubleSide} />
@@ -1124,7 +1287,7 @@ function ProceduralPreviewMarqueeBridge({
 }
 
 export function ProceduralPreview({
-	handles,
+	items,
 	selectedNodeIds = [],
 	preselectNodeIds = [],
 	preselectRemovedNodeIds = [],
@@ -1156,8 +1319,8 @@ export function ProceduralPreview({
 	} | null>(null);
 	const [livePreselect, setLivePreselect] = useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
 
-	const visibleHandles =
-		showMode === "selected" ? handles.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : handles;
+	const visibleItems =
+		showMode === "selected" ? items.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : items;
 
 	const effectiveSelected = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
 	const effectivePreselect = useMemo(() => new Set(livePreselect.ids.length ? livePreselect.ids : preselectNodeIds), [livePreselect.ids, preselectNodeIds]);
@@ -1171,16 +1334,13 @@ export function ProceduralPreview({
 		sizeRef.current = { width: size.width, height: size.height };
 	}, []);
 
-	const screenBoundsForHandle = useCallback(
-		(handle: ProceduralGeometryHandle): ScreenBounds | null => {
+	const screenBoundsForItem = useCallback(
+		(item: ProceduralPreviewItem): ScreenBounds | null => {
 			const camera = cameraRef.current;
 			if (!camera) return null;
-			try {
-				const bounds = kernel.getBoundsSync(handle.handle as GeometryRef);
-				return projectWorldBoundsToScreen(bounds, camera, sizeRef.current.width, sizeRef.current.height);
-			} catch {
-				return null;
-			}
+			const bounds = worldBoundsForPreviewItem(item, kernel);
+			if (!bounds) return null;
+			return projectWorldBoundsToScreen(bounds, camera, sizeRef.current.width, sizeRef.current.height);
 		},
 		[kernel],
 	);
@@ -1190,8 +1350,8 @@ export function ProceduralPreview({
 			const marqueeRect = screenRectFromPoints(points);
 			if (!marqueeRect) return [];
 			const hits: string[] = [];
-			for (const entry of visibleHandles) {
-				const bounds = screenBoundsForHandle(entry);
+			for (const entry of visibleItems) {
+				const bounds = screenBoundsForItem(entry);
 				if (!bounds) continue;
 				const target = { x: bounds.left, y: bounds.top, width: bounds.right - bounds.left, height: bounds.bottom - bounds.top };
 				const marquee = { x: marqueeRect.x, y: marqueeRect.y, width: marqueeRect.width, height: marqueeRect.height };
@@ -1201,7 +1361,7 @@ export function ProceduralPreview({
 			}
 			return hits;
 		},
-		[screenBoundsForHandle, visibleHandles],
+		[screenBoundsForItem, visibleItems],
 	);
 
 	const commitSelection = useCallback(
@@ -1272,22 +1432,34 @@ export function ProceduralPreview({
 						<ambientLight intensity={0.45} />
 						<directionalLight position={[12, 18, 10]} intensity={1.1} />
 						<WorldLayer order={10} name="procedural.preview">
-							{visibleHandles.map((entry, index) => (
-								<BrepGeometryLayer
-									key={`${entry.widgetId}:${entry.handle}`}
-									widgetId={entry.widgetId}
-									geometryId={entry.handle}
-									kernel={kernel}
-									tolerance={tolerance}
-									color={BREP_VIEWPORT_COLORS[index % BREP_VIEWPORT_COLORS.length]!}
-									selected={effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId)}
-									highlighted={effectivePreselectRemoved.has(entry.widgetId)}
-									hovered={hoveredNodeId === entry.widgetId}
-									previewOff={previewOffNodeIds.includes(entry.widgetId)}
-									onHover={onHover}
-									onPick={onPick}
-								/>
-							))}
+							{visibleItems.map((entry, index) => {
+								const color = BREP_VIEWPORT_COLORS[index % BREP_VIEWPORT_COLORS.length]!;
+								const chrome = {
+									selected: effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId),
+									highlighted: effectivePreselectRemoved.has(entry.widgetId),
+									hovered: hoveredNodeId === entry.widgetId,
+									previewOff: previewOffNodeIds.includes(entry.widgetId),
+									onHover,
+									onPick,
+								};
+								if (entry.kind === "point") {
+									return <BrepPointLayer key={previewItemKey(entry)} widgetId={entry.widgetId} position={entry.position} color={color} {...chrome} />;
+								}
+								if (entry.kind === "vector") {
+									return <BrepVectorLayer key={previewItemKey(entry)} widgetId={entry.widgetId} direction={entry.direction} color={color} {...chrome} />;
+								}
+								return (
+									<BrepGeometryLayer
+										key={previewItemKey(entry)}
+										widgetId={entry.widgetId}
+										geometryId={entry.handle}
+										kernel={kernel}
+										tolerance={tolerance}
+										color={color}
+										{...chrome}
+									/>
+								);
+							})}
 						</WorldLayer>
 					</WorldOrbitViewSnapGateProvider>
 				</WorldLodBridge>
@@ -1305,7 +1477,7 @@ export function ProceduralPreview({
 export function BrepViewport({ geometryIds, kernel = brepjsGeometryKernel, tolerance = 0.02, className }: BrepViewportProps): ReactNode {
 	return (
 		<ProceduralPreview
-			handles={geometryIds.map((handle, index) => ({ widgetId: `geometry-${index}`, handle }))}
+			items={geometryIds.map((handle, index) => ({ widgetId: `geometry-${index}`, kind: "geometry" as const, handle: handle as GeometryRef }))}
 			kernel={kernel}
 			tolerance={tolerance}
 			className={className}
@@ -1313,23 +1485,38 @@ export function BrepViewport({ geometryIds, kernel = brepjsGeometryKernel, toler
 	);
 }
 
-export function extractGeometryHandles(outputsJson: string): ProceduralGeometryHandle[] {
-	const handles: ProceduralGeometryHandle[] = [];
+/** @emoji 🔍 Collects geometry, point, and vector preview items from flow eval outputs. */
+export function extractPreviewItems(outputsJson: string): ProceduralPreviewItem[] {
+	const items: ProceduralPreviewItem[] = [];
 	try {
-		const outputs = JSON.parse(outputsJson) as Record<string, Record<string, unknown>>;
+		const parsed = JSON.parse(outputsJson) as unknown;
+		if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return items;
+		if ("error" in (parsed as Record<string, unknown>) && Object.keys(parsed as object).length === 1) return items;
+		const outputs = parsed as Record<string, Record<string, unknown>>;
 		for (const [widgetId, dict] of Object.entries(outputs)) {
-			const handle =
-				typeof dict.geometry === "string" && dict.geometry.length > 0
-					? dict.geometry
-					: typeof dict.brep === "string" && dict.brep.length > 0
-						? dict.brep
-						: null;
-			if (handle) handles.push({ widgetId, handle });
+			if (!dict || typeof dict !== "object" || Array.isArray(dict)) continue;
+			if (typeof dict.error === "string") continue;
+			const geometryRefs: GeometryRef[] = [];
+			collectGeometryRefsFromValue(dict.geometry, geometryRefs);
+			collectGeometryRefsFromValue(dict.brep, geometryRefs);
+			for (const value of Object.values(dict)) collectGeometryRefsFromValue(value, geometryRefs);
+			for (const handle of [...new Set(geometryRefs)]) {
+				items.push({ widgetId, kind: "geometry", handle });
+			}
+			const point = parsePreviewVec3(dict.point);
+			if (point) items.push({ widgetId, kind: "point", position: point });
+			const vector = parsePreviewVec3(dict.vector);
+			if (vector) items.push({ widgetId, kind: "vector", direction: vector });
 		}
 	} catch {
 		/* ignore */
 	}
-	return handles;
+	return items;
+}
+
+/** @deprecated Use {@link extractPreviewItems}. */
+export function extractGeometryHandles(outputsJson: string): ProceduralGeometryHandle[] {
+	return extractPreviewItems(outputsJson).filter((item): item is ProceduralGeometryHandle => item.kind === "geometry");
 }
 // #endregion 🔖BrepViewport
 
@@ -1440,6 +1627,7 @@ if (import.meta.vitest) {
 		ProceduralPreview,
 		PROCEDURAL_PREVIEW_DEFAULT_CAMERA,
 		evaluateBrepFlowKind,
+		extractPreviewItems,
 		proceduralPreviewCameraSeed,
 	} = await import("./index.tsx");
 	const { applyOrbitProjectionToCameraState } = await import("@infinite/world/r3f");
@@ -1480,12 +1668,52 @@ if (import.meta.vitest) {
 			expect(parsed.number).toBeGreaterThan(3);
 		});
 
-		it("extractGeometryHandles collects geometry outputs per widget id", () => {
-			const handles = extractGeometryHandles(JSON.stringify({ box: { geometry: "solid-1" }, line: { geometry: "edge-2" } }));
-			expect(handles).toEqual([
-				{ widgetId: "box", handle: "solid-1" },
-				{ widgetId: "line", handle: "edge-2" },
+		it("extractPreviewItems collects geometry, point, and vector outputs per widget id", () => {
+			const items = extractPreviewItems(
+				JSON.stringify({
+					box: { geometry: "solid-1" },
+					line: { geometry: "edge-2" },
+					pt: { point: { x: 1, y: 2, z: 3 } },
+					vec: { vector: { x: 0, y: 0, z: 1 } },
+				}),
+			);
+			expect(items).toEqual([
+				{ widgetId: "box", kind: "geometry", handle: "solid-1" },
+				{ widgetId: "line", kind: "geometry", handle: "edge-2" },
+				{ widgetId: "pt", kind: "point", position: [1, 2, 3] },
+				{ widgetId: "vec", kind: "vector", direction: [0, 0, 1] },
 			]);
+		});
+
+		it("brep.point and brep.vector evaluate to previewable outputs", () => {
+			const pointOut = evaluateBrepFlowKind("brep.point", JSON.stringify({ x: 1, y: 2, z: 3 }), kernel);
+			const vectorOut = evaluateBrepFlowKind("brep.vector", JSON.stringify({ x: 0, y: 0, z: 5 }), kernel);
+			const items = extractPreviewItems(JSON.stringify({ pointNode: JSON.parse(pointOut), vectorNode: JSON.parse(vectorOut) }));
+			expect(items).toContainEqual({ widgetId: "pointNode", kind: "point", position: [1, 2, 3] });
+			expect(items).toContainEqual({ widgetId: "vectorNode", kind: "vector", direction: [0, 0, 5] });
+		});
+
+		it("extractPreviewItems ignores top-level evaluate errors", () => {
+			expect(extractPreviewItems(JSON.stringify({ error: "cycle detected" }))).toEqual([]);
+		});
+
+		it("procedural preview mounts with point and vector items", async () => {
+			const host = document.createElement("div");
+			document.body.appendChild(host);
+			const root = createRoot(host);
+			await act(async () => {
+				root.render(
+					<ProceduralPreview
+						items={[
+							{ widgetId: "pt", kind: "point", position: [1, 0, 0] },
+							{ widgetId: "vec", kind: "vector", direction: [0, 0, 2] },
+						]}
+					/>,
+				);
+			});
+			expect(host.querySelector("[data-world-projection-switch]")).not.toBeNull();
+			root.unmount();
+			host.remove();
 		});
 
 		it("procedural host includes multiple brep catalogue sections", async () => {
@@ -1523,7 +1751,7 @@ if (import.meta.vitest) {
 			document.body.appendChild(host);
 			const root = createRoot(host);
 			await act(async () => {
-				root.render(<ProceduralPreview handles={[]} />);
+				root.render(<ProceduralPreview items={[]} />);
 			});
 			expect(host.querySelector("[data-world-projection-switch]")).not.toBeNull();
 			root.unmount();

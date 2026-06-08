@@ -1,0 +1,20 @@
+{
+  "title": "Procedural Preview All Types",
+  "emoji": "👁️",
+  "status": "closed",
+  "description": "Extend procedural preview pipeline so point and vector outputs are rendered alongside geometry (curves, surfaces, solids). Unify into ProceduralPreviewItem model.",
+  "summary": "Fixed 3D preview disappearing on flow canvas zoom. Flow wheel zoom persists fixture with updated camera, which triggered setFixtureJson and cleared previewItems. applyFixtureJson now compares widgets+synapses graph signature and only resets preview/selection when graph structure changes, not on camera-only updates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1602"
+  },
+  "goal": "🎯flow",
+  "plan": {
+    "client": "cursor",
+    "id": "60753474",
+    "local": "procedural_preview_all_types_60753474.plan.md"
+  },
+  "sessions": [
+    "⚪8a19f20b29444f3badde561f1217fb49",
+    "⚪0b62c69847244fa5b1d3dd4e5e792892"
+  ]
+}

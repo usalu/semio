@@ -1,0 +1,15 @@
+{
+  "title": "Flow Spotlight Number Slider",
+  "emoji": "🎚️",
+  "status": "closed",
+  "description": "When double-clicking flow canvas and typing a number in spotlight, automatically create a slider with a sensible range. When typing a range like 10.2..15, create a slider with exactly that min/max and step precision matching decimal places.",
+  "summary": "Flow spotlight now creates widgets from typed input: numbers/ranges become sliders with sensible or explicit bounds; free text like 'some text' becomes input notes when no catalogue match (function search like 'mul' still finds catalogue items). InputNote descriptors accept optional text. Tests: flow core 28 pass, flow react 50 pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1604"
+  },
+  "goal": "🎯flow🎯language",
+  "sessions": [
+    "⚪fd7603aea5664e2d8a4738a80dd9159f",
+    "⚪d30a5786604848b8992e4605da786823"
+  ]
+}

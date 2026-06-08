@@ -45,12 +45,12 @@ import {
 } from "@flow/react";
 import type { WindowMeasure } from "@framework/playground/core";
 import {
-	extractGeometryHandles,
+	extractPreviewItems,
 	PROCEDURAL_DEFAULT_FIXTURE,
 	proceduralExtensionHost,
 	proceduralFixtureToJson,
 	type FlowFixtureV1,
-	type ProceduralGeometryHandle,
+	type ProceduralPreviewItem,
 	type ProceduralPreviewShowMode,
 } from "@procedural/react";
 
@@ -136,6 +136,16 @@ function proceduralPlayCmd(command: string, args?: Record<string, unknown>): Com
 
 function buildProceduralLayoutOptionsJson(layerSpacing: number, siblingGap: number, orientation: ProceduralLayoutOrientation): string {
 	return JSON.stringify({ layerSpacing, siblingGap, orientation });
+}
+
+/** @emoji 🧬 Graph signature for preview state — excludes flow camera pan/zoom. */
+export function proceduralFixtureGraphSignature(fixtureJson: string): string | null {
+	try {
+		const fixture = JSON.parse(fixtureJson) as { widgets?: unknown; synapses?: unknown };
+		return JSON.stringify({ widgets: fixture.widgets ?? [], synapses: fixture.synapses ?? [] });
+	} catch {
+		return null;
+	}
 }
 
 /** @emoji 🧩 Workbench extensions tab: installed modules with enable/disable toggles. */
@@ -439,7 +449,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private reorganizeEpoch = 0;
 	private reorganizeOptionsJson = buildProceduralLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
 	private extensionRevision = 0;
-	private geometryHandles: ProceduralGeometryHandle[] = [];
+	private previewItems: ProceduralPreviewItem[] = [];
 	private selectedNodeIds: string[] = [];
 	private preselectNodeIds: string[] = [];
 	private preselectRemovedNodeIds: string[] = [];
@@ -500,13 +510,16 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	private applyFixtureJson(json: string): void {
 		if (!json.includes("flow.fixture/v1") || json === this.fixtureJson) return;
+		const graphChanged = proceduralFixtureGraphSignature(this.fixtureJson) !== proceduralFixtureGraphSignature(json);
 		this.fixtureJson = json;
-		this.selectedNodeIds = [];
-		this.preselectNodeIds = [];
-		this.preselectRemovedNodeIds = [];
-		this.hoveredNodeId = null;
-		this.previewOffNodeIds = [];
-		this.geometryHandles = [];
+		if (graphChanged) {
+			this.selectedNodeIds = [];
+			this.preselectNodeIds = [];
+			this.preselectRemovedNodeIds = [];
+			this.hoveredNodeId = null;
+			this.previewOffNodeIds = [];
+			this.previewItems = [];
+		}
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.rebuildShellMode();
@@ -544,8 +557,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return proceduralExtensionHost.listEntries();
 	}
 
-	getGeometryHandles(): readonly ProceduralGeometryHandle[] {
-		return this.geometryHandles;
+	getPreviewItems(): readonly ProceduralPreviewItem[] {
+		return this.previewItems;
 	}
 
 	getSelectedNodeIds(): readonly string[] {
@@ -684,7 +697,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 				onChange: proceduralPlayCmd("previewEngagementInput"),
 				onSubmit: proceduralPlayCmd("previewEngagementSubmit"),
 			},
-			status: [{ id: "procedural-preview-geometry-count", text: `${this.geometryHandles.length} geometries` }],
+			status: [{ id: "procedural-preview-item-count", text: `${this.previewItems.length} preview items` }],
 		};
 	}
 
@@ -807,9 +820,11 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		if (command === "setEvalOutputs") {
 			const outputsJson = (args as { outputsJson?: string }).outputsJson;
 			if (typeof outputsJson === "string") {
-				this.geometryHandles = extractGeometryHandles(outputsJson);
+				this.previewItems = extractPreviewItems(outputsJson);
 				this.interactionRevision += 1;
 				this.notifySnapshot();
+				this.rebuildShellMode();
+				this.emit();
 			}
 			return;
 		}
@@ -857,7 +872,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			return;
 		}
 		if (command === "selectAll") {
-			const ids = this.geometryHandles.map((entry) => entry.widgetId);
+			const ids = [...new Set(this.previewItems.map((entry) => entry.widgetId))];
 			this.selectedNodeIds = [...new Set(ids)];
 			this.preselectNodeIds = [];
 			this.preselectRemovedNodeIds = [];
@@ -1077,11 +1092,60 @@ if (import.meta.vitest) {
 			expect(ctrl.getShowMode()).toBe("selected");
 		});
 
-		it("setEvalOutputs stores geometry handles per widget", () => {
+		it("setFixtureJson preserves preview items when only flow camera changes", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
-			expect(ctrl.getGeometryHandles()).toEqual([{ widgetId: "box", handle: "solid-1" }]);
+			const base = ctrl.getFixtureJson();
+			const zoomed = JSON.stringify({
+				...JSON.parse(base),
+				camera: { x: 12, y: -4, zoom: 2.5 },
+			});
+			ctrl.run("setFixtureJson", { json: zoomed });
+			expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", kind: "geometry", handle: "solid-1" }]);
+		});
+
+		it("setFixtureJson clears preview items when graph structure changes", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
+			ctrl.run("setFixtureJson", { json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}' });
+			expect(ctrl.getPreviewItems()).toEqual([]);
+		});
+
+		it("setEvalOutputs stores preview items per widget", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
+			expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", kind: "geometry", handle: "solid-1" }]);
+		});
+
+		it("setEvalOutputs stores point and vector preview items", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({
+					pt: { point: { x: 1, y: 0, z: 0 } },
+					vec: { vector: { x: 0, y: 1, z: 0 } },
+				}),
+			});
+			expect(ctrl.getPreviewItems()).toEqual([
+				{ widgetId: "pt", kind: "point", position: [1, 0, 0] },
+				{ widgetId: "vec", kind: "vector", direction: [0, 1, 0] },
+			]);
+		});
+
+		it("selectAll includes widgets with point and vector preview items", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({
+					pt: { point: { x: 0, y: 0, z: 0 } },
+					vec: { vector: { x: 1, y: 0, z: 0 } },
+				}),
+			});
+			ctrl.run("selectAll");
+			expect(ctrl.getSelectedNodeIds().sort()).toEqual(["pt", "vec"]);
 		});
 
 		it("setSelection and setHover update interaction revision", () => {

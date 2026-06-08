@@ -1,0 +1,14 @@
+{
+  "title": "Flow Selection Live Preview",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Fix flow area-select so preselected nodes and marquee overlay are live-previewed during drag (dag paint chrome + label overlay).",
+  "summary": "Area-select marquee now live-previews selection: DagHost paint resolves preselect/preselect_removed into selected/highlighted chrome for nodes, handles, and edges during drag; flow label overlay uses the same chrome mapping via flowElementInteractionChrome. Added regression tests in dag and flow/react.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1601"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪316e0ad855314a3e92ac4da8e11659ef"
+  ]
+}
