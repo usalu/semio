@@ -19,6 +19,9 @@ import {
   type TreeDragAndDropController,
   referenceMediaKindFromUrl,
   SelectionMarquee,
+  marqueeCoverageFromGesture,
+  marqueeIsCrossing,
+  marqueeIsCrossingFromPath,
   marqueeModeFromModifiers,
   ContextMenuController,
   cn,
@@ -7028,11 +7031,6 @@ export function screenRectFromClientPoints(x0: number, y0: number, x1: number, y
   };
 }
 
-/** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
-export function marqueeIsCrossing(startX: number, endX: number): boolean {
-  return endX < startX;
-}
-
 /** @emoji 🖱️ True when a client point lies inside a screen rect. */
 export function pointInScreenRect(point: ScreenPoint, rect: ScreenRect): boolean {
   return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
@@ -7335,7 +7333,7 @@ export function resolveMarqueeSelectionGesture(
     readonly base: SelectionSnapshot;
   },
 ): SelectionSnapshot {
-  const crossing = marqueeIsCrossing(args.startX, args.endX);
+  const crossing = marqueeIsCrossingFromPath(args.path, options.method);
   const screenRect = screenRectFromClientPoints(args.startX, args.startY, args.endX, args.endY);
   const polygon =
     options.method === "lasso" && args.path.length >= 3
@@ -9792,7 +9790,12 @@ function Puzzle3dMarqueeOverlay() {
     return null;
   }
   const toLocal = (point: ScreenPoint) => ({ x: point.x - overlay.clientOrigin.x, y: point.y - overlay.clientOrigin.y });
-  const coverage = marqueeIsCrossing(overlay.start.x, overlay.current.x) ? "partial" : "full";
+  const coverage = marqueeCoverageFromGesture({
+    method: overlay.method,
+    startX: overlay.start.x,
+    endX: overlay.current.x,
+    path: overlay.path,
+  });
   if (overlay.method === "lasso" && overlay.path.length >= 2) {
     return <SelectionMarquee coverage={coverage} shape="polygon" points={overlay.path.map(toLocal)} />;
   }
@@ -12210,6 +12213,22 @@ if (import.meta.vitest) {
     it("is crossing when the drag ends left of the start", () => {
       expect(marqueeIsCrossing(100, 80)).toBe(true);
       expect(marqueeIsCrossing(80, 100)).toBe(false);
+    });
+  });
+  describe("marqueeIsCrossingFromPath", () => {
+    it("lasso crossing follows the first horizontal step not the last", () => {
+      const leftFirst = [
+        { x: 100, y: 100 },
+        { x: 80, y: 100 },
+        { x: 120, y: 100 },
+      ];
+      const rightFirst = [
+        { x: 100, y: 100 },
+        { x: 120, y: 100 },
+        { x: 80, y: 100 },
+      ];
+      expect(marqueeIsCrossingFromPath(leftFirst, "lasso")).toBe(true);
+      expect(marqueeIsCrossingFromPath(rightFirst, "lasso")).toBe(false);
     });
   });
   describe("screenBoundsFromClientPoints", () => {

@@ -4,7 +4,8 @@ pub mod geometry;
 pub mod scene_json;
 
 pub use geometry::{
-    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene,
+    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier,
+    encode_board_stroke_scene,
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim,
     handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero,
     ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
@@ -137,6 +138,7 @@ pub enum InteractionMode {
         fixed_target: Option<HandleId>,
         cursor: Point,
         reconnecting: Option<EdgeId>,
+        snap_target: Option<HandleId>,
     },
     SelectionPending {
         start: Point,
@@ -171,6 +173,9 @@ pub fn handle_position(node: &Node, handle: &Handle) -> Point {
 fn distance(left: Point, right: Point) -> f64 {
     geometry::distance_between(left, right)
 }
+
+const WIRE_SNAP_HIT_TOLERANCE_PX: f64 = 10.0;
+const WIRE_SNAP_EXTRA_PX: f64 = 22.0;
 
 fn node_contains_point(node: &Node, point: Point) -> bool {
     match node.shape {
@@ -286,15 +291,32 @@ pub fn merge_ids_into_selection(initial: &BTreeSet<String>, hits: &BTreeSet<Stri
     next
 }
 
-/// 🎯 Drag left→right = enclosing/full; right→left = crossing/partial.
-pub fn selection_drag_enclosing(start: Point, end: Point) -> bool {
+pub const SELECTION_DRAG_DIRECTION_THRESHOLD_PX: f64 = 2.0;
+
+/// 🎯 Drag left→right = enclosing/full; right→left = crossing/partial (rectangle endpoints).
+pub fn selection_drag_enclosing_rectangle(start: Point, end: Point) -> bool {
     end.x >= start.x
+}
+
+/// 🎯 Lasso uses the first horizontal step; rectangle compares start vs end.
+pub fn selection_drag_enclosing(method: &str, start: Point, points: &[Point]) -> bool {
+    if method == "lasso" {
+        for point in points.iter().skip(1) {
+            let dx = point.x - start.x;
+            if dx.abs() < SELECTION_DRAG_DIRECTION_THRESHOLD_PX {
+                continue;
+            }
+            return dx > 0.0;
+        }
+    }
+    let end = points.last().copied().unwrap_or(start);
+    selection_drag_enclosing_rectangle(start, end)
 }
 
 /// 🧿 Builds the world-space marquee shape for rectangle or lasso drags.
 pub fn selection_drag_shape(method: &str, start: Point, points: &[Point]) -> Option<(WorldBox, bool, Vec<Point>)> {
     let last = points.last().copied().unwrap_or(start);
-    let enclosing = selection_drag_enclosing(start, last);
+    let enclosing = selection_drag_enclosing(method, start, points);
     if method == "lasso" && points.len() >= 3 {
         let poly = points.to_vec();
         let b = world_box_from_points(&poly)?;
@@ -832,13 +854,30 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 }
                 self.interaction = InteractionMode::DragNodes { primary_id, offset };
             }
-            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
-                self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor: point, reconnecting };
-                self.update_hover(self.hit_test(point).map(|hit| match hit {
-                    HitObject::Edge(id) => id,
-                    HitObject::Endpoint(ep) => P::endpoint_as_u64(ep),
-                    HitObject::Node(id) => id,
-                }));
+            InteractionMode::DrawEdge {
+                anchor_handle,
+                anchor_is_source,
+                fixed_target,
+                reconnecting,
+                ..
+            } => {
+                let snap_target = self.nearest_wire_snap_handle(anchor_handle, anchor_is_source, fixed_target, reconnecting, point);
+                self.interaction = InteractionMode::DrawEdge {
+                    anchor_handle,
+                    anchor_is_source,
+                    fixed_target,
+                    cursor: point,
+                    reconnecting,
+                    snap_target,
+                };
+                let hover = snap_target.or_else(|| {
+                    self.hit_test(point).map(|hit| match hit {
+                        HitObject::Edge(id) => id,
+                        HitObject::Endpoint(ep) => P::endpoint_as_u64(ep),
+                        HitObject::Node(id) => id,
+                    })
+                });
+                self.update_hover(hover);
             }
             InteractionMode::SelectionPending { start, start_screen } => {
                 if distance_between(screen, start_screen) < SELECTION_MARQUEE_DRAG_THRESHOLD_PX {
@@ -898,9 +937,21 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let screen = Point::new(screen_x, screen_y);
         let grabbed = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
         match grabbed {
-            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
-                if let Some(HitObject::Endpoint(ep)) = self.hit_test(point) {
-                    let hit_hid = P::endpoint_as_u64(ep);
+            InteractionMode::DrawEdge {
+                anchor_handle,
+                anchor_is_source,
+                fixed_target,
+                reconnecting,
+                snap_target,
+                ..
+            } => {
+                let endpoint = snap_target
+                    .filter(|hid| self.wire_snap_still_active(*hid, point))
+                    .or_else(|| self.hit_test(point).and_then(|hit| match hit {
+                        HitObject::Endpoint(ep) => Some(P::endpoint_as_u64(ep)),
+                        _ => None,
+                    }));
+                if let Some(hit_hid) = endpoint {
                     let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
                         (hit_hid, tgt)
                     } else if anchor_is_source {
@@ -983,8 +1034,16 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 snapshot.edges.push(curve);
             }
         }
-        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, .. } = self.interaction {
-            snapshot.pending_edge = self.draw_edge_preview_curve(anchor_handle, anchor_is_source, fixed_target, cursor);
+        if let InteractionMode::DrawEdge {
+            anchor_handle,
+            anchor_is_source,
+            fixed_target,
+            cursor,
+            snap_target,
+            ..
+        } = self.interaction
+        {
+            snapshot.pending_edge = self.draw_edge_preview_curve(anchor_handle, anchor_is_source, fixed_target, cursor, snap_target);
         }
         let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
         let _ = _stroke_scene.encoding().path_tags.len();
@@ -997,8 +1056,31 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBez> {
         let edge = self.edges.get(&edge_id)?;
-        let (source_position, target_position, source_center, target_center) = self.endpoint_positions(edge)?;
-        Some(compute_edge_bezier_points(source_position, target_position, source_center, target_center))
+        let (source_position, target_position, source_node, target_node) = self.endpoint_wire_nodes(edge)?;
+        Some(self.wire_bezier_between(source_position, target_position, source_node, target_node))
+    }
+
+    fn wire_bezier_between(
+        &self,
+        source_point: Point,
+        target_point: Point,
+        source_node: Option<&Node>,
+        target_node: Option<&Node>,
+    ) -> CubicBez {
+        let chord = normalize_or_zero(target_point - source_point);
+        let source_out = source_node
+            .and_then(|node| {
+                handle_outward_at_node_rim(source_point, node.center, node.shape, node.radius, node.width, node.height)
+            })
+            .filter(|outward| outward.hypot() > f64::EPSILON)
+            .unwrap_or(chord);
+        let target_out = target_node
+            .and_then(|node| {
+                handle_outward_at_node_rim(target_point, node.center, node.shape, node.radius, node.width, node.height)
+            })
+            .filter(|outward| outward.hypot() > f64::EPSILON)
+            .unwrap_or(-chord);
+        compute_edge_bezier_outward(source_point, target_point, source_out, target_out)
     }
 
     fn draw_edge_preview_curve(
@@ -1007,26 +1089,102 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         anchor_is_source: bool,
         fixed_target: Option<HandleId>,
         cursor: Point,
+        snap_target: Option<HandleId>,
     ) -> Option<CubicBez> {
         if let Some(fixed_tgt) = fixed_target {
             let tgt_h = self.handles.get(&fixed_tgt)?;
             let tgt_node = self.nodes.get(&tgt_h.node_id)?;
             let target_point = handle_position(tgt_node, tgt_h);
-            let target_center = tgt_node.center;
-            return Some(compute_edge_bezier_points(cursor, target_point, cursor, target_center));
+            if let Some(snap) = snap_target {
+                let snap_h = self.handles.get(&snap)?;
+                let snap_node = self.nodes.get(&snap_h.node_id)?;
+                let source_point = handle_position(snap_node, snap_h);
+                return Some(self.wire_bezier_between(source_point, target_point, Some(snap_node), Some(tgt_node)));
+            }
+            return Some(self.wire_bezier_between(cursor, target_point, None, Some(tgt_node)));
         }
         let anchor = self.handles.get(&anchor_handle)?;
         let anchor_node = self.nodes.get(&anchor.node_id)?;
         let anchor_point = handle_position(anchor_node, anchor);
-        let anchor_center = anchor_node.center;
-        Some(if anchor_is_source {
-            compute_edge_bezier_points(anchor_point, cursor, anchor_center, cursor)
+        if anchor_is_source {
+            if let Some(snap) = snap_target {
+                let snap_h = self.handles.get(&snap)?;
+                let snap_node = self.nodes.get(&snap_h.node_id)?;
+                let snap_point = handle_position(snap_node, snap_h);
+                return Some(self.wire_bezier_between(anchor_point, snap_point, Some(anchor_node), Some(snap_node)));
+            }
+            Some(self.wire_bezier_between(anchor_point, cursor, Some(anchor_node), None))
+        } else if let Some(snap) = snap_target {
+            let snap_h = self.handles.get(&snap)?;
+            let snap_node = self.nodes.get(&snap_h.node_id)?;
+            let snap_point = handle_position(snap_node, snap_h);
+            Some(self.wire_bezier_between(snap_point, anchor_point, Some(snap_node), Some(anchor_node)))
         } else {
-            compute_edge_bezier_points(cursor, anchor_point, cursor, anchor_center)
-        })
+            Some(self.wire_bezier_between(cursor, anchor_point, None, Some(anchor_node)))
+        }
     }
 
-    fn endpoint_positions(&self, edge: &GraphEdge<P::Endpoint>) -> Option<(Point, Point, Point, Point)> {
+    fn wire_snap_drag_tolerance_world(&self, handle_radius: f64) -> f64 {
+        let zoom = self.camera.zoom.max(1e-9);
+        (WIRE_SNAP_HIT_TOLERANCE_PX + WIRE_SNAP_EXTRA_PX + handle_radius * zoom) / zoom
+    }
+
+    fn wire_snap_still_active(&self, handle_id: HandleId, cursor: Point) -> bool {
+        let Some(handle) = self.handles.get(&handle_id) else {
+            return false;
+        };
+        let Some(node) = self.nodes.get(&handle.node_id) else {
+            return false;
+        };
+        let pos = handle_position(node, handle);
+        distance(cursor, pos) <= self.wire_snap_drag_tolerance_world(handle.radius)
+    }
+
+    fn nearest_wire_snap_handle(
+        &self,
+        anchor_handle: HandleId,
+        anchor_is_source: bool,
+        fixed_target: Option<HandleId>,
+        reconnecting: Option<EdgeId>,
+        cursor: Point,
+    ) -> Option<HandleId> {
+        if !P::HAS_PORTS {
+            return None;
+        }
+        let mut best: Option<(f64, HandleId)> = None;
+        for handle in self.handles.values() {
+            let candidate = handle.id;
+            if candidate == anchor_handle {
+                continue;
+            }
+            let (source_hid, target_hid) = if let Some(fixed) = fixed_target {
+                if anchor_is_source {
+                    (candidate, fixed)
+                } else {
+                    (fixed, candidate)
+                }
+            } else if anchor_is_source {
+                (anchor_handle, candidate)
+            } else {
+                (candidate, anchor_handle)
+            };
+            if !self.is_valid_connection(source_hid, target_hid, reconnecting) {
+                continue;
+            }
+            let Some(node) = self.nodes.get(&handle.node_id) else {
+                continue;
+            };
+            let pos = handle_position(node, handle);
+            let d = distance(cursor, pos);
+            let tol = self.wire_snap_drag_tolerance_world(handle.radius);
+            if d <= tol && best.as_ref().map(|(best_d, _)| d < *best_d).unwrap_or(true) {
+                best = Some((d, candidate));
+            }
+        }
+        best.map(|(_, id)| id)
+    }
+
+    fn endpoint_wire_nodes(&self, edge: &GraphEdge<P::Endpoint>) -> Option<(Point, Point, Option<&Node>, Option<&Node>)> {
         if P::HAS_PORTS {
             let source_handle = self.handles.get(&P::endpoint_as_handle(edge.source)?)?;
             let target_handle = self.handles.get(&P::endpoint_as_handle(edge.target)?)?;
@@ -1034,11 +1192,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             let target_node = self.nodes.get(&target_handle.node_id)?;
             let source_position = handle_position(source_node, source_handle);
             let target_position = handle_position(target_node, target_handle);
-            return Some((source_position, target_position, source_node.center, target_node.center));
+            return Some((source_position, target_position, Some(source_node), Some(target_node)));
         }
         let source_node = self.nodes.get(&P::endpoint_as_u64(edge.source))?;
         let target_node = self.nodes.get(&P::endpoint_as_u64(edge.target))?;
-        Some((source_node.center, target_node.center, source_node.center, target_node.center))
+        Some((source_node.center, target_node.center, Some(source_node), Some(target_node)))
     }
 
     fn remove_handle(&mut self, id: HandleId) {
@@ -1101,8 +1259,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             self.selection_preview_crossing = false;
             return;
         }
-        let last = *screen_points.last().unwrap_or(&start_screen);
-        self.selection_preview_crossing = !selection_drag_enclosing(start_screen, last);
+        self.selection_preview_crossing = !selection_drag_enclosing(self.selection_options.method.as_str(), start_screen, screen_points);
         self.selection_preview_points = selection_screen_overlay_points(self.selection_options.method.as_str(), start_screen, screen_points).unwrap_or_default();
     }
 
@@ -1261,7 +1418,14 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 .and_then(|e| reconnect_from_target(e, handle_id))
                 .unwrap_or((handle_id, true, None, None)),
         };
-        self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, reconnecting };
+        self.interaction = InteractionMode::DrawEdge {
+            anchor_handle,
+            anchor_is_source,
+            fixed_target,
+            cursor,
+            reconnecting,
+            snap_target: None,
+        };
     }
 
     fn incoming_edge_for_handle(&self, handle_id: HandleId) -> Option<EdgeId> {
@@ -1437,6 +1601,20 @@ mod tests {
     }
 
     #[test]
+    fn selection_drag_enclosing_lasso_uses_first_horizontal_step() {
+        use cavas::vello::kurbo::Point;
+
+        let start = Point::new(100.0, 100.0);
+        let left_first = vec![start, Point::new(80.0, 100.0), Point::new(120.0, 100.0)];
+        assert!(!selection_drag_enclosing("lasso", start, &left_first));
+        let right_first = vec![start, Point::new(120.0, 100.0), Point::new(80.0, 100.0)];
+        assert!(selection_drag_enclosing("lasso", start, &right_first));
+        let rectangle = vec![start, Point::new(80.0, 100.0)];
+        assert!(!selection_drag_enclosing("rectangle", start, &rectangle));
+        assert!(!selection_drag_enclosing_rectangle(start, Point::new(80.0, 100.0)));
+    }
+
+    #[test]
     fn rect_node_drags_from_center() {
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.create_rect_node(1, 100.0, 50.0, 160.0, 72.0, true);
@@ -1528,6 +1706,60 @@ mod tests {
         engine.pointer_move(cursor.x, cursor.y);
         let from_target = engine.render_snapshot().pending_edge.expect("target drag preview");
         assert!(midpoint_bulge(from_target) > 1.0, "target-anchored preview should bow away from chord");
+    }
+
+    #[test]
+    fn wire_snaps_preview_and_connects_to_compatible_handle() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.set_camera(0.0, 0.0, 1.0);
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        let inp = handle_position_on_rectangle(Point::new(280.0, 0.0), 160.0, 72.0, std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(out.x, out.y, false);
+        let near = Point::new(inp.x + 24.0, inp.y);
+        engine.pointer_move(near.x, near.y);
+        let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
+            panic!("expected draw-edge interaction");
+        };
+        assert_eq!(snap_target, Some(11));
+        let preview = engine.render_snapshot().pending_edge.expect("preview");
+        assert!((preview.p3.x - inp.x).abs() < 0.01);
+        assert!((preview.p3.y - inp.y).abs() < 0.01);
+        engine.pointer_up(near.x, near.y);
+        assert_eq!(engine.edges.len(), 1);
+        let edge = engine.edges.values().next().expect("edge");
+        assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
+        assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
+    }
+
+    #[test]
+    fn wire_snap_ignores_incompatible_or_occupied_handles() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.set_camera(0.0, 0.0, 1.0);
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 2, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.set_handle_role(12, HandleRole::Source);
+        engine.create_edge(100, 12, 11);
+        let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        let occupied = handle_position_on_rectangle(Point::new(280.0, 0.0), 160.0, 72.0, std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(out.x, out.y, false);
+        engine.pointer_move(occupied.x + 8.0, occupied.y);
+        let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
+            panic!("expected draw-edge interaction");
+        };
+        assert!(snap_target.is_none());
     }
 
     #[test]

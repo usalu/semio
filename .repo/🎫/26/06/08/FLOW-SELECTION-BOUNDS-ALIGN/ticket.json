@@ -1,0 +1,16 @@
+{
+  "title": "Flow Selection Bounds Align",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Add bounding rectangle to flow display with alignment buttons on top (left align, vertical equal spacing, right align) and right side (top align, horizontal equal spacing, bottom align).",
+  "summary": "Fixed non-responsive align buttons: controls were positioned outside the selection rect (negative translate) and were clipped by overflow-hidden playground panes, so clicks never reached them. Moved toolbars inside the bounding rect, added container pointerdown-capture hit testing as fallback, and verified FlowSession.alignSelection wasm path with integration test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1610"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ffb0b61fee56425fa2bd51672f66db9a",
+    "⚪eda0fff0911a496e9c523ecb466491a6",
+    "⚪b0580940d6a145a796ced6428801b085"
+  ]
+}

@@ -2,7 +2,10 @@
   "title": "Fix Interactive Disposition Resize",
   "status": "closed",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
-  "summary": "Description full→short on goal slide now morphs via text morph-source pairing (prior lines on data-id, short label on presentation-morph-target). Affiliation abbreviation uses the same pattern with morphLineLabels. Flow intro keeps data-id on leaf nodes only.",
+  "summary": "Lasso partial/full enclosure now uses the first horizontal mouse step (left = partial/crossing, right = full/enclosing) instead of the last pointer position. Rectangle selection still compares drag start vs end. Canonical logic lives in `@ui/react` (`marqueeCoverageFromGesture`, `marqueeIsCrossingFromPath`) and `mathematical_graph` (`selection_drag_enclosing`). Updated procedural, CAD, puzzle 3d, puzzle 2d (Rust/wasm), flow (board_host), and board engine overlay preview. Added Rust and puzzle 3d unit tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1612"
+  },
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8d10652d4d464f29ad354d87cca945e4",
@@ -17,6 +20,7 @@
     "⚪01b598528f814e35b9e77c9045fe0576",
     "⚪cd7c4b1d508e4fe49afcd35a4c042bcd",
     "⚪35345b81b2eb4f5881864f6103501887",
-    "⚪58dde3a6dacc40709dcafadf4badef48"
+    "⚪58dde3a6dacc40709dcafadf4badef48",
+    "⚪ab5a003e2c0f479085c8f6745a72b592"
   ]
 }

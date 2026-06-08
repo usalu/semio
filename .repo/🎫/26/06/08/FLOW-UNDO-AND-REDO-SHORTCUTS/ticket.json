@@ -1,0 +1,14 @@
+{
+  "title": "Flow Undo and Redo Shortcuts",
+  "emoji": "↩️",
+  "status": "closed",
+  "description": "Add ctrl+z / ctrl+y undo/redo for flow canvas. Implement history stack in FlowHost (Rust core), expose via WASM FlowSession, bind native keyboard shortcuts in React FlowCanvas.",
+  "summary": "Added undo/redo history stack to FlowHost in the Rust core. Snapshots fixture content (widgets, synapses, layout) while ignoring camera/view changes. Discrete mutations call begin_change(); pointer gestures coalesce into single steps via pending snapshot on pointer down and commit on pointer up. Exposed undo/redo/canUndo/canRedo on FlowSession WASM bindings. Wired native keyboard shortcuts in FlowCanvas: Cmd/Ctrl+Z undo, Cmd/Ctrl+Y and Cmd/Ctrl+Shift+Z redo. Added Rust unit tests and vitest coverage. Rebuilt WASM and verified all tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1615"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪1b9174ca3446419fa1a5c2e5eaaa8714"
+  ]
+}

@@ -32,10 +32,12 @@ import {
 	type FlowReorganizeRequest,
 } from "@flow/react";
 import type { ContextMenuItem } from "@ui/react";
+import { meshStyleColors, resolveMeshStyle, type MeshStyleKind } from "@puzzle/3d/react";
 import {
 	applyOrbitProjectionToCameraState,
 	DEFAULT_LOD_GRID_FACTOR,
 	DEFAULT_MANUAL_LOD,
+	WORLD_LOCKED_OPACITY_SCALE,
 	worldEntityRenderMode,
 	WorldCameraInvalidator,
 	WorldCanvas,
@@ -52,7 +54,7 @@ import {
 } from "@infinite/world/r3f";
 import {
 	SelectionMarquee,
-	marqueeCoverageFromDrag,
+	marqueeCoverageFromGesture,
 	marqueeModeFromModifiers,
 	screenRectContainsRect,
 	screenRectFromPoints,
@@ -887,17 +889,26 @@ function collectGeometryRefsFromValue(value: unknown, refs: GeometryRef[]): void
 	}
 }
 
-function previewLayerChrome(
+function previewLayerPaint(
 	previewOff: boolean,
 	hovered: boolean,
 	selected: boolean,
 	highlighted: boolean,
-): { readonly renderMode: ReturnType<typeof worldEntityRenderMode>; readonly opacity: number; readonly emissive: string; readonly emissiveIntensity: number } {
+): {
+	readonly renderMode: ReturnType<typeof worldEntityRenderMode>;
+	readonly style: MeshStyleKind;
+	readonly colors: NonNullable<ReturnType<typeof meshStyleColors>>;
+	readonly opacity: number;
+} {
 	const renderMode = worldEntityRenderMode({ hidden: previewOff }, { hovered, selected: selected || highlighted, revealed: hovered });
-	const opacity = renderMode.dim ? 0.35 : renderMode.asHover ? 0.95 : 0.85;
-	const emissive = highlighted ? "#a78bfa" : renderMode.showSelectedOutline ? "#3b82f6" : renderMode.asHover ? "#60a5fa" : "#000000";
-	const emissiveIntensity = highlighted ? 0.28 : renderMode.showSelectedOutline ? 0.35 : renderMode.asHover ? 0.2 : 0;
-	return { renderMode, opacity, emissive, emissiveIntensity };
+	const style = resolveMeshStyle({
+		selected: renderMode.showSelectedOutline,
+		highlighted,
+		hovered: renderMode.asHover || hovered,
+	});
+	const colors = meshStyleColors(style) ?? meshStyleColors("neutral")!;
+	const opacity = colors.opacity * (renderMode.dim ? WORLD_LOCKED_OPACITY_SCALE : 1);
+	return { renderMode, style, colors, opacity };
 }
 
 function createPreviewPointerHandlers(
@@ -956,7 +967,6 @@ function previewItemKey(item: ProceduralPreviewItem): string {
 function BrepPointLayer({
 	widgetId,
 	position,
-	color,
 	selected,
 	highlighted,
 	hovered,
@@ -966,7 +976,6 @@ function BrepPointLayer({
 }: {
 	readonly widgetId: string;
 	readonly position: Vec3;
-	readonly color: string;
 	readonly selected: boolean;
 	readonly highlighted: boolean;
 	readonly hovered: boolean;
@@ -974,14 +983,22 @@ function BrepPointLayer({
 	readonly onHover?: (widgetId: string | null) => void;
 	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
 }): ReactNode {
-	const { renderMode, opacity, emissive, emissiveIntensity } = previewLayerChrome(previewOff, hovered, selected, highlighted);
+	const { renderMode, colors, opacity } = previewLayerPaint(previewOff, hovered, selected, highlighted);
 	if (!renderMode.visible) return null;
 	const radius = renderMode.asHover ? PROCEDURAL_PREVIEW_POINT_RADIUS * 1.25 : PROCEDURAL_PREVIEW_POINT_RADIUS;
 	return (
 		<group position={position} {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
 			<mesh>
 				<sphereGeometry args={[radius, 16, 12]} />
-				<meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissiveIntensity} metalness={0.1} roughness={0.5} transparent opacity={opacity} />
+				<meshStandardMaterial
+					color={colors.meshColor}
+					emissive={colors.emissiveColor}
+					emissiveIntensity={colors.emissiveIntensity}
+					metalness={0}
+					roughness={1}
+					transparent={opacity < 1}
+					opacity={opacity}
+				/>
 			</mesh>
 		</group>
 	);
@@ -990,7 +1007,6 @@ function BrepPointLayer({
 function BrepVectorLayer({
 	widgetId,
 	direction,
-	color,
 	selected,
 	highlighted,
 	hovered,
@@ -1000,7 +1016,6 @@ function BrepVectorLayer({
 }: {
 	readonly widgetId: string;
 	readonly direction: Vec3;
-	readonly color: string;
 	readonly selected: boolean;
 	readonly highlighted: boolean;
 	readonly hovered: boolean;
@@ -1008,7 +1023,7 @@ function BrepVectorLayer({
 	readonly onHover?: (widgetId: string | null) => void;
 	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
 }): ReactNode {
-	const { renderMode, opacity, emissive, emissiveIntensity } = previewLayerChrome(previewOff, hovered, selected, highlighted);
+	const { renderMode, colors, opacity } = previewLayerPaint(previewOff, hovered, selected, highlighted);
 	const arrow = useMemo(() => {
 		const tip = new THREE.Vector3(direction[0], direction[1], direction[2]);
 		const length = tip.length();
@@ -1024,14 +1039,21 @@ function BrepVectorLayer({
 		return { shaft, head, headPosition, quaternion };
 	}, [direction]);
 	if (!renderMode.visible || !arrow) return null;
-	const lineColor = renderMode.asHover ? "#93c5fd" : "#e2e8f0";
 	return (
 		<group {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
 			<line geometry={arrow.shaft}>
-				<lineBasicMaterial color={lineColor} linewidth={1} transparent opacity={opacity} />
+				<lineBasicMaterial color={colors.lineColor} linewidth={1} transparent={opacity < 1} opacity={opacity} />
 			</line>
 			<mesh geometry={arrow.head} position={arrow.headPosition} quaternion={arrow.quaternion}>
-				<meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissiveIntensity} metalness={0.1} roughness={0.5} transparent opacity={opacity} />
+				<meshStandardMaterial
+					color={colors.meshColor}
+					emissive={colors.emissiveColor}
+					emissiveIntensity={colors.emissiveIntensity}
+					metalness={0}
+					roughness={1}
+					transparent={opacity < 1}
+					opacity={opacity}
+				/>
 			</mesh>
 		</group>
 	);
@@ -1042,7 +1064,6 @@ function BrepGeometryLayer({
 	geometryId,
 	kernel,
 	tolerance,
-	color,
 	selected,
 	highlighted,
 	hovered,
@@ -1054,7 +1075,6 @@ function BrepGeometryLayer({
 	readonly geometryId: string;
 	readonly kernel: BrepKernelType;
 	readonly tolerance: number;
-	readonly color: string;
 	readonly selected: boolean;
 	readonly highlighted: boolean;
 	readonly hovered: boolean;
@@ -1065,7 +1085,7 @@ function BrepGeometryLayer({
 	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
 	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const ref = geometryId as GeometryRef;
-	const { renderMode, opacity, emissive, emissiveIntensity } = previewLayerChrome(previewOff, hovered, selected, highlighted);
+	const { renderMode, colors, opacity } = previewLayerPaint(previewOff, hovered, selected, highlighted);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -1092,24 +1112,31 @@ function BrepGeometryLayer({
 		<group {...createPreviewPointerHandlers(widgetId, onHover, onPick)}>
 			{buffers.surface ? (
 				<mesh geometry={buffers.surface}>
-					<meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissiveIntensity} metalness={0.1} roughness={0.6} transparent opacity={opacity} side={THREE.DoubleSide} />
+					<meshStandardMaterial
+						color={colors.meshColor}
+						emissive={colors.emissiveColor}
+						emissiveIntensity={colors.emissiveIntensity}
+						metalness={0}
+						roughness={1}
+						transparent={opacity < 1}
+						opacity={opacity}
+						side={THREE.DoubleSide}
+					/>
 				</mesh>
 			) : null}
 			{buffers.lines ? (
 				<lineSegments geometry={buffers.lines}>
-					<lineBasicMaterial color={renderMode.asHover ? "#93c5fd" : "#e2e8f0"} linewidth={1} transparent opacity={opacity} />
+					<lineBasicMaterial color={colors.lineColor} linewidth={1} transparent={opacity < 1} opacity={opacity} />
 				</lineSegments>
 			) : null}
 			{buffers.points ? (
 				<points geometry={buffers.points}>
-					<pointsMaterial color={renderMode.asHover ? "#fde68a" : "#fbbf24"} size={renderMode.asHover ? 0.16 : 0.12} transparent opacity={opacity} />
+					<pointsMaterial color={colors.lineColor} size={renderMode.asHover ? 0.16 : 0.12} transparent={opacity < 1} opacity={opacity} />
 				</points>
 			) : null}
 		</group>
 	);
 }
-
-const BREP_VIEWPORT_COLORS = ["#6b9bd1", "#7ec8a3", "#d18b6b", "#b16bd1", "#d1c46b"];
 
 export const PROCEDURAL_PREVIEW_DEFAULT_CAMERA: WorldCameraState = {
 	position: [8, 8, 6],
@@ -1248,7 +1275,7 @@ function ProceduralPreviewMarqueeBridge({
 			marqueeRef.current.active = true;
 			const points = selectionMethodRef.current === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
 			marqueeRef.current.points = points;
-			const coverage = marqueeCoverageFromDrag(start.x, point.x);
+			const coverage = marqueeCoverageFromGesture({ method: selectionMethodRef.current, startX: start.x, endX: point.x, path: points });
 			if (selectionMethodRef.current === "lasso" && points.length >= 3) {
 				onMarqueeOverlayRef.current({ coverage, shape: "polygon", points });
 			} else {
@@ -1270,7 +1297,7 @@ function ProceduralPreviewMarqueeBridge({
 			const mode = marqueeModeFromModifiers(event);
 			if (marqueeRef.current.active && distance >= PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX) {
 				const points = selectionMethodRef.current === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
-				const coverage = marqueeCoverageFromDrag(start.x, point.x);
+				const coverage = marqueeCoverageFromGesture({ method: selectionMethodRef.current, startX: start.x, endX: point.x, path: points });
 				const hits = resolveMarqueeHitsRef.current(points, coverage === "partial");
 				const next = selectionMergeIds(mode, marqueeRef.current.initial, hits);
 				commitSelectionRef.current(next, mode);
@@ -1435,8 +1462,7 @@ export function ProceduralPreview({
 						<ambientLight intensity={0.45} />
 						<directionalLight position={[12, 18, 10]} intensity={1.1} />
 						<WorldLayer order={10} name="procedural.preview">
-							{visibleItems.map((entry, index) => {
-								const color = BREP_VIEWPORT_COLORS[index % BREP_VIEWPORT_COLORS.length]!;
+							{visibleItems.map((entry) => {
 								const chrome = {
 									selected: effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId),
 									highlighted: effectivePreselectRemoved.has(entry.widgetId),
@@ -1446,10 +1472,10 @@ export function ProceduralPreview({
 									onPick,
 								};
 								if (entry.kind === "point") {
-									return <BrepPointLayer key={previewItemKey(entry)} widgetId={entry.widgetId} position={entry.position} color={color} {...chrome} />;
+									return <BrepPointLayer key={previewItemKey(entry)} widgetId={entry.widgetId} position={entry.position} {...chrome} />;
 								}
 								if (entry.kind === "vector") {
-									return <BrepVectorLayer key={previewItemKey(entry)} widgetId={entry.widgetId} direction={entry.direction} color={color} {...chrome} />;
+									return <BrepVectorLayer key={previewItemKey(entry)} widgetId={entry.widgetId} direction={entry.direction} {...chrome} />;
 								}
 								return (
 									<BrepGeometryLayer
@@ -1458,7 +1484,6 @@ export function ProceduralPreview({
 										geometryId={entry.handle}
 										kernel={kernel}
 										tolerance={tolerance}
-										color={color}
 										{...chrome}
 									/>
 								);

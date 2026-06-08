@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -2292,16 +2292,10 @@ function dragDistance(a: { readonly x: number; readonly y: number }, b: { readon
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
-function spatialSelectionCoverageFromPath(path: readonly { readonly x: number; readonly y: number }[]): SpatialSelectionCoverage {
+function spatialSelectionCoverageFromGesture(method: SpatialSelectionMethod, path: readonly { readonly x: number; readonly y: number }[]): SpatialSelectionCoverage {
   const start = path[0];
-  if (!start) return "full";
-  for (const point of path.slice(1)) {
-    const dx = point.x - start.x;
-    if (Math.abs(dx) < 2) continue;
-    return dx < 0 ? "partial" : "full";
-  }
   const end = path[path.length - 1] ?? start;
-  return end.x < start.x ? "partial" : "full";
+  return marqueeCoverageFromGesture({ method, startX: start?.x ?? 0, endX: end?.x ?? 0, path });
 }
 
 function pointInRectangle(point: { readonly x: number; readonly y: number }, rect: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number }): boolean {
@@ -5096,7 +5090,7 @@ export function InteractionRepl({
           ...current,
           currentClient: nextClient,
           path: nextPath,
-          coverage: spatialSelectionCoverageFromPath(nextPath),
+          coverage: spatialSelectionCoverageFromGesture(current.method, nextPath),
           modifiers: pointerModifiersFromNativeEvent(moveEvent),
         };
         dragSelectionRef.current = nextState;
@@ -5135,7 +5129,7 @@ export function InteractionRepl({
           return;
         }
         const targets = spatialPickTargetsFromScreenSelection(
-          { ...finalState, coverage: spatialSelectionCoverageFromPath(finalState.path) },
+          { ...finalState, coverage: spatialSelectionCoverageFromGesture(finalState.method, finalState.path) },
           selectablePickTargets,
           camera,
           canvas.getBoundingClientRect(),

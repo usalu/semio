@@ -565,6 +565,7 @@
         "@flow/react": "workspace:*",
         "@geometry/brep/js": "workspace:*",
         "@infinite/world/r3f": "workspace:*",
+        "@puzzle/3d/react": "workspace:*",
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.4.2",
         "@ui/react": "workspace:*",

@@ -11,7 +11,7 @@ pub use mathematical_graph_port_directed::{
     DirectedPortGraphEngine, Edge, EdgeId,
     GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection, VelloThemePalette,
 };
-use graph::{handle_position, BoardEvent};
+use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 
 /// 🌳 DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;
@@ -54,8 +54,8 @@ const DAG_COMPUTATION_HEADER_ROWS: usize = 0;
 
 const DAG_NODE_EDGE_INSET: f64 = 2.0;
 const DAG_NODE_COLUMN_GAP: f64 = 2.0;
-const DAG_IO_COLUMN_MIN: f64 = 28.0;
-const DAG_IO_COLUMN_MAX: f64 = 38.0;
+const DAG_IO_COLUMN_MIN: f64 = 24.0;
+const DAG_IO_COLUMN_MAX: f64 = 34.0;
 const DAG_IO_WIDGET_HEIGHT: f64 = 28.0;
 const DAG_SLIDER_KNOB_SCREEN_PX: f64 = 8.0;
 const DAG_LABEL_SCREEN_PX: f64 = 11.0;
@@ -79,7 +79,7 @@ fn port_label_text_width(label: &str, px: f64) -> f64 {
     if trimmed.is_empty() || px < 4.0 {
         return 0.0;
     }
-    let pad = px * 0.35;
+    let pad = px * 0.28;
     trimmed.len() as f64 * px * 0.62 + pad * 2.0
 }
 
@@ -105,7 +105,7 @@ pub fn computation_node_width(name: &str, inputs: &[IoPortSpec], outputs: &[IoPo
     };
     let (name_w, _) = label_extent(name, DAG_LABEL_SCREEN_PX);
     let content = io_w.max(name_w);
-    (content + DAG_NODE_EDGE_INSET * 2.0).max(28.0)
+    (content + DAG_NODE_EDGE_INSET * 2.0).max(24.0)
 }
 
 /// 📐 IO widget width from vertically rotated title metrics.
@@ -113,7 +113,7 @@ pub fn io_widget_width(name: &str) -> f64 {
     use cavas::text::label_extent;
     let name_px = DAG_LABEL_SCREEN_PX * 1.05;
     let (_, label_h) = label_extent(name, name_px);
-    (label_h + DAG_NODE_EDGE_INSET * 2.0 + 4.0).max(28.0)
+    (label_h + DAG_NODE_EDGE_INSET * 2.0 + 2.0).max(24.0)
 }
 
 /// 📐 IO widget height from vertically rotated title metrics plus a control band.
@@ -1227,11 +1227,13 @@ fn dag_label_compact_paint_px(zoom: f64, lod_index: usize) -> f64 {
     cavas::lod::lod_band_label_screen_px(DAG_LABEL_COMPACT_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
-fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
         vello_color_with_alpha(theme.node_fill_disabled, 120)
     } else if selected {
         theme.node_fill_selected
+    } else if highlighted {
+        theme.node_fill_selection_exit
     } else if hovered {
         theme.node_fill_hovered
     } else {
@@ -1239,11 +1241,13 @@ fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, h
     }
 }
 
-pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
         vello_color_with_alpha(theme.node_stroke, 110)
     } else if selected {
         theme.node_stroke_selected
+    } else if highlighted {
+        theme.node_stroke_selection_exit
     } else if hovered {
         theme.node_stroke_hovered
     } else {
@@ -1251,11 +1255,13 @@ pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, sele
     }
 }
 
-pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
         vello_color_with_alpha(theme.label_fill, 110)
     } else if selected {
         theme.label_fill_hovered
+    } else if highlighted {
+        theme.node_stroke_selection_exit
     } else if hovered {
         theme.label_fill_hovered
     } else {
@@ -1276,11 +1282,13 @@ pub(crate) fn dag_node_internal_chrome_stroke(
     }
 }
 
-pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
         vello_color_with_alpha(theme.handle_fill_disabled, 120)
     } else if selected {
         theme.handle_fill_selected
+    } else if highlighted {
+        theme.handle_fill_selection_exit
     } else if hovered {
         theme.handle_fill_hovered
     } else {
@@ -1288,11 +1296,13 @@ pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, sele
     }
 }
 
-pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
         vello_color_with_alpha(theme.handle_stroke_disabled, 120)
     } else if selected {
         theme.handle_stroke_selected
+    } else if highlighted {
+        theme.handle_stroke_selection_exit
     } else if hovered {
         theme.handle_stroke_hovered
     } else {
@@ -1300,11 +1310,13 @@ pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, se
     }
 }
 
-pub(crate) fn dag_edge_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_edge_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
         vello_color_with_alpha(theme.edge_stroke_disabled, 120)
     } else if selected {
         theme.edge_stroke_selected
+    } else if highlighted {
+        theme.edge_stroke_selection_exit
     } else if hovered {
         theme.edge_stroke_hovered
     } else {
@@ -1312,12 +1324,12 @@ pub(crate) fn dag_edge_body_stroke(theme: &VelloThemePalette, dimmed: bool, sele
     }
 }
 
-fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, hovered: bool) -> f64 {
+fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> f64 {
     if dimmed {
         1.0
     } else if selected {
         DAG_NODE_STROKE_SELECTED_SCREEN_PX
-    } else if hovered {
+    } else if highlighted || hovered {
         DAG_NODE_STROKE_HOVERED_SCREEN_PX
     } else {
         DAG_NODE_STROKE_SCREEN_PX
@@ -1330,14 +1342,15 @@ pub(crate) fn dag_node_paint_fill(
     theme: &VelloThemePalette,
     dimmed: bool,
     selected: bool,
+    highlighted: bool,
     hovered: bool,
 ) -> Option<cavas::vello::peniko::Color> {
     if lod == DagDrawLod::Minimap {
-        return Some(dag_node_body_stroke(theme, dimmed, selected, hovered));
+        return Some(dag_node_body_stroke(theme, dimmed, selected, highlighted, hovered));
     }
-    let chrome = dimmed || selected || hovered;
+    let chrome = dimmed || selected || highlighted || hovered;
     if chrome {
-        Some(dag_node_body_fill(theme, dimmed, selected, hovered))
+        Some(dag_node_body_fill(theme, dimmed, selected, highlighted, hovered))
     } else {
         None
     }
@@ -1664,31 +1677,45 @@ impl DagHost {
             || !self.engine.preselect.edge_ids.is_empty()
     }
 
-    fn node_interaction_chrome(&self, node_id: NodeId) -> (bool, bool) {
+    fn node_interaction_chrome(&self, node_id: NodeId) -> (bool, bool, bool) {
         if self.is_preselect_active() {
-            return (self.is_node_preselected(node_id), self.is_node_preselect_removed(node_id));
+            return (
+                self.is_node_preselected(node_id),
+                self.is_node_preselect_removed(node_id),
+                false,
+            );
         }
-        (self.is_node_selected(node_id), self.is_node_hovered(node_id))
+        (self.is_node_selected(node_id), false, self.is_node_hovered(node_id))
     }
 
-    fn handle_interaction_chrome(&self, handle_id: HandleId) -> (bool, bool) {
+    fn handle_interaction_chrome(&self, handle_id: HandleId) -> (bool, bool, bool) {
         if self.is_preselect_active() {
             return (
                 self.engine.preselect.handle_ids.contains(&handle_id),
                 self.engine.preselect_removed.handle_ids.contains(&handle_id),
+                false,
             );
         }
-        (self.engine.selection.handle_ids.contains(&handle_id), self.engine.hover == Some(handle_id))
+        (
+            self.engine.selection.handle_ids.contains(&handle_id),
+            false,
+            self.engine.hover == Some(handle_id),
+        )
     }
 
-    fn edge_interaction_chrome(&self, edge_id: EdgeId) -> (bool, bool) {
+    fn edge_interaction_chrome(&self, edge_id: EdgeId) -> (bool, bool, bool) {
         if self.is_preselect_active() {
             return (
                 self.engine.preselect.edge_ids.contains(&edge_id),
                 self.engine.preselect_removed.edge_ids.contains(&edge_id),
+                false,
             );
         }
-        (self.engine.selection.edge_ids.contains(&edge_id), self.engine.hover == Some(edge_id))
+        (
+            self.engine.selection.edge_ids.contains(&edge_id),
+            false,
+            self.engine.hover == Some(edge_id),
+        )
     }
 
     fn sync_camera_from_engine(&mut self) {
@@ -1771,6 +1798,167 @@ impl DagHost {
     pub fn cancel_area_select(&mut self) -> bool {
         self.engine.cancel_area_select()
     }
+
+    // #region 🔖SelectionAlign
+    fn dag_node_world_bounds(node: &DagNodeSpec) -> WorldBox {
+        let hw = node.width * 0.5;
+        let hh = node.height * 0.5;
+        WorldBox {
+            min_x: node.x - hw,
+            min_y: node.y - hh,
+            max_x: node.x + hw,
+            max_y: node.y + hh,
+        }
+    }
+
+    fn selected_fixture_nodes(&self) -> Vec<(usize, DagNodeSpec)> {
+        let ids = self.selected_node_ids();
+        ids.into_iter()
+            .filter_map(|id| {
+                self.fixture
+                    .nodes
+                    .iter()
+                    .enumerate()
+                    .find(|(_, node)| node.id == id)
+                    .map(|(idx, node)| (idx, node.clone()))
+            })
+            .collect()
+    }
+
+    fn sync_fixture_node_center_to_engine(&mut self, idx: usize) {
+        let node = &self.fixture.nodes[idx];
+        let Some(nid) = self.node_id_for_widget_id(&node.id) else {
+            return;
+        };
+        if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
+            engine_node.center.x = node.x;
+            engine_node.center.y = node.y;
+        }
+    }
+
+    /// 📦 Screen-space union bounds of the current node selection for DOM chrome overlays.
+    pub fn selection_union_bounds_screen_json(&self) -> String {
+        let selected = self.selected_fixture_nodes();
+        if selected.is_empty() {
+            return "null".into();
+        }
+        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
+        use cavas::vello::kurbo::Point;
+        let pad_world = 4.0 / self.fixture.camera.zoom.max(0.05);
+        let mut corners = Vec::new();
+        for (_, node) in &selected {
+            let hw = node.width * 0.5 + pad_world;
+            let hh = node.height * 0.5 + pad_world;
+            corners.push(Point::new(node.x - hw, node.y - hh));
+            corners.push(Point::new(node.x + hw, node.y + hh));
+        }
+        let Some(bounds) = world_box_from_points(&corners) else {
+            return "null".into();
+        };
+        let cam = CavasCamera {
+            x: self.fixture.camera.x,
+            y: self.fixture.camera.y,
+            zoom: self.fixture.camera.zoom,
+        };
+        let viewport = Viewport {
+            width: self.width.max(1),
+            height: self.height.max(1),
+            dpr: self.dpr.max(1.0),
+        };
+        let tl = world_to_screen(&cam, &viewport, Point::new(bounds.min_x, bounds.min_y));
+        let br = world_to_screen(&cam, &viewport, Point::new(bounds.max_x, bounds.max_y));
+        serde_json::json!({
+            "x": tl.x,
+            "y": tl.y,
+            "width": (br.x - tl.x).max(1.0),
+            "height": (br.y - tl.y).max(1.0),
+        })
+        .to_string()
+    }
+
+    /// 📐 Aligns or distributes the current multi-node selection.
+    pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
+        let mut selected = self.selected_fixture_nodes();
+        if selected.is_empty() {
+            return Ok(());
+        }
+        match mode {
+            "alignLeft" => {
+                if selected.len() < 2 {
+                    return Ok(());
+                }
+                let min_left = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).min_x).fold(f64::INFINITY, f64::min);
+                for (_, node) in &mut selected {
+                    node.x = min_left + node.width * 0.5;
+                }
+            }
+            "alignRight" => {
+                if selected.len() < 2 {
+                    return Ok(());
+                }
+                let max_right = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_x).fold(f64::NEG_INFINITY, f64::max);
+                for (_, node) in &mut selected {
+                    node.x = max_right - node.width * 0.5;
+                }
+            }
+            "alignTop" => {
+                if selected.len() < 2 {
+                    return Ok(());
+                }
+                let min_top = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).min_y).fold(f64::INFINITY, f64::min);
+                for (_, node) in &mut selected {
+                    node.y = min_top + node.height * 0.5;
+                }
+            }
+            "alignBottom" => {
+                if selected.len() < 2 {
+                    return Ok(());
+                }
+                let max_bottom = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_y).fold(f64::NEG_INFINITY, f64::max);
+                for (_, node) in &mut selected {
+                    node.y = max_bottom - node.height * 0.5;
+                }
+            }
+            "distributeHorizontal" => {
+                if selected.len() < 3 {
+                    return Ok(());
+                }
+                selected.sort_by(|a, b| a.1.x.partial_cmp(&b.1.x).unwrap_or(std::cmp::Ordering::Equal));
+                let left = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).min_x).fold(f64::INFINITY, f64::min);
+                let right = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_x).fold(f64::NEG_INFINITY, f64::max);
+                let total_width: f64 = selected.iter().map(|(_, node)| node.width).sum();
+                let gap = (right - left - total_width) / (selected.len() as f64 - 1.0);
+                let mut cursor = left;
+                for (_, node) in &mut selected {
+                    node.x = cursor + node.width * 0.5;
+                    cursor += node.width + gap;
+                }
+            }
+            "distributeVertical" => {
+                if selected.len() < 3 {
+                    return Ok(());
+                }
+                selected.sort_by(|a, b| a.1.y.partial_cmp(&b.1.y).unwrap_or(std::cmp::Ordering::Equal));
+                let top = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).min_y).fold(f64::INFINITY, f64::min);
+                let bottom = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_y).fold(f64::NEG_INFINITY, f64::max);
+                let total_height: f64 = selected.iter().map(|(_, node)| node.height).sum();
+                let gap = (bottom - top - total_height) / (selected.len() as f64 - 1.0);
+                let mut cursor = top;
+                for (_, node) in &mut selected {
+                    node.y = cursor + node.height * 0.5;
+                    cursor += node.height + gap;
+                }
+            }
+            other => return Err(format!("unknown align mode: {other}")),
+        }
+        for (idx, node) in selected {
+            self.fixture.nodes[idx].x = node.x;
+            self.fixture.nodes[idx].y = node.y;
+            self.sync_fixture_node_center_to_engine(idx);
+        }
+        Ok(())
+    }
+    // #endregion 🔖SelectionAlign
 
     /// 📍 Sets a fixture widget position in both the fixture and engine snapshots.
     pub fn set_widget_position(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), String> {
@@ -2857,6 +3045,13 @@ impl DagHost {
         lod.shows_port_labels()
     }
 
+    fn should_paint_node_lod_icon(node: &DagNodeSpec, lod: DagDrawLod) -> bool {
+        if !lod.node_icon_visible() {
+            return false;
+        }
+        !matches!(node.kind, DagNodeKind::Computation { .. } if lod.shows_computation_layout())
+    }
+
     fn paint_node_lod_icon(
         &self,
         scene: &mut cavas::vello::Scene,
@@ -2867,7 +3062,7 @@ impl DagHost {
         fg: cavas::vello::peniko::Color,
         bg: cavas::vello::peniko::Color,
     ) {
-        if !lod.node_icon_visible() {
+        if !Self::should_paint_node_lod_icon(node, lod) {
             return;
         }
         let icon = node.icon.trim();
@@ -2967,7 +3162,7 @@ impl DagHost {
         let aff = camera_content_affine(&cam, &viewport);
         let ghost_stroke = theme.node_stroke_hovered;
         let ghost_fill = vello_color_with_alpha(theme.node_fill_hovered, 128);
-        let label_fill = dag_node_label_fill(theme, false, false, true);
+        let label_fill = dag_node_label_fill(theme, false, false, false, true);
         let label_halo = theme.label_halo;
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
@@ -3028,23 +3223,23 @@ impl DagHost {
         let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
         for (&eid, _edge) in &self.engine.edges {
             if let Some(curve) = self.engine.edge_curve(eid) {
-                let (is_selected, is_hovered) = self.edge_interaction_chrome(eid);
-                let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_hovered);
+                let (is_selected, is_highlighted, is_hovered) = self.edge_interaction_chrome(eid);
+                let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_highlighted, is_hovered);
                 scene.stroke(&Stroke::new(edge_stroke), aff, stroke_c, None, &curve);
             }
         }
         if let Some(preview) = snap.pending_edge {
-            scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false), None, &preview);
+            scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false, false), None, &preview);
         }
         if lod.shows_handles() {
             let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
             for (hid, center, _radius) in &snap.handles {
                 let node_id = self.engine.handles.get(hid).map(|handle| handle.node_id);
                 let is_dimmed = node_id.is_some_and(|nid| self.dimmed.contains(&nid));
-                let (is_selected, is_hovered) = self.handle_interaction_chrome(*hid);
-                let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_hovered);
-                let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_hovered);
-                let chrome = is_dimmed || is_selected || is_hovered;
+                let (is_selected, is_highlighted, is_hovered) = self.handle_interaction_chrome(*hid);
+                let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+                let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+                let chrome = is_dimmed || is_selected || is_highlighted || is_hovered;
                 let outward = node_id.and_then(|nid| {
                     self.engine.nodes.get(&nid).and_then(|node| {
                         handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)
@@ -3079,10 +3274,10 @@ impl DagHost {
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let (is_selected, is_hovered) = engine_nid
+            let (is_selected, is_highlighted, is_hovered) = engine_nid
                 .map(|nid| self.node_interaction_chrome(nid))
-                .unwrap_or((false, false));
-            if let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_hovered) {
+                .unwrap_or((false, false, false));
+            if let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered) {
                 scene.fill(Fill::NonZero, aff, fill, None, &rect);
             }
         };
@@ -3090,8 +3285,8 @@ impl DagHost {
             for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
                 let engine_nid = self.engine_node_id_for_index(idx);
                 let chrome = engine_nid.is_some_and(|nid| {
-                    let (selected, hovered) = self.node_interaction_chrome(nid);
-                    selected || hovered
+                    let (selected, highlighted, hovered) = self.node_interaction_chrome(nid);
+                    selected || highlighted || hovered
                 });
                 if !chrome {
                     paint_minimap_node(scene, idx, fixture_node);
@@ -3100,8 +3295,8 @@ impl DagHost {
             for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
                 let engine_nid = self.engine_node_id_for_index(idx);
                 let chrome = engine_nid.is_some_and(|nid| {
-                    let (selected, hovered) = self.node_interaction_chrome(nid);
-                    selected || hovered
+                    let (selected, highlighted, hovered) = self.node_interaction_chrome(nid);
+                    selected || highlighted || hovered
                 });
                 if chrome {
                     paint_minimap_node(scene, idx, fixture_node);
@@ -3117,14 +3312,14 @@ impl DagHost {
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let (is_selected, is_hovered) = engine_nid
+            let (is_selected, is_highlighted, is_hovered) = engine_nid
                 .map(|nid| self.node_interaction_chrome(nid))
-                .unwrap_or((false, false));
-            let fill = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_hovered);
-            let stroke = dag_node_body_stroke(theme, is_dimmed, is_selected, is_hovered);
-            let label_fill = dag_node_label_fill(theme, is_dimmed, is_selected, is_hovered);
-            let internal_chrome_stroke = dag_node_internal_chrome_stroke(stroke, label_fill, is_hovered || is_selected);
-            let stroke_screen_px = dag_node_stroke_screen_px(is_dimmed, is_selected, is_hovered);
+                .unwrap_or((false, false, false));
+            let fill = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+            let stroke = dag_node_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+            let label_fill = dag_node_label_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+            let internal_chrome_stroke = dag_node_internal_chrome_stroke(stroke, label_fill, is_hovered || is_selected || is_highlighted);
+            let stroke_screen_px = dag_node_stroke_screen_px(is_dimmed, is_selected, is_highlighted, is_hovered);
             if let Some(fill) = fill {
                 scene.fill(Fill::NonZero, aff, fill, None, &rect);
             }
@@ -4112,6 +4307,36 @@ mod tests {
     }
 
     #[test]
+    fn dag_host_align_selection_left_and_distribute_horizontal() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        host.set_selection(&["scale".into(), "combine".into(), "preview".into()]);
+        host.align_selection("alignLeft").unwrap();
+        let left_edges: Vec<f64> = host
+            .selected_fixture_nodes()
+            .into_iter()
+            .map(|(_, node)| node.x - node.width * 0.5)
+            .collect();
+        assert!(left_edges.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
+        host.align_selection("distributeHorizontal").unwrap();
+        let mut xs: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.x).collect();
+        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert!(xs.windows(2).all(|pair| pair[1] > pair[0]));
+    }
+
+    #[test]
+    fn dag_host_selection_union_bounds_screen_json_nonempty_for_selection() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        host.set_selection(&["scale".into(), "combine".into()]);
+        let json = host.selection_union_bounds_screen_json();
+        assert_ne!(json, "null");
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(parsed["width"].as_f64().unwrap_or(0.0) > 1.0);
+        assert!(parsed["height"].as_f64().unwrap_or(0.0) > 1.0);
+    }
+
+    #[test]
     fn dag_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
@@ -4321,7 +4546,7 @@ mod tests {
         ];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
         let width = computation_node_width("Box", &inputs, &outputs);
-        assert!(width > 78.0 && width < 90.0, "two IO columns should fit port labels, got {width}");
+        assert!(width > 70.0 && width < 82.0, "two IO columns should fit port labels, got {width}");
     }
 
     #[test]
@@ -4335,8 +4560,8 @@ mod tests {
         let outputs_long = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
         let short = computation_node_width("n", &inputs_short, &outputs_short);
         let long = computation_node_width("n", &inputs_long, &outputs_long);
-        assert!(short >= 58.0, "IO columns should not collapse below minimum, got {short}");
-        assert!(long <= 88.0, "long port labels should cap column width, got {long}");
+        assert!(short >= 50.0, "IO columns should not collapse below minimum, got {short}");
+        assert!(long <= 78.0, "long port labels should cap column width, got {long}");
         assert!(long >= short, "longer labels should not shrink columns");
     }
 
@@ -4518,7 +4743,7 @@ mod tests {
         let height = computation_node_height(3, 1, false, false);
         assert!(height <= 42.0, "expected compact height, got {height}");
         assert!(height < 96.0, "expected shorter than legacy 4-row layout");
-        assert!(width > 78.0 && width < 90.0, "expected balanced IO column width, got {width}");
+        assert!(width > 70.0 && width < 82.0, "expected balanced IO column width, got {width}");
     }
 
     #[test]
@@ -4667,62 +4892,78 @@ mod tests {
             node_stroke_hovered: Color::from_rgba8(90, 100, 110, 255),
             node_fill_selected: Color::from_rgba8(70, 80, 90, 255),
             node_stroke_selected: Color::from_rgba8(120, 130, 140, 255),
+            node_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
+            node_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
             ..VelloThemePalette::default()
         };
         assert_eq!(
-            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, false)
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, false, false)
                 .expect("minimap neutral")
                 .to_rgba8(),
             theme.node_stroke.to_rgba8()
         );
-        assert!(dag_node_paint_fill(DagDrawLod::Overview, &theme, false, false, false).is_none());
-        assert!(dag_node_paint_fill(DagDrawLod::Normal, &theme, false, false, false).is_none());
+        assert!(dag_node_paint_fill(DagDrawLod::Overview, &theme, false, false, false, false).is_none());
+        assert!(dag_node_paint_fill(DagDrawLod::Normal, &theme, false, false, false, false).is_none());
         assert_eq!(
-            dag_node_paint_fill(DagDrawLod::Normal, &theme, false, true, false)
+            dag_node_paint_fill(DagDrawLod::Normal, &theme, false, true, false, false)
                 .expect("selected")
                 .to_rgba8(),
             theme.node_fill_selected.to_rgba8()
         );
         assert_eq!(
-            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, true)
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, false, true)
                 .expect("minimap hovered")
                 .to_rgba8(),
             theme.node_stroke_hovered.to_rgba8()
         );
         assert_eq!(
-            dag_node_body_stroke(&theme, false, true, true).to_rgba8(),
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, true, false)
+                .expect("minimap highlighted")
+                .to_rgba8(),
+            theme.node_stroke_selection_exit.to_rgba8()
+        );
+        assert_eq!(
+            dag_node_body_stroke(&theme, false, true, false, true).to_rgba8(),
             theme.node_stroke_selected.to_rgba8()
         );
         assert_eq!(
-            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, true, true)
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, true, false, true)
                 .expect("minimap selected")
                 .to_rgba8(),
             theme.node_stroke_selected.to_rgba8()
         );
         assert_ne!(
-            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, true)
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, false, true)
                 .expect("minimap hovered")
                 .to_rgba8(),
             theme.node_fill_hovered.to_rgba8()
         );
         assert_eq!(
-            dag_node_body_stroke(&theme, false, false, true).to_rgba8(),
+            dag_node_body_stroke(&theme, false, false, false, true).to_rgba8(),
             theme.node_stroke_hovered.to_rgba8()
         );
         assert_eq!(
-            dag_node_label_fill(&theme, false, false, true).to_rgba8(),
+            dag_node_body_stroke(&theme, false, false, true, false).to_rgba8(),
+            theme.node_stroke_selection_exit.to_rgba8()
+        );
+        assert_eq!(
+            dag_node_label_fill(&theme, false, false, false, true).to_rgba8(),
             theme.label_fill_hovered.to_rgba8()
         );
         assert_eq!(
-            dag_node_label_fill(&theme, false, false, false).to_rgba8(),
+            dag_node_label_fill(&theme, false, false, true, false).to_rgba8(),
+            theme.node_stroke_selection_exit.to_rgba8()
+        );
+        assert_eq!(
+            dag_node_label_fill(&theme, false, false, false, false).to_rgba8(),
             theme.label_fill.to_rgba8()
         );
         assert_eq!(
-            dag_node_label_fill(&theme, false, true, false).to_rgba8(),
+            dag_node_label_fill(&theme, false, true, false, false).to_rgba8(),
             theme.label_fill_hovered.to_rgba8()
         );
-        let body = dag_node_body_stroke(&theme, false, false, false);
-        let label = dag_node_label_fill(&theme, false, false, true);
+        let body = dag_node_body_stroke(&theme, false, false, false, false);
+        let label = dag_node_label_fill(&theme, false, false, false, true);
         assert_eq!(
             dag_node_internal_chrome_stroke(body, label, true).to_rgba8(),
             label.to_rgba8()
@@ -4731,8 +4972,8 @@ mod tests {
             dag_node_internal_chrome_stroke(body, label, false).to_rgba8(),
             body.to_rgba8()
         );
-        let body_selected = dag_node_body_stroke(&theme, false, true, false);
-        let label_selected = dag_node_label_fill(&theme, false, true, false);
+        let body_selected = dag_node_body_stroke(&theme, false, true, false, false);
+        let label_selected = dag_node_label_fill(&theme, false, true, false, false);
         assert_eq!(
             dag_node_internal_chrome_stroke(body_selected, label_selected, true).to_rgba8(),
             label_selected.to_rgba8()
@@ -4755,8 +4996,8 @@ mod tests {
             handle_stroke_selected: Color::from_rgba8(50, 60, 70, 255),
             ..VelloThemePalette::default()
         };
-        assert_eq!(dag_edge_body_stroke(&theme, false, false, false).to_rgba8(), theme.edge_stroke.to_rgba8());
-        assert_eq!(dag_handle_body_stroke(&theme, false, false, false).to_rgba8(), theme.handle_stroke.to_rgba8());
+        assert_eq!(dag_edge_body_stroke(&theme, false, false, false, false).to_rgba8(), theme.edge_stroke.to_rgba8());
+        assert_eq!(dag_handle_body_stroke(&theme, false, false, false, false).to_rgba8(), theme.handle_stroke.to_rgba8());
     }
 
     #[test]
@@ -4887,6 +5128,23 @@ mod tests {
         assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Abbreviation);
         assert!(!DagDrawLod::Micro.node_icon_visible());
         assert_eq!(DagDrawLod::Micro.node_label(), DagNodeLabel::Name);
+        let computation = DagNodeSpec::computation(
+            "add".into(),
+            "Add".into(),
+            "Add".into(),
+            "emoji:➕".into(),
+            vec![IoPortSpec { id: "a".into(), label: "a".into() }],
+            vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+            false,
+            false,
+            0.0,
+            0.0,
+            120.0,
+            56.0,
+        );
+        assert!(DagHost::should_paint_node_lod_icon(&computation, DagDrawLod::Overview));
+        assert!(!DagHost::should_paint_node_lod_icon(&computation, DagDrawLod::Detail));
+        assert!(!DagHost::should_paint_node_lod_icon(&computation, DagDrawLod::Micro));
     }
 
     #[test]

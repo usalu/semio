@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ContextMenuController, SelectionMarquee, type ContextMenuItem, type SelectionMarqueeCoverage } from "@ui/react";
+import { ContextMenuController, Icon, SelectionMarquee, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@ui/react";
 import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@ui/styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
@@ -1112,7 +1112,7 @@ function flowOverlayLabelFill(
     return resolveSemanticColorHex("border-emphasized-color", "dark");
   }
   if (chrome.highlightedIds.has(nodeId)) {
-    return resolveSemanticColorHex("border-emphasized-color", "dark");
+    return resolveColorHex(tokenVar("secondary"), "secondary");
   }
   if (hoveredId === nodeId) {
     return resolveSemanticColorHex("border-emphasized-color", "dark");
@@ -1181,6 +1181,160 @@ function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement,
   }
 }
 // #endregion 🔖TextOverlay
+
+// #region 🔖SelectionBounds
+export type FlowSelectionAlignMode = "alignLeft" | "alignRight" | "alignTop" | "alignBottom" | "distributeHorizontal" | "distributeVertical";
+
+export interface FlowSelectionUnionBoundsScreen {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** @emoji 📦 Parses screen-space selection union bounds from the flow session. */
+export function parseFlowSelectionUnionBoundsScreen(json: string): FlowSelectionUnionBoundsScreen | null {
+  if (json.trim() === "null") return null;
+  try {
+    const parsed = JSON.parse(json) as { x?: unknown; y?: unknown; width?: unknown; height?: unknown };
+    const x = Number(parsed.x);
+    const y = Number(parsed.y);
+    const width = Number(parsed.width);
+    const height = Number(parsed.height);
+    if (![x, y, width, height].every(Number.isFinite)) return null;
+    if (width <= 0 || height <= 0) return null;
+    return { x, y, width, height };
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 📏 Compares selection union bounds for overlay state updates. */
+export function flowSelectionUnionBoundsEqual(
+  left: FlowSelectionUnionBoundsScreen | null,
+  right: FlowSelectionUnionBoundsScreen | null,
+): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return left.x === right.x && left.y === right.y && left.width === right.width && left.height === right.height;
+}
+
+const FLOW_SELECTION_ALIGN_BUTTON_PX = 24;
+const FLOW_SELECTION_ALIGN_BUTTON_GAP_PX = 2;
+const FLOW_SELECTION_ALIGN_EDGE_INSET_PX = 4;
+
+/** @emoji 🎯 Screen-space hit regions for selection align controls (container-relative coords). */
+export function flowSelectionAlignHitRegions(
+  rect: FlowSelectionUnionBoundsScreen,
+  selectionCount: number,
+): readonly { readonly mode: FlowSelectionAlignMode; readonly rect: ScreenRect }[] {
+  const btn = FLOW_SELECTION_ALIGN_BUTTON_PX;
+  const gap = FLOW_SELECTION_ALIGN_BUTTON_GAP_PX;
+  const inset = FLOW_SELECTION_ALIGN_EDGE_INSET_PX;
+  const regions: { mode: FlowSelectionAlignMode; rect: ScreenRect }[] = [];
+  if (selectionCount >= 2) {
+    const topY = rect.y + inset;
+    const topRowW = btn * 3 + gap * 2;
+    const topStartX = rect.x + rect.width / 2 - topRowW / 2;
+    regions.push({ mode: "alignLeft", rect: { x: topStartX, y: topY, width: btn, height: btn } });
+    regions.push({ mode: "distributeVertical", rect: { x: topStartX + btn + gap, y: topY, width: btn, height: btn } });
+    regions.push({ mode: "alignRight", rect: { x: topStartX + (btn + gap) * 2, y: topY, width: btn, height: btn } });
+    const rightX = rect.x + rect.width - inset - btn;
+    const rightColH = btn * 3 + gap * 2;
+    const rightStartY = rect.y + rect.height / 2 - rightColH / 2;
+    regions.push({ mode: "alignTop", rect: { x: rightX, y: rightStartY, width: btn, height: btn } });
+    regions.push({ mode: "distributeHorizontal", rect: { x: rightX, y: rightStartY + btn + gap, width: btn, height: btn } });
+    regions.push({ mode: "alignBottom", rect: { x: rightX, y: rightStartY + (btn + gap) * 2, width: btn, height: btn } });
+  }
+  return regions;
+}
+
+/** @emoji 🖱️ True when a container-local point hits a selection align control. */
+export function flowPointerHitsSelectionAlign(
+  localX: number,
+  localY: number,
+  rect: FlowSelectionUnionBoundsScreen,
+  selectionCount: number,
+): FlowSelectionAlignMode | null {
+  for (const region of flowSelectionAlignHitRegions(rect, selectionCount)) {
+    const { x, y, width, height } = region.rect;
+    if (localX >= x && localX <= x + width && localY >= y && localY <= y + height) {
+      if ((region.mode === "distributeVertical" || region.mode === "distributeHorizontal") && selectionCount < 3) {
+        continue;
+      }
+      return region.mode;
+    }
+  }
+  return null;
+}
+
+interface FlowSelectionBoundsOverlayProps {
+  readonly rect: FlowSelectionUnionBoundsScreen;
+  readonly selectionCount: number;
+  readonly onAlign: (mode: FlowSelectionAlignMode) => void;
+}
+
+function FlowSelectionBoundsButton({
+  icon,
+  label,
+  disabled,
+  onPress,
+}: {
+  readonly icon: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+  readonly onPress: () => void;
+}): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      className="pointer-events-auto flex h-6 w-6 items-center justify-center rounded border border-accent/40 bg-canvas text-foreground shadow-sm hover:bg-accent/10 disabled:pointer-events-none disabled:opacity-40"
+      onPointerDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (disabled) return;
+        onPress();
+      }}
+    >
+      <Icon icon={icon} size="tiny" />
+    </button>
+  );
+}
+
+/** @emoji 📐 Selection union bounding rectangle with edge alignment controls. */
+function FlowSelectionBoundsOverlay({ rect, selectionCount, onAlign }: FlowSelectionBoundsOverlayProps): React.JSX.Element {
+  const showAlignControls = selectionCount >= 2;
+  const distribute = selectionCount >= 3;
+  const regions = showAlignControls ? flowSelectionAlignHitRegions(rect, selectionCount) : [];
+  const topRow = regions.slice(0, 3);
+  const rightCol = regions.slice(3);
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-visible" aria-hidden data-testid="flow-selection-bounds">
+      <div
+        className="pointer-events-none absolute border border-emphasized"
+        style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
+      />
+      {showAlignControls ? (
+        <>
+          <div className="pointer-events-none absolute flex gap-0.5" style={{ left: topRow[0]?.rect.x, top: topRow[0]?.rect.y }}>
+            <FlowSelectionBoundsButton icon="arrow-left" label="Align left" onPress={() => onAlign("alignLeft")} />
+            <FlowSelectionBoundsButton icon="grip-vertical" label="Distribute vertically" disabled={!distribute} onPress={() => onAlign("distributeVertical")} />
+            <FlowSelectionBoundsButton icon="arrow-right" label="Align right" onPress={() => onAlign("alignRight")} />
+          </div>
+          <div className="pointer-events-none absolute flex flex-col gap-0.5" style={{ left: rightCol[0]?.rect.x, top: rightCol[0]?.rect.y }}>
+            <FlowSelectionBoundsButton icon="arrow-up" label="Align top" onPress={() => onAlign("alignTop")} />
+            <FlowSelectionBoundsButton icon="more-horizontal" label="Distribute horizontally" disabled={!distribute} onPress={() => onAlign("distributeHorizontal")} />
+            <FlowSelectionBoundsButton icon="arrow-down" label="Align bottom" onPress={() => onAlign("alignBottom")} />
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+// #endregion 🔖SelectionBounds
 
 // #region 🔖FlowCanvas
 export type FlowSelectionMode = "default" | "additive" | "subtractive" | "invertive";
@@ -1345,6 +1499,11 @@ export function FlowCanvas({
     readonly rect?: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
     readonly points?: readonly { readonly x: number; readonly y: number }[];
   } | null>(null);
+  const [selectionBounds, setSelectionBounds] = useState<FlowSelectionUnionBoundsScreen | null>(null);
+  const [selectionBoundsCount, setSelectionBoundsCount] = useState(0);
+  const selectionBoundsRef = useRef<FlowSelectionUnionBoundsScreen | null>(null);
+  const selectionBoundsCountRef = useRef(0);
+  const alignSelectionRef = useRef<(mode: FlowSelectionAlignMode) => void>(() => {});
 
   const syncVelloTheme = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -1467,6 +1626,28 @@ export function FlowCanvas({
     setMarqueeOverlay({ coverage, shape: "rect", rect: { x: minX, y: minY, width: maxX - minX, height: maxY - minY } });
   }, [selectionMethod]);
 
+  const syncSelectionBoundsOverlay = useCallback((session: FlowSession) => {
+    const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
+    if (!selected.length) {
+      selectionBoundsRef.current = null;
+      selectionBoundsCountRef.current = 0;
+      setSelectionBounds((prev) => (prev === null ? prev : null));
+      setSelectionBoundsCount((prev) => (prev === 0 ? prev : 0));
+      return;
+    }
+    const count = selected.length;
+    selectionBoundsCountRef.current = count;
+    setSelectionBoundsCount((prev) => (prev === count ? prev : count));
+    try {
+      const next = parseFlowSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson());
+      selectionBoundsRef.current = next;
+      setSelectionBounds((prev) => (flowSelectionUnionBoundsEqual(prev, next) ? prev : next));
+    } catch {
+      selectionBoundsRef.current = null;
+      setSelectionBounds((prev) => (prev === null ? prev : null));
+    }
+  }, []);
+
   const emitInteractionState = useCallback((session: FlowSession) => {
     const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
     const hovered = session.hoveredWidgetId() ?? null;
@@ -1477,8 +1658,9 @@ export function FlowCanvas({
     onHoverChangeRef.current?.(hovered);
     onPreviewOffChangeRef.current?.(previewOff);
     syncMarqueeOverlay(session);
+    syncSelectionBoundsOverlay(session);
     console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] preselect=[${preselect.ids.join(", ")}] hover=${hovered ?? "—"} previewOff=[${previewOff.join(", ")}]`);
-  }, [syncMarqueeOverlay]);
+  }, [syncMarqueeOverlay, syncSelectionBoundsOverlay]);
 
   const persistFixture = useCallback(() => {
     const session = sessionRef.current;
@@ -1503,11 +1685,14 @@ export function FlowCanvas({
         const { width, height, dpr } = viewportRef.current;
         paintFlowLabelOverlays(session, overlay, width, height, dpr);
       }
+      if (session) {
+        syncSelectionBoundsOverlay(session);
+      }
       reportDrawLod();
     } catch {
       /* gpu not ready */
     }
-  }, [reportDrawLod, syncLodMode, syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncSelectionBoundsOverlay, syncVelloTheme]);
 
   useEffect(() => {
     lastAutomaticLodRef.current = null;
@@ -1523,6 +1708,43 @@ export function FlowCanvas({
     onPreviewTextRef.current?.(text);
     onEvalOutputsRef.current?.(outputsJson);
     console.log(`[DEBUG] flow evaluate preview: ${text}`);
+  }, []);
+
+  const alignSelection = useCallback(
+    (mode: FlowSelectionAlignMode) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      try {
+        session.alignSelection(mode);
+        emitInteractionState(session);
+        evaluate();
+        persistFixture();
+        renderFrame();
+        console.log(`[DEBUG] flow align selection mode=${mode}`);
+      } catch (err) {
+        console.log(`[DEBUG] flow align selection failed: ${String(err)}`);
+      }
+    },
+    [emitInteractionState, evaluate, persistFixture, renderFrame],
+  );
+
+  useEffect(() => {
+    alignSelectionRef.current = alignSelection;
+  }, [alignSelection]);
+
+  const onContainerPointerDownCapture = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    const rect = selectionBoundsRef.current;
+    const count = selectionBoundsCountRef.current;
+    if (!rect || count < 2) return;
+    const host = containerRef.current;
+    if (!host) return;
+    const bounds = host.getBoundingClientRect();
+    const mode = flowPointerHitsSelectionAlign(event.clientX - bounds.left, event.clientY - bounds.top, rect, count);
+    if (!mode) return;
+    event.preventDefault();
+    event.stopPropagation();
+    alignSelectionRef.current(mode);
   }, []);
 
   useEffect(() => {
@@ -1634,7 +1856,28 @@ export function FlowCanvas({
       const session = sessionRef.current;
       if (!session) return;
       const mod = event.metaKey || event.ctrlKey;
-      if (mod && event.key.toLowerCase() === "a") {
+      const key = event.key.toLowerCase();
+      if (mod && key === "z" && !event.shiftKey) {
+        if (session.undo()) {
+          event.preventDefault();
+          emitInteractionState(session);
+          evaluate();
+          persistFixture();
+          renderFrame();
+        }
+        return;
+      }
+      if ((mod && key === "y") || (mod && event.shiftKey && key === "z")) {
+        if (session.redo()) {
+          event.preventDefault();
+          emitInteractionState(session);
+          evaluate();
+          persistFixture();
+          renderFrame();
+        }
+        return;
+      }
+      if (mod && key === "a") {
         event.preventDefault();
         session.selectAll();
         emitInteractionState(session);
@@ -2127,6 +2370,7 @@ export function FlowCanvas({
       ref={containerRef}
       tabIndex={0}
       className={className ?? `relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none${fixtureDragActive ? " ring-2 ring-inset ring-accent" : ""}`}
+      onPointerDownCapture={onContainerPointerDownCapture}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
       onDragOver={onDragOver}
@@ -2134,7 +2378,7 @@ export function FlowCanvas({
     >
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 block h-full w-full touch-none"
+        className="absolute inset-0 z-0 block h-full w-full touch-none"
         aria-hidden
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -2167,6 +2411,9 @@ export function FlowCanvas({
         open={surfaceContextMenu !== null}
         position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
       />
+      {selectionBounds ? (
+        <FlowSelectionBoundsOverlay rect={selectionBounds} selectionCount={selectionBoundsCount} onAlign={alignSelection} />
+      ) : null}
       {marqueeOverlay?.shape === "rect" && marqueeOverlay.rect ? (
         <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
       ) : null}
@@ -2198,16 +2445,19 @@ if (import.meta.vitest) {
       expect(screen).toEqual({ x: 400, y: 300 });
     });
 
-    it("flowOverlayLabelFill uses element default, emphasized when selected or hovered", () => {
+    it("flowOverlayLabelFill uses element default, emphasized when selected or hovered, secondary when highlighted", () => {
       const element = resolveSemanticColorHex("border-element-color", "gray");
       const emphasized = resolveSemanticColorHex("border-emphasized-color", "dark");
+      const secondary = resolveColorHex(tokenVar("secondary"), "secondary");
       const idle = flowElementInteractionChrome([], { ids: [], removedIds: [] });
       const selected = flowElementInteractionChrome(["node-a"], { ids: [], removedIds: [] });
-      const preview = flowElementInteractionChrome([], { ids: ["node-a"], removedIds: [] });
+      const previewSelected = flowElementInteractionChrome([], { ids: ["node-a"], removedIds: [] });
+      const previewHighlighted = flowElementInteractionChrome(["node-a"], { ids: [], removedIds: ["node-a"] });
       expect(flowOverlayLabelFill("node-a", null, idle, [])).toBe(element);
       expect(flowOverlayLabelFill("node-a", "node-a", idle, [])).toBe(emphasized);
       expect(flowOverlayLabelFill("node-a", null, selected, [])).toBe(emphasized);
-      expect(flowOverlayLabelFill("node-a", null, preview, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, previewSelected, [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, previewHighlighted, [])).toBe(secondary);
       expect(flowOverlayLabelFill("node-a", null, idle, ["node-a"])).toBe(element);
     });
   });
@@ -2411,6 +2661,86 @@ if (import.meta.vitest) {
         () => {},
       );
       expect(items.some((item) => item.id === "flow.ctx.replaceImage")).toBe(true);
+    });
+  });
+
+  describe("flow selection bounds", () => {
+    it("parses selection union bounds screen json", () => {
+      expect(parseFlowSelectionUnionBoundsScreen("null")).toBeNull();
+      expect(parseFlowSelectionUnionBoundsScreen(JSON.stringify({ x: 10, y: 20, width: 100, height: 50 }))).toEqual({
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      });
+      expect(parseFlowSelectionUnionBoundsScreen("{}")).toBeNull();
+    });
+
+    it("compares selection union bounds for stable overlay updates", () => {
+      const rect = { x: 1, y: 2, width: 3, height: 4 };
+      expect(flowSelectionUnionBoundsEqual(rect, { ...rect })).toBe(true);
+      expect(flowSelectionUnionBoundsEqual(rect, { ...rect, x: 2 })).toBe(false);
+      expect(flowSelectionUnionBoundsEqual(null, null)).toBe(true);
+    });
+
+    it("maps pointer hits to align modes inside the selection chrome", () => {
+      const rect = { x: 100, y: 80, width: 200, height: 120 };
+      const regions = flowSelectionAlignHitRegions(rect, 2);
+      expect(regions.length).toBe(6);
+      const left = regions[0]!.rect;
+      expect(flowPointerHitsSelectionAlign(left.x + 4, left.y + 4, rect, 2)).toBe("alignLeft");
+      expect(flowPointerHitsSelectionAlign(rect.x + rect.width / 2, rect.y + rect.height / 2, rect, 2)).toBeNull();
+    });
+
+    it("aligns selected widgets through FlowSession wasm", async () => {
+      await ensureFlowWasmLoaded();
+      const session = new FlowSession();
+      const fixture: FlowFixtureV1 = {
+        ...FLOW_DEFAULT_FIXTURE,
+        layout: {
+          slider: { x: -80, y: 10 },
+          add: { x: 160, y: -20 },
+          preview: { x: 320, y: 0 },
+        },
+      };
+      session.loadFixtureJson(flowFixtureToJson(fixture));
+      session.setSelection(JSON.stringify(["slider", "add"]));
+      session.alignSelection("alignTop");
+      const layout = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      expect(layout.slider?.y).toBe(layout.add?.y);
+      session.alignSelection("alignLeft");
+      const leftAligned = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      expect(leftAligned.add?.x).not.toBe(160);
+      expect(leftAligned.slider?.x).toBe(-80);
+    });
+
+    it("undoes and redoes align selection through FlowSession wasm", async () => {
+      await ensureFlowWasmLoaded();
+      const session = new FlowSession();
+      const fixture: FlowFixtureV1 = {
+        ...FLOW_DEFAULT_FIXTURE,
+        layout: {
+          slider: { x: -80, y: 10 },
+          add: { x: 160, y: -20 },
+          preview: { x: 320, y: 0 },
+        },
+      };
+      session.loadFixtureJson(flowFixtureToJson(fixture));
+      const before = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      session.setSelection(JSON.stringify(["slider", "add"]));
+      session.alignSelection("alignTop");
+      const aligned = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      expect(aligned.slider?.y).toBe(aligned.add?.y);
+      expect(session.canUndo()).toBe(true);
+      expect(session.undo()).toBe(true);
+      const undone = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      expect(undone.slider?.y).toBe(before.slider?.y);
+      expect(undone.add?.y).toBe(before.add?.y);
+      expect(session.canRedo()).toBe(true);
+      expect(session.redo()).toBe(true);
+      const redone = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      expect(redone.slider?.y).toBe(aligned.slider?.y);
+      expect(redone.add?.y).toBe(aligned.add?.y);
     });
   });
 

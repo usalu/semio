@@ -201,20 +201,30 @@ pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, t
     f64::atan2(-u.x, -u.y)
 }
 
-pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
-    let mut source_radial = normalize_or_zero(source_point - source_center);
+pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
+    let chord = normalize_or_zero(target_point - source_point);
+    let mut source_radial = normalize_or_zero(source_outward);
     if source_radial == Vec2::new(0.0, 0.0) {
-        source_radial = normalize_or_zero(target_point - source_point);
+        source_radial = chord;
     }
-    let mut target_radial = normalize_or_zero(target_point - target_center);
+    let mut target_radial = normalize_or_zero(target_outward);
     if target_radial == Vec2::new(0.0, 0.0) {
-        target_radial = normalize_or_zero(target_point - source_point);
+        target_radial = -chord;
     }
     let handle_distance = distance_between(source_point, target_point);
     let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
     let p1 = source_point + source_radial * control_length;
     let p2 = target_point + target_radial * control_length;
     CubicBez::new(source_point, p1, p2, target_point)
+}
+
+pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
+    compute_edge_bezier_outward(
+        source_point,
+        target_point,
+        source_point - source_center,
+        target_point - target_center,
+    )
 }
 
 pub fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
@@ -277,6 +287,31 @@ mod tests {
             assert!((bb.y0 - peak.y).abs() < 0.25, "north cap must peak at -y");
             assert!(bb.y1 < trough.y + 0.25, "north cap must not peak inward");
         }
+    }
+
+    #[test]
+    fn edge_bezier_free_target_end_tangent_matches_incoming_chord() {
+        let source = Point::new(0.0, 0.0);
+        let target = Point::new(200.0, 40.0);
+        let curve = compute_edge_bezier_points(source, target, Point::new(-50.0, 0.0), target);
+        let approach = normalize_or_zero(target - source);
+        let tangent = curve.eval(1.0) - curve.eval(0.995);
+        let tangent_dir = normalize_or_zero(Vec2::new(tangent.x, tangent.y));
+        assert!(tangent_dir.dot(approach) > 0.99, "free target tangent should match incoming chord");
+    }
+
+    #[test]
+    fn edge_bezier_rectangle_port_uses_outward_normal() {
+        let node_center = Point::new(100.0, 50.0);
+        let width = 120.0;
+        let height = 80.0;
+        let source = Point::new(node_center.x - width * 0.5, node_center.y - 20.0);
+        let target = Point::new(280.0, 50.0);
+        let outward = handle_outward_at_node_rim(source, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
+        let curve = compute_edge_bezier_outward(source, target, outward, -normalize_or_zero(target - source));
+        let leave = curve.eval(0.005) - curve.eval(0.0);
+        let leave_dir = normalize_or_zero(Vec2::new(leave.x, leave.y));
+        assert!(leave_dir.dot(outward) > 0.99, "anchored port should leave along rim outward");
     }
 
     #[test]

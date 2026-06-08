@@ -9312,6 +9312,49 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("lasso partial versus full enclosure follows the first horizontal step", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({
+        canvas,
+        renderMode: "headless-test",
+        selection: { method: "lasso", mode: "default", targets: { nodes: true, edges: false, handles: false } },
+      });
+      const inside = new Puzzle2dSceneNode({ id: "inside", radius: 10, x: 0, y: 0 });
+      const outside = new Puzzle2dSceneNode({ id: "outside", radius: 10, x: 120, y: 0 });
+      renderer.scene.add(inside).add(outside);
+      renderer.render();
+
+      const drawLasso = (points: Point[]): void => {
+        const [start, ...rest] = points.map((point) => renderer.worldToScreen(point));
+        canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: start.x, clientY: start.y }));
+        for (const point of rest) {
+          canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: point.x, clientY: point.y }));
+        }
+        const end = rest.at(-1) ?? start;
+        canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: end.x, clientY: end.y }));
+      };
+
+      drawLasso([
+        { x: -40, y: -40 },
+        { x: 40, y: -40 },
+        { x: 40, y: 40 },
+        { x: -40, y: 40 },
+        { x: -40, y: 0 },
+      ]);
+      expect(renderer.selection.getSnapshot().ids).toEqual(["inside"]);
+
+      drawLasso([
+        { x: 40, y: -40 },
+        { x: -40, y: -40 },
+        { x: -40, y: 40 },
+        { x: 40, y: 40 },
+        { x: 40, y: 0 },
+      ]);
+      expect(renderer.selection.getSnapshot().ids.sort()).toEqual(["inside", "outside"].sort());
+
+      renderer.dispose();
+    });
+
     it("supports lasso targets and additive subtractive invertive selection modes", () => {
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", targets: { nodes: false, edges: true, handles: false } } });

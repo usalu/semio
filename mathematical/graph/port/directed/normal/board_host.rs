@@ -20,7 +20,7 @@ use crate::{
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle,
     handle_position_on_rectangle, merge_ids_into_selection,
     merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
-    rectangle_handle_angle_toward, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
+    rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
     FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape,
     CachedIconBody, IconPaintCache, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
@@ -2649,7 +2649,7 @@ impl BoardHost {
             return;
         }
         let last = *screen_points.last().unwrap_or(&start_screen);
-        self.selection_preview_crossing = last.x < start_screen.x;
+        self.selection_preview_crossing = !selection_drag_enclosing(self.selection_options.method.as_str(), start_screen, screen_points);
         self.selection_screen_preview = Some(if self.selection_options.method == "lasso" {
             screen_points.to_vec()
         } else {

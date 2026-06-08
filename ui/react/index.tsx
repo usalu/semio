@@ -412,14 +412,51 @@ export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactEleme
 
 export type SelectionMergeMode = "default" | "additive" | "subtractive" | "invertive";
 
+export const SELECTION_DRAG_DIRECTION_THRESHOLD_PX = 2;
+
+export type SelectionMarqueeMethod = "lasso" | "rectangle";
+
 /** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
 export function marqueeIsCrossing(startX: number, endX: number): boolean {
   return endX < startX;
 }
 
-/** @emoji 🖱️ Maps drag direction to marquee coverage. */
+/** @emoji 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
+export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): boolean {
+  const start = path[0];
+  if (!start) return false;
+  if (method === "lasso") {
+    for (const point of path.slice(1)) {
+      const dx = point.x - start.x;
+      if (Math.abs(dx) < SELECTION_DRAG_DIRECTION_THRESHOLD_PX) continue;
+      return dx < 0;
+    }
+  }
+  const end = path[path.length - 1] ?? start;
+  return marqueeIsCrossing(start.x, end.x);
+}
+
+/** @emoji 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
 export function marqueeCoverageFromDrag(startX: number, endX: number): SelectionMarqueeCoverage {
   return marqueeIsCrossing(startX, endX) ? "partial" : "full";
+}
+
+/** @emoji 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
+export function marqueeCoverageFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): SelectionMarqueeCoverage {
+  return marqueeIsCrossingFromPath(path, method) ? "partial" : "full";
+}
+
+/** @emoji 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
+export function marqueeCoverageFromGesture(input: {
+  readonly method: SelectionMarqueeMethod;
+  readonly startX: number;
+  readonly endX: number;
+  readonly path: readonly SelectionMarqueePoint[];
+}): SelectionMarqueeCoverage {
+  if (input.method === "lasso" && input.path.length > 0) {
+    return marqueeCoverageFromPath(input.path, "lasso");
+  }
+  return marqueeCoverageFromDrag(input.startX, input.endX);
 }
 
 /** @emoji 🎯 Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). */

@@ -12,6 +12,7 @@
     "@flow/react": "workspace:*",
     "@geometry/brep/js": "workspace:*",
     "@infinite/world/r3f": "workspace:*",
+    "@puzzle/3d/react": "workspace:*",
     "@ui/react": "workspace:*",
     "@ui/styling": "workspace:*",
     "@react-three/drei": "^10.7.7",

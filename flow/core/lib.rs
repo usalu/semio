@@ -622,6 +622,15 @@ impl EvalBridge {
 }
 // #endregion 🔖EvalBridge
 
+// #region History
+#[derive(Default)]
+struct FlowHistory {
+    past: Vec<FlowFixtureV1>,
+    future: Vec<FlowFixtureV1>,
+    pending: Option<FlowFixtureV1>,
+}
+// #endregion History
+
 // #region 🔖FlowHost
 /// 🏠 Retained flow host: fixture, dag scene, evaluation cache.
 pub struct FlowHost {
@@ -639,6 +648,7 @@ pub struct FlowHost {
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     ghost_node: Option<dag::DagNodeSpec>,
+    history: FlowHistory,
 }
 
 impl Default for FlowHost {
@@ -665,6 +675,7 @@ impl FlowHost {
             viewport_dpr: 1.0,
             pan_anchor: None,
             ghost_node: None,
+            history: FlowHistory::default(),
         };
         host.rebuild_dag();
         host.evaluate_internal();
@@ -773,6 +784,7 @@ impl FlowHost {
     }
 
     pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, String> {
+        self.begin_change();
         self.clear_ghost_widget();
         let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
         let id = self.next_widget_id(&descriptor);
@@ -785,6 +797,7 @@ impl FlowHost {
     }
 
     pub fn remove_widget(&mut self, widget_id: &str) -> Result<(), String> {
+        self.begin_change();
         let before = self.fixture.widgets.len();
         self.fixture.widgets.retain(|w| widget_id_for(w) != widget_id);
         if self.fixture.widgets.len() == before {
@@ -811,6 +824,7 @@ impl FlowHost {
     }
 
     pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, String> {
+        self.begin_change();
         if from_id == to_id {
             return Err("cannot connect widget to itself".into());
         }
@@ -847,6 +861,7 @@ impl FlowHost {
     }
 
     pub fn add_input_port(&mut self, widget_id: &str, index: usize) -> Result<(), String> {
+        self.begin_change();
         let neuron_kind = self
             .fixture
             .widgets
@@ -890,6 +905,7 @@ impl FlowHost {
     }
 
     pub fn remove_input_port(&mut self, widget_id: &str, port_id: &str) -> Result<(), String> {
+        self.begin_change();
         let neuron_kind = self
             .fixture
             .widgets
@@ -935,6 +951,7 @@ impl FlowHost {
     }
 
     pub fn disconnect(&mut self, synapse_id: &str) -> Result<(), String> {
+        self.begin_change();
         let before = self.fixture.synapses.len();
         self.fixture.synapses.retain(|s| s.id != synapse_id);
         if self.fixture.synapses.len() == before {
@@ -947,6 +964,7 @@ impl FlowHost {
 
     /// 🌳 Recomputes widget positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts_json: &str) -> Result<(), String> {
+        self.begin_change();
         let opts: DagLayoutOptions = if opts_json.trim().is_empty() {
             DagLayoutOptions::default()
         } else {
@@ -967,6 +985,7 @@ impl FlowHost {
         }
         self.clear_ghost_widget();
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.history.pending = Some(self.fixture.clone());
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
         if let Some((widget_id, index)) = self.dag.take_pending_port_insert() {
             let _ = self.add_input_port(&widget_id, index);
@@ -1000,6 +1019,7 @@ impl FlowHost {
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
+        self.commit_gesture_history();
         self.evaluate_internal();
     }
 
@@ -1035,6 +1055,7 @@ impl FlowHost {
         if self.dag.selected_node_ids().is_empty() {
             return Ok(());
         }
+        self.begin_change();
         self.dag.delete_selected();
         self.sync_from_dag();
         self.evaluate_internal();
@@ -1187,6 +1208,20 @@ impl FlowHost {
         self.dag.set_selection(&ids);
     }
 
+    /// 📦 Screen-space union bounds of the current selection for DOM overlays.
+    pub fn selection_union_bounds_screen_json(&self) -> String {
+        self.dag.selection_union_bounds_screen_json()
+    }
+
+    /// 📐 Aligns or distributes the current multi-node selection.
+    pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
+        self.begin_change();
+        self.dag.align_selection(mode)?;
+        self.sync_from_dag();
+        self.evaluate_internal();
+        Ok(())
+    }
+
     /// 🖱️ Sets hover to a widget id, or clears hover.
     pub fn set_hover(&mut self, widget_id: Option<&str>) {
         self.dag.set_hover(widget_id);
@@ -1329,6 +1364,7 @@ impl FlowHost {
     }
 
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
+        self.begin_change();
         for widget in &mut self.fixture.widgets {
             if let Widget::InputSlider { id, value: v, min, max, .. } = widget {
                 if id == widget_id {
@@ -1341,6 +1377,7 @@ impl FlowHost {
     }
 
     pub fn set_note_text(&mut self, widget_id: &str, text: &str) {
+        self.begin_change();
         for widget in &mut self.fixture.widgets {
             if let Widget::InputNote { id, text: note } = widget {
                 if id == widget_id {
@@ -1354,6 +1391,7 @@ impl FlowHost {
     }
 
     pub fn set_image_src(&mut self, widget_id: &str, src: &str) {
+        self.begin_change();
         for widget in &mut self.fixture.widgets {
             if let Widget::InputImage { id, src: image } = widget {
                 if id == widget_id {
@@ -1403,6 +1441,66 @@ impl FlowHost {
     pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
         self.dag.label_overlay_paint_state_json()
     }
+
+    // #region History
+    fn content_changed(a: &FlowFixtureV1, b: &FlowFixtureV1) -> bool {
+        a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
+    }
+
+    fn begin_change(&mut self) {
+        if self.history.pending.is_none() {
+            self.history.past.push(self.fixture.clone());
+            self.history.future.clear();
+        }
+    }
+
+    fn commit_gesture_history(&mut self) {
+        if let Some(pre) = self.history.pending.take() {
+            if Self::content_changed(&pre, &self.fixture) {
+                self.history.past.push(pre);
+                self.history.future.clear();
+            }
+        }
+    }
+
+    /// ↩️ Restores the previous fixture content snapshot, keeping the current camera.
+    pub fn undo(&mut self) -> bool {
+        let Some(prev) = self.history.past.pop() else {
+            return false;
+        };
+        let camera = self.fixture.camera.clone();
+        self.history.future.push(self.fixture.clone());
+        self.fixture = prev;
+        self.fixture.camera = camera;
+        self.rebuild_dag();
+        self.evaluate_internal();
+        true
+    }
+
+    /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
+    pub fn redo(&mut self) -> bool {
+        let Some(next) = self.history.future.pop() else {
+            return false;
+        };
+        let camera = self.fixture.camera.clone();
+        self.history.past.push(self.fixture.clone());
+        self.fixture = next;
+        self.fixture.camera = camera;
+        self.rebuild_dag();
+        self.evaluate_internal();
+        true
+    }
+
+    /// ↩️ Whether a content undo step is available.
+    pub fn can_undo(&self) -> bool {
+        !self.history.past.is_empty()
+    }
+
+    /// ↪️ Whether a content redo step is available.
+    pub fn can_redo(&self) -> bool {
+        !self.history.future.is_empty()
+    }
+    // #endregion History
 }
 
 fn dedupe_fixture_widgets(fixture: &mut FlowFixtureV1) {
@@ -1651,6 +1749,26 @@ impl FlowSession {
         self.state.borrow_mut().host.disconnect(synapse_id).map_err(|e| JsValue::from_str(&e))
     }
 
+    #[wasm_bindgen(js_name = undo)]
+    pub fn undo(&self) -> bool {
+        self.state.borrow_mut().host.undo()
+    }
+
+    #[wasm_bindgen(js_name = redo)]
+    pub fn redo(&self) -> bool {
+        self.state.borrow_mut().host.redo()
+    }
+
+    #[wasm_bindgen(js_name = canUndo)]
+    pub fn can_undo(&self) -> bool {
+        self.state.borrow().host.can_undo()
+    }
+
+    #[wasm_bindgen(js_name = canRedo)]
+    pub fn can_redo(&self) -> bool {
+        self.state.borrow().host.can_redo()
+    }
+
     #[wasm_bindgen(js_name = worldFromScreen)]
     pub fn world_from_screen(&self, sx: f64, sy: f64) -> String {
         let (x, y) = self.state.borrow().host.world_from_screen(sx, sy);
@@ -1797,6 +1915,16 @@ impl FlowSession {
         self.state.borrow().host.selection_preview_crossing()
     }
 
+    #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
+    pub fn selection_union_bounds_screen_json(&self) -> String {
+        self.state.borrow().host.selection_union_bounds_screen_json()
+    }
+
+    #[wasm_bindgen(js_name = alignSelection)]
+    pub fn align_selection(&self, mode: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.align_selection(mode).map_err(|e| JsValue::from_str(&e))
+    }
+
     #[wasm_bindgen(js_name = preselectWidgetIdsJson)]
     pub fn preselect_widget_ids_json(&self) -> String {
         self.state.borrow().host.preselect_widget_ids_json()
@@ -1933,7 +2061,7 @@ mod tests {
         assert_eq!(slider.height, slider_widget_height());
         let add = host.dag.fixture.nodes.iter().find(|n| n.id == "add").expect("add");
         assert!(matches!(add.kind, DagNodeKind::Computation { .. }));
-        assert!(slider.width >= 58.0, "slider should use function IO column width");
+        assert!(slider.width >= 50.0, "slider should use function IO column width");
         assert!(slider.width <= add.width, "slider width should follow function sizing");
         let preview = host.dag.fixture.nodes.iter().find(|n| n.id == "preview").expect("preview");
         assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
@@ -2118,6 +2246,36 @@ mod tests {
         host.connect_ports(&id, "out", "preview", "in").unwrap();
         host.set_slider_value("slider", 4.0);
         assert_eq!(host.preview_text(), "4");
+    }
+
+    #[test]
+    fn undo_redo_add_widget() {
+        let mut host = host_with_test_bridge();
+        let count_before = host.fixture.widgets.len();
+        let id = host.add_widget(r#"{"kind":"inputNote","text":"undo me"}"#, 42.0, 42.0).unwrap();
+        assert_eq!(host.fixture.widgets.len(), count_before + 1);
+        assert!(host.can_undo());
+        assert!(host.undo());
+        assert_eq!(host.fixture.widgets.len(), count_before);
+        assert!(!host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
+        assert!(host.can_redo());
+        assert!(host.redo());
+        assert!(host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
+    }
+
+    #[test]
+    fn camera_change_does_not_create_undo_step() {
+        let mut host = host_with_test_bridge();
+        let camera_before = host.fixture.camera.clone();
+        host.set_camera(camera_before.x + 50.0, camera_before.y - 30.0, camera_before.zoom * 1.5);
+        assert!(!host.can_undo());
+        let id = host.add_widget(r#"{"kind":"inputNote","text":"x"}"#, 0.0, 0.0).unwrap();
+        assert!(host.can_undo());
+        assert!(host.undo());
+        assert_eq!(host.fixture.camera.x, camera_before.x + 50.0);
+        assert_eq!(host.fixture.camera.y, camera_before.y - 30.0);
+        assert!((host.fixture.camera.zoom - camera_before.zoom * 1.5).abs() < 1e-9);
+        assert!(!host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
     }
 
     fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -2391,6 +2549,22 @@ mod tests {
         host.delete_selection().unwrap();
         assert!(host.fixture.widgets.iter().all(|w| widget_id_for(w) != "slider"));
         assert!(host.dag.fixture.nodes.iter().all(|n| n.id != "slider"));
+    }
+
+    #[test]
+    fn align_selection_left_aligns_selected_widget_layout() {
+        let mut host = host_with_test_bridge();
+        host.move_widget("slider", -120.0, 20.0).unwrap();
+        host.move_widget("add", 180.0, -40.0).unwrap();
+        host.dag.set_selection(&["slider".into(), "add".into()]);
+        host.align_selection("alignLeft").unwrap();
+        let slider = host.dag.fixture.nodes.iter().find(|node| node.id == "slider").expect("slider");
+        let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add");
+        let slider_left = slider.x - slider.width * 0.5;
+        let add_left = add.x - add.width * 0.5;
+        assert!((slider_left - add_left).abs() < 1e-6, "left edges should match after alignLeft");
+        assert!(host.fixture.layout.get("slider").is_some());
+        assert!(host.fixture.layout.get("add").is_some());
     }
 
     #[test]
