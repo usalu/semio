@@ -1,6 +1,6 @@
 //! 🔌 Shared wasm extension glue for flow modules.
 
-use neural_engine::{inject_input_defaults, Dictionary, EvalError, NeuronKindInfo, Registry};
+use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry, Schema};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Manifest
@@ -20,7 +20,8 @@ pub struct FlowModuleManifestV1 {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FlowModuleContributesV1 {
-    pub neuron_kinds: Vec<NeuronKindInfo>,
+    pub schemas: Vec<Schema>,
+    pub operators: Vec<OperatorInfo>,
     #[serde(default)]
     pub widgets: Vec<FlowModuleWidgetV1>,
     #[serde(default)]
@@ -75,7 +76,8 @@ pub fn build_manifest_json(
         version: version.into(),
         activation_events,
         contributes: FlowModuleContributesV1 {
-            neuron_kinds: registry.catalogue(),
+            schemas: registry.schema_catalogue(),
+            operators: registry.operator_catalogue(),
             widgets,
             commands,
             settings,
@@ -86,24 +88,19 @@ pub fn build_manifest_json(
 // #endregion 🔖Manifest
 
 // #region 🔖Evaluate
-/// 🧮 Evaluates a neuron kind and returns JSON dictionary or `{ "error": ... }`.
+/// 🧮 Evaluates an operator and returns JSON dictionary or `{ "error": ... }`.
 pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
     let input: Dictionary = match serde_json::from_str(input_json) {
         Ok(d) => d,
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
     };
-    match registry.get(kind_id) {
-        Some(kind) => {
-            let input = match registry.kind_info(kind_id) {
-                Some(info) => inject_input_defaults(input, info),
-                None => input,
-            };
-            match kind.evaluate(&input) {
-            Ok(out) => serde_json::to_string(&out).unwrap_or_else(|_| "{}".into()),
-            Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
-            }
-        }
-        None => serde_json::json!({ "error": EvalError::UnknownKind(kind_id.into()).to_string() }).to_string(),
+    let input = match registry.operator_info(kind_id) {
+        Some(info) => inject_channel_defaults(input, info),
+        None => input,
+    };
+    match registry.dispatch(kind_id, &input) {
+        Ok(out) => serde_json::to_string(&out).unwrap_or_else(|_| "{}".into()),
+        Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
     }
 }
 // #endregion 🔖Evaluate
@@ -119,11 +116,11 @@ pub fn command_json(command_id: &str, args_json: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neural_engine::{Atom, Function, InputSpec, Value};
+    use neural_engine::{Atom, ChannelSpec, EvalError, Operation, OperatorImpl, Value};
 
     struct Echo;
 
-    impl Function for Echo {
+    impl Operation for Echo {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
             Ok(input.clone())
         }
@@ -132,19 +129,19 @@ mod tests {
     #[test]
     fn manifest_lists_catalogue() {
         let mut reg = Registry::new();
-        reg.register(
-            NeuronKindInfo {
+        reg.register_operator(
+            OperatorInfo {
                 id: "test.echo".into(),
                 module: "test".into(),
                 name: "Echo".into(),
                 abbreviation: "Echo".into(),
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
-                inputs: vec![InputSpec::value("x")],
-                outputs: vec!["x".into()],
+                inputs: vec![ChannelSpec::value("x")],
+                outputs: vec![ChannelSpec::value("out")],
                 ..Default::default()
             },
-            Box::new(Echo),
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
         );
         let json = build_manifest_json("test", "Test", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("flow.module/v1"));
@@ -154,19 +151,19 @@ mod tests {
     #[test]
     fn evaluate_round_trips_dictionary() {
         let mut reg = Registry::new();
-        reg.register(
-            NeuronKindInfo {
+        reg.register_operator(
+            OperatorInfo {
                 id: "test.echo".into(),
                 module: "test".into(),
                 name: "Echo".into(),
                 abbreviation: "Echo".into(),
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
-                inputs: vec![InputSpec::value("x")],
-                outputs: vec!["x".into()],
+                inputs: vec![ChannelSpec::value("x")],
+                outputs: vec![ChannelSpec::value("out")],
                 ..Default::default()
             },
-            Box::new(Echo),
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
         );
         let input = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0)));
         let out_json = evaluate_json(&reg, "test.echo", &serde_json::to_string(&input).unwrap());

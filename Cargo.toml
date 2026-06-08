@@ -13,6 +13,7 @@ members = [
     "mathematical/graph/port/undirected",
     "neural/engine",
     "flow/modules/wasm",
+    "flow/modules/core",
     "flow/modules/math",
     "flow/modules/text",
     "flow/modules/logic",

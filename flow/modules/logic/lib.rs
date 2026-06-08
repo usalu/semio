@@ -1,77 +1,98 @@
-//! 🔀 Flow logic module: neuron kinds for boolean comparisons.
+//! 🔀 Flow logic module: boolean operators over schema dictionaries.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, ValueType};
 
 // #region 🔖Greater
-/// 📈 Compares two numbers; outputs 1 when a > b else 0.
+/// 📈 Compares two numbers.
 pub struct Greater;
 
-impl Function for Greater {
+impl Operation for Greater {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a")?;
-        let b = read_number(input, "b")?;
-        let flag = if a > b { 1.0 } else { 0.0 };
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(flag))))
+        Ok(boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?))
     }
 }
 // #endregion 🔖Greater
 
 // #region 🔖Not
-/// 🔄 Inverts a boolean number (1 -> 0, 0 -> 1).
+/// 🔄 Inverts a boolean.
 pub struct Not;
 
-impl Function for Not {
+impl Operation for Not {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number")?;
-        let flag = if n > 0.0 { 0.0 } else { 1.0 };
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(flag))))
+        Ok(boolean_dictionary(!read_channel_bool(input, "boolean")?))
     }
 }
 // #endregion 🔖Not
 
-fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+// #region 🔖Helpers
+fn boolean_dictionary(value: bool) -> Dictionary {
+    Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
+}
+
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input
         .get(key)
+        .and_then(|v| v.as_dictionary())
+        .and_then(|d| d.get("value"))
         .and_then(|v| v.as_atom())
         .and_then(|a| a.as_f64())
         .ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
+fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
+    input
+        .get(key)
+        .and_then(|v| v.as_dictionary())
+        .and_then(|d| d.get("value"))
+        .and_then(|v| v.as_atom())
+        .and_then(|a| a.as_bool())
+        .ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+#[cfg(test)]
+fn number_dictionary(value: f64) -> Dictionary {
+    Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+}
+
+fn number_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::number_default(id, 0.0)
+}
+
+fn boolean_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::boolean_default(id, false)
+}
+
+fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
+    OperatorInfo {
+        id: id.into(),
+        module: "logic".into(),
+        name: name.into(),
+        abbreviation: name.into(),
+        icon: "emoji:🔀".into(),
+        summary: summary.into(),
+        inputs,
+        outputs: vec![ChannelSpec::new("out", ValueType::Schema("boolean".into()))],
+        ..Default::default()
+    }
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
 fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
 }
+// #endregion 🔖Helpers
 
-/// 📦 Registers all logic neuron kinds on the registry.
+/// 📦 Registers all logic operators.
 pub fn register(registry: &mut Registry) {
-    registry.register(
-        NeuronKindInfo {
-            id: "logic.greater".into(),
-            module: "logic".into(),
-            name: "Greater".into(),
-            abbreviation: "Gt".into(),
-            icon: "emoji:📈".into(),
-            summary: "True when a > b".into(),
-            inputs: vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 0.0)],
-            outputs: vec!["number".into()],
-            ..Default::default()
-        },
-        Box::new(Greater),
+    registry.register_operator(
+        info("logic.greater", "Greater", "True when a > b", vec![number_channel("a"), number_channel("b")]),
+        vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Greater) }],
     );
-    registry.register(
-        NeuronKindInfo {
-            id: "logic.not".into(),
-            module: "logic".into(),
-            name: "Not".into(),
-            abbreviation: "Not".into(),
-            icon: "emoji:🔄".into(),
-            summary: "Inverts boolean number".into(),
-            inputs: vec![InputSpec::number_default("number", 0.0)],
-            outputs: vec!["number".into()],
-            ..Default::default()
-        },
-        Box::new(Not),
+    registry.register_operator(
+        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean")]),
+        vec![OperatorImpl { schemas: vec!["boolean".into()], operation: Box::new(Not) }],
     );
 }
 
@@ -79,22 +100,20 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
 
     #[test]
     fn greater_compares_numbers() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("a", Value::Atom(Atom::Decimal(5.0)))
-            .insert("b", Value::Atom(Atom::Decimal(2.0)));
-        let out = reg.get("logic.greater").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
+        let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
+        let out = reg.dispatch("logic.greater", &input).unwrap();
+        assert_eq!(out.schema(), Some("boolean"));
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
     }
 
     #[test]
-    fn manifest_lists_logic_kinds() {
+    fn manifest_lists_logic_operators() {
         let json = build_manifest_json(
             "logic",
             "Logic",
@@ -110,13 +129,10 @@ mod tests {
 
     #[test]
     fn evaluate_json_greater() {
-        let reg = module_registry();
-        let input = Dictionary::new()
-            .insert("a", Value::Atom(Atom::Decimal(5.0)))
-            .insert("b", Value::Atom(Atom::Decimal(2.0)));
-        let out_json = evaluate_json(&reg, "logic.greater", &serde_json::to_string(&input).unwrap());
+        let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
+        let out_json = evaluate_json(&module_registry(), "logic.greater", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
     }
 }
 // #endregion 🔖Tests

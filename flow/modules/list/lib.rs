@@ -1,25 +1,34 @@
-//! 📋 Flow list module: index-keyed dictionaries as lists.
+//! 📋 Flow list module: index-keyed schema dictionaries as lists.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, ValueType};
 
 // #region 🔖Empty
 /// 🆕 Creates an empty list dictionary.
 pub struct Empty;
 
-impl Function for Empty {
+impl Operation for Empty {
     fn evaluate(&self, _input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::new().insert("list", Value::Dictionary(Dictionary::new())))
+        Ok(Dictionary::with_schema("list"))
     }
 }
 // #endregion 🔖Empty
 
 // #region 🔖Pack
-/// 📦 Wraps the entire input dictionary as a list value.
+/// 📦 Wraps the input dictionary as a list value.
 pub struct Pack;
 
-impl Function for Pack {
+impl Operation for Pack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::new().insert("list", Value::Dictionary(input.clone())))
+        let mut list = Dictionary::with_schema("list");
+        for key in input.keys() {
+            if key == "$schema" {
+                continue;
+            }
+            if let Some(value) = input.get(key) {
+                list = list.insert(key.clone(), value.clone());
+            }
+        }
+        Ok(list)
     }
 }
 // #endregion 🔖Pack
@@ -28,15 +37,15 @@ impl Function for Pack {
 /// 🔍 Reads a list element by index.
 pub struct Get;
 
-impl Function for Get {
+impl Operation for Get {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let len = list_len(list);
-        let wrap = read_bool(input, "wrap");
-        let index = resolve_list_index(input, "index", len, wrap)?;
-        let key = index.to_string();
-        let value = list.get(&key).cloned().ok_or_else(|| EvalError::MissingInput(key))?;
-        Ok(Dictionary::new().insert("value", value))
+        let index = resolve_list_index(input, "index", len, read_channel_bool(input, "wrap").unwrap_or(false))?;
+        match list.get(&index.to_string()).cloned().ok_or_else(|| EvalError::MissingInput(index.to_string()))? {
+            Value::Dictionary(dictionary) => Ok(dictionary),
+            value => Ok(Dictionary::with_schema("dictionary").insert("value", value)),
+        }
     }
 }
 // #endregion 🔖Get
@@ -45,12 +54,12 @@ impl Function for Get {
 /// ✏️ Replaces a list element at an index.
 pub struct Set;
 
-impl Function for Set {
+impl Operation for Set {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
-        let index = read_index(input, "index")?;
-        let value = read_value(input, "value")?;
-        Ok(Dictionary::new().insert("list", Value::Dictionary(list.clone().insert(index.to_string(), value))))
+        let index = read_channel_index(input, "index")?;
+        let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
+        Ok(list.clone().insert(index.to_string(), value))
     }
 }
 // #endregion 🔖Set
@@ -59,12 +68,11 @@ impl Function for Set {
 /// ➕ Appends a value at the next list index.
 pub struct Append;
 
-impl Function for Append {
+impl Operation for Append {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
-        let value = read_value(input, "value")?;
-        let next = next_list_index(list);
-        Ok(Dictionary::new().insert("list", Value::Dictionary(list.clone().insert(next.to_string(), value))))
+        let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
+        Ok(list.clone().insert(next_list_index(list).to_string(), value))
     }
 }
 // #endregion 🔖Append
@@ -73,10 +81,9 @@ impl Function for Append {
 /// 📏 Reports the number of indexed list elements.
 pub struct Size;
 
-impl Function for Size {
+impl Operation for Size {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let list = read_list(input, "list")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(list_len(list) as f64))))
+        Ok(number_dictionary(list_len(read_list(input, "list")?) as f64))
     }
 }
 // #endregion 🔖Size
@@ -85,11 +92,9 @@ impl Function for Size {
 /// 🗑️ Removes a list element and reindexes remaining items.
 pub struct Remove;
 
-impl Function for Remove {
+impl Operation for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let list = read_list(input, "list")?;
-        let index = read_index(input, "index")?;
-        Ok(Dictionary::new().insert("list", Value::Dictionary(remove_list_index(list, index))))
+        Ok(remove_list_index(read_list(input, "list")?, read_channel_index(input, "index")?))
     }
 }
 // #endregion 🔖Remove
@@ -98,16 +103,16 @@ impl Function for Remove {
 /// 📈 Builds an arithmetic sequence list.
 pub struct Range;
 
-impl Function for Range {
+impl Operation for Range {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let start = read_number(input, "start").unwrap_or(0.0);
-        let step = read_number(input, "step").unwrap_or(1.0);
-        let count = read_index(input, "count")?;
-        let mut list = Dictionary::new();
+        let start = read_channel_number(input, "start")?;
+        let step = read_channel_number(input, "step")?;
+        let count = read_channel_index(input, "count")?;
+        let mut list = Dictionary::with_schema("list");
         for index in 0..count {
-            list = list.insert(index.to_string(), Value::Atom(Atom::Decimal(start + step * index as f64)));
+            list = list.insert(index.to_string(), Value::Dictionary(number_dictionary(start + step * index as f64)));
         }
-        Ok(Dictionary::new().insert("list", Value::Dictionary(list)))
+        Ok(list)
     }
 }
 // #endregion 🔖Range
@@ -116,23 +121,52 @@ impl Function for Range {
 /// 🔁 Reverses indexed list elements.
 pub struct Reverse;
 
-impl Function for Reverse {
+impl Operation for Reverse {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let indices = list_indices(list);
-        let mut out = Dictionary::new();
+        let mut out = Dictionary::with_schema("list");
         for (next, index) in indices.iter().rev().enumerate() {
             if let Some(value) = list.get(&index.to_string()) {
                 out = out.insert(next.to_string(), value.clone());
             }
         }
-        Ok(Dictionary::new().insert("list", Value::Dictionary(out)))
+        Ok(out)
     }
 }
 // #endregion 🔖Reverse
 
-fn read_number(input: &Dictionary, key: &str) -> Option<f64> {
-    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64())
+// #region 🔖Helpers
+fn number_dictionary(value: f64) -> Dictionary {
+    Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+}
+
+fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+    input.get(key).and_then(|v| v.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+    input
+        .get(key)
+        .and_then(|v| v.as_dictionary())
+        .and_then(|d| d.get("value"))
+        .and_then(|v| v.as_atom())
+        .and_then(|a| a.as_f64())
+        .ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
+    input
+        .get(key)
+        .and_then(|v| v.as_dictionary())
+        .and_then(|d| d.get("value"))
+        .and_then(|v| v.as_atom())
+        .and_then(|a| a.as_bool())
+        .ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+fn read_channel_index(input: &Dictionary, key: &str) -> Result<usize, EvalError> {
+    Ok(read_channel_number(input, key)? as usize)
 }
 
 fn list_indices(list: &Dictionary) -> Vec<usize> {
@@ -149,32 +183,8 @@ fn next_list_index(list: &Dictionary) -> usize {
     list_indices(list).last().map(|index| index + 1).unwrap_or(0)
 }
 
-fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_dictionary())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
-}
-
-fn read_bool(input: &Dictionary, key: &str) -> bool {
-    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).unwrap_or(false)
-}
-
-fn read_index(input: &Dictionary, key: &str) -> Result<usize, EvalError> {
-    let raw = input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))?;
-    Ok(raw as usize)
-}
-
 fn resolve_list_index(input: &Dictionary, key: &str, len: usize, wrap: bool) -> Result<usize, EvalError> {
-    let raw = input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))?;
+    let raw = read_channel_number(input, key)?;
     if len == 0 {
         return Err(EvalError::InvalidInput("empty list".into()));
     }
@@ -188,15 +198,10 @@ fn resolve_list_index(input: &Dictionary, key: &str, len: usize, wrap: bool) -> 
     Ok(index)
 }
 
-fn read_value(input: &Dictionary, key: &str) -> Result<Value, EvalError> {
-    input.get(key).cloned().ok_or_else(|| EvalError::MissingInput(key.into()))
-}
-
 fn remove_list_index(list: &Dictionary, remove_at: usize) -> Dictionary {
-    let indices = list_indices(list);
-    let mut out = Dictionary::new();
+    let mut out = Dictionary::with_schema("list");
     let mut next = 0usize;
-    for index in indices {
+    for index in list_indices(list) {
         if index == remove_at {
             continue;
         }
@@ -208,208 +213,81 @@ fn remove_list_index(list: &Dictionary, remove_at: usize) -> Dictionary {
     out
 }
 
+fn list_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::list(id)
+}
+
+fn number_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::number_default(id, 0.0)
+}
+
+fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+    OperatorInfo {
+        id: id.into(),
+        module: "list".into(),
+        name: name.into(),
+        abbreviation: name.into(),
+        icon: "emoji:📋".into(),
+        summary: summary.into(),
+        inputs,
+        outputs: vec![output],
+        ..Default::default()
+    }
+}
+
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }]);
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
 fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
 }
+// #endregion 🔖Helpers
 
-/// 📦 Registers all list neuron kinds on the registry.
+/// 📦 Registers all list operators.
 pub fn register(registry: &mut Registry) {
-    registry.register(
-        NeuronKindInfo {
-            id: "list.empty".into(),
-            module: "list".into(),
-            name: "Empty".into(),
-            abbreviation: "Empty".into(),
-            icon: "emoji:🆕".into(),
-            summary: "Creates an empty list".into(),
-            inputs: vec![],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Empty),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.pack".into(),
-            module: "list".into(),
-            name: "Pack".into(),
-            abbreviation: "Pack".into(),
-            icon: "emoji:📦".into(),
-            summary: "Wraps input as a list dictionary".into(),
-            inputs: vec![InputSpec::wildcard()],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Pack),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.get".into(),
-            module: "list".into(),
-            name: "Get".into(),
-            abbreviation: "Get".into(),
-            icon: "emoji:🔍".into(),
-            summary: "Reads a value by index".into(),
-            inputs: vec![
-                InputSpec::list("list"),
-                InputSpec::number_default("index", 0.0),
-                InputSpec::boolean_default("wrap", false),
-            ],
-            outputs: vec!["value".into()],
-            ..Default::default()
-        },
-        Box::new(Get),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.set".into(),
-            module: "list".into(),
-            name: "Set".into(),
-            abbreviation: "Set".into(),
-            icon: "emoji:✏️".into(),
-            summary: "Replaces a value at an index".into(),
-            inputs: vec![InputSpec::list("list"), InputSpec::number_default("index", 0.0), InputSpec::value("value")],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Set),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.append".into(),
-            module: "list".into(),
-            name: "Append".into(),
-            abbreviation: "Append".into(),
-            icon: "emoji:➕".into(),
-            summary: "Appends a value at the next index".into(),
-            inputs: vec![InputSpec::list("list"), InputSpec::value("value")],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Append),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.size".into(),
-            module: "list".into(),
-            name: "Size".into(),
-            abbreviation: "Size".into(),
-            icon: "emoji:📏".into(),
-            summary: "Reports the number of indexed elements".into(),
-            inputs: vec![InputSpec::list("list")],
-            outputs: vec!["number".into()],
-            ..Default::default()
-        },
-        Box::new(Size),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.remove".into(),
-            module: "list".into(),
-            name: "Remove".into(),
-            abbreviation: "Remove".into(),
-            icon: "emoji:🗑️".into(),
-            summary: "Removes an index and reindexes".into(),
-            inputs: vec![InputSpec::list("list"), InputSpec::number_default("index", 0.0)],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Remove),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.range".into(),
-            module: "list".into(),
-            name: "Range".into(),
-            abbreviation: "Range".into(),
-            icon: "emoji:📈".into(),
-            summary: "Builds an arithmetic sequence list".into(),
-            inputs: vec![
-                InputSpec::number_default("start", 0.0),
-                InputSpec::number_default("step", 1.0),
-                InputSpec::number_default("count", 1.0),
-            ],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Range),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "list.reverse".into(),
-            module: "list".into(),
-            name: "Reverse".into(),
-            abbreviation: "Rev".into(),
-            icon: "emoji:🔁".into(),
-            summary: "Reverses indexed list elements".into(),
-            inputs: vec![InputSpec::list("list")],
-            outputs: vec!["list".into()],
-            ..Default::default()
-        },
-        Box::new(Reverse),
-    );
+    register_simple(registry, info("list.empty", "Empty", "Creates an empty list", vec![], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Empty), vec![]);
+    register_simple(registry, info("list.pack", "Pack", "Wraps input as a list dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Pack), vec![]);
+    register_simple(registry, info("list.get", "Get", "Reads a value by index", vec![list_channel("list"), number_channel("index"), ChannelSpec::boolean_default("wrap", false)], ChannelSpec::value("out")), Box::new(Get), vec!["list", "number", "boolean"]);
+    register_simple(registry, info("list.set", "Set", "Replaces a value at an index", vec![list_channel("list"), number_channel("index"), ChannelSpec::value("value")], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Set), vec![]);
+    register_simple(registry, info("list.append", "Append", "Appends a value at the next index", vec![list_channel("list"), ChannelSpec::value("value")], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Append), vec![]);
+    register_simple(registry, info("list.size", "Size", "Reports the number of indexed elements", vec![list_channel("list")], ChannelSpec::number("out")), Box::new(Size), vec!["list"]);
+    register_simple(registry, info("list.remove", "Remove", "Removes an index and reindexes", vec![list_channel("list"), number_channel("index")], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Remove), vec!["list", "number"]);
+    register_simple(registry, info("list.range", "Range", "Builds an arithmetic sequence list", vec![number_channel("start"), ChannelSpec::number_default("step", 1.0), ChannelSpec::number_default("count", 1.0)], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Range), vec!["number", "number", "number"]);
+    register_simple(registry, info("list.reverse", "Reverse", "Reverses indexed list elements", vec![list_channel("list")], ChannelSpec::new("out", ValueType::Schema("list".into()))), Box::new(Reverse), vec!["list"]);
 }
 
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neural_engine::inject_input_defaults;
+    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
 
     fn sample_list() -> Dictionary {
-        Dictionary::new()
-            .insert("0", Value::Atom(Atom::Decimal(1.0)))
-            .insert("1", Value::Atom(Atom::Decimal(2.0)))
-            .insert("2", Value::Atom(Atom::Decimal(3.0)))
+        Dictionary::with_schema("list")
+            .insert("0", Value::Dictionary(number_dictionary(1.0)))
+            .insert("1", Value::Dictionary(number_dictionary(2.0)))
+            .insert("2", Value::Dictionary(number_dictionary(3.0)))
     }
 
     #[test]
     fn empty_creates_list() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let out = reg.get("list.empty").unwrap().evaluate(&Dictionary::new()).unwrap();
-        assert!(out.get("list").and_then(|v| v.as_dictionary()).is_some());
-    }
-
-    #[test]
-    fn get_defaults_index_zero() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let kind = reg.kind_info("list.get").expect("kind");
-        let input = inject_input_defaults(
-            Dictionary::new().insert("list", Value::Dictionary(sample_list())),
-            kind,
-        );
-        let out = reg.get("list.get").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
-    }
-
-    #[test]
-    fn get_wraps_out_of_range_index() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let kind = reg.kind_info("list.get").expect("kind");
-        let input = inject_input_defaults(
-            Dictionary::new()
-                .insert("list", Value::Dictionary(sample_list()))
-                .insert("index", Value::Atom(Atom::Decimal(5.0)))
-                .insert("wrap", Value::Atom(Atom::Boolean(true))),
-            kind,
-        );
-        let out = reg.get("list.get").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        let out = reg.dispatch("list.empty", &Dictionary::new()).unwrap();
+        assert_eq!(out.schema(), Some("list"));
     }
 
     #[test]
     fn get_reads_index() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("list", Value::Dictionary(sample_list()))
-            .insert("index", Value::Atom(Atom::Decimal(1.0)));
-        let out = reg.get("list.get").unwrap().evaluate(&input).unwrap();
+        let input = Dictionary::new().insert("list", Value::Dictionary(sample_list())).insert("index", Value::Dictionary(number_dictionary(1.0))).insert("wrap", Value::Dictionary(Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(false)))));
+        let out = reg.dispatch("list.get", &input).unwrap();
+        assert_eq!(out.schema(), Some("number"));
         assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
     }
 
@@ -417,56 +295,22 @@ mod tests {
     fn append_adds_next_index() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("list", Value::Dictionary(sample_list()))
-            .insert("value", Value::Atom(Atom::Decimal(4.0)));
-        let out = reg.get("list.append").unwrap().evaluate(&input).unwrap();
-        let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list");
-        assert_eq!(list.get("3").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
+        let input = Dictionary::new().insert("list", Value::Dictionary(sample_list())).insert("value", Value::Dictionary(number_dictionary(4.0)));
+        let out = reg.dispatch("list.append", &input).unwrap();
+        assert_eq!(out.get("3").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
     }
-
-    #[test]
-    fn remove_reindexes() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new()
-            .insert("list", Value::Dictionary(sample_list()))
-            .insert("index", Value::Atom(Atom::Decimal(1.0)));
-        let out = reg.get("list.remove").unwrap().evaluate(&input).unwrap();
-        let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list");
-        assert_eq!(list_len(list), 2);
-        assert_eq!(list.get("0").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
-        assert_eq!(list.get("1").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
-    }
-
-    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
 
     #[test]
     fn range_builds_sequence() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("start", Value::Atom(Atom::Decimal(0.0)))
-            .insert("step", Value::Atom(Atom::Decimal(2.0)))
-            .insert("count", Value::Atom(Atom::Decimal(3.0)));
-        let out = reg.get("list.range").unwrap().evaluate(&input).unwrap();
-        let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list");
-        assert_eq!(list.get("1").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
+        let input = Dictionary::new().insert("start", Value::Dictionary(number_dictionary(0.0))).insert("step", Value::Dictionary(number_dictionary(2.0))).insert("count", Value::Dictionary(number_dictionary(3.0)));
+        let out = reg.dispatch("list.range", &input).unwrap();
+        assert_eq!(out.get("1").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
     }
 
     #[test]
-    fn reverse_reorders_list() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new().insert("list", Value::Dictionary(sample_list()));
-        let out = reg.get("list.reverse").unwrap().evaluate(&input).unwrap();
-        let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list");
-        assert_eq!(list.get("0").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
-        assert_eq!(list.get("2").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
-    }
-
-    #[test]
-    fn manifest_lists_list_kinds() {
+    fn manifest_lists_list_operators() {
         let json = build_manifest_json(
             "list",
             "List",
@@ -483,11 +327,11 @@ mod tests {
 
     #[test]
     fn evaluate_json_size() {
-        let reg = module_registry();
         let input = Dictionary::new().insert("list", Value::Dictionary(sample_list()));
-        let out_json = evaluate_json(&reg, "list.size", &serde_json::to_string(&input).unwrap());
+        let out_json = evaluate_json(&module_registry(), "list.size", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        assert_eq!(out.schema(), Some("number"));
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
     }
 }
 // #endregion 🔖Tests

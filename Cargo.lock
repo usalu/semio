@@ -1383,6 +1383,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow_module_core"
+version = "0.1.0"
+dependencies = [
+ "flow_module_wasm",
+ "neural_engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "flow_module_dictionary"
 version = "0.1.0"
 dependencies = [

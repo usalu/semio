@@ -3018,6 +3018,22 @@ As an example reimplemnt the intro (the first 5 slides of eg-ice-25) of the new 
 
 ---
 
+make sure that flow uses neural properly.
+in neural everything is dictionary in, dictionary out.
+every dictionary caries a reservered $schema field.
+introduce schemas properly.schemas define the data that needs to be available for dictionaries.
+e.g. point is schema with x,y,z numbers. vector is another schema with the same fields.
+Introduce operators. Operators are functions can operate on a set of schema. e.g. move works for point, vector, sphere, etc add works for point, numbers, etc
+
+in flow a component is using the most accurate channels (inputs outputs) if possible (not just in and out)
+e.g. add takes 2 input channels and optionally more can be added and returns one output.
+e.g. constructVector takes three inputs x,y,z by default.
+
+Flows are just extensions of neural trees. in the json they keep separate keys, 
+the flow part must be shakable without destroying the logic.
+
+---
+
 Every node must have a name, an abbreviation and an icon
 Names and abbreviations are always in PascalCase.
 mnimap: nothing

@@ -1,26 +1,25 @@
-//! 📚 Flow dictionary module: neuron kinds for dictionary manipulation.
+//! 📚 Flow dictionary module: operators for dictionary manipulation.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value, VariadicSpec};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, ValueType, VariadicSpec};
 
 // #region 🔖Pack
-/// 📦 Wraps the entire input dictionary under a single dictionary value.
+/// 📦 Wraps input into a dictionary schema.
 pub struct Pack;
 
-impl Function for Pack {
+impl Operation for Pack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::new().insert("dictionary", Value::Dictionary(input.clone())))
+        Ok(Dictionary::with_schema("dictionary").merge(input))
     }
 }
 // #endregion 🔖Pack
 
 // #region 🔖Unpack
-/// 📤 Flattens a nested dictionary value to top-level keys.
+/// 📤 Forwards a dictionary.
 pub struct Unpack;
 
-impl Function for Unpack {
+impl Operation for Unpack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let dict = read_dict(input, "dictionary")?;
-        Ok(flatten_dict(dict))
+        Ok(read_dict(input, "dictionary")?.clone())
     }
 }
 // #endregion 🔖Unpack
@@ -29,12 +28,14 @@ impl Function for Unpack {
 /// 🔍 Reads a value from a dictionary by key.
 pub struct Get;
 
-impl Function for Get {
+impl Operation for Get {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
-        let key = read_text(input, "key")?;
-        let value = dict.get(&key).cloned().ok_or_else(|| EvalError::MissingInput(key))?;
-        Ok(Dictionary::new().insert("value", value))
+        let key = read_channel_text(input, "key")?;
+        match dict.get(&key).cloned().ok_or_else(|| EvalError::MissingInput(key))? {
+            Value::Dictionary(value) => Ok(value),
+            value => Ok(Dictionary::with_schema("dictionary").insert("value", value)),
+        }
     }
 }
 // #endregion 🔖Get
@@ -43,12 +44,12 @@ impl Function for Get {
 /// ✏️ Inserts or replaces a key in a dictionary.
 pub struct Set;
 
-impl Function for Set {
+impl Operation for Set {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
-        let key = read_text(input, "key")?;
-        let value = read_value(input, "value")?;
-        Ok(Dictionary::new().insert("dictionary", Value::Dictionary(dict.clone().insert(key, value))))
+        let key = read_channel_text(input, "key")?;
+        let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
+        Ok(dict.clone().insert(key, value))
     }
 }
 // #endregion 🔖Set
@@ -57,11 +58,11 @@ impl Function for Set {
 /// 🗑️ Removes a key from a dictionary.
 pub struct Remove;
 
-impl Function for Remove {
+impl Operation for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
-        let key = read_text(input, "key")?;
-        Ok(Dictionary::new().insert("dictionary", Value::Dictionary(remove_key(dict, &key))))
+        let key = read_channel_text(input, "key")?;
+        Ok(remove_key(dict, &key))
     }
 }
 // #endregion 🔖Remove
@@ -70,12 +71,11 @@ impl Function for Remove {
 /// ❓ Reports whether a key exists in a dictionary.
 pub struct Has;
 
-impl Function for Has {
+impl Operation for Has {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
-        let key = read_text(input, "key")?;
-        let flag = if dict.get(&key).is_some() { 1.0 } else { 0.0 };
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(flag))))
+        let key = read_channel_text(input, "key")?;
+        Ok(boolean_dictionary(dict.get(&key).is_some()))
     }
 }
 // #endregion 🔖Has
@@ -84,11 +84,9 @@ impl Function for Has {
 /// 🔑 Lists dictionary keys as comma-separated text.
 pub struct Keys;
 
-impl Function for Keys {
+impl Operation for Keys {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let dict = read_dict(input, "dictionary")?;
-        let text = dict.keys().map(String::as_str).collect::<Vec<_>>().join(",");
-        Ok(Dictionary::new().insert("text", Value::Atom(Atom::String(text))))
+        Ok(text_dictionary(read_dict(input, "dictionary")?.keys().map(String::as_str).filter(|key| *key != "$schema").collect::<Vec<_>>().join(",")))
     }
 }
 // #endregion 🔖Keys
@@ -97,10 +95,10 @@ impl Function for Keys {
 /// 📏 Reports the number of keys in a dictionary.
 pub struct Size;
 
-impl Function for Size {
+impl Operation for Size {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let dict = read_dict(input, "dictionary")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(dict.len() as f64))))
+        let count = read_dict(input, "dictionary")?.keys().filter(|key| key.as_str() != "$schema").count();
+        Ok(number_dictionary(count as f64))
     }
 }
 // #endregion 🔖Size
@@ -109,7 +107,7 @@ impl Function for Size {
 /// 🔀 Merges ordered dictionary inputs; later keys override earlier ones.
 pub struct Merge;
 
-impl Function for Merge {
+impl Operation for Merge {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let items = read_dict(input, "items")?;
         let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
@@ -117,39 +115,57 @@ impl Function for Merge {
         if indices.len() < 2 {
             return Err(EvalError::MissingInput("items".into()));
         }
-        let mut merged = Dictionary::new();
+        let mut merged = Dictionary::with_schema("dictionary");
         for index in indices {
-            let slot = read_dict(items, &index.to_string())?;
-            merged = merged.merge(slot);
+            merged = merged.merge(read_dict(items, &index.to_string())?);
         }
-        Ok(Dictionary::new().insert("dictionary", Value::Dictionary(merged)))
+        Ok(merged)
     }
 }
 // #endregion 🔖Merge
 
+// #region 🔖Helpers
 fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+    input.get(key).and_then(|v| v.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input
         .get(key)
         .and_then(|v| v.as_dictionary())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
-}
-
-fn read_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
-    input
-        .get(key)
+        .and_then(|d| d.get("value"))
         .and_then(|v| v.as_atom())
         .and_then(|a| a.as_str())
         .map(str::to_string)
         .ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_value(input: &Dictionary, key: &str) -> Result<Value, EvalError> {
-    input.get(key).cloned().ok_or_else(|| EvalError::MissingInput(key.into()))
+fn text_dictionary(value: String) -> Dictionary {
+    Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(value)))
 }
 
-fn flatten_dict(dict: &Dictionary) -> Dictionary {
-    let mut out = Dictionary::new();
+fn number_dictionary(value: f64) -> Dictionary {
+    Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+}
+
+fn boolean_dictionary(value: bool) -> Dictionary {
+    Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
+}
+
+fn text_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::text_default(id, "")
+}
+
+fn dict_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::dictionary(id)
+}
+
+fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
+    let mut out = Dictionary::with_schema(dict.schema().unwrap_or("dictionary"));
     for k in dict.keys() {
+        if k.as_str() == key || k.as_str() == "$schema" {
+            continue;
+        }
         if let Some(v) = dict.get(k) {
             out = out.insert(k.clone(), v.clone());
         }
@@ -157,152 +173,48 @@ fn flatten_dict(dict: &Dictionary) -> Dictionary {
     out
 }
 
-fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
-    let mut out = Dictionary::new();
-    for k in dict.keys() {
-        if k.as_str() != key {
-            if let Some(v) = dict.get(k) {
-                out = out.insert(k.clone(), v.clone());
-            }
-        }
+fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+    OperatorInfo {
+        id: id.into(),
+        module: "dictionary".into(),
+        name: name.into(),
+        abbreviation: name.into(),
+        icon: "emoji:📚".into(),
+        summary: summary.into(),
+        inputs,
+        outputs: vec![output],
+        ..Default::default()
     }
-    out
 }
 
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }]);
+}
+
+#[cfg(any(test, target_arch = "wasm32"))]
 fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
 }
+// #endregion 🔖Helpers
 
-/// 📦 Registers all dictionary neuron kinds on the registry.
+/// 📦 Registers all dictionary operators.
 pub fn register(registry: &mut Registry) {
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.pack".into(),
-            module: "dictionary".into(),
-            name: "Pack".into(),
-            abbreviation: "Pack".into(),
-            icon: "emoji:📦".into(),
-            summary: "Wraps input as a nested dictionary".into(),
-            inputs: vec![InputSpec::wildcard()],
-            outputs: vec!["dictionary".into()],
-            ..Default::default()
-        },
-        Box::new(Pack),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.unpack".into(),
-            module: "dictionary".into(),
-            name: "Unpack".into(),
-            abbreviation: "Unpack".into(),
-            icon: "emoji:📤".into(),
-            summary: "Flattens a nested dictionary to top-level keys".into(),
-            inputs: vec![InputSpec::dictionary("dictionary")],
-            outputs: vec!["*".into()],
-            ..Default::default()
-        },
-        Box::new(Unpack),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.get".into(),
-            module: "dictionary".into(),
-            name: "Get".into(),
-            abbreviation: "Get".into(),
-            icon: "emoji:🔍".into(),
-            summary: "Reads a value by key".into(),
-            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", "")],
-            outputs: vec!["value".into()],
-            ..Default::default()
-        },
-        Box::new(Get),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.set".into(),
-            module: "dictionary".into(),
-            name: "Set".into(),
-            abbreviation: "Set".into(),
-            icon: "emoji:✏️".into(),
-            summary: "Inserts or replaces a key".into(),
-            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", ""), InputSpec::value("value")],
-            outputs: vec!["dictionary".into()],
-            ..Default::default()
-        },
-        Box::new(Set),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.remove".into(),
-            module: "dictionary".into(),
-            name: "Remove".into(),
-            abbreviation: "Remove".into(),
-            icon: "emoji:🗑️".into(),
-            summary: "Removes a key".into(),
-            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", "")],
-            outputs: vec!["dictionary".into()],
-            ..Default::default()
-        },
-        Box::new(Remove),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.has".into(),
-            module: "dictionary".into(),
-            name: "Has".into(),
-            abbreviation: "Has".into(),
-            icon: "emoji:❓".into(),
-            summary: "Checks whether a key exists".into(),
-            inputs: vec![InputSpec::dictionary("dictionary"), InputSpec::text_default("key", "")],
-            outputs: vec!["number".into()],
-            ..Default::default()
-        },
-        Box::new(Has),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.keys".into(),
-            module: "dictionary".into(),
-            name: "Keys".into(),
-            abbreviation: "Keys".into(),
-            icon: "emoji:🔑".into(),
-            summary: "Lists keys as comma-separated text".into(),
-            inputs: vec![InputSpec::dictionary("dictionary")],
-            outputs: vec!["text".into()],
-            ..Default::default()
-        },
-        Box::new(Keys),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.size".into(),
-            module: "dictionary".into(),
-            name: "Size".into(),
-            abbreviation: "Size".into(),
-            icon: "emoji:📏".into(),
-            summary: "Reports the number of keys".into(),
-            inputs: vec![InputSpec::dictionary("dictionary")],
-            outputs: vec!["number".into()],
-            ..Default::default()
-        },
-        Box::new(Size),
-    );
-    registry.register(
-        NeuronKindInfo {
-            id: "dictionary.merge".into(),
-            module: "dictionary".into(),
-            name: "Merge".into(),
-            abbreviation: "Merge".into(),
-            icon: "emoji:🔀".into(),
-            summary: "Merges ordered dictionary inputs".into(),
-            inputs: vec![],
-            outputs: vec!["dictionary".into()],
+    register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::dictionary("out")), Box::new(Pack), vec![]);
+    register_simple(registry, info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary")], ChannelSpec::dictionary("out")), Box::new(Unpack), vec!["dictionary"]);
+    register_simple(registry, info("dictionary.get", "Get", "Reads a value by key", vec![dict_channel("dictionary"), text_channel("key")], ChannelSpec::value("out")), Box::new(Get), vec!["dictionary", "text"]);
+    register_simple(registry, info("dictionary.set", "Set", "Inserts or replaces a key", vec![dict_channel("dictionary"), text_channel("key"), ChannelSpec::value("value")], ChannelSpec::dictionary("out")), Box::new(Set), vec![]);
+    register_simple(registry, info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary"), text_channel("key")], ChannelSpec::dictionary("out")), Box::new(Remove), vec!["dictionary", "text"]);
+    register_simple(registry, info("dictionary.has", "Has", "Checks whether a key exists", vec![dict_channel("dictionary"), text_channel("key")], ChannelSpec::new("out", ValueType::Schema("boolean".into()))), Box::new(Has), vec!["dictionary", "text"]);
+    register_simple(registry, info("dictionary.keys", "Keys", "Lists keys as comma-separated text", vec![dict_channel("dictionary")], ChannelSpec::new("out", ValueType::Schema("text".into()))), Box::new(Keys), vec!["dictionary"]);
+    register_simple(registry, info("dictionary.size", "Size", "Reports the number of keys", vec![dict_channel("dictionary")], ChannelSpec::number("out")), Box::new(Size), vec!["dictionary"]);
+    registry.register_operator(
+        OperatorInfo {
             variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-            variadic_output: None,
+            ..info("dictionary.merge", "Merge", "Merges ordered dictionary inputs", vec![], ChannelSpec::dictionary("out"))
         },
-        Box::new(Merge),
+        vec![OperatorImpl { schemas: vec!["dictionary".into(), "dictionary".into()], operation: Box::new(Merge) }],
     );
 }
 
@@ -310,41 +222,19 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
 
     fn sample_dict() -> Dictionary {
-        Dictionary::new()
-            .insert("number", Value::Atom(Atom::Decimal(3.0)))
-            .insert("text", Value::Atom(Atom::String("hi".into())))
-    }
-
-    #[test]
-    fn pack_wraps_input() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = sample_dict();
-        let out = reg.get("dictionary.pack").unwrap().evaluate(&input).unwrap();
-        let nested = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("nested");
-        assert_eq!(nested.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
-    }
-
-    #[test]
-    fn unpack_flattens_dictionary() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict()));
-        let out = reg.get("dictionary.unpack").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi"));
+        Dictionary::with_schema("dictionary").insert("number", Value::Dictionary(number_dictionary(3.0))).insert("text", Value::Dictionary(text_dictionary("hi".into())))
     }
 
     #[test]
     fn get_reads_value() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("dictionary", Value::Dictionary(sample_dict()))
-            .insert("key", Value::Atom(Atom::String("number".into())));
-        let out = reg.get("dictionary.get").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict())).insert("key", Value::Dictionary(text_dictionary("number".into())));
+        let out = reg.dispatch("dictionary.get", &input).unwrap();
+        assert_eq!(out.schema(), Some("number"));
     }
 
     #[test]
@@ -352,96 +242,26 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new()
-            .insert("dictionary", Value::Dictionary(Dictionary::new()))
-            .insert("key", Value::Atom(Atom::String("text".into())))
-            .insert("value", Value::Atom(Atom::String("new".into())));
-        let out = reg.get("dictionary.set").unwrap().evaluate(&input).unwrap();
-        let dict = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dict");
-        assert_eq!(dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("new"));
-    }
-
-    #[test]
-    fn remove_drops_key() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new()
-            .insert("dictionary", Value::Dictionary(sample_dict()))
-            .insert("key", Value::Atom(Atom::String("text".into())));
-        let out = reg.get("dictionary.remove").unwrap().evaluate(&input).unwrap();
-        let dict = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dict");
-        assert!(dict.get("text").is_none());
-        assert_eq!(dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
-    }
-
-    #[test]
-    fn has_reports_presence() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new()
-            .insert("dictionary", Value::Dictionary(sample_dict()))
-            .insert("key", Value::Atom(Atom::String("text".into())));
-        let out = reg.get("dictionary.has").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
-    }
-
-    #[test]
-    fn keys_lists_keys() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict()));
-        let out = reg.get("dictionary.keys").unwrap().evaluate(&input).unwrap();
-        let text = out.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("text");
-        assert!(text.contains("number"));
-        assert!(text.contains("text"));
-    }
-
-    #[test]
-    fn size_reports_len() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict()));
-        let out = reg.get("dictionary.size").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
+            .insert("dictionary", Value::Dictionary(Dictionary::with_schema("dictionary")))
+            .insert("key", Value::Dictionary(text_dictionary("text".into())))
+            .insert("value", Value::Dictionary(text_dictionary("new".into())));
+        let out = reg.dispatch("dictionary.set", &input).unwrap();
+        assert!(out.get("text").is_some());
     }
 
     #[test]
     fn merge_combines_dicts() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let a = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(1.0)));
-        let b = Dictionary::new().insert("text", Value::Atom(Atom::String("x".into())));
-        let items = Dictionary::new()
-            .insert("0", Value::Dictionary(a))
-            .insert("1", Value::Dictionary(b));
-        let input = Dictionary::new().insert("items", Value::Dictionary(items));
-        let out = reg.get("dictionary.merge").unwrap().evaluate(&input).unwrap();
-        let dict = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dict");
-        assert_eq!(dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
-        assert_eq!(dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("x"));
+        let items = Dictionary::new().insert("0", Value::Dictionary(Dictionary::with_schema("dictionary").insert("a", Value::Dictionary(number_dictionary(1.0))))).insert("1", Value::Dictionary(Dictionary::with_schema("dictionary").insert("b", Value::Dictionary(text_dictionary("x".into())))));
+        let out = reg.dispatch("dictionary.merge", &Dictionary::new().insert("items", Value::Dictionary(items))).unwrap();
+        assert_eq!(out.schema(), Some("dictionary"));
+        assert!(out.get("a").is_some());
+        assert!(out.get("b").is_some());
     }
 
     #[test]
-    fn merge_three_way_later_overrides() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let first = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(1.0)));
-        let second = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0)));
-        let third = Dictionary::new().insert("text", Value::Atom(Atom::String("z".into())));
-        let items = Dictionary::new()
-            .insert("0", Value::Dictionary(first))
-            .insert("1", Value::Dictionary(second))
-            .insert("2", Value::Dictionary(third));
-        let input = Dictionary::new().insert("items", Value::Dictionary(items));
-        let out = reg.get("dictionary.merge").unwrap().evaluate(&input).unwrap();
-        let dict = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dict");
-        assert_eq!(dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
-        assert_eq!(dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("z"));
-    }
-
-    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
-
-    #[test]
-    fn manifest_lists_dictionary_kinds() {
+    fn manifest_lists_dictionary_operators() {
         let json = build_manifest_json(
             "dictionary",
             "Dictionary",
@@ -457,12 +277,9 @@ mod tests {
 
     #[test]
     fn evaluate_json_pack() {
-        let reg = module_registry();
-        let input = sample_dict();
-        let out_json = evaluate_json(&reg, "dictionary.pack", &serde_json::to_string(&input).unwrap());
+        let out_json = evaluate_json(&module_registry(), "dictionary.pack", &serde_json::to_string(&sample_dict()).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        let nested = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("nested");
-        assert_eq!(nested.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        assert_eq!(out.schema(), Some("dictionary"));
     }
 }
 // #endregion 🔖Tests

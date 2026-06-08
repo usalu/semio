@@ -1,299 +1,378 @@
-//! ➕ Flow math module: neuron kinds for arithmetic.
+//! ➕ Flow math module: schema-dispatched arithmetic operators.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, InputSpec, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
 use std::cell::Cell;
 
 // #region 🔖Add
-/// ➕ Sums two number inputs into one number output.
+/// ➕ Adds numbers, points, or vectors.
 pub struct Add;
 
-impl Function for Add {
+impl Operation for Add {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b").unwrap_or(0.0);
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a + b))))
+        if let Some(items) = input.get("items").and_then(|v| v.as_dictionary()) {
+            return add_items(items);
+        }
+        let a = read_dict(input, "a")?;
+        let b = read_dict(input, "b")?;
+        match a.schema() {
+            Some("point") => Ok(xyz_dictionary("point", read_xyz(a)? + read_xyz(b)?)),
+            Some("vector") => Ok(xyz_dictionary("vector", read_xyz(a)? + read_xyz(b)?)),
+            _ => Ok(number_dictionary(read_value_number(a)? + read_value_number(b)?)),
+        }
     }
 }
 // #endregion 🔖Add
 
 // #region 🔖Subtract
-/// ➖ Subtracts b from a.
+/// ➖ Subtracts numbers, points, or vectors.
 pub struct Subtract;
 
-impl Function for Subtract {
+impl Operation for Subtract {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b").unwrap_or(0.0);
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a - b))))
+        let a = read_dict(input, "a")?;
+        let b = read_dict(input, "b")?;
+        match a.schema() {
+            Some("point") => Ok(xyz_dictionary("point", read_xyz(a)? - read_xyz(b)?)),
+            Some("vector") => Ok(xyz_dictionary("vector", read_xyz(a)? - read_xyz(b)?)),
+            _ => Ok(number_dictionary(read_value_number(a)? - read_value_number(b)?)),
+        }
     }
 }
 // #endregion 🔖Subtract
 
-// #region 🔖Multiply
-/// ✖️ Multiplies two number inputs.
-pub struct Multiply;
+// #region 🔖ConstructXyz
+/// 🧭 Constructs a vector dictionary from x, y, z numbers.
+pub struct ConstructVector;
 
-impl Function for Multiply {
+impl Operation for ConstructVector {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a")?;
-        let b = read_number(input, "b")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a * b))))
+        Ok(xyz_dictionary("vector", Vec3::new(read_channel_number(input, "x")?, read_channel_number(input, "y")?, read_channel_number(input, "z")?)))
     }
 }
-// #endregion 🔖Multiply
 
-// #region 🔖Divide
+/// 📍 Constructs a point dictionary from x, y, z numbers.
+pub struct ConstructPoint;
+
+impl Operation for ConstructPoint {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        Ok(xyz_dictionary("point", Vec3::new(read_channel_number(input, "x")?, read_channel_number(input, "y")?, read_channel_number(input, "z")?)))
+    }
+}
+// #endregion 🔖ConstructXyz
+
+// #region 🔖Move
+/// 🚚 Moves a point or vector by a vector.
+pub struct Move;
+
+impl Operation for Move {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let subject = read_dict(input, "subject")?;
+        let vector = read_dict(input, "vector")?;
+        Ok(xyz_dictionary(subject.schema().unwrap_or("vector"), read_xyz(subject)? + read_xyz(vector)?))
+    }
+}
+// #endregion 🔖Move
+
+// #region 🔖Scalar
+/// ✖️ Multiplies two numbers.
+pub struct Multiply;
+
+impl Operation for Multiply {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        Ok(number_dictionary(read_channel_number(input, "a")? * read_channel_number(input, "b")?))
+    }
+}
+
 /// ➗ Divides a by b.
 pub struct Divide;
 
-impl Function for Divide {
+impl Operation for Divide {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b")?;
+        let b = read_channel_number(input, "b")?;
         if b.abs() < f64::EPSILON {
             return Err(EvalError::InvalidInput("divide by zero".into()));
         }
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a / b))))
+        Ok(number_dictionary(read_channel_number(input, "a")? / b))
     }
 }
-// #endregion 🔖Divide
 
-// #region 🔖Power
 /// ⚡ Raises a to the power of b.
 pub struct Power;
 
-impl Function for Power {
+impl Operation for Power {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a.powf(b)))))
+        Ok(number_dictionary(read_channel_number(input, "a")?.powf(read_channel_number(input, "b")?)))
     }
 }
-// #endregion 🔖Power
 
-// #region 🔖Modulo
 /// 🧮 Remainder of a divided by b.
 pub struct Modulo;
 
-impl Function for Modulo {
+impl Operation for Modulo {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b")?;
+        let b = read_channel_number(input, "b")?;
         if b.abs() < f64::EPSILON {
             return Err(EvalError::InvalidInput("modulo by zero".into()));
         }
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a % b))))
+        Ok(number_dictionary(read_channel_number(input, "a")? % b))
     }
 }
-// #endregion 🔖Modulo
 
-// #region 🔖Negate
 /// ↔️ Negates a number.
 pub struct Negate;
 
-impl Function for Negate {
+impl Operation for Negate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(-n))))
+        Ok(number_dictionary(-read_channel_number(input, "number")?))
     }
 }
-// #endregion 🔖Negate
 
-// #region 🔖Abs
 /// 📏 Absolute value.
 pub struct Abs;
 
-impl Function for Abs {
+impl Operation for Abs {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.abs()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.abs()))
     }
 }
-// #endregion 🔖Abs
 
-// #region 🔖Sqrt
 /// √ Square root.
 pub struct Sqrt;
 
-impl Function for Sqrt {
+impl Operation for Sqrt {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.sqrt()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.sqrt()))
     }
 }
-// #endregion 🔖Sqrt
 
-// #region 🔖Min
 /// ⬇️ Minimum of two numbers.
 pub struct Min;
 
-impl Function for Min {
+impl Operation for Min {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a.min(b)))))
+        Ok(number_dictionary(read_channel_number(input, "a")?.min(read_channel_number(input, "b")?)))
     }
 }
-// #endregion 🔖Min
 
-// #region 🔖Max
 /// ⬆️ Maximum of two numbers.
 pub struct Max;
 
-impl Function for Max {
+impl Operation for Max {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
-        let b = read_number(input, "b")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a.max(b)))))
+        Ok(number_dictionary(read_channel_number(input, "a")?.max(read_channel_number(input, "b")?)))
     }
 }
-// #endregion 🔖Max
 
-// #region 🔖Floor
 /// ⬇️ Floor of a number.
 pub struct Floor;
 
-impl Function for Floor {
+impl Operation for Floor {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.floor()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.floor()))
     }
 }
-// #endregion 🔖Floor
 
-// #region 🔖Ceil
 /// ⬆️ Ceiling of a number.
 pub struct Ceil;
 
-impl Function for Ceil {
+impl Operation for Ceil {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.ceil()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.ceil()))
     }
 }
-// #endregion 🔖Ceil
 
-// #region 🔖Round
 /// ⭕ Rounds a number.
 pub struct Round;
 
-impl Function for Round {
+impl Operation for Round {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.round()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.round()))
     }
 }
-// #endregion 🔖Round
 
-// #region 🔖Sin
 /// 〰️ Sine in radians.
 pub struct Sin;
 
-impl Function for Sin {
+impl Operation for Sin {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.sin()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.sin()))
     }
 }
-// #endregion 🔖Sin
 
-// #region 🔖Cos
 /// 〰️ Cosine in radians.
 pub struct Cos;
 
-impl Function for Cos {
+impl Operation for Cos {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.cos()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.cos()))
     }
 }
-// #endregion 🔖Cos
 
-// #region 🔖Tan
 /// 〰️ Tangent in radians.
 pub struct Tan;
 
-impl Function for Tan {
+impl Operation for Tan {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number").or_else(|_| read_number(input, "a"))?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n.tan()))))
+        Ok(number_dictionary(read_channel_number(input, "number")?.tan()))
     }
 }
-// #endregion 🔖Tan
 
-// #region 🔖Remap
 /// 🗺️ Remaps a value from one range to another.
 pub struct Remap;
 
-impl Function for Remap {
+impl Operation for Remap {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let value = read_number(input, "value").or_else(|_| read_number(input, "number"))?;
-        let from_min = read_number(input, "fromMin").or_else(|_| read_number(input, "a"))?;
-        let from_max = read_number(input, "fromMax").or_else(|_| read_number(input, "b"))?;
-        let to_min = read_optional_number(input, "toMin").unwrap_or(0.0);
-        let to_max = read_optional_number(input, "toMax").unwrap_or(1.0);
+        let value = read_channel_number(input, "value")?;
+        let from_min = read_channel_number(input, "fromMin")?;
+        let from_max = read_channel_number(input, "fromMax")?;
+        let to_min = read_channel_number(input, "toMin")?;
+        let to_max = read_channel_number(input, "toMax")?;
         let span = from_max - from_min;
         if span.abs() < f64::EPSILON {
             return Err(EvalError::InvalidInput("remap span is zero".into()));
         }
-        let t = (value - from_min) / span;
-        let mapped = to_min + (to_max - to_min) * t;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(mapped))))
+        Ok(number_dictionary(to_min + ((value - from_min) / span) * (to_max - to_min)))
     }
 }
-// #endregion 🔖Remap
 
-// #region 🔖Random
 /// 🎲 Seeded or entropy-backed random number in [min, max].
 pub struct Random;
 
-impl Function for Random {
+impl Operation for Random {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let min = read_optional_number(input, "min").unwrap_or(0.0);
-        let max = read_optional_number(input, "max").unwrap_or(1.0);
-        let seed = read_optional_number(input, "seed").map(f64::to_bits);
-        let unit = next_random_unit(seed);
-        let value = min + (max - min) * unit;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(value))))
+        let min = read_channel_number(input, "min")?;
+        let max = read_channel_number(input, "max")?;
+        let seed = read_channel_number(input, "seed").ok().map(f64::to_bits);
+        Ok(number_dictionary(min + (max - min) * next_random_unit(seed)))
     }
 }
-// #endregion 🔖Random
 
-// #region 🔖PassThrough
 /// ➡️ Forwards the number input unchanged.
 pub struct PassThrough;
 
-impl Function for PassThrough {
+impl Operation for PassThrough {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let n = read_number(input, "number")?;
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n))))
+        Ok(number_dictionary(read_channel_number(input, "number")?))
     }
 }
-// #endregion 🔖PassThrough
 
-// #region 🔖Sum
 /// ∑ Sums all numbers in a list dictionary.
 pub struct Sum;
 
-impl Function for Sum {
+impl Operation for Sum {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let list = read_list(input, "list")?;
+        let list = read_dict(input, "list")?;
         let mut total = 0.0;
         for index in list_indices(list) {
             let value = list
                 .get(&index.to_string())
-                .and_then(|v| v.as_atom())
-                .and_then(|a| a.as_f64())
+                .and_then(|v| v.as_dictionary())
+                .map(read_value_number)
+                .transpose()?
                 .ok_or_else(|| EvalError::MissingInput(index.to_string()))?;
             total += value;
         }
-        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(total))))
+        Ok(number_dictionary(total))
     }
 }
-// #endregion 🔖Sum
+// #endregion 🔖Scalar
+
+// #region 🔖Helpers
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Vec3 {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+
+impl Vec3 {
+    fn new(x: f64, y: f64, z: f64) -> Self {
+        Self { x, y, z }
+    }
+}
+
+impl std::ops::Add for Vec3 {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl std::ops::Sub for Vec3 {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
 
 thread_local! {
     static ENTROPY_SEED: Cell<u64> = const { Cell::new(0) };
+}
+
+fn number_dictionary(value: f64) -> Dictionary {
+    Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+}
+
+fn xyz_dictionary(schema: &str, value: Vec3) -> Dictionary {
+    Dictionary::with_schema(schema)
+        .insert("x", Value::Atom(Atom::Decimal(value.x)))
+        .insert("y", Value::Atom(Atom::Decimal(value.y)))
+        .insert("z", Value::Atom(Atom::Decimal(value.z)))
+}
+
+fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
+    let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
+    indices.sort_unstable();
+    let first = indices.first().ok_or_else(|| EvalError::MissingInput("items".into()))?;
+    let first_dict = read_dict(items, &first.to_string())?;
+    match first_dict.schema() {
+        Some("point") | Some("vector") => {
+            let mut total = Vec3::new(0.0, 0.0, 0.0);
+            for index in indices {
+                total = total + read_xyz(read_dict(items, &index.to_string())?)?;
+            }
+            Ok(xyz_dictionary(first_dict.schema().unwrap_or("vector"), total))
+        }
+        _ => {
+            let mut total = 0.0;
+            for index in indices {
+                total += read_value_number(read_dict(items, &index.to_string())?)?;
+            }
+            Ok(number_dictionary(total))
+        }
+    }
+}
+
+fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+    input.get(key).and_then(|v| v.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+    read_value_number(read_dict(input, key)?)
+}
+
+fn read_value_number(input: &Dictionary) -> Result<f64, EvalError> {
+    input
+        .get("value")
+        .and_then(|v| v.as_atom())
+        .and_then(|a| a.as_f64())
+        .ok_or_else(|| EvalError::MissingInput("value".into()))
+}
+
+fn read_xyz(input: &Dictionary) -> Result<Vec3, EvalError> {
+    Ok(Vec3::new(read_field_number(input, "x")?, read_field_number(input, "y")?, read_field_number(input, "z")?))
+}
+
+fn read_field_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
+}
+
+fn list_indices(list: &Dictionary) -> Vec<usize> {
+    let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
+    indices.sort_unstable();
+    indices
 }
 
 fn splitmix64(seed: u64) -> u64 {
@@ -315,10 +394,7 @@ fn entropy_seed() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     {
         use std::time::{SystemTime, UNIX_EPOCH};
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_nanos() as u64)
-            .unwrap_or(0)
+        SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_nanos() as u64).unwrap_or(0)
     }
 }
 
@@ -334,284 +410,150 @@ fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
     })
 }
 
-fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+fn number_channel(id: &str) -> ChannelSpec {
+    ChannelSpec::number_default(id, 0.0)
 }
 
-fn read_optional_number(input: &Dictionary, key: &str) -> Option<f64> {
-    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64())
+fn schema(id: &str, name: &str) -> Schema {
+    Schema {
+        id: id.into(),
+        module: "math".into(),
+        name: name.into(),
+        icon: "emoji:🧭".into(),
+        summary: format!("{name} with x, y, z decimal fields"),
+        fields: vec![FieldSpec::decimal_default("x", 0.0), FieldSpec::decimal_default("y", 0.0), FieldSpec::decimal_default("z", 0.0)],
+    }
 }
 
-fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_dictionary())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
+    OperatorInfo {
+        id: id.into(),
+        module: "math".into(),
+        name: name.into(),
+        abbreviation: abbreviation.into(),
+        icon: "emoji:➕".into(),
+        summary: summary.into(),
+        inputs,
+        outputs,
+        ..Default::default()
+    }
 }
 
-fn list_indices(list: &Dictionary) -> Vec<usize> {
-    let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
-    indices.sort_unstable();
-    indices
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }]);
 }
 
-fn register_kind(
-    registry: &mut Registry,
-    id: &str,
-    name: &str,
-    abbreviation: &str,
-    icon: &str,
-    summary: &str,
-    inputs: Vec<InputSpec>,
-    function: Box<dyn Function>,
-) {
-    registry.register(
-        NeuronKindInfo {
-            id: id.into(),
-            module: "math".into(),
-            name: name.into(),
-            abbreviation: abbreviation.into(),
-            icon: icon.into(),
-            summary: summary.into(),
-            inputs,
-            outputs: vec!["number".into()],
-            ..Default::default()
-        },
-        function,
-    );
-}
-
+#[cfg(any(test, target_arch = "wasm32"))]
 fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
 }
+// #endregion 🔖Helpers
 
-/// 📦 Registers all math neuron kinds on the registry.
+/// 📦 Registers all math schemas and operators.
 pub fn register(registry: &mut Registry) {
-    register_kind(
-        registry,
-        "math.add",
-        "Add",
-        "Add",
-        "emoji:➕",
-        "Sums two numbers",
-        vec![InputSpec::number("a"), InputSpec::number_default("b", 0.0)],
-        Box::new(Add),
-    );
-    register_kind(
-        registry,
-        "math.subtract",
-        "Subtract",
-        "Sub",
-        "emoji:➖",
-        "Subtracts b from a",
-        vec![InputSpec::number("a"), InputSpec::number_default("b", 0.0)],
-        Box::new(Subtract),
-    );
-    register_kind(
-        registry,
-        "math.multiply",
-        "Multiply",
-        "Mul",
-        "emoji:✖️",
-        "Multiplies two numbers",
-        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
-        Box::new(Multiply),
-    );
-    register_kind(
-        registry,
-        "math.divide",
-        "Divide",
-        "Div",
-        "emoji:➗",
-        "Divides a by b",
-        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
-        Box::new(Divide),
-    );
-    register_kind(
-        registry,
-        "math.power",
-        "Power",
-        "Pow",
-        "emoji:⚡",
-        "Raises a to the power of b",
-        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
-        Box::new(Power),
-    );
-    register_kind(
-        registry,
-        "math.modulo",
-        "Modulo",
-        "Mod",
-        "emoji:🧮",
-        "Remainder of a divided by b",
-        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 1.0)],
-        Box::new(Modulo),
-    );
-    register_kind(
-        registry,
-        "math.negate",
-        "Negate",
-        "Neg",
-        "emoji:↔️",
-        "Negates a number",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Negate),
-    );
-    register_kind(
-        registry,
-        "math.abs",
-        "Abs",
-        "Abs",
-        "emoji:📏",
-        "Absolute value",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Abs),
-    );
-    register_kind(
-        registry,
-        "math.sqrt",
-        "Sqrt",
-        "Sqrt",
-        "emoji:√",
-        "Square root",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Sqrt),
-    );
-    register_kind(
-        registry,
-        "math.min",
-        "Min",
-        "Min",
-        "emoji:⬇️",
-        "Minimum of two numbers",
-        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 0.0)],
-        Box::new(Min),
-    );
-    register_kind(
-        registry,
-        "math.max",
-        "Max",
-        "Max",
-        "emoji:⬆️",
-        "Maximum of two numbers",
-        vec![InputSpec::number_default("a", 0.0), InputSpec::number_default("b", 0.0)],
-        Box::new(Max),
-    );
-    register_kind(
-        registry,
-        "math.floor",
-        "Floor",
-        "Flr",
-        "emoji:⬇️",
-        "Floor of a number",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Floor),
-    );
-    register_kind(
-        registry,
-        "math.ceil",
-        "Ceil",
-        "Ceil",
-        "emoji:⬆️",
-        "Ceiling of a number",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Ceil),
-    );
-    register_kind(
-        registry,
-        "math.round",
-        "Round",
-        "Rnd",
-        "emoji:⭕",
-        "Rounds a number",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Round),
-    );
-    register_kind(
-        registry,
-        "math.sin",
-        "Sin",
-        "Sin",
-        "emoji:〰️",
-        "Sine in radians",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Sin),
-    );
-    register_kind(
-        registry,
-        "math.cos",
-        "Cos",
-        "Cos",
-        "emoji:〰️",
-        "Cosine in radians",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Cos),
-    );
-    register_kind(
-        registry,
-        "math.tan",
-        "Tan",
-        "Tan",
-        "emoji:〰️",
-        "Tangent in radians",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(Tan),
-    );
-    register_kind(
-        registry,
-        "math.remap",
-        "Remap",
-        "Map",
-        "emoji:🗺️",
-        "Remaps a value from one range to another",
+    registry.register_schema(schema("point", "Point"));
+    registry.register_schema(schema("vector", "Vector"));
+
+    let scalar = vec![number_channel("a"), number_channel("b")];
+    let scalar_out = vec![ChannelSpec::number("out")];
+    registry.register_operator(
+        operator_info("math.add", "Add", "Add", "Adds numbers, points, or vectors", scalar.clone(), scalar_out.clone()),
         vec![
-            InputSpec::number_default("value", 0.0),
-            InputSpec::number_default("fromMin", 0.0),
-            InputSpec::number_default("fromMax", 1.0),
-            InputSpec::number_default("toMin", 0.0),
-            InputSpec::number_default("toMax", 1.0),
+            OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Add) },
+            OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Add) },
         ],
+    );
+    registry.register_operator(
+        OperatorInfo {
+            variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..operator_info("math.addVariadic", "Add Variadic", "Add", "Adds any number of numbers, points, or vectors", vec![], scalar_out.clone())
+        },
+        vec![
+            OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Add) },
+            OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Add) },
+        ],
+    );
+    registry.register_operator(
+        operator_info("math.subtract", "Subtract", "Sub", "Subtracts numbers, points, or vectors", scalar.clone(), scalar_out.clone()),
+        vec![
+            OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Subtract) },
+            OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Subtract) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Subtract) },
+        ],
+    );
+    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers", scalar.clone(), scalar_out.clone()), Box::new(Multiply), vec!["number", "number"]);
+    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides a by b", scalar.clone(), scalar_out.clone()), Box::new(Divide), vec!["number", "number"]);
+    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", scalar.clone(), scalar_out.clone()), Box::new(Power), vec!["number", "number"]);
+    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", scalar.clone(), scalar_out.clone()), Box::new(Modulo), vec!["number", "number"]);
+
+    for (id, name, abbreviation, summary, op) in [
+        ("math.negate", "Negate", "Neg", "Negates a number", Box::new(Negate) as Box<dyn Operation>),
+        ("math.abs", "Abs", "Abs", "Absolute value", Box::new(Abs)),
+        ("math.sqrt", "Sqrt", "Sqrt", "Square root", Box::new(Sqrt)),
+        ("math.floor", "Floor", "Flr", "Floor of a number", Box::new(Floor)),
+        ("math.ceil", "Ceil", "Ceil", "Ceiling of a number", Box::new(Ceil)),
+        ("math.round", "Round", "Rnd", "Rounds a number", Box::new(Round)),
+        ("math.sin", "Sin", "Sin", "Sine in radians", Box::new(Sin)),
+        ("math.cos", "Cos", "Cos", "Cosine in radians", Box::new(Cos)),
+        ("math.tan", "Tan", "Tan", "Tangent in radians", Box::new(Tan)),
+        ("math.passThrough", "PassThrough", "Pass", "Forwards a number", Box::new(PassThrough)),
+    ] {
+        register_simple(registry, operator_info(id, name, abbreviation, summary, vec![number_channel("number")], scalar_out.clone()), op, vec!["number"]);
+    }
+
+    register_simple(registry, operator_info("math.min", "Min", "Min", "Minimum of two numbers", scalar.clone(), scalar_out.clone()), Box::new(Min), vec!["number", "number"]);
+    register_simple(registry, operator_info("math.max", "Max", "Max", "Maximum of two numbers", scalar.clone(), scalar_out.clone()), Box::new(Max), vec!["number", "number"]);
+    register_simple(
+        registry,
+        operator_info(
+            "math.remap",
+            "Remap",
+            "Map",
+            "Remaps a value from one range to another",
+            vec![number_channel("value"), number_channel("fromMin"), number_channel("fromMax"), number_channel("toMin"), number_channel("toMax")],
+            scalar_out.clone(),
+        ),
         Box::new(Remap),
+        vec!["number", "number", "number", "number", "number"],
     );
-    register_kind(
+    register_simple(
         registry,
-        "math.random",
-        "Random",
-        "Rnd",
-        "emoji:🎲",
-        "Random number in range with optional seed",
-        vec![
-            InputSpec::number_default("seed", 0.0),
-            InputSpec::number_default("min", 0.0),
-            InputSpec::number_default("max", 1.0),
-        ],
+        operator_info("math.random", "Random", "Rnd", "Random number in range with optional seed", vec![number_channel("seed"), number_channel("min"), ChannelSpec::number_default("max", 1.0)], scalar_out.clone()),
         Box::new(Random),
+        vec!["number", "number", "number"],
     );
-    register_kind(
+    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list")], scalar_out.clone()), Box::new(Sum), vec!["list"]);
+
+    let xyz_inputs = vec![number_channel("x"), number_channel("y"), number_channel("z")];
+    register_simple(
         registry,
-        "math.passThrough",
-        "PassThrough",
-        "Pass",
-        "emoji:➡️",
-        "Forwards a number",
-        vec![InputSpec::number_default("number", 0.0)],
-        Box::new(PassThrough),
+        operator_info("math.constructVector", "Construct Vector", "Vec", "Builds a vector from x, y, z", xyz_inputs.clone(), vec![ChannelSpec::new("out", ValueType::Schema("vector".into()))]),
+        Box::new(ConstructVector),
+        vec!["number", "number", "number"],
     );
-    register_kind(
+    register_simple(
         registry,
-        "math.sum",
-        "Sum",
-        "Sum",
-        "emoji:🔢",
-        "Sums numbers in a list dictionary",
-        vec![InputSpec::list("list")],
-        Box::new(Sum),
+        operator_info("math.constructPoint", "Construct Point", "Point", "Builds a point from x, y, z", xyz_inputs, vec![ChannelSpec::new("out", ValueType::Schema("point".into()))]),
+        Box::new(ConstructPoint),
+        vec!["number", "number", "number"],
+    );
+    registry.register_operator(
+        operator_info(
+            "math.move",
+            "Move",
+            "Move",
+            "Moves a point or vector by a vector",
+            vec![ChannelSpec::new("subject", ValueType::Any), ChannelSpec::new("vector", ValueType::Schema("vector".into()))],
+            vec![ChannelSpec::new("out", ValueType::Any)],
+        ),
+        vec![
+            OperatorImpl { schemas: vec!["point".into(), "vector".into()], operation: Box::new(Move) },
+            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Move) },
+        ],
     );
 }
 
@@ -619,20 +561,45 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1, FlowModuleSettingV1};
 
     #[test]
-    fn add_sums_inputs() {
+    fn add_sums_number_dictionaries() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new().insert("a", Value::Atom(Atom::Decimal(3.0))).insert("b", Value::Atom(Atom::Decimal(1.1)));
-        let out = reg.get("math.add").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.1));
+        let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(3.0))).insert("b", Value::Dictionary(number_dictionary(1.1)));
+        let out = reg.dispatch("math.add", &input).unwrap();
+        assert_eq!(out.schema(), Some("number"));
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.1));
     }
 
     #[test]
-    fn manifest_lists_math_kinds() {
+    fn construct_vector_uses_xyz_channels() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let input = Dictionary::new()
+            .insert("x", Value::Dictionary(number_dictionary(1.0)))
+            .insert("y", Value::Dictionary(number_dictionary(2.0)))
+            .insert("z", Value::Dictionary(number_dictionary(3.0)));
+        let out = reg.dispatch("math.constructVector", &input).unwrap();
+        assert_eq!(out.schema(), Some("vector"));
+        assert_eq!(out.get("z").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+    }
+
+    #[test]
+    fn move_translates_point() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let input = Dictionary::new()
+            .insert("subject", Value::Dictionary(xyz_dictionary("point", Vec3::new(1.0, 2.0, 3.0))))
+            .insert("vector", Value::Dictionary(xyz_dictionary("vector", Vec3::new(4.0, 5.0, 6.0))));
+        let out = reg.dispatch("math.move", &input).unwrap();
+        assert_eq!(out.schema(), Some("point"));
+        assert_eq!(out.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
+    }
+
+    #[test]
+    fn manifest_lists_math_operators_and_schemas() {
         let json = build_manifest_json(
             "math",
             "Math",
@@ -649,30 +616,18 @@ mod tests {
             }],
         );
         assert!(json.contains("flow.module/v1"));
-        assert!(json.contains("math.add"));
-        assert!(json.contains("math.random"));
+        assert!(json.contains("math.constructVector"));
+        assert!(json.contains("vector"));
     }
 
     #[test]
     fn evaluate_json_adds_numbers() {
         let reg = module_registry();
-        let input = Dictionary::new().insert("a", Value::Atom(Atom::Decimal(2.0))).insert("b", Value::Atom(Atom::Decimal(1.0)));
+        let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(2.0))).insert("b", Value::Dictionary(number_dictionary(1.0)));
         let out_json = evaluate_json(&reg, "math.add", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
-    }
-
-    #[test]
-    fn sum_totals_list_numbers() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let list = Dictionary::new()
-            .insert("0", Value::Atom(Atom::Decimal(1.0)))
-            .insert("1", Value::Atom(Atom::Decimal(2.5)))
-            .insert("2", Value::Atom(Atom::Decimal(3.0)));
-        let input = Dictionary::new().insert("list", Value::Dictionary(list));
-        let out = reg.get("math.sum").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.5));
+        assert_eq!(out.schema(), Some("number"));
+        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
     }
 
     #[test]
@@ -680,39 +635,20 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new()
-            .insert("seed", Value::Atom(Atom::Decimal(42.0)))
-            .insert("min", Value::Atom(Atom::Decimal(0.0)))
-            .insert("max", Value::Atom(Atom::Decimal(1.0)));
-        let first = reg.get("math.random").unwrap().evaluate(&input).unwrap();
-        let second = reg.get("math.random").unwrap().evaluate(&input).unwrap();
-        assert_eq!(
-            first.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
-            second.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64())
-        );
-    }
-
-    #[test]
-    fn remap_maps_range() {
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new()
-            .insert("value", Value::Atom(Atom::Decimal(5.0)))
-            .insert("fromMin", Value::Atom(Atom::Decimal(0.0)))
-            .insert("fromMax", Value::Atom(Atom::Decimal(10.0)))
-            .insert("toMin", Value::Atom(Atom::Decimal(0.0)))
-            .insert("toMax", Value::Atom(Atom::Decimal(100.0)));
-        let out = reg.get("math.remap").unwrap().evaluate(&input).unwrap();
-        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(50.0));
+            .insert("seed", Value::Dictionary(number_dictionary(42.0)))
+            .insert("min", Value::Dictionary(number_dictionary(0.0)))
+            .insert("max", Value::Dictionary(number_dictionary(1.0)));
+        let first = reg.dispatch("math.random", &input).unwrap();
+        let second = reg.dispatch("math.random", &input).unwrap();
+        assert_eq!(first.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), second.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()));
     }
 
     #[test]
     fn divide_rejects_zero() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("a", Value::Atom(Atom::Decimal(1.0)))
-            .insert("b", Value::Atom(Atom::Decimal(0.0)));
-        assert!(reg.get("math.divide").unwrap().evaluate(&input).is_err());
+        let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(1.0))).insert("b", Value::Dictionary(number_dictionary(0.0)));
+        assert!(reg.dispatch("math.divide", &input).is_err());
     }
 }
 // #endregion 🔖Tests

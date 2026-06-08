@@ -32,6 +32,7 @@
     "gis/map/react",
     "flow/react",
     "flow/play",
+    "flow/modules/*/pkg",
     "geometry/brep/js",
     "procedural/react",
     "procedural/play",

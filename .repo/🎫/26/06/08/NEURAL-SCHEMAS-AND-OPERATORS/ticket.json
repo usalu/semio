@@ -1,0 +1,18 @@
+{
+  "title": "Neural Schemas and Operators",
+  "emoji": "🧠",
+  "status": "open",
+  "description": "Implement first-class neural schemas with reserved $schema dictionaries, replace neuron-kind functions with schema-dispatched operators, make flow persist an authoritative tree plus strippable flow GUI data, and update flow modules/react/core accordingly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1634"
+  },
+  "goal": "🎯procedural🎯floweditor",
+  "plan": {
+    "client": "cursor",
+    "id": "f692e604",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/neural_schemas_and_operators_f692e604.plan.md"
+  },
+  "sessions": [
+    "⚪7f0763c5737c41f4a529f211c04d1d55"
+  ]
+}

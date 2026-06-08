@@ -16,18 +16,21 @@ if (import.meta.env.VITEST) {
   const reactDir = dirname(fileURLToPath(import.meta.url));
   initSync({ module: readFileSync(join(reactDir, "../core/pkg/flow_core_bg.wasm")) });
   const [
+    { initSync: initCoreSync },
     { initSync: initMathSync },
     { initSync: initTextSync },
     { initSync: initLogicSync },
     { initSync: initDictionarySync },
     { initSync: initListSync },
   ] = await Promise.all([
+    import("../modules/core/pkg/flow_module_core.js"),
     import("../modules/math/pkg/flow_module_math.js"),
     import("../modules/text/pkg/flow_module_text.js"),
     import("../modules/logic/pkg/flow_module_logic.js"),
     import("../modules/dictionary/pkg/flow_module_dictionary.js"),
     import("../modules/list/pkg/flow_module_list.js"),
   ]);
+  initCoreSync({ module: readFileSync(join(reactDir, "../modules/core/pkg/flow_module_core_bg.wasm")) });
   initMathSync({ module: readFileSync(join(reactDir, "../modules/math/pkg/flow_module_math_bg.wasm")) });
   initTextSync({ module: readFileSync(join(reactDir, "../modules/text/pkg/flow_module_text_bg.wasm")) });
   initLogicSync({ module: readFileSync(join(reactDir, "../modules/logic/pkg/flow_module_logic_bg.wasm")) });
@@ -63,26 +66,49 @@ export interface FlowModuleVariadicSpecV1 {
   readonly max?: number;
 }
 
-export interface FlowInputSpecV1 {
+export interface FlowValueTypeV1 {
+  readonly kind: string;
+  readonly of?: FlowValueTypeV1 | string;
+}
+
+export interface FlowChannelSpecV1 {
   readonly id: string;
-  readonly type: string;
+  readonly schema: FlowValueTypeV1;
   readonly default?: unknown;
   readonly label?: string;
 }
 
-export interface FlowModuleNeuronKindV1 {
+export interface FlowModuleSchemaFieldV1 {
+  readonly key: string;
+  readonly value: FlowValueTypeV1;
+  readonly default?: unknown;
+  readonly label?: string;
+}
+
+export interface FlowModuleSchemaV1 {
+  readonly id: string;
+  readonly module: string;
+  readonly name: string;
+  readonly icon: string;
+  readonly summary: string;
+  readonly fields: readonly FlowModuleSchemaFieldV1[];
+}
+
+export interface FlowModuleOperatorInfoV1 {
   readonly id: string;
   readonly module: string;
   readonly name: string;
   readonly abbreviation: string;
   readonly icon: string;
   readonly summary: string;
-  readonly inputs: readonly FlowInputSpecV1[];
-  readonly outputs: readonly string[];
+  readonly inputs: readonly FlowChannelSpecV1[];
+  readonly outputs: readonly FlowChannelSpecV1[];
   readonly group?: readonly string[];
   readonly variadicInput?: FlowModuleVariadicSpecV1;
   readonly variadicOutput?: FlowModuleVariadicSpecV1;
 }
+
+export type FlowModuleNeuronKindV1 = FlowModuleOperatorInfoV1;
 
 export interface FlowModuleCommandV1 {
   readonly id: string;
@@ -109,7 +135,8 @@ export interface FlowModuleManifestV1 {
   readonly version: string;
   readonly activationEvents: readonly string[];
   readonly contributes: {
-    readonly neuronKinds: readonly FlowModuleNeuronKindV1[];
+    readonly schemas: readonly FlowModuleSchemaV1[];
+    readonly operators: readonly FlowModuleOperatorInfoV1[];
     readonly widgets: readonly FlowModuleWidgetV1[];
     readonly commands: readonly FlowModuleCommandV1[];
     readonly settings: readonly FlowModuleSettingV1[];
@@ -142,6 +169,7 @@ type FlowModulePackage = {
 type FlowModuleLoader = () => Promise<FlowModulePackage>;
 
 const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
+  core: () => import("@flow/module-core"),
   math: () => import("@flow/module-math"),
   text: () => import("@flow/module-text"),
   logic: () => import("@flow/module-logic"),
@@ -149,7 +177,7 @@ const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
   list: () => import("@flow/module-list"),
 };
 
-export const FLOW_DEFAULT_MODULE_IDS = ["math", "text", "logic", "dictionary", "list"] as const;
+export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list"] as const;
 export type FlowModuleId = (typeof FLOW_DEFAULT_MODULE_IDS)[number];
 
 export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);
@@ -233,7 +261,7 @@ export class FlowExtensionHost {
     glue.activate();
     const manifest = parseFlowModuleManifest(glue.manifest());
     this.active.set(id, { glue, manifest });
-    for (const kind of manifest.contributes.neuronKinds) {
+    for (const kind of manifest.contributes.operators) {
       this.kindToModule.set(kind.id, id);
     }
     console.log(`[DEBUG] flow extension activated: ${id}`);
@@ -244,7 +272,7 @@ export class FlowExtensionHost {
     const entry = this.active.get(id);
     if (!entry) return;
     entry.glue.deactivate();
-    for (const kind of entry.manifest.contributes.neuronKinds) {
+    for (const kind of entry.manifest.contributes.operators) {
       this.kindToModule.delete(kind.id);
     }
     this.active.delete(id);
@@ -285,7 +313,7 @@ export class FlowExtensionHost {
   catalogueSections(): CatalogueSection[] {
     const sections: CatalogueSection[] = [];
     for (const [id, entry] of this.active) {
-      const section = nestNeuronKindsIntoCatalogueSection(id, entry.manifest.name, entry.manifest.contributes.neuronKinds);
+      const section = nestNeuronKindsIntoCatalogueSection(id, entry.manifest.name, entry.manifest.contributes.operators);
       if ((section.items ?? []).length === 0 && !(section.groups?.length ?? 0)) continue;
       sections.push(section);
     }
@@ -299,7 +327,7 @@ export class FlowExtensionHost {
   kindInfosJson(): string {
     const kinds: FlowModuleNeuronKindV1[] = [];
     for (const entry of this.active.values()) {
-      kinds.push(...entry.manifest.contributes.neuronKinds);
+      kinds.push(...entry.manifest.contributes.operators);
     }
     return JSON.stringify(kinds);
   }
@@ -311,7 +339,7 @@ export class FlowExtensionHost {
       name: titleizeModuleId(id),
       version: "0.0.0",
       activationEvents: [],
-      contributes: { neuronKinds: [], widgets: [], commands: [], settings: [] },
+      contributes: { schemas: [], operators: [], widgets: [], commands: [], settings: [] },
     };
   }
 }
@@ -358,6 +386,40 @@ export interface FlowFixtureV1 {
     readonly toPort?: string;
   }[];
   readonly layout?: Readonly<Record<string, { readonly x: number; readonly y: number }>>;
+}
+
+export interface FlowDocumentV1 {
+  readonly schema: "flow.document/v1";
+  readonly flow: FlowGuiV1;
+  readonly tree: FlowTreeV1;
+}
+
+export interface FlowGuiV1 {
+  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly nodes: Readonly<Record<string, FlowNodeGuiV1>>;
+  readonly previews?: readonly FlowPreviewGuiV1[];
+}
+
+export interface FlowNodeGuiV1 {
+  readonly layout: { readonly x: number; readonly y: number };
+  readonly chrome: FlowNodeChromeV1;
+}
+
+export type FlowNodeChromeV1 =
+  | { readonly kind: "plain" }
+  | { readonly kind: "slider"; readonly min: number; readonly max: number; readonly step: number }
+  | { readonly kind: "note" }
+  | { readonly kind: "image" };
+
+export interface FlowPreviewGuiV1 {
+  readonly id: string;
+  readonly source?: { readonly neuron: string; readonly channel: string };
+  readonly mode: string;
+}
+
+export interface FlowTreeV1 {
+  readonly neurons: readonly { readonly id: string; readonly kind: string; readonly params?: unknown }[];
+  readonly synapses: readonly { readonly id: string; readonly from: string; readonly to: string; readonly fromPort?: string; readonly toPort?: string }[];
 }
 
 export type FlowWidgetV1 =

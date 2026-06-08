@@ -17,6 +17,10 @@ impl Dictionary {
         Self::default()
     }
 
+    pub fn with_schema(schema: impl Into<String>) -> Self {
+        Self::new().insert(SCHEMA_KEY, Value::Atom(Atom::String(schema.into())))
+    }
+
     pub fn insert(mut self, key: impl Into<String>, value: Value) -> Self {
         self.pairs.insert(key.into(), value);
         self
@@ -24,6 +28,10 @@ impl Dictionary {
 
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.pairs.get(key)
+    }
+
+    pub fn schema(&self) -> Option<&str> {
+        self.get(SCHEMA_KEY).and_then(|v| v.as_atom()).and_then(|a| a.as_str())
     }
 
     pub fn keys(&self) -> impl Iterator<Item = &String> {
@@ -112,6 +120,124 @@ impl Atom {
 }
 // #endregion 🔖Dictionary
 
+// #region 🔖Schema
+pub const SCHEMA_KEY: &str = "$schema";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "of")]
+pub enum ValueType {
+    Boolean,
+    Integer,
+    Decimal,
+    Text,
+    List(Box<ValueType>),
+    Schema(String),
+    Any,
+}
+
+impl Default for ValueType {
+    fn default() -> Self {
+        Self::Any
+    }
+}
+
+impl ValueType {
+    pub fn id(&self) -> String {
+        match self {
+            ValueType::Boolean => "boolean".into(),
+            ValueType::Integer => "integer".into(),
+            ValueType::Decimal => "number".into(),
+            ValueType::Text => "text".into(),
+            ValueType::List(_) => "list".into(),
+            ValueType::Schema(id) => id.clone(),
+            ValueType::Any => "value".into(),
+        }
+    }
+
+    pub fn matches(&self, value: &Value) -> bool {
+        match self {
+            ValueType::Any => true,
+            ValueType::Boolean => value.as_atom().is_some_and(|a| matches!(a, Atom::Boolean(_))),
+            ValueType::Integer => value.as_atom().is_some_and(|a| matches!(a, Atom::Integer(_))),
+            ValueType::Decimal => value.as_atom().and_then(|a| a.as_f64()).is_some(),
+            ValueType::Text => value.as_atom().and_then(|a| a.as_str()).is_some(),
+            ValueType::List(_) => value.as_dictionary().is_some_and(|d| d.schema() == Some("list")),
+            ValueType::Schema(schema) => value.as_dictionary().is_some_and(|d| d.schema() == Some(schema.as_str())),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldSpec {
+    pub key: String,
+    pub value: ValueType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+impl FieldSpec {
+    pub fn new(key: impl Into<String>, value: ValueType) -> Self {
+        Self { key: key.into(), value, default: None, label: None }
+    }
+
+    pub fn with_default(mut self, default: Value) -> Self {
+        self.default = Some(default);
+        self
+    }
+
+    pub fn decimal(key: impl Into<String>) -> Self {
+        Self::new(key, ValueType::Decimal)
+    }
+
+    pub fn decimal_default(key: impl Into<String>, default: f64) -> Self {
+        Self::decimal(key).with_default(Value::Atom(Atom::Decimal(default)))
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Schema {
+    pub id: String,
+    pub module: String,
+    pub name: String,
+    pub icon: String,
+    pub summary: String,
+    pub fields: Vec<FieldSpec>,
+}
+
+impl Schema {
+    pub fn validate(&self, dictionary: &Dictionary) -> Result<(), EvalError> {
+        match dictionary.schema() {
+            Some(id) if id == self.id => {}
+            Some(id) => return Err(EvalError::InvalidInput(format!("schema {id} does not match {}", self.id))),
+            None => return Err(EvalError::MissingInput(SCHEMA_KEY.into())),
+        }
+        for field in &self.fields {
+            let Some(value) = dictionary.get(&field.key) else {
+                return Err(EvalError::MissingInput(field.key.clone()));
+            };
+            if !field.value.matches(value) {
+                return Err(EvalError::InvalidInput(format!("field {} does not match {}", field.key, field.value.id())));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn default_dictionary(&self) -> Dictionary {
+        let mut dictionary = Dictionary::with_schema(self.id.clone());
+        for field in &self.fields {
+            if let Some(default) = &field.default {
+                dictionary = dictionary.insert(field.key.clone(), default.clone());
+            }
+        }
+        dictionary
+    }
+}
+// #endregion 🔖Schema
+
 // #region 🔖Tree
 /// 🌳 Directed acyclic graph of neurons and synapses.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -151,8 +277,8 @@ pub struct Synapse {
 }
 // #endregion 🔖Tree
 
-// #region 🔖NeuronKind
-/// ⚙️ Eval error from a neuron kind.
+// #region 🔖Operator
+/// ⚙️ Eval error from an operator.
 #[derive(Clone, Debug, PartialEq)]
 pub enum EvalError {
     UnknownKind(String),
@@ -175,7 +301,7 @@ impl std::fmt::Display for EvalError {
 impl std::error::Error for EvalError {}
 
 /// 🧮 Computational unit: one dictionary to another.
-pub trait Function: Send + Sync {
+pub trait Operation: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
 }
 
@@ -189,24 +315,23 @@ pub struct VariadicSpec {
     pub max: Option<usize>,
 }
 
-/// 🔌 Declared neuron input port with type and optional default.
+/// 🔌 Declared operator channel with schema and optional default.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct InputSpec {
+pub struct ChannelSpec {
     pub id: String,
-    #[serde(rename = "type")]
-    pub value_type: String,
+    pub schema: ValueType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
-impl InputSpec {
-    pub fn new(id: impl Into<String>, value_type: impl Into<String>) -> Self {
+impl ChannelSpec {
+    pub fn new(id: impl Into<String>, schema: ValueType) -> Self {
         Self {
             id: id.into(),
-            value_type: value_type.into(),
+            schema,
             default: None,
             label: None,
         }
@@ -223,74 +348,77 @@ impl InputSpec {
     }
 
     pub fn number(id: impl Into<String>) -> Self {
-        Self::new(id, "number")
+        Self::new(id, ValueType::Schema("number".into()))
     }
 
     pub fn number_default(id: impl Into<String>, default: f64) -> Self {
-        Self::number(id).with_default(Value::Atom(Atom::Decimal(default)))
+        Self::number(id).with_default(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(default)))))
     }
 
     pub fn integer_default(id: impl Into<String>, default: i64) -> Self {
-        Self::new(id, "integer").with_default(Value::Atom(Atom::Integer(default)))
+        Self::new(id, ValueType::Integer).with_default(Value::Atom(Atom::Integer(default)))
     }
 
     pub fn boolean_default(id: impl Into<String>, default: bool) -> Self {
-        Self::new(id, "boolean").with_default(Value::Atom(Atom::Boolean(default)))
+        Self::new(id, ValueType::Schema("boolean".into()))
+            .with_default(Value::Dictionary(Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(default)))))
     }
 
     pub fn text_default(id: impl Into<String>, default: impl Into<String>) -> Self {
-        Self::new(id, "text").with_default(Value::Atom(Atom::String(default.into())))
+        Self::new(id, ValueType::Schema("text".into()))
+            .with_default(Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(default.into())))))
     }
 
     pub fn list(id: impl Into<String>) -> Self {
-        Self::new(id, "list")
+        Self::new(id, ValueType::Schema("list".into()))
     }
 
     pub fn dictionary(id: impl Into<String>) -> Self {
-        Self::new(id, "dictionary")
+        Self::new(id, ValueType::Schema("dictionary".into()))
     }
 
     pub fn value(id: impl Into<String>) -> Self {
-        Self::new(id, "value")
+        Self::new(id, ValueType::Any)
     }
 
     pub fn wildcard() -> Self {
-        Self::new("*", "value")
+        Self::new("*", ValueType::Any)
     }
 }
 
-/// 📇 Catalogue metadata for a neuron kind.
+/// 📇 Catalogue metadata for an operator.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NeuronKindInfo {
+pub struct OperatorInfo {
     pub id: String,
     pub module: String,
     pub name: String,
     pub abbreviation: String,
     pub icon: String,
     pub summary: String,
-    pub inputs: Vec<InputSpec>,
-    pub outputs: Vec<String>,
+    pub inputs: Vec<ChannelSpec>,
+    pub outputs: Vec<ChannelSpec>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub variadic_input: Option<VariadicSpec>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub variadic_output: Option<VariadicSpec>,
 }
 
-struct RegistryEntry {
-    info: NeuronKindInfo,
-    function: Box<dyn Function>,
+pub struct OperatorImpl {
+    pub schemas: Vec<String>,
+    pub operation: Box<dyn Operation>,
 }
 
-/// 📋 Registry of neuron kinds by id.
+pub struct Operator {
+    pub info: OperatorInfo,
+    pub implementations: Vec<OperatorImpl>,
+}
+
+/// 📋 Registry of schemas and operators by id.
+#[derive(Default)]
 pub struct Registry {
-    kinds: HashMap<String, RegistryEntry>,
-}
-
-impl Default for Registry {
-    fn default() -> Self {
-        Self { kinds: HashMap::new() }
-    }
+    schemas: HashMap<String, Schema>,
+    operators: HashMap<String, Operator>,
 }
 
 impl Registry {
@@ -298,26 +426,52 @@ impl Registry {
         Self::default()
     }
 
-    pub fn register(&mut self, info: NeuronKindInfo, function: Box<dyn Function>) {
+    pub fn register_schema(&mut self, schema: Schema) {
+        self.schemas.insert(schema.id.clone(), schema);
+    }
+
+    pub fn register_operator(&mut self, info: OperatorInfo, implementations: Vec<OperatorImpl>) {
         let id = info.id.clone();
-        self.kinds.insert(id, RegistryEntry { info, function });
+        self.operators.insert(id, Operator { info, implementations });
     }
 
-    pub fn get(&self, kind_id: &str) -> Option<&dyn Function> {
-        self.kinds.get(kind_id).map(|entry| entry.function.as_ref())
+    pub fn schema(&self, schema_id: &str) -> Option<&Schema> {
+        self.schemas.get(schema_id)
     }
 
-    pub fn kind_info(&self, kind_id: &str) -> Option<&NeuronKindInfo> {
-        self.kinds.get(kind_id).map(|entry| &entry.info)
+    pub fn operator(&self, operator_id: &str) -> Option<&Operator> {
+        self.operators.get(operator_id)
     }
 
-    pub fn catalogue(&self) -> Vec<NeuronKindInfo> {
-        let mut items: Vec<NeuronKindInfo> = self.kinds.values().map(|entry| entry.info.clone()).collect();
+    pub fn operator_info(&self, operator_id: &str) -> Option<&OperatorInfo> {
+        self.operators.get(operator_id).map(|entry| &entry.info)
+    }
+
+    pub fn schema_catalogue(&self) -> Vec<Schema> {
+        let mut items: Vec<Schema> = self.schemas.values().cloned().collect();
         items.sort_by(|a, b| a.id.cmp(&b.id));
         items
     }
+
+    pub fn operator_catalogue(&self) -> Vec<OperatorInfo> {
+        let mut items: Vec<OperatorInfo> = self.operators.values().map(|entry| entry.info.clone()).collect();
+        items.sort_by(|a, b| a.id.cmp(&b.id));
+        items
+    }
+
+    pub fn dispatch(&self, operator_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let operator = self.operator(operator_id).ok_or_else(|| EvalError::UnknownKind(operator_id.into()))?;
+        let signature = operator_signature(&operator.info, input);
+        let implementation = operator
+            .implementations
+            .iter()
+            .find(|implementation| implementation.schemas == signature)
+            .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
+            .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
+        implementation.operation.evaluate(input)
+    }
 }
-// #endregion 🔖NeuronKind
+// #endregion 🔖Operator
 
 // #region 🔖Evaluator
 /// 📡 Resolved neuron inputs and outputs from one evaluation pass.
@@ -345,31 +499,26 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        kind_infos: &HashMap<String, NeuronKindInfo>,
+        operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
     ) -> Result<HashMap<String, Dictionary>, EvalError> {
-        Ok(self.evaluate_channels_with(tree, seeds, kind_infos, dispatch)?.outputs)
+        Ok(self.evaluate_channels_with(tree, seeds, operator_infos, dispatch)?.outputs)
     }
 
     pub fn evaluate_channels(
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        kind_infos: &HashMap<String, NeuronKindInfo>,
+        operator_infos: &HashMap<String, OperatorInfo>,
     ) -> Result<EvalChannels, EvalError> {
-        self.evaluate_channels_with(tree, seeds, kind_infos, &mut |kind, input| {
-            self.registry
-                .get(kind)
-                .ok_or_else(|| EvalError::UnknownKind(kind.into()))?
-                .evaluate(input)
-        })
+        self.evaluate_channels_with(tree, seeds, operator_infos, &mut |kind, input| self.registry.dispatch(kind, input))
     }
 
     pub fn evaluate_channels_with(
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        kind_infos: &HashMap<String, NeuronKindInfo>,
+        operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
     ) -> Result<EvalChannels, EvalError> {
         let order = topo_order(tree)?;
@@ -377,8 +526,8 @@ impl<'a> Evaluator<'a> {
         let mut inputs: HashMap<String, Dictionary> = HashMap::new();
         for neuron_id in order {
             let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
-            let kind_info = kind_infos.get(&neuron.kind).or_else(|| self.registry.kind_info(&neuron.kind));
-            let input = collect_neuron_input(tree, &outputs, &neuron_id, kind_info);
+            let operator_info = operator_infos.get(&neuron.kind).or_else(|| self.registry.operator_info(&neuron.kind));
+            let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info);
             inputs.insert(neuron_id.clone(), input.clone());
             if let Some(seed) = seeds.get(&neuron_id) {
                 outputs.insert(neuron_id.clone(), seed.clone());
@@ -405,26 +554,13 @@ fn insert_variadic_slot(acc: Dictionary, slot_key: &str, port_id: &str, value: V
 }
 
 fn insert_fixed_port(acc: Dictionary, port_key: &str, value: Value) -> Dictionary {
-    match value {
-        Value::Dictionary(dict) => {
-            if let Some(v) = dict.get("number").or_else(|| dict.get("text")).or_else(|| dict.get("dictionary")) {
-                return acc.insert(port_key.to_string(), v.clone());
-            }
-            if dict.len() == 1 {
-                if let Some(v) = dict.keys().next().and_then(|k| dict.get(k)) {
-                    return acc.insert(port_key.to_string(), v.clone());
-                }
-            }
-            acc.insert(port_key.to_string(), Value::Dictionary(dict))
-        }
-        other => acc.insert(port_key.to_string(), other),
-    }
+    acc.insert(port_key.to_string(), value)
 }
 
-/// 💉 Fills missing declared input keys from neuron kind defaults.
-pub fn inject_input_defaults(acc: Dictionary, kind_info: &NeuronKindInfo) -> Dictionary {
+/// 💉 Fills missing declared input keys from operator channel defaults.
+pub fn inject_channel_defaults(acc: Dictionary, operator_info: &OperatorInfo) -> Dictionary {
     let mut acc = acc;
-    for spec in &kind_info.inputs {
+    for spec in &operator_info.inputs {
         if spec.id == "*" || acc.get(&spec.id).is_some() {
             continue;
         }
@@ -435,16 +571,16 @@ pub fn inject_input_defaults(acc: Dictionary, kind_info: &NeuronKindInfo) -> Dic
     acc
 }
 
-fn inject_input_defaults_for_kind(acc: Dictionary, kind_info: Option<&NeuronKindInfo>) -> Dictionary {
-    match kind_info {
-        Some(info) => inject_input_defaults(acc, info),
+fn inject_channel_defaults_for_operator(acc: Dictionary, operator_info: Option<&OperatorInfo>) -> Dictionary {
+    match operator_info {
+        Some(info) => inject_channel_defaults(acc, info),
         None => acc,
     }
 }
 
-fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, kind_info: Option<&NeuronKindInfo>) -> Dictionary {
+fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Dictionary {
     let mut acc = Dictionary::new();
-    let variadic = kind_info.and_then(|info| info.variadic_input.as_ref());
+    let variadic = operator_info.and_then(|info| info.variadic_input.as_ref());
     for syn in &tree.synapses {
         if syn.to != neuron_id {
             continue;
@@ -464,7 +600,36 @@ fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neur
         }
         acc = insert_fixed_port(acc, &syn.to_port, value);
     }
-    inject_input_defaults_for_kind(acc, kind_info)
+    inject_channel_defaults_for_operator(acc, operator_info)
+}
+
+fn channel_schema(input: &Dictionary, channel: &ChannelSpec) -> String {
+    input
+        .get(&channel.id)
+        .and_then(|value| value.as_dictionary())
+        .and_then(|dictionary| dictionary.schema())
+        .map(str::to_string)
+        .unwrap_or_else(|| channel.schema.id())
+}
+
+fn operator_signature(info: &OperatorInfo, input: &Dictionary) -> Vec<String> {
+    if let Some(variadic) = &info.variadic_input {
+        return input
+            .get(&variadic.slot_key)
+            .and_then(|value| value.as_dictionary())
+            .map(|items| {
+                let mut keys: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
+                keys.sort_unstable();
+                keys.into_iter()
+                    .filter_map(|index| items.get(&index.to_string()))
+                    .filter_map(|value| value.as_dictionary())
+                    .filter_map(|dictionary| dictionary.schema())
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default();
+    }
+    info.inputs.iter().filter(|channel| channel.id != "*").map(|channel| channel_schema(input, channel)).collect()
 }
 
 fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
@@ -511,7 +676,7 @@ mod tests {
 
     struct Echo;
 
-    impl Function for Echo {
+    impl Operation for Echo {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
             Ok(input.clone())
         }
@@ -519,66 +684,97 @@ mod tests {
 
     struct Double;
 
-    impl Function for Double {
+    impl Operation for Double {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-            let n = input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
-            Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))
+            let value = input
+                .get("number")
+                .and_then(|v| v.as_dictionary())
+                .and_then(|d| d.get("value"))
+                .and_then(|v| v.as_atom())
+                .and_then(|a| a.as_f64())
+                .ok_or_else(|| EvalError::MissingInput("number.value".into()))?;
+            Ok(number_dictionary(value * 2.0))
         }
     }
 
-    #[test]
-    fn dictionary_json_round_trip() {
-        let d = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.1))).insert("text", Value::Atom(Atom::String("hi".into())));
-        let json = serde_json::to_string(&d).unwrap();
-        let back: Dictionary = serde_json::from_str(&json).unwrap();
-        assert_eq!(d, back);
+    fn number_schema() -> Schema {
+        Schema {
+            id: "number".into(),
+            module: "core".into(),
+            name: "Number".into(),
+            icon: "emoji:#".into(),
+            summary: "Number dictionary".into(),
+            fields: vec![FieldSpec::decimal_default("value", 0.0)],
+        }
     }
 
-    fn echo_info() -> NeuronKindInfo {
-        NeuronKindInfo {
+    fn number_dictionary(value: f64) -> Dictionary {
+        Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+    }
+
+    fn echo_info() -> OperatorInfo {
+        OperatorInfo {
             id: "echo".into(),
             module: "test".into(),
             name: "Echo".into(),
             abbreviation: "Echo".into(),
             icon: "emoji:📣".into(),
             summary: "Forwards input".into(),
-            inputs: vec![InputSpec::value("x")],
-            outputs: vec!["x".into()],
+            inputs: vec![ChannelSpec::value("x")],
+            outputs: vec![ChannelSpec::value("out")],
             ..Default::default()
         }
     }
 
-    fn double_info() -> NeuronKindInfo {
-        NeuronKindInfo {
+    fn double_info() -> OperatorInfo {
+        OperatorInfo {
             id: "double".into(),
             module: "test".into(),
             name: "Double".into(),
             abbreviation: "Dbl".into(),
             icon: "emoji:✖️".into(),
             summary: "Doubles number".into(),
-            inputs: vec![InputSpec::number("number")],
-            outputs: vec!["number".into()],
+            inputs: vec![ChannelSpec::number("number")],
+            outputs: vec![ChannelSpec::number("out")],
             ..Default::default()
         }
     }
 
     #[test]
-    fn registry_dispatches_kind() {
-        let mut reg = Registry::new();
-        reg.register(echo_info(), Box::new(Echo));
-        let out = reg.get("echo").unwrap().evaluate(&Dictionary::new().insert("x", Value::Atom(Atom::Integer(1)))).unwrap();
-        assert_eq!(out.get("x").and_then(|v| v.as_atom()), Some(&Atom::Integer(1)));
+    fn dictionary_schema_round_trip() {
+        let d = number_dictionary(3.1);
+        let json = serde_json::to_string(&d).unwrap();
+        let back: Dictionary = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.schema(), Some("number"));
+        assert_eq!(d, back);
     }
 
     #[test]
-    fn registry_catalogue_lists_kinds() {
+    fn schema_validates_required_fields() {
+        let schema = number_schema();
+        let d = number_dictionary(2.0);
+        schema.validate(&d).unwrap();
+        assert!(schema.validate(&Dictionary::with_schema("point")).is_err());
+    }
+
+    #[test]
+    fn registry_dispatches_operator() {
         let mut reg = Registry::new();
-        reg.register(echo_info(), Box::new(Echo));
-        reg.register(double_info(), Box::new(Double));
-        let catalogue = reg.catalogue();
-        assert_eq!(catalogue.len(), 2);
-        assert_eq!(catalogue[0].id, "double");
-        assert_eq!(catalogue[1].id, "echo");
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }]);
+        let out = reg.dispatch("echo", &Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0)))).unwrap();
+        assert!(out.get("x").is_some());
+    }
+
+    #[test]
+    fn registry_catalogue_lists_operators_and_schemas() {
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }]);
+        assert_eq!(reg.schema_catalogue()[0].id, "number");
+        assert_eq!(reg.operator_catalogue()[0].id, "double");
+        assert_eq!(reg.operator_catalogue()[1].id, "echo");
     }
 
     #[test]
@@ -587,32 +783,28 @@ mod tests {
             neurons: vec![Neuron {
                 id: "b".into(),
                 kind: "double".into(),
-                params: Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))),
+                params: Dictionary::new().insert("number", Value::Dictionary(number_dictionary(3.0))),
             }],
             synapses: vec![],
         };
         let out = Evaluator::new(&Registry::new())
             .evaluate_with(&tree, &HashMap::new(), &HashMap::new(), &mut |kind, input| {
                 assert_eq!(kind, "double");
-                let n = input
-                    .get("number")
-                    .and_then(|v| v.as_atom())
-                    .and_then(|a| a.as_f64())
-                    .ok_or_else(|| EvalError::MissingInput("number".into()))?;
-                Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))
+                Double.evaluate(input)
             })
             .unwrap();
-        assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
+        assert_eq!(out.get("b").and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
     }
 
     #[test]
     fn two_neuron_pipeline() {
         let mut reg = Registry::new();
-        reg.register(echo_info(), Box::new(Echo));
-        reg.register(double_info(), Box::new(Double));
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }]);
         let tree = Tree {
             neurons: vec![
-                Neuron { id: "a".into(), kind: "echo".into(), params: Dictionary::new() },
+                Neuron { id: "a".into(), kind: "echo".into(), params: number_dictionary(2.0) },
                 Neuron { id: "b".into(), kind: "double".into(), params: Dictionary::new() },
             ],
             synapses: vec![Synapse {
@@ -620,19 +812,18 @@ mod tests {
                 from: "a".into(),
                 to: "b".into(),
                 from_port: "out".into(),
-                to_port: "in".into(),
+                to_port: "number".into(),
             }],
         };
-        let mut seeds = HashMap::new();
-        seeds.insert("a".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0))));
-        let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
-        assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
+        let out = Evaluator::new(&reg).evaluate(&tree, &HashMap::new()).unwrap();
+        assert_eq!(out.get("b").and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
     }
 
     #[test]
     fn evaluate_channels_returns_resolved_inputs_per_neuron() {
         let mut reg = Registry::new();
-        reg.register(double_info(), Box::new(Double));
+        reg.register_schema(number_schema());
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }]);
         let tree = Tree {
             neurons: vec![Neuron { id: "add".into(), kind: "double".into(), params: Dictionary::new() }],
             synapses: vec![Synapse {
@@ -644,12 +835,11 @@ mod tests {
             }],
         };
         let mut seeds = HashMap::new();
-        seeds.insert("slider".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))));
+        seeds.insert("slider".into(), number_dictionary(3.0));
         let channels = Evaluator::new(&reg).evaluate_channels(&tree, &seeds, &HashMap::from([(double_info().id.clone(), double_info())])).unwrap();
-        let input = channels.inputs.get("add").expect("add input");
-        assert_eq!(input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        assert_eq!(channels.inputs.get("add").and_then(|d| d.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
         assert_eq!(
-            channels.outputs.get("add").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
+            channels.outputs.get("add").and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
             Some(6.0)
         );
     }
@@ -659,33 +849,21 @@ mod tests {
         let tree = Tree {
             neurons: vec![Neuron { id: "add".into(), kind: "math.add".into(), params: Dictionary::new() }],
             synapses: vec![
-                Synapse {
-                    id: "s1".into(),
-                    from: "slider".into(),
-                    to: "add".into(),
-                    from_port: "out".into(),
-                    to_port: "a".into(),
-                },
-                Synapse {
-                    id: "s2".into(),
-                    from: "note".into(),
-                    to: "add".into(),
-                    from_port: "out".into(),
-                    to_port: "b".into(),
-                },
+                Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "a".into() },
+                Synapse { id: "s2".into(), from: "note".into(), to: "add".into(), from_port: "out".into(), to_port: "b".into() },
             ],
         };
         let mut outputs = HashMap::new();
-        outputs.insert("slider".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0))));
-        outputs.insert("note".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))));
+        outputs.insert("slider".into(), number_dictionary(2.0));
+        outputs.insert("note".into(), number_dictionary(3.0));
         let input = collect_neuron_input(&tree, &outputs, "add", None);
-        assert_eq!(input.get("a").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
-        assert_eq!(input.get("b").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        assert_eq!(input.get("a").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
+        assert_eq!(input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
     }
 
     #[test]
     fn collect_routes_variadic_slots_in_order() {
-        let kind = NeuronKindInfo {
+        let operator = OperatorInfo {
             id: "dictionary.merge".into(),
             module: "dictionary".into(),
             name: "Merge".into(),
@@ -693,39 +871,21 @@ mod tests {
             icon: "emoji:🔀".into(),
             summary: "Merge".into(),
             inputs: vec![],
-            outputs: vec!["dictionary".into()],
+            outputs: vec![ChannelSpec::dictionary("out")],
             variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
             ..Default::default()
         };
         let tree = Tree {
             neurons: vec![Neuron { id: "merge".into(), kind: "dictionary.merge".into(), params: Dictionary::new() }],
             synapses: vec![
-                Synapse {
-                    id: "s1".into(),
-                    from: "a".into(),
-                    to: "merge".into(),
-                    from_port: "out".into(),
-                    to_port: "0".into(),
-                },
-                Synapse {
-                    id: "s2".into(),
-                    from: "b".into(),
-                    to: "merge".into(),
-                    from_port: "out".into(),
-                    to_port: "1".into(),
-                },
+                Synapse { id: "s1".into(), from: "a".into(), to: "merge".into(), from_port: "out".into(), to_port: "0".into() },
+                Synapse { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "out".into(), to_port: "1".into() },
             ],
         };
         let mut outputs = HashMap::new();
-        outputs.insert(
-            "a".into(),
-            Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::new().insert("x", Value::Atom(Atom::Decimal(1.0))))),
-        );
-        outputs.insert(
-            "b".into(),
-            Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::new().insert("y", Value::Atom(Atom::Decimal(2.0))))),
-        );
-        let input = collect_neuron_input(&tree, &outputs, "merge", Some(&kind));
+        outputs.insert("a".into(), Dictionary::with_schema("dictionary"));
+        outputs.insert("b".into(), Dictionary::with_schema("dictionary"));
+        let input = collect_neuron_input(&tree, &outputs, "merge", Some(&operator));
         let items = input.get("items").and_then(|v| v.as_dictionary()).expect("items");
         assert!(items.get("0").is_some());
         assert!(items.get("1").is_some());
@@ -733,7 +893,7 @@ mod tests {
 
     #[test]
     fn collect_injects_declared_defaults_for_unconnected_inputs() {
-        let kind = NeuronKindInfo {
+        let operator = OperatorInfo {
             id: "list.get".into(),
             module: "list".into(),
             name: "Get".into(),
@@ -741,20 +901,26 @@ mod tests {
             icon: "emoji:🔍".into(),
             summary: "Get".into(),
             inputs: vec![
-                InputSpec::list("list"),
-                InputSpec::number_default("index", 0.0),
-                InputSpec::boolean_default("wrap", false),
+                ChannelSpec::list("list"),
+                ChannelSpec::number_default("index", 0.0),
+                ChannelSpec::boolean_default("wrap", false),
             ],
-            outputs: vec!["value".into()],
+            outputs: vec![ChannelSpec::value("out")],
             ..Default::default()
         };
         let tree = Tree {
             neurons: vec![Neuron { id: "get".into(), kind: "list.get".into(), params: Dictionary::new() }],
             synapses: vec![],
         };
-        let input = collect_neuron_input(&tree, &HashMap::new(), "get", Some(&kind));
-        assert_eq!(input.get("index").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
-        assert_eq!(input.get("wrap").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(false));
+        let input = collect_neuron_input(&tree, &HashMap::new(), "get", Some(&operator));
+        assert_eq!(
+            input.get("index").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
+            Some(0.0)
+        );
+        assert_eq!(
+            input.get("wrap").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()),
+            Some(false)
+        );
     }
 }
 // #endregion 🔖Tests
