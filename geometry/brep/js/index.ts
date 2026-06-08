@@ -143,10 +143,25 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
 /** @emoji ⏳ Loads `@flow/module-brep` WASM once. */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
 	if (brepWasm) return brepWasm;
-	const mod = (await import("@flow/module-brep")) as BrepWasmModule;
-	if (mod.default) await mod.default();
-	brepWasm = mod;
-	return mod;
+	if (import.meta.env.VITEST) {
+		const { readFileSync } = await import("node:fs");
+		const { dirname, join } = await import("node:path");
+		const { fileURLToPath } = await import("node:url");
+		const here = dirname(fileURLToPath(import.meta.url));
+		const mod = (await import("@flow/module-brep")) as BrepWasmModule & {
+			initSync?: (input: { module: BufferSource }) => void;
+		};
+		mod.initSync?.({ module: readFileSync(join(here, "../../../flow/modules/brep/pkg/flow_module_brep_bg.wasm")) });
+		brepWasm = mod;
+		return mod;
+	}
+	const [{ default: initBrep, ...mod }, { default: wasmUrl }] = await Promise.all([
+		import("@flow/module-brep"),
+		import("../../../flow/modules/brep/pkg/flow_module_brep_bg.wasm?url"),
+	]);
+	if (initBrep) await initBrep({ module_or_path: wasmUrl });
+	brepWasm = mod as BrepWasmModule;
+	return brepWasm;
 }
 
 export async function createDefaultBrepWasmBridge(): Promise<BrepWasmBridge> {

@@ -8,6 +8,7 @@ rust-version = "1.88"
 path = "lib.rs"
 
 [dependencies]
+async-trait = "0.1.88"
 geometry_brep_engine = { path = "../engine" }
 brepkit-topology = { git = "https://github.com/andymai/brepkit" }
 brepkit-operations = { git = "https://github.com/andymai/brepkit" }

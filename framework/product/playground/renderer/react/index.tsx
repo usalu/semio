@@ -6318,7 +6318,7 @@ import {
   type ProceduralPlayHostBridge,
 } from "@procedural/play";
 import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, flowWidgetPaletteTreeDragController } from "@flow/react";
-import { ProceduralFlowEditor, ProceduralPreview, proceduralExtensionHost } from "@procedural/react";
+import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@procedural/react";
 import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
 
 let proceduralPlayChromeRegistered = false;
@@ -6563,6 +6563,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
 function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
   const { runtime } = useApp();
   const ctrl = useProceduralPlayController();
+  const brepBridge = useProceduralBrepBridge();
   const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   void interactionRevision;
   const onHover = reactHostPort.useCallback(
@@ -6611,7 +6612,7 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
         onHover={onHover}
         onSelect={onSelect}
         onSelectionChange={onSelectionChange}
-        kernel={proceduralExtensionHost.getBrepKernel()}
+        kernel={brepBridge ?? undefined}
         className="h-full w-full"
       />
     </div>

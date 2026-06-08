@@ -9,7 +9,15 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-neural_engine = { path = "../../neural/engine" }
+flow_module_brep = { path = "../modules/brep" }
+flow_module_core = { path = "../modules/core" }
+flow_module_dictionary = { path = "../modules/dictionary" }
+flow_module_list = { path = "../modules/list" }
+flow_module_logic = { path = "../modules/logic" }
+flow_module_math = { path = "../modules/math" }
+flow_module_text = { path = "../modules/text" }
+geometry_brep_engine = { path = "../../geometry/brep/engine", features = ["parallel"] }
+neural_engine = { path = "../../neural/engine", features = ["parallel"] }
 mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }
 infinite_cavas = { path = "../../infinite/cavas/vello" }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -20,4 +28,5 @@ js-sys = "0.3.83"
 serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"
+wasm-bindgen-rayon = { version = "1.3.0", features = ["no-bundler"] }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

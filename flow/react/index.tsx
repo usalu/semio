@@ -7,6 +7,7 @@ import { borderNormalBottomClass, canvasViewportClass, cn, ContextMenuController
 import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@ui/styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
+import flowCoreWasmUrl from "../core/pkg/flow_core_bg.wasm?url";
 
 // #region 🔖GpuWasmBridge
 if (import.meta.env.VITEST) {
@@ -40,11 +41,11 @@ if (import.meta.env.VITEST) {
   initListSync({ module: readFileSync(join(reactDir, "../modules/list/pkg/flow_module_list_bg.wasm")) });
   initBrepSync({ module: readFileSync(join(reactDir, "../modules/brep/pkg/flow_module_brep_bg.wasm")) });
 } else {
-  await initFlowWasm();
+  await initFlowWasm({ module_or_path: flowCoreWasmUrl });
 }
 
 export async function ensureFlowWasmLoaded(): Promise<void> {
-  await initFlowWasm();
+  await initFlowWasm({ module_or_path: flowCoreWasmUrl });
 }
 
 export { FlowSession };
@@ -177,14 +178,27 @@ type FlowModulePackage = {
 
 type FlowModuleLoader = () => Promise<FlowModulePackage>;
 
+type FlowWasmInitInput = string | URL | Request | { readonly module_or_path?: string | URL | Request };
+type FlowWasmInit = (input?: FlowWasmInitInput) => Promise<unknown>;
+
+async function loadFlowWasmModule(
+  jsModule: Promise<FlowModulePackage & { default?: FlowWasmInit }>,
+  wasmUrlModule: Promise<{ default: string }>,
+): Promise<FlowModulePackage> {
+  const [mod, { default: wasmUrl }] = await Promise.all([jsModule, wasmUrlModule]);
+  if (mod.default) await mod.default({ module_or_path: wasmUrl });
+  return mod;
+}
+
 const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
-  core: () => import("../modules/core/pkg/flow_module_core.js"),
-  math: () => import("../modules/math/pkg/flow_module_math.js"),
-  text: () => import("../modules/text/pkg/flow_module_text.js"),
-  logic: () => import("../modules/logic/pkg/flow_module_logic.js"),
-  dictionary: () => import("../modules/dictionary/pkg/flow_module_dictionary.js"),
-  list: () => import("../modules/list/pkg/flow_module_list.js"),
-  brep: () => import("../modules/brep/pkg/flow_module_brep.js"),
+  core: () => loadFlowWasmModule(import("../modules/core/pkg/flow_module_core.js"), import("../modules/core/pkg/flow_module_core_bg.wasm?url")),
+  math: () => loadFlowWasmModule(import("../modules/math/pkg/flow_module_math.js"), import("../modules/math/pkg/flow_module_math_bg.wasm?url")),
+  text: () => loadFlowWasmModule(import("../modules/text/pkg/flow_module_text.js"), import("../modules/text/pkg/flow_module_text_bg.wasm?url")),
+  logic: () => loadFlowWasmModule(import("../modules/logic/pkg/flow_module_logic.js"), import("../modules/logic/pkg/flow_module_logic_bg.wasm?url")),
+  dictionary: () =>
+    loadFlowWasmModule(import("../modules/dictionary/pkg/flow_module_dictionary.js"), import("../modules/dictionary/pkg/flow_module_dictionary_bg.wasm?url")),
+  list: () => loadFlowWasmModule(import("../modules/list/pkg/flow_module_list.js"), import("../modules/list/pkg/flow_module_list_bg.wasm?url")),
+  brep: () => loadFlowWasmModule(import("../modules/brep/pkg/flow_module_brep.js"), import("../modules/brep/pkg/flow_module_brep_bg.wasm?url")),
 };
 
 export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep"] as const;
@@ -258,9 +272,6 @@ export class FlowExtensionHost {
       throw new Error(`unknown flow module: ${id}`);
     }
     const mod = await loader();
-    if (typeof mod.default === "function") {
-      await mod.default();
-    }
     const glue: FlowModuleGlue = {
       manifest: () => mod.manifest(),
       evaluate: (kindId, inputJson) => mod.evaluate(kindId, inputJson),

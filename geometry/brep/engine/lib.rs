@@ -1,5 +1,10 @@
 //! 🧭 Brep kernel interface: geometry handles and mesh transfer contracts.
 
+mod compute;
+
+pub use compute::{block_on, run_blocking};
+
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Types
@@ -89,25 +94,26 @@ impl std::error::Error for BrepError {}
 // #endregion 🔖Types
 
 // #region 🔖Kernel
-/// 🔌 Model-free BREP kernel interface.
+/// 🔌 Model-free BREP kernel interface (fully async).
+#[async_trait(?Send)]
 pub trait BrepKernel {
-    fn box_prim(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError>;
-    fn sphere_prim(&mut self, radius: f64) -> Result<GeometryHandle, BrepError>;
-    fn cylinder_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError>;
-    fn cone_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError>;
-    fn torus_prim(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError>;
-    fn fuse(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
-    fn cut(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
-    fn intersect(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
-    fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError>;
-    fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError>;
-    fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError>;
-    fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError>;
-    fn fillet(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError>;
-    fn chamfer(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError>;
-    fn volume(&self, shape: &GeometryHandle) -> Result<f64, BrepError>;
-    fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError>;
-    fn tessellate(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError>;
-    fn dispose(&mut self, handle: &GeometryHandle);
+    async fn box_prim(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError>;
+    async fn sphere_prim(&mut self, radius: f64) -> Result<GeometryHandle, BrepError>;
+    async fn cylinder_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError>;
+    async fn cone_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError>;
+    async fn torus_prim(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError>;
+    async fn fuse(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
+    async fn cut(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
+    async fn intersect(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
+    async fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError>;
+    async fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError>;
+    async fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError>;
+    async fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError>;
+    async fn fillet(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError>;
+    async fn chamfer(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError>;
+    async fn volume(&self, shape: &GeometryHandle) -> Result<f64, BrepError>;
+    async fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError>;
+    async fn tessellate(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError>;
+    async fn dispose(&mut self, handle: &GeometryHandle);
 }
 // #endregion 🔖Kernel

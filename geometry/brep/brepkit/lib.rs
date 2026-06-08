@@ -1,5 +1,6 @@
 //! 🔩 Brepkit-backed implementation of [`geometry_brep_engine::BrepKernel`].
 
+use async_trait::async_trait;
 use brepkit_math::mat::Mat4;
 use brepkit_math::vec::{Point3, Vec3 as BkVec3};
 use brepkit_operations::boolean::{boolean, BooleanOp};
@@ -99,68 +100,68 @@ impl BrepkitKernel {
 }
 // #endregion 🔖Registry
 
-impl BrepKernel for BrepkitKernel {
-    fn box_prim(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
+impl BrepkitKernel {
+    pub fn box_prim_sync(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_box(&mut self.topo, width, depth, height).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn sphere_prim(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn sphere_prim_sync(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_sphere(&mut self.topo, radius, 24).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn cylinder_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn cylinder_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_cylinder(&mut self.topo, radius, height).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn cone_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn cone_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_cone(&mut self.topo, radius, 0.0, height).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn torus_prim(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn torus_prim_sync(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_torus(&mut self.topo, major, minor, 24).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn fuse(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+    pub fn fuse_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
         let solid = boolean(&mut self.topo, BooleanOp::Fuse, a_id, b_id).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn cut(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+    pub fn cut_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
         let solid = boolean(&mut self.topo, BooleanOp::Cut, a_id, b_id).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn intersect(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+    pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
         let solid = boolean(&mut self.topo, BooleanOp::Intersect, a_id, b_id).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
-    fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
+    pub fn translate_sync(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let matrix = Mat4::translation(offset[0], offset[1], offset[2]);
         transform_solid(&mut self.topo, solid, &matrix).map_err(Self::map_err)?;
         Ok(shape.clone())
     }
 
-    fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn rotate_sync(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let matrix = Self::rotation_axis_matrix(axis, angle)?;
         transform_solid(&mut self.topo, solid, &matrix).map_err(Self::map_err)?;
         Ok(shape.clone())
     }
 
-    fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError> {
+    pub fn scale_sync(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let to_origin = Mat4::translation(-center[0], -center[1], -center[2]);
         let scale = Mat4::scale(factor, factor, factor);
@@ -170,7 +171,7 @@ impl BrepKernel for BrepkitKernel {
         Ok(shape.clone())
     }
 
-    fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
+    pub fn mirror_sync(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
         let solid_id = self.solid_id(shape)?;
         let solid = mirror(
             &mut self.topo,
@@ -182,30 +183,30 @@ impl BrepKernel for BrepkitKernel {
         Ok(self.register_solid(solid))
     }
 
-    fn fillet(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn fillet_sync(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)?;
         let filleted = fillet_rolling_ball(&mut self.topo, solid, &edges, radius).map_err(Self::map_err)?;
         Ok(self.register_solid(filleted))
     }
 
-    fn chamfer(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
+    pub fn chamfer_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)?;
         let chamfered = chamfer(&mut self.topo, solid, &edges, distance).map_err(Self::map_err)?;
         Ok(self.register_solid(chamfered))
     }
 
-    fn volume(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
+    pub fn volume_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
         let solid = self.solid_id(shape)?;
         solid_volume(&self.topo, solid, 0.1).map_err(Self::map_err)
     }
 
-    fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError> {
+    pub fn kind_sync(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError> {
         Ok(self.registry.get(handle.as_str()).map(|entry| entry.kind).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))?)
     }
 
-    fn tessellate(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError> {
+    pub fn tessellate_sync(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError> {
         let solid = self.solid_id(handle)?;
         let tol = tolerance.max(1e-4);
         let mesh = tessellate_solid_with_tolerance(&self.topo, solid, tol, 0.2).map_err(Self::map_err)?;
@@ -223,8 +224,83 @@ impl BrepKernel for BrepkitKernel {
         })
     }
 
-    fn dispose(&mut self, handle: &GeometryHandle) {
+    pub fn dispose_sync(&mut self, handle: &GeometryHandle) {
         self.registry.remove(handle.as_str());
+    }
+}
+
+#[async_trait(?Send)]
+impl BrepKernel for BrepkitKernel {
+    async fn box_prim(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
+        self.box_prim_sync(width, depth, height)
+    }
+
+    async fn sphere_prim(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
+        self.sphere_prim_sync(radius)
+    }
+
+    async fn cylinder_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
+        self.cylinder_prim_sync(radius, height)
+    }
+
+    async fn cone_prim(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
+        self.cone_prim_sync(radius, height)
+    }
+
+    async fn torus_prim(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
+        self.torus_prim_sync(major, minor)
+    }
+
+    async fn fuse(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+        self.fuse_sync(a, b)
+    }
+
+    async fn cut(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+        self.cut_sync(a, b)
+    }
+
+    async fn intersect(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+        self.intersect_sync(a, b)
+    }
+
+    async fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
+        self.translate_sync(shape, offset)
+    }
+
+    async fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+        self.rotate_sync(shape, axis, angle)
+    }
+
+    async fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError> {
+        self.scale_sync(shape, factor, center)
+    }
+
+    async fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
+        self.mirror_sync(shape, origin, normal)
+    }
+
+    async fn fillet(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
+        self.fillet_sync(shape, radius)
+    }
+
+    async fn chamfer(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
+        self.chamfer_sync(shape, distance)
+    }
+
+    async fn volume(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
+        self.volume_sync(shape)
+    }
+
+    async fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError> {
+        self.kind_sync(handle)
+    }
+
+    async fn tessellate(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError> {
+        self.tessellate_sync(handle, tolerance)
+    }
+
+    async fn dispose(&mut self, handle: &GeometryHandle) {
+        self.dispose_sync(handle);
     }
 }
 // #endregion 🔖Kernel
@@ -237,20 +313,20 @@ mod tests {
     #[test]
     fn box_and_tessellate() {
         let mut kernel = BrepkitKernel::new();
-        let solid = kernel.box_prim(2.0, 3.0, 4.0).unwrap();
-        let mesh = kernel.tessellate(&solid, 0.1).unwrap();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let mesh = kernel.tessellate_sync(&solid, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
         assert!(!mesh.index.is_empty());
-        assert_eq!(kernel.volume(&solid).unwrap(), 24.0);
+        assert_eq!(kernel.volume_sync(&solid).unwrap(), 24.0);
     }
 
     #[test]
     fn fillet_and_translate() {
         let mut kernel = BrepkitKernel::new();
-        let solid = kernel.box_prim(2.0, 2.0, 2.0).unwrap();
-        let filleted = kernel.fillet(&solid, 0.1).unwrap();
-        let moved = kernel.translate(&filleted, [1.0, 0.0, 0.0]).unwrap();
-        let mesh = kernel.tessellate(&moved, 0.1).unwrap();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let filleted = kernel.fillet_sync(&solid, 0.1).unwrap();
+        let moved = kernel.translate_sync(&filleted, [1.0, 0.0, 0.0]).unwrap();
+        let mesh = kernel.tessellate_sync(&moved, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
     }
 }

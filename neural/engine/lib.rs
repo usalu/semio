@@ -667,7 +667,7 @@ impl<'a> Evaluator<'a> {
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
         operator_infos: &HashMap<String, OperatorInfo>,
-        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
     ) -> Result<HashMap<String, Dictionary>, EvalError> {
         Ok(self.evaluate_channels_with(tree, seeds, operator_infos, dispatch)?.outputs)
     }
@@ -678,7 +678,7 @@ impl<'a> Evaluator<'a> {
         seeds: &HashMap<String, Dictionary>,
         operator_infos: &HashMap<String, OperatorInfo>,
     ) -> Result<EvalChannels, EvalError> {
-        self.evaluate_channels_with(tree, seeds, operator_infos, &mut |kind, input| self.registry.dispatch(kind, input))
+        self.evaluate_channels_with(tree, seeds, operator_infos, &|kind, input| self.registry.dispatch(kind, input))
     }
 
     pub fn evaluate_channels_with(
@@ -686,31 +686,67 @@ impl<'a> Evaluator<'a> {
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
         operator_infos: &HashMap<String, OperatorInfo>,
-        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
     ) -> Result<EvalChannels, EvalError> {
-        let order = topo_order(tree)?;
+        let levels = topo_levels(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
         let mut inputs: HashMap<String, Dictionary> = HashMap::new();
-        for neuron_id in order {
-            let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
-            let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
-            let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info);
-            inputs.insert(neuron_id.clone(), input.clone());
-            if let Some(seed) = seeds.get(&neuron_id) {
-                outputs.insert(neuron_id.clone(), seed.clone());
-                continue;
+        for level in levels {
+            let mut level_inputs: HashMap<String, Dictionary> = HashMap::new();
+            let mut level_outputs: HashMap<String, Dictionary> = HashMap::new();
+            let mut deferred_clusters: Vec<(String, Tree, Dictionary)> = Vec::new();
+            let mut compute_jobs: Vec<(String, String, Dictionary)> = Vec::new();
+
+            for neuron_id in &level {
+                let neuron = tree
+                    .neurons
+                    .iter()
+                    .find(|n| n.id == *neuron_id)
+                    .ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
+                let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
+                let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info);
+                level_inputs.insert(neuron_id.clone(), input.clone());
+                if let Some(seed) = seeds.get(neuron_id) {
+                    level_outputs.insert(neuron_id.clone(), seed.clone());
+                    continue;
+                }
+                if let Some(sub_tree) = neuron.tree.as_deref().cloned() {
+                    deferred_clusters.push((neuron_id.clone(), sub_tree, input));
+                    continue;
+                }
+                if neuron.kind == INPUT_KIND || neuron.kind == OUTPUT_KIND {
+                    level_outputs.insert(neuron_id.clone(), input.merge(&neuron.params));
+                    continue;
+                }
+                compute_jobs.push((neuron_id.clone(), neuron.kind.clone(), input.merge(&neuron.params)));
             }
-            if let Some(sub_tree) = neuron.tree.as_deref() {
-                let out = self.evaluate_cluster(sub_tree, &input, operator_infos, dispatch)?;
-                outputs.insert(neuron_id.clone(), out);
-                continue;
+
+            #[cfg(feature = "parallel")]
+            {
+                use rayon::prelude::*;
+                let parallel_outputs: Result<Vec<(String, Dictionary)>, EvalError> = compute_jobs
+                    .par_iter()
+                    .map(|(neuron_id, kind, merged)| dispatch(kind, merged).map(|out| (neuron_id.clone(), out)))
+                    .collect();
+                for entry in parallel_outputs? {
+                    level_outputs.insert(entry.0, entry.1);
+                }
             }
-            if neuron.kind == INPUT_KIND || neuron.kind == OUTPUT_KIND {
-                outputs.insert(neuron_id.clone(), input.merge(&neuron.params));
-                continue;
+            #[cfg(not(feature = "parallel"))]
+            {
+                for (neuron_id, kind, merged) in compute_jobs {
+                    let out = dispatch(&kind, &merged)?;
+                    level_outputs.insert(neuron_id, out);
+                }
             }
-            let out = dispatch(&neuron.kind, &input.merge(&neuron.params))?;
-            outputs.insert(neuron_id.clone(), out);
+
+            for (neuron_id, sub_tree, input) in deferred_clusters {
+                let out = self.evaluate_cluster(&sub_tree, &input, operator_infos, dispatch)?;
+                level_outputs.insert(neuron_id, out);
+            }
+
+            inputs.extend(level_inputs);
+            outputs.extend(level_outputs);
         }
         Ok(EvalChannels { outputs, inputs })
     }
@@ -720,7 +756,7 @@ impl<'a> Evaluator<'a> {
         sub_tree: &Tree,
         parent_input: &Dictionary,
         operator_infos: &HashMap<String, OperatorInfo>,
-        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
     ) -> Result<Dictionary, EvalError> {
         let mut sub_seeds = HashMap::new();
         for neuron in &sub_tree.neurons {
@@ -879,6 +915,10 @@ fn operator_signature(info: &OperatorInfo, input: &Dictionary) -> Vec<String> {
 }
 
 fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
+    Ok(topo_levels(tree)?.into_iter().flatten().collect())
+}
+
+fn topo_levels(tree: &Tree) -> Result<Vec<Vec<String>>, EvalError> {
     let ids: HashSet<String> = tree.neurons.iter().map(|n| n.id.clone()).collect();
     let mut incoming: HashMap<String, Vec<String>> = HashMap::new();
     for id in &ids {
@@ -893,25 +933,31 @@ fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
     let mut indegree: HashMap<String, usize> = incoming.iter().map(|(k, v)| (k.clone(), v.len())).collect();
     let mut queue: VecDeque<String> = indegree.iter().filter(|(_, &d)| d == 0).map(|(k, _)| k.clone()).collect();
     queue.make_contiguous().sort();
-    let mut order = Vec::new();
-    while let Some(n) = queue.pop_front() {
-        order.push(n.clone());
-        for syn in &tree.synapses {
-            if syn.from != n {
-                continue;
-            }
-            if let Some(d) = indegree.get_mut(&syn.to) {
-                *d = d.saturating_sub(1);
-                if *d == 0 {
-                    queue.push_back(syn.to.clone());
+    let mut levels = Vec::new();
+    let mut visited = 0usize;
+    while !queue.is_empty() {
+        let mut level: Vec<String> = queue.drain(..).collect();
+        level.sort();
+        visited += level.len();
+        for n in &level {
+            for syn in &tree.synapses {
+                if syn.from != *n {
+                    continue;
+                }
+                if let Some(d) = indegree.get_mut(&syn.to) {
+                    *d = d.saturating_sub(1);
+                    if *d == 0 {
+                        queue.push_back(syn.to.clone());
+                    }
                 }
             }
         }
+        levels.push(level);
     }
-    if order.len() != ids.len() {
+    if visited != ids.len() {
         return Err(EvalError::CycleDetected);
     }
-    Ok(order)
+    Ok(levels)
 }
 // #endregion 🔖Evaluator
 

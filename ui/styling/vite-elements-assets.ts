@@ -80,6 +80,8 @@ export function playgroundStaleOptimizeDepPlugin(): Plugin {
 export function playgroundIframeEmbedHeadersPlugin(): Plugin {
   const useHeaders: Connect.NextHandleFunction = (_req, res, next) => {
     res.setHeader("Content-Security-Policy", "frame-ancestors *");
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
     next();
   };
   return {
@@ -721,6 +723,17 @@ export function mapLibreVectorTileProxyVitePlugin(cacheDir: string): Plugin {
   };
 }
 
+/** @emoji 🦀 Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
+export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
+  "@flow/module-core",
+  "@flow/module-math",
+  "@flow/module-text",
+  "@flow/module-logic",
+  "@flow/module-dictionary",
+  "@flow/module-list",
+  "@flow/module-brep",
+] as const;
+
 /** @emoji 🔀 Vite resolve aliases shared by playground play hosts and renderer vitest graphs. */
 export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> {
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
@@ -751,6 +764,8 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@framework/presentation/renderer/react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
     { find: "@flow/play", replacement: resolve(repoRoot, "flow/play/index.ts") },
     { find: "@flow/react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
+    { find: "@flow/module-core", replacement: resolve(repoRoot, "flow/modules/core/pkg/flow_module_core.js") },
+    { find: "@flow/module-brep", replacement: resolve(repoRoot, "flow/modules/brep/pkg/flow_module_brep.js") },
     { find: "@flow/module-math", replacement: resolve(repoRoot, "flow/modules/math/pkg/flow_module_math.js") },
     { find: "@flow/module-text", replacement: resolve(repoRoot, "flow/modules/text/pkg/flow_module_text.js") },
     { find: "@flow/module-logic", replacement: resolve(repoRoot, "flow/modules/logic/pkg/flow_module_logic.js") },

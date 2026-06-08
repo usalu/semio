@@ -4,7 +4,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPlaygroundPlayViteConfig } from "../../ui/styling/vite-elements-assets.ts";
+import { createPlaygroundPlayViteConfig, FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE } from "../../ui/styling/vite-elements-assets.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../..");
@@ -30,10 +30,10 @@ export default createPlaygroundPlayViteConfig({
 			"@react-three/fiber",
 			"@react-three/drei",
 			"@infinite/world/r3f",
-			"@flow/module-brep",
 			"@flow/react",
 			"@procedural/react",
 		],
+		exclude: [...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
 		esbuildOptions: { target: "esnext" },
 	},
 	watchIgnored: [

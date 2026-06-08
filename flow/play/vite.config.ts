@@ -4,7 +4,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPlaygroundPlayViteConfig } from "../../ui/styling/vite-elements-assets.ts";
+import { createPlaygroundPlayViteConfig, FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE } from "../../ui/styling/vite-elements-assets.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../..");
@@ -20,6 +20,7 @@ export default createPlaygroundPlayViteConfig({
   resolveDedupe: ["react", "react-dom", "@flow/react"],
   optimizeDeps: {
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@flow/react"],
+    exclude: [...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
     esbuildOptions: { target: "esnext" },
   },
   watchIgnored: [

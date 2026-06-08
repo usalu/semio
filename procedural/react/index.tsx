@@ -109,9 +109,34 @@ export class ProceduralExtensionHost extends FlowExtensionHost {
 		if (!this.bridge) throw new Error("brep wasm not ready");
 		return this.bridge;
 	}
+
+	tryGetBrepBridge(): BrepWasmBridge | null {
+		return this.bridge;
+	}
+
+	/** @emoji 🧭 Back-compat alias for preview hosts that still call `getBrepKernel`. */
+	getBrepKernel(): BrepWasmBridge {
+		return this.getBrepBridge();
+	}
 }
 
 export const proceduralExtensionHost = new ProceduralExtensionHost();
+
+/** @emoji 🔌 Resolves the brep WASM bridge after extension defaults are activated. */
+export function useProceduralBrepBridge(host: ProceduralExtensionHost = proceduralExtensionHost): BrepWasmBridge | null {
+	const [bridge, setBridge] = useState<BrepWasmBridge | null>(host.tryGetBrepBridge());
+	useEffect(() => {
+		let cancelled = false;
+		void host.activateDefaults().then(() => {
+			if (cancelled) return;
+			setBridge(host.tryGetBrepBridge());
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [host]);
+	return bridge;
+}
 // #endregion 🔖BrepFlowModule
 
 

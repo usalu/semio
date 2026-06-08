@@ -1,17 +1,20 @@
 //! 🔷 Flow brep module: brepkit-backed geometry operators.
 
 use geometry_brep_brepkit::BrepkitKernel;
-use geometry_brep_engine::{BrepKernel, GeometryHandle, Vec3};
+use geometry_brep_engine::{block_on, BrepKernel, GeometryHandle, Vec3};
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use std::cell::RefCell;
+use std::sync::{Mutex, OnceLock};
 
-thread_local! {
-    static KERNEL: RefCell<BrepkitKernel> = RefCell::new(BrepkitKernel::new());
+static KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
+
+fn kernel() -> &'static Mutex<BrepkitKernel> {
+    KERNEL.get_or_init(|| Mutex::new(BrepkitKernel::new()))
 }
 
 // #region 🔖Helpers
 fn with_kernel<T>(f: impl FnOnce(&mut BrepkitKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
-    KERNEL.with(|cell| f(&mut cell.borrow_mut()))
+    let mut guard = kernel().lock().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
+    f(&mut guard)
 }
 
 fn geometry_dictionary(handle: &GeometryHandle) -> Dictionary {
@@ -106,9 +109,12 @@ struct BoxPrim;
 impl Operation for BoxPrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .box_prim(read_channel_number(input, "width")?, read_channel_number(input, "depth")?, read_channel_number(input, "height")?)
-                .map_err(map_kernel_error)?;
+            let handle = block_on(kernel.box_prim(
+                read_channel_number(input, "width")?,
+                read_channel_number(input, "depth")?,
+                read_channel_number(input, "height")?,
+            ))
+            .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -118,7 +124,7 @@ struct SpherePrim;
 impl Operation for SpherePrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel.sphere_prim(read_channel_number(input, "radius")?).map_err(map_kernel_error)?;
+            let handle = block_on(kernel.sphere_prim(read_channel_number(input, "radius")?)).map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -128,8 +134,7 @@ struct CylinderPrim;
 impl Operation for CylinderPrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .cylinder_prim(read_channel_number(input, "radius")?, read_channel_number(input, "height")?)
+            let handle = block_on(kernel.cylinder_prim(read_channel_number(input, "radius")?, read_channel_number(input, "height")?))
                 .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
@@ -140,8 +145,7 @@ struct ConePrim;
 impl Operation for ConePrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .cone_prim(read_channel_number(input, "radius")?, read_channel_number(input, "height")?)
+            let handle = block_on(kernel.cone_prim(read_channel_number(input, "radius")?, read_channel_number(input, "height")?))
                 .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
@@ -152,8 +156,7 @@ struct TorusPrim;
 impl Operation for TorusPrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .torus_prim(read_channel_number(input, "major")?, read_channel_number(input, "minor")?)
+            let handle = block_on(kernel.torus_prim(read_channel_number(input, "major")?, read_channel_number(input, "minor")?))
                 .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
@@ -166,7 +169,7 @@ struct Fuse;
 impl Operation for Fuse {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel.fuse(&read_geometry(input, "a")?, &read_geometry(input, "b")?).map_err(map_kernel_error)?;
+            let handle = block_on(kernel.fuse(&read_geometry(input, "a")?, &read_geometry(input, "b")?)).map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -176,7 +179,7 @@ struct Cut;
 impl Operation for Cut {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel.cut(&read_geometry(input, "a")?, &read_geometry(input, "b")?).map_err(map_kernel_error)?;
+            let handle = block_on(kernel.cut(&read_geometry(input, "a")?, &read_geometry(input, "b")?)).map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -186,7 +189,7 @@ struct Intersect;
 impl Operation for Intersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel.intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?).map_err(map_kernel_error)?;
+            let handle = block_on(kernel.intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?)).map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -198,8 +201,7 @@ struct Translate;
 impl Operation for Translate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .translate(&read_geometry(input, "geometry")?, read_xyz(input, "offset")?)
+            let handle = block_on(kernel.translate(&read_geometry(input, "geometry")?, read_xyz(input, "offset")?))
                 .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
@@ -210,9 +212,12 @@ struct Rotate;
 impl Operation for Rotate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .rotate(&read_geometry(input, "geometry")?, read_xyz(input, "axis")?, read_channel_number(input, "angle")?)
-                .map_err(map_kernel_error)?;
+            let handle = block_on(kernel.rotate(
+                &read_geometry(input, "geometry")?,
+                read_xyz(input, "axis")?,
+                read_channel_number(input, "angle")?,
+            ))
+            .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -222,9 +227,12 @@ struct Scale;
 impl Operation for Scale {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .scale(&read_geometry(input, "geometry")?, read_channel_number(input, "factor")?, read_xyz(input, "center")?)
-                .map_err(map_kernel_error)?;
+            let handle = block_on(kernel.scale(
+                &read_geometry(input, "geometry")?,
+                read_channel_number(input, "factor")?,
+                read_xyz(input, "center")?,
+            ))
+            .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -234,9 +242,12 @@ struct Mirror;
 impl Operation for Mirror {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .mirror(&read_geometry(input, "geometry")?, read_xyz(input, "origin")?, read_xyz(input, "normal")?)
-                .map_err(map_kernel_error)?;
+            let handle = block_on(kernel.mirror(
+                &read_geometry(input, "geometry")?,
+                read_xyz(input, "origin")?,
+                read_xyz(input, "normal")?,
+            ))
+            .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
     }
@@ -248,8 +259,7 @@ struct Fillet;
 impl Operation for Fillet {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .fillet(&read_geometry(input, "geometry")?, read_channel_number(input, "radius")?)
+            let handle = block_on(kernel.fillet(&read_geometry(input, "geometry")?, read_channel_number(input, "radius")?))
                 .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
@@ -260,8 +270,7 @@ struct Chamfer;
 impl Operation for Chamfer {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let handle = kernel
-                .chamfer(&read_geometry(input, "geometry")?, read_channel_number(input, "distance")?)
+            let handle = block_on(kernel.chamfer(&read_geometry(input, "geometry")?, read_channel_number(input, "distance")?))
                 .map_err(map_kernel_error)?;
             Ok(geometry_dictionary(&handle))
         })
@@ -274,7 +283,7 @@ struct Volume;
 impl Operation for Volume {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let value = kernel.volume(&read_geometry(input, "geometry")?).map_err(map_kernel_error)?;
+            let value = block_on(kernel.volume(&read_geometry(input, "geometry")?)).map_err(map_kernel_error)?;
             Ok(number_dictionary(value))
         })
     }
@@ -630,21 +639,24 @@ mod wasm_ext {
 
     #[wasm_bindgen]
     pub fn tessellate(handle: &str, tolerance: f64) -> String {
-        super::KERNEL.with(|cell| {
-            let kernel = cell.borrow();
-            let geometry = GeometryHandle(handle.to_string());
-            match kernel.tessellate(&geometry, tolerance) {
-                Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| "{}".into()),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
-            }
-        })
+        super::kernel()
+            .lock()
+            .ok()
+            .and_then(|kernel| {
+                let geometry = GeometryHandle(handle.to_string());
+                match block_on(kernel.tessellate(&geometry, tolerance)) {
+                    Ok(mesh) => Some(serde_json::to_string(&mesh).unwrap_or_else(|_| "{}".into())),
+                    Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                }
+            })
+            .unwrap_or_else(|| serde_json::json!({ "error": "brep kernel unavailable" }).to_string())
     }
 
     #[wasm_bindgen]
     pub fn dispose(handle: &str) {
-        super::KERNEL.with(|cell| {
-            cell.borrow_mut().dispose(&GeometryHandle(handle.to_string()));
-        });
+        if let Ok(mut kernel) = super::kernel().lock() {
+            block_on(kernel.dispose(&GeometryHandle(handle.to_string())));
+        }
     }
 
     #[wasm_bindgen]

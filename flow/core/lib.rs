@@ -5,6 +5,7 @@ pub use mathematical_graph_port_directed_dag as dag;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::sync::OnceLock;
 
 use dag::{
     computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width,
@@ -942,6 +943,23 @@ fn titleize_module(module: &str) -> String {
 }
 // #endregion 🔖Catalogue
 
+// #region 🔖ModuleRegistry
+fn flow_registry() -> &'static neural::Registry {
+    static REGISTRY: OnceLock<neural::Registry> = OnceLock::new();
+    REGISTRY.get_or_init(|| {
+        let mut registry = neural::Registry::new();
+        flow_module_core::register(&mut registry);
+        flow_module_math::register(&mut registry);
+        flow_module_text::register(&mut registry);
+        flow_module_logic::register(&mut registry);
+        flow_module_dictionary::register(&mut registry);
+        flow_module_list::register(&mut registry);
+        flow_module_brep::register(&mut registry);
+        registry
+    })
+}
+// #endregion 🔖ModuleRegistry
+
 // #region 🔖EvalBridge
 fn parse_bridge_dictionary_json(result_json: &str) -> Result<Dictionary, EvalError> {
     if let Ok(dict) = serde_json::from_str::<Dictionary>(result_json) {
@@ -1706,15 +1724,17 @@ impl FlowHost {
 
     fn evaluate_internal(&mut self) {
         let tree = self.build_tree();
-        let seeds = HashMap::new();
-        let Some(bridge) = self.eval_bridge.as_ref() else {
-            self.last_eval_json = serde_json::json!({ "error": "evaluation bridge not configured" }).to_string();
-            return;
+        let seeds = self.build_seeds();
+        let registry = flow_registry();
+        let evaluator = Evaluator::new(registry);
+        let result = if let Some(bridge) = self.eval_bridge.as_ref() {
+            let dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
+            evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &dispatch)
+        } else {
+            let dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
+            evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &dispatch)
         };
-        let registry = neural::Registry::new();
-        let evaluator = Evaluator::new(&registry);
-        let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-        match evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &mut dispatch) {
+        match result {
             Ok(channels) => {
                 self.outputs = channels.outputs.clone();
                 self.apply_preview_outputs(&channels.outputs);
@@ -2523,6 +2543,12 @@ impl FlowSessionInner {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = initThreadPool)]
+pub fn init_thread_pool(num_threads: usize) -> js_sys::Promise {
+    wasm_bindgen_rayon::init_thread_pool(num_threads)
+}
+
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub struct FlowSession {
     state: Rc<RefCell<FlowSessionInner>>,
@@ -2601,7 +2627,20 @@ impl FlowSession {
     }
 
     #[wasm_bindgen(js_name = evaluate)]
-    pub fn evaluate(&self) -> Result<String, JsValue> {
+    pub fn evaluate(&self) -> js_sys::Promise {
+        let state = self.state.clone();
+        future_to_promise(async move {
+            let json = {
+                let mut inner = state.borrow_mut();
+                inner.host.evaluate_internal();
+                inner.host.last_eval_json.clone()
+            };
+            Ok(JsValue::from_str(&json))
+        })
+    }
+
+    #[wasm_bindgen(js_name = evaluateSync)]
+    pub fn evaluate_sync(&self) -> Result<String, JsValue> {
         self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e))
     }
 

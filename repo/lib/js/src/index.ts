@@ -1092,6 +1092,26 @@ export type WasmPackWebPkg = {
   sideEffects?: string[];
 };
 
+/** 📦Collect wasm-bindgen snippet paths produced by threaded builds. */
+function wasmPackSnippetFiles(pkgDir: string): string[] {
+  const snippetsDir = join(pkgDir, "snippets");
+  if (!existsSync(snippetsDir)) return [];
+  const out: string[] = [];
+  const walk = (dir: string, prefix: string) => {
+    for (const entry of readdirSync(dir)) {
+      const rel = prefix ? `${prefix}/${entry}` : entry;
+      const abs = join(dir, entry);
+      if (statSync(abs).isDirectory()) {
+        walk(abs, rel);
+      } else {
+        out.push(`snippets/${rel}`);
+      }
+    }
+  };
+  walk(snippetsDir, "");
+  return out;
+}
+
 /** 📦Collects `lib.rs` / `Cargo.toml` paths from `[dependencies]` path crates. */
 function wasmPackPathDependencyInputs(rsDir: string): string[] {
 	const cargoToml = join(rsDir, "Cargo.toml");
@@ -1133,8 +1153,10 @@ export function runWasmPackWebBuild(opts: {
   logPrefix: string;
   pkg: WasmPackWebPkg;
   wasmBaseName: string;
+  /** When true, build with atomics + `-Z build-std` for wasm-bindgen-rayon thread pools. */
+  threads?: boolean;
 }): void {
-  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName } = opts;
+  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false } = opts;
   const pkgDir = join(rsDir, "pkg");
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   if (process.env[skipEnvVar] === "1") {
@@ -1144,22 +1166,32 @@ export function runWasmPackWebBuild(opts: {
   if (!wasmPackInputsStale(rsDir, wasmPath)) {
     console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm up to date → skipping wasm-pack build`);
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
+    const snippetFiles = wasmPackSnippetFiles(pkgDir);
     const pkgJson = {
       type: "module",
       version: pkg.version ?? "0.1.0",
       sideEffects: pkg.sideEffects ?? ["./snippets/*"],
       ...pkg,
+      files: [...new Set([...pkg.files, ...snippetFiles])],
     };
     writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
     return;
   }
-  console.log(`[${logPrefix}] wasm-pack build --release --target web --out-dir pkg --no-pack`);
+  const threadFlags = threads
+    ? '-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-arg=--shared-memory -C link-arg=--max-memory=4294967296'
+    : "";
+  const buildLabel = threads ? "wasm-pack build (threaded)" : "wasm-pack build";
+  console.log(`[${logPrefix}] ${buildLabel} --release --target web --out-dir pkg --no-pack`);
   const t0 = Date.now();
-  const res = spawnSync(
-    "bun",
-    ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack"],
-    { cwd: rsDir, stdio: "inherit" },
-  );
+  const env = { ...process.env };
+  if (threadFlags) {
+    env.RUSTFLAGS = [env.RUSTFLAGS, threadFlags].filter(Boolean).join(" ");
+  }
+  const args = ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack"];
+  if (threads) {
+    args.push("-Z", "build-std=panic_abort,std");
+  }
+  const res = spawnSync("bun", args, { cwd: rsDir, stdio: "inherit", env });
   if (res.status !== 0) {
     console.error(`[${logPrefix}] wasm-pack build failed`);
     process.exit(res.status ?? 1);
@@ -1167,11 +1199,13 @@ export function runWasmPackWebBuild(opts: {
   console.log(`[${logPrefix}] wasm-pack build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
   if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
+  const snippetFiles = wasmPackSnippetFiles(pkgDir);
   const pkgJson = {
     type: "module",
     version: pkg.version ?? "0.1.0",
     sideEffects: pkg.sideEffects ?? ["./snippets/*"],
     ...pkg,
+    files: [...new Set([...pkg.files, ...snippetFiles])],
   };
   writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
 
