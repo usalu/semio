@@ -34,6 +34,8 @@ import subprocess
 import sys
 import time
 import typing
+from typing import Tuple, List, Dict, Any
+from dataclasses import dataclass, field
 import uuid
 import weakref
 from pathlib import Path
@@ -42,6 +44,7 @@ import rdflib
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
+from pydantic import BaseModel, Field
 from owlready2 import get_ontology, sync_reasoner_pellet
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, JSONResponse

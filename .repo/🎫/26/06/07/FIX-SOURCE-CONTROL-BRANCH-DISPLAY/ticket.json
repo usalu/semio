@@ -1,0 +1,10 @@
+{
+  "title": "Fix Source Control Branch Display",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix source control branch displaying wip instead of user's branch",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
+  "sessions": [
+    "⚪418fd9db2b914bf48f506d87c9939604"
+  ]
+}

@@ -14,6 +14,10 @@ lazy_static = "1.4.0"
 console_error_panic_hook = "0.1"
 geo = "0.33.1"
 geo-booleanop = "0.3.2"
+js-sys = "0.3"
 
 [profile.release]
 wasm-opt = false
+
+[workspace]
+

@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::cell::RefCell;
 use serde_json::Value;
 
 // Embed the Tabula database
@@ -73,13 +73,46 @@ pub struct State {
 }
 
 // -----------------------------------------------------------------------------
+// Action Logging & Event Sourcing
+// -----------------------------------------------------------------------------
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type", content = "payload")]
+pub enum Action {
+    Init,
+    AddZone(Zone),
+    RemoveZone(String),
+    UpdateZone(Zone),
+    UpdateParameters(Parameters),
+    GenericUpdate,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct LogEntry {
+    pub timestamp: f64,
+    pub action: Action,
+    pub description: String,
+}
+
+impl LogEntry {
+    pub fn new(action: Action, description: &str) -> Self {
+        Self {
+            timestamp: js_sys::Date::now(),
+            action,
+            description: description.to_string(),
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
 // History Store
 // -----------------------------------------------------------------------------
 
 pub struct HistoryStore {
-    past: Vec<State>,
+    past: Vec<(State, LogEntry)>,
     current: State,
-    future: Vec<State>,
+    current_log: LogEntry,
+    future: Vec<(State, LogEntry)>,
 }
 
 impl HistoryStore {
@@ -87,20 +120,28 @@ impl HistoryStore {
         Self {
             past: Vec::new(),
             current: State::default(),
+            current_log: LogEntry::new(Action::Init, "Initialized engine"),
             future: Vec::new(),
         }
     }
 
-    pub fn set_state(&mut self, new_state: State) {
-        self.past.push(self.current.clone());
+    pub fn apply_action(&mut self, new_state: State, action: Action, description: &str) {
+        let entry = LogEntry::new(action, description);
+        self.past.push((self.current.clone(), self.current_log.clone()));
         self.current = new_state;
+        self.current_log = entry;
         self.future.clear();
     }
 
+    pub fn set_state(&mut self, new_state: State) {
+        self.apply_action(new_state, Action::GenericUpdate, "Generic state update");
+    }
+
     pub fn undo(&mut self) -> bool {
-        if let Some(prev) = self.past.pop() {
-            self.future.push(self.current.clone());
-            self.current = prev;
+        if let Some((prev_state, prev_log)) = self.past.pop() {
+            self.future.push((self.current.clone(), self.current_log.clone()));
+            self.current = prev_state;
+            self.current_log = prev_log;
             true
         } else {
             false
@@ -108,9 +149,10 @@ impl HistoryStore {
     }
 
     pub fn redo(&mut self) -> bool {
-        if let Some(next) = self.future.pop() {
-            self.past.push(self.current.clone());
-            self.current = next;
+        if let Some((next_state, next_log)) = self.future.pop() {
+            self.past.push((self.current.clone(), self.current_log.clone()));
+            self.current = next_state;
+            self.current_log = next_log;
             true
         } else {
             false
@@ -120,11 +162,21 @@ impl HistoryStore {
     pub fn current(&self) -> &State {
         &self.current
     }
+
+    pub fn current_log(&self) -> &LogEntry {
+        &self.current_log
+    }
+
+    pub fn get_log_history(&self) -> Vec<LogEntry> {
+        let mut history: Vec<LogEntry> = self.past.iter().map(|(_, log)| log.clone()).collect();
+        history.push(self.current_log.clone());
+        history
+    }
 }
 
 // Global Store
-lazy_static::lazy_static! {
-    static ref STORE: Mutex<HistoryStore> = Mutex::new(HistoryStore::new());
+thread_local! {
+    static STORE: RefCell<HistoryStore> = RefCell::new(HistoryStore::new());
 }
 
 // -----------------------------------------------------------------------------
@@ -379,48 +431,130 @@ pub fn init_engine() {
 
 #[wasm_bindgen]
 pub fn get_state() -> String {
-    let store = STORE.lock().unwrap();
-    serde_json::to_string(store.current()).unwrap()
+    STORE.with(|store| {
+        let store = store.borrow();
+        serde_json::to_string(store.current()).unwrap()
+    })
+}
+
+#[wasm_bindgen]
+pub fn get_history_log() -> String {
+    STORE.with(|store| {
+        let store = store.borrow();
+        serde_json::to_string(&store.get_log_history()).unwrap()
+    })
 }
 
 #[wasm_bindgen]
 pub fn update_state(state_json: &str) -> String {
     if let Ok(new_state) = serde_json::from_str::<State>(state_json) {
-        let mut store = STORE.lock().unwrap();
-        store.set_state(new_state);
-        let res = calculate_energy(store.current());
-        serde_json::to_string(&res).unwrap()
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            store.set_state(new_state);
+            let res = calculate_energy(store.current());
+            serde_json::to_string(&res).unwrap()
+        })
     } else {
         serde_json::json!({ "status": "error", "message": "Invalid state payload" }).to_string()
     }
 }
 
 #[wasm_bindgen]
-pub fn undo() -> String {
-    let mut store = STORE.lock().unwrap();
-    if store.undo() {
-        let res = calculate_energy(store.current());
-        serde_json::json!({
-            "status": "success",
-            "state": store.current(),
-            "energy": res
-        }).to_string()
+pub fn add_zone(zone_json: &str) -> String {
+    if let Ok(zone) = serde_json::from_str::<Zone>(zone_json) {
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            let mut new_state = store.current().clone();
+            new_state.zones.push(zone.clone());
+            store.apply_action(new_state, Action::AddZone(zone), "Added new zone");
+            let res = calculate_energy(store.current());
+            serde_json::to_string(&res).unwrap()
+        })
     } else {
-        serde_json::json!({ "status": "error", "message": "No undo history" }).to_string()
+        serde_json::json!({ "status": "error", "message": "Invalid zone payload" }).to_string()
     }
 }
 
 #[wasm_bindgen]
-pub fn redo() -> String {
-    let mut store = STORE.lock().unwrap();
-    if store.redo() {
+pub fn remove_zone(zone_id: &str) -> String {
+    STORE.with(|store| {
+        let mut store = store.borrow_mut();
+        let mut new_state = store.current().clone();
+        new_state.zones.retain(|z| z.id != zone_id);
+        store.apply_action(new_state, Action::RemoveZone(zone_id.to_string()), &format!("Removed zone {}", zone_id));
         let res = calculate_energy(store.current());
-        serde_json::json!({
-            "status": "success",
-            "state": store.current(),
-            "energy": res
-        }).to_string()
+        serde_json::to_string(&res).unwrap()
+    })
+}
+
+#[wasm_bindgen]
+pub fn update_zone(zone_json: &str) -> String {
+    if let Ok(updated_zone) = serde_json::from_str::<Zone>(zone_json) {
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            let mut new_state = store.current().clone();
+            if let Some(pos) = new_state.zones.iter().position(|z| z.id == updated_zone.id) {
+                new_state.zones[pos] = updated_zone.clone();
+                store.apply_action(new_state, Action::UpdateZone(updated_zone), "Updated zone");
+                let res = calculate_energy(store.current());
+                serde_json::to_string(&res).unwrap()
+            } else {
+                serde_json::json!({ "status": "error", "message": "Zone not found" }).to_string()
+            }
+        })
     } else {
-        serde_json::json!({ "status": "error", "message": "No redo history" }).to_string()
+        serde_json::json!({ "status": "error", "message": "Invalid zone payload" }).to_string()
     }
+}
+
+#[wasm_bindgen]
+pub fn update_parameters(params_json: &str) -> String {
+    if let Ok(params) = serde_json::from_str::<Parameters>(params_json) {
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            let mut new_state = store.current().clone();
+            new_state.params = params.clone();
+            store.apply_action(new_state, Action::UpdateParameters(params), "Updated parameters");
+            let res = calculate_energy(store.current());
+            serde_json::to_string(&res).unwrap()
+        })
+    } else {
+        serde_json::json!({ "status": "error", "message": "Invalid parameters payload" }).to_string()
+    }
+}
+
+#[wasm_bindgen]
+pub fn undo() -> String {
+    STORE.with(|store| {
+        let mut store = store.borrow_mut();
+        if store.undo() {
+            let res = calculate_energy(store.current());
+            serde_json::json!({
+                "status": "success",
+                "state": store.current(),
+                "energy": res,
+                "log": store.current_log()
+            }).to_string()
+        } else {
+            serde_json::json!({ "status": "error", "message": "No undo history" }).to_string()
+        }
+    })
+}
+
+#[wasm_bindgen]
+pub fn redo() -> String {
+    STORE.with(|store| {
+        let mut store = store.borrow_mut();
+        if store.redo() {
+            let res = calculate_energy(store.current());
+            serde_json::json!({
+                "status": "success",
+                "state": store.current(),
+                "energy": res,
+                "log": store.current_log()
+            }).to_string()
+        } else {
+            serde_json::json!({ "status": "error", "message": "No redo history" }).to_string()
+        }
+    })
 }

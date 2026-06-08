@@ -1014,7 +1014,7 @@ function displayRustResults(data) {
                 html += `<div class="result-row"><span class="result-label">Ventilation Loss:</span><span class="result-value">${data.heat_losses.ventilation_loss_kWh_a.toFixed(1)} kWh/a</span></div>`;
             }
         }
-        if (data.heat_gains && data.heat_gains.solar_gains_kWh_a) {
+        if (data.heat_gains && typeof data.heat_gains.solar_gains_kWh_a === 'number') {
             html += `<div class="result-row"><span class="result-label">Solar Gains:</span><span class="result-value">${data.heat_gains.solar_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
         }
         if (data.final_energy) {
