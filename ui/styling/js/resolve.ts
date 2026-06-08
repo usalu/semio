@@ -289,6 +289,9 @@ export function currentStylingThemeName(): StylingThemeName {
 
 /** @emoji 🎨 Serializes token board theme paints for DAG/flow Vello WASM (`VelloThemePalette` JSON). */
 export function serializeGraphVelloThemePaletteJson(themeName: StylingThemeName = currentStylingThemeName()): string {
+	if (typeof console !== "undefined") {
+		console.debug("[DEBUG] serializeGraphVelloThemePaletteJson", themeName);
+	}
 	return JSON.stringify(STYLING_BOARD_THEMES[themeName]);
 }
 //#endregion 🎨Resolve

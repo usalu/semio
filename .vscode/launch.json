@@ -1159,6 +1159,17 @@
       }
     },
     {
+      "name": "🧪test🖱️ui🎨styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @ui/styling:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 280
+      }
+    },
+    {
       "name": "🧪test🖱️ui🎨styling-rs",
       "type": "node-terminal",
       "request": "launch",

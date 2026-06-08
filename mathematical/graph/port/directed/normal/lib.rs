@@ -1299,7 +1299,7 @@ impl BoardHost {
                 if tip_def.filled {
                     scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &path);
                 } else {
-                    scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &path);
+                    scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &path);
                 }
             }
             EdgeTipGeometry::FineArrow => {
@@ -1328,7 +1328,7 @@ impl BoardHost {
                 if tip_def.filled {
                     scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &path);
                 } else {
-                    scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &path);
+                    scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &path);
                 }
             }
             EdgeTipGeometry::Circle => {
@@ -1338,16 +1338,16 @@ impl BoardHost {
                 if tip_def.filled {
                     scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &circle);
                 } else {
-                    scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &circle);
+                    scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &circle);
                 }
             }
             EdgeTipGeometry::Bar => {
-                let half = sw * 1.25;
+                let half = sw * ui_styling::strokes::EDGE_TIP_MIN;
                 let center = tip - d * (sw * 0.5);
                 let mut path = BezPath::new();
                 path.move_to(center + n * half);
                 path.line_to(center - n * half);
-                scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &path);
+                scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &path);
             }
         }
     }
@@ -4659,18 +4659,18 @@ impl BoardHost {
         if !self.wheel_zoom_active {
             let grid_color = self.vello_theme.grid_minor_stroke;
             if lod != BoardDrawLod::Minimap {
-                self.stroke_world_step_grid(&mut inner, grid_color, 1.0, self.grid_step_large_world(), 0.0);
+                self.stroke_world_step_grid(&mut inner, grid_color, ui_styling::strokes::GRID_LARGE, self.grid_step_large_world(), 0.0);
                 match lod {
                     BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro => {
-                        self.stroke_world_step_grid(&mut inner, grid_color, 0.72, self.grid_step_medium_world(), 0.0);
+                        self.stroke_world_step_grid(&mut inner, grid_color, ui_styling::strokes::GRID_MEDIUM, self.grid_step_medium_world(), 0.0);
                     }
                     BoardDrawLod::Minimap | BoardDrawLod::Overview | BoardDrawLod::Compact => {}
                 }
                 if matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
-                    self.stroke_world_step_grid(&mut inner, grid_color, 0.48, self.grid_step_small_world(), 0.0);
+                    self.stroke_world_step_grid(&mut inner, grid_color, ui_styling::strokes::GRID_SMALL, self.grid_step_small_world(), 0.0);
                 }
                 if lod == BoardDrawLod::Micro {
-                    self.stroke_world_step_grid(&mut inner, grid_color, 0.32, self.grid_step_micro_world(), 0.0);
+                    self.stroke_world_step_grid(&mut inner, grid_color, ui_styling::strokes::GRID_MICRO, self.grid_step_micro_world(), 0.0);
                 }
             }
         }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Delegates styling generation and Python import smoke test. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/src/index.ts";
 import { generateStylingArtifacts } from "../script.ts";
 
 class GenerateScript extends BundleScript {
@@ -11,10 +11,11 @@ class GenerateScript extends BundleScript {
 
 class TestScript extends BundleScript {
 	run(): void {
-		Bun.spawnSync(["uv", "run", "python", "-c", "from styling.generated import BOARD_LIGHT, STYLING_TOKENS; assert STYLING_TOKENS['primary']"], {
-			cwd: import.meta.dir,
-			stdio: "inherit",
-		});
+		runCmd(
+			"uv",
+			["run", "python", "-c", "from styling.generated import BOARD_LIGHT, STYLING_TOKENS; assert STYLING_TOKENS['primary']"],
+			{ cwd: import.meta.dir },
+		);
 	}
 }
 

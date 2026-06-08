@@ -19,25 +19,25 @@ todos:
     status: completed
   - id: js-bridge
     content: Extend tokens.generated.ts and rewrite serializeGraphVelloThemePaletteJson()/ui.css to derive from token themes
-    status: in_progress
+    status: completed
   - id: migrate-vello
     content: Migrate infinite/cavas/vello (clear color, camera limits, label metrics, Typst sizes, insets, fonts, BLACK/WHITE) to ui_styling
-    status: pending
+    status: completed
   - id: migrate-graph
     content: Migrate mathematical/graph port/directed (VelloThemePalette->Theme), normal, dag, and graph lib stroke/radius/opacity constants to ui_styling
-    status: pending
+    status: completed
   - id: migrate-map
     content: Migrate gis/map/rs to ui_styling map paints + tokenized scales/bands; remove build.rs color include
-    status: pending
+    status: completed
   - id: migrate-flow-puzzle
     content: Migrate flow/core and puzzle/2d/rs; remove board .inc.rs include from puzzle build.rs
-    status: pending
+    status: completed
   - id: wiring
     content: Wire nx generate target for all ecosystems and register commands in launch.json
-    status: pending
+    status: completed
   - id: validate
     content: Generate, build/test all affected crates+packages, extend existing tests, validate runtime light/dark via [DEBUG] logs
-    status: pending
+    status: completed
 isProject: false
 ---
 

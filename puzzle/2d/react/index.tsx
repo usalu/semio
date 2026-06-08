@@ -22,11 +22,13 @@ import {
 import { type TreeDragAndDropController, resolveIconUrlsInBoardJson } from "@ui/react";
 import {
   blendTokenHex,
+  currentStylingThemeName,
   readableForegroundHex,
   resolveBackgroundColorHex,
   resolveColorHex,
   resolveColorRgba,
   semanticVar,
+  serializeGraphVelloThemePaletteJson,
   themeColorVar,
   tokenHex,
   tokenVar,
@@ -1580,46 +1582,6 @@ const PUZZLE_2D_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28
 /** @emoji 🎨 Secondary-tinted fill for preselect exit / highlight chrome only. */
 const PUZZLE_2D_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
 
-/** @emoji 🎨 Resolves UI semantic CSS (`@ui/styling/ui.css` / `@theme`) for 2d canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
-const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
-  rasterClear: resolveColorRgba(semanticVar("base"), "light"),
-  gridMinorStroke: [...resolveColorRgba(themeColorVar("element"), "gray").slice(0, 3), 56] as [number, number, number, number],
-  edgeStroke: resolveColorRgba(themeColorVar("element"), "gray"),
-  edgeStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
-  edgeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-  edgeStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
-  edgeStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
-  nodeFill: resolveColorRgba(themeColorVar("panel"), "l-l-l-g"),
-  nodeStroke: resolveColorRgba(themeColorVar("element"), "gray"),
-  nodeFillHovered: resolveColorRgba(themeColorVar("border"), "gray"),
-  nodeStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
-  nodeFillSelected: resolveColorRgba(PUZZLE_2D_CSS_SELECTED_FILL, "primary"),
-  nodeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-  nodeFillSelectionExit: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
-  nodeStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
-  nodeFillDisabled: resolveColorRgba("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
-  nodeStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
-  indirectHandleFill: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
-  indirectHandleStroke: resolveColorRgba(tokenVar("secondary"), "secondary"),
-  handleFill: resolveColorRgba(themeColorVar("base"), "light"),
-  handleStroke: resolveColorRgba(themeColorVar("element"), "gray"),
-  handleFillHovered: resolveColorRgba(themeColorVar("border"), "gray"),
-  handleStrokeHovered: resolveColorRgba(themeColorVar("element"), "gray"),
-  handleFillSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-  handleStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-  handleFillSelectionExit: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
-  handleStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
-  handleFillDisabled: resolveColorRgba("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
-  handleStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
-  wireStroke: resolveColorRgba(themeColorVar("element"), "gray"),
-  wireStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
-  wireStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-  wireStrokeHighlighted: resolveColorRgba(tokenVar("secondary"), "secondary"),
-  wireStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
-  selectionPreviewFill: resolveColorRgba("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
-  selectionPreviewStroke: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-};
-
 function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle> {
   const f = PUZZLE_2D_STYLES_HEADLESS_FALLBACK;
   const stroke = (expr: string, fbKey: string, fb = tokenHex(fbKey)): string => resolveColorHex(expr, fbKey) || fb;
@@ -1665,54 +1627,7 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
 }
 
 function serializePuzzle2dVelloThemeJson(): string {
-  const fb = PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA;
-  const pc = (expr: string, fallKey: string, alpha?: number): number[] => [...resolveColorRgba(expr, fallKey, alpha ?? 255)];
-  const pbg = (expr: string, fallKey: string, alpha?: number): number[] => {
-    const hex = resolveBackgroundColorHex(expr, fallKey);
-    return [...resolveColorRgba(hex, fallKey, alpha ?? 255)];
-  };
-  const payload = {
-    rasterClear: pbg(semanticVar("base"), "light"),
-    gridMinorStroke: (() => {
-      const element = resolveColorRgba(themeColorVar("element"), "gray");
-      return [element[0], element[1], element[2], fb.gridMinorStroke[3]];
-    })(),
-    edgeStroke: pc(themeColorVar("element"), "gray"),
-    edgeStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
-    edgeStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-    edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
-    edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.edgeStrokeDisabled[3]),
-    nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
-    nodeStroke: pc(themeColorVar("element"), "gray"),
-    nodeFillHovered: pbg(themeColorVar("border"), "gray"),
-    nodeStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
-    nodeFillSelected: pbg(PUZZLE_2D_CSS_SELECTED_FILL, "primary"),
-    nodeStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-    nodeFillSelectionExit: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
-    nodeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
-    nodeFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", fb.nodeFillDisabled[3]),
-    nodeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.nodeStrokeDisabled[3]),
-    indirectHandleFill: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
-    indirectHandleStroke: pc(tokenVar("secondary"), "secondary"),
-    handleFill: pbg(themeColorVar("base"), "light"),
-    handleStroke: pc(themeColorVar("element"), "gray"),
-    handleFillHovered: pbg(themeColorVar("border"), "gray"),
-    handleStrokeHovered: pc(themeColorVar("element"), "gray"),
-    handleFillSelected: pbg(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-    handleStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-    handleFillSelectionExit: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
-    handleStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
-    handleFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", fb.handleFillDisabled[3]),
-    handleStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.handleStrokeDisabled[3]),
-    wireStroke: pc(themeColorVar("element"), "gray"),
-    wireStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
-    wireStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-    wireStrokeHighlighted: pc(tokenVar("secondary"), "secondary"),
-    wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.wireStrokeDisabled[3]),
-    selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", fb.selectionPreviewFill[3]),
-    selectionPreviewStroke: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
-  };
-  return JSON.stringify(payload);
+  return serializeGraphVelloThemePaletteJson(currentStylingThemeName());
 }
 //#endregion 🎨ElementsUiPuzzle2dPaint
 

@@ -8853,7 +8853,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
     }
 
     const branchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
-    const rowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "tree-content", "control-tree-row"]);
+    const rowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "tree-content", "control-tree-row", "window-measure-tree-row"]);
     const directChildren = Array.from(branchElement.children) as HTMLElement[];
     const isRowElement = (el: HTMLElement): boolean => rowSlots.has(el.dataset.slot ?? "");
     const isBranchElement = (el: HTMLElement): boolean => branchSlots.has(el.dataset.slot ?? "");
@@ -10496,8 +10496,8 @@ export interface FileTreeNode {
 // 🌳Branch containers that hold child rows and render IndentationLines.
 const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
 // 🔷Row-level elements that own an elbow connector.
-const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row"]);
-const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
+const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row", "window-measure-tree-row"]);
+const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"], [data-slot="window-measure-tree-row"]';
 const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 
@@ -10542,7 +10542,7 @@ const resolveHoverRow = (target: HTMLElement, root: HTMLElement): Element | null
 
 const markTerminalBranch = (row: Element) => {
   const slot = row.getAttribute("data-slot");
-  if (slot === "tree-item-row" || slot === "control-tree-row") {
+  if (slot === "tree-item-row" || slot === "control-tree-row" || slot === "window-measure-tree-row") {
     const next = row.nextElementSibling;
     if (next) {
       const nextSlot = next.getAttribute("data-slot");
@@ -10587,6 +10587,64 @@ const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
     }
     el = el.parentElement;
   }
+};
+
+/** @emoji 🖱️ Pointer handlers that mark ancestor branch guide lines on row hover. */
+const useTreeHoverPathRootHandlers = () => {
+  const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const lastHoverRowRef = reactHostPort.useRef<Element | null>(null);
+  const hoverPathFrameRef = reactHostPort.useRef<number | null>(null);
+  const pendingHoverRowRef = reactHostPort.useRef<Element | null>(null);
+
+  const flushTreeHoverPath = reactHostPort.useCallback(() => {
+    hoverPathFrameRef.current = null;
+    const root = treeRootRef.current;
+    const row = pendingHoverRowRef.current;
+    pendingHoverRowRef.current = null;
+    if (!root) return;
+    if (row) {
+      applyTreeHoverPath(row, root);
+      lastHoverRowRef.current = row;
+      return;
+    }
+    clearTreeHoverPath(root);
+    lastHoverRowRef.current = null;
+  }, []);
+
+  const scheduleTreeHoverPath = reactHostPort.useCallback(
+    (row: Element | null) => {
+      pendingHoverRowRef.current = row;
+      if (hoverPathFrameRef.current !== null) {
+        return;
+      }
+      hoverPathFrameRef.current = requestAnimationFrame(flushTreeHoverPath);
+    },
+    [flushTreeHoverPath],
+  );
+
+  const handleTreePointerOver = reactHostPort.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const root = treeRootRef.current;
+      if (!root) return;
+      const row = resolveHoverRow(e.target as HTMLElement, root);
+      if (row === lastHoverRowRef.current) return;
+      scheduleTreeHoverPath(row);
+    },
+    [scheduleTreeHoverPath],
+  );
+
+  const handleTreePointerLeave = reactHostPort.useCallback(() => {
+    if (hoverPathFrameRef.current !== null) {
+      cancelAnimationFrame(hoverPathFrameRef.current);
+      hoverPathFrameRef.current = null;
+    }
+    pendingHoverRowRef.current = null;
+    lastHoverRowRef.current = null;
+    const root = treeRootRef.current;
+    if (root) clearTreeHoverPath(root);
+  }, []);
+
+  return { treeRootRef, handleTreePointerOver, handleTreePointerLeave };
 };
 //#endregion 🎃TreeHoverPath
 
@@ -11098,58 +11156,7 @@ export const Tree = (({
     ],
   );
 
-  const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const lastHoverRowRef = reactHostPort.useRef<Element | null>(null);
-  const hoverPathFrameRef = reactHostPort.useRef<number | null>(null);
-  const pendingHoverRowRef = reactHostPort.useRef<Element | null>(null);
-
-  const flushTreeHoverPath = reactHostPort.useCallback(() => {
-    hoverPathFrameRef.current = null;
-    const root = treeRootRef.current;
-    const row = pendingHoverRowRef.current;
-    pendingHoverRowRef.current = null;
-    if (!root) return;
-    if (row) {
-      applyTreeHoverPath(row, root);
-      lastHoverRowRef.current = row;
-      return;
-    }
-    clearTreeHoverPath(root);
-    lastHoverRowRef.current = null;
-  }, []);
-
-  const scheduleTreeHoverPath = reactHostPort.useCallback(
-    (row: Element | null) => {
-      pendingHoverRowRef.current = row;
-      if (hoverPathFrameRef.current !== null) {
-        return;
-      }
-      hoverPathFrameRef.current = requestAnimationFrame(flushTreeHoverPath);
-    },
-    [flushTreeHoverPath],
-  );
-
-  const handleTreePointerOver = reactHostPort.useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const root = treeRootRef.current;
-      if (!root) return;
-      const row = resolveHoverRow(e.target as HTMLElement, root);
-      if (row === lastHoverRowRef.current) return;
-      scheduleTreeHoverPath(row);
-    },
-    [scheduleTreeHoverPath],
-  );
-
-  const handleTreePointerLeave = reactHostPort.useCallback(() => {
-    if (hoverPathFrameRef.current !== null) {
-      cancelAnimationFrame(hoverPathFrameRef.current);
-      hoverPathFrameRef.current = null;
-    }
-    pendingHoverRowRef.current = null;
-    lastHoverRowRef.current = null;
-    const root = treeRootRef.current;
-    if (root) clearTreeHoverPath(root);
-  }, []);
+  const { treeRootRef, handleTreePointerOver, handleTreePointerLeave } = useTreeHoverPathRootHandlers();
 
   return (
     <TreeStateProvider>
@@ -11738,11 +11745,21 @@ const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right
 );
 
 /** @emoji 🌳 Root tree shell for the window measures rail (guide lines + indentation). */
-export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-  <div data-slot="window-measures-tree" className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}>
-    <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
-  </div>
-);
+export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+  const { treeRootRef, handleTreePointerOver, handleTreePointerLeave } = useTreeHoverPathRootHandlers();
+
+  return (
+    <div
+      ref={treeRootRef}
+      data-slot="window-measures-tree"
+      className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}
+      onPointerOver={handleTreePointerOver}
+      onPointerLeave={handleTreePointerLeave}
+    >
+      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
+    </div>
+  );
+};
 
 export interface WindowMeasureTreeGroupProps {
   id: string;
@@ -22990,6 +23007,22 @@ if (treeVitest) {
       expect(markup).not.toContain("ring-[3px]");
       expect(markup).not.toContain("border-emphasized");
       expect(markup).not.toContain('data-slot="tree-section-row"');
+    });
+
+    it("renders nested measure groups with branch guide lines", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree>
+          <WindowMeasureTreeGroup id="display" label="Display">
+            <WindowMeasureTreeLeaf label="LOD">
+              <span>Auto</span>
+            </WindowMeasureTreeLeaf>
+          </WindowMeasureTreeGroup>
+        </WindowMeasuresTree>,
+      );
+      expect(markup).toContain('data-slot="window-measure-tree-content"');
+      expect(markup).toContain('data-slot="tree-guide"');
+      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+      expect(markup).toContain('data-slot="tree-branch-elbow"');
     });
   });
 

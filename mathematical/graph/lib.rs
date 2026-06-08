@@ -915,7 +915,6 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub selection_options: EngineSelectionOptions,
     pub handle_pointer_picking: bool,
     pub proximity_distance_world: f64,
-    pub node_body_hit_excluded: BTreeSet<NodeId>,
     pub selection_preview_points: Vec<Point>,
     pub selection_preview_crossing: bool,
     area_initial: Selection,
@@ -945,7 +944,6 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             selection_options: EngineSelectionOptions::default(),
             handle_pointer_picking: true,
             proximity_distance_world: DEFAULT_PROXIMITY_DISTANCE_WORLD,
-            node_body_hit_excluded: BTreeSet::new(),
             selection_preview_points: Vec::new(),
             selection_preview_crossing: false,
             area_initial: Selection::default(),
@@ -2209,9 +2207,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         for node in self.nodes.values().rev() {
-            if self.node_body_hit_excluded.contains(&node.id) {
-                continue;
-            }
             if node_contains_point(node, point) {
                 return Some(HitObject::Node(node.id));
             }

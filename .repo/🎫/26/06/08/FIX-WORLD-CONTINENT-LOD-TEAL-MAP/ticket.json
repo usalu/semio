@@ -1,0 +1,14 @@
+{
+  "title": "Fix World Continent LOD Teal Map",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "World and continent LOD shows only teal water until zooming in. Fix vector tile zoom and colored coastline fallback.",
+  "summary": "Fixed world/continent LOD showing only teal water: vector tile zoom now uses span-based detail (z3 at world, z5 at continent) instead of being capped by coarse raster z0/z1. Colored coastline mode falls back to land backdrop + water polygons when countries layer is absent. Repaired broken compile state (TileSeamCull removal, TILE_INTERIOR_INSET, pub mvt_point_on_tile_bbox_edge). Added tests and rebuilt WASM.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1631"
+  },
+  "goal": "🎯gis🎯map",
+  "sessions": [
+    "⚪2f6cc423a6d44fb58856f1c74e7b3ca5"
+  ]
+}

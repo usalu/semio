@@ -3,13 +3,14 @@
   "emoji": "🌳",
   "status": "closed",
   "description": "Tree indentation guide lines should turn emphasized when hovering over a tree item row.",
-  "summary": "Vertical tree indentation guide lines were hidden under row hover backgrounds while horizontal elbows (inside each row) stayed visible. Raised [data-slot=\"tree-guide\"] to z-index: 1 in TreeHoverPath CSS so branch-level vertical lines paint above row hover fills while remaining pointer-events-none.",
+  "summary": "Window options (WindowMeasuresTree) now participates in the same tree hover-path as detail-panel trees: window-measure-tree-row added to row/branch selectors and CSS :has(:hover) emphasis; WindowMeasuresTree wires shared useTreeHoverPathRootHandlers (extracted from Tree). Vertical guide z-index from prior fix applies globally.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1571"
   },
   "goal": "🎯aioptimizedrepo🎯repoclient",
   "sessions": [
     "⚪ebcd88d9cdac457ea2d9b2ce3ca8c96b",
-    "⚪b032dca70bda43ca9ce2779d6318960e"
+    "⚪b032dca70bda43ca9ce2779d6318960e",
+    "⚪8541dccf0cd44dfd9a2439cfd2ce3992"
   ]
 }

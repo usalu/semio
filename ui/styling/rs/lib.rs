@@ -94,4 +94,19 @@ mod tests {
         assert_eq!(ThemeName::parse("dark"), ThemeName::Dark);
         assert_eq!(ThemeName::parse("light"), ThemeName::Light);
     }
+
+    #[test]
+    fn light_and_dark_themes_differ() {
+        use super::{BOARD_DARK, BOARD_LIGHT, MAP_DARK, MAP_LIGHT};
+        assert_ne!(BOARD_LIGHT.raster_clear, BOARD_DARK.raster_clear);
+        assert_ne!(MAP_LIGHT.surface_clear, MAP_DARK.surface_clear);
+    }
+
+    #[test]
+    fn grid_stroke_widths_match_tokens_json() {
+        assert_eq!(strokes::GRID_LARGE, 1.0);
+        assert_eq!(strokes::GRID_MEDIUM, 0.72);
+        assert_eq!(strokes::GRID_SMALL, 0.48);
+        assert_eq!(strokes::GRID_MICRO, 0.32);
+    }
 }

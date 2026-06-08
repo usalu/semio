@@ -106,7 +106,8 @@
         [data-slot="tree-item-row"],
         [data-slot="tree-section-row"],
         [data-slot="tree-property-item"],
-        [data-slot="control-tree-row"]
+        [data-slot="control-tree-row"],
+        [data-slot="window-measure-tree-row"]
       ):hover
   )
   > [data-slot="tree-guide"]

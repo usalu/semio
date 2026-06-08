@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test` for the `ui_styling` crate. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/src/index.ts";
 
 class TestScript extends BundleScript {
 	run(): void {
-		Bun.spawnSync(["cargo", "test", "-p", "ui_styling"], { cwd: import.meta.dir, stdio: "inherit" });
+		runCmd("cargo", ["test", "-p", "ui_styling"], { cwd: import.meta.dir });
 	}
 }
 

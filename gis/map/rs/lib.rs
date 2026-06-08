@@ -682,10 +682,14 @@ pub mod vector_tiles {
             let extent = 4096;
             assert!(super::mvt_segment_is_tile_seam(extent, (0.0, 0.0), (4096.0, 0.0)));
             assert!(super::mvt_segment_is_tile_seam(extent, (4096.0, 100.0), (4096.0, 900.0)));
-            assert!(!super::mvt_segment_is_tile_seam(extent, (0.0, 0.0), (100.0, 100.0)));
-            assert!(!super::mvt_segment_is_tile_seam(extent, (100.0, 200.0), (300.0, 400.0)));
-            assert!(super::mvt_segment_touches_tile_bbox(extent, (0.0, 0.0), (100.0, 100.0)));
-            assert!(!super::mvt_segment_touches_tile_bbox(extent, (100.0, 200.0), (300.0, 400.0)));
+            assert!(!super::mvt_segment_is_tile_seam(extent, (0.0, 0.0), (200.0, 200.0)));
+            assert!(!super::mvt_segment_is_tile_seam(extent, (200.0, 200.0), (300.0, 400.0)));
+            assert!(super::mvt_segment_touches_tile_bbox(extent, (0.0, 0.0), (200.0, 200.0)));
+            assert!(!super::mvt_segment_touches_tile_bbox(extent, (200.0, 200.0), (300.0, 400.0)));
+            assert!(super::mvt_ring_is_tile_bbox_cover(
+                extent,
+                &[(0.0, 0.0), (4096.0, 0.0), (4096.0, 4096.0), (0.0, 4096.0), (0.0, 0.0)],
+            ));
         }
 
         #[test]
@@ -1129,14 +1133,24 @@ pub mod vector_tiles {
         Color::from_rgba8(scale(rgba.r), scale(rgba.g), scale(rgba.b), 255)
     }
 
-    fn mvt_point_on_tile_bbox_edge(extent: u32, x: f64, y: f64) -> bool {
-        const EPS: f64 = 1.0;
+    const TILE_BBOX_EPS: f64 = 1.0;
+
+    pub fn mvt_point_on_tile_bbox_edge(extent: u32, x: f64, y: f64) -> bool {
+        let eps = TILE_BBOX_EPS;
         let e = f64::from(extent);
-        x.abs() <= EPS || y.abs() <= EPS || (x - e).abs() <= EPS || (y - e).abs() <= EPS
+        x <= eps || y <= eps || x >= e - eps || y >= e - eps
     }
 
     pub fn mvt_segment_is_tile_seam(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
-        mvt_point_on_tile_bbox_edge(extent, a.0, a.1) && mvt_point_on_tile_bbox_edge(extent, b.0, b.1)
+        if !mvt_point_on_tile_bbox_edge(extent, a.0, a.1) || !mvt_point_on_tile_bbox_edge(extent, b.0, b.1) {
+            return false;
+        }
+        let eps = TILE_BBOX_EPS;
+        let e = f64::from(extent);
+        (a.1 <= eps && b.1 <= eps)
+            || (a.1 >= e - eps && b.1 >= e - eps)
+            || (a.0 <= eps && b.0 <= eps)
+            || (a.0 >= e - eps && b.0 >= e - eps)
     }
 
     pub fn mvt_segment_touches_tile_bbox(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
@@ -1149,21 +1163,24 @@ pub mod vector_tiles {
                 .iter()
                 .all(|&(x, y)| mvt_point_on_tile_bbox_edge(extent, x, y))
     }
-}
 
-/// @emoji ✂️ How aggressively MVT line work drops tile-clip seam segments.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum TileSeamCull {
-    BothEndpoints,
-    EitherEndpoint,
-}
-
-impl TileSeamCull {
-    fn drop(self, extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
-        match self {
-            Self::BothEndpoints => vector_tiles::mvt_segment_is_tile_seam(extent, a, b),
-            Self::EitherEndpoint => vector_tiles::mvt_segment_touches_tile_bbox(extent, a, b),
+    pub fn mvt_ring_is_tile_bbox_cover(extent: u32, ring: &[(f64, f64)]) -> bool {
+        if ring.len() < 4 {
+            return false;
         }
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+        for &(x, y) in ring {
+            min_x = min_x.min(x);
+            min_y = min_y.min(y);
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+        }
+        let eps = TILE_BBOX_EPS;
+        let e = f64::from(extent);
+        min_x <= eps && min_y <= eps && max_x >= e - eps && max_y >= e - eps
     }
 }
 // #endregion 🔖VectorTiles
@@ -1343,10 +1360,10 @@ fn map_layer_default_true() -> bool {
 }
 
 /// @emoji 🎚️ Minimum layer line/label weight multiplier from window sliders.
-pub const MAP_LAYER_WEIGHT_MIN: f64 = 0.25;
+pub const MAP_LAYER_WEIGHT_MIN: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MIN;
 
 /// @emoji 🎚️ Maximum layer line/label weight multiplier from window sliders.
-pub const MAP_LAYER_WEIGHT_MAX: f64 = 3.0;
+pub const MAP_LAYER_WEIGHT_MAX: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MAX;
 
 fn map_layer_default_weight() -> f64 {
     1.0
@@ -1743,9 +1760,18 @@ impl MapHost {
 
     pub fn pick_vector_tile_zoom(&self) -> u32 {
         let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
-        self.pick_raster_tile_zoom()
-            .min(vector_tiles::MAP_VECTOR_TILE_MAX_Z)
-            .min(vector_tiles::max_tile_z_for_span(span))
+        let span_cap = vector_tiles::max_tile_z_for_span(span);
+        let lod_idx = resolve_map_lod_index_from_span(span);
+        let mut z = if lod_idx <= 1 {
+            span_cap
+        } else {
+            self.pick_raster_tile_zoom().min(span_cap)
+        };
+        z = z.min(vector_tiles::MAP_VECTOR_TILE_MAX_Z);
+        while z > 0 && tiles::visible_tiles(&self.camera, &self.viewport, z).len() > MAX_VISIBLE_TILE_REQUESTS {
+            z -= 1;
+        }
+        z
     }
 
     pub fn render_mode_str(&self) -> &'static str {
@@ -2108,7 +2134,7 @@ impl MapHost {
         let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
         let mut path = vello::kurbo::BezPath::new();
         for ring in rings {
-            if ring.len() < 3 {
+            if ring.len() < 3 || vector_tiles::mvt_ring_is_tile_bbox_cover(extent, ring) {
                 continue;
             }
             Self::append_screen_ring(
@@ -2139,7 +2165,7 @@ impl MapHost {
     ) {
         let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
         for ring in rings {
-            if ring.len() < 3 {
+            if ring.len() < 3 || vector_tiles::mvt_ring_is_tile_bbox_cover(extent, ring) {
                 continue;
             }
             let mut path = vello::kurbo::BezPath::new();
@@ -2166,7 +2192,6 @@ impl MapHost {
         lines: &[Vec<(f64, f64)>],
         stroke: Color,
         width: f64,
-        seam_cull: TileSeamCull,
     ) {
         if lines.is_empty() || stroke.to_rgba8().a <= 5 || width <= 0.0 {
             return;
@@ -2176,29 +2201,30 @@ impl MapHost {
             if line.len() < 2 {
                 continue;
             }
-            if seam_cull == TileSeamCull::EitherEndpoint
-                && vector_tiles::mvt_polyline_is_tile_bbox_artifact(extent, line)
-            {
+            if vector_tiles::mvt_polyline_is_tile_bbox_artifact(extent, line) {
                 continue;
             }
+            let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
             let mut path = vello::kurbo::BezPath::new();
-            let mut have_subpath = false;
+            let mut prev: Option<Point> = None;
             for window in line.windows(2) {
                 let a = (window[0].0, window[0].1);
                 let b = (window[1].0, window[1].1);
-                if seam_cull.drop(extent, a, b) {
-                    have_subpath = false;
+                if vector_tiles::mvt_segment_is_tile_seam(extent, a, b) {
+                    prev = None;
                     continue;
                 }
                 let sa = to_screen(a.0, a.1);
                 let sb = to_screen(b.0, b.1);
-                if !have_subpath {
-                    path.move_to(sa);
-                    have_subpath = true;
+                match prev {
+                    None => path.move_to(sa),
+                    Some(p) if p.distance(sa) > jump => path.move_to(sa),
+                    _ => {}
                 }
                 path.line_to(sb);
+                prev = Some(sb);
             }
-            if have_subpath {
+            if prev.is_some() {
                 scene.stroke(&Stroke::new(width), Affine::IDENTITY, stroke, None, &path);
             }
         }
@@ -2343,10 +2369,7 @@ impl MapHost {
         let region_stroke = self.theme.region_stroke;
         let water_fill = vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.water);
         let building_fill = vector_tiles::color_with_alpha(land_fill, (220.0 * weights.buildings).clamp(32.0, 255.0) as u8);
-        let park_fill = vector_tiles::color_with_alpha(
-            self.theme.region_fill,
-            (90.0 * weights.land).clamp(16.0, 255.0) as u8,
-        );
+        let park_fill = vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.land);
         let line_scale = vector_tiles::vector_line_scale(span);
         let road_lod_scale = vector_tiles::transportation_stroke_lod_scale(span, forced_lod);
 
@@ -2354,13 +2377,22 @@ impl MapHost {
         let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
         let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
         let draw_coastline = profile.draw_coastline && vis.water;
-        let skip_base_water_fill = draw_coastline && !draw_land_backdrop;
+        let has_any_countries = draw.iter().any(|(_, _, _, tile)| {
+            tile.layers.iter().any(|l| {
+                l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty())
+            })
+        });
+        let coastline_countries = draw_coastline && has_any_countries;
+        let coastline_water_oceans = draw_coastline && !has_any_countries;
+        let skip_base_water_fill = coastline_countries;
         let skip_base_landcover_fill = draw_land_backdrop;
-        let draw_countries_layer = profile.draw_landcover && vis.land && !draw_land_backdrop;
+        let draw_countries_layer = profile.draw_landcover && vis.land && !draw_land_backdrop && has_any_countries;
         if draw_land_backdrop {
             self.append_viewport_fill(scene, land_fill);
-        } else if draw_coastline {
+        } else if coastline_countries {
             self.append_viewport_fill(scene, water_fill);
+        } else if coastline_water_oceans {
+            self.append_viewport_fill(scene, land_fill);
         }
         for (tz, tx, ty, tile) in draw {
             let draw_water = profile.draw_water && vis.water && !skip_base_water_fill;
@@ -2368,7 +2400,7 @@ impl MapHost {
             let draw_landcover = draw_land && !skip_base_landcover_fill && !draw_countries_layer;
             let draw_buildings = profile.draw_buildings && vis.buildings;
             let draw_roads = profile.draw_transportation && vis.roads;
-            let draw_borders = profile.draw_boundary && vis.borders;
+            let draw_borders = profile.draw_boundary && vis.borders && !draw_land_backdrop;
             let mut layers: Vec<_> = tile.layers.iter().collect();
             layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
 
@@ -2455,7 +2487,6 @@ impl MapHost {
                                     &feat.lines,
                                     road_stroke,
                                     w,
-                                    TileSeamCull::BothEndpoints,
                                 );
                             }
                         }
@@ -2473,7 +2504,6 @@ impl MapHost {
                                         &feat.lines,
                                         border_stroke,
                                         w,
-                                        TileSeamCull::EitherEndpoint,
                                     );
                                 }
                                 continue;
@@ -2490,7 +2520,6 @@ impl MapHost {
                                         &feat.lines,
                                         border_stroke,
                                         w,
-                                        TileSeamCull::EitherEndpoint,
                                     );
                                 }
                                 continue;
@@ -2509,7 +2538,6 @@ impl MapHost {
                                     &feat.lines,
                                     region_stroke,
                                     w,
-                                    TileSeamCull::EitherEndpoint,
                                 );
                             }
                         }
@@ -2524,7 +2552,6 @@ impl MapHost {
                                     &feat.lines,
                                     water_fill,
                                     (1.0 * line_scale * weights.water).clamp(0.5, 6.0),
-                                    TileSeamCull::EitherEndpoint,
                                 );
                             }
                         }
@@ -3449,6 +3476,22 @@ mod tests {
     }
 
     #[test]
+    fn pick_vector_tile_zoom_uses_span_cap_at_world_lod_while_raster_stays_coarse() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        assert_eq!(host.pick_raster_tile_zoom(), 0, "world raster stays at z0");
+        assert_eq!(
+            host.pick_vector_tile_zoom(),
+            super::vector_tiles::max_tile_z_for_span(super::viewport_lon_span_degrees(
+                &host.camera,
+                &host.viewport,
+            )),
+            "world vector tiles must be finer than raster so countries/coastlines paint"
+        );
+    }
+
+    #[test]
     fn forced_building_lod_bounds_tile_requests_at_world_zoom() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3800,6 +3843,24 @@ mod tests {
         host.upload_vector_tile(0, 0, 0, &bytes).expect("vector tile");
         let scene = host.build_vector_scene();
         assert!(!scene.encoding().is_empty());
+    }
+
+    #[test]
+    fn colored_world_tile_paints_land_over_water_backdrop() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let bytes = std::fs::read(path).expect("fixture pbf");
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_render_mode("vector");
+        host.set_vector_style("colored");
+        host.fit_world_camera();
+        host.upload_vector_tile(0, 0, 0, &bytes).expect("vector tile");
+        let scene = host.build_vector_scene();
+        assert!(
+            scene.encoding().path_tags.len() > 4,
+            "colored world LOD must paint country landmasses, not only the water backdrop"
+        );
     }
 
     #[test]

@@ -919,14 +919,14 @@ pub mod hierarchical_tree {
 
     fn half_extent(node: &Value) -> f64 {
         let Some(obj) = node.as_object() else {
-            return 24.0;
+            return ui_styling::radii::NODE_DEFAULT;
         };
         if obj.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
             let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(40.0);
             let h = obj.get("height").and_then(|v| v.as_f64()).unwrap_or(40.0);
             return (w.max(h) * 0.5).max(8.0);
         }
-        obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(24.0)
+        obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(ui_styling::radii::NODE_DEFAULT)
     }
 
     const TREE_SUPER_ID: &str = "__tree_super__";
@@ -1638,6 +1638,7 @@ pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_
 #[cfg(test)]
 mod quadrant_tests {
     use super::*;
+    use crate::cavas::vello::peniko::Color;
 
     #[test]
     fn vello_theme_default_uses_centralized_board_light_tokens() {
@@ -1645,7 +1646,7 @@ mod quadrant_tests {
         let t = &ui_styling::BOARD_LIGHT;
         assert_eq!(p.raster_clear, Color::new(t.raster_clear));
         assert_eq!(p.edge_stroke_selected, Color::new(t.edge_stroke_selected));
-        assert_eq!(p.handle_fill[3], Color::new(t.handle_fill).to_rgba8().a);
+        assert_eq!(p.handle_fill.to_rgba8().a, Color::new(t.handle_fill).to_rgba8().a);
     }
 
     #[test]

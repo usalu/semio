@@ -116,7 +116,7 @@ pub fn computation_node_width(name: &str, inputs: &[IoPortSpec], outputs: &[IoPo
 /// 📐 IO widget width from vertically rotated title metrics.
 pub fn io_widget_width(name: &str) -> f64 {
     use cavas::text::label_extent;
-    let name_px = DAG_LABEL_SCREEN_PX * 1.05;
+    let name_px = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_SCALE_MULT;
     let (_, label_h) = label_extent(name, name_px);
     (label_h + DAG_NODE_EDGE_INSET * 2.0 + 2.0).max(24.0)
 }
@@ -124,7 +124,7 @@ pub fn io_widget_width(name: &str) -> f64 {
 /// 📐 IO widget height from vertically rotated title metrics plus a control band.
 pub fn io_widget_height(name: &str) -> f64 {
     use cavas::text::label_extent;
-    let name_px = DAG_LABEL_SCREEN_PX * 1.05;
+    let name_px = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_SCALE_MULT;
     let (label_w, _) = label_extent(name, name_px);
     (label_w + DAG_IO_WIDGET_HEIGHT + DAG_NODE_EDGE_INSET * 2.0).max(40.0)
 }
@@ -197,10 +197,6 @@ fn output_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(
         node.height / count as f64 * 0.5
     };
     Some((x0, y_center - half, x1, y_center + half))
-}
-
-fn computation_node_uses_channel_row_pick(node: &DagNodeSpec) -> bool {
-    matches!(node.kind, DagNodeKind::Computation { .. })
 }
 
 fn computation_port_center_y(node: &DagNodeSpec, port_index: usize) -> f64 {
@@ -295,7 +291,7 @@ enum WidgetPointerKind {
 }
 
 fn preview_scalar_text_width(text: &str) -> f64 {
-    let px = DAG_LABEL_SCREEN_PX * 1.05;
+    let px = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_SCALE_MULT;
     port_label_text_width(text, px).max(text.len() as f64 * px * 0.55)
 }
 
@@ -645,7 +641,7 @@ fn slider_value_world_center(node: &DagNodeSpec, value_text: &str, paint_px: f64
     let hw = node.width * 0.5;
     let (value_w, _) = label_extent(value_text, paint_px);
     let z = zoom.max(0.05);
-    let screen_gap = DAG_LABEL_SCREEN_PX * 0.35;
+    let screen_gap = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_RATIO;
     let world_offset = (screen_gap + value_w * 0.5) / z;
     (node.x - hw - world_offset, node.y)
 }
@@ -809,7 +805,7 @@ fn computation_name_world_center(node: &DagNodeSpec, label: &str, paint_px: f64,
     let hh = node.height * 0.5;
     let (_, label_h) = label_extent(label, paint_px);
     let z = zoom.max(0.05);
-    let screen_gap = DAG_LABEL_SCREEN_PX * 0.2;
+    let screen_gap = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_COMPACT_RATIO;
     let world_offset = (screen_gap + label_h * 0.5) / z;
     (node.x, node.y - hh - world_offset)
 }
@@ -994,11 +990,11 @@ pub struct DagLayoutOptions {
 }
 
 fn default_layer_spacing() -> f64 {
-    120.0
+    ui_styling::metrics::board::LAYOUT_LAYER_SPACING
 }
 
 fn default_sibling_gap() -> f64 {
-    40.0
+    ui_styling::metrics::board::LAYOUT_SIBLING_GAP
 }
 
 fn resolve_layout_node_id(handle_to_node: &HashMap<String, String>, key: &str, node_ids: &HashSet<String>) -> String {
@@ -1204,9 +1200,9 @@ const DAG_LODS: &[Lod; 6] = &[
 const DAG_LOD_SCALE: LodScale = LodScale { lods: DAG_LODS };
 
 /// 📶 Uniform delay before each DAG LOD band activates (requires slightly more zoom for detail tiers).
-const DAG_LOD_ZOOM_SHIFT: f64 = 0.25;
+const DAG_LOD_ZOOM_SHIFT: f64 = ui_styling::metrics::dag::LOD_ZOOM_SHIFT;
 
-const DAG_LOD_BAND_FLOOR_ZOOM: &[f64] = &[0.05, 0.15, 0.35, 0.55, 1.25, 2.5];
+const DAG_LOD_BAND_FLOOR_ZOOM: &[f64] = ui_styling::metrics::dag::LOD_BAND_FLOOR_ZOOM;
 
 fn dag_lod_resolve_zoom(zoom: f64) -> f64 {
     (zoom - DAG_LOD_ZOOM_SHIFT).max(0.05)
@@ -1254,7 +1250,7 @@ fn dag_label_compact_paint_px(zoom: f64, lod_index: usize) -> f64 {
 
 fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
-        vello_color_with_alpha(theme.node_fill_disabled, 120)
+        vello_color_with_alpha(theme.node_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
         theme.node_fill_selected
     } else if highlighted {
@@ -1268,7 +1264,7 @@ fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, h
 
 pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
-        vello_color_with_alpha(theme.node_stroke, 110)
+        vello_color_with_alpha(theme.node_stroke, ui_styling::opacities::DIM_STROKE_ALPHA)
     } else if selected {
         theme.node_stroke_selected
     } else if highlighted {
@@ -1282,7 +1278,7 @@ pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, sele
 
 pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
-        vello_color_with_alpha(theme.label_fill, 110)
+        vello_color_with_alpha(theme.label_fill, ui_styling::opacities::DIM_LABEL_ALPHA)
     } else if selected {
         theme.label_fill_hovered
     } else if highlighted {
@@ -1309,7 +1305,7 @@ pub(crate) fn dag_node_internal_chrome_stroke(
 
 pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
-        vello_color_with_alpha(theme.handle_fill_disabled, 120)
+        vello_color_with_alpha(theme.handle_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
         theme.handle_fill_selected
     } else if highlighted {
@@ -1323,7 +1319,7 @@ pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, sele
 
 pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
-        vello_color_with_alpha(theme.handle_stroke_disabled, 120)
+        vello_color_with_alpha(theme.handle_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
         theme.handle_stroke_selected
     } else if highlighted {
@@ -1337,7 +1333,7 @@ pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, se
 
 pub(crate) fn dag_edge_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
     if dimmed {
-        vello_color_with_alpha(theme.edge_stroke_disabled, 120)
+        vello_color_with_alpha(theme.edge_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
         theme.edge_stroke_selected
     } else if highlighted {
@@ -1747,9 +1743,6 @@ impl DagHost {
                 false,
             );
         }
-        if self.engine.node_body_hit_excluded.contains(&node_id) {
-            return (false, false, false);
-        }
         (self.is_node_selected(node_id), false, self.is_node_hovered(node_id))
     }
 
@@ -1802,9 +1795,6 @@ impl DagHost {
     pub fn hovered_node_id(&self) -> Option<String> {
         let hover = self.engine.hover?;
         if self.node_id_map.contains_key(&hover) {
-            if self.engine.node_body_hit_excluded.contains(&hover) {
-                return None;
-            }
             return self.widget_id_for_node_id(hover);
         }
         if self.draw_lod_for_frame().uses_channel_row_pick() {
@@ -2536,21 +2526,6 @@ impl DagHost {
         None
     }
 
-    fn sync_detail_lod_node_body_hit_exclusion(&mut self) {
-        self.engine.node_body_hit_excluded.clear();
-        if !self.draw_lod_for_frame().uses_channel_row_pick() {
-            return;
-        }
-        for (idx, node) in self.fixture.nodes.iter().enumerate() {
-            if !computation_node_uses_channel_row_pick(node) {
-                continue;
-            }
-            if let Some(nid) = self.engine_node_id_for_index(idx) {
-                self.engine.node_body_hit_excluded.insert(nid);
-            }
-        }
-    }
-
     fn connection_hit_world(&self, world_x: f64, world_y: f64) -> (f64, f64) {
         let Some(hid) = self.handle_anchor_hit(world_x, world_y) else {
             return (world_x, world_y);
@@ -2579,7 +2554,9 @@ impl DagHost {
         if self.handle_anchor_hit(world_x, world_y).is_some() {
             return;
         }
-        self.engine.hover = self.channel_row_handle_hit(world_x, world_y);
+        if let Some(hid) = self.channel_row_handle_hit(world_x, world_y) {
+            self.engine.hover = Some(hid);
+        }
     }
 
     fn try_node_rectangle_pointer_down(&mut self, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) -> bool {
@@ -2730,7 +2707,6 @@ impl DagHost {
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.sync_connection_hit_picking_for_lod();
-        self.sync_detail_lod_node_body_hit_exclusion();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
@@ -2780,7 +2756,6 @@ impl DagHost {
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.sync_connection_hit_picking_for_lod();
-        self.sync_detail_lod_node_body_hit_exclusion();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
@@ -2810,7 +2785,6 @@ impl DagHost {
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.sync_connection_hit_picking_for_lod();
-        self.sync_detail_lod_node_body_hit_exclusion();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         if self.widget_drag.take().is_some() {
@@ -3723,7 +3697,7 @@ impl DagHost {
                                 DagMediaKind::Video => "video",
                             };
                             let hint = world_to_screen(cam, viewport, Point::new(node.x, node.y + hh * 0.1));
-                            append_label(scene, kind_label, hint, paint_px * 0.85, vello_color_with_alpha(label_fill, 140), label_halo);
+                            append_label(scene, kind_label, hint, paint_px * 0.85, vello_color_with_alpha(label_fill, ui_styling::opacities::KIND_HINT_ALPHA), label_halo);
                         }
                     }
                 }
@@ -5050,7 +5024,7 @@ mod tests {
     }
 
     #[test]
-    fn detail_lod_channel_rows_pick_handles_not_node_body() {
+    fn detail_lod_non_channel_body_hovers_and_selects_node() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
@@ -5073,11 +5047,9 @@ mod tests {
         host.pointer_move_screen(body_sx, body_sy, false, false, false);
         assert!(host.hovered_node_id().as_deref() == Some("combine"));
         assert!(host.engine.hover.is_some());
-        let (name_x, name_y) = computation_name_world_center(&combine, &combine.name, dag_label_paint_px(1.0, 0), 1.0);
-        let (clear_sx, clear_sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new(name_x, name_y));
-        host.pointer_move_screen(clear_sx, clear_sy, false, false, false);
-        assert!(host.hovered_node_id().is_none());
-        assert!(host.engine.hover.is_none());
+        host.pointer_down(body_sx, body_sy, false);
+        assert!(host.selected_node_ids().contains(&"combine".to_string()));
+        host.pointer_up(body_sx, body_sy);
     }
 
     #[test]
@@ -5292,7 +5264,7 @@ mod tests {
         let world_offset = top - label_y;
         let (_, label_h) = cavas::text::label_extent("Box", paint_px);
         let screen_offset = world_offset * 1.0;
-        assert!((screen_offset - (DAG_LABEL_SCREEN_PX * 0.2 + label_h * 0.5)).abs() < 1e-6);
+        assert!((screen_offset - (DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_COMPACT_RATIO + label_h * 0.5)).abs() < 1e-6);
     }
 
     #[test]
