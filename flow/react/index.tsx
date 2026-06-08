@@ -919,6 +919,45 @@ function flowCatalogueItemRankScore(item: CatalogueItem, query: string): number 
   return -1;
 }
 
+/** @emoji 📶 Spotlight row label/detail matching DAG node label tiers. */
+export function flowCatalogueItemLodDisplay(
+  item: CatalogueItem,
+  lod: DagDrawLodKind,
+): { readonly primary: string; readonly detail: string | null; readonly showIcon: boolean } {
+  const abbrev = item.abbreviation || item.name;
+  const summary = item.summary?.trim() || null;
+  switch (lod) {
+    case "minimap":
+    case "overview":
+      return { primary: abbrev, detail: null, showIcon: true };
+    case "compact":
+    case "detail":
+      return { primary: abbrev, detail: lod === "detail" ? summary : null, showIcon: false };
+    case "normal":
+      return { primary: item.name, detail: null, showIcon: false };
+    case "micro":
+      return { primary: item.name, detail: summary, showIcon: false };
+  }
+}
+
+function flowSpotlightLodChrome(lod: DagDrawLodKind): {
+  readonly textClass: string;
+  readonly itemPy: string;
+  readonly maxListH: string;
+  readonly panelClass: string;
+} {
+  switch (lod) {
+    case "minimap":
+    case "overview":
+      return { textClass: "text-xs", itemPy: "py-0.5", maxListH: "max-h-28", panelClass: "min-w-[8rem] max-w-[11rem]" };
+    case "compact":
+    case "detail":
+      return { textClass: "text-xs", itemPy: "py-0.5", maxListH: "max-h-36", panelClass: "min-w-[9rem] max-w-[13rem]" };
+    default:
+      return { textClass: "text-sm", itemPy: "py-1", maxListH: "max-h-44", panelClass: "min-w-[11rem] max-w-[16rem]" };
+  }
+}
+
 /** @emoji 🔍 Ranks catalogue items for flow canvas spotlight search. */
 export function flowRankCatalogueSuggestions(sections: readonly CatalogueSection[], query: string): CatalogueItem[] {
   const items = flattenCatalogueItems(sections);
@@ -1222,6 +1261,9 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const drawLodLabel = session.drawLodLabel();
+  const drawLod: DagDrawLodKind = isDagDrawLodKind(drawLodLabel) ? drawLodLabel : "normal";
+  const lodChrome = flowSpotlightLodChrome(drawLod);
   const sliderSpec = flowParseSpotlightSliderQuery(query);
   const noteSpec = sliderSpec ? null : flowParseSpotlightNoteQuery(query, sections);
   const spotlightWidget = sliderSpec ? ("slider" as const) : noteSpec ? ("note" as const) : null;
@@ -1353,18 +1395,18 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   return (
     <div
       ref={rootRef}
-      className={cn("absolute z-20 min-w-[14rem] max-w-[20rem]", floatingMenuSurfaceClass)}
+      className={cn("absolute z-20", lodChrome.panelClass, floatingMenuSurfaceClass)}
       style={{ left: anchor.screen.x, top: anchor.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
-      <div className={cn("flex items-center gap-1 px-2 py-1.5", borderNormalBottomClass)}>
+      <div className={cn("flex items-center gap-1 px-2 py-1", borderNormalBottomClass)}>
         <input
           ref={inputRef}
           type="text"
           value={query}
           placeholder="Add function, number, or text…"
-          className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+          className={cn("min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted", lodChrome.textClass)}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onInputKeyDown}
         />
@@ -1379,23 +1421,31 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
           </button>
         ) : null}
       </div>
-      <ul className="max-h-56 overflow-y-auto py-1">
+      <ul className={cn("overflow-y-auto py-0.5", lodChrome.maxListH)}>
         {visible.length === 0 ? (
-          <li className="px-3 py-2 text-sm text-muted">No matches</li>
+          <li className={cn("px-2 py-1 text-muted", lodChrome.textClass)}>No matches</li>
         ) : (
           visible.map((item, index) => {
             const globalIndex = expanded ? index : 0;
             const active = globalIndex === activeIndex;
+            const display = flowCatalogueItemLodDisplay(item, drawLod);
             return (
               <li key={`${item.kind}-${item.neuronKind ?? item.action ?? item.name}`}>
                 <button
                   type="button"
-                  className={cn(floatingMenuItemClass, "flex-col gap-0.5 px-3 py-1.5 text-sm", active && "bg-active-base text-emphasized")}
+                  className={cn(
+                    floatingMenuItemClass,
+                    "flex w-full min-w-0 items-center gap-1.5 px-2",
+                    lodChrome.itemPy,
+                    lodChrome.textClass,
+                    active && "bg-active-base text-emphasized",
+                  )}
                   onMouseEnter={() => setActiveIndex(globalIndex)}
                   onClick={() => commitItem(item)}
                 >
-                  <span className="font-medium">{item.name}</span>
-                  <span className="text-xs text-muted">{item.summary}</span>
+                  {display.showIcon ? <Icon icon={item.icon} size="tiny" className="shrink-0" /> : null}
+                  <span className="min-w-0 truncate font-medium">{display.primary}</span>
+                  {display.detail ? <span className="min-w-0 truncate text-muted">· {display.detail}</span> : null}
                 </button>
               </li>
             );
@@ -3314,6 +3364,33 @@ if (import.meta.vitest) {
       const tree = buildCatalogueKindsTreeSections(parsed, "test-kinds");
       expect(tree[0]?.items[0]?.label).toBe("Solid");
       expect(tree[0]?.items[0]?.items?.[0]?.label).toBe("Extrude");
+    });
+  });
+
+  describe("flow catalogue lod display", () => {
+    const item: CatalogueItem = {
+      kind: "neuron",
+      neuronKind: "math.multiply",
+      name: "Multiply",
+      abbreviation: "Mul",
+      icon: "emoji:✖️",
+      summary: "Product",
+    };
+
+    it("uses abbreviation at compact and detail tiers", () => {
+      expect(flowCatalogueItemLodDisplay(item, "compact").primary).toBe("Mul");
+      expect(flowCatalogueItemLodDisplay(item, "detail").primary).toBe("Mul");
+    });
+
+    it("uses name at normal and micro tiers", () => {
+      expect(flowCatalogueItemLodDisplay(item, "normal").primary).toBe("Multiply");
+      expect(flowCatalogueItemLodDisplay(item, "micro").primary).toBe("Multiply");
+    });
+
+    it("shows icon at overview and summary inline at micro", () => {
+      expect(flowCatalogueItemLodDisplay(item, "overview").showIcon).toBe(true);
+      expect(flowCatalogueItemLodDisplay(item, "micro").detail).toBe("Product");
+      expect(flowCatalogueItemLodDisplay(item, "normal").detail).toBeNull();
     });
   });
 

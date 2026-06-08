@@ -1,20 +1,19 @@
 {
-  "name": "@ui/styling",
+  "name": "@ui/styling-py",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "ui/styling/js",
-        "command": "bun ./script.ts generate",
-        "forwardAllArgs": true
+        "cwd": "ui/styling/py",
+        "command": "bun ./script.ts generate"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "ui/styling/js",
-        "command": "bun test"
+        "cwd": "ui/styling/py",
+        "command": "bun ./script.ts test"
       }
     }
   }

@@ -5,6 +5,9 @@ pub use vello_svg::usvg;
 pub use vello_svg::vello;
 pub use vello_svg;
 
+#[path = "theme.rs"]
+pub mod theme;
+
 // #region 🏷️IconAssets
 
 pub mod icon_assets {
@@ -193,7 +196,7 @@ pub mod svg_icon_vello09 {
             db.load_font_data(super::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
             let mut o = usvg::Options::default();
             o.fontdb = Arc::new(db);
-            o.font_family = "Noto Color Emoji".into();
+            o.font_family = ui_styling::canvas_fonts::NOTO_COLOR_EMOJI.into();
             o
         })
     }
@@ -478,7 +481,7 @@ pub mod svg_icon_vello09 {
 
     #[allow(dead_code)]
     pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
-        append_svg_str_themed(scene, svg, Color::BLACK, Color::WHITE)
+        append_svg_str_themed(scene, svg, crate::theme::default_icon_fg(), crate::theme::default_icon_bg())
     }
 }
 
@@ -503,7 +506,7 @@ pub mod text {
                 .faces()
                 .next()
                 .and_then(|face| face.families.first().map(|(name, _)| name.clone()))
-                .unwrap_or_else(|| "sans-serif".into());
+                .unwrap_or_else(|| ui_styling::canvas_fonts::MAP_LABEL_SANS_FALLBACK.into());
             let mut o = usvg::Options::default();
             o.fontdb = Arc::new(db);
             o.font_family = family;
@@ -531,22 +534,24 @@ pub mod text {
     /// @emoji 📐 Estimated label box size in screen px for layout (matches `append_label` padding).
     pub fn label_extent(label: &str, px: f64) -> (f64, f64) {
         let trimmed = label.trim();
-        if trimmed.is_empty() || px < 4.0 {
+        if trimmed.is_empty() || px < ui_styling::metrics::label::MIN_PX {
             return (0.0, 0.0);
         }
-        let pad = px * 0.35;
-        let w = (trimmed.len() as f64 * px * 0.62 + pad * 2.0).clamp(32.0, 2048.0);
-        let h = (px * 1.6 + pad * 2.0).clamp(16.0, 256.0);
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let w = (trimmed.len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO + pad * 2.0)
+            .clamp(ui_styling::metrics::label::WIDTH_MIN, ui_styling::metrics::label::WIDTH_MAX);
+        let h = (px * ui_styling::metrics::label::HEIGHT_RATIO + pad * 2.0)
+            .clamp(ui_styling::metrics::label::HEIGHT_MIN, ui_styling::metrics::label::HEIGHT_MAX);
         (w, h)
     }
 
     /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline).
     pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
         let trimmed = label.trim();
-        if trimmed.is_empty() || px < 4.0 {
+        if trimmed.is_empty() || px < ui_styling::metrics::label::MIN_PX {
             return;
         }
-        let pad = px * 0.35;
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
         let (w, h) = label_extent(trimmed, px);
         let text_y = pad + px;
         let family = usvg_options_map_labels().font_family.clone();
@@ -560,7 +565,7 @@ pub mod text {
             family = escape_xml_attr(&family),
             fill = color_to_svg(fill),
             halo = color_to_svg(halo),
-            stroke = (px * 0.12).max(1.0),
+            stroke = (px * ui_styling::metrics::label::HALO_STROKE_RATIO).max(ui_styling::metrics::label::HALO_STROKE_MIN),
             text = escape_xml_attr(trimmed),
         );
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
@@ -570,10 +575,13 @@ pub mod text {
         if bw <= 0.0 || bh <= 0.0 {
             return;
         }
-        let scale = (px * 0.9 / bh).min(2.5);
+        let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = vello::kurbo::Affine::translate((origin.x - bx * scale, origin.y - by * scale - px * 0.85))
+        let aff = vello::kurbo::Affine::translate((
+            origin.x - bx * scale,
+            origin.y - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO,
+        ))
             * vello::kurbo::Affine::scale(scale);
         scene.append(&label_scene, Some(aff));
     }
@@ -584,8 +592,8 @@ pub mod text {
 pub mod camera {
     use crate::vello::kurbo::{Affine, Point};
 
-    pub const CANVAS_CAMERA_ZOOM_MIN: f64 = 0.05;
-    pub const CANVAS_CAMERA_ZOOM_MAX: f64 = 32.0;
+    pub const CANVAS_CAMERA_ZOOM_MIN: f64 = ui_styling::metrics::camera::ZOOM_MIN;
+    pub const CANVAS_CAMERA_ZOOM_MAX: f64 = ui_styling::metrics::camera::ZOOM_MAX;
 
     #[derive(Clone, Debug)]
     pub struct Camera {
@@ -658,7 +666,11 @@ pub mod camera {
     }
 
     pub fn wheel_screen(camera: &mut Camera, viewport: &Viewport, sx: f64, sy: f64, delta_y: f64) {
-        let zoom_factor = if delta_y < 0.0 { 1.1 } else { 0.9 };
+        let zoom_factor = if delta_y < 0.0 {
+            ui_styling::metrics::camera::WHEEL_ZOOM_IN_FACTOR
+        } else {
+            ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR
+        };
         let next_zoom = clamp_zoom(camera.zoom * zoom_factor);
         let screen = Point::new(sx, sy);
         let world_before = screen_to_world(camera, viewport, screen);
@@ -715,8 +727,8 @@ pub mod lod {
 
     /// @emoji 🔤 Label screen px scaled with camera zoom inside one LOD band so text keeps the same proportion to world geometry.
     pub fn lod_band_label_screen_px(base_screen_px: f64, zoom: f64, band_floor_zoom: f64) -> f64 {
-        let z = zoom.max(0.05);
-        let floor = band_floor_zoom.max(0.05);
+        let z = zoom.max(ui_styling::metrics::camera::LOD_ZOOM_FLOOR);
+        let floor = band_floor_zoom.max(ui_styling::metrics::camera::LOD_ZOOM_FLOOR);
         base_screen_px * z / floor
     }
 }
@@ -1248,7 +1260,7 @@ fn board_typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book:
     if doc.pages.is_empty() {
         return None;
     }
-    Some(typst_svg::svg_merged(&doc, Abs::pt(3.0)))
+    Some(typst_svg::svg_merged(&doc, Abs::pt(ui_styling::metrics::typst::SVG_MARGIN_PT)))
 }
 
 static TYPST_ASSET_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
@@ -1279,7 +1291,12 @@ fn resolve_typst_src(src: &str) -> BoardResolvedIcon {
     if src.is_empty() {
         return BoardResolvedIcon::None;
     }
-    let wrapped = format!("#set page(width: 96pt, height: 96pt, margin: 3pt, fill: none)\n{src}");
+    let wrapped = format!(
+        "#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n{src}",
+        ui_styling::metrics::typst::ICON_PAGE_PT,
+        ui_styling::metrics::typst::ICON_PAGE_PT,
+        ui_styling::metrics::typst::ICON_MARGIN_PT
+    );
     match board_typst_markup_to_svg(&wrapped) {
         Some(s) => BoardResolvedIcon::SvgPlain(s),
         None => BoardResolvedIcon::None,
@@ -1292,7 +1309,12 @@ fn resolve_emoji_body(em: &str) -> BoardResolvedIcon {
         return BoardResolvedIcon::None;
     }
     let wrapped = format!(
-        "#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set align(center + horizon)\n#set text(size: 44pt, font: \"Noto Color Emoji\")\n{em}"
+        "#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set align(center + horizon)\n#set text(size: {}pt, font: \"{}\")\n{em}",
+        ui_styling::metrics::typst::EMOJI_PAGE_PT,
+        ui_styling::metrics::typst::EMOJI_PAGE_PT,
+        ui_styling::metrics::typst::EMOJI_MARGIN_PT,
+        ui_styling::metrics::typst::EMOJI_TEXT_PT,
+        ui_styling::canvas_fonts::NOTO_COLOR_EMOJI
     );
     match board_typst_markup_to_svg_for_icon_emoji(&wrapped) {
         Some(s) => BoardResolvedIcon::SvgPlain(s),
@@ -1307,7 +1329,11 @@ fn resolve_text_body(text: &str) -> BoardResolvedIcon {
     }
     let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
     let wrapped = format!(
-        "#set page(width: 96pt, height: 96pt, margin: 3pt, fill: none)\n#set align(center + horizon)\n#set text(size: 28pt)\n\"{escaped}\""
+        "#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set align(center + horizon)\n#set text(size: {}pt)\n\"{escaped}\"",
+        ui_styling::metrics::typst::ICON_PAGE_PT,
+        ui_styling::metrics::typst::ICON_PAGE_PT,
+        ui_styling::metrics::typst::ICON_MARGIN_PT,
+        ui_styling::metrics::typst::TEXT_ICON_PT
     );
     match board_typst_markup_to_svg_for_icon_text(&wrapped) {
         Some(s) => BoardResolvedIcon::SvgPlain(s),
@@ -1433,18 +1459,6 @@ mod tests {
 // #endregion icon_codec
 }
 pub use icon_codec::{board_resolve_icon_kind, board_typst_markup_to_svg, decode_icon, encode_icon, BoardResolvedIcon, Icon, ThemedSvgLookup};
-pub mod theme {
-// #region theme
-//! 🎨 Default Vello board paint helpers for generic graph canvases.
-
-use crate::vello::peniko::Color;
-
-/// @emoji 🎨 Shared default clear color for graph board canvases.
-pub fn default_raster_clear() -> Color {
-    Color::from_rgba8(248, 248, 250, 255)
-}
-// #endregion theme
-}
 // #endregion 🔖IconCodec
 
 // #region 🔖CanvasExtension
@@ -1471,14 +1485,21 @@ mod tests {
     use super::camera::{screen_to_world, world_to_screen, Camera, Viewport};
     use super::lod::{Lod, LodScale};
     use super::text;
+    use super::theme;
     use crate::vello::kurbo::Point;
-    use crate::vello::peniko::Color;
     use crate::vello::Scene;
 
     #[test]
     fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {
         let mut scene = Scene::new();
-        text::append_label(&mut scene, "A", Point::new(10.0, 10.0), 12.0, Color::BLACK, Color::WHITE);
+        text::append_label(
+            &mut scene,
+            "A",
+            Point::new(10.0, 10.0),
+            12.0,
+            theme::default_icon_fg(),
+            theme::default_icon_bg(),
+        );
         let logical = scene.encoding().path_tags.len();
         let scaled = super::render::scale_scene_for_device_pixel_ratio(scene, 2.0);
         assert!(scaled.encoding().path_tags.len() >= logical);
@@ -1489,10 +1510,17 @@ mod tests {
     #[test]
     fn append_label_renders_glyphs() {
         let mut scene = Scene::new();
-        text::append_label(&mut scene, "Zürich", Point::new(40.0, 40.0), 14.0, Color::BLACK, Color::WHITE);
+        text::append_label(
+            &mut scene,
+            "Zürich",
+            Point::new(40.0, 40.0),
+            14.0,
+            theme::default_icon_fg(),
+            theme::default_icon_bg(),
+        );
         assert!(!scene.encoding().path_tags.is_empty());
         let mut empty = Scene::new();
-        text::append_label(&mut empty, "  ", Point::new(0.0, 0.0), 14.0, Color::BLACK, Color::WHITE);
+        text::append_label(&mut empty, "  ", Point::new(0.0, 0.0), 14.0, theme::default_icon_fg(), theme::default_icon_bg());
         assert!(empty.encoding().path_tags.is_empty());
     }
 

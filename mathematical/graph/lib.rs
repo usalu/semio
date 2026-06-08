@@ -346,7 +346,13 @@ pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scen
     let mut scene = Scene::new();
     let stroke = Stroke::new(stroke_width);
     for curve in curves {
-        scene.stroke(&stroke, Affine::IDENTITY, Color::WHITE, None, curve);
+        scene.stroke(
+            &stroke,
+            Affine::IDENTITY,
+            Color::new(ui_styling::CANVAS_LIGHT.icon_bg),
+            None,
+            curve,
+        );
     }
     scene
 }
@@ -601,7 +607,7 @@ fn distance(left: Point, right: Point) -> f64 {
     geometry::distance_between(left, right)
 }
 
-pub const DEFAULT_PROXIMITY_DISTANCE_WORLD: f64 = 48.0;
+pub const DEFAULT_PROXIMITY_DISTANCE_WORLD: f64 = ui_styling::metrics::board::PROXIMITY_DISTANCE_WORLD;
 
 fn node_contains_point(node: &Node, point: Point) -> bool {
     match node.shape {
@@ -643,9 +649,9 @@ pub use cavas::geom_sel::{
     world_box_contains_box, world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
 };
 
-pub const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
-pub const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
-pub const SELECTION_MARQUEE_DRAG_THRESHOLD_PX: f64 = 4.0;
+pub const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_CLICK_MAX_DISTANCE_PX;
+pub const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
+pub const SELECTION_MARQUEE_DRAG_THRESHOLD_PX: f64 = ui_styling::metrics::board::SELECTION_MARQUEE_MAX_DISTANCE_PX;
 
 /// 🎯 Normalizes `default` to `replace` for merge-mode strings.
 pub fn normalize_selection_mode(mode: &str) -> String {
@@ -717,7 +723,7 @@ pub fn merge_ids_into_selection(initial: &BTreeSet<String>, hits: &BTreeSet<Stri
     next
 }
 
-pub const SELECTION_DRAG_DIRECTION_THRESHOLD_PX: f64 = 2.0;
+pub const SELECTION_DRAG_DIRECTION_THRESHOLD_PX: f64 = ui_styling::metrics::board::SELECTION_DRAG_DIRECTION_PX;
 
 /// 🎯 Drag left→right = enclosing/full; right→left = crossing/partial (rectangle endpoints).
 pub fn selection_drag_enclosing_rectangle(start: Point, end: Point) -> bool {
@@ -988,7 +994,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 draggable,
                 height,
                 id,
-                radius: hw.max(hh).max(28.0),
+                radius: hw.max(hh).max(ui_styling::radii::NODE_MIN),
                 shape: NodeShape::Rectangle,
                 width,
             },
@@ -1035,7 +1041,16 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
         if P::HAS_PORTS {
-            self.handles.insert(id, Handle { angle, id, node_id, radius: 8.0, role: HandleRole::Any });
+            self.handles.insert(
+                id,
+                Handle {
+                    angle,
+                    id,
+                    node_id,
+                    radius: ui_styling::radii::HANDLE_DEFAULT,
+                    role: HandleRole::Any,
+                },
+            );
         }
     }
 

@@ -38,26 +38,26 @@ pub use infinite_cavas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX
 
 use infinite_cavas::lod::{Lod, LodScale};
 
-const GRID_WORLD_LARGE: f64 = 10.0;
-const GRID_WORLD_MEDIUM: f64 = 2.5;
-const GRID_WORLD_SMALL: f64 = 0.5;
-const GRID_WORLD_MICRO: f64 = 0.1;
-const GRID_FACTOR_DEFAULT: f64 = 10.0;
-const WORLD_CLIP_TILE_WORLD: f64 = 256.0;
-const MAX_WORLD_CLIP_TILES: u32 = 768;
-const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
-const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
-const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = 0.8;
+const GRID_WORLD_LARGE: f64 = ui_styling::metrics::board::GRID_WORLD_LARGE;
+const GRID_WORLD_MEDIUM: f64 = ui_styling::metrics::board::GRID_WORLD_MEDIUM;
+const GRID_WORLD_SMALL: f64 = ui_styling::metrics::board::GRID_WORLD_SMALL;
+const GRID_WORLD_MICRO: f64 = ui_styling::metrics::board::GRID_WORLD_MICRO;
+const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT;
+const WORLD_CLIP_TILE_WORLD: f64 = ui_styling::metrics::board::WORLD_CLIP_TILE_WORLD;
+const MAX_WORLD_CLIP_TILES: u32 = ui_styling::metrics::board::MAX_WORLD_CLIP_TILES;
+const EDGE_HIT_TOLERANCE_PX: f64 = ui_styling::metrics::board::EDGE_HIT_TOLERANCE_PX;
+const HANDLE_HIT_TOLERANCE_PX: f64 = ui_styling::metrics::board::HANDLE_HIT_TOLERANCE_PX;
+const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = ui_styling::metrics::board::INDIRECT_HANDLE_MARKER_SCALE;
 /// Radial offset from node rim to indirect-handle center, as a fraction of node half-extent (circle radius or half the shorter rectangle side).
-const INDIRECT_HANDLE_RING_GAP_NODE_SCALE: f64 = 0.7;
-const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
-const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
-const LINK_COMMIT_SNAP_TIGHT_PX: f64 = 2.0;
-const DEFAULT_BRUSH_FLUSH_DISTANCE: f64 = 80.0;
-const DEFAULT_BRUSH_NODE_SIZE: f64 = 40.0;
-const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
-const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
-const BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
+const INDIRECT_HANDLE_RING_GAP_NODE_SCALE: f64 = ui_styling::metrics::board::INDIRECT_HANDLE_RING_GAP_SCALE;
+const LINK_DRAG_MIN_DISTANCE_PX: f64 = ui_styling::metrics::board::LINK_DRAG_MIN_DISTANCE_PX;
+const LINK_HANDLE_SNAP_EXTRA_PX: f64 = ui_styling::metrics::board::LINK_HANDLE_SNAP_EXTRA_PX;
+const LINK_COMMIT_SNAP_TIGHT_PX: f64 = ui_styling::metrics::board::LINK_COMMIT_SNAP_TIGHT_PX;
+const DEFAULT_BRUSH_FLUSH_DISTANCE: f64 = ui_styling::metrics::board::BRUSH_FLUSH_DISTANCE;
+const DEFAULT_BRUSH_NODE_SIZE: f64 = ui_styling::metrics::board::BRUSH_NODE_SIZE;
+const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
+const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_CLICK_MAX_DISTANCE_PX;
+const BOUNDED_DRAG_HIT_PAD_PX: f64 = ui_styling::metrics::board::BOUNDED_DRAG_HIT_PAD_PX;
 const DEFAULT_WIRE_KIND_ID: &str = "wire.link";
 
 const PUZZLE_2D_LODS: &[Lod; 6] = &[
@@ -1253,8 +1253,8 @@ impl BoardHost {
         };
         let catalog_w = kind_def.map(|d| d.stroke_width).unwrap_or(2.0);
         let width_mult = match style_kind {
-            BoardElementStyleKind::Selected => 1.35,
-            BoardElementStyleKind::Hovered => 1.2,
+            BoardElementStyleKind::Selected => ui_styling::strokes::EDGE_SELECTED_MULT,
+            BoardElementStyleKind::Hovered => ui_styling::strokes::EDGE_HOVERED_MULT,
             _ => 1.0,
         };
         let width = lod_scale_width * (catalog_w / 2.0) * width_mult;
@@ -2395,8 +2395,8 @@ impl BoardHost {
         let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(icon_kind, stroke_c, fill, preserve_original_style) else {
             return;
         };
-        let clip_inset = 0.88;
-        let fit_inset = 0.76;
+        let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
+        let fit_inset = ui_styling::metrics::icon::FIT_INSET;
         let (sx_half, sy_half) = match shape {
             NodeShape::Circle => {
                 let s = self.draw_space_len(radius, false) * fit_inset;
@@ -2463,7 +2463,7 @@ impl BoardHost {
         let style = BoardElementStyleKind::Highlighted;
         let fill = Self::node_fill_for_style(&self.vello_theme, style);
         let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style);
-        let stroke = Stroke::new(2.0);
+        let stroke = Stroke::new(ui_styling::strokes::NODE_BODY);
         match shape {
             NodeShape::Circle => {
                 let c = self.draw_space_point(center, false);
@@ -2613,7 +2613,13 @@ impl BoardHost {
         let p2 = self.draw_space_point(curve.p2, false);
         let p3 = self.draw_space_point(curve.p3, false);
         let bez = CubicBez::new(p0, p1, p2, p3);
-        scene.stroke(&Stroke::new(2.85), Affine::IDENTITY, self.vello_theme.wire_stroke_highlighted, None, &bez);
+        scene.stroke(
+            &Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT),
+            Affine::IDENTITY,
+            self.vello_theme.wire_stroke_highlighted,
+            None,
+            &bez,
+        );
     }
 
     /// @emoji 🧩 Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
@@ -3696,7 +3702,7 @@ impl BoardHost {
                     id: h.id.clone(),
                     node_id: h.node_id.clone(),
                     angle: h.angle,
-                    radius: h.radius.unwrap_or(8.0),
+                    radius: h.radius.unwrap_or(ui_styling::radii::HANDLE_DEFAULT),
                     scale: h.scale.filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0),
                     selected: h.selected.unwrap_or(false),
                     visible: h.visible.unwrap_or(true),
@@ -4217,8 +4223,10 @@ impl BoardHost {
     /// @emoji 📏 Screen-pixel edge stroke width (world-clip tiles and post-cache overlay).
     fn edge_screen_stroke_width_px(&self, lod: BoardDrawLod) -> f64 {
         match lod {
-            BoardDrawLod::Minimap => 1.12_f64,
-            BoardDrawLod::Overview | BoardDrawLod::Compact => (2.75_f64).max(2.0 * self.camera.zoom),
+            BoardDrawLod::Minimap => ui_styling::strokes::EDGE_MINIMAP,
+            BoardDrawLod::Overview | BoardDrawLod::Compact => {
+                (ui_styling::strokes::EDGE_OVERVIEW).max(ui_styling::strokes::EDGE_BASE * self.camera.zoom)
+            }
             _ => 2.0 * self.camera.zoom.max(0.75),
         }
     }
@@ -4613,7 +4621,7 @@ impl BoardHost {
         self.append_nodes_and_handles_with_overlay_chrome(&mut stroke_layer, None, lod, false, None, &overlay_ids, NodeHandlePaintLayer::Stroke);
         scene.append(&stroke_layer, None);
         if let Some(c) = self.active_link_wire_curve() {
-            let link_wire_stroke = Stroke::new(2.85_f64);
+            let link_wire_stroke = Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT);
             let link_wire_color = self.vello_theme.node_stroke;
             let p0 = self.draw_space_point(c.p0, false);
             let p1 = self.draw_space_point(c.p1, false);
@@ -4675,7 +4683,7 @@ impl BoardHost {
                 }
                 path.close_path();
                 inner.fill(Fill::NonZero, Affine::IDENTITY, self.vello_theme.selection_preview_fill, None, &path);
-                let mut preview_stroke = Stroke::new(1.5);
+                let mut preview_stroke = Stroke::new(ui_styling::strokes::SELECTION_PREVIEW);
                 if self.selection_preview_crossing {
                     preview_stroke.dash_pattern = vec![5.0, 4.0].into();
                 }

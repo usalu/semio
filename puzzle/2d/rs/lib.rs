@@ -34,11 +34,6 @@ fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<
 pub use vello_svg::usvg;
 pub use vello_svg::vello;
 
-mod elements_board_palette {
-    use crate::vello::peniko::Color;
-    include!(concat!(env!("OUT_DIR"), "/elements_styling_board.rs"));
-}
-
 mod board_metabolism_icons {
     include!(concat!(env!("OUT_DIR"), "/board_metabolism_icon_match.rs"));
 }

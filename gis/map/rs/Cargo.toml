@@ -12,15 +12,13 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
+ui_styling = { path = "../../../ui/styling/rs" }
 infinite_cavas = { path = "../../../infinite/cavas/vello" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
 prost = "0.13"
-
-[build-dependencies]
-serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

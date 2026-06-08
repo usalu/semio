@@ -47,19 +47,19 @@ fn default_node_height() -> f64 {
 }
 
 /// 📏 Fixed height of one input or output channel row on computation nodes.
-pub const DAG_CHANNEL_ROW_HEIGHT: f64 = 14.0;
+pub const DAG_CHANNEL_ROW_HEIGHT: f64 = ui_styling::metrics::dag::CHANNEL_ROW_HEIGHT;
 
 /// 📛 Reserved title row above computation IO channels.
 const DAG_COMPUTATION_HEADER_ROWS: usize = 0;
 
-const DAG_NODE_EDGE_INSET: f64 = 2.0;
-const DAG_NODE_COLUMN_GAP: f64 = 2.0;
-const DAG_IO_COLUMN_MIN: f64 = 24.0;
-const DAG_IO_COLUMN_MAX: f64 = 34.0;
-const DAG_IO_WIDGET_HEIGHT: f64 = 28.0;
-const DAG_SLIDER_KNOB_SCREEN_PX: f64 = 8.0;
-const DAG_LABEL_SCREEN_PX: f64 = 11.0;
-const DAG_LABEL_COMPACT_SCREEN_PX: f64 = 10.0;
+const DAG_NODE_EDGE_INSET: f64 = ui_styling::metrics::dag::NODE_EDGE_INSET;
+const DAG_NODE_COLUMN_GAP: f64 = ui_styling::metrics::dag::NODE_COLUMN_GAP;
+const DAG_IO_COLUMN_MIN: f64 = ui_styling::metrics::dag::IO_COLUMN_MIN;
+const DAG_IO_COLUMN_MAX: f64 = ui_styling::metrics::dag::IO_COLUMN_MAX;
+const DAG_IO_WIDGET_HEIGHT: f64 = ui_styling::metrics::dag::IO_WIDGET_HEIGHT;
+const DAG_SLIDER_KNOB_SCREEN_PX: f64 = ui_styling::metrics::dag::SLIDER_KNOB_SCREEN_PX;
+const DAG_LABEL_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_DEFAULT_PX;
+const DAG_LABEL_COMPACT_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_COMPACT_PX;
 
 enum ComputationChannelRowSide {
     Input,
@@ -1226,15 +1226,15 @@ fn dag_lod_band_floor_zoom(lod_index: usize) -> f64 {
 }
 
 /// 🔵 Port dot world radius; screen size grows with camera zoom like node geometry.
-const DAG_HANDLE_WORLD_RADIUS: f64 = 5.0;
+const DAG_HANDLE_WORLD_RADIUS: f64 = ui_styling::radii::DAG_HANDLE_WORLD;
 
-const DAG_NODE_STROKE_SCREEN_PX: f64 = 1.5;
-const DAG_NODE_STROKE_SELECTED_SCREEN_PX: f64 = 2.25;
-const DAG_NODE_STROKE_HOVERED_SCREEN_PX: f64 = 2.0;
-const DAG_EDGE_STROKE_SCREEN_PX: f64 = 2.0;
-const DAG_EDGE_STROKE_MINIMAP_SCREEN_PX: f64 = 1.0;
-const DAG_CHROME_STROKE_SCREEN_PX: f64 = 1.25;
-const DAG_BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
+const DAG_NODE_STROKE_SCREEN_PX: f64 = ui_styling::strokes::DAG_NODE;
+const DAG_NODE_STROKE_SELECTED_SCREEN_PX: f64 = ui_styling::strokes::DAG_NODE_SELECTED;
+const DAG_NODE_STROKE_HOVERED_SCREEN_PX: f64 = ui_styling::strokes::DAG_NODE_HOVERED;
+const DAG_EDGE_STROKE_SCREEN_PX: f64 = ui_styling::strokes::DAG_EDGE;
+const DAG_EDGE_STROKE_MINIMAP_SCREEN_PX: f64 = ui_styling::strokes::DAG_EDGE_MINIMAP;
+const DAG_CHROME_STROKE_SCREEN_PX: f64 = ui_styling::strokes::DAG_CHROME;
+const DAG_BOUNDED_DRAG_HIT_PAD_PX: f64 = ui_styling::metrics::board::BOUNDED_DRAG_HIT_PAD_PX;
 
 fn dag_world_stroke(screen_px: f64, zoom: f64) -> f64 {
     (screen_px / zoom.max(0.05)).max(1e-3)

@@ -9,6 +9,7 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
+ui_styling = { path = "../../ui/styling/rs" }
 mathematical_core = { path = "../core" }
 infinite_cavas = { path = "../../infinite/cavas/vello" }
 serde = { version = "1.0.219", features = ["derive"] }

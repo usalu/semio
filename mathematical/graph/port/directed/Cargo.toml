@@ -9,6 +9,7 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
+ui_styling = { path = "../../../../ui/styling/rs" }
 mathematical_graph_port = { path = ".." }
 mathematical_graph = { path = "../.." }
 mathematical_graph_normal_undirected = { path = "../../normal/undirected" }

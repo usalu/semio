@@ -3,14 +3,12 @@
   "emoji": "🔍",
   "status": "closed",
   "description": "Double-click flow canvas to search functions, preview ghost node with highlight, Enter to add top suggestion, chevron for full list with hover preview.",
-  "summary": "Implemented flow canvas spotlight: double-click opens search overlay with ranked catalogue suggestions, chevron expands full list, hover/arrow keys preview candidates as accent-highlighted ghost nodes on the WASM canvas, Enter or click commits via addWidget. Rust: DagHost::paint_ghost_node, FlowHost ghost_node state with set/clear_ghost_widget and widget_from_descriptor refactor, FlowSession WASM bindings. React: flowRankCatalogueSuggestions, FlowSpotlight in FlowCanvas. Tests: flow core 15 pass, flow react 18 pass. WASM rebuilt.",
+  "summary": "Compacted flow spotlight suggestion rows to a single line (primary label + optional inline summary) instead of stacked name/summary columns. Labels and chrome now follow DAG draw LOD: abbreviation at compact/detail, name at normal/micro, icon at overview, summary inline at detail/micro, with tighter panel sizing per tier. Added flowCatalogueItemLodDisplay helper and vitest coverage. All 98 @flow/react tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1629"
+  },
   "goal": "🎯geometry🎯brep",
-  "files": [
-    "mathematical/graph/port/directed/dag/lib.rs",
-    "flow/core/lib.rs",
-    "flow/core/pkg/flow_core.d.ts",
-    "flow/core/pkg/flow_core.js",
-    "flow/core/pkg/flow_core_bg.wasm",
-    "flow/react/index.tsx"
+  "sessions": [
+    "⚪64d775ed7f7948f9b26a9c1c84c6ffd2"
   ]
 }

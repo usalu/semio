@@ -9,9 +9,8 @@ pub use vello::Scene;
 use cavas::lod::{Lod, LodScale};
 
 // #region 🔖MapPalette
-mod map_palette {
-    use crate::Color;
-    include!(concat!(env!("OUT_DIR"), "/elements_styling_map.rs"));
+fn map_color(rgba: [f32; 4]) -> Color {
+    Color::new(rgba)
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -28,20 +27,27 @@ pub struct MapThemePalette {
     pub position_stroke: Color,
 }
 
+impl MapThemePalette {
+    /// @emoji 🎨 Builds a map palette from centralized theme tokens.
+    pub fn from_map_theme(t: &ui_styling::MapTheme) -> Self {
+        Self {
+            surface_clear: map_color(t.surface_clear),
+            land_fill: map_color(t.land_fill),
+            land_stroke: map_color(t.land_stroke),
+            label_fill: map_color(t.label_fill),
+            label_halo: map_color(t.label_halo),
+            region_fill: map_color(t.region_fill),
+            region_stroke: map_color(t.region_stroke),
+            route_stroke: map_color(t.route_stroke),
+            position_fill: map_color(t.position_fill),
+            position_stroke: map_color(t.position_stroke),
+        }
+    }
+}
+
 impl Default for MapThemePalette {
     fn default() -> Self {
-        Self {
-            surface_clear: map_palette::SURFACE_CLEAR,
-            land_fill: map_palette::LAND_FILL,
-            land_stroke: map_palette::LAND_STROKE,
-            label_fill: map_palette::LABEL_FILL,
-            label_halo: map_palette::LABEL_HALO,
-            region_fill: map_palette::REGION_FILL,
-            region_stroke: map_palette::REGION_STROKE,
-            route_stroke: map_palette::ROUTE_STROKE,
-            position_fill: map_palette::POSITION_FILL,
-            position_stroke: map_palette::POSITION_STROKE,
-        }
+        Self::from_map_theme(&ui_styling::MAP_LIGHT)
     }
 }
 // #endregion 🔖MapPalette
@@ -940,17 +946,17 @@ pub mod vector_tiles {
     /// @emoji 📏 Per-LOD road stroke multiplier (city 30% of prior default).
     pub fn transportation_stroke_lod_scale(span_deg: f64, forced_lod_id: Option<&str>) -> f64 {
         match super::resolve_detail_lod_index(span_deg, forced_lod_id) {
-            3 => 0.4,
-            4 => 0.3,
+            3 => ui_styling::strokes::MAP_ROAD_LOD_REGION,
+            4 => ui_styling::strokes::MAP_ROAD_LOD_CITY,
             _ => 1.0,
         }
     }
 
     /// @emoji 📏 Screen stroke scale from viewport longitude span; damped in region/city bands.
     pub fn vector_line_scale(span_deg: f64) -> f64 {
-        const CAP: f64 = 1.38;
+        let cap = ui_styling::strokes::MAP_LINE_SCALE_CAP;
         let span = span_deg.max(0.08);
-        let raw = 280.0 / span.max(0.25);
+        let raw = ui_styling::strokes::MAP_LINE_SCALE_RAW / span.max(0.25);
         let country = super::GIS_MAP_LOD_MAX_SPAN_DEG[2];
         let region = super::GIS_MAP_LOD_MAX_SPAN_DEG[3];
         let city = super::GIS_MAP_LOD_MAX_SPAN_DEG[4];
@@ -958,7 +964,7 @@ pub mod vector_tiles {
         let street = super::GIS_MAP_LOD_MAX_SPAN_DEG[6];
         let damp = if span_deg <= street {
             let t = (span / street).sqrt();
-            0.44 + 0.1 * t
+            ui_styling::metrics::map::LINE_SCALE_DAMP_MIN + 0.1 * t
         } else if span_deg <= district {
             let u = ((span - street) / (district - street)).clamp(0.0, 1.0);
             0.5 + 0.1 * u
@@ -974,22 +980,22 @@ pub mod vector_tiles {
         } else {
             1.0
         };
-        (raw * damp).clamp(0.5, CAP)
+        (raw * damp).clamp(0.5, cap)
     }
 
     pub fn transportation_stroke_width(class: &str, line_scale: f64) -> f64 {
         let base = match class {
-            "motorway" => 2.4,
+            "motorway" => ui_styling::strokes::MAP_ROAD_MOTORWAY,
             "trunk" => 2.1,
             "primary" => 1.8,
             "secondary" => 1.45,
             "tertiary" => 1.2,
             "minor" | "street" => 0.95,
             "residential" | "service" | "living_street" => 0.78,
-            "path" | "track" | "footway" | "cycleway" | "steps" => 0.55,
+            "path" | "track" | "footway" | "cycleway" | "steps" => ui_styling::strokes::MAP_ROAD_PATH,
             _ => 0.9,
         };
-        (base * line_scale).clamp(0.35, 2.8)
+        (base * line_scale).clamp(ui_styling::strokes::MAP_ROAD_CLAMP_MIN, ui_styling::strokes::MAP_ROAD_CLAMP_MAX)
     }
 
     pub fn boundary_visible(admin_level: u64, span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> bool {
@@ -1003,16 +1009,17 @@ pub mod vector_tiles {
 
     pub fn boundary_stroke_width(admin_level: u64, line_scale: f64) -> f64 {
         let base = match admin_level {
-            2 => 1.75,
+            2 => ui_styling::strokes::MAP_BOUNDARY_ADMIN2,
             3 | 4 => 1.3,
             5 | 6 => 1.0,
-            _ => 0.65,
+            _ => ui_styling::strokes::MAP_BOUNDARY_DEFAULT,
         };
-        (base * line_scale).clamp(0.45, 2.2)
+        (base * line_scale).clamp(ui_styling::strokes::MAP_BOUNDARY_CLAMP_MIN, ui_styling::strokes::MAP_BOUNDARY_CLAMP_MAX)
     }
 
     pub fn coastline_stroke_width(line_scale: f64) -> f64 {
-        (1.35 * line_scale).clamp(0.85, 2.8)
+        (ui_styling::strokes::MAP_COASTLINE_MULT * line_scale)
+            .clamp(ui_styling::strokes::MAP_COASTLINE_CLAMP_MIN, ui_styling::strokes::MAP_COASTLINE_CLAMP_MAX)
     }
 
     pub fn place_label_visible(class: &str, span_deg: f64) -> bool {
@@ -1049,7 +1056,7 @@ pub mod vector_tiles {
         span_deg <= super::GIS_MAP_LOD_MAX_SPAN_DEG[5]
     }
 
-    const GIS_MAP_LABEL_BAND_SCREEN_PX: [f64; 8] = [26.0, 26.0, 20.0, 14.0, 12.5, 12.0, 10.5, 10.5];
+    const GIS_MAP_LABEL_BAND_SCREEN_PX: &[f64] = ui_styling::metrics::map::LABEL_PX_BANDS;
 
     fn map_lod_band_floor_span_deg(lod_idx: usize) -> f64 {
         if lod_idx == 0 {
@@ -1209,7 +1216,7 @@ pub struct RouteData {
 }
 
 fn default_route_stroke() -> f64 {
-    2.0
+    ui_styling::strokes::MAP_ROUTE_DEFAULT
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -1551,8 +1558,9 @@ impl LabelDeclutter {
     }
 
     fn estimate_box(label: &str, px: f64, origin: Point) -> (f64, f64, f64, f64) {
-        let pad = px * 0.35;
-        let w = (label.len() as f64 * px * 0.62 + pad * 2.0).clamp(24.0, 420.0);
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let w = (label.len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO + pad * 2.0)
+            .clamp(ui_styling::metrics::label::MAP_WIDTH_MIN, ui_styling::metrics::label::MAP_WIDTH_MAX);
         let h = (px * 1.6 + pad * 2.0).clamp(14.0, 96.0);
         let x = origin.x;
         let y = origin.y - px * 0.85;
@@ -2307,7 +2315,8 @@ impl MapHost {
             return;
         }
         candidates.sort_by(|a, b| a.rank.cmp(&b.rank).then_with(|| a.label.cmp(&b.label)));
-        let cell = (px * 1.75).clamp(18.0, 44.0);
+        let cell = (px * ui_styling::metrics::label::DECLUTTER_CELL_RATIO)
+            .clamp(ui_styling::metrics::label::DECLUTTER_CELL_MIN, ui_styling::metrics::label::DECLUTTER_CELL_MAX);
         let viewport_area = self.viewport.width.max(1) as f64 * self.viewport.height.max(1) as f64;
         let max_labels = (viewport_area / (cell * cell * 2.6)).round() as usize;
         let max_labels = max_labels.clamp(48, 140);
@@ -2749,10 +2758,16 @@ impl MapHost {
             let stroke = self.theme.position_stroke;
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let r = 8.0 * pos_scale;
+            let r = ui_styling::radii::MAP_POSITION_MARKER * pos_scale;
             let circle = vello::kurbo::Circle::new(s, r);
             scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-            scene.stroke(&Stroke::new(2.0 * pos_scale), Affine::IDENTITY, stroke, None, &circle);
+            scene.stroke(
+                &Stroke::new(ui_styling::strokes::MAP_POSITION_MULT * pos_scale),
+                Affine::IDENTITY,
+                stroke,
+                None,
+                &circle,
+            );
             if self.layer_visibility.position_labels {
                 let label = pos
                     .name
@@ -2761,7 +2776,7 @@ impl MapHost {
                     .map(str::trim)
                     .filter(|t| !t.is_empty());
                 if let Some(label) = label {
-                    let anchor = Point::new(s.x, s.y - r - 6.0);
+                    let anchor = Point::new(s.x, s.y - r - ui_styling::radii::MAP_LABEL_ANCHOR_OFFSET);
                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
                 }
             }

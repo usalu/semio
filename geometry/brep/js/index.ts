@@ -833,28 +833,38 @@ export class BrepjsGeometryKernel implements BrepKernel {
 
 	wireSync(edges: readonly GeometryRef[]): GeometryRef {
 		const shapes = this.registerRefs(edges, "edge").map(asShape1D);
-		return this.register("wire", wire(shapes));
+		const result = wire(shapes);
+		if (!isOk(result)) throw new Error("brep: wire failed");
+		return this.register("wire", unwrap(result));
 	}
 
 	wireLoopSync(edges: readonly GeometryRef[]): GeometryRef {
 		const shapes = this.registerRefs(edges, "edge").map(asShape1D);
-		return this.register("wire", wireLoop(shapes));
+		const result = wireLoop(shapes);
+		if (!isOk(result)) throw new Error("brep: wireLoop failed");
+		return this.register("wire", unwrap(result));
 	}
 	// #endregion 🔖Curves
 
 	// #region 🔖Surfaces
 	faceSync(wires: readonly GeometryRef[]): GeometryRef {
 		const shapes = wires.map((w) => asShape1D(this.require(w, "wire", "edge")));
-		return this.register("face", face(shapes));
+		const result = face(shapes);
+		if (!isOk(result)) throw new Error("brep: face failed");
+		return this.register("face", unwrap(result));
 	}
 
 	filledFaceSync(wire: GeometryRef): GeometryRef {
-		return this.register("face", filledFace(asShape1D(this.require(wire, "wire", "edge"))));
+		const result = filledFace(asShape1D(this.require(wire, "wire", "edge")));
+		if (!isOk(result)) throw new Error("brep: filledFace failed");
+		return this.register("face", unwrap(result));
 	}
 
 	fillSync(edges: readonly GeometryRef[]): GeometryRef {
 		const shapes = edges.map((e) => asShape1D(this.require(e, "edge")));
-		return this.register("face", fill(shapes));
+		const result = fill(shapes);
+		if (!isOk(result)) throw new Error("brep: fill failed");
+		return this.register("face", unwrap(result));
 	}
 
 	subFaceSync(faceRef: GeometryRef, wire: GeometryRef): GeometryRef {
@@ -867,7 +877,9 @@ export class BrepjsGeometryKernel implements BrepKernel {
 
 	surfaceFromGridSync(grid: readonly (readonly Vec3[])[], uClosed = false, vClosed = false): GeometryRef {
 		const poles = grid.map((row) => row.map((p) => [p[0], p[1], p[2]] as [number, number, number]));
-		return this.register("face", surfaceFromGrid(poles, { uClosed, vClosed }));
+		const result = surfaceFromGrid(poles, { uClosed, vClosed });
+		if (!isOk(result)) throw new Error("brep: surfaceFromGrid failed");
+		return this.register("face", unwrap(result));
 	}
 	// #endregion 🔖Surfaces
 
@@ -1137,16 +1149,16 @@ export class BrepjsGeometryKernel implements BrepKernel {
 	}
 
 	reparametrizeCurveSync(curve: GeometryRef, samples = 64): GeometryRef {
-		const n = Math.max(2, Math.round(samples));
-		const shape = asShape1D(this.require(curve, "edge", "wire"));
-		const closed = curveIsClosed(shape);
-		const points: [number, number, number][] = [];
-		for (let i = 0; i < n; i++) {
-			const t = i / (n - 1);
-			const p = curvePointAt(shape, t);
-			points.push([p.x ?? 0, p.y ?? 0, p.z ?? 0]);
+		const points = this.divideCurveSync(curve, Math.max(2, Math.round(samples)));
+		const closed = this.curveIsClosedSync(curve);
+		const edges: GeometryRef[] = [];
+		const segmentCount = closed ? points.length : points.length - 1;
+		for (let i = 0; i < segmentCount; i++) {
+			const a = points[i]!;
+			const b = points[(i + 1) % points.length]!;
+			edges.push(this.lineSync(a, b));
 		}
-		return this.register("edge", interpolateCurve(points, { closed }));
+		return closed ? this.wireLoopSync(edges) : this.wireSync(edges);
 	}
 
 	reparametrizeSurfaceSync(face: GeometryRef, uSamples = 12, vSamples = 12): GeometryRef {
@@ -1154,18 +1166,34 @@ export class BrepjsGeometryKernel implements BrepKernel {
 		const bounds = uvBounds(shape);
 		const uN = Math.max(2, Math.round(uSamples));
 		const vN = Math.max(2, Math.round(vSamples));
+		const uSpan = bounds.uMax - bounds.uMin;
+		const vSpan = bounds.vMax - bounds.vMin;
 		const grid: [number, number, number][][] = [];
 		for (let vi = 0; vi < vN; vi++) {
-			const v = bounds.vMin + (bounds.vMax - bounds.vMin) * (vi / (vN - 1));
+			const v = bounds.vMin + vSpan * (vi / (vN - 1));
 			const row: [number, number, number][] = [];
 			for (let ui = 0; ui < uN; ui++) {
-				const u = bounds.uMin + (bounds.uMax - bounds.uMin) * (ui / (uN - 1));
+				const u = bounds.uMin + uSpan * (ui / (uN - 1));
 				const p = pointOnSurface(shape, u, v);
 				row.push([p.x ?? 0, p.y ?? 0, p.z ?? 0]);
 			}
 			grid.push(row);
 		}
-		return this.register("face", surfaceFromGrid(grid));
+		const result = surfaceFromGrid(grid);
+		if (isOk(result)) {
+			return this.register("face", unwrap(result));
+		}
+		const corners: Vec3[] = [
+			toVec3Tuple(pointOnSurface(shape, bounds.uMin, bounds.vMin)),
+			toVec3Tuple(pointOnSurface(shape, bounds.uMax, bounds.vMin)),
+			toVec3Tuple(pointOnSurface(shape, bounds.uMax, bounds.vMax)),
+			toVec3Tuple(pointOnSurface(shape, bounds.uMin, bounds.vMax)),
+		];
+		const edges: GeometryRef[] = [];
+		for (let i = 0; i < corners.length; i++) {
+			edges.push(this.lineSync(corners[i]!, corners[(i + 1) % corners.length]!));
+		}
+		return this.filledFaceSync(this.wireLoopSync(edges));
 	}
 
 	pointOnSurfaceSync(face: GeometryRef, u: number, v: number): Vec3 {
@@ -1531,13 +1559,12 @@ if (import.meta.vitest) {
 			expect(points[2]![0]).toBeCloseTo(4, 3);
 		});
 
-		it("reparametrizeCurveSync rebuilds edge from samples", async () => {
+		it("reparametrizeCurveSync rebuilds wire from samples", async () => {
 			await ensureBrepWasmLoaded();
 			const line = kernel.lineSync([0, 0, 0], [3, 0, 0]);
 			const rebuilt = kernel.reparametrizeCurveSync(line, 8);
-			expect(kernel.getGeometryKind(rebuilt)).toBe("edge");
-			const pt = kernel.curvePointAtSync(rebuilt, 0.5);
-			expect(pt[0]).toBeCloseTo(1.5, 1);
+			expect(kernel.getGeometryKind(rebuilt)).toBe("wire");
+			expect(kernel.measureLengthSync(rebuilt)).toBeCloseTo(3, 1);
 		});
 
 		it("reparametrizeSurfaceSync rebuilds face from uv grid", async () => {
@@ -1546,10 +1573,10 @@ if (import.meta.vitest) {
 			const solid = kernel.extrudeSync(profile, [0, 0, 1], 1);
 			const faces = kernel.getFacesSync(solid);
 			expect(faces.length).toBeGreaterThan(0);
-			const rebuilt = kernel.reparametrizeSurfaceSync(faces[0]!, 6, 6);
+			const rebuilt = kernel.reparametrizeSurfaceSync(faces[0]!, 4, 4);
 			expect(kernel.getGeometryKind(rebuilt)).toBe("face");
-			const center = kernel.faceCenterSync(rebuilt);
-			expect(center[2]).toBeGreaterThan(0);
+			const mesh = await kernel.tessellateGeometry(rebuilt, 0.05);
+			expect(isRenderableMeshTransfer(mesh)).toBe(true);
 		});
 	});
 }

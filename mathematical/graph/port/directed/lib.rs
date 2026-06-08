@@ -440,6 +440,51 @@ pub struct VelloThemePalette {
 }
 
 impl VelloThemePalette {
+    /// @emoji 🎨 Builds a palette from centralized board theme tokens.
+    pub fn from_board_theme(t: &ui_styling::BoardTheme) -> Self {
+        Self {
+            raster_clear: Color::new(t.raster_clear),
+            grid_minor_stroke: Color::new(t.grid_minor_stroke),
+            edge_stroke: Color::new(t.edge_stroke),
+            edge_stroke_hovered: Color::new(t.edge_stroke_hovered),
+            edge_stroke_selected: Color::new(t.edge_stroke_selected),
+            edge_stroke_selection_exit: Color::new(t.edge_stroke_selection_exit),
+            edge_stroke_disabled: Color::new(t.edge_stroke_disabled),
+            node_fill: Color::new(t.node_fill),
+            node_stroke: Color::new(t.node_stroke),
+            node_fill_hovered: Color::new(t.node_fill_hovered),
+            node_stroke_hovered: Color::new(t.node_stroke_hovered),
+            node_fill_selected: Color::new(t.node_fill_selected),
+            node_stroke_selected: Color::new(t.node_stroke_selected),
+            node_fill_selection_exit: Color::new(t.node_fill_selection_exit),
+            node_stroke_selection_exit: Color::new(t.node_stroke_selection_exit),
+            node_fill_disabled: Color::new(t.node_fill_disabled),
+            node_stroke_disabled: Color::new(t.node_stroke_disabled),
+            indirect_handle_fill: Color::new(t.indirect_handle_fill),
+            indirect_handle_stroke: Color::new(t.indirect_handle_stroke),
+            handle_fill: Color::new(t.handle_fill),
+            handle_stroke: Color::new(t.handle_stroke),
+            handle_fill_hovered: Color::new(t.handle_fill_hovered),
+            handle_stroke_hovered: Color::new(t.handle_stroke_hovered),
+            handle_fill_selected: Color::new(t.handle_fill_selected),
+            handle_stroke_selected: Color::new(t.handle_stroke_selected),
+            handle_fill_selection_exit: Color::new(t.handle_fill_selection_exit),
+            handle_stroke_selection_exit: Color::new(t.handle_stroke_selection_exit),
+            handle_fill_disabled: Color::new(t.handle_fill_disabled),
+            handle_stroke_disabled: Color::new(t.handle_stroke_disabled),
+            wire_stroke: Color::new(t.wire_stroke),
+            wire_stroke_hovered: Color::new(t.wire_stroke_hovered),
+            wire_stroke_selected: Color::new(t.wire_stroke_selected),
+            wire_stroke_highlighted: Color::new(t.wire_stroke_highlighted),
+            wire_stroke_disabled: Color::new(t.wire_stroke_disabled),
+            selection_preview_fill: Color::new(t.selection_preview_fill),
+            selection_preview_stroke: Color::new(t.selection_preview_stroke),
+            label_fill: Color::new(t.label_fill),
+            label_fill_hovered: Color::new(t.label_fill_hovered),
+            label_halo: Color::new(t.label_halo),
+        }
+    }
+
     fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
         let r = u8::try_from(arr.get(0)?.as_u64().unwrap_or(0).min(255)).ok()?;
         let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
@@ -668,14 +713,14 @@ impl IconPaintCache {
         if !(avail_w > 0.0 && avail_h > 0.0) {
             return;
         }
-        let fit_inset = 0.76;
+        let fit_inset = ui_styling::metrics::icon::FIT_INSET;
         let sx_half = avail_w * fit_inset * 0.5;
         let sy_half = avail_h * fit_inset * 0.5;
         let cx = bx + bw * 0.5;
         let cy = by + bh * 0.5;
         let scale = (2.0 * sx_half / bw).min(2.0 * sy_half / bh);
         let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
-        let clip_inset = 0.88;
+        let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
         let hw = avail_w * clip_inset * 0.5;
         let hh = avail_h * clip_inset * 0.5;
         let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
@@ -695,47 +740,7 @@ impl IconPaintCache {
 
 impl Default for VelloThemePalette {
     fn default() -> Self {
-        Self {
-            raster_clear: Color::from_rgba8(248, 248, 250, 255),
-            grid_minor_stroke: Color::from_rgba8(160, 160, 170, 56),
-            edge_stroke: Color::from_rgba8(120, 120, 130, 255),
-            edge_stroke_hovered: Color::from_rgba8(123, 130, 125, 255),
-            edge_stroke_selected: Color::from_rgba8(0, 17, 23, 255),
-            edge_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
-            edge_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
-            node_fill: Color::from_rgba8(235, 238, 245, 255),
-            node_stroke: Color::from_rgba8(123, 130, 125, 255),
-            node_fill_hovered: Color::from_rgba8(123, 130, 125, 255),
-            node_stroke_hovered: Color::from_rgba8(123, 130, 125, 255),
-            node_fill_selected: Color::from_rgba8(60, 120, 220, 89),
-            node_stroke_selected: Color::from_rgba8(0, 17, 23, 255),
-            node_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
-            node_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
-            node_fill_disabled: Color::from_rgba8(235, 238, 245, 255),
-            node_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
-            indirect_handle_fill: Color::from_rgba8(196, 228, 213, 255),
-            indirect_handle_stroke: Color::from_rgba8(80, 140, 110, 255),
-            handle_fill: Color::from_rgba8(123, 130, 125, 0),
-            handle_stroke: Color::from_rgba8(123, 130, 125, 255),
-            handle_fill_hovered: Color::from_rgba8(123, 130, 125, 255),
-            handle_stroke_hovered: Color::from_rgba8(123, 130, 125, 255),
-            handle_fill_selected: Color::from_rgba8(60, 120, 220, 89),
-            handle_stroke_selected: Color::from_rgba8(0, 17, 23, 255),
-            handle_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
-            handle_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
-            handle_fill_disabled: Color::from_rgba8(248, 248, 250, 255),
-            handle_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
-            wire_stroke: Color::from_rgba8(120, 120, 130, 255),
-            wire_stroke_hovered: Color::from_rgba8(123, 130, 125, 255),
-            wire_stroke_selected: Color::from_rgba8(0, 17, 23, 255),
-            wire_stroke_highlighted: Color::from_rgba8(80, 140, 110, 255),
-            wire_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
-            selection_preview_fill: Color::from_rgba8(60, 120, 220, 40),
-            selection_preview_stroke: Color::from_rgba8(0, 17, 23, 180),
-            label_fill: Color::from_rgba8(123, 130, 125, 255),
-            label_fill_hovered: Color::from_rgba8(0, 17, 23, 255),
-            label_halo: Color::from_rgba8(0, 0, 0, 0),
-        }
+        Self::from_board_theme(&ui_styling::BOARD_LIGHT)
     }
 }
 // #endregion types
@@ -1633,6 +1638,15 @@ pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_
 #[cfg(test)]
 mod quadrant_tests {
     use super::*;
+
+    #[test]
+    fn vello_theme_default_uses_centralized_board_light_tokens() {
+        let p = VelloThemePalette::default();
+        let t = &ui_styling::BOARD_LIGHT;
+        assert_eq!(p.raster_clear, Color::new(t.raster_clear));
+        assert_eq!(p.edge_stroke_selected, Color::new(t.edge_stroke_selected));
+        assert_eq!(p.handle_fill[3], Color::new(t.handle_fill).to_rgba8().a);
+    }
 
     #[test]
     fn board_engine_alias_works() {

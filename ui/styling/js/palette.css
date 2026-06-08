@@ -1,4 +1,4 @@
-/* Generated from elements/lib/styling/tokens.json — run `bun ./script.ts generate` from elements/lib/styling. */
+/* Generated from ui/styling/tokens.json — run `bun ./script.ts generate`. */
 @font-face {
   font-family: "Anta";
   src: url("/assets/fonts/anta/latin.woff2") format("woff2");
@@ -167,7 +167,7 @@
   font-display: swap;
 }
 
-/* Generated from elements/lib/styling/tokens.json — run `bun ./script.ts generate` from elements/lib/styling. */
+/* Generated from ui/styling/tokens.json — run `bun ./script.ts generate`. */
 @theme {
   /* Primary brand colors */
   --color-primary: #ff344f;
@@ -210,6 +210,9 @@
   --color-light-8-9: #f0ecdd;
   --color-gray-900: #f1edde;
   --color-light: #f7f3e3;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-indirect-handle: #c4e4d5;
   /* Font interfaces */
   --font-sans: Anta, "Anta Extended", "Anta Math", "Anta Symbols", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
   --font-serif: "Kelly Slab", "Kelly Slab Extended", "Kelly Slab Cyrillic", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";

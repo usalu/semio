@@ -3,7 +3,19 @@
 // #endregion 🧲Header
 
 export { tailwindConfig, tailwindConfig as default } from "../tailwind/tailwind.config.ts";
-export { STYLING_TOKENS, type StylingTokenKey } from "./tokens.generated.ts";
+export {
+	STYLING_BOARD_THEMES,
+	STYLING_CANVAS_FONTS,
+	STYLING_CANVAS_THEMES,
+	STYLING_MAP_THEMES,
+	STYLING_METRICS,
+	STYLING_OPACITIES,
+	STYLING_RADII,
+	STYLING_STROKES,
+	STYLING_TOKENS,
+	type StylingThemeName,
+	type StylingTokenKey,
+} from "./tokens.generated.ts";
 export {
 	blendTokenHex,
 	clearColorResolveCache,
@@ -16,6 +28,7 @@ export {
 	resolveSemanticColorHex,
 	resolveThreeColor,
 	semanticVar,
+	currentStylingThemeName,
 	serializeGraphVelloThemePaletteJson,
 	themeColorVar,
 	tokenHex,

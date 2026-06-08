@@ -19,10 +19,10 @@ todos:
     status: completed
   - id: build-verify
     content: Rebuild math/list wasm pkgs via nx; run brep/procedural vitest and Rust cargo tests; confirm nodes evaluate at runtime
-    status: in_progress
+    status: completed
   - id: close
     content: Close the ticket with summary and file list
-    status: pending
+    status: completed
 isProject: false
 ---
 

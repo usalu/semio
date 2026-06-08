@@ -1558,6 +1558,18 @@ if (import.meta.vitest) {
 			expect(leaf?.dragData).toBeDefined();
 		});
 
+		it("catalogue snapshot listeners fire when sections arrive", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			let revision = ctrl.getCatalogueRevision();
+			const unsubscribe = ctrl.subscribeSnapshot(() => {
+				revision = ctrl.getCatalogueRevision();
+			});
+			ctrl.run("setCatalogueSections", { sections: [{ id: "brep", title: "Brep", items: [] }] });
+			unsubscribe();
+			expect(revision).toBe(1);
+		});
+
 		it("catalogue revision bumps when sections arrive", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});

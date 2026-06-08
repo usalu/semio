@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "ui/styling/rs",
     "infinite/cavas/vello",
     "mathematical/core",
     "mathematical/graph",

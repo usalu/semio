@@ -2090,7 +2090,7 @@ if (import.meta.vitest) {
 				kernel,
 			);
 			const parsed = JSON.parse(out) as { geometry?: string };
-			expect(parsed.geometry).toMatch(/^edge-/);
+			expect(parsed.geometry).toMatch(/^wire-/);
 		});
 
 		it("procedural preview mounts the infinite-world viewport stack", async () => {

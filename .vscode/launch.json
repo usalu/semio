@@ -1159,6 +1159,28 @@
       }
     },
     {
+      "name": "🧪test🖱️ui🎨styling-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/ui/styling/rs",
+      "presentation": {
+        "group": "4_build",
+        "order": 281
+      }
+    },
+    {
+      "name": "🧪test🖱️ui🎨styling-py",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/ui/styling/py",
+      "presentation": {
+        "group": "4_build",
+        "order": 282
+      }
+    },
+    {
       "name": "📦build🖱️ui🏪assets",
       "type": "node-terminal",
       "request": "launch",
