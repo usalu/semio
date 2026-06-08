@@ -410,8 +410,12 @@ fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
     })
 }
 
-fn number_channel(id: &str) -> ChannelSpec {
-    ChannelSpec::number_default(id, 0.0)
+fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
+    ChannelSpec::number_default(id, 0.0, &[operator_id])
+}
+
+fn out_channel() -> ChannelSpec {
+    ChannelSpec::provides("out", vec![])
 }
 
 fn schema(id: &str, name: &str) -> Schema {
@@ -439,8 +443,15 @@ fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs
     }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }]);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(
+        info,
+        vec![OperatorImpl {
+            schemas: schemas.into_iter().map(str::to_string).collect(),
+            operation,
+        }],
+        produces,
+    );
 }
 
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -456,8 +467,8 @@ pub fn register(registry: &mut Registry) {
     registry.register_schema(schema("point", "Point"));
     registry.register_schema(schema("vector", "Vector"));
 
-    let scalar = vec![number_channel("a"), number_channel("b")];
-    let scalar_out = vec![ChannelSpec::number("out")];
+    let scalar = vec![number_channel("a", "math.add"), number_channel("b", "math.add")];
+    let scalar_out = vec![out_channel()];
     registry.register_operator(
         operator_info("math.add", "Add", "Add", "Adds numbers, points, or vectors", scalar.clone(), scalar_out.clone()),
         vec![
@@ -465,6 +476,7 @@ pub fn register(registry: &mut Registry) {
             OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
             OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Add) },
         ],
+        &["number", "point", "vector"],
     );
     registry.register_operator(
         OperatorInfo {
@@ -476,19 +488,23 @@ pub fn register(registry: &mut Registry) {
             OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
             OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Add) },
         ],
+        &["number", "point", "vector"],
     );
+    let subtract_scalar = vec![number_channel("a", "math.subtract"), number_channel("b", "math.subtract")];
     registry.register_operator(
-        operator_info("math.subtract", "Subtract", "Sub", "Subtracts numbers, points, or vectors", scalar.clone(), scalar_out.clone()),
+        operator_info("math.subtract", "Subtract", "Sub", "Subtracts numbers, points, or vectors", subtract_scalar.clone(), scalar_out.clone()),
         vec![
             OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Subtract) },
             OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Subtract) },
             OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Subtract) },
         ],
+        &["number", "point", "vector"],
     );
-    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers", scalar.clone(), scalar_out.clone()), Box::new(Multiply), vec!["number", "number"]);
-    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides a by b", scalar.clone(), scalar_out.clone()), Box::new(Divide), vec!["number", "number"]);
-    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", scalar.clone(), scalar_out.clone()), Box::new(Power), vec!["number", "number"]);
-    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", scalar.clone(), scalar_out.clone()), Box::new(Modulo), vec!["number", "number"]);
+    let binary_scalar = vec![number_channel("a", "math.multiply"), number_channel("b", "math.multiply")];
+    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers", binary_scalar.clone(), scalar_out.clone()), Box::new(Multiply), vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides a by b", binary_scalar.clone(), scalar_out.clone()), Box::new(Divide), vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", binary_scalar.clone(), scalar_out.clone()), Box::new(Power), vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", binary_scalar, scalar_out.clone()), Box::new(Modulo), vec!["number", "number"], &["number"]);
 
     for (id, name, abbreviation, summary, op) in [
         ("math.negate", "Negate", "Neg", "Negates a number", Box::new(Negate) as Box<dyn Operation>),
@@ -502,11 +518,11 @@ pub fn register(registry: &mut Registry) {
         ("math.tan", "Tan", "Tan", "Tangent in radians", Box::new(Tan)),
         ("math.passThrough", "PassThrough", "Pass", "Forwards a number", Box::new(PassThrough)),
     ] {
-        register_simple(registry, operator_info(id, name, abbreviation, summary, vec![number_channel("number")], scalar_out.clone()), op, vec!["number"]);
+        register_simple(registry, operator_info(id, name, abbreviation, summary, vec![number_channel("number", id)], scalar_out.clone()), op, vec!["number"], &["number"]);
     }
 
-    register_simple(registry, operator_info("math.min", "Min", "Min", "Minimum of two numbers", scalar.clone(), scalar_out.clone()), Box::new(Min), vec!["number", "number"]);
-    register_simple(registry, operator_info("math.max", "Max", "Max", "Maximum of two numbers", scalar.clone(), scalar_out.clone()), Box::new(Max), vec!["number", "number"]);
+    register_simple(registry, operator_info("math.min", "Min", "Min", "Minimum of two numbers", vec![number_channel("a", "math.min"), number_channel("b", "math.min")], scalar_out.clone()), Box::new(Min), vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.max", "Max", "Max", "Maximum of two numbers", vec![number_channel("a", "math.max"), number_channel("b", "math.max")], scalar_out.clone()), Box::new(Max), vec!["number", "number"], &["number"]);
     register_simple(
         registry,
         operator_info(
@@ -514,32 +530,60 @@ pub fn register(registry: &mut Registry) {
             "Remap",
             "Map",
             "Remaps a value from one range to another",
-            vec![number_channel("value"), number_channel("fromMin"), number_channel("fromMax"), number_channel("toMin"), number_channel("toMax")],
+            vec![
+                number_channel("value", "math.remap"),
+                number_channel("fromMin", "math.remap"),
+                number_channel("fromMax", "math.remap"),
+                number_channel("toMin", "math.remap"),
+                number_channel("toMax", "math.remap"),
+            ],
             scalar_out.clone(),
         ),
         Box::new(Remap),
         vec!["number", "number", "number", "number", "number"],
+        &["number"],
     );
     register_simple(
         registry,
-        operator_info("math.random", "Random", "Rnd", "Random number in range with optional seed", vec![number_channel("seed"), number_channel("min"), ChannelSpec::number_default("max", 1.0)], scalar_out.clone()),
+        operator_info(
+            "math.random",
+            "Random",
+            "Rnd",
+            "Random number in range with optional seed",
+            vec![
+                number_channel("seed", "math.random"),
+                number_channel("min", "math.random"),
+                ChannelSpec::number_default("max", 1.0, &["math.random"]),
+            ],
+            scalar_out.clone(),
+        ),
         Box::new(Random),
         vec!["number", "number", "number"],
+        &["number"],
     );
-    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list")], scalar_out.clone()), Box::new(Sum), vec!["list"]);
-
-    let xyz_inputs = vec![number_channel("x"), number_channel("y"), number_channel("z")];
     register_simple(
         registry,
-        operator_info("math.constructVector", "Construct Vector", "Vec", "Builds a vector from x, y, z", xyz_inputs.clone(), vec![ChannelSpec::new("out", ValueType::Schema("vector".into()))]),
+        operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], scalar_out.clone()),
+        Box::new(Sum),
+        vec!["list"],
+        &["number"],
+    );
+
+    let xyz_inputs = vec![number_channel("x", "math.constructVector"), number_channel("y", "math.constructVector"), number_channel("z", "math.constructVector")];
+    register_simple(
+        registry,
+        operator_info("math.constructVector", "Construct Vector", "Vec", "Builds a vector from x, y, z", xyz_inputs.clone(), vec![out_channel()]),
         Box::new(ConstructVector),
         vec!["number", "number", "number"],
+        &["vector"],
     );
+    let point_inputs = vec![number_channel("x", "math.constructPoint"), number_channel("y", "math.constructPoint"), number_channel("z", "math.constructPoint")];
     register_simple(
         registry,
-        operator_info("math.constructPoint", "Construct Point", "Point", "Builds a point from x, y, z", xyz_inputs, vec![ChannelSpec::new("out", ValueType::Schema("point".into()))]),
+        operator_info("math.constructPoint", "Construct Point", "Point", "Builds a point from x, y, z", point_inputs, vec![out_channel()]),
         Box::new(ConstructPoint),
         vec!["number", "number", "number"],
+        &["point"],
     );
     registry.register_operator(
         operator_info(
@@ -547,14 +591,16 @@ pub fn register(registry: &mut Registry) {
             "Move",
             "Move",
             "Moves a point or vector by a vector",
-            vec![ChannelSpec::new("subject", ValueType::Any), ChannelSpec::new("vector", ValueType::Schema("vector".into()))],
-            vec![ChannelSpec::new("out", ValueType::Any)],
+            vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])],
+            vec![out_channel()],
         ),
         vec![
             OperatorImpl { schemas: vec!["point".into(), "vector".into()], operation: Box::new(Move) },
             OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Move) },
         ],
+        &["point", "vector"],
     );
+    registry.finalize();
 }
 
 // #region 🔖Tests

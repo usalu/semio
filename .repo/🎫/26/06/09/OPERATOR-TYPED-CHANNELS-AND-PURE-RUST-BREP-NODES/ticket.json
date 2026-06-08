@@ -1,0 +1,18 @@
+{
+  "title": "Operator Typed Channels and Pure Rust Brep Nodes",
+  "emoji": "🔌",
+  "status": "open",
+  "description": "Implement operator-typed channels across neural/flow, create pure-Rust brepkit-backed brep module, rewire procedural, remove OpenCascade JS kernel.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1635"
+  },
+  "goal": "🎯flow🎯neural",
+  "plan": {
+    "client": "cursor",
+    "id": "a382c9bc",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/operator-typed_brep_nodes_a382c9bc.plan.md"
+  },
+  "sessions": [
+    "⚪58564abed14d45918ee5e3e52d90af14"
+  ]
+}

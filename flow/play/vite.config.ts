@@ -13,7 +13,10 @@ export default createPlaygroundPlayViteConfig({
   playDir,
   repoRoot,
   playEntryKind: "flow",
-  extraAliases: [{ find: "@flow/react", replacement: path.resolve(playDir, "../react/index.tsx") }],
+  extraAliases: [
+    { find: "@flow/react", replacement: path.resolve(playDir, "../react/index.tsx") },
+    { find: "@flow/module-core", replacement: path.resolve(playDir, "../modules/core/pkg/flow_module_core.js") },
+  ],
   resolveDedupe: ["react", "react-dom", "@flow/react"],
   optimizeDeps: {
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@flow/react"],

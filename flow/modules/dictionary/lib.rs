@@ -152,12 +152,16 @@ fn boolean_dictionary(value: bool) -> Dictionary {
     Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
 }
 
-fn text_channel(id: &str) -> ChannelSpec {
-    ChannelSpec::text_default(id, "")
+fn dict_channel(id: &str, operator_id: &str) -> ChannelSpec {
+    ChannelSpec::dictionary(id, &[operator_id])
 }
 
-fn dict_channel(id: &str) -> ChannelSpec {
-    ChannelSpec::dictionary(id)
+fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
+    ChannelSpec::text_default(id, "", &[operator_id])
+}
+
+fn out_channel() -> ChannelSpec {
+    ChannelSpec::provides("out", vec![])
 }
 
 fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
@@ -187,8 +191,15 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: C
     }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }]);
+fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(
+        info,
+        vec![OperatorImpl {
+            schemas: schemas.into_iter().map(str::to_string).collect(),
+            operation,
+        }],
+        produces,
+    );
 }
 
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -201,21 +212,59 @@ fn module_registry() -> Registry {
 
 /// 📦 Registers all dictionary operators.
 pub fn register(registry: &mut Registry) {
-    register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::dictionary("out")), Box::new(Pack), vec![]);
-    register_simple(registry, info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary")], ChannelSpec::dictionary("out")), Box::new(Unpack), vec!["dictionary"]);
-    register_simple(registry, info("dictionary.get", "Get", "Reads a value by key", vec![dict_channel("dictionary"), text_channel("key")], ChannelSpec::value("out")), Box::new(Get), vec!["dictionary", "text"]);
-    register_simple(registry, info("dictionary.set", "Set", "Inserts or replaces a key", vec![dict_channel("dictionary"), text_channel("key"), ChannelSpec::value("value")], ChannelSpec::dictionary("out")), Box::new(Set), vec![]);
-    register_simple(registry, info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary"), text_channel("key")], ChannelSpec::dictionary("out")), Box::new(Remove), vec!["dictionary", "text"]);
-    register_simple(registry, info("dictionary.has", "Has", "Checks whether a key exists", vec![dict_channel("dictionary"), text_channel("key")], ChannelSpec::new("out", ValueType::Schema("boolean".into()))), Box::new(Has), vec!["dictionary", "text"]);
-    register_simple(registry, info("dictionary.keys", "Keys", "Lists keys as comma-separated text", vec![dict_channel("dictionary")], ChannelSpec::new("out", ValueType::Schema("text".into()))), Box::new(Keys), vec!["dictionary"]);
-    register_simple(registry, info("dictionary.size", "Size", "Reports the number of keys", vec![dict_channel("dictionary")], ChannelSpec::number("out")), Box::new(Size), vec!["dictionary"]);
+    register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], out_channel()), Box::new(Pack), vec![], &["dictionary"]);
+    register_simple(registry, info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary", "dictionary.unpack")], out_channel()), Box::new(Unpack), vec!["dictionary"], &["dictionary"]);
+    register_simple(
+        registry,
+        info(
+            "dictionary.get",
+            "Get",
+            "Reads a value by key",
+            vec![dict_channel("dictionary", "dictionary.get"), text_channel("key", "dictionary.get")],
+            ChannelSpec::any("out"),
+        ),
+        Box::new(Get),
+        vec!["dictionary", "text"],
+        &["value"],
+    );
+    register_simple(
+        registry,
+        info(
+            "dictionary.set",
+            "Set",
+            "Inserts or replaces a key",
+            vec![dict_channel("dictionary", "dictionary.set"), text_channel("key", "dictionary.set"), ChannelSpec::any("value")],
+            out_channel(),
+        ),
+        Box::new(Set),
+        vec![],
+        &["dictionary"],
+    );
+    register_simple(
+        registry,
+        info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary", "dictionary.remove"), text_channel("key", "dictionary.remove")], out_channel()),
+        Box::new(Remove),
+        vec!["dictionary", "text"],
+        &["dictionary"],
+    );
+    register_simple(
+        registry,
+        info("dictionary.has", "Has", "Checks whether a key exists", vec![dict_channel("dictionary", "dictionary.has"), text_channel("key", "dictionary.has")], out_channel()),
+        Box::new(Has),
+        vec!["dictionary", "text"],
+        &["boolean"],
+    );
+    register_simple(registry, info("dictionary.keys", "Keys", "Lists keys as comma-separated text", vec![dict_channel("dictionary", "dictionary.keys")], out_channel()), Box::new(Keys), vec!["dictionary"], &["text"]);
+    register_simple(registry, info("dictionary.size", "Size", "Reports the number of keys", vec![dict_channel("dictionary", "dictionary.size")], out_channel()), Box::new(Size), vec!["dictionary"], &["number"]);
     registry.register_operator(
         OperatorInfo {
             variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-            ..info("dictionary.merge", "Merge", "Merges ordered dictionary inputs", vec![], ChannelSpec::dictionary("out"))
+            ..info("dictionary.merge", "Merge", "Merges ordered dictionary inputs", vec![], out_channel())
         },
         vec![OperatorImpl { schemas: vec!["dictionary".into(), "dictionary".into()], operation: Box::new(Merge) }],
+        &["dictionary"],
     );
+    registry.finalize();
 }
 
 // #region 🔖Tests

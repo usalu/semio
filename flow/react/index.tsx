@@ -22,6 +22,7 @@ if (import.meta.env.VITEST) {
     { initSync: initLogicSync },
     { initSync: initDictionarySync },
     { initSync: initListSync },
+    { initSync: initBrepSync },
   ] = await Promise.all([
     import("../modules/core/pkg/flow_module_core.js"),
     import("../modules/math/pkg/flow_module_math.js"),
@@ -29,6 +30,7 @@ if (import.meta.env.VITEST) {
     import("../modules/logic/pkg/flow_module_logic.js"),
     import("../modules/dictionary/pkg/flow_module_dictionary.js"),
     import("../modules/list/pkg/flow_module_list.js"),
+    import("../modules/brep/pkg/flow_module_brep.js"),
   ]);
   initCoreSync({ module: readFileSync(join(reactDir, "../modules/core/pkg/flow_module_core_bg.wasm")) });
   initMathSync({ module: readFileSync(join(reactDir, "../modules/math/pkg/flow_module_math_bg.wasm")) });
@@ -36,6 +38,7 @@ if (import.meta.env.VITEST) {
   initLogicSync({ module: readFileSync(join(reactDir, "../modules/logic/pkg/flow_module_logic_bg.wasm")) });
   initDictionarySync({ module: readFileSync(join(reactDir, "../modules/dictionary/pkg/flow_module_dictionary_bg.wasm")) });
   initListSync({ module: readFileSync(join(reactDir, "../modules/list/pkg/flow_module_list_bg.wasm")) });
+  initBrepSync({ module: readFileSync(join(reactDir, "../modules/brep/pkg/flow_module_brep_bg.wasm")) });
 } else {
   await initFlowWasm();
 }
@@ -73,9 +76,15 @@ export interface FlowValueTypeV1 {
 
 export interface FlowChannelSpecV1 {
   readonly id: string;
-  readonly schema: FlowValueTypeV1;
+  readonly operators: readonly string[];
   readonly default?: unknown;
   readonly label?: string;
+}
+
+export function flowChannelCompatible(output: FlowChannelSpecV1, input: FlowChannelSpecV1): boolean {
+  if (!input.operators.length) return true;
+  const provided = new Set(output.operators);
+  return input.operators.every((required) => provided.has(required));
 }
 
 export interface FlowModuleSchemaFieldV1 {
@@ -169,15 +178,16 @@ type FlowModulePackage = {
 type FlowModuleLoader = () => Promise<FlowModulePackage>;
 
 const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
-  core: () => import("@flow/module-core"),
-  math: () => import("@flow/module-math"),
-  text: () => import("@flow/module-text"),
-  logic: () => import("@flow/module-logic"),
-  dictionary: () => import("@flow/module-dictionary"),
-  list: () => import("@flow/module-list"),
+  core: () => import("../modules/core/pkg/flow_module_core.js"),
+  math: () => import("../modules/math/pkg/flow_module_math.js"),
+  text: () => import("../modules/text/pkg/flow_module_text.js"),
+  logic: () => import("../modules/logic/pkg/flow_module_logic.js"),
+  dictionary: () => import("../modules/dictionary/pkg/flow_module_dictionary.js"),
+  list: () => import("../modules/list/pkg/flow_module_list.js"),
+  brep: () => import("../modules/brep/pkg/flow_module_brep.js"),
 };
 
-export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list"] as const;
+export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep"] as const;
 export type FlowModuleId = (typeof FLOW_DEFAULT_MODULE_IDS)[number];
 
 export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);
@@ -428,7 +438,8 @@ export type FlowWidgetV1 =
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
   | { readonly kind: "inputImage"; readonly id: string; readonly src?: string }
   | { readonly kind: "outputPreview"; readonly id: string; readonly expanded?: readonly string[] }
-  | { readonly kind: "outputAction"; readonly id: string; readonly action: string };
+  | { readonly kind: "outputAction"; readonly id: string; readonly action: string }
+  | { readonly kind: "cluster"; readonly id: string; readonly name?: string; readonly tree: FlowTreeV1; readonly flow?: FlowGuiV1 };
 
 export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
   schema: "flow.fixture/v1",
@@ -1072,7 +1083,9 @@ export type FlowGraphEditOp =
   | { readonly op: "makeSpace"; readonly anchor: string; readonly dx: number; readonly dy?: number }
   | { readonly op: "setPreviewOff"; readonly ids: readonly string[] }
   | { readonly op: "setSliderValue"; readonly id: string; readonly value: number }
-  | { readonly op: "setNeuronParams"; readonly id: string; readonly paramsJson: string };
+  | { readonly op: "setNeuronParams"; readonly id: string; readonly paramsJson: string }
+  | { readonly op: "collapse"; readonly ids: readonly string[] }
+  | { readonly op: "explode"; readonly id: string };
 
 /** @emoji 🔧 Applies a batched list of generic flow graph edit primitives. */
 export function runFlowGraphEdit(session: FlowSession, ops: readonly FlowGraphEditOp[]): void {
@@ -1108,6 +1121,12 @@ export function runFlowGraphEdit(session: FlowSession, ops: readonly FlowGraphEd
       case "setNeuronParams":
         session.setNeuronParams(entry.id, entry.paramsJson);
         break;
+      case "collapse":
+        (session as FlowSessionClusterApi).collapseSelection(JSON.stringify(entry.ids));
+        break;
+      case "explode":
+        (session as FlowSessionClusterApi).explodeCluster(entry.id);
+        break;
       default:
         break;
     }
@@ -1117,6 +1136,7 @@ export function runFlowGraphEdit(session: FlowSession, ops: readonly FlowGraphEd
 export interface FlowCanvasContextMenuContext {
   readonly hoveredNodeId: string | null;
   readonly selectedNodeIds: readonly string[];
+  readonly clusterNodeIds: readonly string[];
   readonly isImageWidget: boolean;
   readonly isBackground: boolean;
   readonly previewOffNodeIds: readonly string[];
@@ -1159,6 +1179,25 @@ export function buildFlowContextMenuItems(ctx: FlowCanvasContextMenuContext, dis
       checked: allPreviewOff,
       onSelect: () => dispatch("canvasCommand", { command: "togglePreview", argsJson: JSON.stringify({ ids: targetIds }) }),
     });
+    if (targetIds.length >= 2) {
+      items.push({
+        id: "flow.ctx.collapse",
+        label: "Collapse to cluster",
+        icon: "layers",
+        onSelect: () => dispatch("canvasCommand", { command: "collapse", argsJson: JSON.stringify({ ids: targetIds }) }),
+      });
+    }
+    if (targetIds.length === 1) {
+      const clusterId = targetIds[0];
+      if (ctx.clusterNodeIds.includes(clusterId)) {
+        items.push({
+          id: "flow.ctx.explode",
+          label: "Explode cluster",
+          icon: "expand",
+          onSelect: () => dispatch("canvasCommand", { command: "explode", argsJson: JSON.stringify({ id: clusterId }) }),
+        });
+      }
+    }
     if (ctx.isImageWidget && ctx.hoveredNodeId) {
       items.push({
         id: "flow.ctx.replaceImage",
@@ -2092,9 +2131,17 @@ export interface FlowChannelRef {
   readonly direction: "in" | "out";
 }
 
+type FlowSessionClusterApi = FlowSession & {
+  collapseSelection(idsJson: string): string;
+  explodeCluster(clusterId: string): void;
+  takePendingClusterExplode(): string | undefined;
+};
+
 type FlowSessionChannelApi = FlowSession & {
   hoveredChannelJson(): string;
   selectedChannelsJson(): string;
+  setHoverChannel(widgetId: string | null, port: string | null): void;
+  setSelectedChannels(json: string): void;
 };
 
 export function parseFlowChannelRef(json: string | null | undefined): FlowChannelRef | null {
@@ -2149,6 +2196,8 @@ export interface FlowCanvasProps {
   readonly onSelectedChannelsChange?: (channels: readonly FlowChannelRef[]) => void;
   readonly selectedNodeIds?: readonly string[];
   readonly hoveredNodeId?: string | null;
+  readonly hoveredChannel?: FlowChannelRef | null;
+  readonly selectedChannels?: readonly FlowChannelRef[];
   readonly previewOffNodeIds?: readonly string[];
   readonly selectionMode?: FlowSelectionMode;
   readonly selectionMethod?: FlowSelectionMethod;
@@ -2206,6 +2255,17 @@ export function flowWidgetIdArraysEqual(left: readonly string[], right: readonly
   return left.every((value, index) => value === right[index]);
 }
 
+export function flowChannelRefEqual(left: FlowChannelRef | null | undefined, right: FlowChannelRef | null | undefined): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return left.widgetId === right.widgetId && left.port === right.port && left.direction === right.direction;
+}
+
+export function flowChannelRefArraysEqual(left: readonly FlowChannelRef[], right: readonly FlowChannelRef[]): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => flowChannelRefEqual(value, right[index]));
+}
+
 function flowWheelDeltaScale(deltaMode: number): number {
   if (deltaMode === WheelEvent.DOM_DELTA_LINE) return 16;
   if (deltaMode === WheelEvent.DOM_DELTA_PAGE) return 400;
@@ -2237,6 +2297,8 @@ export function FlowCanvas({
   onSelectedChannelsChange,
   selectedNodeIds,
   hoveredNodeId,
+  hoveredChannel,
+  selectedChannels,
   previewOffNodeIds,
   selectionMode = "default",
   selectionMethod = "rectangle",
@@ -2701,10 +2763,24 @@ export function FlowCanvas({
         session.setSelection(JSON.stringify([...selectedNodeIds]));
       }
     }
-    if (hoveredNodeId !== undefined) {
-      const current = session.hoveredWidgetId() ?? null;
-      if (current !== hoveredNodeId) {
-        session.setHover(hoveredNodeId);
+    if (hoveredNodeId !== undefined || hoveredChannel !== undefined) {
+      const api = session as FlowSessionChannelApi;
+      const currentChannels = readFlowSessionChannels(session);
+      const nextChannel = hoveredChannel ?? null;
+      if (!flowChannelRefEqual(currentChannels.hovered, nextChannel)) {
+        api.setHoverChannel?.(nextChannel?.widgetId ?? null, nextChannel?.port ?? null);
+      } else if (hoveredNodeId !== undefined) {
+        const current = session.hoveredWidgetId() ?? null;
+        if (current !== hoveredNodeId) {
+          session.setHover(hoveredNodeId);
+        }
+      }
+    }
+    if (selectedChannels !== undefined) {
+      const api = session as FlowSessionChannelApi;
+      const current = readFlowSessionChannels(session).selected;
+      if (!flowChannelRefArraysEqual(current, selectedChannels)) {
+        api.setSelectedChannels?.(JSON.stringify([...selectedChannels]));
       }
     }
     if (previewOffNodeIds !== undefined) {
@@ -2714,7 +2790,7 @@ export function FlowCanvas({
       }
     }
     renderFrame();
-  }, [hoveredNodeId, previewOffNodeIds, renderFrame, selectedNodeIds]);
+  }, [hoveredChannel, hoveredNodeId, previewOffNodeIds, renderFrame, selectedChannels, selectedNodeIds]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -2919,6 +2995,11 @@ export function FlowCanvas({
       if (!session || pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
       session.pointerUpScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
+      const clusterApi = session as FlowSessionClusterApi;
+      const explodeId = clusterApi.takePendingClusterExplode?.();
+      if (explodeId) {
+        clusterApi.explodeCluster(explodeId);
+      }
       pointerRef.current = { active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false };
       emitInteractionState(session);
       evaluate();
@@ -2995,6 +3076,28 @@ export function FlowCanvas({
           evaluate();
           persistFixture();
           renderFrame();
+          break;
+        }
+        case "collapse": {
+          const ids = Array.isArray(args.ids) ? args.ids.filter((value): value is string => typeof value === "string") : [];
+          if (ids.length >= 2) {
+            (session as FlowSessionClusterApi).collapseSelection(JSON.stringify(ids));
+            emitInteractionState(session);
+            evaluate();
+            persistFixture();
+            renderFrame();
+          }
+          break;
+        }
+        case "explode": {
+          const id = typeof args.id === "string" ? args.id : null;
+          if (id) {
+            (session as FlowSessionClusterApi).explodeCluster(id);
+            emitInteractionState(session);
+            evaluate();
+            persistFixture();
+            renderFrame();
+          }
           break;
         }
         case "setSelection": {
@@ -3118,18 +3221,21 @@ export function FlowCanvas({
       const screen = clientToCanvas(e.clientX, e.clientY);
       const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
       let isImageWidget = false;
-      if (hoveredNodeId) {
-        try {
-          const fixture = JSON.parse(session.fixtureJson()) as FlowFixtureV1;
+      let clusterNodeIds: string[] = [];
+      try {
+        const fixture = JSON.parse(session.fixtureJson()) as FlowFixtureV1;
+        clusterNodeIds = fixture.widgets.filter((widget) => widget.kind === "cluster").map((widget) => widget.id);
+        if (hoveredNodeId) {
           const widget = fixture.widgets.find((entry) => entry.id === hoveredNodeId);
           isImageWidget = widget?.kind === "inputImage";
-        } catch {
-          /* fixture not ready */
         }
+      } catch {
+        /* fixture not ready */
       }
       const menuCtx: FlowCanvasContextMenuContext = {
         hoveredNodeId,
         selectedNodeIds: hoveredNodeId && !selectedNodeIds.includes(hoveredNodeId) ? [hoveredNodeId] : selectedNodeIds,
+        clusterNodeIds,
         isImageWidget,
         isBackground: !hoveredNodeId,
         previewOffNodeIds,
@@ -3407,6 +3513,17 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("flow channel compatibility", () => {
+    it("flowChannelCompatible requires input operators subset of output operators", () => {
+      const output = { id: "out", operators: ["brep.bool.fuse", "brep.xform.translate"] };
+      const compatible = { id: "geometry", operators: ["brep.bool.fuse"] };
+      const incompatible = { id: "geometry", operators: ["brep.solid.extrude"] };
+      expect(flowChannelCompatible(output, compatible)).toBe(true);
+      expect(flowChannelCompatible(output, incompatible)).toBe(false);
+      expect(flowChannelCompatible(output, { id: "any", operators: [] })).toBe(true);
+    });
+  });
+
   describe("flow proximity connect", () => {
     it("exports default proximity distance for window options", () => {
       expect(FLOW_DEFAULT_PROXIMITY_DISTANCE).toBe(48);
@@ -3451,7 +3568,22 @@ if (import.meta.vitest) {
           version: "0.1.0",
           activationEvents: ["onStartup"],
           contributes: {
-            neuronKinds: [{ id: "math.add", module: "math", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum", inputs: [{ id: "a", type: "number" }, { id: "b", type: "number", default: 0 }], outputs: ["number"] }],
+            schemas: [],
+            operators: [
+              {
+                id: "math.add",
+                module: "math",
+                name: "Add",
+                abbreviation: "Add",
+                icon: "emoji:➕",
+                summary: "Sum",
+                inputs: [
+                  { id: "a", operators: ["math.add"] },
+                  { id: "b", operators: ["math.add"], default: { $schema: "number", value: 0 } },
+                ],
+                outputs: [{ id: "out", operators: ["math.add"] }],
+              },
+            ],
             widgets: [],
             commands: [],
             settings: [],
@@ -3459,7 +3591,7 @@ if (import.meta.vitest) {
         }),
       );
       expect(manifest.id).toBe("math");
-      expect(manifest.contributes.neuronKinds[0]?.id).toBe("math.add");
+      expect(manifest.contributes.operators[0]?.id).toBe("math.add");
     });
 
     it("aggregates active catalogue sections", async () => {
@@ -3737,6 +3869,7 @@ if (import.meta.vitest) {
     const baseCtx: FlowCanvasContextMenuContext = {
       hoveredNodeId: null,
       selectedNodeIds: [],
+      clusterNodeIds: [],
       isImageWidget: false,
       isBackground: true,
       previewOffNodeIds: [],
@@ -3764,6 +3897,22 @@ if (import.meta.vitest) {
       expect(items.some((item) => item.id === "flow.ctx.delete")).toBe(true);
       expect(items.some((item) => item.id === "flow.ctx.preview")).toBe(true);
       expect(items.some((item) => item.id === "flow.ctx.add")).toBe(false);
+    });
+
+    it("multi-selection menu includes collapse to cluster", () => {
+      const items = buildFlowContextMenuItems(
+        { ...baseCtx, isBackground: false, selectedNodeIds: ["a", "b"] },
+        () => {},
+      );
+      expect(items.some((item) => item.id === "flow.ctx.collapse")).toBe(true);
+    });
+
+    it("cluster menu includes explode", () => {
+      const items = buildFlowContextMenuItems(
+        { ...baseCtx, isBackground: false, selectedNodeIds: ["cluster_1"], clusterNodeIds: ["cluster_1"] },
+        () => {},
+      );
+      expect(items.some((item) => item.id === "flow.ctx.explode")).toBe(true);
     });
 
     it("image widget menu includes replace image", () => {

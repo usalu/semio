@@ -129,14 +129,15 @@ pub fn register(registry: &mut Registry) {
     registry.register_schema(schema("dictionary", "Dictionary", "Arbitrary dictionary", vec![]));
     registry.register_schema(schema("image", "Image", "Image data URL", vec![FieldSpec::new("dataUrl", ValueType::Text).with_default(Value::Atom(Atom::String(String::new())))]));
 
-    let (info, implementations) = operator("core.number", "Number", "Produces a number dictionary", vec![ChannelSpec::number("out")], Box::new(Number));
-    registry.register_operator(info, implementations);
-    let (info, implementations) = operator("core.text", "Text", "Produces a text dictionary", vec![ChannelSpec::new("out", ValueType::Schema("text".into()))], Box::new(Text));
-    registry.register_operator(info, implementations);
-    let (info, implementations) = operator("core.boolean", "Bool", "Produces a boolean dictionary", vec![ChannelSpec::new("out", ValueType::Schema("boolean".into()))], Box::new(Boolean));
-    registry.register_operator(info, implementations);
-    let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::new("out", ValueType::Schema("image".into()))], Box::new(Image));
-    registry.register_operator(info, implementations);
+    let (info, implementations) = operator("core.number", "Number", "Produces a number dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Number));
+    registry.register_operator(info, implementations, &["number"]);
+    let (info, implementations) = operator("core.text", "Text", "Produces a text dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Text));
+    registry.register_operator(info, implementations, &["text"]);
+    let (info, implementations) = operator("core.boolean", "Bool", "Produces a boolean dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Boolean));
+    registry.register_operator(info, implementations, &["boolean"]);
+    let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Image));
+    registry.register_operator(info, implementations, &["image"]);
+    registry.finalize();
 }
 
 // #region 🔖Tests

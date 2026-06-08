@@ -13,7 +13,7 @@ import {
 import { playgroundDevPortString, playgroundPortEnv } from "../../ui/styling/playground-dev-ports.ts";
 
 const wasmScript = join(import.meta.dir, "../../flow/core/script.ts");
-const moduleWasmScripts = ["math", "text", "logic", "dictionary", "list"].map((name) =>
+const moduleWasmScripts = ["core", "math", "text", "logic", "dictionary", "list", "brep"].map((name) =>
 	join(import.meta.dir, `../../flow/modules/${name}/script.ts`),
 );
 

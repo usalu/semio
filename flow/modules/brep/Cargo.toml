@@ -1,0 +1,22 @@
+[package]
+name = "flow_module_brep"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "lib.rs"
+
+[dependencies]
+flow_module_wasm = { path = "../wasm" }
+geometry_brep_brepkit = { path = "../../../geometry/brep/brepkit" }
+geometry_brep_engine = { path = "../../../geometry/brep/engine" }
+neural_engine = { path = "../../../neural/engine" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+js-sys = "0.3.77"
+wasm-bindgen = "0.2.106"

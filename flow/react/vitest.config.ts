@@ -19,6 +19,7 @@ export default defineConfig({
       { find: "@flow/module-logic", replacement: resolve(root, "../modules/logic/pkg/flow_module_logic.js") },
       { find: "@flow/module-dictionary", replacement: resolve(root, "../modules/dictionary/pkg/flow_module_dictionary.js") },
       { find: "@flow/module-list", replacement: resolve(root, "../modules/list/pkg/flow_module_list.js") },
+      { find: "@flow/module-brep", replacement: resolve(root, "../modules/brep/pkg/flow_module_brep.js") },
     ],
   },
   test: {

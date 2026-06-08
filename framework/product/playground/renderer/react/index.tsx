@@ -6056,26 +6056,33 @@ let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
 
 /** @emoji 🔔 Re-renders flow play workbench kinds when WASM catalogue sections arrive. */
-function useFlowPlaySnapshotRevision(ctrl: FlowPlayController | undefined, selector: (ctrl: FlowPlayController) => number): number {
-  flowPlayControllerRef.current = ctrl ?? null;
+function useFlowPlaySnapshotRevision(runtime: Platform, selector: (ctrl: FlowPlayController) => number): number {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
-      if (!ctrl?.subscribeSnapshot) {
-        return () => {};
-      }
-      return ctrl.subscribeSnapshot(listener);
+      const ctrl = runtime.getActiveApp()?.controller as FlowPlayController | undefined;
+      flowPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeChrome = runtime.subscribeChrome(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeChrome();
+        unsubscribeSnapshot?.();
+      };
     },
-    () => (ctrl ? selector(ctrl) : 0),
+    () => {
+      const ctrl = runtime.getActiveApp()?.controller as FlowPlayController | undefined;
+      flowPlayControllerRef.current = ctrl ?? null;
+      return ctrl ? selector(ctrl) : 0;
+    },
     () => 0,
   );
 }
 
-function useFlowPlayCatalogueRevision(ctrl: FlowPlayController | undefined): number {
-  return useFlowPlaySnapshotRevision(ctrl, (c) => c.getCatalogueRevision());
+function useFlowPlayCatalogueRevision(runtime: Platform): number {
+  return useFlowPlaySnapshotRevision(runtime, (c) => c.getCatalogueRevision());
 }
 
-function useFlowPlayExtensionRevision(ctrl: FlowPlayController | undefined): number {
-  return useFlowPlaySnapshotRevision(ctrl, (c) => c.getExtensionRevision());
+function useFlowPlayExtensionRevision(runtime: Platform): number {
+  return useFlowPlaySnapshotRevision(runtime, (c) => c.getExtensionRevision());
 }
 
 function useFlowPlayController(runtimeOverride?: Platform): FlowPlayController | undefined {
@@ -6092,8 +6099,9 @@ function useFlowPlayController(runtimeOverride?: Platform): FlowPlayController |
 }
 
 function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
   const ctrl = useFlowPlayController();
-  const extensionRevision = useFlowPlayExtensionRevision(ctrl);
+  const extensionRevision = useFlowPlayExtensionRevision(runtime);
   const scopeId = node.paneId ?? FLOW_PLAY_WINDOW_KIND_ID;
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
   const proximityDistance = ctrl?.proximityDistanceValue() ?? FLOW_DEFAULT_PROXIMITY_DISTANCE;
@@ -6183,16 +6191,14 @@ class FlowPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  const ctrl = useFlowPlayController(runtime);
-  const catalogueRevision = useFlowPlayCatalogueRevision(ctrl);
-  const extensionRevision = useFlowPlayExtensionRevision(ctrl);
-  const flowPlayKindsPanel = reactHostPort.useMemo(() => new FlowPlayKindsPanelDefinition(), []);
-  const flowPlayExtensionsPanel = reactHostPort.useMemo(() => new FlowPlayExtensionsPanelDefinition(), []);
+  useFlowPlayController(runtime);
+  const catalogueRevision = useFlowPlayCatalogueRevision(runtime);
+  const extensionRevision = useFlowPlayExtensionRevision(runtime);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [flowPlayKindsPanel, flowPlayExtensionsPanel],
+      workbench: [new FlowPlayKindsPanelDefinition().resolveTab(), new FlowPlayExtensionsPanelDefinition().resolveTab()],
     }),
-    [flowPlayKindsPanel, flowPlayExtensionsPanel, catalogueRevision, extensionRevision],
+    [catalogueRevision, extensionRevision],
   );
   return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
@@ -6319,30 +6325,37 @@ let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
 
 /** @emoji 🔔 Re-renders procedural play workbench kinds when WASM catalogue sections arrive. */
-function useProceduralPlaySnapshotRevision(ctrl: ProceduralPlayController | undefined, selector: (ctrl: ProceduralPlayController) => number): number {
-  proceduralPlayControllerRef.current = ctrl ?? null;
+function useProceduralPlaySnapshotRevision(runtime: Platform, selector: (ctrl: ProceduralPlayController) => number): number {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
-      if (!ctrl?.subscribeSnapshot) {
-        return () => {};
-      }
-      return ctrl.subscribeSnapshot(listener);
+      const ctrl = runtime.getActiveApp()?.controller as ProceduralPlayController | undefined;
+      proceduralPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeChrome = runtime.subscribeChrome(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeChrome();
+        unsubscribeSnapshot?.();
+      };
     },
-    () => (ctrl ? selector(ctrl) : 0),
+    () => {
+      const ctrl = runtime.getActiveApp()?.controller as ProceduralPlayController | undefined;
+      proceduralPlayControllerRef.current = ctrl ?? null;
+      return ctrl ? selector(ctrl) : 0;
+    },
     () => 0,
   );
 }
 
-function useProceduralPlayCatalogueRevision(ctrl: ProceduralPlayController | undefined): number {
-  return useProceduralPlaySnapshotRevision(ctrl, (c) => c.getCatalogueRevision());
+function useProceduralPlayCatalogueRevision(runtime: Platform): number {
+  return useProceduralPlaySnapshotRevision(runtime, (c) => c.getCatalogueRevision());
 }
 
-function useProceduralPlayExtensionRevision(ctrl: ProceduralPlayController | undefined): number {
-  return useProceduralPlaySnapshotRevision(ctrl, (c) => c.getExtensionRevision());
+function useProceduralPlayExtensionRevision(runtime: Platform): number {
+  return useProceduralPlaySnapshotRevision(runtime, (c) => c.getExtensionRevision());
 }
 
-function useProceduralPlayInteractionRevision(ctrl: ProceduralPlayController | undefined): number {
-  return useProceduralPlaySnapshotRevision(ctrl, (c) => c.getInteractionRevision());
+function useProceduralPlayInteractionRevision(runtime: Platform): number {
+  return useProceduralPlaySnapshotRevision(runtime, (c) => c.getInteractionRevision());
 }
 
 function useProceduralPlayController(runtimeOverride?: Platform): ProceduralPlayController | undefined {
@@ -6379,7 +6392,7 @@ async function downloadProceduralFixtureJson(name: string, text: string): Promis
 }
 
 function ProceduralPlayToolbarHostBridge({ runtime, ctrl }: { readonly runtime: Platform; readonly ctrl: ProceduralPlayController | undefined }): ReactElement {
-  const interactionRevision = useProceduralPlayInteractionRevision(ctrl);
+  const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
   const downloadFixture = reactHostPort.useCallback(async () => {
     const json = ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON;
@@ -6433,9 +6446,10 @@ function ProceduralPlayToolbarHostBridge({ runtime, ctrl }: { readonly runtime: 
 }
 
 function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
   const ctrl = useProceduralPlayController();
-  const extensionRevision = useProceduralPlayExtensionRevision(ctrl);
-  const interactionRevision = useProceduralPlayInteractionRevision(ctrl);
+  const extensionRevision = useProceduralPlayExtensionRevision(runtime);
+  const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   void interactionRevision;
   const scopeId = node.paneId ?? PROCEDURAL_PLAY_WINDOW_KIND_ID;
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
@@ -6547,12 +6561,19 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
 }
 
 function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
   const ctrl = useProceduralPlayController();
-  const interactionRevision = useProceduralPlayInteractionRevision(ctrl);
+  const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   void interactionRevision;
   const onHover = reactHostPort.useCallback(
-    (id: string | null) => {
-      ctrl?.run("setHover", { id, channel: null });
+    (channel: import("@procedural/react").ProceduralChannelRef | null) => {
+      ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
+    },
+    [ctrl],
+  );
+  const onSelect = reactHostPort.useCallback(
+    (channel: import("@procedural/react").ProceduralChannelRef) => {
+      ctrl?.run("setSelectChannels", { channels: [channel] });
     },
     [ctrl],
   );
@@ -6577,7 +6598,9 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
         preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
         hoveredNodeId={ctrl?.getHoveredNodeId()}
         hoveredChannel={ctrl?.getHoveredChannel()}
+        hoveredGeometryTargets={ctrl?.getHoveredGeometryTargets()}
         selectedChannels={ctrl?.getSelectedChannels()}
+        selectedGeometryTargets={ctrl?.getSelectedGeometryTargets()}
         previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
         showMode={ctrl?.getShowMode() ?? "everything"}
         selectionMode={ctrl?.getSelectionMode()}
@@ -6586,6 +6609,7 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
         onGumballTransform={onGumballTransform}
         gumballActiveWidgetIds={ctrl?.getGumballActiveWidgetIds()}
         onHover={onHover}
+        onSelect={onSelect}
         onSelectionChange={onSelectionChange}
         kernel={proceduralExtensionHost.getBrepKernel()}
         className="h-full w-full"
@@ -6632,15 +6656,13 @@ class ProceduralPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition
 
 function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
   const ctrl = useProceduralPlayController(runtime);
-  const catalogueRevision = useProceduralPlayCatalogueRevision(ctrl);
-  const extensionRevision = useProceduralPlayExtensionRevision(ctrl);
-  const proceduralPlayKindsPanel = reactHostPort.useMemo(() => new ProceduralPlayKindsPanelDefinition(), []);
-  const proceduralPlayExtensionsPanel = reactHostPort.useMemo(() => new ProceduralPlayExtensionsPanelDefinition(), []);
+  const catalogueRevision = useProceduralPlayCatalogueRevision(runtime);
+  const extensionRevision = useProceduralPlayExtensionRevision(runtime);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [proceduralPlayKindsPanel, proceduralPlayExtensionsPanel],
+      workbench: [new ProceduralPlayKindsPanelDefinition().resolveTab(), new ProceduralPlayExtensionsPanelDefinition().resolveTab()],
     }),
-    [proceduralPlayKindsPanel, proceduralPlayExtensionsPanel, catalogueRevision, extensionRevision],
+    [catalogueRevision, extensionRevision],
   );
   return (
     <>

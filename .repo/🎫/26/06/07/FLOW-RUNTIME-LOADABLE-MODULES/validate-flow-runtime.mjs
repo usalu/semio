@@ -89,19 +89,24 @@ await waitForDebugLog(debugLogs, "flow extension activated: math");
 
 await openWorkbench(page);
 await page.waitForFunction(() => {
-  const labels = [...document.querySelectorAll("[data-tree-item-label], .tree-item-label, button, span")].map((el) => el.textContent?.trim() ?? "");
+  const host = window.__flowExtensionHost;
+  if (!host) return false;
+  const sections = host.catalogueSections().map((section) => section.id);
+  const operators = JSON.parse(host.kindInfosJson());
+  const add = operators.find((operator) => operator.id === "math.add");
+  const constructVector = operators.find((operator) => operator.id === "math.constructVector");
   return (
-    labels.some((t) => /dictionary/i.test(t)) &&
-    labels.some((t) => /math/i.test(t)) &&
-    labels.some((t) => /text/i.test(t)) &&
-    labels.some((t) => /logic/i.test(t)) &&
-    labels.some((t) => /inputs/i.test(t)) &&
-    labels.some((t) => /outputs/i.test(t))
+    ["core", "dictionary", "list", "logic", "math", "text"].every((id) => sections.includes(id)) &&
+    add?.inputs?.map((input) => input.id).join(",") === "a,b" &&
+    constructVector?.inputs?.map((input) => input.id).join(",") === "x,y,z"
   );
 }, { timeout: 60_000 });
 
-const sectionLabelsBefore = await page.locator("body").innerText();
-const hasMathBefore = /math/i.test(sectionLabelsBefore);
+const hasMathBefore = await page.evaluate(() => {
+  const host = window.__flowExtensionHost;
+  if (!host) throw new Error("missing window.__flowExtensionHost");
+  return host.catalogueSections().some((section) => section.id === "math");
+});
 
 const deactivated = await page.evaluate(async () => {
   const host = window.__flowExtensionHost;
@@ -111,8 +116,11 @@ const deactivated = await page.evaluate(async () => {
 });
 await page.waitForTimeout(700);
 
-const sectionLabelsAfterDeactivate = await page.locator("body").innerText();
-const hasMathAfterDeactivate = /(^|\s)Math(\s|$)/i.test(sectionLabelsAfterDeactivate) && /math\.add/i.test(sectionLabelsAfterDeactivate);
+const hasMathAfterDeactivate = await page.evaluate(() => {
+  const host = window.__flowExtensionHost;
+  if (!host) throw new Error("missing window.__flowExtensionHost");
+  return host.catalogueSections().some((section) => section.id === "math");
+});
 
 const reactivated = await page.evaluate(async () => {
   const host = window.__flowExtensionHost;

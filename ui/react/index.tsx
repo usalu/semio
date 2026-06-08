@@ -12764,7 +12764,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   );
   const activeTabTree = reactHostPort.useMemo(
     () => (activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
-    [activeTab?.tree],
+    [activeTab?.tree, tabs],
   );
 
   const handleTabChange = (tabId: string) => {
@@ -12879,7 +12879,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
   const activeTabTree = reactHostPort.useMemo(
     () => (activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
-    [activeTab?.tree],
+    [activeTab?.tree, tabs],
   );
 
   const handleTabChange = (tabId: string) => {

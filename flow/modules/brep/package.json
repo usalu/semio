@@ -1,22 +1,18 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@geometry/brep/js",
+  "name": "@flow/module-brep",
   "version": "0.1.0",
-  "description": "🧭 brep WASM bridge and mesh contracts.",
+  "description": "flow · module · brep",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @geometry/brep/js:test"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "wasm": "bun nx run @flow/module-brep:wasm"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "geometry/brep/js"
+    "directory": "flow/modules/brep"
   },
   "bundleKind": "library"
 }

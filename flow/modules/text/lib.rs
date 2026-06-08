@@ -40,8 +40,8 @@ fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError>
         .ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn text_channel(id: &str) -> ChannelSpec {
-    ChannelSpec::text_default(id, "")
+fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
+    ChannelSpec::text_default(id, "", &[operator_id])
 }
 
 fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
@@ -53,7 +53,7 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> Operat
         icon: "emoji:📝".into(),
         summary: summary.into(),
         inputs,
-        outputs: vec![ChannelSpec::new("out", ValueType::Schema("text".into()))],
+        outputs: vec![ChannelSpec::provides("out", vec![])],
         ..Default::default()
     }
 }
@@ -69,13 +69,16 @@ fn module_registry() -> Registry {
 /// 📦 Registers all text operators.
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
-        info("text.concat", "Concat", "Joins two text values", vec![text_channel("a"), text_channel("b")]),
+        info("text.concat", "Concat", "Joins two text values", vec![text_channel("a", "text.concat"), text_channel("b", "text.concat")]),
         vec![OperatorImpl { schemas: vec!["text".into(), "text".into()], operation: Box::new(Concat) }],
+        &["text"],
     );
     registry.register_operator(
-        info("text.upper", "Upper", "Uppercases text", vec![text_channel("text")]),
+        info("text.upper", "Upper", "Uppercases text", vec![text_channel("text", "text.upper")]),
         vec![OperatorImpl { schemas: vec!["text".into()], operation: Box::new(Upper) }],
+        &["text"],
     );
+    registry.finalize();
 }
 
 // #region 🔖Tests

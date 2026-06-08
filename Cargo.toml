@@ -19,6 +19,7 @@ members = [
     "flow/modules/logic",
     "flow/modules/dictionary",
     "flow/modules/list",
+    "flow/modules/brep",
     "flow/core",
     "reasoning/mindmap/wires",
     "reasoning/mindmap/rs",
@@ -29,7 +30,7 @@ members = [
     "semio/client/lib/rs",
     "semio/client/lib/query",
     "semio/client/bin/store",
-    "semio/server/hub",
+    "semio/server/hub", "geometry/brep/engine", "geometry/brep/brepkit",
 ]
 
 resolver = "2"

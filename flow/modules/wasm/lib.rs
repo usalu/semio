@@ -137,11 +137,12 @@ mod tests {
                 abbreviation: "Echo".into(),
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
-                inputs: vec![ChannelSpec::value("x")],
-                outputs: vec![ChannelSpec::value("out")],
+                inputs: vec![ChannelSpec::any("x")],
+                outputs: vec![ChannelSpec::provides("out", vec![])],
                 ..Default::default()
             },
             vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
+            &[],
         );
         let json = build_manifest_json("test", "Test", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("flow.module/v1"));
@@ -159,11 +160,12 @@ mod tests {
                 abbreviation: "Echo".into(),
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
-                inputs: vec![ChannelSpec::value("x")],
-                outputs: vec![ChannelSpec::value("out")],
+                inputs: vec![ChannelSpec::any("x")],
+                outputs: vec![ChannelSpec::provides("out", vec![])],
                 ..Default::default()
             },
             vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
+            &[],
         );
         let input = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0)));
         let out_json = evaluate_json(&reg, "test.echo", &serde_json::to_string(&input).unwrap());

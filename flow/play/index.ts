@@ -117,7 +117,7 @@ export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry
       items: entries.map((entry) => ({
         id: `flow-play-extensions.${entry.id}`,
         label: entry.manifest.name,
-        description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
+        description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.operators.length} operators · ${entry.manifest.contributes.schemas.length} schemas · ${entry.manifest.contributes.commands.length} commands`,
         command: flowPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
       })),
     },

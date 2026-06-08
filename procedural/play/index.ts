@@ -54,6 +54,7 @@ import type { ContextMenuItem } from "@ui/react";
 import type { WindowMeasure } from "@framework/playground/core";
 import {
 	extractChannelPreviewItems,
+	resolveGeometryTargets,
 	PROCEDURAL_DEFAULT_FIXTURE,
 	proceduralExtensionHost,
 	proceduralFixtureToJson,
@@ -63,6 +64,7 @@ import {
 	type ProceduralGumballTransformPhase,
 	type ProceduralGumballTransformRequest,
 	type ProceduralChannelRef,
+	type ProceduralFixtureEdge,
 	type ProceduralPreviewItem,
 	type ProceduralPreviewShowMode,
 	type ProceduralTransformGranularity,
@@ -98,7 +100,7 @@ export const PROCEDURAL_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
 
 export const PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
 
-export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Circle extrude" }] as const;
+export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Box fillet move" }] as const;
 
 const PROCEDURAL_PLAY_STORE_KEY = "procedural.fixture/v1";
 
@@ -339,12 +341,17 @@ export function buildProceduralPlayExtensionsTree(entries: readonly FlowExtensio
 			id: "procedural-play-extensions.installed",
 			label: "Installed",
 			defaultOpen: true,
-			items: entries.map((entry) => ({
-				id: `procedural-play-extensions.${entry.id}`,
-				label: entry.manifest.name,
-				description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
-				command: proceduralPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
-			})),
+			items: entries.map((entry) => {
+				const operators = entry.manifest.contributes.operators ?? [];
+				const schemas = entry.manifest.contributes.schemas ?? [];
+				const commands = entry.manifest.contributes.commands ?? [];
+				return {
+					id: `procedural-play-extensions.${entry.id}`,
+					label: entry.manifest.name,
+					description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${operators.length} operators · ${schemas.length} schemas · ${commands.length} commands`,
+					command: proceduralPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
+				};
+			}),
 		},
 	];
 	if (commandItems.length) {
@@ -608,6 +615,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private hoveredNodeId: string | null = null;
 	private hoveredChannel: ProceduralChannelRef | null = null;
 	private selectedChannels: ProceduralChannelRef[] = [];
+	private fixtureEdges: ProceduralFixtureEdge[] = [];
 	private previewOffNodeIds: string[] = [];
 	private showMode: ProceduralPreviewShowMode = "everything";
 	private selectionMode: ProceduralPlaySelectionMode = "default";
@@ -625,6 +633,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ProceduralPlayFixtureStore = createProceduralPlayFixtureStore()) {
 		super(PROCEDURAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.fixtureStore = fixtureStore;
+		this.fixtureEdges = this.parseFixtureEdges(this.fixtureJson);
 		this.rebuildShellMode();
 	}
 
@@ -677,9 +686,29 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.clearGumballDrag();
 	}
 
+	private parseFixtureEdges(json: string): ProceduralFixtureEdge[] {
+		try {
+			const parsed = JSON.parse(json) as { synapses?: Array<{ from?: string; to?: string; from_port?: string; to_port?: string }> };
+			if (!Array.isArray(parsed.synapses)) return [];
+			return parsed.synapses.flatMap((synapse) => {
+				if (typeof synapse.from !== "string" || typeof synapse.to !== "string") return [];
+				const fromPort = typeof synapse.from_port === "string" ? synapse.from_port : "out";
+				const toPort = typeof synapse.to_port === "string" ? synapse.to_port : "in";
+				return [{ source: `${synapse.from}:${fromPort}`, target: `${synapse.to}:${toPort}` }];
+			});
+		} catch {
+			return [];
+		}
+	}
+
 	private applyFixtureJson(json: string, resetInteraction = false): void {
-		if (!json.includes("flow.fixture/v1") || json === this.fixtureJson) return;
-		this.fixtureJson = json;
+		if (!json.includes("flow.fixture/v1")) return;
+		const unchanged = json === this.fixtureJson;
+		if (unchanged && !resetInteraction) return;
+		if (!unchanged) {
+			this.fixtureJson = json;
+			this.fixtureEdges = this.parseFixtureEdges(json);
+		}
 		if (resetInteraction) this.resetInteractionState();
 		this.interactionRevision += 1;
 		this.notifySnapshot();
@@ -752,6 +781,30 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	getSelectedChannels(): readonly ProceduralChannelRef[] {
 		return this.selectedChannels;
+	}
+
+	getHoveredGeometryTargets(): readonly ProceduralChannelRef[] {
+		if (this.hoveredChannel) {
+			return resolveGeometryTargets([this.hoveredChannel], null, this.previewItems, this.fixtureEdges);
+		}
+		if (this.hoveredNodeId) {
+			return resolveGeometryTargets([], this.hoveredNodeId, this.previewItems, this.fixtureEdges);
+		}
+		return [];
+	}
+
+	getSelectedGeometryTargets(): readonly ProceduralChannelRef[] {
+		if (this.selectedChannels.length > 0) {
+			return resolveGeometryTargets(this.selectedChannels, null, this.previewItems, this.fixtureEdges);
+		}
+		if (this.selectedNodeIds.length > 0) {
+			const targets: ProceduralChannelRef[] = [];
+			for (const widgetId of this.selectedNodeIds) {
+				targets.push(...resolveGeometryTargets([], widgetId, this.previewItems, this.fixtureEdges));
+			}
+			return targets;
+		}
+		return [];
 	}
 
 	getPreviewOffNodeIds(): readonly string[] {
@@ -1376,14 +1429,24 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.notifySnapshot();
 			return;
 		}
-		if (command === "setSelectedChannels") {
+		if (command === "setSelectedChannels" || command === "setSelectChannels") {
 			const channels = (args as { channels?: ProceduralChannelRef[] }).channels;
 			if (!Array.isArray(channels)) return;
 			const next = [...channels];
 			if (JSON.stringify(next) === JSON.stringify(this.selectedChannels)) return;
 			this.selectedChannels = next;
+			this.selectedNodeIds = [...new Set(next.map((channel) => channel.widgetId))];
+			this.preselectNodeIds = [];
+			this.preselectRemovedNodeIds = [];
 			this.interactionRevision += 1;
 			this.notifySnapshot();
+			this.rebuildToolbarTools();
+			this.emit();
+			return;
+		}
+		if (command === "setHoverChannel") {
+			const channel = (args as { channel?: ProceduralChannelRef | null }).channel ?? null;
+			this.run("setHover", { id: channel?.widgetId ?? null, channel });
 			return;
 		}
 		if (command === "togglePreview") {
@@ -1724,6 +1787,7 @@ if (import.meta.vitest) {
 				{
 					hoveredNodeId: "box",
 					selectedNodeIds: ["box"],
+					clusterNodeIds: [],
 					isImageWidget: false,
 					isBackground: false,
 					previewOffNodeIds: [],
@@ -1762,7 +1826,9 @@ if (import.meta.vitest) {
 		it("setFixtureJson with resetInteraction clears preview items", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
-			ctrl.run("setEvalOutputs", { outputsJson: JSON.stringify({ box: { geometry: "solid-1" } }) });
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({ box: { in: {}, out: { out: { geometry: "solid-1" } } } }),
+			});
 			ctrl.run("setFixtureJson", {
 				json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}',
 				resetInteraction: true,
@@ -1801,12 +1867,49 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					pt: { point: { x: 0, y: 0, z: 0 } },
-					vec: { vector: { x: 1, y: 0, z: 0 } },
+					pt: { in: {}, out: { out: { point: { x: 0, y: 0, z: 0 } } } },
+					vec: { in: {}, out: { out: { vector: { x: 1, y: 0, z: 0 } } } },
 				}),
 			});
 			ctrl.run("selectAll");
 			expect(ctrl.getSelectedNodeIds().sort()).toEqual(["pt", "vec"]);
+		});
+
+		it("setHoverChannel and geometry target getters resolve upstream output", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({
+					circle: { in: {}, out: { out: { geometry: "drawing-1" } } },
+					offset: { in: { geometry: "drawing-1" }, out: { out: { geometry: "wire-2" } } },
+				}),
+			});
+			ctrl.run("setFixtureJson", {
+				json: JSON.stringify({
+					schema: "flow.fixture/v1",
+					camera: { x: 0, y: 0, zoom: 1 },
+					widgets: [
+						{ kind: "neuron", id: "circle", neuronKind: "brep.sketch2d.circle" },
+						{ kind: "neuron", id: "offset", neuronKind: "brep.xform.offset" },
+					],
+					synapses: [{ id: "s1", from: "circle", to: "offset", from_port: "out", to_port: "geometry" }],
+				}),
+			});
+			ctrl.run("setHoverChannel", {
+				channel: { widgetId: "offset", port: "geometry", direction: "in" },
+			});
+			expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "offset", port: "geometry", direction: "in" });
+			expect(ctrl.getHoveredGeometryTargets()).toEqual([{ widgetId: "circle", port: "out", direction: "out" }]);
+		});
+
+		it("setSelectChannels stores channel selection and parent nodes", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setSelectChannels", {
+				channels: [{ widgetId: "box", port: "out", direction: "out" }],
+			});
+			expect(ctrl.getSelectedChannels()).toEqual([{ widgetId: "box", port: "out", direction: "out" }]);
+			expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
 		});
 
 		it("setSelection and setHover update interaction revision", () => {
@@ -1908,7 +2011,7 @@ if (import.meta.vitest) {
 			ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
 			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
 			ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
-			expect(ctrl.getFixtureJson()).toContain("brep.sketch2d.circle");
+			expect(ctrl.getFixtureJson()).toContain("brep.prim3d.box");
 		});
 
 		it("extensions tree lists installed modules", () => {
@@ -2037,7 +2140,7 @@ if (import.meta.vitest) {
 			expect(makeSpace?.op === "makeSpace" && makeSpace.dx).toBeGreaterThan(240);
 			const sliderX = insertOps.find((op) => op.op === "addWidget" && JSON.parse(op.descriptor).id === "solid_gumball_translate_sx");
 			expect(sliderX?.op).toBe("addWidget");
-			expect(JSON.parse(sliderX!.descriptor)).toEqual({ kind: "inputSlider", id: "solid_gumball_translate_sx", value: 1, min: 0, max: 10, step: 1 });
+			expect(JSON.parse(sliderX!.descriptor)).toEqual({ kind: "inputSlider", id: "solid_gumball_translate_sx", value: 1, min: 0, max: 1, step: 1 });
 		});
 	});
 }

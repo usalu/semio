@@ -162,7 +162,7 @@ fn input_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f
     if port_index >= inputs.len() {
         return None;
     }
-    let (x0, x1) = if matches!(node.kind, DagNodeKind::Computation { .. }) {
+    let (x0, x1) = if uses_computation_layout(&node.kind) {
         computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Input)
     } else {
         let hw = node.width * 0.5;
@@ -170,7 +170,7 @@ fn input_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(f
     };
     let count = inputs.len().max(1);
     let y_center = port_center_y(node, port_index, count);
-    let half = if matches!(node.kind, DagNodeKind::Computation { .. }) {
+    let half = if uses_computation_layout(&node.kind) {
         DAG_CHANNEL_ROW_HEIGHT * 0.5
     } else {
         node.height / count as f64 * 0.5
@@ -183,7 +183,7 @@ fn output_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(
     if port_index >= outputs.len() {
         return None;
     }
-    let (x0, x1) = if matches!(node.kind, DagNodeKind::Computation { .. }) {
+    let (x0, x1) = if uses_computation_layout(&node.kind) {
         computation_channel_row_divider_x_span(node, ComputationChannelRowSide::Output)
     } else {
         let hw = node.width * 0.5;
@@ -191,7 +191,7 @@ fn output_port_row_hit_bounds(node: &DagNodeSpec, port_index: usize) -> Option<(
     };
     let count = outputs.len().max(1);
     let y_center = port_center_y(node, port_index, count);
-    let half = if matches!(node.kind, DagNodeKind::Computation { .. }) {
+    let half = if uses_computation_layout(&node.kind) {
         DAG_CHANNEL_ROW_HEIGHT * 0.5
     } else {
         node.height / count as f64 * 0.5
@@ -210,7 +210,7 @@ fn proportional_port_center_y(node: &DagNodeSpec, port_index: usize, count: usiz
 }
 
 fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
-    if matches!(node.kind, DagNodeKind::Computation { .. }) {
+    if uses_computation_layout(&node.kind) {
         computation_port_center_y(node, port_index)
     } else {
         proportional_port_center_y(node, port_index, count)
@@ -306,6 +306,7 @@ enum WidgetPointerKind {
     SliderDrag,
     SelectClick,
     PreviewToggle(String),
+    ClusterExplode,
 }
 
 fn preview_scalar_text_width(text: &str) -> f64 {
@@ -535,6 +536,35 @@ pub enum DagNodeKind {
         label: String,
         input: IoPortSpec,
     },
+    Cluster {
+        inputs: Vec<IoPortSpec>,
+        outputs: Vec<IoPortSpec>,
+    },
+}
+
+fn uses_computation_layout(kind: &DagNodeKind) -> bool {
+    matches!(kind, DagNodeKind::Computation { .. } | DagNodeKind::Cluster { .. })
+}
+
+pub const DAG_CLUSTER_EXPLODE_HIT_SIZE: f64 = 14.0;
+
+/// 💥 World-space hit rect for the cluster explode affordance.
+pub fn cluster_explode_hit_rect(node: &DagNodeSpec) -> Option<(f64, f64, f64, f64)> {
+    if !matches!(node.kind, DagNodeKind::Cluster { .. }) {
+        return None;
+    }
+    let hw = node.width * 0.5;
+    let hh = node.height * 0.5;
+    let size = DAG_CLUSTER_EXPLODE_HIT_SIZE;
+    let x1 = node.x + hw - DAG_NODE_EDGE_INSET;
+    let y0 = node.y - hh + DAG_NODE_EDGE_INSET;
+    Some((x1 - size, y0, x1, y0 + size))
+}
+
+/// 💥 Whether a world point hits the cluster explode affordance.
+pub fn cluster_explode_hit(node: &DagNodeSpec, world_x: f64, world_y: f64) -> bool {
+    cluster_explode_hit_rect(node)
+        .is_some_and(|(x0, y0, x1, y1)| point_in_rect(world_x, world_y, x0, y0, x1, y1))
 }
 
 /// 📦 DAG node with shared layout fields and a tagged kind.
@@ -594,6 +624,33 @@ impl DagNodeSpec {
         }
     }
 
+    /// 🧩 Builds a cluster node with contract IO ports.
+    pub fn cluster(
+        id: String,
+        name: String,
+        abbreviation: String,
+        icon: String,
+        inputs: Vec<IoPortSpec>,
+        outputs: Vec<IoPortSpec>,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+    ) -> Self {
+        let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
+        Self {
+            id,
+            name,
+            abbreviation,
+            icon,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Cluster { inputs, outputs },
+        }
+    }
+
     /// ➕ Whether the node exposes variadic input insert controls.
     pub fn variadic_inputs(&self) -> bool {
         match &self.kind {
@@ -605,7 +662,7 @@ impl DagNodeSpec {
     /// ⬅ Effective input ports for the node kind.
     pub fn inputs(&self) -> &[IoPortSpec] {
         match &self.kind {
-            DagNodeKind::Computation { inputs, .. } => inputs,
+            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } => inputs,
             DagNodeKind::Screen { input, .. } | DagNodeKind::Preview { input, .. } | DagNodeKind::Action { input, .. } => {
                 std::slice::from_ref(input)
             }
@@ -616,7 +673,7 @@ impl DagNodeSpec {
     /// ➡ Effective output ports for the node kind.
     pub fn outputs(&self) -> &[IoPortSpec] {
         match &self.kind {
-            DagNodeKind::Computation { outputs, .. } => outputs,
+            DagNodeKind::Computation { outputs, .. } | DagNodeKind::Cluster { outputs, .. } => outputs,
             DagNodeKind::Slider { output, .. }
             | DagNodeKind::Select { output, .. }
             | DagNodeKind::Note { output, .. }
@@ -781,18 +838,20 @@ fn computation_output_column_x_bounds(node: &DagNodeSpec) -> Option<(f64, f64)> 
 }
 
 fn computation_io_side_row_counts(node: &DagNodeSpec) -> (usize, usize) {
-    let DagNodeKind::Computation {
-        inputs,
-        outputs,
-        variadic_inputs,
-        variadic_outputs,
-    } = &node.kind
-    else {
-        return (0, 0);
-    };
-    let input_rows = inputs.len() + usize::from(*variadic_inputs);
-    let output_rows = outputs.len() + usize::from(*variadic_outputs);
-    (input_rows, output_rows)
+    match &node.kind {
+        DagNodeKind::Computation {
+            inputs,
+            outputs,
+            variadic_inputs,
+            variadic_outputs,
+        } => {
+            let input_rows = inputs.len() + usize::from(*variadic_inputs);
+            let output_rows = outputs.len() + usize::from(*variadic_outputs);
+            (input_rows, output_rows)
+        }
+        DagNodeKind::Cluster { inputs, outputs } => (inputs.len(), outputs.len()),
+        _ => (0, 0),
+    }
 }
 
 fn channel_row_divider_y(node_y: f64, node_height: f64, after_row_index: usize) -> f64 {
@@ -842,16 +901,18 @@ fn io_widget_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64, f64, 
 }
 
 fn computation_channel_row_count(node: &DagNodeSpec) -> usize {
-    let DagNodeKind::Computation {
-        inputs,
-        outputs,
-        variadic_inputs,
-        variadic_outputs,
-    } = &node.kind
-    else {
-        return 0;
-    };
-    computation_io_row_count(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs) + DAG_COMPUTATION_HEADER_ROWS
+    match &node.kind {
+        DagNodeKind::Computation {
+            inputs,
+            outputs,
+            variadic_inputs,
+            variadic_outputs,
+        } => computation_io_row_count(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs) + DAG_COMPUTATION_HEADER_ROWS,
+        DagNodeKind::Cluster { inputs, outputs } => {
+            computation_io_row_count(inputs.len(), outputs.len(), false, false) + DAG_COMPUTATION_HEADER_ROWS
+        }
+        _ => 0,
+    }
 }
 
 pub fn fit_node_size(node: &mut DagNodeSpec) {
@@ -864,6 +925,10 @@ pub fn fit_node_size(node: &mut DagNodeSpec) {
         } => {
             node.width = computation_node_width(&node.name, inputs, outputs);
             node.height = computation_node_height(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs);
+        }
+        DagNodeKind::Cluster { inputs, outputs } => {
+            node.width = computation_node_width(&node.name, inputs, outputs);
+            node.height = computation_node_height(inputs.len(), outputs.len(), false, false);
         }
         DagNodeKind::Slider { output, .. } => {
             node.width = slider_widget_width(&node.name, output);
@@ -1593,6 +1658,7 @@ pub struct DagHost {
     forced_draw_lod: Option<DagDrawLod>,
     icon_paint_cache: graph::IconPaintCache,
     ghost_node: Option<DagNodeSpec>,
+    pending_cluster_explode: Option<String>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -1708,6 +1774,7 @@ impl DagHost {
             forced_draw_lod: None,
             icon_paint_cache: graph::IconPaintCache::new(),
             ghost_node: None,
+            pending_cluster_explode: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -2195,6 +2262,45 @@ impl DagHost {
         if self.engine.hover != next {
             self.engine.hover = next;
         }
+    }
+
+    /// 🔌 Sets hover to a fixture channel handle, falling back to node hover below channel LOD.
+    pub fn set_hover_channel(&mut self, widget_id: Option<&str>, port_id: Option<&str>) {
+        if widget_id.is_none() {
+            self.set_hover(None);
+            return;
+        }
+        let widget_id = widget_id.expect("widget id");
+        if let Some(port_id) = port_id {
+            if self.draw_lod_for_frame().uses_channel_row_pick() {
+                if let Some(hid) = self.handle_id_for_port(widget_id, port_id) {
+                    if self.engine.hover != Some(hid) {
+                        self.engine.hover = Some(hid);
+                    }
+                    return;
+                }
+            }
+        }
+        self.set_hover(Some(widget_id));
+    }
+
+    /// 🔌 Replaces channel handle selection from fixture channel JSON, falling back to node selection below channel LOD.
+    pub fn set_selected_channels_json(&mut self, json: &str) {
+        let channels: Vec<DagChannelRef> = serde_json::from_str(json).unwrap_or_default();
+        if self.draw_lod_for_frame().uses_channel_row_pick() {
+            let mut selection = Selection::default();
+            for channel in channels {
+                if let Some(hid) = self.handle_id_for_port(&channel.widget_id, &channel.port) {
+                    selection.handle_ids.insert(hid);
+                }
+            }
+            self.engine.selection = selection;
+            self.engine.preselect = Selection::default();
+            self.engine.preselect_removed = Selection::default();
+            return;
+        }
+        let widget_ids: Vec<String> = channels.into_iter().map(|channel| channel.widget_id).collect();
+        self.set_selection(&widget_ids);
     }
 
     /// 🌫️ Marks preview-off nodes as dimmed on the canvas.
@@ -2694,6 +2800,11 @@ impl DagHost {
                         }
                     }
                 }
+                DagNodeKind::Cluster { .. } => {
+                    if cluster_explode_hit(node, world_x, world_y) {
+                        return Some((idx, WidgetPointerKind::ClusterExplode));
+                    }
+                }
                 _ => {}
             }
         }
@@ -2773,8 +2884,16 @@ impl DagHost {
                 Self::toggle_preview_tree_path(&mut self.fixture.nodes[idx], &path);
                 self.sync_fixture_node_size_to_engine(idx);
             }
+            WidgetPointerKind::ClusterExplode => {
+                self.pending_cluster_explode = Some(self.fixture.nodes[idx].id.clone());
+            }
         }
         true
+    }
+
+    /// 💥 Takes a pending cluster explode request from the last widget hit.
+    pub fn take_pending_cluster_explode(&mut self) -> Option<String> {
+        self.pending_cluster_explode.take()
     }
 
     fn sync_connection_hit_picking_for_lod(&mut self) {
@@ -3013,7 +3132,7 @@ impl DagHost {
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
             let (layout, x, y) = if lod.node_label_is_horizontal() {
                 ("horizontal", node.x, node.y)
-            } else if matches!(node.kind, DagNodeKind::Computation { .. }) && lod.shows_computation_layout() {
+            } else if uses_computation_layout(&node.kind) && lod.shows_computation_layout() {
                 let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
                 ("horizontal", lx, ly)
             } else if matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls() {
@@ -3052,7 +3171,7 @@ impl DagHost {
         let handle_inset = 8.0 / zoom.max(0.05);
         let inputs = node.inputs();
         let outputs = node.outputs();
-        let computation = matches!(node.kind, DagNodeKind::Computation { .. });
+        let computation = uses_computation_layout(&node.kind);
         let port_layout_px = if computation {
             dag_label_compact_paint_px(zoom, lod_index)
         } else {
@@ -3126,8 +3245,9 @@ impl DagHost {
     }
 
     fn param_overlay_rows_for_node(node: &DagNodeSpec) -> Vec<serde_json::Value> {
-        let DagNodeKind::Computation { inputs, .. } = &node.kind else {
-            return Vec::new();
+        let inputs = match &node.kind {
+            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } => inputs,
+            _ => return Vec::new(),
         };
         let mut rows = Vec::new();
         let hw = node.width * 0.5;
@@ -3235,7 +3355,7 @@ impl DagHost {
         let handle_inset = 8.0 / cam.zoom.max(0.05);
         let inputs = node.inputs();
         let outputs = node.outputs();
-        let computation = matches!(node.kind, DagNodeKind::Computation { .. });
+        let computation = uses_computation_layout(&node.kind);
         let port_layout_px = if computation { DAG_LABEL_COMPACT_SCREEN_PX } else { layout_px };
         let port_paint_px = if computation {
             dag_label_compact_paint_px(cam.zoom, lod_index)
@@ -3582,7 +3702,7 @@ impl DagHost {
         if !lod.node_icon_visible() {
             return false;
         }
-        !matches!(node.kind, DagNodeKind::Computation { .. } if lod.shows_computation_layout())
+        !uses_computation_layout(&node.kind) || !lod.shows_computation_layout()
     }
 
     fn paint_node_lod_icon(
@@ -3605,6 +3725,29 @@ impl DagHost {
         let screen_w = node.width * zoom.max(0.05);
         let screen_h = node.height * zoom.max(0.05);
         self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, center_screen, screen_w, screen_h, fg, bg, false);
+    }
+
+    fn paint_cluster_affordances(
+        scene: &mut cavas::vello::Scene,
+        cam: &cavas::camera::Camera,
+        viewport: &cavas::camera::Viewport,
+        node: &DagNodeSpec,
+        paint_px: f64,
+        label_fill: cavas::vello::peniko::Color,
+        label_halo: cavas::vello::peniko::Color,
+    ) {
+        use cavas::camera::world_to_screen;
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::Point;
+        let (name_x, name_y) = computation_name_world_center(node, &node.name, paint_px, cam.zoom);
+        let glyph_pos = world_to_screen(cam, viewport, Point::new(name_x - paint_px * 0.55, name_y));
+        append_label(scene, "🧩", glyph_pos, paint_px * 0.85, label_fill, label_halo);
+        if let Some((x0, y0, x1, y1)) = cluster_explode_hit_rect(node) {
+            let cx = (x0 + x1) * 0.5;
+            let cy = (y0 + y1) * 0.5;
+            let explode_pos = world_to_screen(cam, viewport, Point::new(cx, cy));
+            append_label(scene, "⤢", explode_pos, paint_px * 0.75, label_fill, label_halo);
+        }
     }
 
     fn paint_computation_node_name(
@@ -3735,7 +3878,7 @@ impl DagHost {
             }
         } else {
             match &node.kind {
-                DagNodeKind::Computation { variadic_inputs, .. } => {
+                DagNodeKind::Computation { .. } | DagNodeKind::Cluster { .. } => {
                     if lod.shows_computation_layout() {
                         let channel_row_pick = lod.uses_channel_row_pick();
                         if channel_row_pick {
@@ -3755,8 +3898,13 @@ impl DagHost {
                         if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                             Self::paint_computation_node_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
                         }
-                        if *variadic_inputs && cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
-                            Self::paint_variadic_plus_controls(scene, cam, viewport, node, paint_px, label_fill, label_halo);
+                        if matches!(node.kind, DagNodeKind::Cluster { .. }) {
+                            Self::paint_cluster_affordances(scene, cam, viewport, node, paint_px, label_fill, label_halo);
+                        }
+                        if let DagNodeKind::Computation { variadic_inputs: true, .. } = &node.kind {
+                            if cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
+                                Self::paint_variadic_plus_controls(scene, cam, viewport, node, paint_px, label_fill, label_halo);
+                            }
                         }
                     }
                 }
@@ -5166,6 +5314,34 @@ mod tests {
     }
 
     #[test]
+    fn set_hover_channel_targets_port_handle_at_detail_lod() {
+        let mut host = DagHost::default_demo();
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("detail");
+        host.set_hover_channel(Some("combine"), Some("b"));
+        assert_eq!(
+            host.hovered_channel(),
+            Some(DagChannelRef {
+                widget_id: "combine".into(),
+                port: "b".into(),
+                direction: "in".into(),
+            })
+        );
+        host.set_hover_channel(None, None);
+        assert!(host.hovered_channel().is_none());
+    }
+
+    #[test]
+    fn set_hover_channel_falls_back_to_node_at_compact_lod() {
+        let mut host = DagHost::default_demo();
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("compact");
+        host.set_hover_channel(Some("combine"), Some("b"));
+        assert_eq!(host.hovered_node_id().as_deref(), Some("combine"));
+        assert!(host.hovered_channel().is_none());
+    }
+
+    #[test]
     fn hovered_channel_decodes_port_handle_at_detail_lod() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
@@ -6058,6 +6234,48 @@ mod tests {
         host.paint_scene(&mut scene, 1280, 800, 1.0);
         host.fixture.camera.zoom = 5.0;
         host.paint_scene(&mut scene, 1280, 800, 1.0);
+    }
+
+    #[test]
+    fn cluster_node_round_trips_serde() {
+        let inputs = vec![IoPortSpec::simple("a", "a")];
+        let outputs = vec![IoPortSpec::simple("out", "out")];
+        let node = DagNodeSpec::cluster(
+            "cluster".into(),
+            "Cluster".into(),
+            "Cluster".into(),
+            "emoji:🧩".into(),
+            inputs,
+            outputs,
+            10.0,
+            20.0,
+            120.0,
+            80.0,
+        );
+        let json = serde_json::to_string(&node).unwrap();
+        let back: DagNodeSpec = serde_json::from_str(&json).unwrap();
+        assert!(matches!(back.kind, DagNodeKind::Cluster { .. }));
+    }
+
+    #[test]
+    fn cluster_explode_hit_rect_detects_top_right_affordance() {
+        let inputs = vec![IoPortSpec::simple("a", "a")];
+        let outputs = vec![IoPortSpec::simple("out", "out")];
+        let node = DagNodeSpec::cluster(
+            "cluster".into(),
+            "Cluster".into(),
+            "Cluster".into(),
+            "emoji:🧩".into(),
+            inputs,
+            outputs,
+            0.0,
+            0.0,
+            120.0,
+            80.0,
+        );
+        let (x0, y0, x1, y1) = cluster_explode_hit_rect(&node).expect("rect");
+        assert!(cluster_explode_hit(&node, (x0 + x1) * 0.5, (y0 + y1) * 0.5));
+        assert!(!cluster_explode_hit(&node, node.x - 50.0, node.y - 50.0));
     }
 }
 // #endregion 🔖Tests

@@ -54,12 +54,12 @@ fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-fn number_channel(id: &str) -> ChannelSpec {
-    ChannelSpec::number_default(id, 0.0)
+fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
+    ChannelSpec::number_default(id, 0.0, &[operator_id])
 }
 
-fn boolean_channel(id: &str) -> ChannelSpec {
-    ChannelSpec::boolean_default(id, false)
+fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
+    ChannelSpec::boolean_default(id, false, &[operator_id])
 }
 
 fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
@@ -71,7 +71,7 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> Operat
         icon: "emoji:🔀".into(),
         summary: summary.into(),
         inputs,
-        outputs: vec![ChannelSpec::new("out", ValueType::Schema("boolean".into()))],
+        outputs: vec![ChannelSpec::provides("out", vec![])],
         ..Default::default()
     }
 }
@@ -87,13 +87,16 @@ fn module_registry() -> Registry {
 /// 📦 Registers all logic operators.
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
-        info("logic.greater", "Greater", "True when a > b", vec![number_channel("a"), number_channel("b")]),
+        info("logic.greater", "Greater", "True when a > b", vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")]),
         vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Greater) }],
+        &["boolean"],
     );
     registry.register_operator(
-        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean")]),
+        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean", "logic.not")]),
         vec![OperatorImpl { schemas: vec!["boolean".into()], operation: Box::new(Not) }],
+        &["boolean"],
     );
+    registry.finalize();
 }
 
 // #region 🔖Tests
