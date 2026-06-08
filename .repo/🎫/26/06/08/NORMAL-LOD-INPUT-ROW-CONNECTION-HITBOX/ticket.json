@@ -1,0 +1,14 @@
+{
+  "title": "Normal Lod Input Row Connection Hitbox",
+  "emoji": "🔌",
+  "status": "closed",
+  "description": "On normal LOD, hide handle dots and use the full input row as the hitbox for wire connections.",
+  "summary": "At normal LOD, handle dots are no longer painted (`shows_handles` now gates detail/micro only). Pointer hit-testing remaps clicks inside computation input-column rows to the matching input handle so wire drag, drop, and reconnect work across the full row width instead of a tiny rim dot.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1597"
+  },
+  "goal": "🎯flow🎯gui",
+  "sessions": [
+    "⚪6be7e0769db34962ac20e7f7e2e08dea"
+  ]
+}

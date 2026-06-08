@@ -1092,22 +1092,38 @@ export type WasmPackWebPkg = {
   sideEffects?: string[];
 };
 
+/** 📦Collects `lib.rs` / `Cargo.toml` paths from `[dependencies]` path crates. */
+function wasmPackPathDependencyInputs(rsDir: string): string[] {
+	const cargoToml = join(rsDir, "Cargo.toml");
+	if (!existsSync(cargoToml)) return [];
+	const out: string[] = [];
+	for (const m of readFileSync(cargoToml, "utf8").matchAll(/path\s*=\s*"([^"]+)"/gu)) {
+		const depRoot = join(rsDir, m[1]!);
+		const libRs = join(depRoot, "lib.rs");
+		const depCargo = join(depRoot, "Cargo.toml");
+		if (existsSync(libRs)) out.push(libRs);
+		if (existsSync(depCargo)) out.push(depCargo);
+	}
+	return out;
+}
+
 /** 📦True when any wasm-pack input is newer than the built `.wasm` artifact. */
 function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
-  if (!existsSync(wasmPath)) return true;
-  const wasmMtime = statSync(wasmPath).mtimeMs;
-  const repoRoot = getWorkspaceRoot();
-  const inputs = [
-    join(rsDir, "lib.rs"),
-    join(rsDir, "Cargo.toml"),
-    join(rsDir, "Cargo.lock"),
-    join(repoRoot, "Cargo.toml"),
-    join(repoRoot, "Cargo.lock"),
-  ];
-  for (const input of inputs) {
-    if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
-  }
-  return false;
+	if (!existsSync(wasmPath)) return true;
+	const wasmMtime = statSync(wasmPath).mtimeMs;
+	const repoRoot = getWorkspaceRoot();
+	const inputs = [
+		join(rsDir, "lib.rs"),
+		join(rsDir, "Cargo.toml"),
+		join(rsDir, "Cargo.lock"),
+		join(repoRoot, "Cargo.toml"),
+		join(repoRoot, "Cargo.lock"),
+		...wasmPackPathDependencyInputs(rsDir),
+	];
+	for (const input of inputs) {
+		if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
+	}
+	return false;
 }
 
 /** 📦`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */

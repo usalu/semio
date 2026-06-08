@@ -3324,6 +3324,23 @@ export const formControlFocusBorderClass = cn(
   "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none",
 );
 
+/** @emoji 🎚 Slider filled range — element gray at rest. */
+export const sliderRangeClassName = "bg-element absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full";
+
+/** @emoji 🎚 Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
+export const sliderThumbClassName = cn(
+  "block size-small shrink-0 rounded-full border bg-panel ring-ring/50 transition-[color,border-color,background-color] outline-hidden",
+  borderElementClass,
+  interactiveHoverFillClass,
+  "hover:border-emphasized",
+  "focus-visible:bg-active-base focus-visible:border-emphasized focus-visible:ring-0",
+  "data-[dragging=true]:bg-active-base data-[dragging=true]:border-emphasized",
+  "disabled:pointer-events-none disabled:opacity-50",
+);
+
+/** @emoji 🎚 Slider numeric readout — element gray at rest. */
+export const sliderValueClassName = "text-element w-[28px] text-right text-xs leading-none select-none";
+
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
@@ -3439,6 +3456,12 @@ export const modeDockInactiveTabBeforeGapClass =
 /** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
 export const modeDockTabClassName =
   "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors hover:bg-hover-interactive-fill hover:text-emphasized";
+
+/** @emoji 🪧 Static shell title (navbar app label, pane headings) — element gray at rest. */
+export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
+
+/** @emoji 🪧 Uppercase shell section title — element gray at rest. */
+export const shellChromeSectionTitleClassName = "text-[10px] font-semibold uppercase tracking-wide text-element";
 
 /** @emoji 📏 Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
@@ -6350,14 +6373,14 @@ function Slider({
         data-slot="slider-track"
         className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
       >
-        <SliderPrimitive.Range data-slot="slider-range" className={cn("bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full")} />
+        <SliderPrimitive.Range data-slot="slider-range" className={cn(sliderRangeClassName)} />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           data-dragging={isDragging ? "true" : undefined}
           key={index}
-          className="border-foreground bg-foreground ring-ring/50 block size-small shrink-0 rounded-full border transition-colors hover:border-accent hover:bg-accent focus-visible:border-accent focus-visible:bg-accent focus-visible:outline-hidden data-[dragging=true]:border-accent data-[dragging=true]:bg-accent disabled:pointer-events-none disabled:opacity-50"
+          className={sliderThumbClassName}
         />
       ))}
     </SliderPrimitive.Root>
@@ -6383,7 +6406,7 @@ function Slider({
             id={id}
           />
         ) : (
-          <span data-slot="slider-value" className="w-[28px] text-right text-xs leading-none select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
+          <span data-slot="slider-value" className={sliderValueClassName} role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
             {formatNumber(displayValue)}
           </span>
         )}
@@ -9304,6 +9327,30 @@ const getTreeSectionLoadingId = (sectionId: string): string => `tree-section-loa
 
 const getTreeItemLoadingId = (itemId: string): string => `tree-item-loading-${itemId}`;
 
+const treeSectionItemsSeed = (sections: readonly TreeDataSection[]): Record<string, TreeDataItem[]> => {
+  const nextItems: Record<string, TreeDataItem[]> = {};
+  for (const section of sections) {
+    if (section.items) {
+      nextItems[section.id] = section.items;
+    }
+  }
+  return nextItems;
+};
+
+const treeSectionItemsMapsEqual = (left: Record<string, TreeDataItem[]>, right: Record<string, TreeDataItem[]>): boolean => {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+  for (const key of leftKeys) {
+    if (left[key] !== right[key]) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const getTreeSectionItems = (section: TreeDataSection, sectionItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => sectionItemsById[section.id] ?? section.items ?? [];
 
 const getTreeItemItems = (item: TreeDataItem, itemItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => itemItemsById[item.id] ?? item.items ?? [];
@@ -10667,15 +10714,8 @@ export const Tree = (({
   }, [highlightStore, resolvedHighlightedIds]);
 
   reactHostPort.useEffect(() => {
-    setSectionItemsById(() => {
-      const nextItems: Record<string, TreeDataItem[]> = {};
-      for (const section of resolvedSections) {
-        if (section.items) {
-          nextItems[section.id] = section.items;
-        }
-      }
-      return nextItems;
-    });
+    const nextItems = treeSectionItemsSeed(resolvedSections);
+    setSectionItemsById((previous) => (treeSectionItemsMapsEqual(previous, nextItems) ? previous : nextItems));
   }, [resolvedSections]);
 
   const itemMap = reactHostPort.useMemo(() => {
@@ -11901,19 +11941,19 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
     if (React.isValidElement(itemContent)) {
       if (itemContent.type === React.Fragment) {
         return (
-          <span data-slot="breadcrumb-link" className={cn("cursor-selectable flex h-full min-w-0 items-center px-single", interactiveControlTransitionClass, hoverClass)}>
+          <span data-slot="breadcrumb-link" className={cn("cursor-selectable flex h-full min-w-0 items-center px-single text-element", interactiveControlTransitionClass, hoverClass)}>
             {itemContent}
           </span>
         );
       }
       const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
-        className: cn("cursor-selectable h-full min-w-0 px-single", interactiveControlTransitionClass, hoverClass, elementProps?.className),
+        className: cn("cursor-selectable h-full min-w-0 px-single text-element", interactiveControlTransitionClass, hoverClass, elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
       });
     }
     return (
-      <span data-slot="breadcrumb-link" className={cn("cursor-selectable flex h-full min-w-0 items-center px-single", interactiveControlTransitionClass, hoverClass)}>
+      <span data-slot="breadcrumb-link" className={cn("cursor-selectable flex h-full min-w-0 items-center px-single text-element", interactiveControlTransitionClass, hoverClass)}>
         {itemContent}
       </span>
     );
@@ -12614,7 +12654,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
     () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
     [currentActiveTab, sortedTabs],
   );
-  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTabTree = reactHostPort.useMemo(
+    () => (activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
+    [activeTab?.tree],
+  );
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -12726,7 +12769,10 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const showTabBar = sortedTabs.length > 0;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+  const activeTabTree = reactHostPort.useMemo(
+    () => (activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
+    [activeTab?.tree],
+  );
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -13359,7 +13405,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   if (control.kind === "slider") {
     return (
       <div data-slot="engagement-control" data-control-kind="slider" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-muted-foreground text-xs">{label}</span> : null}
+        {label ? <span className="text-element text-xs">{label}</span> : null}
         <Slider
           id={control.id}
           value={[control.value]}
@@ -13381,7 +13427,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   if (control.kind === "stepper") {
     return (
       <div data-slot="engagement-control" data-control-kind="stepper" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-muted-foreground text-xs">{label}</span> : null}
+        {label ? <span className="text-element text-xs">{label}</span> : null}
         <Stepper
           id={control.id}
           value={control.value}
@@ -13406,7 +13452,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   }));
   return (
     <div data-slot="engagement-control" data-control-kind="ring" className="flex min-w-0 flex-col items-center gap-half px-half">
-      {label ? <span className="text-muted-foreground text-xs">{label}</span> : null}
+      {label ? <span className="text-element text-xs">{label}</span> : null}
       <Ring
         id={control.id}
         orbs={orbs}
@@ -21974,6 +22020,19 @@ if (treeVitest) {
       expect(markup).toContain('value="12.5"');
     });
 
+    it("renders sliders with element gray range and thumb at rest", () => {
+      const markup = renderToStaticMarkup(<Slider id="ui.slider.demo" value={[42]} min={0} max={100} />);
+
+      expect(markup).toContain('data-slot="slider-range"');
+      expect(markup).toContain("bg-element");
+      expect(markup).not.toContain("bg-foreground");
+      expect(markup).toContain('data-slot="slider-thumb"');
+      expect(markup).toContain("border-element");
+      expect(markup).toContain("hover:bg-hover-interactive-fill");
+      expect(markup).toContain('data-slot="slider-value"');
+      expect(markup).toContain("text-element");
+    });
+
     it("renders shared field roots that stretch within the property value column", () => {
       const inputMarkup = renderToStaticMarkup(<Input id="tooltip.manual" value="value" />);
       const textareaMarkup = renderToStaticMarkup(<Textarea id="tooltip.manual" value="value" />);
@@ -22855,6 +22914,7 @@ if (treeVitest) {
         <Breadcrumb items={[{ content: "Home", onNavigate: () => undefined }, { content: "Project", onNavigate: () => undefined }]} />,
       );
       expect(breadcrumbMarkup).toContain('data-slot="breadcrumb-link"');
+      expect(breadcrumbMarkup).toContain("text-element");
       expect(breadcrumbMarkup).toContain("hover:bg-hover-interactive-fill");
       const commandMarkup = renderToStaticMarkup(
         <Command>

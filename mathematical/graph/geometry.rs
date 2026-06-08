@@ -93,15 +93,58 @@ fn append_shape_elements(path: &mut BezPath, shape: &impl Shape) {
     }
 }
 
+/// 🧭 Outward normal for a handle on a node rim: edge-normal on rectangles, radial on circles.
+pub fn handle_outward_at_node_rim(
+    handle: Point,
+    node_center: Point,
+    node_shape: NodeShape,
+    node_radius: f64,
+    node_width: f64,
+    node_height: f64,
+) -> Option<Vec2> {
+    match node_shape {
+        NodeShape::Circle => {
+            let outward = normalize_or_zero(handle - node_center);
+            if outward.hypot() < 1e-9 {
+                None
+            } else {
+                Some(outward)
+            }
+        }
+        NodeShape::Rectangle => {
+            let hw = node_width * 0.5;
+            let hh = node_height * 0.5;
+            if hw < 1e-9 || hh < 1e-9 {
+                return None;
+            }
+            let dx = handle.x - node_center.x;
+            let dy = handle.y - node_center.y;
+            if dx.abs() / hw >= dy.abs() / hh {
+                Some(Vec2::new(if dx < 0.0 { -1.0 } else { 1.0 }, 0.0))
+            } else {
+                Some(Vec2::new(0.0, if dy < 0.0 { -1.0 } else { 1.0 }))
+            }
+        }
+    }
+}
+
 fn handle_exterior_cap_arc(center: Point, outward: Vec2, radius: f64) -> Option<Arc> {
     let out = normalize_or_zero(outward);
     let r = radius.max(1e-9);
     if out.hypot() < 1e-9 {
         return None;
     }
-    let peak_angle = out.y.atan2(out.x);
-    let start_angle = peak_angle + std::f64::consts::FRAC_PI_2;
-    Some(Arc::new(center, (r, r), start_angle, -std::f64::consts::PI, 0.0))
+    let perp = Vec2::new(-out.y, out.x);
+    let start = center + perp * r;
+    let peak = center + out * r;
+    let start_angle = (start.y - center.y).atan2(start.x - center.x);
+    let arc_pos = Arc::new(center, (r, r), start_angle, std::f64::consts::PI, 0.0);
+    let arc_neg = Arc::new(center, (r, r), start_angle, -std::f64::consts::PI, 0.0);
+    if distance_between(arc_pos.eval(0.5), peak) <= distance_between(arc_neg.eval(0.5), peak) {
+        Some(arc_pos)
+    } else {
+        Some(arc_neg)
+    }
 }
 
 /// 🌗 Closed fill path for the handle cap outside a node body (semicircle on the `outward` side).
@@ -212,10 +255,12 @@ mod tests {
     }
 
     fn assert_cap_bulges_outward(center: Point, outward: Vec2, radius: f64) {
-        let fill = handle_exterior_cap_fill_path(center, outward, radius);
         let out = normalize_or_zero(outward);
-        let bb = fill.bounding_box();
         let peak = center + out * radius;
+        let arc = handle_exterior_cap_arc(center, outward, radius).expect("exterior arc");
+        assert!(distance_between(arc.eval(0.5), peak) < 0.35, "arc midpoint must sit on outward peak");
+        let fill = handle_exterior_cap_fill_path(center, outward, radius);
+        let bb = fill.bounding_box();
         let trough = center - out * radius;
         if out.x.abs() >= out.y.abs() {
             if out.x > 0.0 {
@@ -232,6 +277,18 @@ mod tests {
             assert!((bb.y0 - peak.y).abs() < 0.25, "north cap must peak at -y");
             assert!(bb.y1 < trough.y + 0.25, "north cap must not peak inward");
         }
+    }
+
+    #[test]
+    fn rectangle_rim_outward_uses_edge_normal_not_radial() {
+        let node_center = Point::new(100.0, 50.0);
+        let width = 120.0;
+        let height = 80.0;
+        let handle = Point::new(node_center.x - width * 0.5, node_center.y - 20.0);
+        let radial = normalize_or_zero(handle - node_center);
+        let outward = handle_outward_at_node_rim(handle, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
+        assert!((outward.x + 1.0).abs() < 1e-9 && outward.y.abs() < 1e-9);
+        assert!(radial.y.abs() > 0.1, "radial must tilt for off-center left ports");
     }
 
     #[test]

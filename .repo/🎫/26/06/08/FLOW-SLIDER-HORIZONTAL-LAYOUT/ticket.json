@@ -3,12 +3,15 @@
   "emoji": "🎚️",
   "status": "closed",
   "description": "Flow sliders are wrongly standing rectangles. They should be lying rectangles with a single line and knob inside. On minimap only the rectangle is moveable. On display show the number on the left of the rectangle. Both name and number are outside the rectangle.",
-  "summary": "Redesigned flow/DAG slider widgets as horizontal lying rectangles (120×20) with a centered track line and knob inside. Name is painted above the rectangle; value is painted to its left—both outside the node bounds. Removed vertical title column chrome. Slider value drag only works when draw LOD shows controls (not on minimap/overview/compact); at minimap only the filled rectangle is shown and node move/selection applies. Added slider_widget_width/height sizing, updated flow core widget mapping, demo fixture, and tests.",
+  "summary": "Slider sizing now uses computation_node_width with standard in/out IO columns (same width formula as function nodes) and DAG_CHANNEL_ROW_HEIGHT (14px) for one channel row height. Updated fit_node_size, flow core widget_node_size, fixtures, and tests.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1584"
   },
   "goal": "🎯flow🎯language",
   "sessions": [
-    "⚪7df8f717310846fd8c323c1d0a9feaff"
+    "⚪7df8f717310846fd8c323c1d0a9feaff",
+    "⚪861f7ed4b3c546c5bf7157a27c2a0181",
+    "⚪c6d12db6d40b4766b629f6f12aa21e37",
+    "⚪2964a879fe00470b840a4f08723d60de"
   ]
 }

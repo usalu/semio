@@ -32,6 +32,8 @@ import {
   navbarFillItem,
   PanelToggleGroup,
   type PanelToggleItem,
+  shellChromeSectionTitleClassName,
+  shellChromeTitleClassName,
   type SidePanelTabConfig,
   type SidePanelTabDefinition,
   type TreeDataItem,
@@ -257,28 +259,36 @@ export class StaticTreePanelDefinition implements TreePanelDefinition {
   }
 }
 
+function treePanelSectionsFingerprint(sections: readonly TreeDataSection[]): string {
+  return sections.map((section) => `${section.id}:${(section.items ?? []).map((item) => item.id).join(",")}`).join("|");
+}
+
+const CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS: readonly string[] = [];
+
 /** @emoji 🌲 Tree panel that rebuilds when the builder returns sections or a full {@link TreePanelConfig}. */
 export class CallbackTreePanelDefinition implements TreePanelDefinition {
   private resolved: TreePanelConfig | null = null;
-  private resolvedSections: TreeDataSection[] | null = null;
-  private resolvedHighlightedIds: readonly string[] | null = null;
+  private resolvedSectionsFingerprint: string | null = null;
+  private resolvedHighlightedFingerprint: string | null = null;
 
   constructor(
     private readonly buildTree: () => TreeDataSection[] | TreePanelConfig,
-    private readonly buildHighlightedIds: () => readonly string[] = () => [],
+    private readonly buildHighlightedIds: () => readonly string[] = () => CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS,
   ) {}
 
   resolveTree(): TreePanelConfig {
     const built = this.buildTree();
     const sections = Array.isArray(built) ? built : built.sections;
+    const sectionsFingerprint = treePanelSectionsFingerprint(sections);
     const extraHighlightedIds = this.buildHighlightedIds();
     const highlightedIds =
       extraHighlightedIds.length > 0
         ? extraHighlightedIds
         : Array.isArray(built)
-          ? extraHighlightedIds
-          : built.highlightedIds;
-    if (this.resolved && this.resolvedSections === sections && this.resolvedHighlightedIds === highlightedIds) {
+          ? CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS
+          : (built.highlightedIds ?? CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS);
+    const highlightedFingerprint = highlightedIds.join("\0");
+    if (this.resolved && this.resolvedSectionsFingerprint === sectionsFingerprint && this.resolvedHighlightedFingerprint === highlightedFingerprint) {
       return this.resolved;
     }
     const config: TreePanelConfig = Array.isArray(built)
@@ -286,8 +296,8 @@ export class CallbackTreePanelDefinition implements TreePanelDefinition {
       : { ...built, sections, highlightedIds };
     enforcePlaygroundTreePanel(config);
     this.resolved = config;
-    this.resolvedSections = sections;
-    this.resolvedHighlightedIds = highlightedIds;
+    this.resolvedSectionsFingerprint = sectionsFingerprint;
+    this.resolvedHighlightedFingerprint = highlightedFingerprint;
     return config;
   }
 }
@@ -699,7 +709,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       const section = node as UiSectionNode;
       return (
         <div className="border-normal/60 flex flex-col gap-single rounded-md border p-single" data-ui-section={section.id}>
-          {section.label ? <div className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{section.label}</div> : null}
+          {section.label ? <div className={shellChromeSectionTitleClassName}>{section.label}</div> : null}
           <div className="flex flex-col gap-single">
             {section.children.map((child, index) => (
               <UiRenderer key={index} node={child} commandBus={commandBus} />
@@ -1440,7 +1450,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
       {
         key: "title",
         className: "min-w-0 shrink-0 max-w-[40%]",
-        content: <span className="truncate px-single text-sm font-medium">{shell.activeApp.label}</span>,
+        content: <span className={cn("px-single", shellChromeTitleClassName)}>{shell.activeApp.label}</span>,
       },
     ];
     if (navbarFixtureSelect) {
@@ -3630,13 +3640,13 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
       <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-normal pb-2">
         <Icon icon="settings" size={16} className="shrink-0" />
         <div>
-          <div className="font-semibold uppercase tracking-wide">Settings</div>
+          <div className={cn(shellChromeTitleClassName, "uppercase tracking-wide")}>Settings</div>
           <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
         </div>
       </div>
-      <div className="text-muted-foreground shrink-0 text-[11px] font-medium uppercase tracking-wide">Redraw</div>
+      <div className={cn(shellChromeSectionTitleClassName, "shrink-0 text-[11px]")}>Redraw</div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-        <div className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">Redraw nodes</div>
+        <div className={cn(shellChromeSectionTitleClassName, "text-[11px]")}>Redraw nodes</div>
         <Label id="puzzle2d.play.settings.redraw.mode" label="Layout kind">
           <Select onValueChange={(v) => setPuzzle2dRedrawMode(v as Puzzle2dRedrawModeKind)} value={puzzle2dRedrawMode}>
             <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-redraw-mode" size="sm">
@@ -3672,7 +3682,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
         )}
         {puzzle2dRedrawMode === "force-graph" ? (
           <>
-            <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Graph</div>
+            <div className={cn(shellChromeSectionTitleClassName, "pt-1 text-[11px]")}>Graph</div>
             <Label id="puzzle2d.play.settings.force.fullIterations" label="Iterations (apply once)">
               <Slider id="puzzle-2d-play-slider-force-full-iters" max={720} min={24} step={4} value={[forceLayoutFullIterations]} onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)} />
             </Label>
@@ -3688,7 +3698,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
           </>
         ) : (
           <>
-            <div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Tree</div>
+            <div className={cn(shellChromeSectionTitleClassName, "pt-1 text-[11px]")}>Tree</div>
             <Label id="puzzle2d.play.settings.tree.layerSpacing" label="Layer spacing (px)">
               <Slider id="puzzle-2d-play-slider-tree-layer" max={280} min={40} step={4} value={[treeLayoutLayerSpacing]} onValueChange={(vals) => setTreeLayoutLayerSpacing(vals[0] ?? 120)} />
             </Label>
@@ -3713,7 +3723,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
         <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-nodes" type="button" variant="secondary" onClick={applyPuzzle2dRedrawOnce}>
           Redraw nodes
         </Button>
-        <div className="text-muted-foreground border-t border-normal pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
+        <div className={cn(shellChromeSectionTitleClassName, "border-t border-normal pt-2 text-[11px]")}>Redraw handles</div>
         <p className="text-muted-foreground text-[11px] leading-snug">Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).</p>
         <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-handles" type="button" variant="secondary" onClick={applyPuzzle2dRedrawHandlesOnce}>
           Redraw handles
@@ -6798,7 +6808,7 @@ function FigureSourcePicker(props: {
 		>
 			<Icon icon="image-up" size="large" className="text-muted-foreground" />
 			<div className="flex flex-col gap-1">
-				<p className="text-sm font-medium">Pick figure media</p>
+				<p className={shellChromeTitleClassName}>Pick figure media</p>
 				<p className="text-muted-foreground text-xs">Image, SVG, video, or PDF — drag and drop or choose a file</p>
 			</div>
 			<Button id="presentation.play.pick-figure" type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
@@ -7462,6 +7472,13 @@ if (import.meta.vitest) {
         selectedIds: ["i"],
       }));
       expect(panel.resolveTree().selectedIds).toEqual(["i"]);
+    });
+
+    it("reuses resolved config when section content is unchanged", () => {
+      const panel = new CallbackTreePanelDefinition(() => [{ id: "a", items: [{ id: "i", label: "Item" }] }]);
+      const first = panel.resolveTree();
+      const second = panel.resolveTree();
+      expect(second).toBe(first);
     });
   });
 

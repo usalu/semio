@@ -4,11 +4,11 @@ pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed_dag as dag;
 pub use neural_engine as neural;
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use dag::{
-    computation_node_height, computation_node_width, io_widget_height, io_widget_width, slider_widget_height, slider_widget_width, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost,
-    DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec,
+    computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, preview_widget_size, slider_widget_height, slider_widget_width, would_create_cycle,
+    DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
 };
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,8 @@ pub enum Widget {
     },
     InputSlider { id: String, #[serde(default = "default_slider_value")] value: f64 },
     InputNote { id: String, #[serde(default)] text: String },
-    OutputPreview { id: String, #[serde(default)] preview: Dictionary },
+    InputImage { id: String, #[serde(default)] src: String },
+    OutputPreview { id: String, #[serde(default)] preview: Dictionary, #[serde(default)] expanded: BTreeSet<String> },
     OutputAction { id: String, #[serde(default)] action: String },
 }
 
@@ -102,7 +103,7 @@ impl Default for FlowFixtureV1 {
                     input_ports: vec![],
                     preview: true,
                 },
-                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
+                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
             ],
             synapses: vec![
                 SynapseSpec {
@@ -130,6 +131,7 @@ fn widget_label(widget: &Widget) -> String {
         Widget::Neuron { neuronKind, .. } => neuronKind.clone(),
         Widget::InputSlider { .. } => "Slider".into(),
         Widget::InputNote { .. } => "Note".into(),
+        Widget::InputImage { .. } => "Image".into(),
         Widget::OutputPreview { .. } => "Preview".into(),
         Widget::OutputAction { action, .. } => action.clone(),
     }
@@ -143,6 +145,7 @@ fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, NeuronKindI
         }),
         Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
         Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝".into()),
+        Widget::InputImage { .. } => ("Image".into(), "Image".into(), "emoji:🖼️".into()),
         Widget::OutputPreview { .. } => ("Preview".into(), "Preview".into(), "emoji:👁️".into()),
         Widget::OutputAction { action, .. } => {
             let title = if action.is_empty() { "Action" } else { action.as_str() };
@@ -211,7 +214,7 @@ fn neuron_io_layout(
 fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     match widget {
         Widget::Neuron { neuronKind, input_ports, .. } => neuron_io_layout(neuronKind, input_ports, kind_infos),
-        Widget::InputSlider { .. } | Widget::InputNote { .. } => (
+        Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } => (
             vec![],
             vec![IoPortSpec { id: "out".into(), label: "out".into() }],
             false,
@@ -229,10 +232,13 @@ fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>
 fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
     let label = widget_label(widget);
     match widget {
-        Widget::InputSlider { .. } => (slider_widget_width(&label), slider_widget_height()),
-        Widget::InputNote { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } => {
-            (io_widget_width(&label), io_widget_height(&label))
+        Widget::InputSlider { .. } => {
+            let output = IoPortSpec { id: "out".into(), label: "out".into() };
+            (slider_widget_width(&label, &output), slider_widget_height())
         }
+        Widget::InputNote { .. } | Widget::OutputAction { .. } => (io_widget_width(&label), io_widget_height(&label)),
+        Widget::InputImage { src, .. } => image_widget_size(src),
+        Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), expanded),
         Widget::Neuron { neuronKind, input_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
             (
@@ -245,7 +251,12 @@ fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo
 
 fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, kind_infos: &HashMap<String, NeuronKindInfo>) -> DagNodeSpec {
     let id = match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. } => id.clone(),
     };
     let (width, height) = widget_node_size(widget, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
@@ -286,7 +297,21 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
                 output: IoPortSpec { id: "out".into(), label: "out".into() },
             },
         },
-        Widget::OutputPreview { preview, .. } => DagNodeSpec {
+        Widget::InputImage { src, .. } => DagNodeSpec {
+            id,
+            name,
+            abbreviation,
+            icon,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Image {
+                src: src.clone(),
+                output: IoPortSpec { id: "out".into(), label: "out".into() },
+            },
+        },
+        Widget::OutputPreview { preview, expanded, .. } => DagNodeSpec {
             id,
             name,
             abbreviation,
@@ -296,7 +321,8 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             width,
             height,
             kind: DagNodeKind::Preview {
-                text: format_dictionary_preview(preview),
+                content: dag_preview_content_from_dict(preview),
+                expanded: expanded.clone(),
                 input: IoPortSpec { id: "in".into(), label: "in".into() },
             },
         },
@@ -336,13 +362,43 @@ fn format_preview_number(n: f64) -> String {
     }
 }
 
-fn format_dictionary_preview(dict: &Dictionary) -> String {
-    dict.get("number")
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .map(format_preview_number)
-        .or_else(|| dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string))
-        .unwrap_or_else(|| "—".into())
+fn dag_preview_content_from_dict(dict: &Dictionary) -> DagPreviewContent {
+    if let Some(n) = dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()) {
+        return DagPreviewContent::Scalar { text: format_preview_number(n) };
+    }
+    if let Some(t) = dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) {
+        return DagPreviewContent::Scalar { text: t.to_string() };
+    }
+    if let Some(src) = dict.get("image").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) {
+        return DagPreviewContent::Image { src: src.to_string() };
+    }
+    if dict.is_empty() {
+        return DagPreviewContent::Empty;
+    }
+    serde_json::to_value(dict)
+        .ok()
+        .map(|json| DagPreviewContent::Tree { json })
+        .unwrap_or(DagPreviewContent::Empty)
+}
+
+fn preview_content_summary(content: &DagPreviewContent) -> String {
+    match content {
+        DagPreviewContent::Empty => "—".into(),
+        DagPreviewContent::Scalar { text } => if text.is_empty() { "—".into() } else { text.clone() },
+        DagPreviewContent::Image { .. } => "image".into(),
+        DagPreviewContent::Tree { json } => preview_tree_collapsed_summary(json),
+    }
+}
+
+fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+        serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+        serde_json::Value::String(s) => s.clone(),
+        serde_json::Value::Number(n) => n.to_string(),
+        serde_json::Value::Bool(b) => b.to_string(),
+        serde_json::Value::Null => "null".into(),
+    }
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -351,6 +407,7 @@ enum WidgetDescriptor {
     Neuron { neuronKind: String },
     InputSlider,
     InputNote,
+    InputImage,
     OutputPreview,
     OutputAction { #[serde(default)] action: String },
 }
@@ -366,7 +423,8 @@ fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos:
         },
         WidgetDescriptor::InputSlider => Widget::InputSlider { id, value: 3.0 },
         WidgetDescriptor::InputNote => Widget::InputNote { id, text: String::new() },
-        WidgetDescriptor::OutputPreview => Widget::OutputPreview { id, preview: Dictionary::new() },
+        WidgetDescriptor::InputImage => Widget::InputImage { id, src: String::new() },
+        WidgetDescriptor::OutputPreview => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: BTreeSet::new() },
         WidgetDescriptor::OutputAction { action } => Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } },
     }
 }
@@ -405,6 +463,7 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
             items: vec![
                 CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), abbreviation: "Slider".into(), icon: "emoji:🎚️".into(), summary: "Number input".into() },
                 CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝".into(), summary: "Text input".into() },
+                CatalogueItem { kind: "inputImage".into(), neuronKind: None, action: None, name: "Image".into(), abbreviation: "Image".into(), icon: "emoji:🖼️".into(), summary: "Image input".into() },
             ],
         },
         CatalogueSection {
@@ -508,7 +567,8 @@ impl Default for FlowHost {
 }
 
 impl FlowHost {
-    pub fn from_fixture(fixture: FlowFixtureV1) -> Self {
+    pub fn from_fixture(mut fixture: FlowFixtureV1) -> Self {
+        dedupe_fixture_widgets(&mut fixture);
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -632,6 +692,7 @@ impl FlowHost {
     }
 
     pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, String> {
+        self.clear_ghost_widget();
         let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
         let id = self.next_widget_id(&descriptor);
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
@@ -660,11 +721,7 @@ impl FlowHost {
             return Err(format!("unknown widget: {widget_id}"));
         }
         self.fixture.layout.insert(widget_id.to_string(), WidgetLayout { x, y });
-        if let Some(node) = self.dag.fixture.nodes.iter_mut().find(|n| n.id == widget_id) {
-            node.x = x;
-            node.y = y;
-        }
-        self.rebuild_dag();
+        self.dag.set_widget_position(widget_id, x, y)?;
         Ok(())
     }
 
@@ -827,6 +884,7 @@ impl FlowHost {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
             return;
         }
+        self.clear_ghost_widget();
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
         if let Some((widget_id, index)) = self.dag.take_pending_port_insert() {
@@ -847,6 +905,13 @@ impl FlowHost {
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
+        if self.dag.widget_drag_active() {
+            self.evaluate_internal();
+        }
+    }
+
+    pub fn widget_drag_active(&self) -> bool {
+        self.dag.widget_drag_active()
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
@@ -957,6 +1022,9 @@ impl FlowHost {
                 Widget::InputNote { id, text } => {
                     seeds.insert(id.clone(), Dictionary::new().insert("text", NeuralValue::Atom(Atom::String(text.clone()))));
                 }
+                Widget::InputImage { id, src } => {
+                    seeds.insert(id.clone(), Dictionary::new().insert("image", NeuralValue::Atom(Atom::String(src.clone()))));
+                }
                 _ => {}
             }
         }
@@ -965,7 +1033,7 @@ impl FlowHost {
 
     fn apply_preview_outputs(&mut self, outputs: &HashMap<String, Dictionary>) {
         for widget in &mut self.fixture.widgets {
-            if let Widget::OutputPreview { id, preview } = widget {
+            if let Widget::OutputPreview { id, preview, .. } = widget {
                 if let Some(out) = outputs.get(id) {
                     *preview = out.clone();
                 } else if let Some(syn) = self.fixture.synapses.iter().find(|s| s.to == *id) {
@@ -976,6 +1044,7 @@ impl FlowHost {
             }
         }
         self.sync_dag_display_from_widgets();
+        self.dag.fit_preview_sizes();
     }
 
     fn sync_dag_display_from_widgets(&mut self) {
@@ -991,8 +1060,12 @@ impl FlowHost {
                 (Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => {
                     *dag_text = text.clone();
                 }
-                (Widget::OutputPreview { preview, .. }, DagNodeKind::Preview { text, .. }) => {
-                    *text = format_dictionary_preview(preview);
+                (Widget::InputImage { src, .. }, DagNodeKind::Image { src: dag_src, .. }) => {
+                    *dag_src = src.clone();
+                }
+                (Widget::OutputPreview { preview, expanded, .. }, DagNodeKind::Preview { content, expanded: dag_expanded, .. }) => {
+                    *content = dag_preview_content_from_dict(preview);
+                    *dag_expanded = expanded.clone();
                 }
                 (Widget::OutputAction { action, .. }, DagNodeKind::Action { label, .. }) => {
                     *label = action.clone();
@@ -1075,6 +1148,8 @@ impl FlowHost {
     }
 
     fn sync_from_dag(&mut self) {
+        let dag_ids: BTreeSet<String> = self.dag.fixture.nodes.iter().map(|node| node.id.clone()).collect();
+        self.fixture.widgets.retain(|widget| dag_ids.contains(widget_id_for(widget)));
         for node in &self.dag.fixture.nodes {
             self.fixture.layout.insert(node.id.clone(), WidgetLayout { x: node.x, y: node.y });
         }
@@ -1089,6 +1164,12 @@ impl FlowHost {
                 }
                 (Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => {
                     *text = dag_text.clone();
+                }
+                (Widget::InputImage { src, .. }, DagNodeKind::Image { src: dag_src, .. }) => {
+                    *src = dag_src.clone();
+                }
+                (Widget::OutputPreview { expanded, .. }, DagNodeKind::Preview { expanded: dag_expanded, .. }) => {
+                    *expanded = dag_expanded.clone();
                 }
                 (Widget::OutputAction { action, .. }, DagNodeKind::Action { label, .. }) => {
                     *action = label.clone();
@@ -1121,11 +1202,13 @@ impl FlowHost {
     }
 
     fn build_dag_fixture_v1(&self) -> DagFixtureV1 {
+        let mut seen = BTreeSet::new();
         let nodes: Vec<DagNodeSpec> = self
             .fixture
             .widgets
             .iter()
             .enumerate()
+            .filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string()))
             .map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout, &self.kind_infos))
             .collect();
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
@@ -1157,6 +1240,7 @@ impl FlowHost {
             WidgetDescriptor::Neuron { neuronKind } => neuronKind.replace('.', "_"),
             WidgetDescriptor::InputSlider => "slider".into(),
             WidgetDescriptor::InputNote => "note".into(),
+            WidgetDescriptor::InputImage => "image".into(),
             WidgetDescriptor::OutputPreview => "preview".into(),
             WidgetDescriptor::OutputAction { .. } => "action".into(),
         };
@@ -1185,12 +1269,25 @@ impl FlowHost {
         let _ = self.evaluate();
     }
 
+    pub fn set_image_src(&mut self, widget_id: &str, src: &str) {
+        for widget in &mut self.fixture.widgets {
+            if let Widget::InputImage { id, src: image } = widget {
+                if id == widget_id {
+                    *image = src.to_string();
+                }
+            }
+        }
+        self.sync_dag_display_from_widgets();
+        self.dag.fit_preview_sizes();
+        let _ = self.evaluate();
+    }
+
     pub fn preview_text(&self) -> String {
         self.fixture
             .widgets
             .iter()
             .find_map(|w| match w {
-                Widget::OutputPreview { preview, .. } => Some(format_dictionary_preview(preview)),
+                Widget::OutputPreview { preview, .. } => Some(preview_content_summary(&dag_preview_content_from_dict(preview))),
                 _ => None,
             })
             .unwrap_or_else(|| "—".into())
@@ -1224,9 +1321,19 @@ impl FlowHost {
     }
 }
 
+fn dedupe_fixture_widgets(fixture: &mut FlowFixtureV1) {
+    let mut seen = BTreeSet::new();
+    fixture.widgets.retain(|widget| seen.insert(widget_id_for(widget).to_string()));
+}
+
 fn widget_id_for(widget: &Widget) -> &str {
     match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id,
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. } => id,
     }
 }
 
@@ -1416,6 +1523,11 @@ impl FlowSession {
         self.state.borrow_mut().host.set_note_text(widget_id, text);
     }
 
+    #[wasm_bindgen(js_name = setImageSrc)]
+    pub fn set_image_src(&self, widget_id: &str, src: &str) {
+        self.state.borrow_mut().host.set_image_src(widget_id, src);
+    }
+
     #[wasm_bindgen(js_name = addWidget)]
     pub fn add_widget(&self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, JsValue> {
         self.state.borrow_mut().host.add_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e))
@@ -1576,6 +1688,11 @@ impl FlowSession {
         self.state.borrow_mut().host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
+    #[wasm_bindgen(js_name = widgetDragActive)]
+    pub fn widget_drag_active(&self) -> bool {
+        self.state.borrow().host.widget_drag_active()
+    }
+
     #[wasm_bindgen(js_name = pointerUpScreen)]
     pub fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
@@ -1729,8 +1846,11 @@ mod tests {
         let host = host_with_test_bridge();
         let slider = host.dag.fixture.nodes.iter().find(|n| n.id == "slider").expect("slider");
         assert!(matches!(slider.kind, DagNodeKind::Slider { .. }));
+        assert_eq!(slider.height, slider_widget_height());
         let add = host.dag.fixture.nodes.iter().find(|n| n.id == "add").expect("add");
         assert!(matches!(add.kind, DagNodeKind::Computation { .. }));
+        assert!(slider.width >= 68.0, "slider should use function IO column width");
+        assert!(slider.width <= add.width, "slider width should follow function sizing");
         let preview = host.dag.fixture.nodes.iter().find(|n| n.id == "preview").expect("preview");
         assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
     }
@@ -1746,6 +1866,47 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_slider_value("slider", 5.0);
         assert_eq!(host.preview_text(), "5");
+    }
+
+    #[test]
+    fn preview_text_formats_geometry_as_tree_summary() {
+        let dict = Dictionary::new().insert("geometry", NeuralValue::Atom(Atom::String("solid-3".into())));
+        let content = dag_preview_content_from_dict(&dict);
+        assert!(matches!(content, DagPreviewContent::Tree { .. }));
+        assert_eq!(preview_content_summary(&content), "{1 keys}");
+    }
+
+    #[test]
+    fn preview_scalar_content_from_number_dict() {
+        let dict = Dictionary::new().insert("number", NeuralValue::Atom(Atom::Decimal(3.0)));
+        assert!(matches!(
+            dag_preview_content_from_dict(&dict),
+            DagPreviewContent::Scalar { text } if text == "3"
+        ));
+    }
+
+    #[test]
+    fn image_input_seed_and_preview_content() {
+        let mut host = host_with_test_bridge();
+        let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+        host.fixture.widgets.push(Widget::InputImage { id: "image".into(), src: png.into() });
+        host.rebuild_dag();
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == "image").expect("image node");
+        assert!(matches!(node.kind, DagNodeKind::Image { .. }));
+        let seeds = host.build_seeds();
+        assert_eq!(seeds.get("image").and_then(|d| d.get("image")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some(png));
+    }
+
+    #[test]
+    fn slider_drag_evaluates_preview_before_release() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(800, 600, 1.0);
+        let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
+        assert_eq!(host.preview_text(), "3");
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
+        host.pointer_move_screen(sx + 80.0, sy, false, false, false);
+        assert_ne!(host.preview_text(), "3");
+        host.pointer_up_screen(sx + 80.0, sy, false, false, false);
     }
 
     #[test]
@@ -1914,7 +2075,7 @@ mod tests {
                     input_ports: vec!["0".into(), "1".into()],
                     preview: true,
                 },
-                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
+                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
             ],
             synapses: vec![
                 SynapseSpec {
@@ -2022,6 +2183,60 @@ mod tests {
         assert_eq!(host.preview_off_widget_ids(), vec!["add"]);
         host.toggle_preview("add").unwrap();
         assert!(host.preview_off_widget_ids().is_empty());
+    }
+
+    #[test]
+    fn drag_merge_node_preserves_single_fixture_widget() {
+        let mut host = host_with_test_bridge();
+        host.set_neuron_kind_infos_json(&serde_json::to_string(&[NeuronKindInfo {
+            id: "dictionary.merge".into(),
+            module: "dictionary".into(),
+            name: "Merge".into(),
+            abbreviation: "Merge".into(),
+            icon: "emoji:🔀".into(),
+            summary: "Merge".into(),
+            inputs: vec![],
+            outputs: vec!["dictionary".into()],
+            variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..Default::default()
+        }]).unwrap());
+        let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 120.0, 80.0).unwrap();
+        host.set_viewport(800, 600, 1.0);
+        let merge = host.dag.fixture.nodes.iter().find(|n| n.id == merge_id).expect("merge").clone();
+        let grab = Point::new(merge.x, merge.y);
+        let cam = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+        let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
+        let screen = world_to_screen(&cam, &viewport, grab);
+        host.pointer_down_screen(screen.x, screen.y, 0, false, false, false, false);
+        host.pointer_move_screen(screen.x + 80.0, screen.y + 40.0, false, false, false);
+        host.pointer_up_screen(screen.x + 80.0, screen.y + 40.0, false, false, false);
+        assert_eq!(host.fixture.widgets.iter().filter(|w| widget_id_for(w) == merge_id).count(), 1);
+        assert_eq!(host.dag.fixture.nodes.iter().filter(|n| n.id == merge_id).count(), 1);
+        let moved = host.fixture.layout.get(&merge_id).expect("merge layout");
+        assert!((moved.x - merge.x).abs() > 1.0);
+    }
+
+    #[test]
+    fn ghost_widget_cleared_on_pointer_down_and_add_widget() {
+        let mut host = host_with_test_bridge();
+        host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 12.0, 18.0).unwrap();
+        host.set_viewport(800, 600, 1.0);
+        host.pointer_down_screen(120.0, 120.0, 0, false, false, false, false);
+        assert!(host.ghost_node.is_none());
+        host.set_ghost_widget(r#"{"kind":"inputSlider"}"#, 0.0, 0.0).unwrap();
+        let _ = host.add_widget(r#"{"kind":"inputSlider"}"#, 40.0, 40.0).unwrap();
+        assert!(host.ghost_node.is_none());
+        assert_eq!(host.fixture.widgets.iter().filter(|w| widget_id_for(w).starts_with("slider")).count(), 2);
+        assert_eq!(host.dag.fixture.nodes.iter().filter(|n| n.id == "slider").count(), 1);
+    }
+
+    #[test]
+    fn delete_selection_removes_widget_from_fixture() {
+        let mut host = host_with_test_bridge();
+        host.dag.set_selection(&["slider".into()]);
+        host.delete_selection().unwrap();
+        assert!(host.fixture.widgets.iter().all(|w| widget_id_for(w) != "slider"));
+        assert!(host.dag.fixture.nodes.iter().all(|n| n.id != "slider"));
     }
 
     #[test]

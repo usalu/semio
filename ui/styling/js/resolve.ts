@@ -280,6 +280,7 @@ export function readableForegroundHex(
 }
 
 /** @emoji 🎨 Elements semantic tokens for graph canvas selection chrome. */
+const GRAPH_VELLO_CSS_COLOR_PRIMARY = tokenVar("primary");
 const GRAPH_VELLO_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
 const GRAPH_VELLO_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
 const GRAPH_VELLO_CSS_HOVER_FILL = themeColorVar("hover-interactive-fill");
@@ -297,16 +298,16 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		rasterClear: pbg(semanticVar("canvas"), "light-8-9"),
 		gridMinorStroke: [element[0], element[1], element[2], 56],
 		edgeStroke: [element[0], element[1], element[2], 255],
-		edgeStrokeHovered: [element[0], element[1], element[2], 255],
-		edgeStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
+		edgeStrokeHovered: [emphasized[0], emphasized[1], emphasized[2], 255],
+		edgeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
 		nodeStroke: [element[0], element[1], element[2], 255],
 		nodeFillHovered: pbg(GRAPH_VELLO_CSS_HOVER_FILL, "gray"),
-		nodeStrokeHovered: [element[0], element[1], element[2], 255],
+		nodeStrokeHovered: [emphasized[0], emphasized[1], emphasized[2], 255],
 		nodeFillSelected: pbg(GRAPH_VELLO_CSS_SELECTED_FILL, "primary"),
-		nodeStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
+		nodeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		nodeFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
 		nodeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		nodeFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
@@ -316,20 +317,20 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		handleFill: [element[0], element[1], element[2], 0],
 		handleStroke: [element[0], element[1], element[2], 255],
 		handleFillHovered: pbg(GRAPH_VELLO_CSS_HOVER_FILL, "gray"),
-		handleStrokeHovered: [element[0], element[1], element[2], 255],
+		handleStrokeHovered: [emphasized[0], emphasized[1], emphasized[2], 255],
 		handleFillSelected: pbg(GRAPH_VELLO_CSS_SELECTED_FILL, "primary"),
-		handleStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
+		handleStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		handleFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
 		handleStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		handleFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
 		handleStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		wireStroke: [element[0], element[1], element[2], 255],
-		wireStrokeHovered: [element[0], element[1], element[2], 255],
-		wireStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
+		wireStrokeHovered: [emphasized[0], emphasized[1], emphasized[2], 255],
+		wireStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		wireStrokeHighlighted: pc(tokenVar("secondary"), "secondary"),
 		wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
-		selectionPreviewStroke: [emphasized[0], emphasized[1], emphasized[2], 180],
+		selectionPreviewStroke: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		labelFill: [element[0], element[1], element[2], 255],
 		labelFillHovered: [emphasized[0], emphasized[1], emphasized[2], 255],
 		labelHalo: pbg(semanticVar("canvas"), "light-8-9", 200),
@@ -409,9 +410,10 @@ if (import.meta.vitest) {
 			expect(parsed.edgeStroke).toEqual([123, 130, 125, 255]);
 			expect(parsed.handleStroke).toEqual([123, 130, 125, 255]);
 			expect(parsed.nodeStroke).toEqual([123, 130, 125, 255]);
-			expect(parsed.nodeStrokeHovered).toEqual(parsed.nodeStroke);
-			expect(parsed.nodeStrokeSelected).toEqual(parsed.labelFillHovered);
+			expect(parsed.nodeStrokeHovered).toEqual(parsed.labelFillHovered);
+			expect(parsed.nodeStrokeSelected).toEqual([...resolveColorRgba(tokenVar("primary"), "primary")]);
 			expect(parsed.nodeStrokeSelected).not.toEqual(parsed.nodeStroke);
+			expect(parsed.nodeStrokeSelected).not.toEqual(parsed.nodeStrokeHovered);
 			expect(parsed.handleFill[3]).toBe(0);
 			expect(parsed.labelFill).not.toEqual(parsed.labelFillHovered);
 			expect(parsed.labelFill).not.toEqual(parsed.rasterClear);

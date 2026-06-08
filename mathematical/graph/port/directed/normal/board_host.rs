@@ -17,7 +17,7 @@ use infinite_cavas::geom_sel::{
 use infinite_cavas::camera::Camera;
 use crate::{
     board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
-    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_position_on_circle,
+    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle,
     handle_position_on_rectangle, merge_ids_into_selection,
     merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
     rectangle_handle_angle_toward, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
@@ -4140,10 +4140,9 @@ impl BoardHost {
         let paint_stroke = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_icon && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
         let outward = if exterior_cap {
-            self.nodes
-                .get(h.node_id.as_str())
-                .map(|n| normalize_or_zero(center - Point::new(n.x, n.y)))
-                .filter(|v| v.hypot() > 1e-9)
+            self.nodes.get(h.node_id.as_str()).and_then(|n| {
+                handle_outward_at_node_rim(center, Point::new(n.x, n.y), n.shape, n.radius, n.width, n.height)
+            })
         } else {
             None
         };
@@ -4259,9 +4258,12 @@ impl BoardHost {
             self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
         };
         let sw = 2.0_f64;
-        let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
-            && (lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
-                || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral));
+        let paint_fill = if lod == BoardDrawLod::Minimap {
+            matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
+        } else {
+            matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
+                && !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
+        };
         let paint_stroke = draw_node_stroke && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_node_icons && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
         match n.shape {
@@ -4402,6 +4404,9 @@ impl BoardHost {
             let style_kind = self.resolve_handle_style_kind(h, self.chrome_pass_for_entity(&h.id, overlay_ids));
             self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer, true);
         }
+        let paint_node = |scene: &mut Scene, n: &NodeData, chrome_pass: StyleChromePass| {
+            self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
+        };
         for n in self.nodes.values() {
             if !n.visible {
                 continue;
@@ -4416,8 +4421,29 @@ impl BoardHost {
                     continue;
                 }
             }
-            let chrome_pass = self.chrome_pass_for_entity(&n.id, overlay_ids);
-            self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
+            if overlay_ids.contains(&n.id) {
+                continue;
+            }
+            paint_node(scene, n, StyleChromePass::CachedBase);
+        }
+        for n in self.nodes.values() {
+            if !n.visible {
+                continue;
+            }
+            if let Some(ids) = only_ids {
+                if !ids.contains(&n.id) {
+                    continue;
+                }
+            }
+            if let Some(tb) = tile_filter {
+                if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
+                    continue;
+                }
+            }
+            if !overlay_ids.contains(&n.id) {
+                continue;
+            }
+            paint_node(scene, n, StyleChromePass::InteractionOverlay);
         }
     }
 
@@ -4713,6 +4739,7 @@ impl BoardHost {
         if self.hovered_id == id && self.hovered_kind.is_none() {
             return;
         }
+        self.bump_content_scene_generation();
         self.hovered_id = id;
         self.hovered_kind = None;
     }

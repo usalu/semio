@@ -3,13 +3,14 @@
   "emoji": "🔤",
   "status": "closed",
   "description": "Text labels are not visible at any LOD tier in the procedural flow editor canvas.",
-  "summary": "Node labels now paint via a Canvas 2D overlay on FlowCanvas (labelOverlayPaintStateJson from DagHost/FlowSession WASM), matching puzzle2d because Vello append_label text was invisible in the browser. FlowSpotlight input and list items use text-foreground for dark-theme contrast. serializeGraphVelloThemePaletteJson labelFill uses readableForegroundHex(canvas) instead of element gray.",
+  "summary": "Fixed procedural play hover crash (Maximum update depth): setHover/setPreselect/setEvalOutputs no longer bump platform.generation; Tree section sync skips identical maps; CallbackTreePanelDefinition caches by content fingerprint; SidePanel memoizes resolved tree config. Fixed passive wheel preventDefault on FlowCanvas via native non-passive listener. Preview widget now formats geometry/brep dictionary keys instead of em dash.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1581"
   },
   "goal": "🎯flow",
   "sessions": [
     "⚪9b2177675d76470d93843ead3930cc44",
-    "⚪9d2664fb79c647cc84b367317424eb0e"
+    "⚪9d2664fb79c647cc84b367317424eb0e",
+    "⚪0d2a7f8d66db41229af21c6e6b042c69"
   ]
 }

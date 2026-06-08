@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ContextMenuController, SelectionMarquee, type ContextMenuItem, type SelectionMarqueeCoverage } from "@ui/react";
-import { clearColorResolveCache, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson } from "@ui/styling";
+import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@ui/styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 
@@ -363,7 +363,8 @@ export type FlowWidgetV1 =
   | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[] }
   | { readonly kind: "inputSlider"; readonly id: string; readonly value: number }
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
-  | { readonly kind: "outputPreview"; readonly id: string }
+  | { readonly kind: "inputImage"; readonly id: string; readonly src?: string }
+  | { readonly kind: "outputPreview"; readonly id: string; readonly expanded?: readonly string[] }
   | { readonly kind: "outputAction"; readonly id: string; readonly action: string };
 
 export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
@@ -862,14 +863,20 @@ function flowClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targe
 
 function flowOverlayLabelFill(
   nodeId: string,
-  _hoveredId: string | null,
-  _selectedIds: readonly string[],
+  hoveredId: string | null,
+  selectedIds: readonly string[],
   previewOffIds: readonly string[],
 ): string {
   if (previewOffIds.includes(nodeId)) {
     return resolveSemanticColorHex("border-element-color", "gray");
   }
-  return resolveSemanticColorHex("border-emphasized-color", "dark");
+  if (selectedIds.includes(nodeId)) {
+    return resolveColorHex(tokenVar("primary"), "primary");
+  }
+  if (hoveredId === nodeId) {
+    return resolveSemanticColorHex("border-emphasized-color", "dark");
+  }
+  return resolveSemanticColorHex("border-element-color", "gray");
 }
 
 function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement, width: number, height: number, dpr: number): void {
@@ -1066,6 +1073,8 @@ export function FlowCanvas({
   const onHoverChangeRef = useRef(onHoverChange);
   const storeRef = useRef(store ?? createLocalFlowStore());
   const pointerRef = useRef({ active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false });
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
+  const pendingImageWidgetIdRef = useRef<string | null>(null);
   const onContextMenuRef = useRef(onContextMenu);
   const onLodChangeRef = useRef(onLodChange);
   const lastAutomaticLodRef = useRef<boolean | null>(null);
@@ -1294,6 +1303,7 @@ export function FlowCanvas({
     (detail: FlowWidgetDropDetail) => {
       const session = sessionRef.current;
       if (!session) return false;
+      session.clearGhostWidget();
       const handler = onWidgetDropRef.current;
       if (handler) {
         handler(detail);
@@ -1508,10 +1518,13 @@ export function FlowCanvas({
       session.pointerMoveScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       emitInteractionState(session);
       if (pointerRef.current.active) {
+        if (session.widgetDragActive()) {
+          evaluate();
+        }
         renderFrame();
       }
     },
-    [clientToCanvas, emitInteractionState, renderFrame],
+    [clientToCanvas, emitInteractionState, evaluate, renderFrame],
   );
 
   const onPointerLeave = useCallback(
@@ -1543,16 +1556,56 @@ export function FlowCanvas({
     setSpotlight(null);
   }, []);
 
+  const openImagePicker = useCallback((widgetId: string) => {
+    pendingImageWidgetIdRef.current = widgetId;
+    imageFileInputRef.current?.click();
+  }, []);
+
+  const onImageFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const session = sessionRef.current;
+      const file = e.target.files?.[0];
+      const widgetId = pendingImageWidgetIdRef.current;
+      e.target.value = "";
+      pendingImageWidgetIdRef.current = null;
+      if (!session || !file || !widgetId) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const src = reader.result;
+        if (typeof src !== "string") return;
+        session.setImageSrc(widgetId, src);
+        evaluate();
+        persistFixture();
+        renderFrame();
+      };
+      reader.readAsDataURL(file);
+    },
+    [evaluate, persistFixture, renderFrame],
+  );
+
   const onCanvasDoubleClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const session = sessionRef.current;
       if (!session) return;
       e.preventDefault();
+      const hoveredId = session.hoveredWidgetId();
+      if (hoveredId) {
+        try {
+          const fixture = JSON.parse(session.fixtureJson()) as FlowFixtureV1;
+          const widget = fixture.widgets.find((entry) => entry.id === hoveredId);
+          if (widget?.kind === "inputImage") {
+            openImagePicker(hoveredId);
+            return;
+          }
+        } catch {
+          /* fixture not ready */
+        }
+      }
       const screen = clientToCanvas(e.clientX, e.clientY);
       const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
       setSpotlight({ screen, world });
     },
-    [clientToCanvas],
+    [clientToCanvas, openImagePicker],
   );
 
   const syncWheelZoomActive = useCallback((active: boolean) => {
@@ -1563,8 +1616,8 @@ export function FlowCanvas({
     }
   }, []);
 
-  const onWheel = useCallback(
-    (e: React.WheelEvent<HTMLCanvasElement>) => {
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
       const session = sessionRef.current;
       if (!session) return;
       e.preventDefault();
@@ -1586,6 +1639,13 @@ export function FlowCanvas({
     },
     [clientToCanvas, persistFixture, renderFrame, syncWheelZoomActive],
   );
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
 
   const onCanvasContextMenu = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1733,7 +1793,6 @@ export function FlowCanvas({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onDoubleClick={onCanvasDoubleClick}
-        onWheel={onWheel}
         onContextMenu={onCanvasContextMenu}
       />
       <canvas
@@ -1741,6 +1800,15 @@ export function FlowCanvas({
         aria-hidden
         className="pointer-events-none absolute inset-0 block h-full w-full"
         data-testid="flow-text-overlay"
+      />
+      <input
+        ref={imageFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden
+        onChange={onImageFileChange}
       />
       <ContextMenuController
         items={surfaceContextMenu?.items ?? []}
@@ -1781,11 +1849,13 @@ if (import.meta.vitest) {
       expect(screen).toEqual({ x: 400, y: 300 });
     });
 
-    it("flowOverlayLabelFill uses emphasized by default and element when preview is off", () => {
+    it("flowOverlayLabelFill uses element, primary when selected, emphasized when hovered", () => {
       const element = resolveSemanticColorHex("border-element-color", "gray");
       const emphasized = resolveSemanticColorHex("border-emphasized-color", "dark");
-      expect(flowOverlayLabelFill("node-a", null, [], [])).toBe(emphasized);
+      const primary = resolveColorHex(tokenVar("primary"), "primary");
+      expect(flowOverlayLabelFill("node-a", null, [], [])).toBe(element);
       expect(flowOverlayLabelFill("node-a", "node-a", [], [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, ["node-a"], [])).toBe(primary);
       expect(flowOverlayLabelFill("node-a", null, [], ["node-a"])).toBe(element);
     });
   });

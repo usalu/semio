@@ -3,12 +3,14 @@
   "emoji": "🗺️",
   "status": "closed",
   "description": "On minimap LOD in flow and puzzle 2d, nodes and edges are wrongly shown with emphasized color at rest and turn gray on hover. Fix to show element gray (like navbar toggles) at rest and emphasize on hover.",
-  "summary": "Fixed inverted minimap LOD chrome for flow (DAG) and puzzle 2d (board host). Minimap node silhouettes now always use stroke palette colors: element gray at rest, emphasized on hover/selection — instead of switching to node_fill_hovered (border gray) on hover. Board host minimap edges on chrome states now use theme edge stroke directly instead of lerping toward muted fills. Added minimap hover regression test in dag lib. Rebuilt DAG wasm pkg.",
+  "summary": "Fixed flow minimap selected nodes showing emphasized instead of primary. Root cause was serializeGraphVelloThemePaletteJson mapping nodeStrokeSelected, edgeStrokeSelected, handleStrokeSelected, wireStrokeSelected, and selectionPreviewStroke to border-emphasized instead of --color-primary. Restored primary for all selection strokes; hover strokes use emphasized again. Flow JS label overlay uses primary for selected captions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1588"
   },
   "goal": "🎯ui🎯theming",
   "sessions": [
-    "⚪0c178030e6cb40289197f5f18532a7d4"
+    "⚪0c178030e6cb40289197f5f18532a7d4",
+    "⚪2bc3e13a999143bea9d8b49eebc035c1",
+    "⚪14c7a8e2d31f428d9951a111d03f579b"
   ]
 }

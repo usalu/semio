@@ -5,8 +5,8 @@ pub mod scene_json;
 
 pub use geometry::{
     circle_handle_angle_toward, clamp_f64, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene,
-    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_position_on_circle,
-    handle_position_on_rectangle, normalize_or_zero,
+    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim,
+    handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero,
     ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
 };
 pub use scene_json::{board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
@@ -459,6 +459,7 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub preselect: Selection,
     pub preselect_removed: Selection,
     pub selection_options: EngineSelectionOptions,
+    pub handle_pointer_picking: bool,
     pub selection_preview_points: Vec<Point>,
     pub selection_preview_crossing: bool,
     area_initial: Selection,
@@ -485,6 +486,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             preselect: Selection::default(),
             preselect_removed: Selection::default(),
             selection_options: EngineSelectionOptions::default(),
+            handle_pointer_picking: true,
             selection_preview_points: Vec::new(),
             selection_preview_crossing: false,
             area_initial: Selection::default(),
@@ -1278,7 +1280,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     fn hit_test(&self, point: Point) -> Option<HitObject<P::Endpoint>> {
-        if P::HAS_PORTS {
+        if P::HAS_PORTS && self.handle_pointer_picking {
             for handle in self.handles.values().rev() {
                 let node = self.nodes.get(&handle.node_id)?;
                 if distance(point, handle_position(node, handle)) <= handle.radius + 6.0 {

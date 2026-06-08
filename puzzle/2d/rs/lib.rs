@@ -1533,6 +1533,21 @@ mod host_tests {
     }
 
     #[test]
+    fn board_host_minimap_pointer_move_hovers_node_under_cursor() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 0.1);
+        h.set_forced_draw_lod_label("minimap");
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let center = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(center.x, center.y, false, false, false);
+        assert_eq!(h.hovered_id.as_deref(), Some("a"));
+        let away = h.world_to_screen(Point::new(5000.0, 5000.0));
+        h.pointer_move_screen(away.x, away.y, false, false, false);
+        assert!(h.hovered_id.is_none());
+    }
+
+    #[test]
     fn board_host_minimap_preselect_matches_selected_chrome() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);

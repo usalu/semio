@@ -810,8 +810,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 				this.geometryHandles = extractGeometryHandles(outputsJson);
 				this.interactionRevision += 1;
 				this.notifySnapshot();
-				this.rebuildShellMode();
-				this.emit();
 			}
 			return;
 		}
@@ -838,7 +836,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.preselectRemovedNodeIds = [...removedIds];
 			this.interactionRevision += 1;
 			this.notifySnapshot();
-			this.emit();
 			return;
 		}
 		if (command === "setSelectionMode") {
@@ -887,7 +884,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.hoveredNodeId = next;
 			this.interactionRevision += 1;
 			this.notifySnapshot();
-			this.emit();
 			return;
 		}
 		if (command === "togglePreview") {
