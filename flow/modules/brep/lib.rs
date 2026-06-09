@@ -614,12 +614,36 @@ mod tests {
 }
 // #endregion 🔖Tests
 
+// #region 🔖Tessellation
+/// 🧊 Tessellates a geometry handle owned by the in-process brep kernel.
+pub fn tessellate_geometry_json(handle: &str, tolerance: f64) -> String {
+    kernel()
+        .lock()
+        .ok()
+        .and_then(|kernel| {
+            let geometry = GeometryHandle(handle.to_string());
+            match block_on(kernel.tessellate(&geometry, tolerance)) {
+                Ok(mesh) => Some(serde_json::to_string(&mesh).unwrap_or_else(|_| "{}".into())),
+                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+            }
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "brep kernel unavailable" }).to_string())
+}
+
+/// 🗑️ Disposes a geometry handle owned by the in-process brep kernel.
+pub fn dispose_geometry(handle: &str) {
+    if let Ok(mut kernel) = kernel().lock() {
+        block_on(kernel.dispose(&GeometryHandle(handle.to_string())));
+    }
+}
+// #endregion 🔖Tessellation
+
 // #region 🔖WasmExt
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]
 mod wasm_ext {
     use super::module_registry;
     use flow_module_wasm::{build_manifest_json, command_json, evaluate_json};
-    use geometry_brep_engine::{BrepKernel, GeometryHandle};
+    use geometry_brep_engine::{block_on, BrepKernel, GeometryHandle};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -639,24 +663,12 @@ mod wasm_ext {
 
     #[wasm_bindgen]
     pub fn tessellate(handle: &str, tolerance: f64) -> String {
-        super::kernel()
-            .lock()
-            .ok()
-            .and_then(|kernel| {
-                let geometry = GeometryHandle(handle.to_string());
-                match block_on(kernel.tessellate(&geometry, tolerance)) {
-                    Ok(mesh) => Some(serde_json::to_string(&mesh).unwrap_or_else(|_| "{}".into())),
-                    Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
-                }
-            })
-            .unwrap_or_else(|| serde_json::json!({ "error": "brep kernel unavailable" }).to_string())
+        super::tessellate_geometry_json(handle, tolerance)
     }
 
     #[wasm_bindgen]
     pub fn dispose(handle: &str) {
-        if let Ok(mut kernel) = super::kernel().lock() {
-            block_on(kernel.dispose(&GeometryHandle(handle.to_string())));
-        }
+        super::dispose_geometry(handle);
     }
 
     #[wasm_bindgen]

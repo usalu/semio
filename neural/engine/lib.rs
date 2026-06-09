@@ -1,6 +1,9 @@
 //! 🧠 Headless neural engine: dictionary in, dictionary out.
 
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::hash::{Hash, Hasher};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 
@@ -640,6 +643,96 @@ impl Registry {
 }
 // #endregion 🔖Operator
 
+// #region 🔖Cache
+fn hash_str<H: Hasher>(hasher: &mut H, value: &str) {
+    value.hash(hasher);
+}
+
+fn hash_atom<H: Hasher>(hasher: &mut H, atom: &Atom) {
+    match atom {
+        Atom::Boolean(value) => value.hash(hasher),
+        Atom::Integer(value) => value.hash(hasher),
+        Atom::Decimal(value) => value.to_bits().hash(hasher),
+        Atom::String(value) => hash_str(hasher, value),
+    }
+}
+
+fn hash_value<H: Hasher>(hasher: &mut H, value: &Value) {
+    match value {
+        Value::Atom(atom) => hash_atom(hasher, atom),
+        Value::Dictionary(dict) => {
+            0u8.hash(hasher);
+            hash_dictionary(hasher, dict);
+        }
+    }
+}
+
+fn hash_dictionary<H: Hasher>(hasher: &mut H, dictionary: &Dictionary) {
+    for key in dictionary.keys() {
+        hash_str(hasher, key);
+        hash_value(hasher, dictionary.get(key).expect("key"));
+    }
+}
+
+/// 🔑 Content-addressable cache key from operator kind and resolved input dictionary.
+pub fn node_hash(kind: &str, input: &Dictionary) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    hash_str(&mut hasher, kind);
+    hash_dictionary(&mut hasher, input);
+    hasher.finish()
+}
+
+/// 🧠 Epoch-bounded in-process cache for DAG node outputs.
+#[derive(Default)]
+pub struct NeuralCache {
+    entries: Mutex<HashMap<u64, (u64, Dictionary)>>,
+    epoch: AtomicU64,
+}
+
+impl NeuralCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn begin_epoch(&self) {
+        self.epoch.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn current_epoch(&self) -> u64 {
+        self.epoch.load(Ordering::Relaxed)
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.lock().map(|entries| entries.len()).unwrap_or(0)
+    }
+
+    pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>
+    where
+        F: FnOnce() -> Result<Dictionary, EvalError>,
+    {
+        let epoch = self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut entries) = self.entries.lock() {
+            if let Some(entry) = entries.get_mut(&key) {
+                entry.0 = epoch;
+                return Ok(entry.1.clone());
+            }
+        }
+        let value = compute()?;
+        if let Ok(mut entries) = self.entries.lock() {
+            entries.insert(key, (epoch, value.clone()));
+        }
+        Ok(value)
+    }
+
+    pub fn sweep(&self) {
+        let epoch = self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut entries) = self.entries.lock() {
+            entries.retain(|_, (entry_epoch, _)| *entry_epoch == epoch);
+        }
+    }
+}
+// #endregion 🔖Cache
+
 // #region 🔖Evaluator
 /// 📡 Resolved neuron inputs and outputs from one evaluation pass.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -681,12 +774,78 @@ impl<'a> Evaluator<'a> {
         self.evaluate_channels_with(tree, seeds, operator_infos, &|kind, input| self.registry.dispatch(kind, input))
     }
 
+    pub fn evaluate_channels_sequential_with(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+    ) -> Result<EvalChannels, EvalError> {
+        let cache = NeuralCache::new();
+        cache.begin_epoch();
+        let result = self.evaluate_channels_sequential_cached(tree, seeds, operator_infos, dispatch, &cache);
+        cache.sweep();
+        result
+    }
+
+    pub fn evaluate_channels_sequential_cached(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+        cache: &NeuralCache,
+    ) -> Result<EvalChannels, EvalError> {
+        let order = topo_order(tree)?;
+        let mut outputs: HashMap<String, Dictionary> = seeds.clone();
+        let mut inputs: HashMap<String, Dictionary> = HashMap::new();
+        for neuron_id in order {
+            let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
+            let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
+            let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info);
+            inputs.insert(neuron_id.clone(), input.clone());
+            if let Some(seed) = seeds.get(&neuron_id) {
+                outputs.insert(neuron_id.clone(), seed.clone());
+                continue;
+            }
+            if let Some(sub_tree) = neuron.tree.as_deref() {
+                let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
+                outputs.insert(neuron_id.clone(), out);
+                continue;
+            }
+            if neuron.kind == INPUT_KIND || neuron.kind == OUTPUT_KIND {
+                outputs.insert(neuron_id.clone(), input.merge(&neuron.params));
+                continue;
+            }
+            let merged = input.merge(&neuron.params);
+            let key = node_hash(&neuron.kind, &merged);
+            let out = cache.get_or_insert_with(key, || dispatch(&neuron.kind, &merged))?;
+            outputs.insert(neuron_id.clone(), out);
+        }
+        Ok(EvalChannels { outputs, inputs })
+    }
+
     pub fn evaluate_channels_with(
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
+    ) -> Result<EvalChannels, EvalError> {
+        let cache = NeuralCache::new();
+        cache.begin_epoch();
+        let result = self.evaluate_channels_cached(tree, seeds, operator_infos, dispatch, &cache);
+        cache.sweep();
+        result
+    }
+
+    pub fn evaluate_channels_cached(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
+        cache: &NeuralCache,
     ) -> Result<EvalChannels, EvalError> {
         let levels = topo_levels(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
@@ -726,7 +885,12 @@ impl<'a> Evaluator<'a> {
                 use rayon::prelude::*;
                 let parallel_outputs: Result<Vec<(String, Dictionary)>, EvalError> = compute_jobs
                     .par_iter()
-                    .map(|(neuron_id, kind, merged)| dispatch(kind, merged).map(|out| (neuron_id.clone(), out)))
+                    .map(|(neuron_id, kind, merged)| {
+                        let key = node_hash(kind, merged);
+                        cache
+                            .get_or_insert_with(key, || dispatch(kind, merged))
+                            .map(|out| (neuron_id.clone(), out))
+                    })
                     .collect();
                 for entry in parallel_outputs? {
                     level_outputs.insert(entry.0, entry.1);
@@ -735,13 +899,14 @@ impl<'a> Evaluator<'a> {
             #[cfg(not(feature = "parallel"))]
             {
                 for (neuron_id, kind, merged) in compute_jobs {
-                    let out = dispatch(&kind, &merged)?;
+                    let key = node_hash(&kind, &merged);
+                    let out = cache.get_or_insert_with(key, || dispatch(&kind, &merged))?;
                     level_outputs.insert(neuron_id, out);
                 }
             }
 
             for (neuron_id, sub_tree, input) in deferred_clusters {
-                let out = self.evaluate_cluster(&sub_tree, &input, operator_infos, dispatch)?;
+                let out = self.evaluate_cluster(&sub_tree, &input, operator_infos, dispatch, cache)?;
                 level_outputs.insert(neuron_id, out);
             }
 
@@ -751,12 +916,13 @@ impl<'a> Evaluator<'a> {
         Ok(EvalChannels { outputs, inputs })
     }
 
-    fn evaluate_cluster(
+    fn evaluate_cluster_sequential(
         &self,
         sub_tree: &Tree,
         parent_input: &Dictionary,
         operator_infos: &HashMap<String, OperatorInfo>,
-        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
+        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+        cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
         let mut sub_seeds = HashMap::new();
         for neuron in &sub_tree.neurons {
@@ -767,7 +933,42 @@ impl<'a> Evaluator<'a> {
             let Some(value) = parent_input.get(&channel_id) else { continue };
             sub_seeds.insert(neuron.id.clone(), boundary_seed_dictionary(value));
         }
-        let sub_channels = self.evaluate_channels_with(sub_tree, &sub_seeds, operator_infos, dispatch)?;
+        let sub_channels = self.evaluate_channels_sequential_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache)?;
+        let mut out = Dictionary::new();
+        for neuron in &sub_tree.neurons {
+            if neuron.kind != OUTPUT_KIND {
+                continue;
+            }
+            let (channel_id, _) = contract_channel(neuron);
+            let Some(neuron_input) = sub_channels.inputs.get(&neuron.id) else {
+                return Err(EvalError::MissingInput(format!("cluster output boundary {channel_id}")));
+            };
+            let Some(value) = boundary_output_value(neuron_input) else {
+                return Err(EvalError::MissingInput(format!("cluster output boundary {channel_id}")));
+            };
+            out = out.insert(channel_id, value);
+        }
+        Ok(out)
+    }
+
+    fn evaluate_cluster(
+        &self,
+        sub_tree: &Tree,
+        parent_input: &Dictionary,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
+        cache: &NeuralCache,
+    ) -> Result<Dictionary, EvalError> {
+        let mut sub_seeds = HashMap::new();
+        for neuron in &sub_tree.neurons {
+            if neuron.kind != INPUT_KIND {
+                continue;
+            }
+            let (channel_id, _) = contract_channel(neuron);
+            let Some(value) = parent_input.get(&channel_id) else { continue };
+            sub_seeds.insert(neuron.id.clone(), boundary_seed_dictionary(value));
+        }
+        let sub_channels = self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache)?;
         let mut out = Dictionary::new();
         for neuron in &sub_tree.neurons {
             if neuron.kind != OUTPUT_KIND {

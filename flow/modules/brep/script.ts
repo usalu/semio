@@ -9,7 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FLOW_MODULE_BREP_SKIP_WASM_BUILD",
       logPrefix: "flow/modules/brep",
       wasmBaseName: "flow_module_brep",
-      threads: true,
+      threads: false,
       pkg: {
         name: "@flow/module-brep",
         files: ["flow_module_brep_bg.wasm", "flow_module_brep.js", "flow_module_brep.d.ts", "flow_module_brep_bg.wasm.d.ts"],

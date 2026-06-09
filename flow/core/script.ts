@@ -9,7 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD",
       logPrefix: "flow/core",
       wasmBaseName: "flow_core",
-      threads: true,
+      threads: false,
       pkg: {
         name: "@flow/core",
         files: ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"],

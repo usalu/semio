@@ -69,6 +69,19 @@ import {
 	type ProceduralPreviewShowMode,
 	type ProceduralTransformGranularity,
 } from "@procedural/react";
+import { meshTransferFromPreviewPayload } from "@geometry/brep/js";
+
+function previewItemsWithMeshes(
+	items: ProceduralPreviewItem[],
+	previewMeshes?: Readonly<Record<string, unknown>>,
+): ProceduralPreviewItem[] {
+	if (!previewMeshes) return items;
+	return items.map((item) => {
+		if (item.kind !== "geometry" || item.direction !== "out") return item;
+		const mesh = meshTransferFromPreviewPayload(previewMeshes[`${item.widgetId}:${item.port}`]);
+		return mesh ? { ...item, mesh } : item;
+	});
+}
 
 export const PROCEDURAL_PLAY_APP_ID = "procedural-play";
 export const PROCEDURAL_PLAY_CONTROLLER_ID = "procedural-play";
@@ -1340,8 +1353,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 		if (command === "setEvalOutputs") {
 			const outputsJson = (args as { outputsJson?: string }).outputsJson;
+			const previewMeshes = (args as { previewMeshes?: Readonly<Record<string, unknown>> }).previewMeshes;
 			if (typeof outputsJson === "string") {
-				this.previewItems = extractChannelPreviewItems(outputsJson);
+				this.previewItems = previewItemsWithMeshes(extractChannelPreviewItems(outputsJson), previewMeshes);
 				this.interactionRevision += 1;
 				this.notifySnapshot();
 				this.rebuildShellMode();

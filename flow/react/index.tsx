@@ -8,6 +8,7 @@ import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, seria
 import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 import flowCoreWasmUrl from "../core/pkg/flow_core_bg.wasm?url";
+import { FlowOrchestratorClient } from "../worker-client.ts";
 
 // #region 🔖GpuWasmBridge
 if (import.meta.env.VITEST) {
@@ -49,6 +50,14 @@ export async function ensureFlowWasmLoaded(): Promise<void> {
 }
 
 export { FlowSession };
+export { FlowOrchestratorClient, createFlowOrchestratorWorker, type FlowEvalWorkerResult } from "../worker-client.ts";
+export {
+  defaultComputeWorkerCount,
+  effectiveComputeWorkerCount,
+  initFlowThreadPool,
+  isCrossOriginIsolatedRuntime,
+  readStoredComputeWorkerCount,
+} from "../compute.ts";
 
 export {
   DAG_LOD_MODE_AUTOMATIC,
@@ -468,6 +477,18 @@ export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
 
 export function flowFixtureToJson(fixture: FlowFixtureV1): string {
   return JSON.stringify(fixture);
+}
+
+/** @emoji 🧠 Neuron widget ids from a flow fixture JSON blob. */
+export function neuronWidgetIdsFromFixtureJson(fixtureJson: string): string[] {
+  try {
+    const fixture = JSON.parse(fixtureJson) as { readonly widgets?: readonly { readonly kind?: string; readonly id?: string }[] };
+    return (fixture.widgets ?? [])
+      .filter((widget) => widget.kind === "neuron" && typeof widget.id === "string")
+      .map((widget) => widget.id as string);
+  } catch {
+    return [];
+  }
 }
 // #endregion 🔖Fixture
 
@@ -2196,7 +2217,7 @@ export interface FlowCanvasProps {
   readonly extensionRevision?: number;
   readonly extensionHost?: FlowExtensionHost;
   readonly onPreviewText?: (text: string) => void;
-  readonly onEvalOutputs?: (outputsJson: string) => void;
+  readonly onEvalOutputs?: (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
   readonly onWidgetDrop?: (detail: FlowWidgetDropDetail) => void;
@@ -2604,15 +2625,59 @@ export function FlowCanvas({
     renderFrame();
   }, [automaticLod, lod, proximityDistance, renderFrame]);
 
-  const evaluate = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session) return;
-    const outputsJson = session.evaluate();
-    const text = session.previewText();
-    onPreviewTextRef.current?.(text);
-    onEvalOutputsRef.current?.(outputsJson);
-    console.log(`[DEBUG] flow evaluate preview: ${text}`);
+  const evaluateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const orchestratorRef = useRef<FlowOrchestratorClient | null>(null);
+  const evalGenerationRef = useRef(0);
+
+  useEffect(() => {
+    if (import.meta.env.VITEST || typeof Worker === "undefined") return;
+    const client = new FlowOrchestratorClient();
+    orchestratorRef.current = client;
+    return () => {
+      client.terminate();
+      orchestratorRef.current = null;
+    };
   }, []);
+
+  const evaluate = useCallback(() => {
+    if (evaluateTimerRef.current != null) clearTimeout(evaluateTimerRef.current);
+    evaluateTimerRef.current = setTimeout(() => {
+      evaluateTimerRef.current = null;
+      void (async () => {
+        const session = sessionRef.current;
+        if (!session) return;
+        const generation = ++evalGenerationRef.current;
+        const fixture = session.fixtureJson();
+        const computingIds = neuronWidgetIdsFromFixtureJson(fixture);
+        session.setComputingWidgetIds(JSON.stringify(computingIds));
+        renderFrame();
+        try {
+          let outputsJson: string;
+          let previewMeshes: Readonly<Record<string, unknown>> | undefined;
+          const orchestrator = orchestratorRef.current;
+          if (orchestrator && !import.meta.env.VITEST) {
+            await orchestrator.loadFixtureJson(fixture);
+            const result = await orchestrator.evaluate();
+            if (generation !== evalGenerationRef.current) return;
+            outputsJson = result.outputsJson;
+            previewMeshes = result.previewMeshes;
+            session.applyEvalOutputsJson(outputsJson);
+          } else {
+            outputsJson = await session.evaluate();
+            if (generation !== evalGenerationRef.current) return;
+          }
+          const text = session.previewText();
+          onPreviewTextRef.current?.(text);
+          onEvalOutputsRef.current?.(outputsJson, previewMeshes);
+          console.log(`[DEBUG] flow evaluate preview: ${text}`);
+        } catch (err) {
+          session.clearComputingWidgetIds();
+          console.log(`[DEBUG] flow evaluate failed: ${String(err)}`);
+        }
+        renderFrame();
+      })();
+    }, 32);
+  }, [renderFrame]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -2704,7 +2769,7 @@ export function FlowCanvas({
 
   const syncExtensionSurface = useCallback(
     (session: FlowSession) => {
-      session.setEvalBridge(createFlowEvalBridge(extensionHost));
+      // In-WASM module registry handles evaluation; extension host loads manifests only.
       session.setCatalogueJson(extensionHost.catalogueJson());
       session.setNeuronKindInfosJson(extensionHost.kindInfosJson());
       const sections = parseFlowCatalogueSections(session.catalogueJson());

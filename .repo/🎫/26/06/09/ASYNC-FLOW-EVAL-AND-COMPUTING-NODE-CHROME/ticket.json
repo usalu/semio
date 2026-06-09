@@ -1,0 +1,13 @@
+{
+  "title": "Async Flow Eval and Computing Node Chrome",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "UI freezes on heavy brep ops; computing nodes need animated rotating active border.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1638"
+  },
+  "goal": "🎯flow🎯asynceval",
+  "sessions": [
+    "⚪914cea5f20834a5eaf9a6fa55e756169"
+  ]
+}

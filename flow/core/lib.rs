@@ -1047,6 +1047,25 @@ fn output_ports_json(dict: &Dictionary) -> serde_json::Map<String, serde_json::V
     ports
 }
 
+fn outputs_from_channel_eval_json(json: &str) -> HashMap<String, Dictionary> {
+    let Ok(parsed) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
+        return HashMap::new();
+    };
+    let mut outputs = HashMap::new();
+    for (widget_id, entry) in parsed {
+        let Some(out_ports) = entry.get("out").and_then(|value| value.as_object()) else {
+            continue;
+        };
+        let Some(out_val) = out_ports.get("out") else {
+            continue;
+        };
+        if let Ok(dict) = serde_json::from_value::<Dictionary>(out_val.clone()) {
+            outputs.insert(widget_id, dict);
+        }
+    }
+    outputs
+}
+
 fn widget_kind_info<'a>(widget: &Widget, kind_infos: &'a HashMap<String, OperatorInfo>) -> Option<&'a OperatorInfo> {
     match widget {
         Widget::Neuron { neuronKind, .. } => kind_infos.get(neuronKind),
@@ -1223,7 +1242,7 @@ impl FlowHost {
             history: FlowHistory::default(),
         };
         host.rebuild_dag();
-        host.evaluate_internal();
+        host.touch_channel_eval();
         host
     }
 
@@ -1272,6 +1291,25 @@ impl FlowHost {
     pub fn evaluate(&mut self) -> Result<String, String> {
         self.evaluate_internal();
         Ok(self.last_eval_json.clone())
+    }
+
+    /// 📥 Applies channel-structured eval JSON from an off-thread worker without re-running operators.
+    pub fn apply_eval_outputs_json(&mut self, json: &str) {
+        self.last_eval_json = json.to_string();
+        let outputs = outputs_from_channel_eval_json(json);
+        self.outputs = outputs.clone();
+        self.apply_preview_outputs(&outputs);
+        self.dag.clear_computing();
+    }
+
+    /// ⚙️ Marks neuron widgets as actively computing for animated canvas chrome.
+    pub fn set_computing_widget_ids(&mut self, widget_ids: &[String]) {
+        self.dag.set_computing(widget_ids);
+    }
+
+    /// ✅ Clears computing chrome from all widgets.
+    pub fn clear_computing_widget_ids(&mut self) {
+        self.dag.clear_computing();
     }
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
@@ -1348,7 +1386,7 @@ impl FlowHost {
         self.fixture.widgets.push(widget);
         self.fixture.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(id)
     }
 
@@ -1362,7 +1400,7 @@ impl FlowHost {
         self.fixture.layout.remove(widget_id);
         self.fixture.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -1412,7 +1450,7 @@ impl FlowHost {
             to_port: to_port.to_string(),
         });
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(synapse_id)
     }
 
@@ -1456,7 +1494,7 @@ impl FlowHost {
         }
         *input_ports = (0..ports.len()).map(|slot| slot.to_string()).collect();
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -1502,7 +1540,7 @@ impl FlowHost {
         next_ports.remove(remove_index);
         *input_ports = (0..next_ports.len()).map(|slot| slot.to_string()).collect();
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -1514,7 +1552,7 @@ impl FlowHost {
             return Err(format!("unknown synapse: {synapse_id}"));
         }
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -1561,7 +1599,7 @@ impl FlowHost {
             synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port
         }) {
             self.rebuild_dag();
-            self.evaluate_internal();
+            self.touch_channel_eval();
             return Ok(());
         }
         self.next_synapse_serial += 1;
@@ -1574,7 +1612,7 @@ impl FlowHost {
             to_port: mid_in_port.to_string(),
         });
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -1612,7 +1650,7 @@ impl FlowHost {
         };
         *params = params.merge(&patch);
         self.sync_dag_display_from_widgets();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
     // #endregion GumballEditing
@@ -1661,7 +1699,7 @@ impl FlowHost {
         self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
         if self.dag.widget_drag_active() {
-            self.evaluate_internal();
+            self.touch_channel_eval();
         }
     }
 
@@ -1675,7 +1713,7 @@ impl FlowHost {
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
         self.commit_gesture_history();
-        self.evaluate_internal();
+        self.touch_channel_eval();
     }
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str) {
@@ -1713,7 +1751,7 @@ impl FlowHost {
         self.begin_change();
         self.dag.delete_selected();
         self.sync_from_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -1728,8 +1766,8 @@ impl FlowHost {
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry);
         let result = if let Some(bridge) = self.eval_bridge.as_ref() {
-            let dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-            evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &dispatch)
+            let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
+            evaluator.evaluate_channels_sequential_with(&tree, &seeds, &self.kind_infos, &mut dispatch)
         } else {
             let dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
             evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &dispatch)
@@ -1744,6 +1782,12 @@ impl FlowHost {
                 self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
             }
         }
+    }
+
+    /// 🧵 Runs channel eval on native hosts; wasm UI defers to the orchestrator worker.
+    fn touch_channel_eval(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        self.evaluate_internal();
     }
 
     fn build_tree(&self) -> Tree {
@@ -1876,7 +1920,7 @@ impl FlowHost {
         self.begin_change();
         self.dag.align_selection(mode)?;
         self.sync_from_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2281,7 +2325,7 @@ impl FlowHost {
             }
         }
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(cluster_id)
     }
 
@@ -2410,7 +2454,7 @@ impl FlowHost {
         }
         self.fixture.synapses = next_synapses;
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2445,7 +2489,7 @@ impl FlowHost {
         self.fixture = prev;
         self.fixture.camera = camera;
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         true
     }
 
@@ -2459,7 +2503,7 @@ impl FlowHost {
         self.fixture = next;
         self.fixture.camera = camera;
         self.rebuild_dag();
-        self.evaluate_internal();
+        self.touch_channel_eval();
         true
     }
 
@@ -2540,12 +2584,6 @@ impl FlowSessionInner {
         let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, self.dpr);
         self.gpu.render_frame(&scene, clear)
     }
-}
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = initThreadPool)]
-pub fn init_thread_pool(num_threads: usize) -> js_sys::Promise {
-    wasm_bindgen_rayon::init_thread_pool(num_threads)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -2642,6 +2680,22 @@ impl FlowSession {
     #[wasm_bindgen(js_name = evaluateSync)]
     pub fn evaluate_sync(&self) -> Result<String, JsValue> {
         self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = applyEvalOutputsJson)]
+    pub fn apply_eval_outputs_json(&self, json: &str) {
+        self.state.borrow_mut().host.apply_eval_outputs_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setComputingWidgetIds)]
+    pub fn set_computing_widget_ids(&self, json: &str) {
+        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
+        self.state.borrow_mut().host.set_computing_widget_ids(&ids);
+    }
+
+    #[wasm_bindgen(js_name = clearComputingWidgetIds)]
+    pub fn clear_computing_widget_ids(&self) {
+        self.state.borrow_mut().host.clear_computing_widget_ids();
     }
 
     #[wasm_bindgen(js_name = previewText)]
@@ -3032,6 +3086,18 @@ impl FlowSession {
     pub fn select_all(&self) {
         self.state.borrow_mut().host.select_all();
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn tessellate(handle: &str, tolerance: f64) -> String {
+    flow_module_brep::tessellate_geometry_json(handle, tolerance)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dispose(handle: &str) {
+    flow_module_brep::dispose_geometry(handle);
 }
 // #endregion 🔖WasmSession
 

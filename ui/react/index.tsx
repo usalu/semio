@@ -1618,6 +1618,44 @@ export function writeStoredUiChromeExpertise(expertise: Expertise): void {
   localStorage.setItem(UI_CHROME_EXPERTISE_STORAGE_KEY, expertise);
 }
 
+/** @emoji 🧵 localStorage key for WASM compute worker thread count. */
+export const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY = "ui.compute.workerCount";
+
+/** @emoji 🧵 Default compute workers: `navigator.hardwareConcurrency` or 1. */
+export function defaultComputeWorkerCount(): number {
+  if (typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency > 0) {
+    return navigator.hardwareConcurrency;
+  }
+  return 1;
+}
+
+/** @emoji 🧵 Reads persisted compute worker count from localStorage. */
+export function readStoredComputeWorkerCount(): number {
+  if (typeof localStorage === "undefined") return defaultComputeWorkerCount();
+  const raw = localStorage.getItem(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY);
+  if (raw == null || raw === "") return defaultComputeWorkerCount();
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return defaultComputeWorkerCount();
+  return parsed;
+}
+
+/** @emoji 🧵 Persists compute worker count to localStorage. */
+export function writeStoredComputeWorkerCount(count: number): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, String(Math.max(1, Math.floor(count))));
+}
+
+/** @emoji 🧵 True when SharedArrayBuffer thread pools are available. */
+export function isCrossOriginIsolatedRuntime(): boolean {
+  return typeof crossOriginIsolated !== "undefined" && crossOriginIsolated === true;
+}
+
+/** @emoji 🧵 Effective worker count after cross-origin isolation fallback. */
+export function effectiveComputeWorkerCount(requested = readStoredComputeWorkerCount()): number {
+  if (!isCrossOriginIsolatedRuntime()) return 1;
+  return Math.max(1, Math.floor(requested));
+}
+
 const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
 
 /** @emoji 🏷️ When `always`, inline button/toggle captions stay visible even if compact chrome is on. */

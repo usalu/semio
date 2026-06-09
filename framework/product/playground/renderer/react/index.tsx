@@ -55,8 +55,11 @@ import {
   NavbarFixtureSelect,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
+  readStoredComputeWorkerCount,
   writeStoredUiChromeCompact,
   writeStoredUiChromeExpertise,
+  writeStoredComputeWorkerCount,
+  isCrossOriginIsolatedRuntime,
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 
@@ -1312,6 +1315,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   const [activeRightPanelKind, setActiveRightPanelKind] = reactHostPort.useState<"details" | "settings">("details");
   const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
   const [uiExpertise, setUiExpertise] = reactHostPort.useState(readStoredUiChromeExpertise);
+  const [computeWorkerCount, setComputeWorkerCount] = reactHostPort.useState(readStoredComputeWorkerCount);
   useElementsSurfaceChrome({ ...PLAYGROUND_SYSTEM_SURFACE_CHROME, compact: uiCompact, expertise: uiExpertise });
 
   const namedLayoutStore = reactHostPort.useMemo(
@@ -1351,12 +1355,19 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         setUiExpertise(expertise);
         writeStoredUiChromeExpertise(expertise);
       },
+      computeWorkerCount,
+      setComputeWorkerCount: (count: number) => {
+        const clamped = Math.max(1, Math.floor(count));
+        setComputeWorkerCount(clamped);
+        writeStoredComputeWorkerCount(clamped);
+      },
+      computeThreadsAvailable: isCrossOriginIsolatedRuntime(),
       modes: (shell.activeAppBase?.modes ?? []).map((mode) => ({ id: mode.id, label: mode.label, iconId: mode.iconId })),
       activeModeId: shell.activeModeId,
       setActiveModeId,
       hasModeNav,
     }),
-    [hasModeNav, setActiveModeId, shell.activeAppBase?.modes, shell.activeModeId, uiCompact, uiExpertise],
+    [computeWorkerCount, hasModeNav, setActiveModeId, shell.activeAppBase?.modes, shell.activeModeId, uiCompact, uiExpertise],
   );
   const settingsTabs = reactHostPort.useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostApi, shell.bus), [settingsHostApi, shell.bus]);
   const settingsIcon = reactHostPort.useMemo(() => <Icon icon="settings-2" size={16} />, []);
@@ -6467,9 +6478,9 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     [ctrl],
   );
   const onEvalOutputs = reactHostPort.useCallback(
-    (outputsJson: string) => {
+    (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => {
       console.log(`[DEBUG] procedural play eval outputs: ${outputsJson.slice(0, 120)}`);
-      ctrl?.run("setEvalOutputs", { outputsJson });
+      ctrl?.run("setEvalOutputs", { outputsJson, previewMeshes });
     },
     [ctrl],
   );

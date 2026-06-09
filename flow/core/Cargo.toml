@@ -4,18 +4,21 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-flow_module_brep = { path = "../modules/brep" }
-flow_module_core = { path = "../modules/core" }
-flow_module_dictionary = { path = "../modules/dictionary" }
-flow_module_list = { path = "../modules/list" }
-flow_module_logic = { path = "../modules/logic" }
-flow_module_math = { path = "../modules/math" }
-flow_module_text = { path = "../modules/text" }
+flow_module_brep = { path = "../modules/brep", default-features = false }
+flow_module_core = { path = "../modules/core", default-features = false }
+flow_module_dictionary = { path = "../modules/dictionary", default-features = false }
+flow_module_list = { path = "../modules/list", default-features = false }
+flow_module_logic = { path = "../modules/logic", default-features = false }
+flow_module_math = { path = "../modules/math", default-features = false }
+flow_module_text = { path = "../modules/text", default-features = false }
 geometry_brep_engine = { path = "../../geometry/brep/engine", features = ["parallel"] }
 neural_engine = { path = "../../neural/engine", features = ["parallel"] }
 mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }
@@ -28,5 +31,4 @@ js-sys = "0.3.83"
 serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"
-wasm-bindgen-rayon = { version = "1.3.0", features = ["no-bundler"] }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

@@ -141,7 +141,7 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖WasmExt
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]
 mod wasm_ext {
     use super::module_registry;
     use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommandV1};

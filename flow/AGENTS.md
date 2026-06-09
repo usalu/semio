@@ -5,24 +5,29 @@ flow is a gui for the [neural engine](../neural/engine/AGENTS.md#engine).
 
 # Flow
 
-A flow is a graphical [directed acyclic graph](../mathematical/graph/port/directed/dag) [neural tree](../neural/AGENTS.md#tree) along with inputs and outputs.
+A flow is a graphical [directed acyclic graph](../mathematical/graph/port/directed/dag) [neural tree](../neural/AGENTS.md#tree) along with sources and sinks.
 The flow data and the tree data are kept separate in order to make sure that the gui is not leaking into the logic.
 
 ```json
-{"flow":{¡¿³[]},"tree":{"neurons":[…],"synapes":…}}
+{"flow":{"components":[{…}],…},"tree":{"neurons":[…],"synapes":…}}
 ```
 
-# Widet
+# Component
 
-A widget is either a neuron, input or output.
+A component is either a function, source or sink.
 
-## Input
+## Function
 
-An input is a widget that interactively produces a dictionary.
+A function is the gui enhancement for a neuron.
+A function exposes channels for building up the dictionary and splitting the resulting dictionary.
+
+## Source
+
+An source is a component that interactively produces a dictionary.
 
 ### Slider
 
-A slider is widget for creating a single number dictionary.
+A slider is component for creating a single number dictionary.
 
 ```json
 {"number":3.1}
@@ -30,19 +35,19 @@ A slider is widget for creating a single number dictionary.
 
 ### Note
 
-A note is a widget for creating a single text dictionary.
+A note is a component for creating a single text dictionary.
 
 ```json
 {"text":"Some text"}
 ```
 
-## Output
+## Sink
 
-An output is either a preview or an action.
+An sink is either a preview or an action.
 
 ### Preview
 
-An output that previews dictionaries either as text, image or video.
+An sink that previews dictionaries either as text, image or video.
 
 ### Action
 

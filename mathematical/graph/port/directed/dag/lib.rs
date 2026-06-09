@@ -1659,6 +1659,8 @@ pub struct DagHost {
     icon_paint_cache: graph::IconPaintCache,
     ghost_node: Option<DagNodeSpec>,
     pending_cluster_explode: Option<String>,
+    computing: HashSet<NodeId>,
+    computing_anim_phase: Cell<f64>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -1673,6 +1675,7 @@ struct DagNodePaintChrome {
     is_selected: bool,
     is_highlighted: bool,
     is_hovered: bool,
+    is_computing: bool,
     body_fill_alpha: u8,
     ghost_tint: bool,
 }
@@ -1684,6 +1687,7 @@ impl DagNodePaintChrome {
             is_selected: false,
             is_highlighted: false,
             is_hovered: false,
+            is_computing: false,
             body_fill_alpha: 255,
             ghost_tint: true,
         }
@@ -1775,6 +1779,8 @@ impl DagHost {
             icon_paint_cache: graph::IconPaintCache::new(),
             ghost_node: None,
             pending_cluster_explode: None,
+            computing: HashSet::new(),
+            computing_anim_phase: Cell::new(0.0),
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -2311,6 +2317,29 @@ impl DagHost {
                 self.dimmed.insert(nid);
             }
         }
+    }
+
+    /// ⚙️ Marks widgets currently evaluating with animated active chrome.
+    pub fn set_computing(&mut self, widget_ids: &[String]) {
+        self.computing.clear();
+        for widget_id in widget_ids {
+            if let Some(nid) = self.node_id_for_widget_id(widget_id) {
+                self.computing.insert(nid);
+            }
+        }
+    }
+
+    /// ✅ Clears evaluating chrome from all nodes.
+    pub fn clear_computing(&mut self) {
+        self.computing.clear();
+    }
+
+    fn tick_computing_animation(&self) {
+        if self.computing.is_empty() {
+            return;
+        }
+        let next = (self.computing_anim_phase.get() + 0.02) % 1.0;
+        self.computing_anim_phase.set(next);
     }
 
     /// 📋 Preview-off fixture node ids currently dimmed on the canvas.
@@ -3826,6 +3855,61 @@ impl DagHost {
         );
     }
 
+    fn paint_computing_active_border(
+        &self,
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        rect: &cavas::vello::kurbo::Rect,
+        cam_zoom: f64,
+        theme: &VelloThemePalette,
+    ) {
+        use cavas::vello::kurbo::{BezPath, Point, Stroke};
+        const SEGMENTS: usize = 40;
+        const ARC_FRACTION: f64 = 0.24;
+        let start_t = self.computing_anim_phase.get();
+        let mut path = BezPath::new();
+        for i in 0..=SEGMENTS {
+            let local = i as f64 / SEGMENTS as f64;
+            let t = (start_t + local * ARC_FRACTION).fract();
+            let p = Self::rect_perimeter_point(rect, t);
+            if i == 0 {
+                path.move_to(p);
+            } else {
+                path.line_to(p);
+            }
+        }
+        let stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX * 1.75, cam_zoom);
+        scene.stroke(
+            &Stroke::new(stroke_px),
+            *aff,
+            theme.node_stroke_selected,
+            None,
+            &path,
+        );
+    }
+
+    fn rect_perimeter_point(rect: &cavas::vello::kurbo::Rect, t: f64) -> cavas::vello::kurbo::Point {
+        use cavas::vello::kurbo::Point;
+        let t = t.fract();
+        let w = rect.width();
+        let h = rect.height();
+        let perim = 2.0 * (w + h);
+        let mut d = t * perim;
+        if d <= w {
+            return Point::new(rect.x0 + d, rect.y0);
+        }
+        d -= w;
+        if d <= h {
+            return Point::new(rect.x1, rect.y0 + d);
+        }
+        d -= h;
+        if d <= w {
+            return Point::new(rect.x1 - d, rect.y1);
+        }
+        d -= w;
+        Point::new(rect.x0, rect.y1 - d)
+    }
+
     fn paint_node_visual(
         &self,
         scene: &mut cavas::vello::Scene,
@@ -3861,6 +3945,9 @@ impl DagHost {
         }
         if !chrome.is_selected {
             scene.stroke(&Stroke::new(dag_world_stroke(stroke_screen_px, cam.zoom)), *aff, stroke, None, &rect);
+        }
+        if chrome.is_computing {
+            self.paint_computing_active_border(scene, aff, &rect, cam.zoom, theme);
         }
         let layout_px = dag_label_layout_px();
         let paint_px = dag_label_paint_px(cam.zoom, lod_index);
@@ -4047,6 +4134,7 @@ impl DagHost {
         use cavas::vello::peniko::Fill;
 
         let theme = &self.vello_theme;
+        self.tick_computing_animation();
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
@@ -4159,6 +4247,7 @@ impl DagHost {
             let (is_selected, is_highlighted, is_hovered) = engine_nid
                 .map(|nid| self.node_interaction_chrome(nid))
                 .unwrap_or((false, false, false));
+            let is_computing = engine_nid.is_some_and(|nid| self.computing.contains(&nid));
             self.paint_node_visual(
                 scene,
                 &aff,
@@ -4173,6 +4262,7 @@ impl DagHost {
                     is_selected,
                     is_highlighted,
                     is_hovered,
+                    is_computing,
                     body_fill_alpha: 255,
                     ghost_tint: false,
                 },

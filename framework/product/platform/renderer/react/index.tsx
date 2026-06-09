@@ -209,6 +209,10 @@ import {
 	getLevelBgClass,
 	readStoredUiChromeCompact,
 	readStoredUiChromeExpertise,
+	readStoredComputeWorkerCount,
+	writeStoredComputeWorkerCount,
+	isCrossOriginIsolatedRuntime,
+	defaultComputeWorkerCount,
 	UiChromeCompactProvider,
 	UiChromeLabelPolicyProvider,
 	useElementsSurfaceChrome,
@@ -1415,6 +1419,9 @@ export interface SettingsHostApi {
 	setCompact: (compact: boolean) => void;
 	readonly expertise: Expertise;
 	setExpertise: (expertise: Expertise) => void;
+	readonly computeWorkerCount: number;
+	setComputeWorkerCount: (count: number) => void;
+	readonly computeThreadsAvailable: boolean;
 	readonly modes: readonly SettingsHostModeEntry[];
 	readonly activeModeId: string | null;
 	setActiveModeId: (modeId: string) => void;
@@ -1475,6 +1482,25 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 						))}
 					</SelectContent>
 				</Select>
+			),
+		},
+		{
+			id: "framework.settings.general.workers",
+			label: "Compute workers",
+			control: (
+				<Input
+					id="framework.settings.workers"
+					type="number"
+					min={1}
+					max={128}
+					disabled={!host.computeThreadsAvailable}
+					value={String(host.computeWorkerCount)}
+					onChange={(event) => {
+						const parsed = Number.parseInt(event.target.value, 10);
+						if (Number.isFinite(parsed) && parsed >= 1) host.setComputeWorkerCount(parsed);
+					}}
+					className="h-medium w-full min-w-0"
+				/>
 			),
 		},
 	];
@@ -3400,6 +3426,9 @@ if (import.meta.vitest) {
 				setCompact: () => {},
 				expertise: Expertise.NORMAL,
 				setExpertise: () => {},
+				computeWorkerCount: 4,
+				setComputeWorkerCount: () => {},
+				computeThreadsAvailable: true,
 				modes: [
 					{ id: "edit", label: "Edit" },
 					{ id: "inspect", label: "Inspect" },
@@ -4403,6 +4432,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
 	const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
 	const [uiExpertise, setUiExpertise] = reactHostPort.useState(readStoredUiChromeExpertise);
+	const [computeWorkerCount, setComputeWorkerCount] = reactHostPort.useState(readStoredComputeWorkerCount);
 	const detectedMobile = useMediaQuery(mobileQuery);
 	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
 
@@ -4455,12 +4485,19 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 				setUiExpertise(expertise);
 				writeStoredUiChromeExpertise(expertise);
 			},
+			computeWorkerCount,
+			setComputeWorkerCount: (count: number) => {
+				const clamped = Math.max(1, Math.floor(count));
+				setComputeWorkerCount(clamped);
+				writeStoredComputeWorkerCount(clamped);
+			},
+			computeThreadsAvailable: isCrossOriginIsolatedRuntime(),
 			modes: activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, iconId: mode.iconId })),
 			activeModeId,
 			setActiveModeId,
 			hasModeNav,
 		}),
-		[activeModeId, activeAppBase.modes, hasModeNav, setActiveModeId, uiCompact, uiExpertise],
+		[activeModeId, activeAppBase.modes, computeWorkerCount, hasModeNav, setActiveModeId, uiCompact, uiExpertise],
 	);
 
 	const panelTabsByKind = reactHostPort.useMemo(

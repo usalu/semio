@@ -7,22 +7,22 @@ todos:
     status: completed
   - id: coi-headers
     content: Add COOP/COEP (credentialless) cross-origin-isolation headers to dev/preview/build vite configs; runtime crossOriginIsolated fallback
-    status: in_progress
+    status: completed
   - id: brep-async
     content: Convert BrepKernel trait + BrepkitKernel impl to async (async-trait); rayon-backed heavy ops; async TS bridge
-    status: pending
+    status: completed
   - id: neural-parallel
     content: Parallelize neural Evaluator via topo-level rayon batching; make dispatch hook Sync; add parallel feature
-    status: pending
+    status: completed
   - id: flow-inwasm-registry
     content: Link flow modules into flow_core as rlibs (in-WASM registry), replacing JS EvalBridge; Mutex brep kernel; init_thread_pool export; async evaluate
-    status: pending
+    status: completed
   - id: ui-worker-setting
     content: Run FlowSession in dedicated worker (async evaluate + debounce); add configurable worker-count setting defaulting to hardwareConcurrency
-    status: pending
+    status: completed
   - id: validate
     content: Test crates serially, build threaded wasm, verify cross-origin isolation and responsive UI under heavy boolean ops
-    status: pending
+    status: completed
 isProject: false
 ---
 

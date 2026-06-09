@@ -27,6 +27,7 @@ import {
 	meshTransferToGeometryData,
 	type BrepWasmBridge,
 	type GeometryRef,
+	type MeshTransfer,
 	type Vec3,
 } from "@geometry/brep/js";
 import {
@@ -176,7 +177,14 @@ export interface ProceduralChannelRef {
 }
 
 export type ProceduralPreviewItem =
-	| { readonly widgetId: string; readonly port: string; readonly direction: ProceduralChannelDirection; readonly kind: "geometry"; readonly handle: GeometryRef }
+	| {
+			readonly widgetId: string;
+			readonly port: string;
+			readonly direction: ProceduralChannelDirection;
+			readonly kind: "geometry";
+			readonly handle: GeometryRef;
+			readonly mesh?: MeshTransfer;
+	  }
 	| { readonly widgetId: string; readonly port: string; readonly direction: ProceduralChannelDirection; readonly kind: "point"; readonly position: Vec3 }
 	| { readonly widgetId: string; readonly port: string; readonly direction: ProceduralChannelDirection; readonly kind: "vector"; readonly directionVec: Vec3 };
 
@@ -679,6 +687,11 @@ function BrepPreviewLayer({
 
 	useEffect(() => {
 		if (!geometryRef) return;
+		if (item.kind === "geometry" && item.mesh && isRenderableMeshTransfer(item.mesh)) {
+			setBuffers(buildMeshBuffers(meshTransferToGeometryData(item.mesh)));
+			invalidate();
+			return;
+		}
 		let cancelled = false;
 		void (async () => {
 			await ensureBrepWasmLoaded();
@@ -695,7 +708,7 @@ function BrepPreviewLayer({
 		return () => {
 			cancelled = true;
 		};
-	}, [geometryRef, invalidate, kernel, tolerance]);
+	}, [geometryRef, invalidate, item, kernel, tolerance]);
 
 	if (!renderMode.visible) return null;
 
@@ -1278,7 +1291,7 @@ export interface ProceduralFlowEditorProps {
 	readonly reorganize?: FlowReorganizeRequest;
 	readonly extensionRevision?: number;
 	readonly onPreviewText?: (text: string) => void;
-	readonly onEvalOutputs?: (outputsJson: string) => void;
+	readonly onEvalOutputs?: (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => void;
 	readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
 	readonly onFixtureChange?: (fixtureJson: string) => void;
 	readonly onSelectionChange?: (ids: readonly string[]) => void;

@@ -106,6 +106,19 @@ type BrepWasmModule = {
 
 let brepWasm: BrepWasmModule | null = null;
 
+async function tessellateGeometryJson(handle: string, tolerance: number): Promise<string> {
+  const module = await ensureBrepWasmLoaded();
+  return module.tessellate(handle, tolerance);
+}
+
+/** @emoji 📦 Parses worker-tessellated preview mesh JSON into a mesh transfer. */
+export function meshTransferFromPreviewPayload(value: unknown): MeshTransfer | null {
+	if (!value || typeof value !== "object") return null;
+	const raw = value as RawMeshTransfer;
+	if (raw.error) return null;
+	return rawMeshToTransfer(raw);
+}
+
 function rawMeshToTransfer(raw: RawMeshTransfer): MeshTransfer {
 	return {
 		position: new Float32Array(raw.position ?? []),
@@ -120,7 +133,7 @@ function rawMeshToTransfer(raw: RawMeshTransfer): MeshTransfer {
 	};
 }
 
-/** @emoji 🔌 Preview kernel backed by `@flow/module-brep` WASM tessellation. */
+/** @emoji 🔌 Preview kernel backed by flow eval brep WASM tessellation. */
 export interface BrepWasmBridge {
 	tessellateGeometry(ref: GeometryRef, tolerance: number): Promise<MeshTransfer>;
 	disposeGeometry(ref: GeometryRef): void;
@@ -129,7 +142,7 @@ export interface BrepWasmBridge {
 export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
 	return {
 		async tessellateGeometry(ref, tolerance) {
-			const json = module.tessellate(ref, tolerance);
+			const json = await tessellateGeometryJson(ref, tolerance);
 			const raw = JSON.parse(json) as RawMeshTransfer;
 			if (raw.error) throw new Error(raw.error);
 			return rawMeshToTransfer(raw);
@@ -140,7 +153,7 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
 	};
 }
 
-/** @emoji ⏳ Loads `@flow/module-brep` WASM once. */
+/** @emoji ⏳ Loads brep tessellation WASM (flow_core in browser — same kernel as flow eval). */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
 	if (brepWasm) return brepWasm;
 	if (import.meta.env.VITEST) {
@@ -148,19 +161,22 @@ export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
 		const { dirname, join } = await import("node:path");
 		const { fileURLToPath } = await import("node:url");
 		const here = dirname(fileURLToPath(import.meta.url));
-		const mod = (await import("@flow/module-brep")) as BrepWasmModule & {
+		const mod = (await import("../../../flow/modules/brep/pkg/flow_module_brep.js")) as BrepWasmModule & {
 			initSync?: (input: { module: BufferSource }) => void;
 		};
 		mod.initSync?.({ module: readFileSync(join(here, "../../../flow/modules/brep/pkg/flow_module_brep_bg.wasm")) });
 		brepWasm = mod;
 		return mod;
 	}
-	const [{ default: initBrep, ...mod }, { default: wasmUrl }] = await Promise.all([
-		import("@flow/module-brep"),
-		import("../../../flow/modules/brep/pkg/flow_module_brep_bg.wasm?url"),
+	const [{ default: initFlow, tessellate, dispose }, { default: wasmUrl }] = await Promise.all([
+		import("../../../flow/core/pkg/flow_core.js"),
+		import("../../../flow/core/pkg/flow_core_bg.wasm?url"),
 	]);
-	if (initBrep) await initBrep({ module_or_path: wasmUrl });
-	brepWasm = mod as BrepWasmModule;
+	if (typeof tessellate !== "function" || typeof dispose !== "function") {
+		throw new Error("flow_core brep tessellation exports missing — rebuild flow/core wasm");
+	}
+	if (initFlow) await initFlow({ module_or_path: wasmUrl });
+	brepWasm = { tessellate, dispose };
 	return brepWasm;
 }
 

@@ -8,6 +8,10 @@ rust-version = "1.88"
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
+[features]
+default = ["standalone-wasm"]
+standalone-wasm = ["dep:wasm-bindgen"]
+
 [dependencies]
 flow_module_wasm = { path = "../wasm" }
 neural_engine = { path = "../../../neural/engine" }
@@ -15,4 +19,4 @@ serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.3", features = ["wasm_js"] }
-wasm-bindgen = "0.2.106"
+wasm-bindgen = { version = "0.2.106", optional = true }
