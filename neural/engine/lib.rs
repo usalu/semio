@@ -731,6 +731,21 @@ impl NeuralCache {
         }
     }
 }
+
+fn eval_error_dictionary(err: &EvalError) -> Dictionary {
+    Dictionary::new().insert("error", Value::Atom(Atom::String(err.to_string())))
+}
+
+fn evaluate_cached_output<F>(cache: &NeuralCache, kind: &str, merged: &Dictionary, dispatch: F) -> Dictionary
+where
+    F: FnOnce() -> Result<Dictionary, EvalError>,
+{
+    let key = node_hash(kind, merged);
+    match cache.get_or_insert_with(key, dispatch) {
+        Ok(dict) => dict,
+        Err(err) => eval_error_dictionary(&err),
+    }
+}
 // #endregion 🔖Cache
 
 // #region 🔖Evaluator
@@ -818,8 +833,7 @@ impl<'a> Evaluator<'a> {
                 continue;
             }
             let merged = input.merge(&neuron.params);
-            let key = node_hash(&neuron.kind, &merged);
-            let out = cache.get_or_insert_with(key, || dispatch(&neuron.kind, &merged))?;
+            let out = evaluate_cached_output(cache, &neuron.kind, &merged, || dispatch(&neuron.kind, &merged));
             outputs.insert(neuron_id.clone(), out);
         }
         Ok(EvalChannels { outputs, inputs })
@@ -883,24 +897,21 @@ impl<'a> Evaluator<'a> {
             #[cfg(feature = "parallel")]
             {
                 use rayon::prelude::*;
-                let parallel_outputs: Result<Vec<(String, Dictionary)>, EvalError> = compute_jobs
+                let parallel_outputs: Vec<(String, Dictionary)> = compute_jobs
                     .par_iter()
                     .map(|(neuron_id, kind, merged)| {
-                        let key = node_hash(kind, merged);
-                        cache
-                            .get_or_insert_with(key, || dispatch(kind, merged))
-                            .map(|out| (neuron_id.clone(), out))
+                        let out = evaluate_cached_output(cache, kind, merged, || dispatch(kind, merged));
+                        (neuron_id.clone(), out)
                     })
                     .collect();
-                for entry in parallel_outputs? {
+                for entry in parallel_outputs {
                     level_outputs.insert(entry.0, entry.1);
                 }
             }
             #[cfg(not(feature = "parallel"))]
             {
                 for (neuron_id, kind, merged) in compute_jobs {
-                    let key = node_hash(&kind, &merged);
-                    let out = cache.get_or_insert_with(key, || dispatch(&kind, &merged))?;
+                    let out = evaluate_cached_output(cache, &kind, &merged, || dispatch(&kind, &merged));
                     level_outputs.insert(neuron_id, out);
                 }
             }
@@ -1601,6 +1612,34 @@ mod tests {
         cache.begin_epoch();
         evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn missing_required_input_records_per_node_error() {
+        let tree = Tree {
+            neurons: vec![
+                Neuron::with_kind("a", "echo", number_dictionary(2.0)),
+                Neuron::with_kind("b", "echo", number_dictionary(5.0)),
+                Neuron::with_kind("add", "math.add", Dictionary::new()),
+            ],
+            synapses: vec![Synapse {
+                id: "s1".into(),
+                from: "a".into(),
+                to: "add".into(),
+                from_port: "out".into(),
+                to_port: "a".into(),
+            }],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        let channels = Evaluator::new(&reg)
+            .evaluate_channels(&tree, &HashMap::new(), &HashMap::from([(add_info().id.clone(), add_info())]))
+            .unwrap();
+        let add_out = channels.outputs.get("add").expect("add output");
+        assert!(add_out.get("error").is_some());
+        assert!(channels.outputs.get("a").is_some());
     }
 
     #[test]

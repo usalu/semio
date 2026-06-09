@@ -1484,6 +1484,7 @@ checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 name = "flow_core"
 version = "0.1.0"
 dependencies = [
+ "flow_module_bim",
  "flow_module_brep",
  "flow_module_core",
  "flow_module_dictionary",
@@ -1502,6 +1503,19 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "flow_module_bim"
+version = "0.1.0"
+dependencies = [
+ "flow_module_wasm",
+ "getrandom 0.3.4",
+ "js-sys",
+ "neural_engine",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

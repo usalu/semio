@@ -620,6 +620,14 @@ function previewItemChannel(item: ProceduralPreviewItem): ProceduralChannelRef {
 	return { widgetId: item.widgetId, port: item.port, direction: item.direction };
 }
 
+export function previewOffForItem(
+	showMode: ProceduralPreviewShowMode,
+	widgetId: string,
+	previewOffNodeIds: readonly string[],
+): boolean {
+	return showMode !== "selected" && previewOffNodeIds.includes(widgetId);
+}
+
 function createPreviewPointerHandlers(
 	channel: ProceduralChannelRef,
 	onHover?: (channel: ProceduralChannelRef | null) => void,
@@ -1249,7 +1257,7 @@ export function ProceduralPreview({
 										(!hasChannelSelection && (effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId))),
 									highlighted: effectivePreselectRemoved.has(entry.widgetId),
 									hovered: geometryTargetMatches(entry, resolvedHoverTargets),
-									previewOff: previewOffNodeIds.includes(entry.widgetId),
+									previewOff: previewOffForItem(showMode, entry.widgetId, previewOffNodeIds),
 									locked,
 									interactionHighlighted,
 									pickEnabled: !gumballDragActive,
@@ -1340,6 +1348,7 @@ export interface ProceduralFlowEditorProps {
 	readonly automaticLod?: boolean;
 	readonly lod?: DagDrawLodKind;
 	readonly onLodChange?: (lod: DagDrawLodKind) => void;
+	readonly proximityDistance?: number;
 }
 
 export function ProceduralFlowEditor({
@@ -1372,6 +1381,7 @@ export function ProceduralFlowEditor({
 	automaticLod,
 	lod,
 	onLodChange,
+	proximityDistance,
 }: ProceduralFlowEditorProps): ReactNode {
 	const hostRef = useRef(extensionHost);
 
@@ -1412,6 +1422,7 @@ export function ProceduralFlowEditor({
 			automaticLod={automaticLod}
 			lod={lod}
 			onLodChange={onLodChange}
+			proximityDistance={proximityDistance}
 			className={className ?? "h-full w-full"}
 		/>
 	);
@@ -1513,6 +1524,55 @@ if (import.meta.vitest) {
 			expect(items).toContainEqual({ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: box.handle });
 		});
 
+		it("previewOffForItem is ignored in show selected mode", async () => {
+			const { previewOffForItem } = await import("./index.tsx");
+			expect(previewOffForItem("everything", "sphere", ["sphere"])).toBe(true);
+			expect(previewOffForItem("selected", "sphere", ["sphere"])).toBe(false);
+		});
+
+		it("filterVisiblePreviewItems resolves input channel selection to upstream geometry", async () => {
+			const { filterVisiblePreviewItems } = await import("./index.tsx");
+			const sphereHandle = "solid-sphere";
+			const torusHandle = "solid-torus";
+			const cutHandle = "solid-cut";
+			const items = [
+				{ widgetId: "sphere", port: "out", direction: "out" as const, kind: "geometry" as const, handle: sphereHandle },
+				{ widgetId: "torus", port: "out", direction: "out" as const, kind: "geometry" as const, handle: torusHandle },
+				{ widgetId: "cut", port: "out", direction: "out" as const, kind: "geometry" as const, handle: cutHandle },
+			];
+			const edges = [
+				{ source: "sphere:out", target: "cut:a" },
+				{ source: "torus:out", target: "cut:b" },
+			];
+			const visibleForA = filterVisiblePreviewItems(items, {
+				showMode: "selected",
+				selectedNodeIds: ["cut"],
+				selectedChannels: [{ widgetId: "cut", port: "a", direction: "in" }],
+				edges,
+				hoveredNodeId: null,
+				hoveredChannel: null,
+			});
+			expect(visibleForA).toEqual([items[0]]);
+			const visibleForB = filterVisiblePreviewItems(items, {
+				showMode: "selected",
+				selectedNodeIds: ["cut"],
+				selectedChannels: [{ widgetId: "cut", port: "b", direction: "in" }],
+				edges,
+				hoveredNodeId: null,
+				hoveredChannel: null,
+			});
+			expect(visibleForB).toEqual([items[1]]);
+			const visibleForOut = filterVisiblePreviewItems(items, {
+				showMode: "selected",
+				selectedNodeIds: ["cut"],
+				selectedChannels: [{ widgetId: "cut", port: "out", direction: "out" }],
+				edges,
+				hoveredNodeId: null,
+				hoveredChannel: null,
+			});
+			expect(visibleForOut).toEqual([items[2]]);
+		});
+
 		it("procedural host exposes brep operators with capability-typed ports", async () => {
 			const sections = host.catalogueSections();
 			const brep = sections.find((section) => section.id === "brep");
@@ -1521,6 +1581,49 @@ if (import.meta.vitest) {
 			const box = kinds.find((item) => item.id === "brep.prim3d.box");
 			expect(box?.inputs.some((port) => port.id === "width")).toBe(true);
 			expect(box?.inputs[0]?.operators?.length).toBeGreaterThan(0);
+		});
+
+		it("procedural host exposes bim building model operators", async () => {
+			const sections = host.catalogueSections();
+			const bim = sections.find((section) => section.id === "bim");
+			expect(bim?.groups?.some((group) => group.title === "Elements")).toBe(true);
+			const wall = JSON.parse(host.evaluate("bim.element.wall", JSON.stringify({}))) as { $schema?: string; length?: number };
+			expect(wall.$schema).toBe("wall");
+			const slab = JSON.parse(
+				host.evaluate(
+					"bim.element.slab",
+					JSON.stringify({
+						width: { $schema: "number", value: 10 },
+						depth: { $schema: "number", value: 8 },
+						thickness: { $schema: "number", value: 0.25 },
+					}),
+				),
+			) as { $schema?: string };
+			const story = JSON.parse(
+				host.evaluate(
+					"bim.assemble.story",
+					JSON.stringify({
+						height: { $schema: "number", value: 3 },
+						slab,
+						elements: {},
+					}),
+				),
+			) as { $schema?: string };
+			const building = JSON.parse(
+				host.evaluate(
+					"bim.assemble.building",
+					JSON.stringify({
+						name: { $schema: "text", value: "Tower" },
+						stories: { 0: story },
+					}),
+				),
+			) as { $schema?: string; name?: string };
+			const area = JSON.parse(
+				host.evaluate("bim.measure.floorArea", JSON.stringify({ building })),
+			) as { $schema?: string; value?: number };
+			expect(building.$schema).toBe("building");
+			expect(area.$schema).toBe("number");
+			expect(area.value).toBe(80);
 		});
 
 		it("procedural preview mounts the infinite-world viewport stack", async () => {

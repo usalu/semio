@@ -19,6 +19,7 @@ export default createPlaygroundPlayViteConfig({
 		{ find: "@geometry/brep/js", replacement: path.resolve(repoRoot, "geometry/brep/js/index.ts") },
 		{ find: "@flow/react", replacement: path.resolve(repoRoot, "flow/react/index.tsx") },
 		{ find: "@flow/module-brep", replacement: path.resolve(repoRoot, "flow/modules/brep/pkg/flow_module_brep.js") },
+		{ find: "@flow/module-bim", replacement: path.resolve(repoRoot, "flow/modules/bim/pkg/flow_module_bim.js") },
 		{ find: /^three$/, replacement: threeModule },
 	],
 	resolveDedupe: ["react", "react-dom", "three", "scheduler", "@flow/react", "@procedural/react"],

@@ -20,6 +20,7 @@ members = [
     "flow/modules/dictionary",
     "flow/modules/list",
     "flow/modules/brep",
+    "flow/modules/bim",
     "flow/core",
     "reasoning/mindmap/wires",
     "reasoning/mindmap/rs",

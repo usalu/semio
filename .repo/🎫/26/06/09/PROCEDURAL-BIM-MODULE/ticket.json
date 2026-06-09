@@ -1,0 +1,19 @@
+{
+  "title": "Procedural BIM Module",
+  "emoji": "🏗️",
+  "status": "closed",
+  "description": "Add a new flow module `bim` (Building Information Modeling) that contributes semantic building-model schemas and operators, fully wired into the flow/procedural toolchain, so future modules like energy and structure can consume a building model.",
+  "summary": "Added flow module `bim` for semantic building information modeling: schemas (material, space, wall, slab, column, window, story, building), element constructors, story/building assembly operators, and floor-area/gross-volume measures. Wired into Cargo workspace, flow_core registry, FlowExtensionHost loaders/defaults, build scripts, vitest/vite aliases, launch.json, and procedural integration test for end-to-end wall→story→building→measure evaluation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1643"
+  },
+  "goal": "🎯procedural🎯bim",
+  "plan": {
+    "client": "cursor",
+    "id": "3177064c",
+    "local": "procedural_bim_module_3177064c.plan.md"
+  },
+  "sessions": [
+    "⚪60ffd7c3df2c49188b907f7bae7eb7a8"
+  ]
+}

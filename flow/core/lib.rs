@@ -5,6 +5,7 @@ pub use mathematical_graph_port_directed_dag as dag;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::hash::{Hash, Hasher};
 use std::sync::OnceLock;
 
 use dag::{
@@ -306,6 +307,49 @@ fn tree_from_fixture(fixture: &FlowFixtureV1) -> Tree {
     Tree { neurons, synapses }
 }
 
+fn tree_signature(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    let mut neurons: Vec<_> = tree
+        .neurons
+        .iter()
+        .map(|neuron| (neuron.id.as_str(), neuron.kind.as_str(), &neuron.params, &neuron.tree))
+        .collect();
+    neurons.sort_by(|left, right| left.0.cmp(right.0));
+    for (id, kind, params, subtree) in neurons {
+        id.hash(&mut hasher);
+        kind.hash(&mut hasher);
+        if let Ok(json) = serde_json::to_string(params) {
+            json.hash(&mut hasher);
+        }
+        if let Some(subtree) = subtree {
+            if let Ok(json) = serde_json::to_string(subtree) {
+                json.hash(&mut hasher);
+            }
+        }
+    }
+    let mut synapses: Vec<_> = tree
+        .synapses
+        .iter()
+        .map(|synapse| (synapse.from.as_str(), synapse.to.as_str(), synapse.from_port.as_str(), synapse.to_port.as_str()))
+        .collect();
+    synapses.sort_by(|left, right| (left.0, left.1, left.2, left.3).cmp(&(right.0, right.1, right.2, right.3)));
+    for (from, to, from_port, to_port) in synapses {
+        from.hash(&mut hasher);
+        to.hash(&mut hasher);
+        from_port.hash(&mut hasher);
+        to_port.hash(&mut hasher);
+    }
+    let mut seed_keys: Vec<_> = seeds.keys().collect();
+    seed_keys.sort();
+    for key in seed_keys {
+        key.hash(&mut hasher);
+        if let Ok(json) = serde_json::to_string(seeds.get(key).expect("key")) {
+            json.hash(&mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
 fn widget_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { neuronKind, .. } => neuronKind.clone(),
@@ -437,7 +481,15 @@ fn neuron_io_layout(
         let ports = default_neuron_input_ports(neuron_kind, input_ports, kind_infos);
         let inputs = ports
             .iter()
-            .map(|port_id| IoPortSpec::simple(port_id.clone(), port_id.clone()))
+            .map(|port_id| {
+                let connected = is_port_connected(synapses, neuron_id, port_id);
+                IoPortSpec {
+                    id: port_id.clone(),
+                    label: port_id.clone(),
+                    connected: Some(connected),
+                    ..Default::default()
+                }
+            })
             .collect();
         let variadic_outputs = info.and_then(|entry| entry.variadic_output.as_ref()).is_some();
         return (inputs, outputs, true, variadic_outputs);
@@ -455,7 +507,15 @@ fn neuron_io_layout(
     if !input_ports.is_empty() {
         let inputs = input_ports
             .iter()
-            .map(|port_id| IoPortSpec::simple(port_id.clone(), port_id.clone()))
+            .map(|port_id| {
+                let connected = is_port_connected(synapses, neuron_id, port_id);
+                IoPortSpec {
+                    id: port_id.clone(),
+                    label: port_id.clone(),
+                    connected: Some(connected),
+                    ..Default::default()
+                }
+            })
             .collect();
         return (inputs, outputs, false, false);
     }
@@ -962,6 +1022,7 @@ fn flow_registry() -> &'static neural::Registry {
         flow_module_dictionary::register(&mut registry);
         flow_module_list::register(&mut registry);
         flow_module_brep::register(&mut registry);
+        flow_module_bim::register(&mut registry);
         registry
     })
 }
@@ -1221,6 +1282,26 @@ fn collect_live_geometry_handles(outputs: &HashMap<String, Dictionary>) -> Vec<S
     handles.dedup();
     handles
 }
+
+fn collect_live_geometry_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
+    let mut handles = Vec::new();
+    for dict in channels.outputs.values().chain(channels.inputs.values()) {
+        collect_geometry_handles_from_dictionary(dict, &mut handles);
+    }
+    handles.sort();
+    handles.dedup();
+    handles
+}
+
+fn is_global_eval_error_json(json: &str) -> bool {
+    let Ok(parsed) = serde_json::from_str::<serde_json::Value>(json) else {
+        return true;
+    };
+    let Some(object) = parsed.as_object() else {
+        return true;
+    };
+    object.len() == 1 && object.contains_key("error")
+}
 // #endregion 🔖ChannelEval
 
 // #region History
@@ -1243,6 +1324,7 @@ pub struct FlowHost {
     host_catalogue_json: String,
     kind_infos: HashMap<String, OperatorInfo>,
     neural_cache: NeuralCache,
+    last_tree_signature: Option<u64>,
     next_widget_serial: u64,
     next_synapse_serial: u64,
     viewport_w: u32,
@@ -1271,6 +1353,7 @@ impl FlowHost {
             host_catalogue_json: String::new(),
             kind_infos: HashMap::new(),
             neural_cache: NeuralCache::new(),
+            last_tree_signature: None,
             next_widget_serial: 1,
             next_synapse_serial: 100,
             viewport_w: 1,
@@ -1291,6 +1374,7 @@ impl FlowHost {
         self.fixture = fixture;
         self.outputs.clear();
         self.last_eval_json.clear();
+        self.last_tree_signature = None;
         self.pan_anchor = None;
         self.ghost_node = None;
         self.history = FlowHistory::default();
@@ -1347,6 +1431,10 @@ impl FlowHost {
 
     /// 📥 Applies channel-structured eval JSON from an off-thread worker without re-running operators.
     pub fn apply_eval_outputs_json(&mut self, json: &str) {
+        if is_global_eval_error_json(json) {
+            self.dag.clear_computing();
+            return;
+        }
         self.last_eval_json = json.to_string();
         let outputs = outputs_from_channel_eval_json(json);
         self.outputs = outputs.clone();
@@ -1354,9 +1442,9 @@ impl FlowHost {
         self.dag.clear_computing();
     }
 
-    /// ⚙️ Marks neuron widgets as actively computing for animated canvas chrome.
-    pub fn set_computing_widget_ids(&mut self, widget_ids: &[String]) {
-        self.dag.set_computing(widget_ids);
+    /// ⚙️ Marks one actively computing widget and downstream widgets as stale.
+    pub fn set_computing_progress(&mut self, active_widget_id: Option<&str>, stale_widget_ids: &[String]) {
+        self.dag.set_computing_progress(active_widget_id, stale_widget_ids);
     }
 
     /// ✅ Clears computing chrome from all widgets.
@@ -1820,6 +1908,11 @@ impl FlowHost {
     fn evaluate_internal(&mut self) {
         let tree = self.build_tree();
         let seeds = self.build_seeds();
+        let signature = tree_signature(&tree, &seeds);
+        if self.last_tree_signature == Some(signature) && !self.outputs.is_empty() {
+            return;
+        }
+        self.last_tree_signature = Some(signature);
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry);
         self.neural_cache.begin_epoch();
@@ -1836,11 +1929,13 @@ impl FlowHost {
                 self.outputs = channels.outputs.clone();
                 self.apply_preview_outputs(&channels.outputs);
                 self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
-                let live_handles = collect_live_geometry_handles(&self.outputs);
+                let live_handles = collect_live_geometry_handles_from_channels(&channels);
                 flow_module_brep::retain_geometry_handles(&live_handles);
             }
             Err(err) => {
-                self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
+                if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
+                    self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
+                }
             }
         }
     }
@@ -2744,10 +2839,19 @@ impl FlowSession {
         self.state.borrow_mut().host.apply_eval_outputs_json(json);
     }
 
-    #[wasm_bindgen(js_name = setComputingWidgetIds)]
-    pub fn set_computing_widget_ids(&self, json: &str) {
-        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
-        self.state.borrow_mut().host.set_computing_widget_ids(&ids);
+    #[wasm_bindgen(js_name = setComputingProgress)]
+    pub fn set_computing_progress(&self, json: &str) {
+        let payload: serde_json::Value = serde_json::from_str(json).unwrap_or(serde_json::Value::Null);
+        let active = payload.get("active").and_then(|value| value.as_str()).map(str::to_string);
+        let stale: Vec<String> = payload
+            .get("stale")
+            .and_then(|value| value.as_array())
+            .map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
+            .unwrap_or_default();
+        self.state
+            .borrow_mut()
+            .host
+            .set_computing_progress(active.as_deref(), &stale);
     }
 
     #[wasm_bindgen(js_name = clearComputingWidgetIds)]
@@ -3317,6 +3421,49 @@ mod tests {
     }
 
     #[test]
+    fn evaluate_skips_unchanged_tree_after_move_widget() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+        let calls = Arc::new(AtomicUsize::new(0));
+        let calls_for_bridge = calls.clone();
+        let mut host = FlowHost::default();
+        host.set_eval_bridge_fn(Box::new(move |kind, input| {
+            calls_for_bridge.fetch_add(1, Ordering::Relaxed);
+            test_math_bridge(kind, input)
+        }));
+        host.set_neuron_kind_infos_json(&test_kind_infos_json());
+        host.evaluate_internal();
+        let baseline = calls.load(Ordering::Relaxed);
+        host.move_widget("slider", -120.0, 20.0).unwrap();
+        host.evaluate_internal();
+        assert_eq!(calls.load(Ordering::Relaxed), baseline);
+    }
+
+    #[test]
+    fn evaluate_runs_after_tree_change() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+        let calls = Arc::new(AtomicUsize::new(0));
+        let calls_for_bridge = calls.clone();
+        let mut host = FlowHost::default();
+        host.set_eval_bridge_fn(Box::new(move |kind, input| {
+            calls_for_bridge.fetch_add(1, Ordering::Relaxed);
+            test_math_bridge(kind, input)
+        }));
+        host.set_neuron_kind_infos_json(&test_kind_infos_json());
+        host.evaluate_internal();
+        let baseline = calls.load(Ordering::Relaxed);
+        host.set_slider_value("slider", 5.0);
+        host.evaluate_internal();
+        let after_slider = calls.load(Ordering::Relaxed);
+        assert!(after_slider > baseline);
+        host.disconnect("s1").unwrap();
+        host.connect_ports("slider", "out", "add", "b").unwrap();
+        host.evaluate_internal();
+        assert!(calls.load(Ordering::Relaxed) > after_slider);
+    }
+
+    #[test]
     fn neural_cache_persists_across_evaluations() {
         use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
@@ -3334,6 +3481,43 @@ mod tests {
         assert_eq!(calls.load(Ordering::Relaxed), 0);
         host.set_slider_value("slider", 4.0);
         assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn collect_live_geometry_handles_includes_input_channels() {
+        let mut outputs = HashMap::new();
+        outputs.insert(
+            "box".into(),
+            Dictionary::with_schema("geometry")
+                .insert("handle", NeuralValue::Atom(Atom::String("solid-box".into())))
+                .insert("kind", NeuralValue::Atom(Atom::String("solid".into()))),
+        );
+        outputs.insert(
+            "volume".into(),
+            Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(12.0))),
+        );
+        let mut inputs = HashMap::new();
+        inputs.insert(
+            "volume".into(),
+            Dictionary::new().insert(
+                "geometry",
+                NeuralValue::Dictionary(
+                    Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-box".into()))),
+                ),
+            ),
+        );
+        let channels = EvalChannels { outputs, inputs };
+        let handles = collect_live_geometry_handles_from_channels(&channels);
+        assert_eq!(handles, vec![String::from("solid-box")]);
+    }
+
+    #[test]
+    fn apply_eval_outputs_json_preserves_state_on_global_error() {
+        let mut host = host_with_test_bridge();
+        let good = host.last_eval_json.clone();
+        host.apply_eval_outputs_json(r#"{"error":"missing input: geometry"}"#);
+        assert_eq!(host.last_eval_json, good);
+        assert!(!host.outputs.is_empty());
     }
 
     #[test]
@@ -4092,6 +4276,63 @@ mod tests {
         host.delete_selection().unwrap();
         assert!(host.fixture.widgets.iter().all(|w| widget_id_for(w) != "slider"));
         assert!(host.dag.fixture.nodes.iter().all(|n| n.id != "slider"));
+    }
+
+    #[test]
+    fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
+        use cavas::camera::{world_to_screen, Camera, Viewport};
+        use cavas::vello::kurbo::Point;
+        let mut host = FlowHost::default();
+        host.set_viewport(1280, 800, 1.0);
+        host.fixture.widgets = vec![
+            Widget::Neuron {
+                id: "sphere".into(),
+                neuronKind: "brep.prim3d.sphere".into(),
+                params: Dictionary::new(),
+                input_ports: vec![],
+                preview: false,
+            },
+            Widget::Neuron {
+                id: "torus".into(),
+                neuronKind: "brep.prim3d.torus".into(),
+                params: Dictionary::new(),
+                input_ports: vec![],
+                preview: false,
+            },
+            Widget::Neuron {
+                id: "cut".into(),
+                neuronKind: "brep.bool.cut".into(),
+                params: Dictionary::new(),
+                input_ports: vec!["a".into(), "b".into()],
+                preview: true,
+            },
+        ];
+        host.fixture.synapses = vec![
+            SynapseSpec { id: "e1".into(), from: "sphere".into(), to: "cut".into(), from_port: "out".into(), to_port: "a".into() },
+            SynapseSpec { id: "e2".into(), from: "torus".into(), to: "cut".into(), from_port: "out".into(), to_port: "b".into() },
+        ];
+        host.fixture.layout.insert("sphere".into(), WidgetLayout { x: 0.0, y: -60.0 });
+        host.fixture.layout.insert("torus".into(), WidgetLayout { x: 0.0, y: 60.0 });
+        host.fixture.layout.insert("cut".into(), WidgetLayout { x: 240.0, y: 0.0 });
+        host.rebuild_dag();
+        host.dag.set_proximity_distance(160.0);
+        host.dag.set_automatic_lod(false);
+        host.dag.set_forced_draw_lod_label("normal");
+        assert_eq!(host.dag.engine.edges.len(), 2, "synapses should load as engine edges");
+        let cut = host.dag.fixture.nodes.iter().find(|node| node.id == "cut").expect("cut");
+        let grab = Point::new(cut.x, cut.y);
+        let cam = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+        let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
+        let screen = world_to_screen(&cam, &viewport, grab);
+        host.pointer_down_screen(screen.x, screen.y, 0, false, false, false, false);
+        host.pointer_move_screen(screen.x - 180.0, screen.y, false, false, false);
+        assert!(
+            host.dag.engine.render_snapshot().pending_edge.is_none(),
+            "dragging wired cut near sources must not preview proximity edges"
+        );
+        host.pointer_up_screen(screen.x - 180.0, screen.y, false, false, false);
+        assert_eq!(host.dag.engine.edges.len(), 2);
+        assert_eq!(host.fixture.synapses.len(), 2);
     }
 
     #[test]

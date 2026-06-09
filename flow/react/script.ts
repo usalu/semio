@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../repo/lib/js/src/index.ts";
 
 const wasmScript = join(import.meta.dir, "../core/script.ts");
-const moduleWasmScripts = ["core", "math", "text", "logic", "dictionary", "list"].map((name) => join(import.meta.dir, `../modules/${name}/script.ts`));
+const moduleWasmScripts = ["core", "math", "text", "logic", "dictionary", "list", "bim"].map((name) => join(import.meta.dir, `../modules/${name}/script.ts`));
 
 function runFlowModuleWasmBuilds(): void {
   for (const script of moduleWasmScripts) {

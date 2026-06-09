@@ -25,6 +25,7 @@ if (import.meta.env.VITEST) {
     { initSync: initDictionarySync },
     { initSync: initListSync },
     { initSync: initBrepSync },
+    { initSync: initBimSync },
   ] = await Promise.all([
     import("../modules/core/pkg/flow_module_core.js"),
     import("../modules/math/pkg/flow_module_math.js"),
@@ -33,6 +34,7 @@ if (import.meta.env.VITEST) {
     import("../modules/dictionary/pkg/flow_module_dictionary.js"),
     import("../modules/list/pkg/flow_module_list.js"),
     import("../modules/brep/pkg/flow_module_brep.js"),
+    import("../modules/bim/pkg/flow_module_bim.js"),
   ]);
   initCoreSync({ module: readFileSync(join(reactDir, "../modules/core/pkg/flow_module_core_bg.wasm")) });
   initMathSync({ module: readFileSync(join(reactDir, "../modules/math/pkg/flow_module_math_bg.wasm")) });
@@ -41,6 +43,7 @@ if (import.meta.env.VITEST) {
   initDictionarySync({ module: readFileSync(join(reactDir, "../modules/dictionary/pkg/flow_module_dictionary_bg.wasm")) });
   initListSync({ module: readFileSync(join(reactDir, "../modules/list/pkg/flow_module_list_bg.wasm")) });
   initBrepSync({ module: readFileSync(join(reactDir, "../modules/brep/pkg/flow_module_brep_bg.wasm")) });
+  initBimSync({ module: readFileSync(join(reactDir, "../modules/bim/pkg/flow_module_bim_bg.wasm")) });
 } else {
   await initFlowWasm({ module_or_path: flowCoreWasmUrl });
 }
@@ -208,9 +211,10 @@ const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
     loadFlowWasmModule(import("../modules/dictionary/pkg/flow_module_dictionary.js"), import("../modules/dictionary/pkg/flow_module_dictionary_bg.wasm?url")),
   list: () => loadFlowWasmModule(import("../modules/list/pkg/flow_module_list.js"), import("../modules/list/pkg/flow_module_list_bg.wasm?url")),
   brep: () => loadFlowWasmModule(import("../modules/brep/pkg/flow_module_brep.js"), import("../modules/brep/pkg/flow_module_brep_bg.wasm?url")),
+  bim: () => loadFlowWasmModule(import("../modules/bim/pkg/flow_module_bim.js"), import("../modules/bim/pkg/flow_module_bim_bg.wasm?url")),
 };
 
-export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep"] as const;
+export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep", "bim"] as const;
 export type FlowModuleId = (typeof FLOW_DEFAULT_MODULE_IDS)[number];
 
 export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);
@@ -488,6 +492,233 @@ export function neuronWidgetIdsFromFixtureJson(fixtureJson: string): string[] {
       .map((widget) => widget.id as string);
   } catch {
     return [];
+  }
+}
+
+export interface FlowTreeDirtyResult {
+  readonly ids: readonly string[];
+  readonly path: readonly string[];
+  readonly structural: boolean;
+}
+
+function canonicalizeFlowValue(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (Array.isArray(value)) return value.map(canonicalizeFlowValue);
+  if (typeof value === "object") {
+    const sorted: Record<string, unknown> = {};
+    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+      sorted[key] = canonicalizeFlowValue((value as Record<string, unknown>)[key]);
+    }
+    return sorted;
+  }
+  return value;
+}
+
+function flowWidgetTreeSignature(widget: FlowWidgetV1): string {
+  switch (widget.kind) {
+    case "neuron":
+      return JSON.stringify(
+        canonicalizeFlowValue({
+          neuronKind: widget.neuronKind,
+          params: (widget as { readonly params?: unknown }).params ?? {},
+          inputPorts: widget.inputPorts ?? [],
+        }),
+      );
+    case "inputSlider":
+      return JSON.stringify(canonicalizeFlowValue({ value: widget.value }));
+    case "inputNote":
+      return JSON.stringify(canonicalizeFlowValue({ text: widget.text }));
+    case "inputImage":
+      return JSON.stringify(canonicalizeFlowValue({ src: widget.src ?? "" }));
+    case "cluster":
+      return JSON.stringify(canonicalizeFlowValue({ tree: widget.tree }));
+    default:
+      return JSON.stringify(canonicalizeFlowValue({ kind: widget.kind }));
+  }
+}
+
+function parseFlowFixtureForDirtyDiff(json: string): { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] } | null {
+  try {
+    const fixture = JSON.parse(json) as FlowFixtureV1;
+    if (!Array.isArray(fixture.widgets)) return null;
+    return { widgets: fixture.widgets, synapses: fixture.synapses ?? [] };
+  } catch {
+    return null;
+  }
+}
+
+function incomingSynapseKeys(widgetId: string, synapses: FlowFixtureV1["synapses"]): string[] {
+  return synapses
+    .filter((synapse) => synapse.to === widgetId)
+    .map((synapse) => `${synapse.from}|${synapse.fromPort ?? "out"}|${synapse.toPort ?? "in"}`)
+    .sort();
+}
+
+function isComputeFlowWidget(widget: FlowWidgetV1): boolean {
+  return widget.kind === "neuron" || widget.kind === "cluster";
+}
+
+function downstreamAdjacency(synapses: FlowFixtureV1["synapses"]): Map<string, string[]> {
+  const adjacency = new Map<string, string[]>();
+  for (const synapse of synapses) {
+    const next = adjacency.get(synapse.from) ?? [];
+    next.push(synapse.to);
+    adjacency.set(synapse.from, next);
+  }
+  return adjacency;
+}
+
+function downstreamSubgraphWidgetIds(
+  roots: Iterable<string>,
+  fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] },
+): string[] {
+  const adjacency = downstreamAdjacency(fixture.synapses);
+  const visited = new Set<string>();
+  const queue = [...roots];
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    for (const next of adjacency.get(id) ?? []) {
+      if (!visited.has(next)) queue.push(next);
+    }
+  }
+  return [...visited];
+}
+
+function downstreamComputeWidgetIds(
+  roots: Iterable<string>,
+  fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] },
+): string[] {
+  const widgetById = new Map(fixture.widgets.map((widget) => [widget.id, widget]));
+  return downstreamSubgraphWidgetIds(roots, fixture).filter((id) => {
+    const widget = widgetById.get(id);
+    return widget != null && isComputeFlowWidget(widget);
+  });
+}
+
+function topoSortWidgetIds(widgetIds: readonly string[], synapses: FlowFixtureV1["synapses"]): string[] {
+  const ids = new Set(widgetIds);
+  const inDegree = new Map<string, number>();
+  const adjacency = new Map<string, string[]>();
+  for (const id of ids) {
+    inDegree.set(id, 0);
+    adjacency.set(id, []);
+  }
+  for (const synapse of synapses) {
+    if (!ids.has(synapse.from) || !ids.has(synapse.to)) continue;
+    adjacency.get(synapse.from)!.push(synapse.to);
+    inDegree.set(synapse.to, (inDegree.get(synapse.to) ?? 0) + 1);
+  }
+  const queue = [...ids].filter((id) => inDegree.get(id) === 0).sort();
+  const order: string[] = [];
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    order.push(id);
+    for (const next of adjacency.get(id) ?? []) {
+      const degree = (inDegree.get(next) ?? 1) - 1;
+      inDegree.set(next, degree);
+      if (degree === 0) queue.push(next);
+    }
+    queue.sort();
+  }
+  return order.length === ids.size ? order : [...ids];
+}
+
+function flowFixtureComputePath(fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] }): string[] {
+  return topoSortWidgetIds(
+    fixture.widgets.map((widget) => widget.id),
+    fixture.synapses,
+  );
+}
+
+function flowDirtyComputePath(
+  roots: Iterable<string>,
+  fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] },
+): string[] {
+  return topoSortWidgetIds(downstreamSubgraphWidgetIds(roots, fixture), fixture.synapses);
+}
+
+/** @emoji 🌳 Predictive dirty neuron ids from a fixture diff (changed node + downstream). */
+export function flowTreeDirtyNeuronIds(prevFixtureJson: string | null, currFixtureJson: string): FlowTreeDirtyResult {
+  const curr = parseFlowFixtureForDirtyDiff(currFixtureJson);
+  if (!curr) return { ids: [], path: [], structural: true };
+  if (!prevFixtureJson) return { ids: [], path: flowFixtureComputePath(curr), structural: true };
+  const prev = parseFlowFixtureForDirtyDiff(prevFixtureJson);
+  if (!prev) return { ids: [], path: flowFixtureComputePath(curr), structural: true };
+
+  const prevWidgets = new Map(prev.widgets.map((widget) => [widget.id, widget]));
+  const dirtyRoots = new Set<string>();
+  for (const widget of curr.widgets) {
+    const previous = prevWidgets.get(widget.id);
+    if (!previous) {
+      dirtyRoots.add(widget.id);
+      continue;
+    }
+    if (flowWidgetTreeSignature(widget) !== flowWidgetTreeSignature(previous)) dirtyRoots.add(widget.id);
+    if (JSON.stringify(incomingSynapseKeys(widget.id, prev.synapses)) !== JSON.stringify(incomingSynapseKeys(widget.id, curr.synapses))) {
+      dirtyRoots.add(widget.id);
+    }
+  }
+  if (dirtyRoots.size === 0) return { ids: [], path: [], structural: false };
+  return {
+    ids: downstreamComputeWidgetIds(dirtyRoots, curr),
+    path: flowDirtyComputePath(dirtyRoots, curr),
+    structural: false,
+  };
+}
+
+export function flowComputeProgressPayload(path: readonly string[], activeIndex: number): { readonly active: string | null; readonly stale: string[] } {
+  const active = path[activeIndex] ?? null;
+  return { active, stale: path.slice(activeIndex + 1) };
+}
+
+function flowEvalAnimationPath(
+  path: readonly string[],
+  fixture: { readonly widgets: readonly FlowWidgetV1[] },
+): string[] {
+  const widgetById = new Map(fixture.widgets.map((widget) => [widget.id, widget]));
+  return path.filter((id) => {
+    const widget = widgetById.get(id);
+    return widget != null && widget.kind !== "outputPreview" && widget.kind !== "outputAction";
+  });
+}
+
+function flowIncomingSynapseCount(widgetId: string, synapses: FlowFixtureV1["synapses"]): number {
+  return synapses.filter((synapse) => synapse.to === widgetId).length;
+}
+
+/** @emoji ✅ True when every dirty compute node in the path can evaluate without missing upstream inputs. */
+export function flowDirtyComputePathReady(fixtureJson: string, dirtyPath: readonly string[]): boolean {
+  const fixture = parseFlowFixtureForDirtyDiff(fixtureJson);
+  if (!fixture || dirtyPath.length === 0) return true;
+  const widgetById = new Map(fixture.widgets.map((widget) => [widget.id, widget]));
+  for (const widgetId of dirtyPath) {
+    const widget = widgetById.get(widgetId);
+    if (!widget) continue;
+    if (widget.kind === "inputSlider" || widget.kind === "inputNote" || widget.kind === "inputImage") continue;
+    if (widget.kind === "outputPreview" || widget.kind === "outputAction") continue;
+    if (widget.kind === "neuron") {
+      const incoming = flowIncomingSynapseCount(widgetId, fixture.synapses);
+      if (incoming > 0) continue;
+      const params = (widget as { readonly params?: Record<string, unknown> }).params ?? {};
+      if (Object.keys(params).length > 0) continue;
+      if (widget.neuronKind.startsWith("brep.prim") || widget.neuronKind.startsWith("core.")) continue;
+      return false;
+    }
+    if (widget.kind === "cluster" && flowIncomingSynapseCount(widgetId, fixture.synapses) === 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function isGlobalFlowEvalErrorJson(json: string): boolean {
+  try {
+    const parsed = JSON.parse(json) as Record<string, unknown>;
+    return Object.keys(parsed).length === 1 && typeof parsed.error === "string";
+  } catch {
+    return true;
   }
 }
 // #endregion 🔖Fixture
@@ -2361,7 +2592,8 @@ export function FlowCanvas({
   const onChannelHoverChangeRef = useRef(onChannelHoverChange);
   const onSelectedChannelsChangeRef = useRef(onSelectedChannelsChange);
   const storeRef = useRef(store ?? createLocalFlowStore());
-  const pointerRef = useRef({ active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false });
+  const pointerRef = useRef({ active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false, x: 0, y: 0 });
+  const pointerGestureFixtureRef = useRef<string | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const pendingImageWidgetIdRef = useRef<string | null>(null);
   const onContextMenuRef = useRef(onContextMenu);
@@ -2628,6 +2860,7 @@ export function FlowCanvas({
   const evaluateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const orchestratorRef = useRef<FlowOrchestratorClient | null>(null);
   const evalGenerationRef = useRef(0);
+  const lastEvalFixtureRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (import.meta.env.VITEST || typeof Worker === "undefined") return;
@@ -2640,10 +2873,10 @@ export function FlowCanvas({
   }, []);
 
   const runEvalAnimation = useCallback(
-    (active: () => boolean) => {
-      if (!active()) return;
+    (tick: () => boolean) => {
+      if (!tick()) return;
       renderFrame();
-      requestAnimationFrame(() => runEvalAnimation(active));
+      requestAnimationFrame(() => runEvalAnimation(tick));
     },
     [renderFrame],
   );
@@ -2657,21 +2890,64 @@ export function FlowCanvas({
         if (!session) return;
         const generation = ++evalGenerationRef.current;
         const fixture = session.fixtureJson();
-        const computingIds = neuronWidgetIdsFromFixtureJson(fixture);
-        session.setComputingWidgetIds(JSON.stringify(computingIds));
+        const dirty = flowTreeDirtyNeuronIds(lastEvalFixtureRef.current, fixture);
+        if (!dirty.structural && dirty.ids.length === 0) {
+          lastEvalFixtureRef.current = fixture;
+          session.clearComputingWidgetIds();
+          renderFrame();
+          return;
+        }
+        const path = dirty.path;
+        if (!dirty.structural && !flowDirtyComputePathReady(fixture, path)) {
+          lastEvalFixtureRef.current = fixture;
+          session.clearComputingWidgetIds();
+          renderFrame();
+          return;
+        }
+        const parsedFixture = parseFlowFixtureForDirtyDiff(fixture);
+        const animationPath = parsedFixture ? flowEvalAnimationPath(path, parsedFixture) : [...path];
+        const orchestrator = orchestratorRef.current;
+        const willEvaluate = Boolean(orchestrator && !import.meta.env.VITEST) || import.meta.env.VITEST;
+        if (!willEvaluate) {
+          console.log("[DEBUG] flow orchestrator unavailable; skipped eval");
+          lastEvalFixtureRef.current = fixture;
+          session.clearComputingWidgetIds();
+          renderFrame();
+          return;
+        }
+        let pathIndex = 0;
+        let lastPathAdvanceMs = performance.now();
+        const applyPathProgress = () => {
+          if (animationPath.length === 0) {
+            session.clearComputingWidgetIds();
+            return;
+          }
+          session.setComputingProgress(JSON.stringify(flowComputeProgressPayload(animationPath, pathIndex)));
+        };
+        applyPathProgress();
         renderFrame();
         let animating = true;
-        runEvalAnimation(() => animating && generation === evalGenerationRef.current);
+        runEvalAnimation(() => {
+          if (!animating || generation !== evalGenerationRef.current) return false;
+          const now = performance.now();
+          if (animationPath.length > 0 && pathIndex < animationPath.length - 1 && now - lastPathAdvanceMs >= 160) {
+            pathIndex += 1;
+            lastPathAdvanceMs = now;
+            applyPathProgress();
+          }
+          return true;
+        });
         try {
           let outputsJson: string;
           let previewMeshes: Readonly<Record<string, unknown>> | undefined;
-          const orchestrator = orchestratorRef.current;
           if (orchestrator && !import.meta.env.VITEST) {
             await orchestrator.loadFixtureJson(fixture);
             const result = await orchestrator.evaluate();
             if (generation !== evalGenerationRef.current) return;
             outputsJson = result.outputsJson;
             session.applyEvalOutputsJson(outputsJson);
+            animating = false;
+            lastEvalFixtureRef.current = fixture;
             renderFrame();
             const text = session.previewText();
             onPreviewTextRef.current?.(text);
@@ -2682,19 +2958,20 @@ export function FlowCanvas({
           } else if (import.meta.env.VITEST) {
             outputsJson = await session.evaluate();
             if (generation !== evalGenerationRef.current) return;
+            animating = false;
+            lastEvalFixtureRef.current = fixture;
             const text = session.previewText();
             onPreviewTextRef.current?.(text);
             onEvalOutputsRef.current?.(outputsJson);
             console.log(`[DEBUG] flow evaluate preview: ${text}`);
-          } else {
-            console.log("[DEBUG] flow orchestrator unavailable; skipped eval");
-            session.clearComputingWidgetIds();
           }
         } catch (err) {
-          session.clearComputingWidgetIds();
           console.log(`[DEBUG] flow evaluate failed: ${String(err)}`);
         } finally {
           animating = false;
+          if (generation === evalGenerationRef.current) {
+            session.clearComputingWidgetIds();
+          }
         }
         renderFrame();
       })();
@@ -2707,6 +2984,15 @@ export function FlowCanvas({
     try {
       const current = session.fixtureJson();
       if (current === fixtureJson) return;
+      const treeDelta = flowTreeDirtyNeuronIds(lastEvalFixtureRef.current, fixtureJson);
+      if (!treeDelta.structural && treeDelta.ids.length === 0) {
+        session.loadFixtureJson(fixtureJson);
+        lastEvalFixtureRef.current = fixtureJson;
+        emitInteractionState(session);
+        renderFrame();
+        return;
+      }
+      lastEvalFixtureRef.current = null;
       session.loadFixtureJson(fixtureJson);
       emitInteractionState(session);
       evaluate();
@@ -3049,8 +3335,13 @@ export function FlowCanvas({
       if (!session || e.button > 2) return;
       if (e.button === 2) return;
       e.currentTarget.setPointerCapture(e.pointerId);
-      pointerRef.current = { active: true, pan: false, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey };
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
+      pointerRef.current = { active: true, pan: false, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey, x, y };
+      try {
+        pointerGestureFixtureRef.current = session.fixtureJson();
+      } catch {
+        pointerGestureFixtureRef.current = null;
+      }
       session.pointerDownScreen(x, y, e.button, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey, false);
       emitInteractionState(session);
       renderFrame();
@@ -3064,6 +3355,11 @@ export function FlowCanvas({
       if (!session) return;
       if (pointerRef.current.active && pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
+      pointerRef.current.x = x;
+      pointerRef.current.y = y;
+      pointerRef.current.shift = e.shiftKey;
+      pointerRef.current.ctrl = e.metaKey || e.ctrlKey;
+      pointerRef.current.alt = e.altKey;
       session.pointerMoveScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       emitInteractionState(session);
       if (pointerRef.current.active) {
@@ -3097,14 +3393,57 @@ export function FlowCanvas({
       if (explodeId) {
         clusterApi.explodeCluster(explodeId);
       }
-      pointerRef.current = { active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false };
+      pointerRef.current = { active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false, x: 0, y: 0 };
       emitInteractionState(session);
-      evaluate();
-      persistFixture();
+      const gestureBefore = pointerGestureFixtureRef.current;
+      pointerGestureFixtureRef.current = null;
+      let shouldEvaluate = false;
+      let shouldPersist = false;
+      if (gestureBefore !== null) {
+        try {
+          const fixtureAfter = session.fixtureJson();
+          shouldPersist = fixtureAfter !== gestureBefore;
+          const gestureDirty = flowTreeDirtyNeuronIds(gestureBefore, fixtureAfter);
+          shouldEvaluate = gestureDirty.structural || gestureDirty.ids.length > 0;
+        } catch {
+          /* fixture not ready */
+        }
+      }
+      if (shouldEvaluate) evaluate();
+      if (shouldPersist) persistFixture();
       renderFrame();
     },
     [clientToCanvas, emitInteractionState, evaluate, persistFixture, renderFrame],
   );
+
+  useEffect(() => {
+    const refreshDragWithAlt = (alt: boolean) => {
+      const session = sessionRef.current;
+      const ptr = pointerRef.current;
+      if (!session || !ptr.active) return;
+      ptr.alt = alt;
+      session.pointerMoveScreen(ptr.x, ptr.y, ptr.shift, ptr.ctrl, alt);
+      emitInteractionState(session);
+      if (session.widgetDragActive()) {
+        evaluate();
+      }
+      renderFrame();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Alt" || !e.altKey) return;
+      refreshDragWithAlt(true);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key !== "Alt") return;
+      refreshDragWithAlt(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [emitInteractionState, evaluate, renderFrame]);
 
   const closeSpotlight = useCallback(() => {
     setSpotlight(null);
@@ -3607,6 +3946,144 @@ if (import.meta.vitest) {
       const json = flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
       expect(json).toContain("flow.fixture/v1");
       expect(json).toContain("math.add");
+    });
+  });
+
+  describe("flowTreeDirtyNeuronIds", () => {
+    const chainFixture: FlowFixtureV1 = {
+      schema: "flow.fixture/v1",
+      camera: { x: 0, y: 0, zoom: 1 },
+      layout: { slider: { x: 0, y: 0 }, add: { x: 120, y: 0 }, pass: { x: 240, y: 0 }, preview: { x: 360, y: 0 } },
+      widgets: [
+        { kind: "inputSlider", id: "slider", value: 3 },
+        { kind: "neuron", id: "add", neuronKind: "math.add" },
+        { kind: "neuron", id: "pass", neuronKind: "math.passThrough" },
+        { kind: "outputPreview", id: "preview" },
+      ],
+      synapses: [
+        { id: "s1", from: "slider", to: "add", fromPort: "out", toPort: "a" },
+        { id: "s2", from: "add", to: "pass", fromPort: "out", toPort: "number" },
+        { id: "s3", from: "pass", to: "preview", fromPort: "out", toPort: "in" },
+      ],
+    };
+
+    it("returns structural when previous fixture is missing", () => {
+      const result = flowTreeDirtyNeuronIds(null, flowFixtureToJson(FLOW_DEFAULT_FIXTURE));
+      expect(result.structural).toBe(true);
+      expect(result.ids).toEqual([]);
+      expect(result.path).toEqual(["slider", "add", "preview"]);
+    });
+
+    it("ignores layout and camera changes", () => {
+      const base = flowFixtureToJson(chainFixture);
+      const moved: FlowFixtureV1 = {
+        ...chainFixture,
+        camera: { x: 40, y: -20, zoom: 1.5 },
+        layout: { slider: { x: 10, y: 20 }, add: { x: 130, y: 40 }, pass: { x: 250, y: 60 }, preview: { x: 370, y: 80 } },
+      };
+      expect(flowTreeDirtyNeuronIds(base, flowFixtureToJson(moved))).toEqual({ ids: [], path: [], structural: false });
+    });
+
+    it("ignores identical fixture snapshots for selection-only gestures", () => {
+      const base = flowFixtureToJson(chainFixture);
+      expect(flowTreeDirtyNeuronIds(base, base)).toEqual({ ids: [], path: [], structural: false });
+    });
+
+    it("marks downstream neurons when slider value changes", () => {
+      const base = flowFixtureToJson(chainFixture);
+      const changed: FlowFixtureV1 = {
+        ...chainFixture,
+        widgets: chainFixture.widgets.map((widget) => (widget.kind === "inputSlider" ? { ...widget, value: 7 } : widget)),
+      };
+      expect(flowTreeDirtyNeuronIds(base, flowFixtureToJson(changed))).toEqual({
+        ids: ["add", "pass"],
+        path: ["slider", "add", "pass", "preview"],
+        structural: false,
+      });
+    });
+
+    it("marks target and downstream on reconnect", () => {
+      const base = flowFixtureToJson(chainFixture);
+      const reconnected: FlowFixtureV1 = {
+        ...chainFixture,
+        synapses: [
+          { id: "s1", from: "slider", to: "add", fromPort: "out", toPort: "b" },
+          { id: "s2", from: "add", to: "pass", fromPort: "out", toPort: "number" },
+          { id: "s3", from: "pass", to: "preview", fromPort: "out", toPort: "in" },
+        ],
+      };
+      expect(flowTreeDirtyNeuronIds(base, flowFixtureToJson(reconnected))).toEqual({
+        ids: ["add", "pass"],
+        path: ["add", "pass", "preview"],
+        structural: false,
+      });
+    });
+
+    it("marks downstream when a node is added upstream", () => {
+      const base = flowFixtureToJson(chainFixture);
+      const extended: FlowFixtureV1 = {
+        ...chainFixture,
+        widgets: [...chainFixture.widgets, { kind: "neuron", id: "extra", neuronKind: "math.passThrough" }],
+        synapses: [
+          { id: "s0", from: "extra", to: "add", fromPort: "out", toPort: "b" },
+          ...chainFixture.synapses,
+        ],
+      };
+      const extendedResult = flowTreeDirtyNeuronIds(base, flowFixtureToJson(extended));
+      expect(extendedResult.ids).toEqual(expect.arrayContaining(["add", "pass", "extra"]));
+      expect(extendedResult.path).toEqual(expect.arrayContaining(["extra", "add", "pass", "preview"]));
+    });
+  });
+
+  describe("flowComputeProgressPayload", () => {
+    it("marks upstream node active and downstream nodes stale", () => {
+      const path = ["slider", "add", "pass", "preview"];
+      expect(flowComputeProgressPayload(path, 0)).toEqual({ active: "slider", stale: ["add", "pass", "preview"] });
+      expect(flowComputeProgressPayload(path, 1)).toEqual({ active: "add", stale: ["pass", "preview"] });
+      expect(flowComputeProgressPayload(path, 3)).toEqual({ active: "preview", stale: [] });
+    });
+  });
+
+  describe("flowEvalAnimationPath", () => {
+    it("omits output preview and action widgets from computing animation", () => {
+      const fixture: FlowFixtureV1 = {
+        schema: "flow.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        widgets: [
+          { kind: "inputSlider", id: "slider", value: 1 },
+          { kind: "neuron", id: "volume", neuronKind: "brep.measure.volume" },
+          { kind: "outputPreview", id: "preview" },
+        ],
+        synapses: [
+          { id: "s1", from: "slider", to: "volume", fromPort: "out", toPort: "geometry" },
+          { id: "s2", from: "volume", to: "preview", fromPort: "out", toPort: "in" },
+        ],
+      };
+      const path = flowFixtureComputePath(fixture);
+      expect(path).toEqual(["slider", "volume", "preview"]);
+      expect(flowEvalAnimationPath(path, fixture)).toEqual(["slider", "volume"]);
+    });
+  });
+
+  describe("flowDirtyComputePathReady", () => {
+    it("waits for upstream inputs on disconnected measure nodes", () => {
+      const fixture: FlowFixtureV1 = {
+        schema: "flow.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        widgets: [
+          { kind: "neuron", id: "box", neuronKind: "brep.prim3d.box" },
+          { kind: "neuron", id: "volume", neuronKind: "brep.measure.volume" },
+        ],
+        synapses: [],
+      };
+      const json = flowFixtureToJson(fixture);
+      expect(flowDirtyComputePathReady(json, ["box"])).toBe(true);
+      expect(flowDirtyComputePathReady(json, ["volume"])).toBe(false);
+      const connected: FlowFixtureV1 = {
+        ...fixture,
+        synapses: [{ id: "s1", from: "box", to: "volume", fromPort: "out", toPort: "geometry" }],
+      };
+      expect(flowDirtyComputePathReady(flowFixtureToJson(connected), ["volume"])).toBe(true);
     });
   });
 

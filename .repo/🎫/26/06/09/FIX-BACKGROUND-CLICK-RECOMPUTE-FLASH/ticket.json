@@ -1,0 +1,14 @@
+{
+  "title": "Fix Background Click Recompute Flash",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Clicking flow canvas background triggers computing animation on all nodes. Gate evaluate/persist on pointer up to tree changes only; fix fixtureJson prop effect resetting lastEvalFixtureRef on presentational-only updates.",
+  "summary": "Background clicks no longer trigger full-graph computing chrome. Pointer-up now snapshots the fixture on pointer-down and only calls evaluate()/persistFixture() when flowTreeDirtyNeuronIds detects a compute-tree change (slider/edge/param), not selection-only or layout/camera updates. The fixtureJson prop effect also skips resetting lastEvalFixtureRef and re-evaluating when the external fixture differs only presentationally.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1644"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪b0b453ff8da34fa6ac8a930c9c2288e7"
+  ]
+}

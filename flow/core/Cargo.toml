@@ -13,6 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 flow_module_brep = { path = "../modules/brep", default-features = false }
+flow_module_bim = { path = "../modules/bim", default-features = false }
 flow_module_core = { path = "../modules/core", default-features = false }
 flow_module_dictionary = { path = "../modules/dictionary", default-features = false }
 flow_module_list = { path = "../modules/list", default-features = false }

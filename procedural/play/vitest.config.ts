@@ -17,6 +17,7 @@ export default defineConfig({
 			"@flow/core": resolve(root, "../../flow/core/pkg/flow_core.js"),
 			"@geometry/brep/js": resolve(root, "../../geometry/brep/js/index.ts"),
 			"@flow/module-brep": resolve(root, "../../flow/modules/brep/pkg/flow_module_brep.js"),
+			"@flow/module-bim": resolve(root, "../../flow/modules/bim/pkg/flow_module_bim.js"),
 			"@flow/module-core": resolve(root, "../../flow/modules/core/pkg/flow_module_core.js"),
 			"@flow/module-math": resolve(root, "../../flow/modules/math/pkg/flow_module_math.js"),
 			"@ui/react": resolve(root, "../../ui/react/index.tsx"),

@@ -14,6 +14,7 @@ export default defineConfig({
 			{ find: "@flow/core", replacement: resolve(root, "../../flow/core/pkg/flow_core.js") },
 			{ find: "@flow/react", replacement: resolve(root, "../../flow/react/index.tsx") },
 			{ find: "@flow/module-brep", replacement: resolve(root, "../../flow/modules/brep/pkg/flow_module_brep.js") },
+			{ find: "@flow/module-bim", replacement: resolve(root, "../../flow/modules/bim/pkg/flow_module_bim.js") },
 			{ find: "@flow/module-core", replacement: resolve(root, "../../flow/modules/core/pkg/flow_module_core.js") },
 			{ find: "@flow/module-math", replacement: resolve(root, "../../flow/modules/math/pkg/flow_module_math.js") },
 			{ find: "@flow/module-text", replacement: resolve(root, "../../flow/modules/text/pkg/flow_module_text.js") },

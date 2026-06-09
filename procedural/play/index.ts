@@ -37,6 +37,7 @@ import {
 	dagLodAutomaticSelectLabel,
 	dagPlayLodTierMenuLabel,
 	buildCatalogueKindsTreeSections,
+	FLOW_DEFAULT_PROXIMITY_DISTANCE,
 	flowPlayCatalogueItemDragData,
 	isDagDrawLodKind,
 	type CatalogueSection,
@@ -54,6 +55,7 @@ import type { ContextMenuItem } from "@ui/react";
 import type { WindowMeasure } from "@framework/playground/core";
 import {
 	extractChannelPreviewItems,
+	filterVisiblePreviewItems,
 	resolveGeometryTargets,
 	PROCEDURAL_DEFAULT_FIXTURE,
 	proceduralExtensionHost,
@@ -71,14 +73,23 @@ import {
 } from "@procedural/react";
 import { meshTransferFromPreviewPayload } from "@geometry/brep/js";
 
+function previewItemKey(item: ProceduralPreviewItem): string {
+	return `${item.widgetId}:${item.port}:${item.direction}`;
+}
+
 function previewItemsWithMeshes(
 	items: ProceduralPreviewItem[],
 	previewMeshes?: Readonly<Record<string, unknown>>,
+	previous: readonly ProceduralPreviewItem[] = [],
 ): ProceduralPreviewItem[] {
-	if (!previewMeshes) return items;
+	const previousByKey = new Map(previous.map((item) => [previewItemKey(item), item]));
 	return items.map((item) => {
 		if (item.kind !== "geometry" || item.direction !== "out") return item;
-		const mesh = meshTransferFromPreviewPayload(previewMeshes[`${item.widgetId}:${item.port}`]);
+		const meshKey = `${item.widgetId}:${item.port}`;
+		const previousItem = previousByKey.get(previewItemKey(item));
+		const mesh =
+			meshTransferFromPreviewPayload(previewMeshes?.[meshKey]) ??
+			(previousItem?.handle === item.handle ? previousItem.mesh : undefined);
 		return mesh ? { ...item, mesh } : item;
 	});
 }
@@ -680,6 +691,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
 	private lodModeByInstance: Record<string, DagLodModeKind> = {};
 	private effectiveLod: DagDrawLodKind = "normal";
+	private proximityDistance = FLOW_DEFAULT_PROXIMITY_DISTANCE;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ProceduralPlayFixtureStore = createProceduralPlayFixtureStore()) {
 		super(PROCEDURAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -739,12 +751,27 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	private parseFixtureEdges(json: string): ProceduralFixtureEdge[] {
 		try {
-			const parsed = JSON.parse(json) as { synapses?: Array<{ from?: string; to?: string; from_port?: string; to_port?: string }> };
+			const parsed = JSON.parse(json) as {
+				synapses?: Array<{
+					from?: string;
+					to?: string;
+					from_port?: string;
+					to_port?: string;
+					fromPort?: string;
+					toPort?: string;
+				}>;
+			};
 			if (!Array.isArray(parsed.synapses)) return [];
 			return parsed.synapses.flatMap((synapse) => {
 				if (typeof synapse.from !== "string" || typeof synapse.to !== "string") return [];
-				const fromPort = typeof synapse.from_port === "string" ? synapse.from_port : "out";
-				const toPort = typeof synapse.to_port === "string" ? synapse.to_port : "in";
+				const fromPort =
+					typeof synapse.from_port === "string"
+						? synapse.from_port
+						: typeof synapse.fromPort === "string"
+							? synapse.fromPort
+							: "out";
+				const toPort =
+					typeof synapse.to_port === "string" ? synapse.to_port : typeof synapse.toPort === "string" ? synapse.toPort : "in";
 				return [{ source: `${synapse.from}:${fromPort}`, target: `${synapse.to}:${toPort}` }];
 			});
 		} catch {
@@ -1126,6 +1153,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return this.lodModeByInstance[scopeId] ?? this.lodMode;
 	}
 
+	proximityDistanceValue(): number {
+		return this.proximityDistance;
+	}
+
 	private lodMeasure(scopeId: string): WindowMeasure {
 		return {
 			kind: "select",
@@ -1140,8 +1171,21 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		};
 	}
 
+	private proximityMeasure(): WindowMeasure {
+		return {
+			kind: "slider",
+			id: "procedural-flow-proximity-distance",
+			label: "Proximity",
+			value: this.proximityDistance,
+			min: 0,
+			max: 240,
+			step: 4,
+			onChange: { controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "setProximityDistance" },
+		};
+	}
+
 	private flowWindowMeasures(): readonly WindowMeasure[] {
-		return [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID)];
+		return [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID), this.proximityMeasure()];
 	}
 
 	private previewWindowMeasures(): readonly WindowMeasure[] {
@@ -1381,6 +1425,16 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.emit();
 			return;
 		}
+		if (command === "setProximityDistance") {
+			const value = (args as { value?: number }).value;
+			if (typeof value !== "number" || !Number.isFinite(value)) return;
+			const next = Math.max(0, value);
+			if (this.proximityDistance === next) return;
+			this.proximityDistance = next;
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
 		if (command === "setPreviewText") {
 			const text = (args as { text?: string }).text;
 			if (typeof text === "string" && text !== this.previewText) {
@@ -1393,7 +1447,12 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			const outputsJson = (args as { outputsJson?: string }).outputsJson;
 			const previewMeshes = (args as { previewMeshes?: Readonly<Record<string, unknown>> }).previewMeshes;
 			if (typeof outputsJson === "string") {
-				this.previewItems = previewItemsWithMeshes(extractChannelPreviewItems(outputsJson), previewMeshes);
+				const nextItems = previewItemsWithMeshes(
+					extractChannelPreviewItems(outputsJson),
+					previewMeshes,
+					this.previewItems,
+				);
+				this.previewItems = nextItems;
 				this.interactionRevision += 1;
 				this.notifySnapshot();
 				this.rebuildShellMode();
@@ -1790,6 +1849,25 @@ if (import.meta.vitest) {
 			expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
 		});
 
+		it("flow window proximity measure defaults and updates via command", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			expect(ctrl.proximityDistanceValue()).toBe(FLOW_DEFAULT_PROXIMITY_DISTANCE);
+			const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+			const proximity = measures.find((measure) => measure.kind === "slider" && measure.label === "Proximity");
+			expect(proximity?.kind).toBe("slider");
+			if (proximity?.kind === "slider") {
+				expect(proximity.value).toBe(FLOW_DEFAULT_PROXIMITY_DISTANCE);
+			}
+			ctrl.run("setProximityDistance", { value: 0 });
+			expect(ctrl.proximityDistanceValue()).toBe(0);
+			const updated = ctrl.mainMode.windowKinds[0]?.measures?.find((measure) => measure.kind === "slider" && measure.label === "Proximity");
+			expect(updated?.kind).toBe("slider");
+			if (updated?.kind === "slider") {
+				expect(updated.value).toBe(0);
+			}
+		});
+
 		it("preview window exposes show mode and transform detail in shell measures", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
@@ -1965,6 +2043,89 @@ if (import.meta.vitest) {
 			});
 			expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "offset", port: "geometry", direction: "in" });
 			expect(ctrl.getHoveredGeometryTargets()).toEqual([{ widgetId: "circle", port: "out", direction: "out" }]);
+		});
+
+		it("parseFixtureEdges reads camelCase flow synapse ports", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", {
+				json: JSON.stringify({
+					schema: "flow.fixture/v1",
+					camera: { x: 0, y: 0, zoom: 1 },
+					widgets: [],
+					synapses: [
+						{ id: "e101", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "out", toPort: "a" },
+						{ id: "e102", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "out", toPort: "b" },
+					],
+				}),
+			});
+			expect(ctrl.getSelectedGeometryTargets()).toEqual([]);
+			ctrl.run("setSelectChannels", {
+				channels: [{ widgetId: "brep_bool_cut_5", port: "a", direction: "in" }],
+			});
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({
+					brep_prim3d_sphere_2: { in: {}, out: { out: { geometry: "solid-sphere" } } },
+					brep_bool_cut_5: { in: { a: { geometry: "solid-sphere" } }, out: { out: { geometry: "solid-cut" } } },
+				}),
+			});
+			expect(ctrl.getSelectedGeometryTargets()).toEqual([
+				{ widgetId: "brep_prim3d_sphere_2", port: "out", direction: "out" },
+			]);
+		});
+
+		it("show selected reveals upstream geometry for preview-off input channels", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			const outputsJson = JSON.stringify({
+				brep_prim3d_sphere_2: { in: {}, out: { out: { geometry: "solid-sphere" } } },
+				brep_prim3d_torus_4: { in: {}, out: { out: { geometry: "solid-torus" } } },
+				brep_bool_cut_5: {
+					in: { a: { geometry: "solid-sphere" }, b: { geometry: "solid-torus" } },
+					out: { out: { geometry: "solid-cut" } },
+				},
+			});
+			ctrl.run("setEvalOutputs", { outputsJson });
+			ctrl.run("setFixtureJson", {
+				json: JSON.stringify({
+					schema: "flow.fixture/v1",
+					camera: { x: 0, y: 0, zoom: 1 },
+					widgets: [
+						{ kind: "neuron", id: "brep_prim3d_sphere_2", neuronKind: "brep.prim3d.sphere", preview: false },
+						{ kind: "neuron", id: "brep_prim3d_torus_4", neuronKind: "brep.prim3d.torus", preview: false },
+						{ kind: "neuron", id: "brep_bool_cut_5", neuronKind: "brep.bool.cut", preview: true },
+					],
+					synapses: [
+						{ id: "e1", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "out", toPort: "a" },
+						{ id: "e2", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "out", toPort: "b" },
+					],
+				}),
+			});
+			ctrl.run("setPreviewOff", {
+				ids: ["brep_prim3d_sphere_2", "brep_prim3d_torus_4"],
+				fromFlow: true,
+			});
+			ctrl.run("setShowMode", { id: "selected" });
+			ctrl.run("setSelectChannels", {
+				channels: [{ widgetId: "brep_bool_cut_5", port: "a", direction: "in" }],
+			});
+			const visible = filterVisiblePreviewItems(ctrl.getPreviewItems(), {
+				showMode: ctrl.getShowMode(),
+				selectedNodeIds: [...ctrl.getSelectedNodeIds()],
+				selectedChannels: [...ctrl.getSelectedChannels()],
+				selectedGeometryTargets: [...ctrl.getSelectedGeometryTargets()],
+				hoveredNodeId: null,
+				hoveredChannel: null,
+			});
+			expect(visible).toEqual([
+				{
+					widgetId: "brep_prim3d_sphere_2",
+					port: "out",
+					direction: "out",
+					kind: "geometry",
+					handle: "solid-sphere",
+				},
+			]);
 		});
 
 		it("setSelectChannels stores channel selection and parent nodes", () => {

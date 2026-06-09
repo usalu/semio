@@ -593,7 +593,6 @@ impl Default for InteractionMode {
 struct ProximityConnection {
     source: HandleId,
     target: HandleId,
-    replacing: Option<EdgeId>,
 }
 
 pub fn handle_position(node: &Node, handle: &Handle) -> Point {
@@ -914,7 +913,8 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub preselect_removed: Selection,
     pub selection_options: EngineSelectionOptions,
     pub handle_pointer_picking: bool,
-    pub proximity_distance_world: f64,
+    pub     proximity_distance_world: f64,
+    proximity_distance_override: Option<f64>,
     pub selection_preview_points: Vec<Point>,
     pub selection_preview_crossing: bool,
     area_initial: Selection,
@@ -944,6 +944,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             selection_options: EngineSelectionOptions::default(),
             handle_pointer_picking: true,
             proximity_distance_world: DEFAULT_PROXIMITY_DISTANCE_WORLD,
+            proximity_distance_override: None,
             selection_preview_points: Vec::new(),
             selection_preview_crossing: false,
             area_initial: Selection::default(),
@@ -1368,7 +1369,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.pointer_move_screen(x, y, x, y, false, false, false);
     }
 
-    pub fn pointer_move_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, _alt: bool) {
+    pub fn pointer_move_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let point = Point::new(world_x, world_y);
         let screen = Point::new(screen_x, screen_y);
         match std::mem::replace(&mut self.interaction, InteractionMode::Idle) {
@@ -1379,11 +1380,18 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.interaction = InteractionMode::Pan { start_screen, cam_x, cam_y, zoom };
             }
             InteractionMode::DragNode { node_id, offset } => {
+                if alt {
+                    self.proximity_distance_override = Some(0.0);
+                }
                 if let Some(node) = self.nodes.get_mut(&node_id) {
                     node.center = point - offset;
                     self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
                 }
                 self.update_node_drag_proximity(&[node_id]);
+                if alt {
+                    self.proximity_distance_override = None;
+                    self.proximity_connection = None;
+                }
                 self.interaction = InteractionMode::DragNode { node_id, offset };
             }
             InteractionMode::DragNodes { primary_id, offset } => {
@@ -1396,6 +1404,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let dx = nx - px0;
                 let dy = ny - py0;
                 let dragged_ids: Vec<NodeId> = self.drag_start_positions.keys().copied().collect();
+                if alt {
+                    self.proximity_distance_override = Some(0.0);
+                }
                 for (id, start) in &self.drag_start_positions {
                     if let Some(node) = self.nodes.get_mut(id) {
                         node.center = Point::new(start.x + dx, start.y + dy);
@@ -1403,6 +1414,10 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     }
                 }
                 self.update_node_drag_proximity(&dragged_ids);
+                if alt {
+                    self.proximity_distance_override = None;
+                    self.proximity_connection = None;
+                }
                 self.interaction = InteractionMode::DragNodes { primary_id, offset };
             }
             InteractionMode::DrawEdge {
@@ -1412,7 +1427,17 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 reconnecting,
                 ..
             } => {
-                let snap_target = self.nearest_wire_snap_handle(anchor_handle, anchor_is_source, fixed_target, reconnecting, point);
+                if alt {
+                    self.proximity_distance_override = Some(0.0);
+                }
+                let snap_target = if alt {
+                    None
+                } else {
+                    self.nearest_wire_snap_handle(anchor_handle, anchor_is_source, fixed_target, reconnecting, point)
+                };
+                if alt {
+                    self.proximity_distance_override = None;
+                }
                 self.interaction = InteractionMode::DrawEdge {
                     anchor_handle,
                     anchor_is_source,
@@ -1483,7 +1508,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.pointer_up_screen(x, y, x, y, false, false, false);
     }
 
-    pub fn pointer_up_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, _alt: bool) {
+    pub fn pointer_up_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let point = Point::new(world_x, world_y);
         let screen = Point::new(screen_x, screen_y);
         let grabbed = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
@@ -1503,21 +1528,24 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                         HitObject::Endpoint(ep) => Some(P::endpoint_as_u64(ep)),
                         _ => None,
                     }));
-                if let Some(hit_hid) = endpoint {
-                    let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
-                        (hit_hid, tgt)
-                    } else if anchor_is_source {
-                        (anchor_handle, hit_hid)
-                    } else {
-                        (hit_hid, anchor_handle)
-                    };
-                    let allow_replace = snap_target.is_some();
-                    self.try_connect_handles(source_hid, target_handle, reconnecting, allow_replace);
+                if !alt {
+                    if let Some(hit_hid) = endpoint {
+                        let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
+                            (hit_hid, tgt)
+                        } else if anchor_is_source {
+                            (anchor_handle, hit_hid)
+                        } else {
+                            (hit_hid, anchor_handle)
+                        };
+                        self.try_connect_handles(source_hid, target_handle, reconnecting);
+                    }
                 }
             }
             InteractionMode::DragNodes { .. } | InteractionMode::DragNode { .. } => {
-                if let Some(conn) = node_drag_proximity {
-                    self.try_connect_handles(conn.source, conn.target, None, true);
+                if !alt {
+                    if let Some(conn) = node_drag_proximity {
+                        self.try_connect_handles(conn.source, conn.target, None);
+                    }
                 }
             }
             InteractionMode::SelectionPending { start, start_screen } => {
@@ -1669,15 +1697,20 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }
     }
 
+    fn active_proximity_distance_world(&self) -> f64 {
+        self.proximity_distance_override
+            .unwrap_or(self.proximity_distance_world)
+    }
+
     fn proximity_enabled(&self) -> bool {
-        self.proximity_distance_world > 0.0
+        self.active_proximity_distance_world() > 0.0
     }
 
     fn wire_snap_drag_tolerance_world(&self, handle_radius: f64) -> f64 {
         if !self.proximity_enabled() {
             return 0.0;
         }
-        self.proximity_distance_world + handle_radius
+        self.active_proximity_distance_world() + handle_radius
     }
 
     fn wire_snap_still_active(&self, handle_id: HandleId, cursor: Point) -> bool {
@@ -1722,7 +1755,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             } else {
                 (candidate, anchor_handle)
             };
-            if !self.is_valid_connection(source_hid, target_hid, reconnecting, true) {
+            if !self.is_valid_connection(source_hid, target_hid, reconnecting) {
                 continue;
             }
             let Some(node) = self.nodes.get(&handle.node_id) else {
@@ -1989,13 +2022,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             .map(|edge| edge.id)
     }
 
-    fn is_valid_connection(
-        &self,
-        source_hid: HandleId,
-        target_hid: HandleId,
-        reconnecting: Option<EdgeId>,
-        allow_target_replace: bool,
-    ) -> bool {
+    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {
         if source_hid == target_hid {
             return false;
         }
@@ -2019,11 +2046,17 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }) {
             return false;
         }
-        if !allow_target_replace
-            && self
-                .edges
-                .values()
-                .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid)
+        if self
+            .edges
+            .values()
+            .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid)
+        {
+            return false;
+        }
+        if self
+            .edges
+            .values()
+            .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.source) == source_hid)
         {
             return false;
         }
@@ -2037,27 +2070,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         true
     }
 
-    fn incoming_edge_on_target(&self, target_hid: HandleId, excluding: Option<EdgeId>) -> Option<EdgeId> {
-        self.edges
-            .values()
-            .find(|e| Some(e.id) != excluding && P::endpoint_as_u64(e.target) == target_hid)
-            .map(|e| e.id)
-    }
-
-    fn try_connect_handles(
-        &mut self,
-        source_hid: HandleId,
-        target_hid: HandleId,
-        reconnecting: Option<EdgeId>,
-        allow_target_replace: bool,
-    ) -> bool {
-        if !self.is_valid_connection(source_hid, target_hid, reconnecting, allow_target_replace) {
+    fn try_connect_handles(&mut self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {
+        if !self.is_valid_connection(source_hid, target_hid, reconnecting) {
             return false;
-        }
-        if allow_target_replace {
-            if let Some(existing) = self.incoming_edge_on_target(target_hid, reconnecting) {
-                self.remove_edge(existing);
-            }
         }
         let new_id = reconnecting.unwrap_or_else(|| {
             let id = self.next_edge_id;
@@ -2108,7 +2123,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         for dragged_handle in self.handles.values().filter(|h| dragged.contains(&h.node_id)) {
             for other_handle in self.handles.values().filter(|h| !dragged.contains(&h.node_id)) {
                 for (source_hid, target_hid) in self.connection_pairs_for_handles(dragged_handle, other_handle) {
-                    if !self.is_valid_connection(source_hid, target_hid, None, true) {
+                    if !self.is_valid_connection(source_hid, target_hid, None) {
                         continue;
                     }
                     let Some(source_handle) = self.handles.get(&source_hid) else {
@@ -2126,10 +2141,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     let src_pos = handle_position(source_node, source_handle);
                     let tgt_pos = handle_position(target_node, target_handle);
                     let d = distance(src_pos, tgt_pos);
-                    let tol = self.proximity_distance_world + source_handle.radius + target_handle.radius;
+                    let tol = self.active_proximity_distance_world() + source_handle.radius + target_handle.radius;
                     if d <= tol && best.as_ref().map(|(best_d, _)| d < *best_d).unwrap_or(true) {
-                        let replacing = self.incoming_edge_on_target(target_hid, None);
-                        best = Some((d, ProximityConnection { source: source_hid, target: target_hid, replacing }));
+                        best = Some((d, ProximityConnection { source: source_hid, target: target_hid }));
                     }
                 }
             }
@@ -2423,7 +2437,7 @@ mod tests {
     }
 
     #[test]
-    fn wire_snap_replaces_occupied_compatible_target() {
+    fn wire_snap_ignores_occupied_compatible_targets() {
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.enforce_acyclic = true;
         engine.set_camera(0.0, 0.0, 1.0);
@@ -2443,11 +2457,11 @@ mod tests {
         let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
             panic!("expected draw-edge interaction");
         };
-        assert_eq!(snap_target, Some(11));
+        assert!(snap_target.is_none());
         engine.pointer_up(occupied.x + 8.0, occupied.y);
         assert_eq!(engine.edges.len(), 1);
         let edge = engine.edges.values().next().expect("edge");
-        assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
+        assert_eq!(Ported::endpoint_as_u64(edge.source), 12);
         assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
     }
 
@@ -2512,6 +2526,90 @@ mod tests {
         let edge = engine.edges.values().next().expect("edge");
         assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
         assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
+    }
+
+    #[test]
+    fn node_drag_proximity_skips_occupied_input() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.proximity_distance_world = 80.0;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 200.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(3, 400.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 3, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.set_handle_role(12, HandleRole::Source);
+        engine.create_edge(100, 10, 11);
+        engine.pointer_down(400.0, 0.0, false);
+        engine.pointer_move(220.0, 0.0);
+        assert!(engine.render_snapshot().pending_edge.is_none());
+        engine.pointer_up(220.0, 0.0);
+        assert_eq!(engine.edges.len(), 1);
+        let edge = engine.edges.values().next().expect("edge");
+        assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
+        assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
+    }
+
+    #[test]
+    fn node_drag_alt_suppresses_proximity_preview_and_connect() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.proximity_distance_world = 80.0;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 200.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.pointer_down(0.0, 0.0, false);
+        engine.pointer_move_screen(40.0, 0.0, 40.0, 0.0, false, false, true);
+        assert!(engine.render_snapshot().pending_edge.is_none());
+        engine.pointer_up_screen(40.0, 0.0, 40.0, 0.0, false, false, true);
+        assert_eq!(engine.edges.len(), 0);
+        assert_eq!(engine.proximity_distance_world, 80.0);
+    }
+
+    #[test]
+    fn node_drag_alt_restores_proximity_when_released() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.proximity_distance_world = 80.0;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 200.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.pointer_down(0.0, 0.0, false);
+        engine.pointer_move_screen(40.0, 0.0, 40.0, 0.0, false, false, true);
+        assert!(engine.render_snapshot().pending_edge.is_none());
+        engine.pointer_move_screen(40.0, 0.0, 40.0, 0.0, false, false, false);
+        assert!(engine.render_snapshot().pending_edge.is_some());
+        assert_eq!(engine.proximity_distance_world, 80.0);
+    }
+
+    #[test]
+    fn node_drag_proximity_skips_occupied_source_output() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.proximity_distance_world = 120.0;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 220.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 2, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.set_handle_role(12, HandleRole::Target);
+        engine.create_edge(100, 10, 11);
+        engine.pointer_down(220.0, 0.0, false);
+        engine.pointer_move(40.0, 0.0);
+        assert!(engine.render_snapshot().pending_edge.is_none());
+        engine.pointer_up(40.0, 0.0);
+        assert_eq!(engine.edges.len(), 1);
     }
 
     #[test]

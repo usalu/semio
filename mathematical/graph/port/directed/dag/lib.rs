@@ -1659,8 +1659,10 @@ pub struct DagHost {
     icon_paint_cache: graph::IconPaintCache,
     ghost_node: Option<DagNodeSpec>,
     pending_cluster_explode: Option<String>,
-    computing: HashSet<NodeId>,
-    computing_anim_phase: Cell<f64>,
+    computing_active: Option<NodeId>,
+    computing_stale: HashSet<NodeId>,
+    computing_active_anim_phase: Cell<f64>,
+    computing_stale_anim_phase: Cell<f64>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -1676,6 +1678,7 @@ struct DagNodePaintChrome {
     is_highlighted: bool,
     is_hovered: bool,
     is_computing: bool,
+    is_stale: bool,
     body_fill_alpha: u8,
     ghost_tint: bool,
 }
@@ -1688,6 +1691,7 @@ impl DagNodePaintChrome {
             is_highlighted: false,
             is_hovered: false,
             is_computing: false,
+            is_stale: false,
             body_fill_alpha: 255,
             ghost_tint: true,
         }
@@ -1779,8 +1783,10 @@ impl DagHost {
             icon_paint_cache: graph::IconPaintCache::new(),
             ghost_node: None,
             pending_cluster_explode: None,
-            computing: HashSet::new(),
-            computing_anim_phase: Cell::new(0.0),
+            computing_active: None,
+            computing_stale: HashSet::new(),
+            computing_active_anim_phase: Cell::new(0.0),
+            computing_stale_anim_phase: Cell::new(0.0),
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -2324,27 +2330,34 @@ impl DagHost {
         }
     }
 
-    /// ⚙️ Marks widgets currently evaluating with animated active chrome.
-    pub fn set_computing(&mut self, widget_ids: &[String]) {
-        self.computing.clear();
-        for widget_id in widget_ids {
+    /// ⚙️ Marks one actively computing widget and downstream widgets as stale.
+    pub fn set_computing_progress(&mut self, active_widget_id: Option<&str>, stale_widget_ids: &[String]) {
+        self.computing_active = active_widget_id.and_then(|widget_id| self.node_id_for_widget_id(widget_id));
+        self.computing_stale.clear();
+        for widget_id in stale_widget_ids {
             if let Some(nid) = self.node_id_for_widget_id(widget_id) {
-                self.computing.insert(nid);
+                if self.computing_active != Some(nid) {
+                    self.computing_stale.insert(nid);
+                }
             }
         }
     }
 
     /// ✅ Clears evaluating chrome from all nodes.
     pub fn clear_computing(&mut self) {
-        self.computing.clear();
+        self.computing_active = None;
+        self.computing_stale.clear();
     }
 
     fn tick_computing_animation(&self) {
-        if self.computing.is_empty() {
-            return;
+        if self.computing_active.is_some() {
+            let next = (self.computing_active_anim_phase.get() + 0.02) % 1.0;
+            self.computing_active_anim_phase.set(next);
         }
-        let next = (self.computing_anim_phase.get() + 0.02) % 1.0;
-        self.computing_anim_phase.set(next);
+        if !self.computing_stale.is_empty() {
+            let next = (self.computing_stale_anim_phase.get() + 0.008) % 1.0;
+            self.computing_stale_anim_phase.set(next);
+        }
     }
 
     /// 📋 Preview-off fixture node ids currently dimmed on the canvas.
@@ -3860,18 +3873,19 @@ impl DagHost {
         );
     }
 
-    fn paint_computing_active_border(
+    fn paint_computing_border_arc(
         &self,
         scene: &mut cavas::vello::Scene,
         aff: &cavas::vello::kurbo::Affine,
         rect: &cavas::vello::kurbo::Rect,
         cam_zoom: f64,
-        theme: &VelloThemePalette,
+        color: cavas::vello::peniko::Color,
+        start_t: f64,
+        dashed: bool,
     ) {
-        use cavas::vello::kurbo::{BezPath, Point, Stroke};
+        use cavas::vello::kurbo::{BezPath, Stroke};
         const SEGMENTS: usize = 40;
         const ARC_FRACTION: f64 = 0.24;
-        let start_t = self.computing_anim_phase.get();
         let mut path = BezPath::new();
         for i in 0..=SEGMENTS {
             let local = i as f64 / SEGMENTS as f64;
@@ -3884,13 +3898,42 @@ impl DagHost {
             }
         }
         let stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX * 1.75, cam_zoom);
-        scene.stroke(
-            &Stroke::new(stroke_px),
-            *aff,
+        let mut stroke = Stroke::new(stroke_px);
+        if dashed {
+            stroke.dash_pattern = vec![stroke_px * 2.5, stroke_px * 2.0].into();
+        }
+        scene.stroke(&stroke, *aff, color, None, &path);
+    }
+
+    fn paint_computing_active_border(
+        &self,
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        rect: &cavas::vello::kurbo::Rect,
+        cam_zoom: f64,
+        theme: &VelloThemePalette,
+    ) {
+        self.paint_computing_border_arc(
+            scene,
+            aff,
+            rect,
+            cam_zoom,
             theme.node_stroke_selected,
-            None,
-            &path,
+            self.computing_active_anim_phase.get(),
+            false,
         );
+    }
+
+    fn paint_computing_stale_border(
+        &self,
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        rect: &cavas::vello::kurbo::Rect,
+        cam_zoom: f64,
+        theme: &VelloThemePalette,
+    ) {
+        let highlight = vello_color_with_alpha(theme.node_stroke_selected, 220);
+        self.paint_computing_border_arc(scene, aff, rect, cam_zoom, highlight, self.computing_stale_anim_phase.get(), true);
     }
 
     fn rect_perimeter_point(rect: &cavas::vello::kurbo::Rect, t: f64) -> cavas::vello::kurbo::Point {
@@ -3953,6 +3996,8 @@ impl DagHost {
         }
         if chrome.is_computing {
             self.paint_computing_active_border(scene, aff, &rect, cam.zoom, theme);
+        } else if chrome.is_stale {
+            self.paint_computing_stale_border(scene, aff, &rect, cam.zoom, theme);
         }
         let layout_px = dag_label_layout_px();
         let paint_px = dag_label_paint_px(cam.zoom, lod_index);
@@ -4252,7 +4297,8 @@ impl DagHost {
             let (is_selected, is_highlighted, is_hovered) = engine_nid
                 .map(|nid| self.node_interaction_chrome(nid))
                 .unwrap_or((false, false, false));
-            let is_computing = engine_nid.is_some_and(|nid| self.computing.contains(&nid));
+            let is_computing = engine_nid.is_some_and(|nid| self.computing_active == Some(nid));
+            let is_stale = engine_nid.is_some_and(|nid| self.computing_stale.contains(&nid));
             self.paint_node_visual(
                 scene,
                 &aff,
@@ -4268,6 +4314,7 @@ impl DagHost {
                     is_highlighted,
                     is_hovered,
                     is_computing,
+                    is_stale,
                     body_fill_alpha: 255,
                     ghost_tint: false,
                 },
@@ -5319,6 +5366,87 @@ mod tests {
                 .any(|edge| edge.source == "src:out" && edge.target == "tgt:in"),
             "proximity drag should commit edge"
         );
+    }
+
+    #[test]
+    fn dag_host_node_drag_skips_wired_cut_inputs() {
+        let inputs = vec![
+            IoPortSpec { id: "a".into(), label: "a".into(), ..Default::default() },
+            IoPortSpec { id: "b".into(), label: "b".into(), ..Default::default() },
+        ];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
+        let src_w = computation_node_width("Src", &[], &outputs);
+        let cut_w = computation_node_width("Cut", &inputs, &outputs);
+        let src_h = computation_node_height(0, 1, false, false);
+        let cut_h = computation_node_height(2, 1, false, false);
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                DagNodeSpec::computation(
+                    "sphere".into(),
+                    "Sphere".into(),
+                    "Sphere".into(),
+                    "emoji:🔵".into(),
+                    vec![],
+                    outputs.clone(),
+                    false,
+                    false,
+                    0.0,
+                    -60.0,
+                    src_w,
+                    src_h,
+                ),
+                DagNodeSpec::computation(
+                    "torus".into(),
+                    "Torus".into(),
+                    "Torus".into(),
+                    "emoji:🍩".into(),
+                    vec![],
+                    outputs.clone(),
+                    false,
+                    false,
+                    0.0,
+                    60.0,
+                    src_w,
+                    src_h,
+                ),
+                DagNodeSpec::computation(
+                    "cut".into(),
+                    "Cut".into(),
+                    "Cut".into(),
+                    "emoji:✂️".into(),
+                    inputs,
+                    outputs,
+                    false,
+                    false,
+                    240.0,
+                    0.0,
+                    cut_w,
+                    cut_h,
+                ),
+            ],
+            edges: vec![
+                DagFixtureEdgeV1 { id: "e1".into(), source: "sphere:out".into(), target: "cut:a".into() },
+                DagFixtureEdgeV1 { id: "e2".into(), source: "torus:out".into(), target: "cut:b".into() },
+            ],
+        });
+        assert_eq!(host.engine.edges.len(), 2, "fixture edges should load into engine");
+        host.set_viewport(1280, 800, 1.0);
+        host.set_proximity_distance(160.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("normal");
+        let cut_center = cavas::vello::kurbo::Point::new(240.0, 0.0);
+        let (sx, sy) = world_to_screen_px(&host, cut_center);
+        host.pointer_down_screen(sx, sy, 0, false, false, false);
+        host.pointer_move_screen(sx - 180.0, sy, false, false, false);
+        assert!(
+            host.engine.render_snapshot().pending_edge.is_none(),
+            "dragging wired cut near sources must not preview proximity edges to occupied inputs"
+        );
+        host.pointer_up_screen(sx - 180.0, sy, false, false, false);
+        assert_eq!(host.engine.edges.len(), 2);
+        assert_eq!(host.fixture.edges.len(), 2);
     }
 
     #[test]

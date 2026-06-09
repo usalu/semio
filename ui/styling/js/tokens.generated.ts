@@ -331,9 +331,9 @@ export const STYLING_BOARD_THEMES = {
       255
     ],
     "nodeFillSelected": [
-      216,
-      159,
-      158,
+      255,
+      52,
+      79,
       255
     ],
     "nodeStrokeSelected": [
@@ -567,9 +567,9 @@ export const STYLING_BOARD_THEMES = {
       255
     ],
     "nodeFillSelected": [
-      105,
-      58,
-      66,
+      255,
+      52,
+      79,
       255
     ],
     "nodeStrokeSelected": [

@@ -6328,7 +6328,7 @@ import {
   registerProceduralPlayDeclarativeBodies,
   type ProceduralPlayHostBridge,
 } from "@procedural/play";
-import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, flowWidgetPaletteTreeDragController } from "@flow/react";
+import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, FLOW_DEFAULT_PROXIMITY_DISTANCE, flowWidgetPaletteTreeDragController } from "@flow/react";
 import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@procedural/react";
 import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
 
@@ -6464,6 +6464,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   void interactionRevision;
   const scopeId = node.paneId ?? PROCEDURAL_PLAY_WINDOW_KIND_ID;
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
+  const proximityDistance = ctrl?.proximityDistanceValue() ?? FLOW_DEFAULT_PROXIMITY_DISTANCE;
   const onLodChange = reactHostPort.useCallback(
     (lod: import("@flow/react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
@@ -6566,6 +6567,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
       contextMenu={(ctx) => buildProceduralPlayCanvasContextMenu(ctx, onCanvasCommand)}
       {...lodProps}
       onLodChange={onLodChange}
+      proximityDistance={proximityDistance}
       className="h-full w-full"
     />
   );
