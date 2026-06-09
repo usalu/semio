@@ -11914,14 +11914,14 @@ if (import.meta.vitest) {
         references: [
           {
             id: "ref-a",
-            source: { url: "/infinite-fixture/sketch.png", mediaKind: "image" },
+            source: { url: "/example/reference.png", mediaKind: "image" },
             origin: [0, 0, 0.01],
             widthWorld: 12,
           },
         ],
       });
       expect(f?.references).toHaveLength(1);
-      expect(f?.references[0]?.source.url).toBe("/infinite-fixture/sketch.png");
+      expect(f?.references[0]?.source.url).toBe("/example/reference.png");
     });
     it("parses domain case-insensitively", () => {
       const f = parseFixtureV1({

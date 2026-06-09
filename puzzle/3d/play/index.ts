@@ -2,6 +2,7 @@
 // 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
+import { WORLD_REFERENCE_DEFAULT_WIDTH } from "@infinite/world/r3f";
 import { bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@ui/react";
 import {
   AppRuntime,
@@ -2059,8 +2060,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       id,
       source: { url: args.url, mediaKind, ...(typeof args.page === "number" ? { page: args.page } : {}) },
       origin: args.origin ?? [this.fixture.camera.target[0], this.fixture.camera.target[1], 0.01],
-      widthWorld: 50,
-      locked: true,
+      widthWorld: WORLD_REFERENCE_DEFAULT_WIDTH,
     };
     this.patchFixture((fixture) => addReferenceToFixture(fixture, reference));
     this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [id], targetVolumeIds: [] };
@@ -2367,32 +2367,10 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       command: "setGumballConfigToggle",
       args: { key },
     }));
-    const referenceTools: ToolItem[] = [
-      {
-        id: "puzzle3d.importReference.masterarbeit",
-        kind: "button",
-        iconId: "image",
-        text: "Import Master Thesis",
-        order: 100,
-        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
-        command: "importReference",
-        args: { url: "/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg" },
-      },
-      {
-        id: "puzzle3d.importReference.rathausAhlen",
-        kind: "button",
-        iconId: "image",
-        text: "Import Rathaus Ahlen",
-        order: 101,
-        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
-        command: "importReference",
-        args: { url: "/infinite-fixture/rathaus-ahlen-grundriss.png" },
-      },
-    ];
     this.mainMode.tools = {
       selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
       filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      actions: [...relocateTools, ...referenceTools],
+      actions: relocateTools,
     };
   }
 

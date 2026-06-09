@@ -1,0 +1,18 @@
+{
+  "title": "Full Brep CAD Kernel",
+  "emoji": "🔷",
+  "status": "open",
+  "description": "Expand the solid-only brep kernel into a full CAD kernel: multi-entity handle/registry, exhaustive brepkit operations (curves, surfaces, sweeps, features, intersect, evaluate, analysis, IO), flow node catalog, and preview rendering for all entity kinds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1659"
+  },
+  "goal": "🎯flow🎯asynceval",
+  "plan": {
+    "client": "cursor",
+    "id": "386d6722",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/full_brep_cad_kernel_386d6722.plan.md"
+  },
+  "sessions": [
+    "⚪83b607b647d54e33b93203844f8e62f6"
+  ]
+}

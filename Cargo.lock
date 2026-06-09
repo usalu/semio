@@ -1858,6 +1858,9 @@ name = "geometry_brep_brepkit"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
+ "brepkit-check",
+ "brepkit-geometry",
  "brepkit-io",
  "brepkit-math",
  "brepkit-operations",
