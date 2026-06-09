@@ -2,7 +2,7 @@
 // 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
-import { DEFAULT_GUMBALL_CONFIG, bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@ui/react";
 import {
   AppRuntime,
   CommandBus,
@@ -115,6 +115,7 @@ import {
   type ObjectKindVortexTemplate,
   type BrushPlacePayload,
   type RelocatePayload,
+  type Quat,
   type Vec3,
   type WorldReferenceRelocatePayload,
   type WorldReferenceProps,
@@ -161,6 +162,7 @@ import {
   type Puzzle3dKindHoverDomain,
   puzzle3dHoverTargetsEqual,
   puzzle3dKindHoversEqual,
+  PUZZLE_3D_GUMBALL_CONFIG,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
 import concreteForestPuzzle3dFixtureJson from "../fixture/concrete-forest.3d.json";
@@ -864,15 +866,14 @@ export interface Puzzle3dPlayHostBridge {
 /** @emoji 🎯 Play harness selection: objects, vortex full ids, and attractions. */
 export type Puzzle3dPlaySelection = SelectionSnapshot;
 
-export type Puzzle3dGumballGroupKey = keyof Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">;
+export type Puzzle3dGumballGroupKey = keyof Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate">;
+
+export { PUZZLE_3D_GUMBALL_CONFIG };
 
 export const PUZZLE_3D_GUMBALL_GROUPS: readonly { readonly key: Puzzle3dGumballGroupKey; readonly label: string; readonly iconId: string }[] = [
   { key: "moveAxes", label: "Move Axes", iconId: "move" },
   { key: "movePlanes", label: "Move Planes", iconId: "move-3d" },
   { key: "rotate", label: "Rotate", iconId: "rotate-cw" },
-  { key: "scaleAxes", label: "Scale Axes", iconId: "maximize-2" },
-  { key: "scalePlanes", label: "Scale Planes", iconId: "scaling" },
-  { key: "scaleUniform", label: "Scale Uniform", iconId: "box" },
 ];
 
 export const PUZZLE_3D_PLAY_EMPTY_SELECTION: Puzzle3dPlaySelection = {
@@ -892,7 +893,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
   automaticLod: true,
   depthVariableLod: false,
-  gumballConfig: DEFAULT_GUMBALL_CONFIG,
+  gumballConfig: PUZZLE_3D_GUMBALL_CONFIG,
   selection: PUZZLE_3D_PLAY_EMPTY_SELECTION,
   selectedId: null,
   selectedLabel: null,
@@ -967,6 +968,9 @@ export function puzzle3dPlaySelectionLabel(fixture: FixtureV1 | null, selection:
   if (selection.objectIds[0]) {
     const object = fixture.objects.find((row) => row.id === selection.objectIds[0]);
     return puzzle3dPlayFixtureRowLabel(object?.label, selection.objectIds[0]);
+  }
+  if (selection.referenceIds[0]) {
+    return selection.referenceIds[0];
   }
   return null;
 }
@@ -1685,7 +1689,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.manualLod = DEFAULT_MANUAL_LOD;
     this.lodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
     this.lodTag = DEFAULT_MANUAL_LOD;
-    this.gumballConfig = { ...DEFAULT_GUMBALL_CONFIG };
+    this.gumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
     this.activeTool = "select";
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.selectionMode = "default";
@@ -2055,7 +2059,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       id,
       source: { url: args.url, mediaKind, ...(typeof args.page === "number" ? { page: args.page } : {}) },
       origin: args.origin ?? [this.fixture.camera.target[0], this.fixture.camera.target[1], 0.01],
-      widthWorld: 20,
+      widthWorld: 50,
+      locked: true,
     };
     this.patchFixture((fixture) => addReferenceToFixture(fixture, reference));
     this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [id], targetVolumeIds: [] };
@@ -2364,24 +2369,24 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     }));
     const referenceTools: ToolItem[] = [
       {
-        id: "puzzle3d.importReference.sketch",
+        id: "puzzle3d.importReference.masterarbeit",
         kind: "button",
         iconId: "image",
-        text: "Import Sketch",
+        text: "Import Master Thesis",
         order: 100,
         controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
         command: "importReference",
-        args: { url: "/infinite-fixture/sketch.png" },
+        args: { url: "/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg" },
       },
       {
-        id: "puzzle3d.importReference.sitePdf",
+        id: "puzzle3d.importReference.rathausAhlen",
         kind: "button",
-        iconId: "file-text",
-        text: "Import Site Pdf",
+        iconId: "image",
+        text: "Import Rathaus Ahlen",
         order: 101,
         controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
         command: "importReference",
-        args: { url: "/infinite-fixture/site.pdf", page: 1 },
+        args: { url: "/infinite-fixture/rathaus-ahlen-grundriss.png" },
       },
     ];
     this.mainMode.tools = {
@@ -2527,7 +2532,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           return;
         }
         const next = [...this.voxelBrushDimensions] as Vec3;
-        next[axis] = Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, value));
+        next[axis] = Math.round(Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, value)));
         this.voxelBrushDimensions = next;
         this.notifySnapshot();
         return;
@@ -2903,6 +2908,52 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.patchFixture((fixture) => updatePuzzle3dAttractionInFixture(fixture, attractionId, patch));
         return;
       }
+      case "patchPuzzle3dReference": {
+        const { referenceId, field, value } = args as {
+          referenceId: string;
+          field: "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity";
+          value?: unknown;
+        };
+        if (!referenceId || !field) {
+          return;
+        }
+        const patch: Partial<Omit<WorldReferenceProps, "id">> = {};
+        if (field === "origin" && Array.isArray(value) && value.length === 3) {
+          patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
+        }
+        if (field === "rotation" && Array.isArray(value) && value.length === 3) {
+          patch.orientation = puzzle3dPlayEulerDegreesToQuat([Number(value[0]), Number(value[1]), Number(value[2])]);
+        }
+        if (field === "scale" && Array.isArray(value) && value.length === 3) {
+          const sx = Number(value[0]);
+          const sy = Number(value[1]);
+          const sz = Number(value[2]);
+          patch.scale = sx === sy && sy === sz ? sx : ([sx, sy, sz] as [number, number, number]);
+        }
+        if (field === "scaleUniform") {
+          const parsed = typeof value === "number" ? value : Number(value);
+          if (Number.isFinite(parsed)) {
+            patch.scale = parsed;
+          }
+        }
+        if (field === "widthWorld") {
+          const parsed = typeof value === "number" ? value : Number(value);
+          if (Number.isFinite(parsed)) {
+            patch.widthWorld = parsed;
+          }
+        }
+        if (field === "opacity") {
+          const parsed = typeof value === "number" ? value : Number(value);
+          if (Number.isFinite(parsed)) {
+            patch.opacity = parsed;
+          }
+        }
+        if (!Object.keys(patch).length) {
+          return;
+        }
+        this.patchFixture((fixture) => updatePuzzle3dReferenceInFixture(fixture, referenceId, patch));
+        return;
+      }
       case "setSelectionMode": {
         const mode = ((args as { mode?: SelectionMode; value?: string }).mode ?? (args as { value?: string }).value) as SelectionMode;
         if (mode === "default" || mode === "additive" || mode === "subtractive" || mode === "invertive") {
@@ -3228,6 +3279,67 @@ function puzzle3dPlayVec3AllEqual(values: readonly (readonly [number, number, nu
   return true;
 }
 
+const PUZZLE_3D_PLAY_REFERENCE_DEFAULT_QUAT: Quat = [0, 0, 0, 1];
+
+function puzzle3dPlayReferenceScaleVec(scale: number | Vec3 | undefined): [number, number, number] {
+  if (typeof scale === "number") {
+    return [scale, scale, scale];
+  }
+  if (scale) {
+    return [scale[0], scale[1], scale[2]];
+  }
+  return [1, 1, 1];
+}
+
+function puzzle3dPlayReferenceOrientation(reference: Pick<WorldReferenceProps, "orientation">): Quat {
+  return reference.orientation ?? PUZZLE_3D_PLAY_REFERENCE_DEFAULT_QUAT;
+}
+
+function puzzle3dPlayQuatToEulerDegrees(quat: Quat): [number, number, number] {
+  const [x, y, z, w] = quat;
+  const sinRoll = 2 * (w * x + y * z);
+  const cosRoll = 1 - 2 * (x * x + y * y);
+  const roll = Math.atan2(sinRoll, cosRoll);
+  const sinPitch = 2 * (w * y - z * x);
+  const pitch = Math.abs(sinPitch) >= 1 ? Math.sign(sinPitch) * (Math.PI / 2) : Math.asin(sinPitch);
+  const sinYaw = 2 * (w * z + x * y);
+  const cosYaw = 1 - 2 * (y * y + z * z);
+  const yaw = Math.atan2(sinYaw, cosYaw);
+  const radToDeg = 180 / Math.PI;
+  return [roll * radToDeg, pitch * radToDeg, yaw * radToDeg];
+}
+
+function puzzle3dPlayEulerDegreesToQuat(euler: readonly [number, number, number]): Quat {
+  const degToRad = Math.PI / 180;
+  const roll = euler[0] * degToRad;
+  const pitch = euler[1] * degToRad;
+  const yaw = euler[2] * degToRad;
+  const cy = Math.cos(yaw * 0.5);
+  const sy = Math.sin(yaw * 0.5);
+  const cp = Math.cos(pitch * 0.5);
+  const sp = Math.sin(pitch * 0.5);
+  const cr = Math.cos(roll * 0.5);
+  const sr = Math.sin(roll * 0.5);
+  return [
+    sr * cp * cy - cr * sp * sy,
+    cr * sp * cy + sr * cp * sy,
+    cr * cp * sy - sr * sp * cy,
+    cr * cp * cy + sr * sp * sy,
+  ];
+}
+
+function puzzle3dPlayQuatAllEqual(values: readonly Quat[]): boolean {
+  if (values.length <= 1) return true;
+  const first = values[0]!;
+  for (let i = 1; i < values.length; i += 1) {
+    const next = values[i]!;
+    if (next[0] !== first[0] || next[1] !== first[1] || next[2] !== first[2] || next[3] !== first[3]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 type Puzzle3dPlayInspectorVortexRow = { readonly fullId: string; readonly vortex: VortexProps };
 
 /** @emoji 🗺️ Resolves selected vortex rows via object index (O(V) not O(V×objects)). */
@@ -3256,7 +3368,12 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
     ]);
   }
   const selection = snap.selection;
-  const hasSelection = selection.objectIds.length > 0 || selection.vortexIds.length > 0 || selection.attractionIds.length > 0;
+  const hasSelection =
+    selection.objectIds.length > 0 ||
+    selection.vortexIds.length > 0 ||
+    selection.attractionIds.length > 0 ||
+    selection.referenceIds.length > 0 ||
+    selection.targetVolumeIds.length > 0;
   const catalogs = parseKindCatalogs(fixture.meta);
   const objectKinds = catalogs?.objects ?? [];
   const vortexKinds = catalogs?.vortices ?? [];
@@ -3269,11 +3386,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
       children: [
         {
           type: "text",
-          value: `${selection.objectIds.length} objects · ${selection.vortexIds.length} vortices · ${selection.attractionIds.length} attractions`,
+          value: `${selection.objectIds.length} objects · ${selection.vortexIds.length} vortices · ${selection.attractionIds.length} attractions · ${selection.referenceIds.length} references`,
         },
         ...(hasSelection
           ? []
-          : [{ type: "text", value: "Select objects, vortices, or attractions in the canvas or workbench hierarchy." }]),
+          : [{ type: "text", value: "Select objects, vortices, attractions, or references in the canvas or workbench hierarchy." }]),
         {
           type: "button",
           id: "puzzle-3d-play-inspector.delete",
@@ -3552,6 +3669,208 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
           id: "puzzle-3d-play-inspector.attractions.attracted",
           label: "Attracted",
           child: { type: "text", value: puzzle3dPlayAllEqual(attracted) ? attracted[0]! : "Mixed" },
+        },
+      ],
+    });
+  }
+  const referenceById = new Map((fixture.references ?? []).map((reference) => [reference.id, reference]));
+  const selectedReferences = selection.referenceIds
+    .map((referenceId) => referenceById.get(referenceId))
+    .filter((reference): reference is WorldReferenceProps => reference !== undefined);
+  if (selectedReferences.length === 1) {
+    const reference = selectedReferences[0]!;
+    const referenceId = reference.id;
+    const orientation = puzzle3dPlayReferenceOrientation(reference);
+    const tilt = puzzle3dPlayQuatToEulerDegrees(orientation);
+    const scaleVec = puzzle3dPlayReferenceScaleVec(reference.scale);
+    const referenceFields: UiNode[] = [
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.id",
+        label: "Id",
+        child: { type: "text", value: referenceId },
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.source",
+        label: "Source",
+        child: { type: "text", value: reference.source.url },
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.mediaKind",
+        label: "Media kind",
+        child: { type: "text", value: reference.source.mediaKind },
+      },
+      ...(typeof reference.source.page === "number"
+        ? [
+            {
+              type: "field" as const,
+              id: "puzzle-3d-play-inspector.reference.page",
+              label: "Page",
+              child: { type: "text" as const, value: String(reference.source.page) },
+            },
+          ]
+        : []),
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.origin",
+        label: "Position",
+        child: {
+          type: "vec3",
+          id: "puzzle-3d-play-inspector.reference.origin.vec3",
+          value: reference.origin as [number, number, number],
+          onChange: puzzle3dPlayCmd("patchPuzzle3dReference", { referenceId, field: "origin" }),
+        },
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.tilt",
+        label: "Tilt (°)",
+        child: {
+          type: "vec3",
+          id: "puzzle-3d-play-inspector.reference.tilt.vec3",
+          value: tilt,
+          onChange: puzzle3dPlayCmd("patchPuzzle3dReference", { referenceId, field: "rotation" }),
+        },
+      },
+      {
+        type: "keyValue",
+        entries: [
+          { label: "Quaternion X", value: formatNumber(orientation[0]) },
+          { label: "Quaternion Y", value: formatNumber(orientation[1]) },
+          { label: "Quaternion Z", value: formatNumber(orientation[2]) },
+          { label: "Quaternion W", value: formatNumber(orientation[3]) },
+        ],
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.scale",
+        label: "Scale (X, Y, Z)",
+        child: {
+          type: "vec3",
+          id: "puzzle-3d-play-inspector.reference.scale.vec3",
+          value: scaleVec,
+          onChange: puzzle3dPlayCmd("patchPuzzle3dReference", { referenceId, field: "scale" }),
+        },
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.scaleUniform",
+        label: "Scale factor",
+        child: {
+          type: "input",
+          id: "puzzle-3d-play-inspector.reference.scaleUniform.input",
+          inputKind: "number",
+          value: String(typeof reference.scale === "number" ? reference.scale : scaleVec[0]),
+          onChange: puzzle3dPlayCmd("patchPuzzle3dReference", { referenceId, field: "scaleUniform" }),
+        },
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.widthWorld",
+        label: "Width (world)",
+        child: {
+          type: "input",
+          id: "puzzle-3d-play-inspector.reference.widthWorld.input",
+          inputKind: "number",
+          value: String(reference.widthWorld ?? 10),
+          onChange: puzzle3dPlayCmd("patchPuzzle3dReference", { referenceId, field: "widthWorld" }),
+        },
+      },
+      {
+        type: "field",
+        id: "puzzle-3d-play-inspector.reference.opacity",
+        label: "Opacity",
+        child: {
+          type: "input",
+          id: "puzzle-3d-play-inspector.reference.opacity.input",
+          inputKind: "number",
+          value: String(reference.opacity ?? 1),
+          onChange: puzzle3dPlayCmd("patchPuzzle3dReference", { referenceId, field: "opacity" }),
+        },
+      },
+      {
+        type: "keyValue",
+        entries: [
+          { label: "Hidden", value: String(reference.hidden === true) },
+          { label: "Locked", value: String(reference.locked === true) },
+        ],
+      },
+    ];
+    children.push({
+      type: "section",
+      id: "puzzle-3d-play-inspector.reference",
+      label: referenceId,
+      children: referenceFields,
+    });
+  } else if (selectedReferences.length > 1) {
+    const origins = selectedReferences.map((reference) => reference.origin);
+    const tilts = selectedReferences.map((reference) => puzzle3dPlayQuatToEulerDegrees(puzzle3dPlayReferenceOrientation(reference)));
+    const scales = selectedReferences.map((reference) => puzzle3dPlayReferenceScaleVec(reference.scale));
+    const orientations = selectedReferences.map((reference) => puzzle3dPlayReferenceOrientation(reference));
+    const widthWorlds = selectedReferences.map((reference) => reference.widthWorld ?? 10);
+    const opacities = selectedReferences.map((reference) => reference.opacity ?? 1);
+    const originUniform = puzzle3dPlayVec3AllEqual(origins);
+    const tiltUniform = puzzle3dPlayVec3AllEqual(tilts);
+    const scaleUniform = puzzle3dPlayVec3AllEqual(scales);
+    const orientationUniform = puzzle3dPlayQuatAllEqual(orientations);
+    const widthUniform = puzzle3dPlayAllEqual(widthWorlds);
+    const opacityUniform = puzzle3dPlayAllEqual(opacities);
+    children.push({
+      type: "section",
+      id: "puzzle-3d-play-inspector.references",
+      label: `References (${selectedReferences.length})`,
+      children: [
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.references.position",
+          label: "Position",
+          child: {
+            type: "text",
+            value: originUniform ? `[${origins[0]!.map(formatNumber).join(", ")}]` : "Mixed",
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.references.tilt",
+          label: "Tilt (°)",
+          child: {
+            type: "text",
+            value: tiltUniform ? `[${tilts[0]!.map(formatNumber).join(", ")}]` : "Mixed",
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.references.orientation",
+          label: "Quaternion",
+          child: {
+            type: "text",
+            value: orientationUniform
+              ? `[${orientations[0]!.map(formatNumber).join(", ")}]`
+              : "Mixed",
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.references.scale",
+          label: "Scale (X, Y, Z)",
+          child: {
+            type: "text",
+            value: scaleUniform ? `[${scales[0]!.map(formatNumber).join(", ")}]` : "Mixed",
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.references.widthWorld",
+          label: "Width (world)",
+          child: { type: "text", value: widthUniform ? String(widthWorlds[0]) : "Mixed" },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.references.opacity",
+          label: "Opacity",
+          child: { type: "text", value: opacityUniform ? String(opacities[0]) : "Mixed" },
         },
       ],
     });
@@ -4649,6 +4968,52 @@ if (import.meta.vitest) {
       const objectsOnly = puzzle3dPlayAllSelectionFromFixture(fixture!, { object: true, vortex: false, attraction: false });
       expect(objectsOnly.vortexIds).toEqual([]);
       expect(objectsOnly.attractionIds).toEqual([]);
+    });
+
+    it("buildPuzzle3dPlayInspectorBody exposes reference transform fields for single selection", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [],
+        references: [
+          {
+            id: "ref-a",
+            source: { url: "/plan.png", mediaKind: "image" },
+            origin: [1, 2, 3],
+            orientation: [0, 0, 0, 1],
+            scale: [2, 3, 4],
+            widthWorld: 42,
+            opacity: 0.8,
+          },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("setSelection", { selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: ["ref-a"], targetVolumeIds: [] } });
+      const tree = buildPuzzle3dPlayInspectorBody({
+        runtime: wb,
+        windowKindId: PUZZLE_3D_PLAY_WINDOW_ID,
+        bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY,
+        activeModeId: "main",
+        generation: wb.generation,
+      });
+      const referenceSection = tree.sections.find((section) => section.label === "ref-a");
+      expect(referenceSection).toBeDefined();
+      const positionField = referenceSection!.items.find((item) => item.id === "puzzle-3d-play-inspector.reference.origin");
+      const tiltField = referenceSection!.items.find((item) => item.id === "puzzle-3d-play-inspector.reference.tilt");
+      const scaleField = referenceSection!.items.find((item) => item.id === "puzzle-3d-play-inspector.reference.scale");
+      const widthField = referenceSection!.items.find((item) => item.id === "puzzle-3d-play-inspector.reference.widthWorld");
+      expect(positionField?.control?.type).toBe("vec3");
+      expect((positionField?.control as { value?: readonly number[] } | undefined)?.value).toEqual([1, 2, 3]);
+      expect(tiltField?.control?.type).toBe("vec3");
+      expect(scaleField?.control?.type).toBe("vec3");
+      expect((scaleField?.control as { value?: readonly number[] } | undefined)?.value).toEqual([2, 3, 4]);
+      expect((widthField?.control as { value?: string } | undefined)?.value).toBe("42");
     });
 
     it("buildPuzzle3dPlayInspectorBody exposes editable object fields for single selection", () => {

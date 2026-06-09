@@ -1,0 +1,14 @@
+{
+  "title": "Fix Missing kernelGeometry Export in Brep Js",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix runtime error: geometry/brep/js/index.ts does not export kernelGeometry, solidRef, EdgeCurve, ArcPlaneFrame, EdgeGroup, EdgeInfo, FaceInfo that cad/js/core imports.",
+  "summary": "Restored missing brep contracts in @geometry/brep/js: kernelGeometry namespace, solidRef, EdgeCurve, ArcPlaneFrame, EdgeGroup, FaceInfo, EdgeInfo, and full MeshTransfer shape. Cad core imports these from the geometry bundle; the refactor had updated imports without adding the exports.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1656"
+  },
+  "goal": "🎯cad🎯framework",
+  "sessions": [
+    "⚪43422a1934f24edca81377450ddfec68"
+  ]
+}

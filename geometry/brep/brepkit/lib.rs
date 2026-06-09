@@ -173,7 +173,9 @@ impl BrepkitKernel {
     pub fn cut_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
-        if self.entry_source(b) == SolidSource::Torus && solid_bounds_overlap(&self.topo, a_id, b_id) {
+        if (self.entry_source(a) == SolidSource::Torus || self.entry_source(b) == SolidSource::Torus)
+            && solid_bounds_overlap(&self.topo, a_id, b_id)
+        {
             return Err(BrepError::Operation(
                 "boolean cut with intersecting torus is not supported yet; move the torus away or use a different cutter"
                     .into(),

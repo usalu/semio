@@ -3,7 +3,8 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, DEFAULT_GUMBALL_CONFIG, type ContextMenuItem, type GumballConfig } from "@ui/react";
+import { reactHostPort, type ContextMenuItem, type GumballConfig } from "@ui/react";
+import { PUZZLE_3D_GUMBALL_CONFIG, puzzle3dObjectGumballConfig } from "../../3d/react/index.tsx";
 import type { ReactElement } from "react";
 
 /** @emoji 🔗 Unified puzzle 5d model with 2d WASM + 3d R3F projections and a shared {@link Store}. */
@@ -1857,7 +1858,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       gridSnapEnabled={FIVE_D_FLAT_LOD_DEFAULTS.gridSnapEnabled}
       kindCatalogs={project3dKindCatalogs(snap.model.kindCatalogs)}
       kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
-      gumballConfig={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
+      gumballConfig={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG}
       onCamera={onCamera}
       onConnect={(p) => {
         onConnect?.(p);
@@ -1927,7 +1928,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       sceneFixture={fixture3d}
       selection={canvasSelection}
     >
-      <Puzzle3dParts relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
+      <Puzzle3dParts relocate={puzzle3dObjectGumballConfig(props.gumballConfig)} />
       <Puzzle3dTies />
     </Puzzle3dCanvas>
   );

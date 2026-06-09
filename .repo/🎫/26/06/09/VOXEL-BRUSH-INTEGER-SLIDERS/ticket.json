@@ -1,0 +1,14 @@
+{
+  "title": "Voxel Brush Integer Sliders",
+  "emoji": "🖌️",
+  "status": "closed",
+  "description": "puzzle3d: the voxel brush should have sliders (1 to 20 only integers, default 10)",
+  "summary": "Voxel brush W/D/H controls are now engagement sliders (integers 1–20, step 1, default 10 per axis). Updated DEFAULT_VOXEL_BRUSH_DIMENSIONS and clamping in setVoxelBrushDimension. Extended fill target-volume engagement test. 344 react tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1651"
+  },
+  "goal": "🎯puzzle3d🎯puzzle3dplay",
+  "sessions": [
+    "⚪e92edca790ba401bbcd2885920662fe0"
+  ]
+}

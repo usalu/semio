@@ -58,8 +58,8 @@ import {
   type Puzzle2dSelectionTargets,
 } from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
-import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
-import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+import { type GumballConfig } from "@ui/react";
+import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
   FIXTURE_DRAG_V1_MIME,
   beginPuzzle3dFixturePalettePointerDrag,
@@ -399,7 +399,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   private activeFixtureId = PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID;
   readonly puzzle5dStore: Puzzle5dStore = createStore(loadNakagin5dModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
-  private gumballConfig: GumballConfig = { ...DEFAULT_GUMBALL_CONFIG };
+  private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();
   private selected3d: string | null = null;
   private camera2d: CameraState | null = { ...this.puzzle5dStore.read().camera2d };

@@ -21,39 +21,62 @@ export function createFlowOrchestratorWorker(): Worker {
   return new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
 }
 
+const FLOW_EVAL_TIMEOUT_MS = 30_000;
+
 export class FlowOrchestratorClient {
-  private readonly worker: Worker;
+  private worker: Worker;
+  private readonly createWorker: () => Worker;
   private nextReqId = 1;
   private ready: Promise<void>;
   private readonly pending = new Map<number, { resolve: (json: string) => void; reject: (err: Error) => void }>();
 
-  constructor(worker = createFlowOrchestratorWorker()) {
-    this.worker = worker;
-    this.ready = new Promise((resolve, reject) => {
-      const onMessage = (event: MessageEvent<FlowWorkerResponse>) => {
+  constructor(createWorker: () => Worker = createFlowOrchestratorWorker) {
+    this.createWorker = createWorker;
+    this.worker = createWorker();
+    this.ready = this.bootWorker();
+  }
+
+  private bootWorker(): Promise<void> {
+    this.worker.addEventListener("message", this.onWorkerMessage);
+    return new Promise((resolve, reject) => {
+      const onReady = (event: MessageEvent<FlowWorkerResponse>) => {
         const msg = event.data;
         if (msg.op === "ready") {
-          this.worker.removeEventListener("message", onMessage);
+          this.worker.removeEventListener("message", onReady);
           resolve();
           return;
         }
         if (msg.op === "error" && msg.reqId === 0) {
-          this.worker.removeEventListener("message", onMessage);
+          this.worker.removeEventListener("message", onReady);
           reject(new Error(msg.message));
         }
       };
-      this.worker.addEventListener("message", onMessage);
+      this.worker.addEventListener("message", onReady);
       this.worker.postMessage({ op: "init" } satisfies FlowWorkerRequest);
     });
-    this.worker.addEventListener("message", (event: MessageEvent<FlowWorkerResponse>) => {
-      const msg = event.data;
-      if (msg.op !== "result" && msg.op !== "error") return;
-      const entry = this.pending.get(msg.reqId);
-      if (!entry) return;
-      this.pending.delete(msg.reqId);
-      if (msg.op === "error") entry.reject(new Error(msg.message));
-      else entry.resolve(msg.json);
-    });
+  }
+
+  private readonly onWorkerMessage = (event: MessageEvent<FlowWorkerResponse>) => {
+    const msg = event.data;
+    if (msg.op !== "result" && msg.op !== "error") return;
+    const entry = this.pending.get(msg.reqId);
+    if (!entry) return;
+    this.pending.delete(msg.reqId);
+    if (msg.op === "error") entry.reject(new Error(msg.message));
+    else entry.resolve(msg.json);
+  };
+
+  private rejectPending(message: string): void {
+    for (const [, entry] of this.pending) entry.reject(new Error(message));
+    this.pending.clear();
+  }
+
+  private restartWorker(reason: string): void {
+    this.rejectPending(reason);
+    this.worker.removeEventListener("message", this.onWorkerMessage);
+    this.worker.terminate();
+    this.worker = this.createWorker();
+    this.ready = this.bootWorker();
   }
 
   private async request(op: Exclude<FlowWorkerRequest["op"], "init">, payload: Omit<FlowWorkerRequest, "op" | "reqId">): Promise<string> {
@@ -69,9 +92,24 @@ export class FlowOrchestratorClient {
     await this.request("loadFixture", { json });
   }
 
-  async evaluate(): Promise<FlowEvalWorkerResult> {
-    const json = await this.request("evaluate", {});
-    return JSON.parse(json) as FlowEvalWorkerResult;
+  async evaluate(timeoutMs = FLOW_EVAL_TIMEOUT_MS): Promise<FlowEvalWorkerResult> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const json = await Promise.race([
+        this.request("evaluate", {}),
+        new Promise<string>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error("flow evaluate timed out")), timeoutMs);
+        }),
+      ]);
+      return JSON.parse(json) as FlowEvalWorkerResult;
+    } catch (err) {
+      if (err instanceof Error && err.message === "flow evaluate timed out") {
+        this.restartWorker("flow worker restarted after evaluate timeout");
+      }
+      throw err;
+    } finally {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    }
   }
 
   async tessellatePreviews(outputsJson: string, tolerance = 0.02): Promise<Readonly<Record<string, unknown>>> {

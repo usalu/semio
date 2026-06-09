@@ -1324,6 +1324,12 @@
   border-color: var(--border-emphasized-color) !important;
 }
 
+[data-slot="side-panel-tab-button"],
+[data-slot="mobile-panel-tab-button"] {
+  appearance: none;
+  font: inherit;
+}
+
 [data-slot="side-panel-tabs"],
 [data-slot="mobile-panel-tabs"],
 [data-slot="accordion-item"],

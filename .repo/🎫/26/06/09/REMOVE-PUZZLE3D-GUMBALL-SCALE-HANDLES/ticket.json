@@ -1,0 +1,14 @@
+{
+  "title": "Remove Puzzle3d Gumball Scale Handles",
+  "emoji": "📷",
+  "status": "closed",
+  "description": "Remove scale handles from the gumball in puzzle3d because puzzle parts/objects exist as fixed geometry and cannot be mirrored, scaled, etc. Disable scale in default gumball config, remove scale toggle tools from toolbar, and ensure object gumball never shows scale handles.",
+  "summary": "Puzzle 3D parts are fixed geometry and must not be scaled via the gumball. Added PUZZLE_3D_GUMBALL_CONFIG (move/rotate only) and puzzle3dObjectGumballConfig helper that always strips scale handle groups. Removed Scale Axes, Scale Planes, and Scale Uniform from PUZZLE_3D_GUMBALL_GROUPS toolbar toggles. Object gumball and puzzle5d parts use the object-specific config; play shell defaults to the new config.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1655"
+  },
+  "goal": "🎯puzzle🎯3d🎯play",
+  "sessions": [
+    "⚪0c21d020a5da44c3b4ecb5a676368c9b"
+  ]
+}

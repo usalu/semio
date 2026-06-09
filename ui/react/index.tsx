@@ -3415,10 +3415,10 @@ export const formControlFocusBorderClass = cn(
   "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none",
 );
 
-/** @emoji 🎚 Slider filled range — element gray at rest; emphasized on slider hover; active fill while dragging. */
+/** @emoji 🎚 Slider filled range — element gray at rest; foreground emphasis on hover; active fill while dragging. */
 export const sliderRangeClassName = cn(
   "bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
-  "group-hover:bg-hover-interactive-fill",
+  "group-hover:bg-emphasized",
   "data-[dragging=true]:bg-active-base",
 );
 
@@ -3510,22 +3510,32 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
 /** @emoji 📑 Panel tab strip — {@link borderNormalBottomClass} under tabs; outer outline is {@link panelChromeBorderClass}. */
-export const panelTabBarClass = cn("relative z-20 flex min-w-0 items-stretch shrink-0 overflow-x-auto overflow-y-hidden", borderNormalBottomClass);
+export const panelTabBarClass = cn("relative z-20 flex min-w-0 items-center shrink-0 overflow-x-auto", borderNormalBottomClass);
+
+/** @emoji 📑 Panel tab icon slot — defers dimensions to the tab icon (12px). */
+export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
+
+/** @emoji 📑 Panel tab label beside the icon. */
+export const panelTabLabelClass = "truncate text-xs leading-none";
 
 /** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
-export const panelTabButtonClass = "flex shrink-0 items-center gap-half h-full cursor-pointer whitespace-nowrap transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized";
+export const panelTabButtonClass = cn(
+  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-0 bg-transparent p-0",
+  "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
+  "hover:bg-hover-interactive-fill hover:text-emphasized",
+);
 
 /** @emoji 📑 Side panel tab strip height. */
 export const sidePanelTabBarClass = cn(panelTabBarClass, "h-medium");
 
-/** @emoji 📑 Side panel tab icon button padding. */
-export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-small");
+/** @emoji 📑 Side panel tab button padding. */
+export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
 /** @emoji 📑 Mobile panel tab strip height. */
 export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 
-/** @emoji 📑 Mobile panel tab icon button padding. */
-export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-medium");
+/** @emoji 📑 Mobile panel tab button padding. */
+export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
 /** @emoji ↔️ Accent stroke on the panel resize edge while hovered or dragging. */
 export function panelResizeEdgeAccentClass(resizeSide: ResizeSide, active: boolean): string | undefined {
@@ -6513,7 +6523,7 @@ function Slider({
       onKeyUp={handleKeyUp}
       className={cn(
         "group relative flex h-full w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-        "has-[[data-slot=slider-thumb]:hover]:[&_[data-slot=slider-range]]:bg-hover-interactive-fill",
+        "has-[[data-slot=slider-thumb]:hover]:[&_[data-slot=slider-range]]:bg-emphasized",
         "has-[[data-slot=slider-thumb][data-dragging=true]]:[&_[data-slot=slider-range]]:bg-active-base",
       )}
       {...props}
@@ -8726,6 +8736,9 @@ const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-[6px
 const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-[6px]";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + 7;
+/** @emoji 🌳 Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
+const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] =>
+  Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
 const treeRowInlineGapPx = 6;
 const treeToggleSlotWidthPx = 14;
 const treeRowVerticalPaddingPx = 0;
@@ -8774,7 +8787,7 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
   const { indentMultiplier, isLastAtLevel } = reactHostPort.useContext(TreeContext);
   if (!showLines || level === 0) return null;
 
-  const guideIndices = Array.from({ length: level }, (_, index) => index).filter((index) => !isLastAtLevel[index]);
+  const guideIndices = treeBranchGuideIndices(level, isLastAtLevel);
   return (
     <div data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
       {guideIndices.map((guideIndex) => (
@@ -9224,6 +9237,7 @@ interface TreeSectionProps {
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
+  isLastSection?: boolean;
 }
 
 /**
@@ -9605,6 +9619,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDragOver,
   onDragLeave,
   onDrop,
+  isLastSection = false,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const suppressLocalizedLabel = label == null || label === "";
@@ -9740,7 +9755,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent className="min-w-0">
-        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastSection], showLines, isTree, indentMultiplier }}>
           <TreeBranchContent slot="tree-section-content" ownerRowKind="section" ownerExpanded={open && hasChildren} topPaddingPx={treeSectionContentPaddingTopPx}>
             {children}
           </TreeBranchContent>
@@ -10883,8 +10898,8 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
 });
 
 /** @emoji 🌿 Hoisted data-tree section row (stable component type across Tree re-renders). */
-const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection }): React.ReactElement {
-  const { section } = props;
+const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
+  const { section, isLastSection } = props;
   const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection } = useTreeDataRendering();
   const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
   const items = getTreeSectionItems(section, sectionItemsById);
@@ -10917,6 +10932,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       onDoubleClick={section.onDoubleClick}
       onDragOver={isContentHost ? undefined : handleDragOver}
       onDrop={isContentHost ? undefined : (event) => handleDropOnSection(event, section)}
+      isLastSection={isLastSection}
     >
       {hasContent ? section.content : null}
       {items.map((item, index) => (
@@ -11302,9 +11318,9 @@ export const Tree = (({
             <TreeSelectionContext.Provider value={selectionStore}>
               <TreeHighlightContext.Provider value={highlightStore}>
                 <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-                  {resolvedSections.map((section) => (
+                  {resolvedSections.map((section, sectionIndex) => (
                     <div key={section.id} data-slot="tree-section-wrapper">
-                      <TreeDataSectionView section={section} />
+                      <TreeDataSectionView section={section} isLastSection={sectionIndex === resolvedSections.length - 1} />
                     </div>
                   ))}
                 </TreeDataRenderingContext.Provider>
@@ -12958,10 +12974,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(sidePanelTabButtonClass, isActive && panelTabActiveClass)}
                   >
-                    <span className="shrink-0">
-                      <Icon size={16} />
+                    <span className={panelTabIconSlotClass}>
+                      <Icon size={12} />
                     </span>
-                    <span className="truncate">{tab.name}</span>
+                    <span className={panelTabLabelClass}>{tab.name}</span>
                   </button>
                 </ChromeControlHint>
               );
@@ -13054,8 +13070,10 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(mobilePanelTabButtonClass, isActive && panelTabActiveClass)}
                   >
-                    <Icon size={20} className="shrink-0" />
-                    <span className="truncate">{tab.name}</span>
+                    <span className={panelTabIconSlotClass}>
+                      <Icon size={12} />
+                    </span>
+                    <span className={panelTabLabelClass}>{tab.name}</span>
                   </button>
                 </ChromeControlHint>
               );
@@ -22430,6 +22448,44 @@ if (treeVitest) {
       expect(markup).toMatch(/data-slot="tree-row-content"[^>]*class="[^"]*\bh-full\b[^"]*\bflex\b[^"]*\bitems-center\b/);
     });
 
+    it("renders parent-level vertical guides through expanded last-sibling branches", () => {
+      const markup = renderToStaticMarkup(
+        <TreeStateProvider>
+          <Tree
+            sections={[
+              {
+                id: "objects",
+                label: "Objects",
+                defaultOpen: true,
+                items: [
+                  {
+                    id: "object-only",
+                    label: "Hexagonal Cut Concrete",
+                    defaultOpen: true,
+                    items: [
+                      { id: "vortex-a", label: "a" },
+                      { id: "vortex-b", label: "b" },
+                    ],
+                  },
+                ],
+              },
+              {
+                id: "references",
+                label: "References",
+                defaultOpen: false,
+                items: [],
+              },
+            ]}
+          />
+        </TreeStateProvider>,
+      );
+
+      const objectBranch = markup.split('data-slot="tree-item-content"')[1]?.slice(0, 900) ?? "";
+      const guideLefts = [...objectBranch.matchAll(/style="left:([0-9.]+)px"/g)].map((match) => match[1]);
+      expect(guideLefts).toContain("6.5");
+      expect(guideLefts).toContain("16.5");
+    });
+
     it("renders steppers at full control width with the current numeric value visible", () => {
       const markup = renderToStaticMarkup(<Stepper id="ui.stepper.demo" value={12.5} />);
 
@@ -22446,9 +22502,9 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="slider-range"');
       expect(markup).toContain("bg-element");
-      expect(markup).toContain("group-hover:bg-hover-interactive-fill");
+      expect(markup).toContain("group-hover:bg-emphasized");
       expect(markup).toContain("data-[dragging=true]:bg-active-base");
-      expect(markup).toContain("has-[[data-slot=slider-thumb]:hover]:[&amp;_[data-slot=slider-range]]:bg-hover-interactive-fill");
+      expect(markup).toContain("has-[[data-slot=slider-thumb]:hover]:[&amp;_[data-slot=slider-range]]:bg-emphasized");
       expect(markup).toContain("h-full");
       expect(markup).not.toContain("bg-foreground");
       expect(markup).toContain('data-slot="slider-thumb"');

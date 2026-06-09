@@ -3,7 +3,7 @@
   "emoji": "🎚",
   "status": "closed",
   "description": "The slider knob should show hover and only turn active color when dragged",
-  "summary": "Range line now emphasizes when the knob is hovered: root fills the 22px row (h-full) and uses :has([data-slot=slider-thumb]:hover) to style the filled range even though the thumb is absolutely positioned outside the thin track.",
+  "summary": "Slider range hover emphasis now uses bg-emphasized (foreground) instead of bg-hover-interactive-fill, so the value line stays visible against tree row hover backgrounds that share the same gray fill token.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1553"
   },
@@ -12,6 +12,7 @@
     "⚪50dd4558a69a429c946747f63b4d8bcf",
     "⚪5583dcf6f5e441bbb4cf12b19e16aa3b",
     "⚪809dd288cf7541798c7f86bf38b6738e",
-    "⚪82e498b036fd47329ba434c3edd0b79b"
+    "⚪82e498b036fd47329ba434c3edd0b79b",
+    "⚪da1018a9506b4ee884675b25af64919d"
   ]
 }

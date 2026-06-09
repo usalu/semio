@@ -5,14 +5,13 @@ import {
   engagementCommandTokenEquals,
   ENGAGEMENT_USER,
   normalizeEngagementCommandText,
-  DEFAULT_GUMBALL_CONFIG,
   gumballConfigVisible,
   gumballHandleKindToTransformMode,
   gumballKindFromRaycastObject,
   gumballPointerConsumesCanvasEventRef,
   UnifiedGumball,
   type EngagementSpec,
-  type EngagementStepperControl,
+  type EngagementSliderControl,
   type GumballConfig,
   type GumballHandleKind,
   type ThreeEvent,
@@ -201,6 +200,21 @@ export type Vec3 = readonly [number, number, number];
 export type Quat = readonly [number, number, number, number];
 
 export type RelocateMode = "translate" | "rotate" | "scale";
+
+/** @emoji 🎛 Default puzzle 3D gumball: move and rotate only (parts are fixed geometry). */
+export const PUZZLE_3D_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">>> = {
+  moveAxes: true,
+  movePlanes: true,
+  rotate: true,
+  scaleAxes: false,
+  scalePlanes: false,
+  scaleUniform: false,
+};
+
+/** @emoji 📦 Gumball config for puzzle objects: never expose scale handles. */
+export function puzzle3dObjectGumballConfig(base?: GumballConfig): GumballConfig {
+  return { ...PUZZLE_3D_GUMBALL_CONFIG, ...base, scaleAxes: false, scalePlanes: false, scaleUniform: false };
+}
 
 /** @emoji 🎛 Maps a unified gumball handle drag to puzzle relocate mode. */
 export function gumballHandleKindToRelocateMode(kind: GumballHandleKind): RelocateMode {
@@ -6490,7 +6504,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   });
   const config = reactHostPort.useMemo(() => {
     if (props.relocate === false) return { moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false };
-    const base = props.relocate ?? gumballConfig;
+    const base = puzzle3dObjectGumballConfig(props.relocate === undefined ? gumballConfig : props.relocate);
     const transSnap = lodCtx.gridSnapEnabled && lodCtx.gridStepWorld != null && lodCtx.gridStepWorld > 0 ? lodCtx.gridStepWorld : undefined;
     return { ...base, translationSnap: transSnap ?? base.translationSnap };
   }, [props.relocate, gumballConfig, lodCtx.gridSnapEnabled, lodCtx.gridStepWorld]);
@@ -8026,8 +8040,8 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
       ? `Fill ${inputs.fillCount} (building ${inputs.fillBuildProgress.count}/${inputs.fillBuildProgress.maxCount})`
       : `Fill ${inputs.fillCount}`;
   const dims = inputs.voxelBrushDimensions ?? DEFAULT_VOXEL_BRUSH_DIMENSIONS;
-  const voxelDimensionStepper = (axis: 0 | 1 | 2, label: string, id: string): EngagementStepperControl => ({
-    kind: "stepper",
+  const voxelDimensionSlider = (axis: 0 | 1 | 2, label: string, id: string): EngagementSliderControl => ({
+    kind: "slider",
     id,
     label,
     value: dims[axis],
@@ -8095,9 +8109,9 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     ...(inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
       ? {
           controls: [
-            voxelDimensionStepper(0, "Width", "puzzle3d-voxel-width"),
-            voxelDimensionStepper(1, "Depth", "puzzle3d-voxel-depth"),
-            voxelDimensionStepper(2, "Height", "puzzle3d-voxel-height"),
+            voxelDimensionSlider(0, "Width", "puzzle3d-voxel-width"),
+            voxelDimensionSlider(1, "Depth", "puzzle3d-voxel-depth"),
+            voxelDimensionSlider(2, "Height", "puzzle3d-voxel-height"),
           ],
         }
       : {}),
@@ -8155,10 +8169,10 @@ export const puzzle3dBrushAltPressedRef = { current: false };
 export const puzzle3dTargetVolumeToolActiveRef = { current: false };
 
 /** @emoji 🧱 Default axis-aligned voxel brush box size (world units). */
-export const DEFAULT_VOXEL_BRUSH_DIMENSIONS: Vec3 = [1, 1, 1];
-export const VOXEL_BRUSH_SIZE_MIN = 0.25;
-export const VOXEL_BRUSH_SIZE_MAX = 8;
-export const VOXEL_BRUSH_SIZE_STEP = 0.25;
+export const DEFAULT_VOXEL_BRUSH_DIMENSIONS: Vec3 = [10, 10, 10];
+export const VOXEL_BRUSH_SIZE_MIN = 1;
+export const VOXEL_BRUSH_SIZE_MAX = 20;
+export const VOXEL_BRUSH_SIZE_STEP = 1;
 
 export interface VoxelBrushUiSnapshot {
   readonly altPainting: boolean;
@@ -11184,7 +11198,7 @@ function Inner(props: CanvasProps & {
           proximityRadius={proximityRadius}
           proximityRelocateEnabled={proximityRelocateEnabled}
           selectionMode={props.selectionMode ?? "default"}
-          gumballConfig={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
+          gumballConfig={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG}
           selectionMethod={props.selectionMethod ?? "rectangle"}
           marqueeSelectableKinds={props.marqueeSelectableKinds ?? { object: true, vortex: true, attraction: true }}
           hostCallbacksRef={registryHostCallbacksRef}
@@ -11300,13 +11314,13 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
   const sceneChildren = reactHostPort.useMemo(
     () => (
       <>
-        <PuzzleReferences references={props.fixture.references ?? []} relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
+        <PuzzleReferences references={props.fixture.references ?? []} relocate={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG} />
         <PuzzleTargetVolumes
           targetVolumes={props.fixture.targetVolumes ?? []}
           interactive={props.fillEditTargetVolumes === true}
           relocate={false}
         />
-        <Objects relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
+        <Objects relocate={puzzle3dObjectGumballConfig(props.gumballConfig)} />
         <AttractionTreeRoots />
         <MarqueeAttractionSource />
         <PlayTestBridge setSelectedId={(id) => setSelectedIdRef.current(id)} />
@@ -11371,7 +11385,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       blockedVortexFullIds={props.blockedVortexFullIds}
       proximityRadius={props.proximityRadius}
       proximityRelocateEnabled={props.proximityRelocateEnabled}
-      gumballConfig={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
+      gumballConfig={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG}
       selectionMode={props.selectionMode}
       selectionMethod={props.selectionMethod}
       marqueeSelectableKinds={props.marqueeSelectableKinds}
@@ -12162,6 +12176,15 @@ if (import.meta.vitest) {
       const links = objectAttractionsFromAttractions([{ id: "x", attracting: "objA:v1", attracted: "objB:link" }]);
       expect(links[0]?.attractingObjectId).toBe("objA");
       expect(links[0]?.attractedObjectId).toBe("objB");
+    });
+  });
+  describe("puzzle3dObjectGumballConfig", () => {
+    it("never enables scale handle groups", () => {
+      const config = puzzle3dObjectGumballConfig({ moveAxes: true, scaleAxes: true, scalePlanes: true, scaleUniform: true });
+      expect(config.scaleAxes).toBe(false);
+      expect(config.scalePlanes).toBe(false);
+      expect(config.scaleUniform).toBe(false);
+      expect(config.moveAxes).toBe(true);
     });
   });
   describe("gumballHandleKindToRelocateMode", () => {
@@ -13945,6 +13968,14 @@ if (import.meta.vitest) {
       expect(deleted).toBe(true);
       expect(spec.control).toBeUndefined();
       expect(spec.controls?.map((row) => row.label)).toEqual(["Width", "Depth", "Height"]);
+      expect(spec.controls?.every((row) => row.kind === "slider")).toBe(true);
+      for (const row of spec.controls ?? []) {
+        if (row.kind !== "slider") continue;
+        expect(row.min).toBe(VOXEL_BRUSH_SIZE_MIN);
+        expect(row.max).toBe(VOXEL_BRUSH_SIZE_MAX);
+        expect(row.step).toBe(VOXEL_BRUSH_SIZE_STEP);
+        expect(row.value).toBe(10);
+      }
     });
     it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned boxes", () => {
       expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], [1, 2, 3])).toEqual([0.5, 1, 1.5]);
