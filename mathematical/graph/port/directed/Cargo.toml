@@ -14,6 +14,6 @@ mathematical_graph_port = { path = ".." }
 mathematical_graph = { path = "../.." }
 mathematical_graph_normal_undirected = { path = "../../normal/undirected" }
 mathematical_core = { path = "../../../core" }
-infinite_cavas = { path = "../../../../infinite/cavas/vello" }
+infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

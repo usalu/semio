@@ -2419,10 +2419,9 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.selectableKinds.attraction && this.visibleKinds.attraction
           ? selection.attractionIds.filter((attractionId) => entitySelectable(attractionById.get(attractionId)))
           : [],
-      referenceIds: (selection.referenceIds ?? []).filter((referenceId) => {
-        const reference = (this.fixture.references ?? []).find((row) => row.id === referenceId);
-        return reference ? entitySelectable(reference) : false;
-      }),
+      referenceIds: (selection.referenceIds ?? []).filter((referenceId) =>
+        (this.fixture.references ?? []).some((row) => row.id === referenceId),
+      ),
       targetVolumeIds: (selection.targetVolumeIds ?? []).filter((volumeId) => {
         const volume = (this.fixture.targetVolumes ?? []).find((row) => row.id === volumeId);
         return volume ? entitySelectable(volume) : false;
@@ -4968,6 +4967,32 @@ if (import.meta.vitest) {
       const objectsOnly = puzzle3dPlayAllSelectionFromFixture(fixture!, { object: true, vortex: false, attraction: false });
       expect(objectsOnly.vortexIds).toEqual([]);
       expect(objectsOnly.attractionIds).toEqual([]);
+    });
+
+    it("setSelection keeps locked references for inspector details", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [],
+        references: [
+          {
+            id: "ref-locked",
+            source: { url: "/plan.png", mediaKind: "image" },
+            origin: [0, 0, 0],
+            locked: true,
+          },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("setSelection", {
+        selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: ["ref-locked"], targetVolumeIds: [] },
+      });
+      expect(ctrl.getSnapshot().selection.referenceIds).toEqual(["ref-locked"]);
     });
 
     it("buildPuzzle3dPlayInspectorBody exposes reference transform fields for single selection", () => {

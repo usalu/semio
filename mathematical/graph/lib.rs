@@ -2067,13 +2067,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         {
             return false;
         }
-        if self
-            .edges
-            .values()
-            .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.source) == source_hid)
-        {
-            return false;
-        }
         if self.enforce_acyclic {
             let src_node = source_handle.node_id;
             let tgt_node = target_handle.node_id;
@@ -2612,7 +2605,36 @@ mod tests {
     }
 
     #[test]
-    fn node_drag_proximity_skips_occupied_source_output() {
+    fn wire_snap_connects_fan_out_from_same_output() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.set_camera(0.0, 0.0, 1.0);
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 280.0, -60.0, 160.0, 72.0, true);
+        engine.create_rect_node(3, 280.0, 60.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 3, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.set_handle_role(12, HandleRole::Target);
+        engine.create_edge(100, 10, 11);
+        let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+        let second = handle_position_on_rectangle(Point::new(280.0, 60.0), 160.0, 72.0, std::f64::consts::FRAC_PI_2);
+        engine.pointer_down(out.x, out.y, false);
+        engine.pointer_move(second.x + 8.0, second.y);
+        let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
+            panic!("expected draw-edge interaction");
+        };
+        assert_eq!(snap_target, Some(12));
+        engine.pointer_up(second.x + 8.0, second.y);
+        assert_eq!(engine.edges.len(), 2);
+        assert!(engine.edges.values().any(|edge| Ported::endpoint_as_u64(edge.source) == 10 && Ported::endpoint_as_u64(edge.target) == 11));
+        assert!(engine.edges.values().any(|edge| Ported::endpoint_as_u64(edge.source) == 10 && Ported::endpoint_as_u64(edge.target) == 12));
+    }
+
+    #[test]
+    fn node_drag_proximity_allows_fan_out_from_occupied_source() {
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.enforce_acyclic = true;
         engine.proximity_distance_world = 120.0;
@@ -2627,9 +2649,10 @@ mod tests {
         engine.create_edge(100, 10, 11);
         engine.pointer_down(220.0, 0.0, false);
         engine.pointer_move(40.0, 0.0);
-        assert!(engine.render_snapshot().pending_edge.is_none());
+        assert!(engine.render_snapshot().pending_edge.is_some());
         engine.pointer_up(40.0, 0.0);
-        assert_eq!(engine.edges.len(), 1);
+        assert_eq!(engine.edges.len(), 2);
+        assert!(engine.edges.values().any(|edge| Ported::endpoint_as_u64(edge.source) == 10 && Ported::endpoint_as_u64(edge.target) == 12));
     }
 
     #[test]

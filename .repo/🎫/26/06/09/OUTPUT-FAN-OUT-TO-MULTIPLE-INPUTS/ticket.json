@@ -1,0 +1,13 @@
+{
+  "title": "Output Fan-Out to Multiple Inputs",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Allow connecting the same output channel to multiple different input channels in flow. Currently is_valid_connection rejects sources that already have an outgoing edge.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1657"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪c171d91edbc04c0480f6e54a074a6672"
+  ]
+}

@@ -9,7 +9,7 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-infinite_cavas = { path = "../../../../infinite/cavas/vello" }
+infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 mathematical_graph = { path = "../.." }
 mathematical_core = { path = "../../../core" }
 serde = { version = "1.0.219", features = ["derive"] }

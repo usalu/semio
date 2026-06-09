@@ -1,0 +1,20 @@
+{
+  "title": "Arbitrary Brep Cut and Fuse in Kernel",
+  "emoji": "⚡",
+  "status": "closed",
+  "description": "UI freezes on heavy brep ops; computing nodes need animated rotating active border.",
+  "summary": "Removed torus-specific boolean guards and SolidSource machinery from geometry/brep/rs. Boolean cut/fuse/intersect now routes through brepkit directly; when either operand has a torus surface, operands are copied and converted to NURBS via convert_to_bspline before boolean to avoid GFA hang on sphere+torus. Updated crate paths from geometry/brep/brepkit and infinite/cavas/vello to geometry/brep/rs and infinite/cavas/rs across workspace Cargo.toml files. Rebuilt flow/core WASM; sphere-cut-with-torus fixture eval completes in ~93ms with brep_bool_cut_5 producing solid-3. All 6 geometry_brep_brepkit tests, 6 flow_module_brep tests, and 42 procedural/play tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1638"
+  },
+  "goal": "🎯flow🎯asynceval",
+  "plan": {
+    "client": "cursor",
+    "id": "784f4043",
+    "local": "arbitrary_brep_cut_fuse_784f4043.plan.md"
+  },
+  "sessions": [
+    "⚪914cea5f20834a5eaf9a6fa55e756169",
+    "⚪d8d2145cfe3c444da60043148773fa14"
+  ]
+}

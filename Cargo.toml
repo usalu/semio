@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "ui/styling/rs",
-    "infinite/cavas/vello",
+    "infinite/cavas/rs",
     "mathematical/core",
     "mathematical/graph",
     "mathematical/graph/port",
@@ -31,7 +31,7 @@ members = [
     "semio/client/lib/rs",
     "semio/client/lib/query",
     "semio/client/bin/store",
-    "semio/server/hub", "geometry/brep/engine", "geometry/brep/brepkit",
+    "semio/server/hub", "geometry/brep/engine", "geometry/brep/rs",
 ]
 
 resolver = "2"

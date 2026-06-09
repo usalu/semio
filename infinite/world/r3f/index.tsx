@@ -2321,7 +2321,8 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
     selected: props.selected,
     revealed: props.revealed || pointerHovered,
   });
-  const selectable = worldEntitySelectable(props.reference);
+  const pickable = props.reference.hidden !== true;
+  const editable = worldEntitySelectable(props.reference);
   reactHostPort.useEffect(() => {
     let cancelled = false;
     referenceMediaPort
@@ -2353,7 +2354,10 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const [planeWidth, planeHeight] = reactHostPort.useMemo(() => worldReferencePlaneSize(props.reference, mediaAspect), [props.reference, mediaAspect]);
   const opacityBase = props.reference.opacity ?? 1;
   const opacityDimmed = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
-  const appearance = worldReferenceAppearance(renderMode, opacityDimmed);
+  const appearance = worldReferenceAppearance(
+    { ...renderMode, showSelectedOutline: props.selected && pickable },
+    opacityDimmed,
+  );
   const planeOutlineGeo = reactHostPort.useMemo(() => {
     const plane = new PlaneGeometry(planeWidth, planeHeight);
     const edges = new EdgesGeometry(plane);
@@ -2365,7 +2369,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
     return null;
   }
   const config = props.reference.relocate === false ? null : { ...(props.reference.relocate ?? {}), translationSnap: props.translationSnap };
-  const showGumball = props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
+  const showGumball = props.selected && editable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
   return (
     <>
       <group
@@ -2373,7 +2377,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         visible={renderMode.visible}
         userData={{ worldReferenceId: props.reference.id }}
         onPointerDown={(event) => {
-          if (!selectable) {
+          if (!pickable) {
             return;
           }
           event.stopPropagation();
@@ -2382,7 +2386,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         onPointerOver={(event) => {
           event.stopPropagation();
           setPointerHovered(true);
-          if (selectable) {
+          if (pickable) {
             props.onHover?.(props.reference.id);
           }
         }}

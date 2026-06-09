@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-/** 🦀 `geometry/brep/brepkit` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
+/** 🦀 `geometry/brep/rs` router: `bun ./script.ts test`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.js";
 
 class TestScript extends BundleScript {
   run(): void {

@@ -5,7 +5,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "geometry/brep/brepkit",
+        "cwd": "geometry/brep/rs",
         "command": "bun ./script.ts test"
       }
     }

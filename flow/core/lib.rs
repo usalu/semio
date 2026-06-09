@@ -3443,6 +3443,24 @@ mod tests {
     }
 
     #[test]
+    fn connect_ports_allows_fan_out_from_same_output() {
+        let mut host = host_with_test_bridge();
+        let pass_id = host
+            .add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 120.0, 120.0)
+            .unwrap();
+        host.connect_ports("add", "out", &pass_id, "in").unwrap();
+        let fan_out: Vec<_> = host
+            .fixture
+            .synapses
+            .iter()
+            .filter(|s| s.from == "add" && s.from_port == "out")
+            .collect();
+        assert_eq!(fan_out.len(), 2);
+        assert!(fan_out.iter().any(|s| s.to == "preview"));
+        assert!(fan_out.iter().any(|s| s.to == pass_id));
+    }
+
+    #[test]
     fn connect_ports_replaces_existing_incoming_on_same_input() {
         let mut host = host_with_test_bridge();
         assert!(host.fixture.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));

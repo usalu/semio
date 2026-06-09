@@ -1664,7 +1664,7 @@ function puzzle3dPlaySelectionSnapshotKey(ctrl: Puzzle3dPlayShellController | un
   const snap = ctrl.getSnapshot();
   const selection = snap.selection;
   const hover = snap.hoverFocus;
-  return `${selection.objectIds.join("\0")}\0${selection.vortexIds.join("\0")}\0${selection.attractionIds.join("\0")}\0${hover.kindHover?.domain ?? ""}\0${hover.kindHover?.kindId ?? ""}`;
+  return `${selection.objectIds.join("\0")}\0${selection.vortexIds.join("\0")}\0${selection.attractionIds.join("\0")}\0${(selection.referenceIds ?? []).join("\0")}\0${(selection.targetVolumeIds ?? []).join("\0")}\0${hover.kindHover?.domain ?? ""}\0${hover.kindHover?.kindId ?? ""}`;
 }
 
 /** @emoji 🔔 Re-renders hierarchy/inspector panels on puzzle 3D selection without a shell generation bump. */
