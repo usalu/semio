@@ -17,26 +17,33 @@ lazy_static::lazy_static! {
 // Data Structures
 // -----------------------------------------------------------------------------
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Window {
-    pub id: String,
-    pub wall_id: String,
-    pub u: f64,
-    pub v: f64,
-    pub width: f64,
-    pub height: f64,
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct EnvelopeDirectionData {
+    pub gross_wall_area: f64,
+    pub window_area: f64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Zone {
-    pub id: String,
-    pub room_type: String,
-    pub width: f64,
-    pub length: f64,
-    pub x: f64,
-    pub y: f64,
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct EnvelopeData {
+    #[serde(rename = "N")]
+    pub n: EnvelopeDirectionData,
+    #[serde(rename = "E")]
+    pub e: EnvelopeDirectionData,
+    #[serde(rename = "S")]
+    pub s: EnvelopeDirectionData,
+    #[serde(rename = "W")]
+    pub w: EnvelopeDirectionData,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct BuildingGeometry {
+    pub total_conditioned_volume: f64,
+    pub total_floor_area: f64,
+    pub total_roof_area: f64,
+    pub total_ground_area: f64,
+    pub exterior_perimeter: f64,
     #[serde(default)]
-    pub windows: Vec<Window>,
+    pub envelope_data: EnvelopeData,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -68,8 +75,9 @@ impl Default for Parameters {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct State {
-    pub zones: Vec<Zone>,
+    pub geometry: Option<BuildingGeometry>,
     pub params: Parameters,
+    pub ui_state: Option<Value>,
 }
 
 // -----------------------------------------------------------------------------
@@ -80,9 +88,7 @@ pub struct State {
 #[serde(tag = "type", content = "payload")]
 pub enum Action {
     Init,
-    AddZone(Zone),
-    RemoveZone(String),
-    UpdateZone(Zone),
+    UpdateGeometry(BuildingGeometry),
     UpdateParameters(Parameters),
     GenericUpdate,
 }
@@ -189,115 +195,29 @@ thread_local! {
 // We assume simple non-overlapping rectangular zones for the area calculation to match the sketchpad.
 
 fn calculate_energy(state: &State) -> Value {
-    if state.zones.is_empty() {
-        return serde_json::json!({ "status": "error", "message": "No zones defined." });
-    }
+    let geometry = match &state.geometry {
+        Some(g) => g,
+        None => return serde_json::json!({ "status": "error", "message": "No geometry defined." }),
+    };
 
-    use geo::{polygon, MultiPolygon};
-    use geo::algorithm::area::Area;
+    let a_floor_total = geometry.total_floor_area;
+    let a_roof = geometry.total_roof_area;
+    let a_ground = geometry.total_ground_area;
+    let perimeter = geometry.exterior_perimeter;
+    let conditioned_volume = geometry.total_conditioned_volume;
 
-    use geo::BooleanOps;
+    let win_n = geometry.envelope_data.n.window_area;
+    let win_e = geometry.envelope_data.e.window_area;
+    let win_s = geometry.envelope_data.s.window_area;
+    let win_w = geometry.envelope_data.w.window_area;
 
-    let mut unioned: MultiPolygon<f64> = MultiPolygon::new(vec![]);
-    for z in &state.zones {
-        let poly = polygon![
-            (x: z.x, y: z.y),
-            (x: z.x + z.width, y: z.y),
-            (x: z.x + z.width, y: z.y + z.length),
-            (x: z.x, y: z.y + z.length),
-            (x: z.x, y: z.y),
-        ];
-        unioned = unioned.union(&poly);
-    }
-    
-    let a_floor = unioned.unsigned_area();
-    let mut perimeter = 0.0;
-    
-    let mut walls_n = 0.0;
-    let mut walls_e = 0.0;
-    let mut walls_s = 0.0;
-    let mut walls_w = 0.0;
+    let a_wall = geometry.envelope_data.n.gross_wall_area
+        + geometry.envelope_data.e.gross_wall_area
+        + geometry.envelope_data.s.gross_wall_area
+        + geometry.envelope_data.w.gross_wall_area;
 
-    for p in unioned.iter() {
-        let coords: Vec<_> = p.exterior().0.iter().collect();
-        for i in 0..(coords.len().saturating_sub(1)) {
-            let dx = coords[i+1].x - coords[i].x;
-            let dy = coords[i+1].y - coords[i].y;
-            let length = (dx * dx + dy * dy).sqrt();
-            perimeter += length;
-            
-            if length < 0.001 { continue; }
-            
-            let rot_rad = -state.params.building_rotation_deg.to_radians();
-            let dx_rot = dx * rot_rad.cos() - dy * rot_rad.sin();
-            let dy_rot = dx * rot_rad.sin() + dy * rot_rad.cos();
-            
-            let normal_x = dy_rot;
-            let normal_y = -dx_rot;
-            
-            let mut angle_deg = normal_x.atan2(normal_y).to_degrees();
-            if angle_deg < 0.0 { angle_deg += 360.0; }
-            
-            if angle_deg >= 315.0 || angle_deg < 45.0 {
-                walls_n += length;
-            } else if angle_deg >= 45.0 && angle_deg < 135.0 {
-                walls_e += length;
-            } else if angle_deg >= 135.0 && angle_deg < 225.0 {
-                walls_s += length;
-            } else {
-                walls_w += length;
-            }
-        }
-    }
-    
-    let a_floor_total = a_floor * state.params.num_stories as f64;
-    let a_wall = perimeter * state.params.story_height * state.params.num_stories as f64;
-
-    let mut a_window = 0.0;
-    let mut win_n = 0.0;
-    let mut win_e = 0.0;
-    let mut win_s = 0.0;
-    let mut win_w = 0.0;
-
-    let rot_rad = -state.params.building_rotation_deg.to_radians();
-
-    for z in &state.zones {
-        for w in &z.windows {
-            let w_area = w.width * w.height * state.params.num_stories as f64; // assuming windows span stories or are defined per story? Let's just multiply by num_stories to be consistent with walls. Or maybe windows are absolute. Let's just use w_area. Wait, if it's 3D, and the user draws on one face... Let's just take w.width * w.height.
-            let mut true_w_area = w.width * w.height;
-            a_window += true_w_area;
-            
-            // Base normal of the local wall
-            let (nx, ny) = match w.wall_id.as_str() {
-                "N" => (0.0, 1.0),
-                "E" => (1.0, 0.0),
-                "S" => (0.0, -1.0),
-                "W" => (-1.0, 0.0),
-                _ => (0.0, 1.0), // default to N
-            };
-            
-            // Rotate the normal
-            let nx_rot = nx * rot_rad.cos() - ny * rot_rad.sin();
-            let ny_rot = nx * rot_rad.sin() + ny * rot_rad.cos();
-            
-            let mut angle_deg = nx_rot.atan2(ny_rot).to_degrees();
-            if angle_deg < 0.0 { angle_deg += 360.0; }
-            
-            if angle_deg >= 315.0 || angle_deg < 45.0 {
-                win_n += true_w_area;
-            } else if angle_deg >= 45.0 && angle_deg < 135.0 {
-                win_e += true_w_area;
-            } else if angle_deg >= 135.0 && angle_deg < 225.0 {
-                win_s += true_w_area;
-            } else {
-                win_w += true_w_area;
-            }
-        }
-    }
-
+    let a_window = win_n + win_e + win_s + win_w;
     let net_wall = a_wall - a_window;
-    let a_roof = a_floor;
-    let a_ground = a_floor;
 
     // Lookup TABULA
     let year_class = &state.params.year_class;
@@ -357,7 +277,7 @@ fn calculate_energy(state: &State) -> Value {
         _ => if is_old { 0.4 } else { 0.2 },
     };
 
-    let h_ve = 0.34 * (0.4 + n_infiltr) * a_floor_total * 2.5;
+    let h_ve = 0.34 * (0.4 + n_infiltr) * conditioned_volume;
     
     // ISO 13790
     let theta_int = 20.0;
@@ -368,7 +288,7 @@ fn calculate_energy(state: &State) -> Value {
     let q_ht_tr = 0.024 * h_tr * 1.0 * (theta_int - theta_e) * d_hs;
     let q_ht_ve = 0.024 * h_ve * 1.0 * (theta_int - theta_e) * d_hs;
     
-    let h_story = state.params.story_height * state.params.num_stories as f64;
+    
     // win_n, win_e, win_s, win_w are already calculated.
     
     let sol_factor = 0.6 * (1.0 - 0.3) * 0.9 * g_value;
@@ -460,50 +380,18 @@ pub fn update_state(state_json: &str) -> String {
 }
 
 #[wasm_bindgen]
-pub fn add_zone(zone_json: &str) -> String {
-    if let Ok(zone) = serde_json::from_str::<Zone>(zone_json) {
+pub fn update_geometry(geom_json: &str) -> String {
+    if let Ok(geometry) = serde_json::from_str::<BuildingGeometry>(geom_json) {
         STORE.with(|store| {
             let mut store = store.borrow_mut();
             let mut new_state = store.current().clone();
-            new_state.zones.push(zone.clone());
-            store.apply_action(new_state, Action::AddZone(zone), "Added new zone");
+            new_state.geometry = Some(geometry.clone());
+            store.apply_action(new_state, Action::UpdateGeometry(geometry), "Updated building geometry");
             let res = calculate_energy(store.current());
             serde_json::to_string(&res).unwrap()
         })
     } else {
-        serde_json::json!({ "status": "error", "message": "Invalid zone payload" }).to_string()
-    }
-}
-
-#[wasm_bindgen]
-pub fn remove_zone(zone_id: &str) -> String {
-    STORE.with(|store| {
-        let mut store = store.borrow_mut();
-        let mut new_state = store.current().clone();
-        new_state.zones.retain(|z| z.id != zone_id);
-        store.apply_action(new_state, Action::RemoveZone(zone_id.to_string()), &format!("Removed zone {}", zone_id));
-        let res = calculate_energy(store.current());
-        serde_json::to_string(&res).unwrap()
-    })
-}
-
-#[wasm_bindgen]
-pub fn update_zone(zone_json: &str) -> String {
-    if let Ok(updated_zone) = serde_json::from_str::<Zone>(zone_json) {
-        STORE.with(|store| {
-            let mut store = store.borrow_mut();
-            let mut new_state = store.current().clone();
-            if let Some(pos) = new_state.zones.iter().position(|z| z.id == updated_zone.id) {
-                new_state.zones[pos] = updated_zone.clone();
-                store.apply_action(new_state, Action::UpdateZone(updated_zone), "Updated zone");
-                let res = calculate_energy(store.current());
-                serde_json::to_string(&res).unwrap()
-            } else {
-                serde_json::json!({ "status": "error", "message": "Zone not found" }).to_string()
-            }
-        })
-    } else {
-        serde_json::json!({ "status": "error", "message": "Invalid zone payload" }).to_string()
+        serde_json::json!({ "status": "error", "message": "Invalid geometry payload" }).to_string()
     }
 }
 

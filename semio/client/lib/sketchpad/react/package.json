@@ -1,7 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@semio/sketchpad",
+  "name": "@semio/sketchpad-react",
   "version": "0.1.0",
   "type": "module",
   "description": "semio ⋅ sketchpad",

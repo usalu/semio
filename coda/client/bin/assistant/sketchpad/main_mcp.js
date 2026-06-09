@@ -18,6 +18,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { ViewHelper } from 'three/addons/helpers/ViewHelper.js';
+import polygonClipping from 'polygon-clipping';
 
 // ── MCP App Bridge ──────────────────────────────────────────────────────────
 function logToConsole(msg) {
@@ -946,26 +947,127 @@ function getRustStatePayload() {
         heating_system: document.getElementById('heating-system').value,
     };
     
-    const rust_zones = zones.map(z => ({
-        id: z.id,
-        room_type: z.type || "Zone",
-        width: z.geometry.width,
-        length: z.geometry.length,
-        x: z.geometry.x,
-        y: z.geometry.y,
-        windows: z.windows || []
-    }));
+    let polys = zones.map(z => [[
+        [z.geometry.x, z.geometry.y],
+        [z.geometry.x + z.geometry.width, z.geometry.y],
+        [z.geometry.x + z.geometry.width, z.geometry.y + z.geometry.length],
+        [z.geometry.x, z.geometry.y + z.geometry.length],
+        [z.geometry.x, z.geometry.y]
+    ]]);
     
-    return { zones: rust_zones, params };
+    let unionPolys = [];
+    if (polys.length > 0) {
+        unionPolys = polygonClipping.union(...polys);
+    }
+    
+    const rot_rad = -buildingRotationDeg * Math.PI / 180;
+    
+    let floor_area_2d = 0;
+    let exterior_perimeter = 0;
+    
+    let envelope_data = {
+        N: { gross_wall_area: 0, window_area: 0 },
+        E: { gross_wall_area: 0, window_area: 0 },
+        S: { gross_wall_area: 0, window_area: 0 },
+        W: { gross_wall_area: 0, window_area: 0 }
+    };
+    
+    unionPolys.forEach((multi, idx) => {
+        multi.forEach(ring => {
+            let ring_area = 0;
+            for (let i = 0; i < ring.length - 1; i++) {
+                ring_area += ring[i][0] * ring[i+1][1] - ring[i+1][0] * ring[i][1];
+            }
+            floor_area_2d += Math.abs(ring_area / 2);
+            
+            for (let i = 0; i < ring.length - 1; i++) {
+                let p1 = ring[i];
+                let p2 = ring[i+1];
+                let dx = p2[0] - p1[0];
+                let dy = p2[1] - p1[1];
+                let length = Math.sqrt(dx*dx + dy*dy);
+                exterior_perimeter += length;
+                
+                let gross_wall_area = length * story_height * num_stories;
+                
+                let dx_rot = dx * Math.cos(rot_rad) - dy * Math.sin(rot_rad);
+                let dy_rot = dx * Math.sin(rot_rad) + dy * Math.cos(rot_rad);
+                let normal_x = dy_rot;
+                let normal_y = -dx_rot;
+                let angle_deg = Math.atan2(normal_x, normal_y) * 180 / Math.PI;
+                if (angle_deg < 0) angle_deg += 360;
+                
+                let cardinal = "N";
+                if (angle_deg >= 315 || angle_deg < 45) cardinal = "N";
+                else if (angle_deg >= 45 && angle_deg < 135) cardinal = "E";
+                else if (angle_deg >= 135 && angle_deg < 225) cardinal = "S";
+                else cardinal = "W";
+                
+                envelope_data[cardinal].gross_wall_area += gross_wall_area;
+                
+                let mx = (p1[0] + p2[0]) / 2;
+                let my = (p1[1] + p2[1]) / 2;
+                
+                zones.forEach(z => {
+                    const eps = 0.001;
+                    if (mx >= z.geometry.x - eps && mx <= z.geometry.x + z.geometry.width + eps &&
+                        my >= z.geometry.y - eps && my <= z.geometry.y + z.geometry.length + eps) {
+                        
+                        let unrot_nx = dy;
+                        let unrot_ny = -dx;
+                        let unrot_ang = Math.atan2(unrot_nx, unrot_ny) * 180 / Math.PI;
+                        if (unrot_ang < 0) unrot_ang += 360;
+                        let orig_card = "N";
+                        if (unrot_ang >= 315 || unrot_ang < 45) orig_card = "N";
+                        else if (unrot_ang >= 45 && unrot_ang < 135) orig_card = "E";
+                        else if (unrot_ang >= 135 && unrot_ang < 225) orig_card = "S";
+                        else orig_card = "W";
+                        
+                        (z.windows || []).forEach(w => {
+                            if (w.wall_id === orig_card) {
+                                if (!z._windowsHandled) z._windowsHandled = new Set();
+                                if (!z._windowsHandled.has(w.id)) {
+                                    envelope_data[cardinal].window_area += (w.width * w.height) * num_stories;
+                                    z._windowsHandled.add(w.id);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+    
+    let total_floor_area = floor_area_2d * num_stories;
+    let total_roof_area = floor_area_2d;
+    let total_ground_area = floor_area_2d;
+    let total_conditioned_volume = total_floor_area * story_height;
+    
+    let buildingGeometry = {
+        total_conditioned_volume,
+        total_floor_area,
+        total_roof_area,
+        total_ground_area,
+        exterior_perimeter,
+        envelope_data
+    };
+    
+    zones.forEach(z => { if (z._windowsHandled) delete z._windowsHandled; });
+    
+    return { geometry: buildingGeometry, params, ui_state: { raw_zones: zones } };
 }
 
 function syncUIFromState(state) {
-    zones = state.zones.map(z => ({
-        id: z.id,
-        type: z.room_type,
-        geometry: { width: z.width, length: z.length, x: z.x, y: z.y },
-        windows: z.windows || []
-    }));
+    if (state.ui_state && state.ui_state.raw_zones) {
+        zones = state.ui_state.raw_zones;
+    } else {
+        zones = state.zones.map(z => ({
+            id: z.id,
+            type: z.room_type,
+            geometry: { width: 5, length: 5, x: 0, y: 0 },
+            windows: []
+        }));
+    }
     zoneCounter = zones.length;
     
     document.getElementById('tabula-type').value = state.params.building_type;
@@ -1035,7 +1137,9 @@ async function dispatchState() {
             }
         }
         const payload = getRustStatePayload();
-        logToConsole(`Dispatching state to WASM... (${payload.zones.length} zones)`);
+        const numZones = payload.ui_state && payload.ui_state.raw_zones ? payload.ui_state.raw_zones.length : 0;
+        logToConsole(`Dispatching state to WASM... (${numZones} zones)`);
+        
         const resultJson = window.sketchpadRs.update_state(JSON.stringify(payload));
         const data = JSON.parse(resultJson);
         if (data.status === 'success') {
