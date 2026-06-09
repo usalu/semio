@@ -2639,6 +2639,15 @@ export function FlowCanvas({
     };
   }, []);
 
+  const runEvalAnimation = useCallback(
+    (active: () => boolean) => {
+      if (!active()) return;
+      renderFrame();
+      requestAnimationFrame(() => runEvalAnimation(active));
+    },
+    [renderFrame],
+  );
+
   const evaluate = useCallback(() => {
     if (evaluateTimerRef.current != null) clearTimeout(evaluateTimerRef.current);
     evaluateTimerRef.current = setTimeout(() => {
@@ -2651,6 +2660,8 @@ export function FlowCanvas({
         const computingIds = neuronWidgetIdsFromFixtureJson(fixture);
         session.setComputingWidgetIds(JSON.stringify(computingIds));
         renderFrame();
+        let animating = true;
+        runEvalAnimation(() => animating && generation === evalGenerationRef.current);
         try {
           let outputsJson: string;
           let previewMeshes: Readonly<Record<string, unknown>> | undefined;
@@ -2660,24 +2671,35 @@ export function FlowCanvas({
             const result = await orchestrator.evaluate();
             if (generation !== evalGenerationRef.current) return;
             outputsJson = result.outputsJson;
-            previewMeshes = result.previewMeshes;
             session.applyEvalOutputsJson(outputsJson);
-          } else {
+            renderFrame();
+            const text = session.previewText();
+            onPreviewTextRef.current?.(text);
+            previewMeshes = await orchestrator.tessellatePreviews(outputsJson);
+            if (generation !== evalGenerationRef.current) return;
+            onEvalOutputsRef.current?.(outputsJson, previewMeshes);
+            console.log(`[DEBUG] flow evaluate preview: ${text}`);
+          } else if (import.meta.env.VITEST) {
             outputsJson = await session.evaluate();
             if (generation !== evalGenerationRef.current) return;
+            const text = session.previewText();
+            onPreviewTextRef.current?.(text);
+            onEvalOutputsRef.current?.(outputsJson);
+            console.log(`[DEBUG] flow evaluate preview: ${text}`);
+          } else {
+            console.log("[DEBUG] flow orchestrator unavailable; skipped eval");
+            session.clearComputingWidgetIds();
           }
-          const text = session.previewText();
-          onPreviewTextRef.current?.(text);
-          onEvalOutputsRef.current?.(outputsJson, previewMeshes);
-          console.log(`[DEBUG] flow evaluate preview: ${text}`);
         } catch (err) {
           session.clearComputingWidgetIds();
           console.log(`[DEBUG] flow evaluate failed: ${String(err)}`);
+        } finally {
+          animating = false;
         }
         renderFrame();
       })();
     }, 32);
-  }, [renderFrame]);
+  }, [renderFrame, runEvalAnimation]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -2921,8 +2943,7 @@ export function FlowCanvas({
         return;
       }
       if (event.key === "Delete" || event.key === "Backspace") {
-        const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
-        if (!selected.length) return;
+        if (!session.hasSelection()) return;
         event.preventDefault();
         try {
           session.deleteSelection();

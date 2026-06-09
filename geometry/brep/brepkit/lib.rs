@@ -227,6 +227,15 @@ impl BrepkitKernel {
     pub fn dispose_sync(&mut self, handle: &GeometryHandle) {
         self.registry.remove(handle.as_str());
     }
+
+    /// 🧹 Drops registry entries whose handles are not in the live reference set.
+    pub fn retain_sync(&mut self, live: &std::collections::HashSet<String>) {
+        self.registry.retain(|handle, _| live.contains(handle));
+    }
+
+    pub fn registry_len(&self) -> usize {
+        self.registry.len()
+    }
 }
 
 #[async_trait(?Send)]
@@ -328,6 +337,19 @@ mod tests {
         let moved = kernel.translate_sync(&filleted, [1.0, 0.0, 0.0]).unwrap();
         let mesh = kernel.tessellate_sync(&moved, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
+    }
+
+    #[test]
+    fn retain_sync_drops_unreferenced_handles() {
+        let mut kernel = BrepkitKernel::new();
+        let kept = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let orphan = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        assert_eq!(kernel.registry_len(), 2);
+        let live = std::collections::HashSet::from([kept.as_str().to_string()]);
+        kernel.retain_sync(&live);
+        assert_eq!(kernel.registry_len(), 1);
+        assert!(kernel.tessellate_sync(&kept, 0.1).is_ok());
+        assert!(kernel.tessellate_sync(&orphan, 0.1).is_err());
     }
 }
 // #endregion 🔖Tests

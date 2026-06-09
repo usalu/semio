@@ -1,0 +1,13 @@
+{
+  "title": "Fix Procedural Show Selected Mode",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "The show selected option in procedural preview doesn't work correctly. When selecting input channels (e.g. a or b on cut component), geometry is not shown even though out channel works. filterVisiblePreviewItems uses exact channel match instead of resolveGeometryTargets.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1641"
+  },
+  "goal": "🎯procedural",
+  "sessions": [
+    "⚪41981f186b2b4e4faf97442401fd4163"
+  ]
+}

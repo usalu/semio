@@ -3,12 +3,37 @@
 use geometry_brep_brepkit::BrepkitKernel;
 use geometry_brep_engine::{block_on, BrepKernel, GeometryHandle, Vec3};
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 
 static KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
+static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), String>>> = OnceLock::new();
 
 fn kernel() -> &'static Mutex<BrepkitKernel> {
     KERNEL.get_or_init(|| Mutex::new(BrepkitKernel::new()))
+}
+
+fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), String>> {
+    MESH_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn evict_mesh_cache_for_handles(handles: &[String]) {
+    if handles.is_empty() {
+        if let Ok(mut cache) = mesh_cache().lock() {
+            cache.clear();
+        }
+        return;
+    }
+    let live: HashSet<&str> = handles.iter().map(String::as_str).collect();
+    if let Ok(mut cache) = mesh_cache().lock() {
+        cache.retain(|(handle, _), _| live.contains(handle.as_str()));
+    }
+}
+
+fn evict_mesh_cache_for_handle(handle: &str) {
+    if let Ok(mut cache) = mesh_cache().lock() {
+        cache.retain(|(cached_handle, _), _| cached_handle != handle);
+    }
 }
 
 // #region 🔖Helpers
@@ -611,13 +636,77 @@ mod tests {
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         assert_eq!(out.schema(), Some("geometry"));
     }
+
+    #[test]
+    fn retain_geometry_handles_sweeps_orphaned_shapes() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let box_out = reg
+            .dispatch(
+                "brep.prim3d.box",
+                &Dictionary::new()
+                    .insert("width", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("depth", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("height", Value::Dictionary(number_dictionary(1.0))),
+            )
+            .unwrap();
+        let orphan = reg
+            .dispatch(
+                "brep.prim3d.box",
+                &Dictionary::new()
+                    .insert("width", Value::Dictionary(number_dictionary(2.0)))
+                    .insert("depth", Value::Dictionary(number_dictionary(2.0)))
+                    .insert("height", Value::Dictionary(number_dictionary(2.0))),
+            )
+            .unwrap();
+        let live_handle = box_out.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().to_string();
+        let orphan_handle = orphan.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().to_string();
+        retain_geometry_handles(&[live_handle.clone()]);
+        assert!(tessellate_geometry_json(&live_handle, 0.1).contains("position"));
+        assert!(tessellate_geometry_json(&orphan_handle, 0.1).contains("error"));
+    }
+
+    #[test]
+    fn tessellate_geometry_json_is_memoized() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let box_out = reg
+            .dispatch(
+                "brep.prim3d.box",
+                &Dictionary::new()
+                    .insert("width", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("depth", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("height", Value::Dictionary(number_dictionary(1.0))),
+            )
+            .unwrap();
+        let handle = box_out.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
+        let first = tessellate_geometry_json(handle, 0.1);
+        let second = tessellate_geometry_json(handle, 0.1);
+        assert_eq!(first, second);
+        assert!(first.contains("position"));
+    }
 }
 // #endregion 🔖Tests
 
 // #region 🔖Tessellation
+/// 🧹 Retains only geometry handles referenced by the current evaluation outputs.
+pub fn retain_geometry_handles(live: &[String]) {
+    let live_set: HashSet<String> = live.iter().cloned().collect();
+    if let Ok(mut guard) = kernel().lock() {
+        guard.retain_sync(&live_set);
+    }
+    evict_mesh_cache_for_handles(live);
+}
+
 /// 🧊 Tessellates a geometry handle owned by the in-process brep kernel.
 pub fn tessellate_geometry_json(handle: &str, tolerance: f64) -> String {
-    kernel()
+    let key = (handle.to_string(), tolerance.to_bits());
+    if let Ok(cache) = mesh_cache().lock() {
+        if let Some(cached) = cache.get(&key) {
+            return cached.clone();
+        }
+    }
+    let json = kernel()
         .lock()
         .ok()
         .and_then(|kernel| {
@@ -627,11 +716,18 @@ pub fn tessellate_geometry_json(handle: &str, tolerance: f64) -> String {
                 Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
             }
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "brep kernel unavailable" }).to_string())
+        .unwrap_or_else(|| serde_json::json!({ "error": "brep kernel unavailable" }).to_string());
+    if !json.contains("\"error\"") {
+        if let Ok(mut cache) = mesh_cache().lock() {
+            cache.insert(key, json.clone());
+        }
+    }
+    json
 }
 
 /// 🗑️ Disposes a geometry handle owned by the in-process brep kernel.
 pub fn dispose_geometry(handle: &str) {
+    evict_mesh_cache_for_handle(handle);
     if let Ok(mut kernel) = kernel().lock() {
         block_on(kernel.dispose(&GeometryHandle(handle.to_string())));
     }

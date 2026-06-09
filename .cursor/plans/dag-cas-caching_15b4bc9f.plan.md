@@ -4,19 +4,19 @@ overview: Add in-process content-addressable (Merkle) caching to the neural DAG 
 todos:
   - id: neural-cache
     content: Add NeuralCache (epoch-bounded, thread-safe) + deterministic node_hash + cache-aware evaluate variants in neural/engine/lib.rs; wire into both parallel and sequential paths; extend tests.
-    status: in_progress
+    status: completed
   - id: flowhost-persist
     content: Add persistent neural_cache to FlowHost; use cached evaluator in evaluate_internal with begin_epoch/sweep for flow + procedural.
-    status: pending
+    status: completed
   - id: brep-gc
     content: Add BrepkitKernel::retain + flow_module_brep::retain_geometry_handles; collect live handles from FlowHost outputs and sweep orphaned brep shapes each evaluate.
-    status: pending
+    status: completed
   - id: tess-memo
     content: Add handle+tolerance mesh memo in flow/modules/brep tessellate_geometry_json, evicted together with handle GC (serves both worker paths).
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing test regions for neural cache, brep retain/mesh-memo, and FlowHost branch-recompute/sweep; run cargo + vitest and verify with temporary [DEBUG] logs.
-    status: pending
+    status: completed
 isProject: false
 ---
 

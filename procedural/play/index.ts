@@ -104,6 +104,32 @@ export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
 export const PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID = "procedural-default";
 
+const proceduralFixtureModules = import.meta.glob("../fixture/*.procedural.json", { eager: true }) as Record<
+	string,
+	{ default: unknown }
+>;
+
+function proceduralFixtureIdFromGlobPath(globPath: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	return base.replace(/\.procedural\.json$/, "");
+}
+
+function proceduralFixtureLabelFromId(id: string): string {
+	return id
+		.split("-")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+const PROCEDURAL_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+	Object.entries(proceduralFixtureModules).map(([path, mod]) => {
+		const id = proceduralFixtureIdFromGlobPath(path);
+		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+		return [id, json];
+	}),
+);
+
 export const PROCEDURAL_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
 	schema: "flow.fixture/v1",
 	camera: { x: 0, y: 0, zoom: 1 },
@@ -113,7 +139,12 @@ export const PROCEDURAL_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
 
 export const PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
 
-export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Box fillet move" }] as const;
+export const PROCEDURAL_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+	{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Box fillet move" },
+	...Object.keys(PROCEDURAL_PLAY_FILE_FIXTURE_JSON_BY_ID)
+		.sort()
+		.map((id) => ({ id, label: proceduralFixtureLabelFromId(id) })),
+];
 
 const PROCEDURAL_PLAY_STORE_KEY = "procedural.fixture/v1";
 
@@ -598,7 +629,14 @@ function proceduralFixtureJsonForId(fixtureId: string): string {
 	if (fixtureId === PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID) {
 		return PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
 	}
+	const fileJson = PROCEDURAL_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];
+	if (fileJson) return fileJson;
 	return PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON;
+}
+
+/** @emoji 🧪 Resolves procedural play fixture JSON by catalog id. */
+export function proceduralPlayFixtureJson(fixtureId: string = PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID): string {
+	return proceduralFixtureJsonForId(fixtureId);
 }
 
 /** @emoji 🎛 Procedural play shell controller. */
@@ -1419,7 +1457,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.emit();
 			return;
 		}
-		if (command === "clearSelection" || command === "deleteSelection") {
+		if (command === "clearSelection") {
 			if (!this.selectedNodeIds.length) return;
 			this.selectedNodeIds = [];
 			this.preselectNodeIds = [];
@@ -1428,6 +1466,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.notifySnapshot();
 			this.rebuildToolbarTools();
 			this.emit();
+			return;
+		}
+		if (command === "deleteSelection") {
+			this.run("canvasCommand", { command: "deleteSelection" });
 			return;
 		}
 		if (command === "setHover") {
@@ -1789,6 +1831,15 @@ if (import.meta.vitest) {
 			expect(ctrl.getCommandRequest().epoch).toBe(1);
 		});
 
+		it("deleteSelection forwards to flow canvas command request", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setSelection", { ids: ["node-a"] });
+			ctrl.run("deleteSelection");
+			expect(ctrl.getCommandRequest().command).toBe("deleteSelection");
+			expect(ctrl.getSelectedNodeIds()).toEqual(["node-a"]);
+		});
+
 		it("setPreviewOff stores preview-off node ids", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
@@ -2026,6 +2077,23 @@ if (import.meta.vitest) {
 			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
 			ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
 			expect(ctrl.getFixtureJson()).toContain("brep.prim3d.box");
+		});
+
+		it("fixture catalog includes procedural/fixture files", () => {
+			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === "sphere-cut-with-torus")).toBe(true);
+			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.find((option) => option.id === "sphere-cut-with-torus")?.label).toBe(
+				"Sphere Cut With Torus",
+			);
+		});
+
+		it("setActiveFixture loads file fixtures from procedural/fixture", () => {
+			const sphereCutId = "sphere-cut-with-torus";
+			expect(proceduralPlayFixtureJson(sphereCutId)).toContain("brep.bool.cut");
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setActiveFixture", { fixtureId: sphereCutId });
+			expect(ctrl.getFixtureJson()).toContain("brep.bool.cut");
+			expect(ctrl.getFixtureJson()).toContain("brep.prim3d.sphere");
 		});
 
 		it("extensions tree lists installed modules", () => {

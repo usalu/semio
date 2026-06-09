@@ -1903,6 +1903,13 @@ impl DagHost {
             .collect()
     }
 
+    /// ✅ Whether the engine has any committed node, edge, or handle selection.
+    pub fn has_selection(&self) -> bool {
+        !self.engine.selection.node_ids.is_empty()
+            || !self.engine.selection.edge_ids.is_empty()
+            || !self.engine.selection.handle_ids.is_empty()
+    }
+
     /// 🖱️ Hovered fixture widget id for node body hover, or parent widget when a channel handle is hovered at detail LOD.
     pub fn hovered_node_id(&self) -> Option<String> {
         let hover = self.engine.hover?;
@@ -2242,14 +2249,12 @@ impl DagHost {
         Ok(())
     }
 
-    /// 🗑️ Deletes the current node selection from the fixture.
+    /// 🗑️ Deletes the current selection from the fixture.
     pub fn delete_selected(&mut self) {
         let widget_ids = self.selected_node_ids();
         self.engine.delete_selection();
         self.fixture.nodes.retain(|node| !widget_ids.contains(&node.id));
-        self.fixture.edges.retain(|edge| {
-            !widget_ids.iter().any(|id| edge.source.starts_with(id.as_str()) || edge.target.starts_with(id.as_str()))
-        });
+        self.sync_edges_from_engine();
         self.rebuild_engine_with_layout(false);
     }
 
@@ -4755,6 +4760,31 @@ mod tests {
         assert!((c.x - 700.0).abs() < 0.01);
         assert!((c.y - 300.0).abs() < 0.01);
         assert!(host.fixture.nodes.iter().all(|n| n.id != "b"));
+    }
+
+    #[test]
+    fn dag_host_delete_selected_removes_edge_only_selection() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
+                DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }], vec![IoPortSpec { id: "out".into(), label: "out".into() , ..Default::default() }], false, false, 400.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
+            ],
+            edges: vec![
+                DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() },
+                DagFixtureEdgeV1 { id: "e2".into(), source: "b:out".into(), target: "c:in".into() },
+            ],
+        });
+        let edge_id = *host.engine.edges.keys().next().expect("edge");
+        host.engine.selection.edge_ids.insert(edge_id);
+        assert!(host.has_selection());
+        assert_eq!(host.fixture.edges.len(), 2);
+        host.delete_selected();
+        assert_eq!(host.fixture.edges.len(), 1);
+        assert_eq!(host.fixture.nodes.len(), 3);
+        assert!(!host.has_selection());
     }
 
     #[test]

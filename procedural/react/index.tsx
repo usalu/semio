@@ -219,10 +219,6 @@ function previewItemsFromChannelValue(widgetId: string, port: string, direction:
 	return runPreviewExtractors({ widgetId, port, direction, value });
 }
 
-function proceduralChannelMatches(item: ProceduralPreviewItem, channel: ProceduralChannelRef): boolean {
-	return item.widgetId === channel.widgetId && item.port === channel.port && item.direction === channel.direction;
-}
-
 export interface ProceduralFixtureEdge {
 	readonly source: string;
 	readonly target: string;
@@ -269,25 +265,51 @@ function geometryTargetMatches(item: ProceduralPreviewItem, targets: readonly Pr
 	return item.direction === "out" && targets.some((target) => item.widgetId === target.widgetId && item.port === target.port);
 }
 
+function resolveSelectedPreviewTargets(
+	items: readonly ProceduralPreviewItem[],
+	options: {
+		readonly selectedNodeIds: readonly string[];
+		readonly selectedChannels: readonly ProceduralChannelRef[];
+		readonly selectedGeometryTargets: readonly ProceduralChannelRef[];
+		readonly edges: readonly ProceduralFixtureEdge[];
+	},
+): ProceduralChannelRef[] {
+	if (options.selectedGeometryTargets.length > 0) return [...options.selectedGeometryTargets];
+	if (options.selectedChannels.length > 0) {
+		return resolveGeometryTargets(options.selectedChannels, null, items, options.edges);
+	}
+	if (options.selectedNodeIds.length > 0) {
+		const targets: ProceduralChannelRef[] = [];
+		for (const widgetId of options.selectedNodeIds) {
+			targets.push(...resolveGeometryTargets([], widgetId, items, options.edges));
+		}
+		return targets;
+	}
+	return [];
+}
+
 export function filterVisiblePreviewItems(
 	items: readonly ProceduralPreviewItem[],
 	options: {
 		readonly showMode: ProceduralPreviewShowMode;
 		readonly selectedNodeIds: readonly string[];
 		readonly selectedChannels: readonly ProceduralChannelRef[];
+		readonly selectedGeometryTargets?: readonly ProceduralChannelRef[];
+		readonly edges?: readonly ProceduralFixtureEdge[];
 		readonly hoveredNodeId: string | null;
 		readonly hoveredChannel: ProceduralChannelRef | null;
 	},
 ): ProceduralPreviewItem[] {
-	const { showMode, selectedNodeIds, selectedChannels } = options;
+	const { showMode } = options;
 	if (showMode === "selected") {
-		if (selectedChannels.length > 0) {
-			return items.filter((entry) => selectedChannels.some((channel) => proceduralChannelMatches(entry, channel)));
-		}
-		if (selectedNodeIds.length > 0) {
-			return items.filter((entry) => selectedNodeIds.includes(entry.widgetId));
-		}
-		return [];
+		const targets = resolveSelectedPreviewTargets(items, {
+			selectedNodeIds: options.selectedNodeIds,
+			selectedChannels: options.selectedChannels,
+			selectedGeometryTargets: options.selectedGeometryTargets ?? [],
+			edges: options.edges ?? [],
+		});
+		if (targets.length === 0) return [];
+		return items.filter((entry) => geometryTargetMatches(entry, targets));
 	}
 	return items.filter((entry) => entry.direction === "out");
 }
@@ -450,6 +472,7 @@ export interface ProceduralPreviewProps {
 	readonly hoveredChannel?: ProceduralChannelRef | null;
 	readonly hoveredGeometryTargets?: readonly ProceduralChannelRef[];
 	readonly selectedGeometryTargets?: readonly ProceduralChannelRef[];
+	readonly fixtureEdges?: readonly ProceduralFixtureEdge[];
 	readonly previewOffNodeIds?: readonly string[];
 	readonly showMode?: ProceduralPreviewShowMode;
 	readonly selectionMode?: ProceduralSelectionMode;
@@ -993,6 +1016,7 @@ export function ProceduralPreview({
 	hoveredChannel = null,
 	hoveredGeometryTargets = [],
 	selectedGeometryTargets = [],
+	fixtureEdges = [],
 	previewOffNodeIds = [],
 	showMode = "everything",
 	selectionMode = "default",
@@ -1060,10 +1084,12 @@ export function ProceduralPreview({
 				showMode,
 				selectedNodeIds,
 				selectedChannels,
+				selectedGeometryTargets,
+				edges: fixtureEdges,
 				hoveredNodeId,
 				hoveredChannel,
 			}),
-		[hoveredChannel, hoveredNodeId, items, selectedChannels, selectedNodeIds, showMode],
+		[fixtureEdges, hoveredChannel, hoveredNodeId, items, selectedChannels, selectedGeometryTargets, selectedNodeIds, showMode],
 	);
 
 	const gumballAnchorId = reactHostPort.useMemo(() => {

@@ -1560,5 +1560,82 @@ mod tests {
             Some(false)
         );
     }
+
+    #[test]
+    fn node_hash_is_stable_for_identical_inputs() {
+        let input = number_dictionary(3.0);
+        assert_eq!(node_hash("double", &input), node_hash("double", &input));
+        assert_ne!(node_hash("double", &input), node_hash("echo", &input));
+    }
+
+    #[test]
+    fn cached_evaluate_skips_dispatch_on_hit() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let tree = Tree {
+            neurons: vec![
+                Neuron::with_kind("a", "echo", number_dictionary(2.0)),
+                Neuron::with_kind("b", "double", Dictionary::new()),
+            ],
+            synapses: vec![Synapse {
+                id: "s1".into(),
+                from: "a".into(),
+                to: "b".into(),
+                from_port: "out".into(),
+                to_port: "number".into(),
+            }],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        let evaluator = Evaluator::new(&reg);
+        let cache = NeuralCache::new();
+        let calls = AtomicUsize::new(0);
+        let dispatch = |kind: &str, input: &Dictionary| {
+            calls.fetch_add(1, Ordering::Relaxed);
+            reg.dispatch(kind, input)
+        };
+        cache.begin_epoch();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 2);
+        cache.begin_epoch();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn cached_evaluate_recomputes_only_changed_branch() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let tree = Tree {
+            neurons: vec![
+                Neuron::with_kind("a", "echo", number_dictionary(2.0)),
+                Neuron::with_kind("b", "echo", number_dictionary(5.0)),
+                Neuron::with_kind("add", "math.add", Dictionary::new()),
+            ],
+            synapses: vec![
+                Synapse { id: "s1".into(), from: "a".into(), to: "add".into(), from_port: "out".into(), to_port: "a".into() },
+                Synapse { id: "s2".into(), from: "b".into(), to: "add".into(), from_port: "out".into(), to_port: "b".into() },
+            ],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        let evaluator = Evaluator::new(&reg);
+        let cache = NeuralCache::new();
+        let calls = AtomicUsize::new(0);
+        let dispatch = |kind: &str, input: &Dictionary| {
+            calls.fetch_add(1, Ordering::Relaxed);
+            reg.dispatch(kind, input)
+        };
+        cache.begin_epoch();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 3);
+        let mut tree_changed = tree.clone();
+        tree_changed.neurons[0] = Neuron::with_kind("a", "echo", number_dictionary(3.0));
+        cache.begin_epoch();
+        evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 5);
+    }
 }
 // #endregion 🔖Tests

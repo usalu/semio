@@ -12,8 +12,8 @@ use dag::{
     normalize_node_display, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
 };
 use neural::{
-    cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND,
-    OUTPUT_KIND,
+    cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND,
+    INPUT_KIND, OUTPUT_KIND,
 };
 use serde::{Deserialize, Serialize};
 
@@ -27,7 +27,7 @@ pub enum Widget {
         neuronKind: String,
         #[serde(default)]
         params: Dictionary,
-        #[serde(default)]
+        #[serde(default, alias = "input_ports")]
         input_ports: Vec<String>,
         #[serde(default = "default_neuron_preview")]
         preview: bool,
@@ -451,6 +451,13 @@ fn neuron_io_layout(
                 .collect();
             return (inputs, outputs, false, false);
         }
+    }
+    if !input_ports.is_empty() {
+        let inputs = input_ports
+            .iter()
+            .map(|port_id| IoPortSpec::simple(port_id.clone(), port_id.clone()))
+            .collect();
+        return (inputs, outputs, false, false);
     }
     (
         vec![IoPortSpec::simple("in", "in")],
@@ -1184,6 +1191,36 @@ fn build_channel_eval_json(fixture: &FlowFixtureV1, channels: &EvalChannels, kin
     }
     serde_json::to_string(&widgets).unwrap_or_else(|_| "{}".into())
 }
+
+fn collect_geometry_handles_from_value(value: &NeuralValue, handles: &mut Vec<String>) {
+    if let Some(dict) = value.as_dictionary() {
+        collect_geometry_handles_from_dictionary(dict, handles);
+    }
+}
+
+fn collect_geometry_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<String>) {
+    if dict.schema() == Some("geometry") {
+        if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
+            handles.push(handle.to_string());
+            return;
+        }
+    }
+    for key in dict.keys() {
+        if let Some(value) = dict.get(key) {
+            collect_geometry_handles_from_value(value, handles);
+        }
+    }
+}
+
+fn collect_live_geometry_handles(outputs: &HashMap<String, Dictionary>) -> Vec<String> {
+    let mut handles = Vec::new();
+    for dict in outputs.values() {
+        collect_geometry_handles_from_dictionary(dict, &mut handles);
+    }
+    handles.sort();
+    handles.dedup();
+    handles
+}
 // #endregion 🔖ChannelEval
 
 // #region History
@@ -1205,6 +1242,7 @@ pub struct FlowHost {
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
     kind_infos: HashMap<String, OperatorInfo>,
+    neural_cache: NeuralCache,
     next_widget_serial: u64,
     next_synapse_serial: u64,
     viewport_w: u32,
@@ -1232,6 +1270,7 @@ impl FlowHost {
             eval_bridge: None,
             host_catalogue_json: String::new(),
             kind_infos: HashMap::new(),
+            neural_cache: NeuralCache::new(),
             next_widget_serial: 1,
             next_synapse_serial: 100,
             viewport_w: 1,
@@ -1244,6 +1283,19 @@ impl FlowHost {
         host.rebuild_dag();
         host.touch_channel_eval();
         host
+    }
+
+    /// 📥 Replaces fixture content while keeping catalogue, operator metadata, and eval bridge.
+    pub fn replace_fixture(&mut self, mut fixture: FlowFixtureV1) {
+        dedupe_fixture_widgets(&mut fixture);
+        self.fixture = fixture;
+        self.outputs.clear();
+        self.last_eval_json.clear();
+        self.pan_anchor = None;
+        self.ghost_node = None;
+        self.history = FlowHistory::default();
+        self.rebuild_dag();
+        self.touch_channel_eval();
     }
 
     pub fn parse_fixture_json(json: &str) -> Result<FlowFixtureV1, String> {
@@ -1745,7 +1797,7 @@ impl FlowHost {
     }
 
     pub fn delete_selection(&mut self) -> Result<(), String> {
-        if self.dag.selected_node_ids().is_empty() {
+        if !self.dag.has_selection() {
             return Ok(());
         }
         self.begin_change();
@@ -1753,6 +1805,11 @@ impl FlowHost {
         self.sync_from_dag();
         self.touch_channel_eval();
         Ok(())
+    }
+
+    /// ✅ Whether the canvas has any committed node, edge, or handle selection.
+    pub fn has_selection(&self) -> bool {
+        self.dag.has_selection()
     }
 
     pub fn select_all(&mut self) {
@@ -1765,18 +1822,22 @@ impl FlowHost {
         let seeds = self.build_seeds();
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry);
+        self.neural_cache.begin_epoch();
         let result = if let Some(bridge) = self.eval_bridge.as_ref() {
             let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-            evaluator.evaluate_channels_sequential_with(&tree, &seeds, &self.kind_infos, &mut dispatch)
+            evaluator.evaluate_channels_sequential_cached(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache)
         } else {
             let dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
-            evaluator.evaluate_channels_with(&tree, &seeds, &self.kind_infos, &dispatch)
+            evaluator.evaluate_channels_cached(&tree, &seeds, &self.kind_infos, &dispatch, &self.neural_cache)
         };
+        self.neural_cache.sweep();
         match result {
             Ok(channels) => {
                 self.outputs = channels.outputs.clone();
                 self.apply_preview_outputs(&channels.outputs);
                 self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
+                let live_handles = collect_live_geometry_handles(&self.outputs);
+                flow_module_brep::retain_geometry_handles(&live_handles);
             }
             Err(err) => {
                 self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
@@ -2604,11 +2665,7 @@ impl FlowSession {
     pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
         let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
         let mut inner = self.state.borrow_mut();
-        let (w, h, dpr) = (inner.width, inner.height, inner.dpr);
-        let theme = inner.host.dag.vello_theme;
-        inner.host = FlowHost::from_fixture(fixture);
-        inner.host.dag.vello_theme = theme;
-        inner.host.set_viewport(w.max(1), h.max(1), dpr.max(1.0));
+        inner.host.replace_fixture(fixture);
         Ok(())
     }
 
@@ -3082,6 +3139,11 @@ impl FlowSession {
         self.state.borrow_mut().host.delete_selection().map_err(|e| JsValue::from_str(&e))
     }
 
+    #[wasm_bindgen(js_name = hasSelection)]
+    pub fn has_selection(&self) -> bool {
+        self.state.borrow().host.has_selection()
+    }
+
     #[wasm_bindgen(js_name = selectAll)]
     pub fn select_all(&self) {
         self.state.borrow_mut().host.select_all();
@@ -3252,6 +3314,48 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_slider_value("slider", 5.0);
         assert_eq!(host.preview_text(), "5");
+    }
+
+    #[test]
+    fn neural_cache_persists_across_evaluations() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+        let calls = Arc::new(AtomicUsize::new(0));
+        let calls_for_bridge = calls.clone();
+        let mut host = FlowHost::default();
+        host.set_eval_bridge_fn(Box::new(move |kind, input| {
+            calls_for_bridge.fetch_add(1, Ordering::Relaxed);
+            test_math_bridge(kind, input)
+        }));
+        host.set_neuron_kind_infos_json(&test_kind_infos_json());
+        host.evaluate_internal();
+        assert_eq!(calls.load(Ordering::Relaxed), 0);
+        host.evaluate_internal();
+        assert_eq!(calls.load(Ordering::Relaxed), 0);
+        host.set_slider_value("slider", 4.0);
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn collect_live_geometry_handles_traverses_nested_dictionaries() {
+        let mut outputs = HashMap::new();
+        outputs.insert(
+            "box".into(),
+            Dictionary::with_schema("geometry")
+                .insert("handle", NeuralValue::Atom(Atom::String("solid-1".into())))
+                .insert("kind", NeuralValue::Atom(Atom::String("solid".into()))),
+        );
+        outputs.insert(
+            "nested".into(),
+            Dictionary::new().insert(
+                "child",
+                NeuralValue::Dictionary(
+                    Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-2".into()))),
+                ),
+            ),
+        );
+        let handles = collect_live_geometry_handles(&outputs);
+        assert_eq!(handles, vec![String::from("solid-1"), String::from("solid-2")]);
     }
 
     #[test]
@@ -3426,6 +3530,27 @@ mod tests {
         host.dag.vello_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
         host.rebuild_dag();
         assert_eq!(host.dag.vello_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
+    }
+
+    #[test]
+    fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
+        let mut host = host_with_test_bridge();
+        host.replace_fixture(FlowFixtureV1 {
+            schema: "flow.fixture/v1".into(),
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            widgets: vec![Widget::Neuron {
+                id: "add".into(),
+                neuronKind: "math.add".into(),
+                params: Dictionary::new(),
+                input_ports: vec![],
+                preview: true,
+            }],
+            synapses: vec![],
+            layout: BTreeMap::new(),
+        });
+        let node = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
+        let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();
+        assert_eq!(input_ids, vec!["a", "b"]);
     }
 
     #[test]
@@ -3967,6 +4092,19 @@ mod tests {
         host.delete_selection().unwrap();
         assert!(host.fixture.widgets.iter().all(|w| widget_id_for(w) != "slider"));
         assert!(host.dag.fixture.nodes.iter().all(|n| n.id != "slider"));
+    }
+
+    #[test]
+    fn delete_selection_removes_selected_edge_from_fixture() {
+        let mut host = host_with_test_bridge();
+        let synapse_count_before = host.fixture.synapses.len();
+        assert!(synapse_count_before > 0);
+        let edge_id = *host.dag.engine.edges.keys().next().expect("edge");
+        host.dag.engine.selection.edge_ids.insert(edge_id);
+        assert!(host.has_selection());
+        host.delete_selection().unwrap();
+        assert!(host.fixture.synapses.len() < synapse_count_before);
+        assert!(!host.has_selection());
     }
 
     #[test]
