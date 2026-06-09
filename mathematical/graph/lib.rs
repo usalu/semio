@@ -1755,7 +1755,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             } else {
                 (candidate, anchor_handle)
             };
-            if !self.is_valid_connection(source_hid, target_hid, reconnecting) {
+            if !self.is_valid_connection(source_hid, target_hid, reconnecting, true) {
                 continue;
             }
             let Some(node) = self.nodes.get(&handle.node_id) else {
@@ -2022,7 +2022,20 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             .map(|edge| edge.id)
     }
 
-    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {
+    fn displaced_incoming_edge(&self, target_hid: HandleId, reconnecting: Option<EdgeId>) -> Option<EdgeId> {
+        self.edges
+            .values()
+            .find(|edge| Some(edge.id) != reconnecting && P::endpoint_as_u64(edge.target) == target_hid)
+            .map(|edge| edge.id)
+    }
+
+    fn is_valid_connection(
+        &self,
+        source_hid: HandleId,
+        target_hid: HandleId,
+        reconnecting: Option<EdgeId>,
+        allow_target_replace: bool,
+    ) -> bool {
         if source_hid == target_hid {
             return false;
         }
@@ -2046,10 +2059,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }) {
             return false;
         }
-        if self
-            .edges
-            .values()
-            .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid)
+        if !allow_target_replace
+            && self
+                .edges
+                .values()
+                .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid)
         {
             return false;
         }
@@ -2063,7 +2077,14 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         if self.enforce_acyclic {
             let src_node = source_handle.node_id;
             let tgt_node = target_handle.node_id;
-            if self.would_create_cycle_between_nodes(src_node, tgt_node, reconnecting) {
+            let excluding = reconnecting.or_else(|| {
+                if allow_target_replace {
+                    self.displaced_incoming_edge(target_hid, reconnecting)
+                } else {
+                    None
+                }
+            });
+            if self.would_create_cycle_between_nodes(src_node, tgt_node, excluding) {
                 return false;
             }
         }
@@ -2071,7 +2092,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     fn try_connect_handles(&mut self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {
-        if !self.is_valid_connection(source_hid, target_hid, reconnecting) {
+        if !self.is_valid_connection(source_hid, target_hid, reconnecting, true) {
             return false;
         }
         let new_id = reconnecting.unwrap_or_else(|| {
@@ -2079,9 +2100,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             self.next_edge_id += 1;
             id
         });
-        if let Some(old_id) = reconnecting {
-            self.edges.remove(&old_id);
-            self.selection.edge_ids.remove(&old_id);
+        if let Some(old_id) = reconnecting.or_else(|| self.incoming_edge_for_handle(target_hid)) {
+            self.remove_edge(old_id);
         }
         let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_hid)) else {
             return false;
@@ -2123,7 +2143,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         for dragged_handle in self.handles.values().filter(|h| dragged.contains(&h.node_id)) {
             for other_handle in self.handles.values().filter(|h| !dragged.contains(&h.node_id)) {
                 for (source_hid, target_hid) in self.connection_pairs_for_handles(dragged_handle, other_handle) {
-                    if !self.is_valid_connection(source_hid, target_hid, None) {
+                    if !self.is_valid_connection(source_hid, target_hid, None, false) {
                         continue;
                     }
                     let Some(source_handle) = self.handles.get(&source_hid) else {
@@ -2437,7 +2457,7 @@ mod tests {
     }
 
     #[test]
-    fn wire_snap_ignores_occupied_compatible_targets() {
+    fn wire_snap_replaces_occupied_compatible_target() {
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.enforce_acyclic = true;
         engine.set_camera(0.0, 0.0, 1.0);
@@ -2457,11 +2477,11 @@ mod tests {
         let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
             panic!("expected draw-edge interaction");
         };
-        assert!(snap_target.is_none());
+        assert_eq!(snap_target, Some(11));
         engine.pointer_up(occupied.x + 8.0, occupied.y);
         assert_eq!(engine.edges.len(), 1);
         let edge = engine.edges.values().next().expect("edge");
-        assert_eq!(Ported::endpoint_as_u64(edge.source), 12);
+        assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
         assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
     }
 

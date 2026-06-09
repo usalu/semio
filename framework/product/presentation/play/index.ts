@@ -606,6 +606,7 @@ function buildPresentationPlayAppRuntime(controller: PresentationPlayController)
 			panel: "workbench",
 			order: 0,
 			bodyKey: PRESENTATION_PLAY_BODY_KEY_HIERARCHY,
+			label: "Hierarchy",
 		},
 		{
 			id: `${PRESENTATION_PLAY_APP_ID}.details`,

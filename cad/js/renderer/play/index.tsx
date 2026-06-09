@@ -1436,6 +1436,7 @@ class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: CAD_PLAY_HIERARCHY_TAB_ID,
       icon: ListTree,
+      name: "Hierarchy",
       order: 0,
       tree: new CallbackTreePanelDefinition(() => this.buildSections(), () => this.buildHighlightedIds()),
     };
@@ -2566,6 +2567,7 @@ class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: "cad-play-catalog",
       icon: Shapes,
+      name: "Catalog",
       order: 1,
       tree: new StaticTreePanelDefinition({
         sections: [playgroundPanelSection("cad-play-catalog.section", "Catalog", <CadPlayCatalogAside />)],
@@ -2579,6 +2581,7 @@ class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: "cad-play-details",
       icon: ListTree,
+      name: "Selection",
       order: 0,
       tree: new StaticTreePanelDefinition({
         sections: [playgroundPanelSection("cad-play-details.section", "Selection", <CadPlayDetailsAside />)],

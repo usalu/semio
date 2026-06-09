@@ -513,8 +513,8 @@ export interface SideTabSpec {
 	readonly panel: PanelKind;
 	readonly order?: number;
 	readonly bodyKey: string;
-	/** @emoji 🏷️ Panel section title; omit for content-only panel chrome. */
-	readonly label?: string;
+	/** @emoji 🏷️ Tab label shown after the icon in panel chrome. */
+	readonly label: string;
 }
 //#endregion 🔖SideTab
 

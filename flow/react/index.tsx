@@ -648,6 +648,7 @@ export function flowTreeDirtyNeuronIds(prevFixtureJson: string | null, currFixtu
   if (!prev) return { ids: [], path: flowFixtureComputePath(curr), structural: true };
 
   const prevWidgets = new Map(prev.widgets.map((widget) => [widget.id, widget]));
+  const currWidgetIds = new Set(curr.widgets.map((widget) => widget.id));
   const dirtyRoots = new Set<string>();
   for (const widget of curr.widgets) {
     const previous = prevWidgets.get(widget.id);
@@ -658,6 +659,12 @@ export function flowTreeDirtyNeuronIds(prevFixtureJson: string | null, currFixtu
     if (flowWidgetTreeSignature(widget) !== flowWidgetTreeSignature(previous)) dirtyRoots.add(widget.id);
     if (JSON.stringify(incomingSynapseKeys(widget.id, prev.synapses)) !== JSON.stringify(incomingSynapseKeys(widget.id, curr.synapses))) {
       dirtyRoots.add(widget.id);
+    }
+  }
+  for (const widget of prev.widgets) {
+    if (currWidgetIds.has(widget.id)) continue;
+    for (const synapse of prev.synapses) {
+      if (synapse.from === widget.id && currWidgetIds.has(synapse.to)) dirtyRoots.add(synapse.to);
     }
   }
   if (dirtyRoots.size === 0) return { ids: [], path: [], structural: false };
@@ -2992,7 +2999,6 @@ export function FlowCanvas({
         renderFrame();
         return;
       }
-      lastEvalFixtureRef.current = null;
       session.loadFixtureJson(fixtureJson);
       emitInteractionState(session);
       evaluate();
@@ -3987,6 +3993,31 @@ if (import.meta.vitest) {
     it("ignores identical fixture snapshots for selection-only gestures", () => {
       const base = flowFixtureToJson(chainFixture);
       expect(flowTreeDirtyNeuronIds(base, base)).toEqual({ ids: [], path: [], structural: false });
+    });
+
+    it("deleting a downstream child does not dirty upstream parents", () => {
+      const base = flowFixtureToJson(chainFixture);
+      const afterDelete: FlowFixtureV1 = {
+        ...chainFixture,
+        widgets: chainFixture.widgets.filter((widget) => widget.id !== "pass"),
+        synapses: chainFixture.synapses.filter((synapse) => synapse.from !== "pass" && synapse.to !== "pass"),
+      };
+      const result = flowTreeDirtyNeuronIds(base, flowFixtureToJson(afterDelete));
+      expect(result.structural).toBe(false);
+      expect(result.ids).not.toContain("add");
+      expect(result.ids).not.toContain("slider");
+      expect(result.path).not.toContain("add");
+      expect(result.path).not.toContain("slider");
+    });
+
+    it("deleting a leaf preview leaves upstream compute nodes clean", () => {
+      const base = flowFixtureToJson(chainFixture);
+      const afterDelete: FlowFixtureV1 = {
+        ...chainFixture,
+        widgets: chainFixture.widgets.filter((widget) => widget.id !== "preview"),
+        synapses: chainFixture.synapses.filter((synapse) => synapse.to !== "preview"),
+      };
+      expect(flowTreeDirtyNeuronIds(base, flowFixtureToJson(afterDelete))).toEqual({ ids: [], path: [], structural: false });
     });
 
     it("marks downstream neurons when slider value changes", () => {

@@ -807,8 +807,8 @@ export function buildPlaygroundWorkbenchApp(ids: PlaygroundIds, controller: Play
   app.defaultModeId = controller.browseMode.id;
   app.addMode(controller.browseMode);
   app.panelTabs = [
-    { id: `${ids.appId}.workbench`, iconId: ids.workbenchIconId, panel: "workbench", order: 0, bodyKey: ids.workbenchTabBodyKey },
-    { id: `${ids.appId}.details`, iconId: ids.detailsIconId, panel: "details", order: 0, bodyKey: ids.detailsTabBodyKey },
+    { id: `${ids.appId}.workbench`, iconId: ids.workbenchIconId, panel: "workbench", order: 0, bodyKey: ids.workbenchTabBodyKey, label: "Workbench" },
+    { id: `${ids.appId}.details`, iconId: ids.detailsIconId, panel: "details", order: 0, bodyKey: ids.detailsTabBodyKey, label: "Details" },
   ];
   controller.commandBus.dispatch(controller.id, "setQuery", { query: options?.initialQuery ?? "" });
   return app;

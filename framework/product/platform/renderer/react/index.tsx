@@ -1391,12 +1391,14 @@ export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | 
 		{
 			id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
 			icon: shellTabIconComponent("framework.display.windows", "display"),
+			name: "Windows",
 			order: -100,
 			tree: new DisplayWindowsTreeDefinition(getHost),
 		},
 		{
 			id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
 			icon: shellTabIconComponent("framework.display.layout", "display"),
+			name: "Layout",
 			order: -99,
 			tree: new DisplayLayoutTreeDefinition(getHost, bus),
 		},
@@ -1554,6 +1556,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
 		{
 			id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
 			icon: shellTabIconComponent("framework.settings.general", "settings"),
+			name: "General",
 			order: -100,
 			tree: new FrameworkSettingsGeneralTreeDefinition(getHost),
 		},
@@ -3812,6 +3815,7 @@ export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], platform: Plat
 			return {
 				id: tab.id,
 				icon: shellTabIconComponent(tab.iconId, tab.panel),
+				name: tab.label,
 				order: tab.order ?? orderIndex,
 				tree: new DeclarativeSidePanelTreeDefinition(platform, tab.id, tab.bodyKey, bus),
 			};
@@ -3821,6 +3825,7 @@ export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], platform: Plat
 			return {
 				id: tab.id,
 				icon: shellTabIconComponent(tab.iconId, tab.panel),
+				name: tab.label,
 				order: tab.order ?? orderIndex,
 				tree: {
 					sections: [
@@ -3835,6 +3840,7 @@ export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], platform: Plat
 		return {
 			id: tab.id,
 			icon: shellTabIconComponent(tab.iconId, tab.panel),
+			name: tab.label,
 			order: tab.order ?? orderIndex,
 			tree: { sections: [{ id: `${tab.id}.missing`, items: [{ id: "missing", label: `Missing panel ${tab.bodyKey}` }] }] },
 		};
@@ -4855,8 +4861,8 @@ if (import.meta.vitest) {
 
 	function attachTestPanelTabs(app: AppRuntime): void {
 		app.panelTabs = [
-			{ id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench" },
-			{ id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "test.platform.panel.details" },
+			{ id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench", label: "Workbench" },
+			{ id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "test.platform.panel.details", label: "Details" },
 		];
 		registerSidePanelBody("test.platform.panel.workbench", () => <div data-testid="test-panel.workbench" />);
 		registerSidePanelBody("test.platform.panel.details", () => <div data-testid="test-panel.details" />);
@@ -5158,8 +5164,8 @@ if (import.meta.vitest) {
 			]);
 			registerWindowBody("test.workbench-view.icons", () => <div>Main</div>);
 			app.panelTabs = [
-				{ id: "workbench", iconId: "lucide.folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench" },
-				{ id: "details", iconId: "lucide.info", panel: "details", order: 0, bodyKey: "test.platform.panel.details" },
+				{ id: "workbench", iconId: "lucide.folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench", label: "Workbench" },
+				{ id: "details", iconId: "lucide.info", panel: "details", order: 0, bodyKey: "test.platform.panel.details", label: "Details" },
 			];
 			registerSidePanelBody("test.platform.panel.workbench", () => <div />);
 			registerSidePanelBody("test.platform.panel.details", () => <div />);

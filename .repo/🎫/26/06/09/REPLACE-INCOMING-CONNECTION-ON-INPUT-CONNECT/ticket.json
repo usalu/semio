@@ -1,0 +1,14 @@
+{
+  "title": "Replace Incoming Connection on Input Connect",
+  "emoji": "🔌",
+  "status": "closed",
+  "description": "When connecting to an input channel in flow, replace the current incoming connection instead of rejecting the connection.",
+  "summary": "Input channel connections now replace any existing incoming wire on the same port. GraphEngine gained allow_target_replace on is_valid_connection (enabled for wire draw/snap, disabled for node-drag proximity), and try_connect_handles removes the displaced incoming edge via remove_edge before creating the new one. FlowHost.connect_ports retains the same replace semantics for programmatic connects. Updated wire_snap test and added connect_ports_replaces_existing_incoming_on_same_input.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1649"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪5a0358561aff486ab88b952e4c9f7604"
+  ]
+}

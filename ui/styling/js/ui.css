@@ -736,7 +736,6 @@
 }
 
 .touch [data-slot="mobile-panel-tab-button"] {
-  min-width: 44px;
   min-height: 44px;
 }
 
@@ -832,6 +831,10 @@
   border-color: var(--border-emphasized-color);
 }
 
+@utility border-active-base {
+  border-color: var(--active-base);
+}
+
 [data-slot="navbar"] {
   border-bottom-color: var(--border-normal-color);
   transition: border-color 120ms ease;
@@ -877,8 +880,11 @@
 [data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
-[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:not(:disabled) {
+[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"])[data-state="on"]:not(:disabled),
+:is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"])[data-state="on"]:not(:disabled) {
   background-color: var(--active-base);
+  border-color: var(--active-base) !important;
   color: var(--border-emphasized-color);
 }
 

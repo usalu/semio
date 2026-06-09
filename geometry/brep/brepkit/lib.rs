@@ -18,9 +18,32 @@ use brepkit_topology::TopologyError;
 use geometry_brep_engine::{BrepError, BrepKernel, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, Vec3};
 
 // #region 🔖Registry
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SolidSource {
+    Unknown,
+    Torus,
+}
+
 struct Entry {
     kind: GeometryKind,
     solid: SolidId,
+    source: SolidSource,
+}
+
+fn solid_bounds_overlap(topo: &Topology, a: SolidId, b: SolidId) -> bool {
+    let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(topo, a).ok() else {
+        return true;
+    };
+    let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(topo, b).ok() else {
+        return true;
+    };
+    let margin = brepkit_math::tolerance::Tolerance::new().linear;
+    aabb_a.min.x() <= aabb_b.max.x() + margin
+        && aabb_a.max.x() + margin >= aabb_b.min.x()
+        && aabb_a.min.y() <= aabb_b.max.y() + margin
+        && aabb_a.max.y() + margin >= aabb_b.min.y()
+        && aabb_a.min.z() <= aabb_b.max.z() + margin
+        && aabb_a.max.z() + margin >= aabb_b.min.z()
 }
 
 pub struct BrepkitKernel {
@@ -44,11 +67,25 @@ impl BrepkitKernel {
         }
     }
 
-    fn register_solid(&mut self, solid: SolidId) -> GeometryHandle {
+    fn register_solid(&mut self, solid: SolidId, source: SolidSource) -> GeometryHandle {
         self.seq += 1;
         let handle = GeometryHandle::new(GeometryKind::Solid, self.seq);
-        self.registry.insert(handle.as_str().to_string(), Entry { kind: GeometryKind::Solid, solid });
+        self.registry.insert(
+            handle.as_str().to_string(),
+            Entry {
+                kind: GeometryKind::Solid,
+                solid,
+                source,
+            },
+        );
         handle
+    }
+
+    fn entry_source(&self, handle: &GeometryHandle) -> SolidSource {
+        self.registry
+            .get(handle.as_str())
+            .map(|entry| entry.source)
+            .unwrap_or(SolidSource::Unknown)
     }
 
     fn solid_id(&self, handle: &GeometryHandle) -> Result<SolidId, BrepError> {
@@ -103,55 +140,82 @@ impl BrepkitKernel {
 impl BrepkitKernel {
     pub fn box_prim_sync(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_box(&mut self.topo, width, depth, height).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn sphere_prim_sync(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_sphere(&mut self.topo, radius, 24).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn cylinder_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_cylinder(&mut self.topo, radius, height).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn cone_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_cone(&mut self.topo, radius, 0.0, height).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn torus_prim_sync(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_torus(&mut self.topo, major, minor, 24).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Torus))
     }
 
     pub fn fuse_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
         let solid = boolean(&mut self.topo, BooleanOp::Fuse, a_id, b_id).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn cut_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
+        if self.entry_source(b) == SolidSource::Torus && solid_bounds_overlap(&self.topo, a_id, b_id) {
+            return Err(BrepError::Operation(
+                "boolean cut with intersecting torus is not supported yet; move the torus away or use a different cutter"
+                    .into(),
+            ));
+        }
         let solid = boolean(&mut self.topo, BooleanOp::Cut, a_id, b_id).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
+        if (self.entry_source(a) == SolidSource::Torus || self.entry_source(b) == SolidSource::Torus)
+            && solid_bounds_overlap(&self.topo, a_id, b_id)
+        {
+            return Err(BrepError::Operation(
+                "boolean intersect with torus is not supported yet".into(),
+            ));
+        }
         let solid = boolean(&mut self.topo, BooleanOp::Intersect, a_id, b_id).map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn translate_sync(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
+        let source = self.entry_source(shape);
         let matrix = Mat4::translation(offset[0], offset[1], offset[2]);
         transform_solid(&mut self.topo, solid, &matrix).map_err(Self::map_err)?;
-        Ok(shape.clone())
+        if source == SolidSource::Unknown {
+            return Ok(shape.clone());
+        }
+        self.seq += 1;
+        let handle = GeometryHandle::new(GeometryKind::Solid, self.seq);
+        self.registry.insert(
+            handle.as_str().to_string(),
+            Entry {
+                kind: GeometryKind::Solid,
+                solid,
+                source,
+            },
+        );
+        Ok(handle)
     }
 
     pub fn rotate_sync(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
@@ -180,21 +244,21 @@ impl BrepkitKernel {
             BkVec3::new(normal[0], normal[1], normal[2]),
         )
         .map_err(Self::map_err)?;
-        Ok(self.register_solid(solid))
+        Ok(self.register_solid(solid, SolidSource::Unknown))
     }
 
     pub fn fillet_sync(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)?;
         let filleted = fillet_rolling_ball(&mut self.topo, solid, &edges, radius).map_err(Self::map_err)?;
-        Ok(self.register_solid(filleted))
+        Ok(self.register_solid(filleted, SolidSource::Unknown))
     }
 
     pub fn chamfer_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)?;
         let chamfered = chamfer(&mut self.topo, solid, &edges, distance).map_err(Self::map_err)?;
-        Ok(self.register_solid(chamfered))
+        Ok(self.register_solid(chamfered, SolidSource::Unknown))
     }
 
     pub fn volume_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
@@ -337,6 +401,46 @@ mod tests {
         let moved = kernel.translate_sync(&filleted, [1.0, 0.0, 0.0]).unwrap();
         let mesh = kernel.tessellate_sync(&moved, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
+    }
+
+    #[test]
+    fn sphere_cut_cylinder_completes() {
+        let mut kernel = BrepkitKernel::new();
+        let sphere = kernel.sphere_prim_sync(2.8).unwrap();
+        let cylinder = kernel.cylinder_prim_sync(0.5, 4.0).unwrap();
+        let cut = kernel.cut_sync(&sphere, &cylinder).unwrap();
+        let volume = kernel.volume_sync(&cut).unwrap();
+        assert!(volume > 0.0);
+        assert!(volume < 92.0);
+    }
+
+    #[test]
+    fn torus_cut_sphere_rejects_intersecting_overlap() {
+        let mut kernel = BrepkitKernel::new();
+        let sphere = kernel.sphere_prim_sync(2.8).unwrap();
+        let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
+        let err = kernel.cut_sync(&torus, &sphere).unwrap_err();
+        assert!(err.to_string().contains("torus"));
+    }
+
+    #[test]
+    fn sphere_cut_disjoint_torus_completes() {
+        let mut kernel = BrepkitKernel::new();
+        let sphere = kernel.sphere_prim_sync(2.8).unwrap();
+        let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
+        let moved = kernel.translate_sync(&torus, [20.0, 0.0, 0.0]).unwrap();
+        let cut = kernel.cut_sync(&sphere, &moved).unwrap();
+        let volume = kernel.volume_sync(&cut).unwrap();
+        assert!((volume - 92.0).abs() < 2.0);
+    }
+
+    #[test]
+    fn sphere_cut_torus_rejects_intersecting_overlap() {
+        let mut kernel = BrepkitKernel::new();
+        let sphere = kernel.sphere_prim_sync(2.8).unwrap();
+        let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
+        let err = kernel.cut_sync(&sphere, &torus).unwrap_err();
+        assert!(err.to_string().contains("torus"));
     }
 
     #[test]

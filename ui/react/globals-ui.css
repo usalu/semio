@@ -91,7 +91,7 @@
  * to match hovered row labels. */
 
 [data-slot="tree-guide"] {
-  z-index: 1;
+  z-index: 2;
 }
 
 [data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line],
@@ -126,6 +126,20 @@
 
 [data-tree-hover-path="row"] [data-slot="tree-branch-stem"] {
   width: 1.5px !important;
+}
+
+:is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is(
+    [data-slot="tree-label"],
+    [data-slot="tree-icon"],
+    [data-slot="tree-header-actions"],
+    [data-slot="tree-gutter-slot"]
+  ),
+:is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is(
+    [data-slot="tree-gutter-slot"] svg,
+    [data-slot="tree-icon"] svg,
+    [data-slot="tree-header-actions"] svg
+  ) {
+  color: var(--border-emphasized-color);
 }
 /* #endregion 🎃TreeHoverPath */
 

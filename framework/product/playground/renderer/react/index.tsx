@@ -2599,6 +2599,7 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
       icon: createIconComponent("list-tree"),
+      name: "Hierarchy",
       order: 0,
       tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
     };
@@ -2617,6 +2618,7 @@ class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PUZZLE_5D_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
+      name: "Kinds",
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const treeNode = this.buildTree();
@@ -2635,6 +2637,7 @@ class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: "puzzle-5d-play-status",
       icon: createIconComponent("clipboard-list"),
+      name: "Status",
       order: 0,
       tree: new StaticTreePanelDefinition({
         sections: [playgroundPanelSection("puzzle-5d-play-status.section", "Paired play", <Puzzle5dPlayStatusPanel />)],
@@ -3369,6 +3372,7 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_HIERARCHY_TAB_ID : PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
       icon: createIconComponent("list-tree"),
+      name: "Hierarchy",
       order: 0,
       tree: new CallbackTreePanelDefinition(
         () => {
@@ -3435,6 +3439,7 @@ class Puzzle2dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_KINDS_TAB_ID : PUZZLE_2D_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
+      name: "Kinds",
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const shell = puzzle2dPlayShellRef.current;
@@ -3460,6 +3465,7 @@ class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: "puzzle-2d-play-inspector",
       icon: createIconComponent("clipboard-list"),
+      name: "Inspector",
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const shell = puzzle2dPlayShellRef.current;
@@ -3478,6 +3484,7 @@ class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: "puzzle-2d-play-settings",
       icon: createIconComponent("settings"),
+      name: "Settings",
       order: 1,
       tree: new CallbackTreePanelDefinition(() => [playgroundPanelSection("puzzle-2d-play-settings.section", "Settings", <Puzzle2dPlaySettingsPanel />)]),
     };
@@ -6170,6 +6177,7 @@ class FlowPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: FLOW_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
+      name: "Kinds",
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = flowPlayControllerRef.current;
@@ -6190,6 +6198,7 @@ class FlowPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: FLOW_PLAY_EXTENSIONS_TAB_ID,
       icon: createIconComponent("puzzle"),
+      name: "Extensions",
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = flowPlayControllerRef.current;
@@ -6637,6 +6646,7 @@ class ProceduralPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PROCEDURAL_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
+      name: "Kinds",
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = proceduralPlayControllerRef.current;
@@ -6657,6 +6667,7 @@ class ProceduralPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition
     return {
       id: PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
       icon: createIconComponent("puzzle"),
+      name: "Extensions",
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = proceduralPlayControllerRef.current;
@@ -7441,8 +7452,8 @@ if (import.meta.vitest) {
         new WindowKindRuntime("main", "Main", "playground.view.test.main"),
       ]);
       app.panelTabs = [
-        { id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "playground.view.test.workbench" },
-        { id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "playground.view.test.details" },
+        { id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "playground.view.test.workbench", label: "Workbench" },
+        { id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "playground.view.test.details", label: "Details" },
       ];
       registerWindowBody("playground.view.test.main", () => buildPanelWindowBody("playground.view.test", "playground-view-test"));
       registerSidePanelBody("playground.view.test.workbench", () => ({ type: "tree", sections: [{ id: "workbench", items: [{ id: "item", label: "Workbench" }] }] }));

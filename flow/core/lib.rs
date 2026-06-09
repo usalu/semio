@@ -1580,6 +1580,9 @@ impl FlowHost {
         {
             return Err("connection already exists".into());
         }
+        self.fixture
+            .synapses
+            .retain(|s| !(s.to == to_id && s.to_port == to_port));
         self.next_synapse_serial += 1;
         let synapse_id = format!("s{}", self.next_synapse_serial);
         self.fixture.synapses.push(SynapseSpec {
@@ -3437,6 +3440,25 @@ mod tests {
         host.move_widget("slider", -120.0, 20.0).unwrap();
         host.evaluate_internal();
         assert_eq!(calls.load(Ordering::Relaxed), baseline);
+    }
+
+    #[test]
+    fn connect_ports_replaces_existing_incoming_on_same_input() {
+        let mut host = host_with_test_bridge();
+        assert!(host.fixture.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
+        let note_id = host
+            .add_widget(r#"{"kind":"inputNote","id":"note","text":"2"}"#, -120.0, 0.0)
+            .unwrap();
+        host.connect_ports(&note_id, "out", "add", "a").unwrap();
+        let incoming_a: Vec<_> = host
+            .fixture
+            .synapses
+            .iter()
+            .filter(|s| s.to == "add" && s.to_port == "a")
+            .collect();
+        assert_eq!(incoming_a.len(), 1);
+        assert_eq!(incoming_a[0].from, note_id);
+        assert!(!host.fixture.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
     }
 
     #[test]

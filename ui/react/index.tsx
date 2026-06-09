@@ -1027,17 +1027,25 @@ export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 /** @emoji 🎨 Interactive hover: normal-border fill + emphasized content. */
 export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
-/** @emoji 🎨 Active/on: primary fill + emphasized content (never the transient hover fill). */
+/** @emoji 📏 Active stroke paired with {@link interactiveActiveFillClass}. */
+export const interactiveActiveBorderClass = "border-active-base";
+
+/** @emoji 🎨 Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
+  "data-[state=on]:border-active-base",
   "data-[state=on]:text-emphasized",
   "data-[state=on]:hover:bg-active-base/90",
+  "data-[state=on]:hover:border-active-base",
   "data-[state=on]:hover:text-emphasized",
 );
 
 /** @emoji 🎨 Shared active fill for pressed tabs, toggles, and nav selection. */
-export const interactiveActiveFillClass =
-  "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized";
+export const interactiveActiveFillClass = cn(
+  "bg-active-base",
+  interactiveActiveBorderClass,
+  "text-emphasized hover:bg-active-base/90 hover:border-active-base hover:text-emphasized",
+);
 
 /** @emoji 🎨 Table rows: element gray at rest, hover fill + emphasized content. */
 export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
@@ -1045,11 +1053,13 @@ export const tableRowInteractiveClass = cn("text-element", interactiveControlTra
 /** @emoji 🎨 Selected table row: primary fill + emphasized content. */
 export const tableRowSelectedClass = interactiveActiveFillClass;
 
-/** @emoji 🎨 Active tab: primary fill + emphasized content. */
+/** @emoji 🎨 Active tab: primary fill + active border + emphasized content. */
 export const interactiveTabActiveClass = cn(
   "data-[state=active]:bg-active-base",
+  "data-[state=active]:border-active-base",
   "data-[state=active]:text-emphasized",
   "data-[state=active]:hover:bg-active-base/90",
+  "data-[state=active]:hover:border-active-base",
   "data-[state=active]:hover:text-emphasized",
 );
 
@@ -1058,7 +1068,7 @@ export const menuListItemClassName = cn(
   "text-element",
   interactiveHoverClass,
   "focus:bg-hover-interactive-fill focus:text-emphasized",
-  "data-[selected=true]:bg-active-base data-[selected=true]:text-emphasized",
+  "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
 );
 
 const contextMenuContentClassName = cn(
@@ -3405,8 +3415,12 @@ export const formControlFocusBorderClass = cn(
   "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none",
 );
 
-/** @emoji 🎚 Slider filled range — element gray at rest. */
-export const sliderRangeClassName = "bg-element absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full";
+/** @emoji 🎚 Slider filled range — element gray at rest; emphasized on slider hover; active fill while dragging. */
+export const sliderRangeClassName = cn(
+  "bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
+  "group-hover:bg-hover-interactive-fill",
+  "data-[dragging=true]:bg-active-base",
+);
 
 /** @emoji 🎚 Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
 export const sliderThumbClassName = cn(
@@ -3414,8 +3428,9 @@ export const sliderThumbClassName = cn(
   borderElementClass,
   interactiveHoverFillClass,
   "hover:border-emphasized",
-  "focus-visible:bg-active-base focus-visible:border-emphasized focus-visible:ring-0",
-  "data-[dragging=true]:bg-active-base data-[dragging=true]:border-emphasized",
+  "group-hover:bg-hover-interactive-fill group-hover:border-emphasized",
+  "focus-visible:bg-active-base focus-visible:border-active-base focus-visible:ring-0",
+  "data-[dragging=true]:bg-active-base data-[dragging=true]:border-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
 );
 
@@ -3495,10 +3510,10 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
 /** @emoji 📑 Panel tab strip — {@link borderNormalBottomClass} under tabs; outer outline is {@link panelChromeBorderClass}. */
-export const panelTabBarClass = cn("relative z-20 flex items-stretch shrink-0 overflow-x-auto", borderNormalBottomClass);
+export const panelTabBarClass = cn("relative z-20 flex min-w-0 items-stretch shrink-0 overflow-x-auto overflow-y-hidden", borderNormalBottomClass);
 
-/** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
-export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized";
+/** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
+export const panelTabButtonClass = "flex shrink-0 items-center gap-half h-full cursor-pointer whitespace-nowrap transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 📑 Side panel tab strip height. */
 export const sidePanelTabBarClass = cn(panelTabBarClass, "h-medium");
@@ -5250,7 +5265,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && "bg-active-base text-emphasized")}
+              className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && interactiveActiveFillClass)}
             >
               <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
@@ -6497,7 +6512,9 @@ function Slider({
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className={cn(
-        "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
+        "group relative flex h-full w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
+        "has-[[data-slot=slider-thumb]:hover]:[&_[data-slot=slider-range]]:bg-hover-interactive-fill",
+        "has-[[data-slot=slider-thumb][data-dragging=true]]:[&_[data-slot=slider-range]]:bg-active-base",
       )}
       {...props}
     >
@@ -6505,7 +6522,7 @@ function Slider({
         data-slot="slider-track"
         className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
       >
-        <SliderPrimitive.Range data-slot="slider-range" className={cn(sliderRangeClassName)} />
+        <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
@@ -8722,12 +8739,13 @@ const treeItemLabelStyle: React.CSSProperties = {};
 const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150";
 const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";
 const treeItemSecondaryTextClassName = "text-[10px] leading-none text-muted-foreground";
-const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide transition-colors select-text";
-const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 transition-colors";
+const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element transition-colors select-text";
+const treeSectionChevronClassName = "size-[14px] flex-shrink-0 text-element transition-colors";
+const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-element transition-colors";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
 const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName) => (
-  <span data-slot="tree-icon" className="flex items-center justify-center flex-shrink-0">
+  <span data-slot="tree-icon" className="flex items-center justify-center flex-shrink-0 text-element transition-colors">
     {icon ?? <Icon icon={defaultIcon} size={12} className={treeRowDefaultIconClassName} />}
   </span>
 );
@@ -8822,6 +8840,7 @@ interface TreeAlignedRowProps {
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
+  contentChromeClassName?: string;
   align?: "start" | "center";
   connectCurrentLevel?: boolean;
   extendCurrentLevelToBottom?: boolean;
@@ -8837,6 +8856,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
   children,
   className,
   contentClassName,
+  contentChromeClassName,
   align = "center",
   connectCurrentLevel = false,
   extendCurrentLevelToBottom = false,
@@ -8851,7 +8871,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
       style={treeAlignedRowStyle(level, indentMultiplier)}
     >
       <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
-      <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentClassName)}>
+      <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentChromeClassName, contentClassName)}>
         {children}
       </div>
     </div>
@@ -8881,9 +8901,18 @@ interface TreeBranchContentProps {
   ownerExpanded?: boolean;
 }
 
+const TreeHoverPathRefreshContext = reactHostPort.createContext<(() => void) | null>(null);
+
 const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, className, topPaddingPx = 0, ownerRowKind, ownerExpanded = false }) => {
   const { level, showLines, isTree } = reactHostPort.useContext(TreeContext);
+  const refreshTreeHoverPath = reactHostPort.useContext(TreeHoverPathRefreshContext);
   const branchRef = reactHostPort.useRef<HTMLDivElement>(null);
+  reactHostPort.useLayoutEffect(() => {
+    if (!isTree) {
+      return;
+    }
+    refreshTreeHoverPath?.();
+  }, [children, isTree, ownerExpanded, refreshTreeHoverPath]);
   reactHostPort.useLayoutEffect(() => {
     const branchElement = branchRef.current;
     if (!branchElement || !isTree) {
@@ -9510,16 +9539,32 @@ const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="t
 
 const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]`;
 
-/** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
-function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
+/** @emoji 🎨 Tree row shell: group + text tokens; gutter stays transparent so branch guides remain visible. */
+function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
   const hiddenClass = isHidden ? "opacity-50 text-muted-foreground" : "";
   if (isSelected) {
-    return cn("group", interactiveActiveFillClass, hiddenClass);
+    return cn("group", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
   }
   if (isHighlighted) {
-    return cn("group", "bg-hover-interactive-fill text-emphasized", hiddenClass);
+    return cn("group", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
   }
-  return cn("group", "text-element", interactiveControlTransitionClass, interactiveHoverClass, hiddenClass);
+  return cn("group", "text-element", interactiveControlTransitionClass, "hover:text-emphasized", hiddenClass);
+}
+
+/** @emoji 🎨 Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
+function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean): string {
+  if (isSelected) {
+    return cn(interactiveActiveFillClass, interactiveControlTransitionClass);
+  }
+  if (isHighlighted) {
+    return cn("bg-hover-interactive-fill", interactiveControlTransitionClass);
+  }
+  return cn(interactiveControlTransitionClass, "group-hover:bg-hover-interactive-fill");
+}
+
+/** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
+function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
+  return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted));
 }
 
 const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuItem[]; readonly children: React.ReactNode }> = ({ items, children }) => {
@@ -9594,7 +9639,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     !onDragOver &&
     !onDragLeave &&
     !onDrop;
-  const rowClassName = cn(treeRowShellClassName, treeRowChromeClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", className);
+  const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", className);
+  const rowContentFillClassName = treeRowChromeContentFillClasses(false, false);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
@@ -9627,7 +9673,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0">
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0" contentChromeClassName={rowContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "folder")}
@@ -9677,8 +9723,9 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
             showLines={showLines}
             connectCurrentLevel={level > 0}
             extendCurrentLevelToBottom={open && hasChildren}
-            slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+            slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className={treeSectionChevronClassName} /> : <ChevronRightIcon className={treeSectionChevronClassName} />}
             contentClassName="min-w-0"
+            contentChromeClassName={rowContentFillClassName}
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
@@ -9739,13 +9786,14 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const itemClasses = cn(
+  const itemShellClasses = cn(
     treeRowShellClassName,
-    treeRowChromeClasses(isSelected, isHighlighted),
+    treeRowChromeShellClasses(isSelected, isHighlighted),
     "w-full",
     hasChildren ? "cursor-foldable" : "cursor-selectable",
     className,
   );
+  const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
 
   if (hasChildren && displayLabel) {
     if (layoutKind === "property") {
@@ -9760,7 +9808,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             id={id}
             ref={setNodeRef}
             style={style}
-            className={itemClasses}
+            className={itemShellClasses}
             onDoubleClick={(event) => {
               if (!onDoubleClick) return;
               event.preventDefault();
@@ -9787,6 +9835,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 </button>
               }
               contentClassName="min-w-0"
+              contentChromeClassName={itemContentFillClassName}
             >
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
@@ -9832,7 +9881,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           id={id}
           ref={setNodeRef}
           style={style}
-          className={itemClasses}
+          className={itemShellClasses}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -9859,6 +9908,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               </button>
             }
             contentClassName="min-w-0"
+            contentChromeClassName={itemContentFillClassName}
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
@@ -9907,7 +9957,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         id={id}
         ref={setNodeRef}
         style={style}
-        className={itemClasses}
+        className={itemShellClasses}
         onClick={(event) => {
           if (event.detail > 1) return;
           onClick?.(event);
@@ -9919,7 +9969,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
@@ -9944,7 +9994,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       id={id}
       ref={setNodeRef}
       style={style}
-      className={itemClasses}
+      className={itemShellClasses}
       onClick={(event) => {
         if (event.detail > 1) return;
         onClick?.(event);
@@ -9956,7 +10006,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         onDoubleClick(event);
       }}
     >
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
@@ -10092,14 +10142,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const itemClasses = cn(
+  const itemShellClasses = cn(
     treeRowShellClassName,
-    treeRowChromeClasses(isSelected, isHighlighted, isHidden),
+    treeRowChromeShellClasses(isSelected, isHighlighted, isHidden),
     "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable ? "cursor-grab active:cursor-grabbing" : "",
     className,
   );
+  const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
   if (layoutKind === "property" && resolvedLabel) {
@@ -10112,7 +10163,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         role="treeitem"
         id={id}
         data-state={open ? "open" : "closed"}
-        className={cn("min-w-0 w-full", treeRowChromeClasses(isSelected, isHighlighted, isHidden), className)}
+        className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), className)}
         draggable={draggable}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
@@ -10154,6 +10205,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             ) : undefined
           }
           contentClassName="min-w-0"
+          contentChromeClassName={itemContentFillClassName}
         >
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
@@ -10205,7 +10257,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           data-tree-group
           role="treeitem"
           id={id}
-          className={itemClasses}
+          className={itemShellClasses}
           draggable={draggable}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -10244,6 +10296,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               </button>
             }
             contentClassName="min-w-0"
+            contentChromeClassName={itemContentFillClassName}
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
@@ -10321,7 +10374,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
       role="treeitem"
       id={id}
-      className={itemClasses}
+      className={itemShellClasses}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -10336,7 +10389,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
     >
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
@@ -10538,9 +10591,14 @@ const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-propert
 const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"], [data-slot="window-measure-tree-row"]';
 const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
+const treeSelectionPathAttr = "data-tree-selection-path";
+
+const clearTreePath = (root: HTMLElement, pathAttr: string) => {
+  root.querySelectorAll(`[${pathAttr}]`).forEach((el) => el.removeAttribute(pathAttr));
+};
 
 const clearTreeHoverPath = (root: HTMLElement) => {
-  root.querySelectorAll(`[${treeHoverPathAttr}]`).forEach((el) => el.removeAttribute(treeHoverPathAttr));
+  clearTreePath(root, treeHoverPathAttr);
 };
 
 /**
@@ -10578,14 +10636,14 @@ const resolveHoverRow = (target: HTMLElement, root: HTMLElement): Element | null
   return null;
 };
 
-const markTerminalBranch = (row: Element) => {
+const markTerminalBranch = (row: Element, pathAttr: string) => {
   const slot = row.getAttribute("data-slot");
   if (slot === "tree-item-row" || slot === "control-tree-row" || slot === "window-measure-tree-row") {
     const next = row.nextElementSibling;
     if (next) {
       const nextSlot = next.getAttribute("data-slot");
       if (nextSlot && treeBranchSlots.has(nextSlot)) {
-        next.setAttribute(treeHoverPathAttr, "branch");
+        next.setAttribute(pathAttr, "branch");
       }
     }
   } else if (slot === "tree-section-row") {
@@ -10593,7 +10651,7 @@ const markTerminalBranch = (row: Element) => {
     if (next?.getAttribute("data-slot") === "collapsible-content") {
       for (const child of Array.from(next.children)) {
         if (child.getAttribute("data-slot") === "tree-section-content") {
-          child.setAttribute(treeHoverPathAttr, "branch");
+          child.setAttribute(pathAttr, "branch");
           break;
         }
       }
@@ -10601,29 +10659,48 @@ const markTerminalBranch = (row: Element) => {
   } else if (slot === "tree-property-item") {
     for (const child of Array.from(row.children)) {
       if (child.getAttribute("data-slot") === "tree-property-content") {
-        child.setAttribute(treeHoverPathAttr, "branch");
+        child.setAttribute(pathAttr, "branch");
         break;
       }
     }
   }
 };
 
-const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
-  clearTreeHoverPath(root);
-  row.setAttribute(treeHoverPathAttr, "row");
-  markTerminalBranch(row);
+const markTreeRowPath = (row: Element, root: HTMLElement, pathAttr: string) => {
+  row.setAttribute(pathAttr, "row");
+  markTerminalBranch(row, pathAttr);
   let el: Element | null = row.parentElement;
   while (el && el !== root) {
     const slot = el.getAttribute("data-slot");
     if (slot && treeBranchSlots.has(slot)) {
-      el.setAttribute(treeHoverPathAttr, "branch");
+      el.setAttribute(pathAttr, "branch");
       const ownerRow = rowForBranch(el);
       if (ownerRow) {
-        ownerRow.setAttribute(treeHoverPathAttr, "row");
-        markTerminalBranch(ownerRow);
+        ownerRow.setAttribute(pathAttr, "row");
+        markTerminalBranch(ownerRow, pathAttr);
       }
     }
     el = el.parentElement;
+  }
+};
+
+const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
+  clearTreeHoverPath(root);
+  markTreeRowPath(row, root, treeHoverPathAttr);
+};
+
+const syncTreeSelectionPath = (root: HTMLElement, selectedIds: readonly string[]) => {
+  clearTreePath(root, treeSelectionPathAttr);
+  for (const selectedId of selectedIds) {
+    const row = root.ownerDocument.getElementById(selectedId);
+    if (!row || !root.contains(row)) {
+      continue;
+    }
+    const slot = row.getAttribute("data-slot");
+    if (!slot || !treeRowSlots.has(slot)) {
+      continue;
+    }
+    markTreeRowPath(row, root, treeSelectionPathAttr);
   }
 };
 
@@ -10682,7 +10759,27 @@ const useTreeHoverPathRootHandlers = () => {
     if (root) clearTreeHoverPath(root);
   }, []);
 
-  return { treeRootRef, handleTreePointerOver, handleTreePointerLeave };
+  const refreshTreeHoverPath = reactHostPort.useCallback(() => {
+    const root = treeRootRef.current;
+    const row = lastHoverRowRef.current;
+    if (!root || !row) {
+      return;
+    }
+    applyTreeHoverPath(row, root);
+  }, []);
+
+  return { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath };
+};
+
+/** @emoji ✅ Marks ancestor section rows when a descendant tree item is selected. */
+const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | null>, selectedIds: readonly string[]) => {
+  reactHostPort.useLayoutEffect(() => {
+    const root = treeRootRef.current;
+    if (!root) {
+      return;
+    }
+    syncTreeSelectionPath(root, selectedIds);
+  }, [selectedIds, treeRootRef]);
 };
 //#endregion 🎃TreeHoverPath
 
@@ -11194,23 +11291,26 @@ export const Tree = (({
     ],
   );
 
-  const { treeRootRef, handleTreePointerOver, handleTreePointerLeave } = useTreeHoverPathRootHandlers();
+  const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
+  useTreeSelectionPathSync(treeRootRef, resolvedSelectedIds);
 
   return (
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
-          <TreeSelectionContext.Provider value={selectionStore}>
-            <TreeHighlightContext.Provider value={highlightStore}>
-              <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-                {resolvedSections.map((section) => (
-                  <div key={section.id} data-slot="tree-section-wrapper">
-                    <TreeDataSectionView section={section} />
-                  </div>
-                ))}
-              </TreeDataRenderingContext.Provider>
-            </TreeHighlightContext.Provider>
-          </TreeSelectionContext.Provider>
+          <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
+            <TreeSelectionContext.Provider value={selectionStore}>
+              <TreeHighlightContext.Provider value={highlightStore}>
+                <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
+                  {resolvedSections.map((section) => (
+                    <div key={section.id} data-slot="tree-section-wrapper">
+                      <TreeDataSectionView section={section} />
+                    </div>
+                  ))}
+                </TreeDataRenderingContext.Provider>
+              </TreeHighlightContext.Provider>
+            </TreeSelectionContext.Provider>
+          </TreeHoverPathRefreshContext.Provider>
           {resolvedSections.length === 0 && emptyState}
         </div>
       </TreeContext.Provider>
@@ -11784,7 +11884,7 @@ const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right
 
 /** @emoji 🌳 Root tree shell for the window measures rail (guide lines + indentation). */
 export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
-  const { treeRootRef, handleTreePointerOver, handleTreePointerLeave } = useTreeHoverPathRootHandlers();
+  const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
 
   return (
     <div
@@ -11794,7 +11894,9 @@ export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className
       onPointerOver={handleTreePointerOver}
       onPointerLeave={handleTreePointerLeave}
     >
-      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
+      <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
+      </TreeHoverPathRefreshContext.Provider>
     </div>
   );
 };
@@ -12572,6 +12674,8 @@ export { BottomPanel };
 export interface SidePanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
+  /** @emoji 🏷️ Mandatory tab label shown after the icon. */
+  name: string;
   order?: number;
   /** @emoji 🌲 Tree sections and items for this tab (required). */
   tree: TreePanelSource;
@@ -12854,7 +12958,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(sidePanelTabButtonClass, isActive && panelTabActiveClass)}
                   >
-                    <Icon size={16} />
+                    <span className="shrink-0">
+                      <Icon size={16} />
+                    </span>
+                    <span className="truncate">{tab.name}</span>
                   </button>
                 </ChromeControlHint>
               );
@@ -12947,7 +13054,8 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(mobilePanelTabButtonClass, isActive && panelTabActiveClass)}
                   >
-                    <Icon size={20} />
+                    <Icon size={20} className="shrink-0" />
+                    <span className="truncate">{tab.name}</span>
                   </button>
                 </ChromeControlHint>
               );
@@ -13825,7 +13933,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                           key={item.id}
                           value={item.id}
                           data-active={index === activePossibleIndex ? "true" : undefined}
-                          className={cn(index === activePossibleIndex && "bg-active-base")}
+                          className={cn(index === activePossibleIndex && interactiveActiveFillClass)}
                           onPointerDown={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
@@ -13880,7 +13988,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                 aria-label={commandLabel}
                 icon={option.icon}
                 text={commandLabel}
-                className={cn(option.pressed && "bg-active-base")}
+                className={cn(option.pressed && interactiveActiveFillClass)}
                 onClick={option.onPress}
                 disabled={option.disabled}
               />
@@ -20236,13 +20344,16 @@ if (import.meta.vitest) {
     it("SidePanel marks the active tab with hover fill and emphasized icon below the emphasized frame", () => {
       const StubIcon = (): null => null;
       const tabs: SidePanelTabConfig[] = [
-        { id: "tab-a", icon: StubIcon, tree: { sections: [] } },
-        { id: "tab-b", icon: StubIcon, tree: { sections: [] } },
+        { id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } },
+        { id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } },
       ];
       const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabId="tab-b" />);
+      expect(screen.getByText("Tab A")).toBeTruthy();
+      expect(screen.getByText("Tab B")).toBeTruthy();
       const activeButton = container.querySelector('[data-slot="side-panel-tab-button"][data-active="true"]');
       expect(activeButton?.className).toContain("bg-active-base");
       expect(activeButton?.className).toContain("text-emphasized");
+      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("overflow-x-auto");
       expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
@@ -20253,6 +20364,7 @@ if (import.meta.vitest) {
         {
           id: "tab-a",
           icon: StubIcon,
+          name: "Tab A",
           tree: {
             sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row" }] }],
           },
@@ -22005,6 +22117,26 @@ if (treeVitest) {
       expect(shouldDispatchTreeRowPointerLeave(gap)).toBe(false);
     });
 
+    it("syncTreeSelectionPath marks ancestor section rows for selected tree items", () => {
+      document.body.innerHTML = `
+        <div id="tree-root">
+          <div data-slot="tree-section-row" id="section-a"></div>
+          <div data-slot="collapsible-content">
+            <div data-slot="tree-section-content">
+              <div data-slot="tree-item-row" id="item-a"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      const root = document.getElementById("tree-root")!;
+      syncTreeSelectionPath(root, ["item-a"]);
+      expect(document.getElementById("item-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      expect(document.getElementById("section-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      syncTreeSelectionPath(root, []);
+      expect(document.getElementById("item-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
+      expect(document.getElementById("section-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
+    });
+
     it("treeRowChromeClasses uses hover tokens for highlight and active tokens for selection", () => {
       expect(treeRowChromeClasses(false, false)).toContain("text-element");
       expect(treeRowChromeClasses(false, true)).toContain("bg-hover-interactive-fill");
@@ -22015,6 +22147,23 @@ if (treeVitest) {
       expect(treeRowChromeClasses(true, false)).not.toContain("bg-hover-interactive-fill");
       expect(treeRowChromeClasses(false, false, true)).toContain("opacity-50");
       expect(treeRowChromeClasses(true, false, true)).toContain("opacity-50");
+    });
+
+    it("applies tree row fill on tree-row-content so gutter guides stay visible", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeSection id="tooltip.manual" label="Section" defaultOpen>
+            <TreeItem id="tooltip.group" label="Group" defaultOpen>
+              <TreeItem id="tooltip.first" label="First" />
+              <TreeItem id="tooltip.second" label="Second" isSelected />
+            </TreeItem>
+          </TreeSection>
+        </TreeContext.Provider>,
+      );
+      expect(markup.match(/data-tree-guide-line/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+      expect(markup).toContain('data-slot="tree-row-content"');
+      expect(markup).toMatch(/data-slot="tree-row-content"[^>]*bg-active-base/);
+      expect(markup).not.toMatch(/data-slot="tree-item-row"[^>]*bg-active-base/);
     });
 
     it("renders selected tree item rows with emphasized text instead of hover gray", () => {
@@ -22297,10 +22446,15 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="slider-range"');
       expect(markup).toContain("bg-element");
+      expect(markup).toContain("group-hover:bg-hover-interactive-fill");
+      expect(markup).toContain("data-[dragging=true]:bg-active-base");
+      expect(markup).toContain("has-[[data-slot=slider-thumb]:hover]:[&amp;_[data-slot=slider-range]]:bg-hover-interactive-fill");
+      expect(markup).toContain("h-full");
       expect(markup).not.toContain("bg-foreground");
       expect(markup).toContain('data-slot="slider-thumb"');
       expect(markup).toContain("border-element");
       expect(markup).toContain("hover:bg-hover-interactive-fill");
+      expect(markup).toContain("group-hover:border-emphasized");
       expect(markup).toContain('data-slot="slider-value"');
       expect(markup).toContain("text-element");
     });
@@ -23120,6 +23274,7 @@ if (treeVitest) {
       );
       expect(markup).toContain('data-state="on"');
       expect(markup).toContain("data-[state=on]:bg-active-base");
+      expect(markup).toContain("data-[state=on]:border-active-base");
       expect(markup).toContain("data-[state=on]:text-emphasized");
       expect(markup).not.toContain("data-[state=on]:bg-hover-interactive-fill");
     });
@@ -23306,7 +23461,7 @@ if (treeVitest) {
       expect(toolbarMarkup).toContain(borderNormalClass);
       expect(toolbarMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(
-        <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, tree: { sections: [] } }]} />,
+        <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }]} />,
       );
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-normal");
