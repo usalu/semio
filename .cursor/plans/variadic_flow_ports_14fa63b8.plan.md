@@ -6,7 +6,7 @@ todos:
     content: "neural/engine/lib.rs: add variadic metadata to NeuronKindInfo, port fields to Synapse, and port-aware collect_neuron_input routing + tests"
     status: completed
   - id: merge
-    content: "flow/modules/dictionary/lib.rs: make Merge fold N ordered slots, declare variadic_input, extend tests"
+    content: "flow/module/dictionary/lib.rs: make Merge fold N ordered slots, declare variadic_input, extend tests"
     status: completed
   - id: core
     content: "flow/core/lib.rs: persist neuron slot list, store kind metadata, port-level synapses (build_dag_fixture_v1/sync_from_dag/build_tree), add/remove_input_port + wasm bindings, port-aware connect"
@@ -15,7 +15,7 @@ todos:
     content: "mathematical/graph/port/directed/dag/lib.rs: variadic flag on Computation, zoom-gated + glyph painting, hit-testing + insert-request surfacing, tests"
     status: completed
   - id: manifest
-    content: "flow/modules/wasm/lib.rs + flow/react/index.tsx: verify variadic fields serialize and TS interfaces mirror them; ensure catalogue metadata reaches core"
+    content: "flow/module/wasm/lib.rs + flow/react/index.tsx: verify variadic fields serialize and TS interfaces mirror them; ensure catalogue metadata reaches core"
     status: completed
   - id: fixtures
     content: Update default + playground fixtures for merge slots/ports; add ticket validation script and run Rust + vitest suites via launch.json
@@ -45,7 +45,7 @@ flowchart LR
 
 ## Key existing facts (verified)
 
-- `Value` is only `Atom | Dictionary` (no list type); lists are index-keyed dicts (`"0"`,`"1"`,...) per [flow/modules/list/lib.rs](flow/modules/list/lib.rs). Variadic slots will be passed to functions the same way: an index-keyed dictionary under a slot key.
+- `Value` is only `Atom | Dictionary` (no list type); lists are index-keyed dicts (`"0"`,`"1"`,...) per [flow/module/list/lib.rs](flow/module/list/lib.rs). Variadic slots will be passed to functions the same way: an index-keyed dictionary under a slot key.
 - Port arity lives only in JS module manifests today; core only knows the kind id string. Core must receive port/variadic metadata via the catalogue it already gets through `setCatalogueJson` ([flow/core/lib.rs](flow/core/lib.rs) `set_host_catalogue_json`).
 - Synapses are widget-to-widget and `sync_from_dag` strips the `:port` suffix; this must be changed to preserve port ids.
 
@@ -56,7 +56,7 @@ flowchart LR
 - Rewrite `collect_neuron_input` so that, per incoming synapse, it pulls `from_port` from the source output and inserts it under the target slot id. Fixed ports map to their named key (`a`,`b`,...); variadic slots map to ordered keys `0,1,2,...` nested under `slot_key` (a list-style dict), so a function sees `{ items: { "0": {...}, "1": {...} } }`.
 - Add unit tests in the existing `#region Tests` covering variadic routing (ordered slots) and port-specific fixed routing.
 
-## 2. dictionary.merge becomes variadic — [flow/modules/dictionary/lib.rs](flow/modules/dictionary/lib.rs)
+## 2. dictionary.merge becomes variadic — [flow/module/dictionary/lib.rs](flow/module/dictionary/lib.rs)
 
 - Change `Merge::evaluate` to read the ordered slot dict (e.g. `items`), iterate slots `0..n` in order, and fold via `Dictionary::merge` (later overrides earlier). Output stays `{ "dictionary": ... }`.
 - Update registration (currently `inputs: ["a","b"]`) to declare `variadic_input: Some(VariadicSpec { slot_key: "items", min: 2, max: None })`.
@@ -78,7 +78,7 @@ flowchart LR
 - Add hit-testing for these `+` regions in `pointer_down` (compute boundary rects from node geometry, analogous to `slider_track_bounds`). On hit, surface the action to the flow layer. Since DAG is generic, expose it via either a new `BoardEvent::PortInsertRequested { node, side, index }` drained by the host, or a `DagHost` method returning the hit; the flow `FlowHost` translates it into `add_input_port`.
 - Tests: `+` rects only generated above the zoom threshold; a click at a boundary maps to the expected insert index.
 
-## 5. Manifest plumbing — [flow/modules/wasm/lib.rs](flow/modules/wasm/lib.rs) and [flow/react/index.tsx](flow/react/index.tsx)
+## 5. Manifest plumbing — [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs) and [flow/react/index.tsx](flow/react/index.tsx)
 
 - `build_manifest_json` already serializes `registry.catalogue()`, so the new `NeuronKindInfo` variadic fields flow through automatically; verify the TS `FlowModuleNeuronKindV1` interface in [flow/react/index.tsx](flow/react/index.tsx) mirrors the new fields.
 - Ensure the React host forwards kind metadata to the wasm core (via `setCatalogueJson`) so core can resolve variadic specs. No new pointer handlers needed: `+` clicks are handled inside wasm `pointerDownScreen` (canvas already routes pointer + wheel events). `onPointerUp` already calls `persistFixture()`, so inserted slots persist.
@@ -86,7 +86,7 @@ flowchart LR
 ## 6. Fixtures, launch.json, validation
 
 - Update the default fixture / any `dictionary.merge` fixtures and the playground default ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) `FLOW_PLAY_DEFAULT_FIXTURE_JSON`) so merge nodes carry an `inputs` slot list and synapses carry ports.
-- Reuse the existing ticket validation script pattern (`.repo/.../validate-flow-runtime.mjs`) to assert: 3-way merge evaluates correctly, and an inserted slot rewires/evaluates. Run Rust tests for `neural/engine`, `flow/core`, `flow/modules/dictionary`, `mathematical/.../dag` and the flow vitest via the existing `launch.json` entries (add entries only if a needed command is missing, following existing grouping).
+- Reuse the existing ticket validation script pattern (`.repo/.../validate-flow-runtime.mjs`) to assert: 3-way merge evaluates correctly, and an inserted slot rewires/evaluates. Run Rust tests for `neural/engine`, `flow/core`, `flow/module/dictionary`, `mathematical/.../dag` and the flow vitest via the existing `launch.json` entries (add entries only if a needed command is missing, following existing grouping).
 
 ## Ticket workflow
 

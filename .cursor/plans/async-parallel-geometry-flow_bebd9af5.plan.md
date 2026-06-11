@@ -67,7 +67,7 @@ flowchart TB
 ## Key constraints discovered
 
 - Rayon worker threads (Web Workers) cannot synchronously call the main-thread JS `EvalBridge`. So flow module `Operation` impls must be **linked into `flow_core` as `rlib`s** (in-WASM registry) instead of the per-module-cdylib + JS bridge path in [flow/core/lib.rs](flow/core/lib.rs) (`evaluate_internal`, `EvalBridge`) and [flow/react/index.tsx](flow/react/index.tsx) (`createFlowEvalBridge`, `FLOW_MODULE_LOADERS`).
-- `brep` kernel is `thread_local!` with opaque string handles in [flow/modules/brep/lib.rs](flow/modules/brep/lib.rs) (`with_kernel`). Must become a shared `Mutex<BrepkitKernel>` so handles stay valid across threads.
+- `brep` kernel is `thread_local!` with opaque string handles in [flow/module/brep/lib.rs](flow/module/brep/lib.rs) (`with_kernel`). Must become a shared `Mutex<BrepkitKernel>` so handles stay valid across threads.
 - `wasm-bindgen-rayon` requires **nightly Rust + `-Z build-std`** with `+atomics,+bulk-memory`, and **cross-origin isolation** (COOP/COEP). Existing iframe embedding uses `frame-ancestors *` in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) (`playgroundIframeEmbedHeadersPlugin`); use `COEP: credentialless` + a single-thread fallback when `crossOriginIsolated` is false.
 
 ## Phase 1 - Threaded WASM build + cross-origin isolation (foundation)
@@ -90,8 +90,8 @@ flowchart TB
 
 ## Phase 4 - In-WASM flow registry + threaded session
 
-- Make each `flow/modules/*` crate dual: keep `cdylib`, add `rlib` exporting a `register(&mut Registry)`; link all modules into `flow_core`. Build a real in-process `Registry` in [flow/core/lib.rs](flow/core/lib.rs) `evaluate_internal` instead of the empty registry + JS `EvalBridge`.
-- Convert brep state to shared, thread-safe storage: replace `thread_local! KERNEL` / `with_kernel` in [flow/modules/brep/lib.rs](flow/modules/brep/lib.rs) with `static KERNEL: Mutex<BrepkitKernel>` (handles valid across rayon threads; booleans serialize on the mutex, everything else parallel).
+- Make each `flow/module/*` crate dual: keep `cdylib`, add `rlib` exporting a `register(&mut Registry)`; link all modules into `flow_core`. Build a real in-process `Registry` in [flow/core/lib.rs](flow/core/lib.rs) `evaluate_internal` instead of the empty registry + JS `EvalBridge`.
+- Convert brep state to shared, thread-safe storage: replace `thread_local! KERNEL` / `with_kernel` in [flow/module/brep/lib.rs](flow/module/brep/lib.rs) with `static KERNEL: Mutex<BrepkitKernel>` (handles valid across rayon threads; booleans serialize on the mutex, everything else parallel).
 - Initialize the rayon pool: expose `#[wasm_bindgen] init_thread_pool(n)` (re-export `wasm_bindgen_rayon::init_thread_pool`) from `flow_core`; call once before first evaluate.
 - Make `FlowSession.evaluate()` async at the JS boundary (returns a Promise) in [flow/core/lib.rs](flow/core/lib.rs) and the React caller.
 

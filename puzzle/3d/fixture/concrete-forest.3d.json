@@ -65,7 +65,7 @@
           "id": "Hexagonal Cut Concrete Forest Left",
           "label": "Hexagonal Cut Concrete Forest Left",
           "name": "Hexagonal Cut Concrete Forest Left",
-          "meshUrl": "/meshes/hexagonal-cut-concrete-forest-left.glb",
+          "meshUrl": "/mesh/hexagonal-cut-concrete-forest-left.glb",
           "vortices": [
             {
               "vortexKind": "b-l",
@@ -227,7 +227,7 @@
           "id": "Hexagonal Cut Concrete Forest Right",
           "label": "Hexagonal Cut Concrete Forest Right",
           "name": "Hexagonal Cut Concrete Forest Right",
-          "meshUrl": "/meshes/hexagonal-cut-concrete-forest-right.glb",
+          "meshUrl": "/mesh/hexagonal-cut-concrete-forest-right.glb",
           "vortices": [
             {
               "vortexKind": "b-l",
@@ -513,7 +513,7 @@
       "id": "seed-left-001",
       "label": "Hexagonal Cut Concrete Forest Left",
       "objectKind": "Hexagonal Cut Concrete Forest Left",
-      "meshUrl": "/meshes/hexagonal-cut-concrete-forest-left.glb",
+      "meshUrl": "/mesh/hexagonal-cut-concrete-forest-left.glb",
       "origin": [
         0,
         0,

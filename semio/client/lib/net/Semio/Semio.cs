@@ -11656,19 +11656,19 @@ public interface IApi
     [Delete("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
-    [Put("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
+    [Put("/api/kits/{encodedKitUri}/type/{encodedTypeName}")]
     Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, [Body]
         Type input);
 
-    [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
+    [Delete("/api/kits/{encodedKitUri}/type/{encodedTypeName}")]
     Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName);
 
-    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
+    [Put("/api/kits/{encodedKitUri}/design/{encodedDesignName}")]
     Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName,
     [Body]
         Design input);
 
-    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
+    [Delete("/api/kits/{encodedKitUri}/design/{encodedDesignName}")]
     Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName);
 
     [Get("/api/assistant/predictDesign")]

@@ -12,14 +12,14 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-flow_module_brep = { path = "../modules/brep", default-features = false }
-flow_module_bim = { path = "../modules/bim", default-features = false }
-flow_module_core = { path = "../modules/core", default-features = false }
-flow_module_dictionary = { path = "../modules/dictionary", default-features = false }
-flow_module_list = { path = "../modules/list", default-features = false }
-flow_module_logic = { path = "../modules/logic", default-features = false }
-flow_module_math = { path = "../modules/math", default-features = false }
-flow_module_text = { path = "../modules/text", default-features = false }
+flow_module_brep = { path = "../module/brep", default-features = false }
+flow_module_bim = { path = "../module/bim", default-features = false }
+flow_module_core = { path = "../module/core", default-features = false }
+flow_module_dictionary = { path = "../module/dictionary", default-features = false }
+flow_module_list = { path = "../module/list", default-features = false }
+flow_module_logic = { path = "../module/logic", default-features = false }
+flow_module_math = { path = "../module/math", default-features = false }
+flow_module_text = { path = "../module/text", default-features = false }
 geometry_brep_engine = { path = "../../geometry/brep/engine", features = ["parallel"] }
 neural_engine = { path = "../../neural/engine", features = ["parallel"] }
 mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }

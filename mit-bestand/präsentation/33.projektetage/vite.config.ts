@@ -12,7 +12,7 @@ import {
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../");
-const uiAssetsRoot = resolve(repoRoot, "ui/assets");
+const uiAssetsRoot = resolve(repoRoot, "ui/asset");
 const uiReact = resolve(repoRoot, "ui/react/index.tsx");
 const presentationCore = resolve(repoRoot, "framework/product/presentation/core/index.ts");
 const presentationRenderer = resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx");

@@ -1,0 +1,17 @@
+{
+  "name": "@semio/fixture",
+  "version": "1.0.0",
+  "type": "module",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": ".",
+  "projectType": "library",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "fixture"
+}

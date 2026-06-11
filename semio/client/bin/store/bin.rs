@@ -406,7 +406,7 @@ mod tests {
         if q2.get("errors").is_some() {
             return Err(format!("query: {q2}").into());
         }
-        let wip = "/data/session/stores/edges/0/node/wip";
+        let wip = "/data/session/store/edges/0/node/wip";
         assert_eq!(q2.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("SeedName"), "initialKit stays install baseline");
         assert_eq!(q2.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("RenamedKit"), "theKit.kit materialized head");
         assert_eq!(
@@ -469,7 +469,7 @@ mod tests {
         if q.get("errors").is_some() {
             return Err(format!("bundle install query: {q}").into());
         }
-        let wip = "/data/session/stores/edges/0/node/wip";
+        let wip = "/data/session/store/edges/0/node/wip";
         assert_eq!(q.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("BundleInstallName"));
         assert_eq!(q.pointer(&format!("{wip}/initialKit/version")).and_then(|n| n.as_str()), Some("v-bundle-smoke"));
         assert_eq!(q.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("BundleInstallName"));
@@ -510,7 +510,7 @@ mod tests {
         assert_eq!(r.status(), reqwest::StatusCode::OK);
         let v: Value = r.json().await?;
         assert!(v.get("errors").is_none(), "preview wip query errors: {v:?}");
-        let wip = "/data/session/stores/edges/0/node/wip";
+        let wip = "/data/session/store/edges/0/node/wip";
         assert_eq!(v.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("the kit"));
         assert_eq!(v.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("the kit"));
         assert_eq!(v.pointer(&format!("{wip}/checkpoints/edges/0/node/initial/name")).and_then(|n| n.as_str()), Some("the kit"));
@@ -598,7 +598,7 @@ mod tests {
                         return Err(format!("materialization query: {q2}").into());
                     }
                     assert_eq!(
-                        q2.pointer("/data/session/stores/edges/0/node/wip/theKit/kit/name").and_then(|n| n.as_str()),
+                        q2.pointer("/data/session/store/edges/0/node/wip/theKit/kit/name").and_then(|n| n.as_str()),
                         Some(renamed)
                     );
                 }

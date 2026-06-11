@@ -76,8 +76,8 @@ In [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx):
 
 Add explicit `style` to demonstrate rich, distinct rendering (auto-fallback still covers all others):
 
-- [cad/assets/modelDefinition/aec.building.structure.classic/typology/OneWayReinforcedConcreteSlab/typology.json](cad/assets/modelDefinition/aec.building.structure.classic/typology/OneWayReinforcedConcreteSlab/typology.json): directional `hatch` (the "one-way" direction).
-- [cad/assets/modelDefinition/aec.building.structure.classic/typology/ReinforcedConcreteExternalWall/typology.json](cad/assets/modelDefinition/aec.building.structure.classic/typology/ReinforcedConcreteExternalWall/typology.json): distinct fill + `crosshatch`.
+- [cad/asset/modelDefinition/aec.building.structure.classic/typology/OneWayReinforcedConcreteSlab/typology.json](cad/asset/modelDefinition/aec.building.structure.classic/typology/OneWayReinforcedConcreteSlab/typology.json): directional `hatch` (the "one-way" direction).
+- [cad/asset/modelDefinition/aec.building.structure.classic/typology/ReinforcedConcreteExternalWall/typology.json](cad/asset/modelDefinition/aec.building.structure.classic/typology/ReinforcedConcreteExternalWall/typology.json): distinct fill + `crosshatch`.
 - A couple of energy typologies (e.g. `ExternalWall`, `Roof`) for visible contrast across views.
 
 ## 5. Tests

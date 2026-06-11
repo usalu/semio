@@ -1,5 +1,5 @@
 // #region 🧲Header
-// .storybook/stories/elements/ui/Mode.stories.tsx
+// .storybook/story/elements/ui/Mode.stories.tsx
 // #endregion 🧲Header
 
 // #region 🔌Adapters

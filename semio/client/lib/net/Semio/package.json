@@ -5,7 +5,7 @@
   "sourceRoot": "semio/client/lib/net/Semio",
   "projectType": "library",
   "devDependencies": {
-    "@semio/assets": "*"
+    "@semio/asset": "*"
   },
   "author": {
     "name": "Ueli Saluz",

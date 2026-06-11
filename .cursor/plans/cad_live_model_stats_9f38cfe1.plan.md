@@ -52,7 +52,7 @@ New file `cad/schema/json/stat.json` (sibling of `cad/schema/json/attribute.json
 
 - `schema` const `spatial.stat/v1`, `id`, `version`, `label`, `description?`
 - `scopes`: array subset of `["model","selection"]` (default both)
-- `sources?.typologies`: optional typology-id filter (same convention as `propertyDefinition.sources.typologies` in `cad/assets/modelDefinition/aec.building.energy/propertyDefinition/heatedvolume.json`)
+- `sources?.typologies`: optional typology-id filter (same convention as `propertyDefinition.sources.typologies` in `cad/asset/modelDefinition/aec.building.energy/propertyDefinition/heatedvolume.json`)
 - `outputs`: array of `{ key, label, unit?, format? }` (multi-KPI per stat, unlike single-value property `output`)
 
 ## 2. Core: definitions, catalog, scope, compute registry
@@ -60,7 +60,7 @@ New file `cad/schema/json/stat.json` (sibling of `cad/schema/json/attribute.json
 All edits in `[cad/js/core/index.ts](cad/js/core/index.ts)`, added to existing files via regions/subregions (no new core files).
 
 - `📥ModelDefinitionRegistry` region: add `statDefinitions` to `ModelDefinitionAssetModules` (interface + `emptyModelDefinitionAssetModules` + `registerModelDefinitionAssets`), and a `modelDefinitionStatCatalog()` accessor (mirrors `modelDefinitionPropertyCatalog` at line 77).
-- `📥ModelDefinitionAssets` region: add `import.meta.glob("../../assets/modelDefinition/**/statDefinition/*.json", ...)` and include it in the `registerModelDefinitionAssets({...})` call (mirrors `__modelDefinitionPropertyDefinitionModules` at line 112).
+- `📥ModelDefinitionAssets` region: add `import.meta.glob("../../asset/modelDefinition/**/statDefinition/*.json", ...)` and include it in the `registerModelDefinitionAssets({...})` call (mirrors `__modelDefinitionPropertyDefinitionModules` at line 112).
 - New subregion near the property-definition code (~line 2088-2320):
   - `StatDefinitionSpec` interface + `parseStatDefinitionSpec(raw)` (mirrors `parsePropertyDefinitionSpec`).
   - `shippedStatDefinitionCatalog()`, `loadStatDefinition(id)`, `listModelDefinitionStatDefinitions()`.
@@ -80,11 +80,11 @@ All edits in `[cad/js/core/index.ts](cad/js/core/index.ts)`, added to existing f
 
 ## 3. Stat definition assets
 
-- `cad/assets/modelDefinition/spatial.shape/statDefinition/geometry.json`
-- `cad/assets/modelDefinition/aec.building.energy/statDefinition/energydemand.json`
-- `cad/assets/modelDefinition/aec.building.structure/statDefinition/stability.json`
+- `cad/asset/modelDefinition/spatial.shape/statDefinition/geometry.json`
+- `cad/asset/modelDefinition/aec.building.energy/statDefinition/energydemand.json`
+- `cad/asset/modelDefinition/aec.building.structure/statDefinition/stability.json`
 
-Add `"stat"` to the `kinds` array of each `modelDefinition.json` (`[cad/assets/modelDefinition/spatial.shape/modelDefinition.json](cad/assets/modelDefinition/spatial.shape/modelDefinition.json)`, `aec.building.energy/modelDefinition.json`, `[cad/assets/modelDefinition/aec.building.structure/modelDefinition.json](cad/assets/modelDefinition/aec.building.structure/modelDefinition.json)`).
+Add `"stat"` to the `kinds` array of each `modelDefinition.json` (`[cad/asset/modelDefinition/spatial.shape/modelDefinition.json](cad/asset/modelDefinition/spatial.shape/modelDefinition.json)`, `aec.building.energy/modelDefinition.json`, `[cad/asset/modelDefinition/aec.building.structure/modelDefinition.json](cad/asset/modelDefinition/aec.building.structure/modelDefinition.json)`).
 
 ## 4. Renderer: `ModelStatsPanel`
 

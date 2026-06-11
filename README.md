@@ -1,33 +1,33 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="semio/assets/logo/logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="semio/assets/logo/logo.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="semio/assets/logo/logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="semio/asset/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="semio/asset/logo/logo.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="semio/asset/logo/logo.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
+    <a href="https://play.semio-tech.com"><img src="semio/asset/badge/site-play.svg" alt="A free online playground to toy with semio without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="semio/asset/badge/site-docs.svg" alt="The documentation page to learn semio."></a>
+    <a href="https://js.semio-tech.com"><img src="semio/asset/badge/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="semio/assets/badges/cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="semio/assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+     <a href="https://github.com/usalu/semio"><img src="semio/asset/badge/repo-semio.svg" alt="The repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="semio/asset/badge/cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="semio/asset/badge/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="semio/assets/badges/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="semio/assets/badges/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="semio/assets/badges/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="semio/asset/badge/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="semio/asset/badge/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="semio/asset/badge/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="semio/assets/badges/ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="semio/assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="semio/assets/badges/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="semio/assets/badges/ui-macos.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="semio/asset/badge/ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="semio/asset/badge/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="semio/asset/badge/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="semio/asset/badge/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="semio/assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="semio/assets/badges/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="semio/assets/badges/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="semio/asset/badge/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="semio/asset/badge/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="semio/asset/badge/powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘 </i>
@@ -131,31 +131,31 @@ Let me walk you through 🚶
 
 It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍
 
-![sketchpad demo](semio/assets/images/sketchpad-demo.gif)
+![sketchpad demo](semio/asset/image/sketchpad-demo.gif)
 
 ## 👥 studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
 
-![semio studio Demo](semio/assets/images/studio-demo.png)
+![semio studio Demo](semio/asset/image/studio-demo.png)
 
 ## ☁ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 
-![Cloud Demo](semio/assets/images/cloud-demo.png)
+![Cloud Demo](semio/asset/image/cloud-demo.png)
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
 The assistant helps you on every step in the design process with semio ✍
 
-![semio assistant Demo](semio/assets/images/assistant-demo.png)
+![semio assistant Demo](semio/asset/image/assistant-demo.png)
 
-## 🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)
+## 🦗 [semio.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 
 A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for semio ⚡
 
-![semio Grasshopper Demo](semio/assets/images/grasshopper-demo.png)
+![semio Grasshopper Demo](semio/asset/image/grasshopper-demo.png)
 
 ## 🦏 semio.3dm [↑](#%EF%B8%8F-products-)
 
@@ -165,13 +165,13 @@ A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio �
 
 A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and semio 🔀
 
-![Wasp Demo](semio/assets/images/wasp-demo.png)
+![Wasp Demo](semio/asset/image/wasp-demo.png)
 
 ## 🦌 semio.monoceros [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and semio 🔀
 
-![Monoceros Demo](semio/assets/images/monoceros-demo.png)
+![Monoceros Demo](semio/asset/image/monoceros-demo.png)
 
 ## 🐞 semio.ladybug [↑](#%EF%B8%8F-products-)
 
@@ -633,7 +633,7 @@ Good for larger experiments due to more generous free quota 🥼
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
+- [Chat modes](https://code.visualstudio.com/doc/copilot/chat/chat-modes)
 
 </details>
 
@@ -717,13 +717,13 @@ Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, 
 
 # 🏘 [Examples](semio/examples) [↑](#-overview)
 
-## 🚀 [Starter](semio/examples/starters) [↑](#%EF%B8%8F-examples-)
+## 🚀 [Starter](semio/example/starters) [↑](#%EF%B8%8F-examples-)
 
-## 👋 [Hello semio](semio/examples/hello-semio) [↑](#%EF%B8%8F-examples-)
+## 👋 [Hello semio](semio/example/hello-semio) [↑](#%EF%B8%8F-examples-)
 
-## 🌈 [Geometry](semio/examples/geometry) [↑](#%EF%B8%8F-examples-)
+## 🌈 [Geometry](semio/example/geometry) [↑](#%EF%B8%8F-examples-)
 
-## 🫀 [Metabolism](semio/examples/metabolism) [↑](#%EF%B8%8F-examples-)
+## 🫀 [Metabolism](semio/example/metabolism) [↑](#%EF%B8%8F-examples-)
 
 # 💯 Brand [↑](#-overview)
 
@@ -742,7 +742,7 @@ Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, 
 
 ## 🌈 Colors [↑](#-brand-)
 
-![Palette](semio/assets/lists/palette.png)
+![Palette](semio/asset/list/palette.png)
 
 | Name                                   | Hex     | RGB         | HSL              | HSV (or HSB)     | CMYK          | Color            |
 | -------------------------------------- | ------- | ----------- | ---------------- | ---------------- | ------------- | ---------------- |
@@ -804,7 +804,7 @@ We use it e.g. for:
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
-![Grayscale](semio/assets/lists/grayscale.png)
+![Grayscale](semio/asset/list/grayscale.png)
 
 ## 📄 Typography [↑](#-brand-)
 
@@ -828,7 +828,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!TIP]
 > In the end of a section you can give the curious reader a summarizing question to think about the consequences and a link to more resources 🤔
 
-### 🔡 [Typesetting](semio/assets/README.md#fonts) [↑](#-typography-)
+### 🔡 [Typesetting](semio/asset/README.md#fonts) [↑](#-typography-)
 
 - Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨
 - Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍
@@ -880,7 +880,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#%EF%B8%8F-semioplay-" title="🎛semio/play"><sub>🎛<sub></a>
         <br />
         <a href="#-semiodocs-" title="📚semio/docs"><sub>📚<sub></a>
-        <a href="#-semioassets-" title="🛍semio/assets"><sub>🛍<sub></a>
+        <a href="#-semioassets-" title="🛍semio/asset"><sub>🛍<sub></a>
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
         <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>

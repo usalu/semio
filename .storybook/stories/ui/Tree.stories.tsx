@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/stories/elements/aggregation/Tree.stories.tsx
+// 🥼︎ semio/js/.storybook/story/elements/aggregation/Tree.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

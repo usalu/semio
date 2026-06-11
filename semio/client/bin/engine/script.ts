@@ -77,9 +77,9 @@ class BuildScript extends BundleScript {
       "--add-data",
       `../openapi/schema.json${addDataSep}openapi/`,
       "--add-data",
-      `../assets/icons/semio_512x512.png${addDataSep}icons/`,
+      `../asset/icon/semio_512x512.png${addDataSep}icon/`,
       "--icon",
-      "../assets/icons/semio.ico",
+      "../asset/icon/semio.ico",
       "main.py",
     ];
     execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd: this.root, env, stdio: "inherit" });

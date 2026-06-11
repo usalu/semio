@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
 // #region 🧲Header
-/** @emoji 🎬 `@cad/js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/assets/modelDefinition/spatial.shape/interaction/box.json`. */
+/** @emoji 🎬 `@cad/js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/box.json`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -6955,7 +6955,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
       const { ModelSpace } = await import("@cad/js/core");
-      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../assets/play/small-building.model.json"), "utf8"));
+      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../asset/play/small-building.model.json"), "utf8"));
       const model = ModelSpace.fromJSON(json).models[defaultModelDefinitionId()]!;
       const mdId = defaultModelDefinitionId();
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);

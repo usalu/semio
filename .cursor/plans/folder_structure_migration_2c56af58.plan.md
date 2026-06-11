@@ -57,7 +57,7 @@ Work happens inside repo MCP tickets under the `AI-optimized Repo` goal (folder/
 - Every package's `package.json` `name`, `repository.directory`, and intra-repo `dependencies` (the `@elements/*` / `@spatial/*` deps between these packages).
 - Per-package `vite.config.ts` aliases (notably `cad/js/renderer-r3f` aliasing `@elements/playground` -> `@framework/playground/core`, `@elements/ui` -> `@ui/react`).
 - Fix `framework/playground/core/package.json` `./react` export and implement/export `renderPlayground` in `framework/playground/renderer/react/index.tsx` (referenced by `puzzle/3d/play/main.ts`).
-- [.storybook/main.ts](.storybook/main.ts) + stories under `.storybook/stories/elements/**`: update `@elements/*` imports and story paths.
+- [.storybook/main.ts](.storybook/main.ts) + stories under `.storybook/story/elements/**`: update `@elements/*` imports and story paths.
 - [.vscode/launch.json](.vscode/launch.json): rename launch configs referencing spatial/elements/board/scene per existing grouping.
 - Regenerate `bun.lock` via `bun install`; sanity-check `nx.json`, `eslint.config.mjs`, `Monorepo.sln` for stale paths.
 

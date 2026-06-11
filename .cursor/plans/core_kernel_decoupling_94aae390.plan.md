@@ -41,7 +41,7 @@ isProject: false
 
 ## Current leakage (in `cad/js/core/index.ts`)
 
-- `import.meta.glob("../../assets/modelDefinition/**")` baked into the `ModelDefinitionAssets` region (lines 5-89).
+- `import.meta.glob("../../asset/modelDefinition/**")` baked into the `ModelDefinitionAssets` region (lines 5-89).
 - `TransformationGeometry` region (lines 2589-2935): real geometry (`transformationFaceNormal`/`Centroid`/`AreaEstimate`, `fuseShapeSolidsToExternalFaces`, `facesAreContactPair`, `solidFaceIds`) + domain code (`EnergySurfaceRole`, `classifyEnergySurfaceRole`, `energyTypologyForRole`, `applyEnergyFromGeometryTransformation`) + `applyTransformation` hardcoding `"aec.building.energy.from_geometry"`/`"spatial.shape"`.
 - Scattered vector math: `projectPointOnScalarAxis`, `scalarTopOnAxis`, `clampPointAlongDirection` (lines ~4425-4527).
 - Hardcoded ids: `SHAPE_MODEL_DEFINITION_ID = "spatial.shape"` (1668), `defaultGeometryKernelTypologyIds` `spatial.shape.kernel.*` (~2011), `inferTypologyPrimitiveKinds` substrings `energy.energy.`/`structure.structure.` (1723).
@@ -60,7 +60,7 @@ flowchart LR
 
 - In `cad/js/core/index.ts` `ModelDefinitionAssets` region: delete all `import.meta.glob` calls. Replace with a registry holding the raw catalogs (typology/action/interaction/manifest/attribute/property/transformation/extension) plus `registerModelDefinitionAssets(catalogs)` and a reset. Keep the existing `modelDefinition*Catalog()` accessors but have them read the registry. Clear the `*OwnerByIdCache` and `modelDefinitionFolderIdMapCache` on register. Zero `assets/` references remain in `index.ts`.
 - New file `cad/js/core/assets.ts`: holds the `import.meta.glob(...)` blocks (paths relative to this file) and calls `registerModelDefinitionAssets(...)` from `@cad/js/core` at import time. Add `assets.ts` to `cad/js/core/tsconfig.json` `include`.
-- Side-effect import `@cad/js/core/assets` from every consumer: `cad/js/kernel/brepjs/index.ts`, `cad/js/query/index.ts`, the play apps' entry files, `cad/js/renderer`, and the core `Tests` region (`import "./assets"`). Confirm bun resolves the `@cad/js/core/assets` subpath; if not, add a subpath to core `package.json`.
+- Side-effect import `@cad/js/core/assets` from every consumer: `cad/js/kernel/brepjs/index.ts`, `cad/js/query/index.ts`, the play apps' entry files, `cad/js/renderer`, and the core `Tests` region (`import "./asset"`). Confirm bun resolves the `@cad/js/core/assets` subpath; if not, add a subpath to core `package.json`.
 
 ## Workstream B — Geometry primitives to the kernel
 
@@ -70,7 +70,7 @@ flowchart LR
 ## Workstream C — Transformations as pure data
 
 - Extend `spatial.transformation/v1` (`cad/schema/json/transformation.json` + `TransformationSpec` parser in core) with an optional declarative `derive` block (surface-classification): `fuse` source primitive kind, `hull` typology, ordered `rules` (axis dominance, min-dot, z-band max/min) → typology, `opening` attribute→typology, `ensure` typologies.
-- Encode the energy rules in `cad/assets/modelDefinition/aec.building.energy/transformation/from_geometry/transformation.json` (roof/baseplate/slab/externalwall/window thresholds currently hardcoded in `classifyEnergySurfaceRole`).
+- Encode the energy rules in `cad/asset/modelDefinition/aec.building.energy/transformation/from_geometry/transformation.json` (roof/baseplate/slab/externalwall/window thresholds currently hardcoded in `classifyEnergySurfaceRole`).
 - Replace `applyEnergyFromGeometryTransformation`, `EnergySurfaceRole`, `classifyEnergySurfaceRole`, `energyTypologyForRole`, `applyTransformationFallback`, and the special-case in `applyTransformation` with one generic `runTransformation(spec, source, preview)` engine that interprets `derive` and calls kernel geometry primitives. No `energy.energy.*`/`spatial.shape`/`from_geometry` literals left in core code.
 - Thread the preview kernel through: `applyTransformation(spec, source, preview)`, `ModelSpace.transform(...)`, and `query`'s `runTransformationCall` (pass `ctx.preview`/`ctx.kernel`).
 - De-hardcode remaining ids: derive the default model-definition from a manifest flag (e.g. `default: true`) instead of `SHAPE_MODEL_DEFINITION_ID`; require `primitiveKinds`/kernel-typology mapping to come from assets, removing the `energy.energy.`/`structure.structure.` substring heuristics in `inferTypologyPrimitiveKinds` and the `defaultGeometryKernelTypologyIds` literals (move to the `spatial.shape` manifest/typology data).

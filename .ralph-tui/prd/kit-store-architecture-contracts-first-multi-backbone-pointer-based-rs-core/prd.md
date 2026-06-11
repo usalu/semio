@@ -2,7 +2,7 @@
 
 ## Overview
 
-Replace the current incomplete kit persistence and layering across `semio/assets/semio`, `semio/graphql`, `semio/rs`, `semio/js`, `semio/react`, and `semio/sketchpad` with a single coherent **kit store architecture**:
+Replace the current incomplete kit persistence and layering across `semio/asset/semio`, `semio/graphql`, `semio/rs`, `semio/js`, `semio/react`, and `semio/sketchpad` with a single coherent **kit store architecture**:
 
 - **One root kit snapshot per kit graph**; all history is modeled as an **ordered list of semantic kit changes** (operations + inputs).
 - **Everything is async** end-to-end in `semio/rs`, including backbone IO and GraphQL resolution paths that touch persistence or replay.
@@ -65,11 +65,11 @@ For **UI / sketchpad** stories, also include:
 
 ### US-001: Align Kit Asset Contracts With Snapshot + Change History Model
 
-As a contributor, I want the canonical kit asset shapes under `semio/assets/semio` (including patterns exemplified by `semio/assets/semio/metabolism.new.kit.semio.json`) to match the target architecture so that contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.
+As a contributor, I want the canonical kit asset shapes under `semio/asset/semio` (including patterns exemplified by `semio/asset/semio/metabolism.new.kit.semio.json`) to match the target architecture so that contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.
 
 **Acceptance Criteria:**
 - [ ] Document and encode the intended kit graph model as **one root snapshot + ordered semantic changes**, consistent with how checkpoints/drafts/transactions reference history (**same ordered op persistence model**, differing by **metadata/lifecycle**).
-- [ ] Update or replace incompatible example assets/schemas in `semio/assets/semio` needed for the new model (**greenfield replacement**, no legacy compatibility requirement).
+- [ ] Update or replace incompatible example assets/schemas in `semio/asset/semio` needed for the new model (**greenfield replacement**, no legacy compatibility requirement).
 - [ ] Provide at least **one minimal golden fixture** pair: **( persisted op log inputs ) → ( expected derived snapshot hash or structural invariant checks )** suitable for automated testing (exact mechanism chosen in RS tests).
 
 ### US-002: Finalize `semio/graphql` Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle

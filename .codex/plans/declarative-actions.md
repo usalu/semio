@@ -6,7 +6,7 @@ Refactor `spatial` actions so action definitions are JSON data only. The TypeScr
 ## Key Changes
 - Open/reopen a repo ticket under the Running Sketchpad spatial work before implementation, then close it with touched files listed.
 - Add `spatial.action/v1` schema in `spatial/schema/json/action.json`.
-- Add JSON action assets under existing `spatial/assets/extension/builtin/action/**`.
+- Add JSON action assets under existing `spatial/asset/extension/builtin/action/**`.
 - Replace `ActionFn`/code-backed built-ins in `spatial/js/core/index.ts` with:
   - `ActionSpec` parser/catalog loader.
   - `DeclarativeActionRuntime`.
@@ -50,6 +50,6 @@ Expressions remain declarative JSON. Add a `kernel.call` expression form only fo
 - Run with `bun nx run @spatial/js-core:test` and `bun nx run @spatial/js-kernel-brepjs:test`.
 
 ## Assumptions
-- New JSON files under `spatial/assets/extension/builtin/action/**` are allowed because you selected JSON Assets as the storage model.
+- New JSON files under `spatial/asset/extension/builtin/action/**` are allowed because you selected JSON Assets as the storage model.
 - Runtime interpreter code is allowed; the “no code” rule applies to action definitions, not to the generic action interpreter or kernel implementations.
 - “Use functionality from the kernel” means all geometry/model mutations happen via named `SpatialKernel`/`SpatialPreviewKernel` capabilities, not inside action definitions.

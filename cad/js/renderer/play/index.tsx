@@ -1131,14 +1131,14 @@ import {
 } from "@framework/playground/renderer/react/shell";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
 import { defaultConstructRunner } from "@cad/js/query";
-import geometryNakagin from "../../../assets/play/geometry.json";
-import geometryLoom from "../../../assets/play/geometry-loom.json";
-import geometryRoutes from "../../../assets/play/geometry-routes.json";
-import geometrySmallBuilding from "../../../assets/play/small-building.model.json";
-import geometryTallBuilding from "../../../assets/play/tall-building.model.json";
-import geometryLargeBuilding from "../../../assets/play/large-building.model.json";
-import geometryConcreteForestLeft from "../../../assets/play/hexagonal-cut-concrete-forest-left.model.json";
-import geometryConcreteForestRight from "../../../assets/play/hexagonal-cut-concrete-forest-right.model.json";
+import geometryNakagin from "../../../asset/play/geometry.json";
+import geometryLoom from "../../../asset/play/geometry-loom.json";
+import geometryRoutes from "../../../asset/play/geometry-routes.json";
+import geometrySmallBuilding from "../../../asset/play/small-building.model.json";
+import geometryTallBuilding from "../../../asset/play/tall-building.model.json";
+import geometryLargeBuilding from "../../../asset/play/large-building.model.json";
+import geometryConcreteForestLeft from "../../../asset/play/hexagonal-cut-concrete-forest-left.model.json";
+import geometryConcreteForestRight from "../../../asset/play/hexagonal-cut-concrete-forest-right.model.json";
 import { BrepjsKernel, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {

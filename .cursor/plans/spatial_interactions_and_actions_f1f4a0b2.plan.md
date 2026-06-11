@@ -128,7 +128,7 @@ type CommitOperationSpec = { kind: "action"; action: string; params?: Record<str
 
 All previous variants (`cell.createBox`, `wire.extrudeToCell`, `face.offset`, `measure.*`) become `{kind:"action", action:"…"}`.
 
-## 3. JSON fixtures + schema — [spatial/fixtures/](spatial/fixtures), [spatial/schema/json/](spatial/schema/json)
+## 3. JSON fixtures + schema — [spatial/fixture/](spatial/fixtures), [spatial/schema/json/](spatial/schema/json)
 
 - Rename files: `box.command.json` → `box.interaction.json`, plus `extrude-wire`, `offset-surface`, `distance`, `area`. Delete the orphaned `factory.json`, `extrude.factory.json`, `offset-surface.factory.json` (per repo "no legacy api" rule) unless still referenced — verify with rg first.
 - Bump schema string `"spatial.command/v1"` → `"spatial.interaction/v1"`. Update the matching schema file under `spatial/schema/json/`.

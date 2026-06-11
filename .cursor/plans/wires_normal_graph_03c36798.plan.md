@@ -57,7 +57,7 @@ In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (or lifted into [mathematical/grap
 - Add `GraphPortMode` field to `BoardHost`; default `Ported`.
 - `parse_fixture_v1`: accept `reasoning.mindmap.fixture/v1` (no `handles[]`, node-id edges) -> Normal; keep `puzzle.2d.fixture/v1` -> Ported. Edge endpoints store node ids in Normal.
 - `edge_curve` / `endpoint geometry`: Normal anchors at node rim toward peer (reuse `ray_*_rectangle_edge` / circle rim from `infinite_cavas`), control arms from node centers; matches `GraphEngine<Normal>` semantics.
-- Scene build (`append_nodes_and_handles`, `append_edges_wires_and_link`, indirect ring): skip handle markers/icons/rings/wires in Normal.
+- Scene build (`append_nodes_and_handles`, `append_edges_wires_and_link`, indirect ring): skip handle markers/icon/rings/wires in Normal.
 - Hit-test/hover (`resolve_hit_world` ~3433): Normal = nodes then edges only.
 - `delete_selection`: Normal deletes node -> incident edges directly.
 - `sync_descriptor` + `SceneDescriptorJson`: allow empty `handles` and node-id edges in Normal.

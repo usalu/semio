@@ -96,7 +96,7 @@ flowchart TB
 
 ## Part F: validation
 
-- Run via launch.json/nx: `neural/engine` tests, all `flow/modules/*` tests, `flow/core` tests (incl. cluster + shakability), `dag` tests, `flow/react` + `procedural` vitest.
+- Run via launch.json/nx: `neural/engine` tests, all `flow/module/*` tests, `flow/core` tests (incl. cluster + shakability), `dag` tests, `flow/react` + `procedural` vitest.
 - Manually confirm in the flow play app: select neurons → "Collapse to cluster" yields a cluster node showing contract ports + cluster symbol; the cluster evaluates (e.g. add inside a cluster equals the inlined result); explode restores the original graph and outputs; stripping `flow` from the saved document still evaluates the cluster.
 
 ## Ticket workflow (first execution step)

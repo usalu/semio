@@ -12,7 +12,7 @@ todos:
     content: Extend UiRenderer for new nodes; render rightTabs declaratively + drop augmentPanelTabs; add PlaygroundShell (generic surface chrome + keybindings) and renderPlayground.
     status: completed
   - id: scene
-    content: Add ScenePlayground class, convert scene inspector/settings/hierarchy/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
+    content: Add ScenePlayground class, convert scene inspector/setting/hierarchy/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
     status: in_progress
   - id: topology
     content: Add TopologyPlayground class, convert status/hierarchy panels to declarative bodies, expose registerTopologySurfaceHosts, delete TopologyPlayApp, rewrite main.ts.
@@ -104,7 +104,7 @@ flowchart TB
 ## 5. Board — `elements/lib/board/` (largest)
 
 - Migrate all React-held state out of `BoardPlayInner` into `BoardPlayShellController`: `fixture`, `selectionIds`, `camerasByPane`, `boardSelectionMethod/Mode/Targets`, `boardGridSnapEnabled`, `boardRedrawPlaying`, `effectiveLodByPane`. Implement `appendCircle/appendRectangle/clearSelection/toggle*` as real controller mutations (move geometry helpers like `triptychCamerasFromFixture`, `newBoardAuthoringId` as needed). Delete `BoardPlayHostBridge`/`setHostBridge`/`runHostCommand`.
-- Convert library/inspector/settings/hierarchy panels to declarative side-panel bodies; keep the board canvas adapter React behind `registerBoardSurfaceHosts()`.
+- Convert library/inspector/setting/hierarchy panels to declarative side-panel bodies; keep the board canvas adapter React behind `registerBoardSurfaceHosts()`.
 - Add `class BoardPlayground extends Playground`; delete `BoardPlayApp`/`BoardPlayInner`/`augmentPanelTabs`/`mountBoardPlay`; `play/main.ts` → `renderPlayground(new BoardPlayground())`.
 
 ## 6. Tests & validation

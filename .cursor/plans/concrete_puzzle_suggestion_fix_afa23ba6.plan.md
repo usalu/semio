@@ -34,11 +34,11 @@ i.e. every beam connector of both pieces except the self-connector, and no `c-*`
 ## Pipeline (confirmed)
 - Compatibility: `brushCompatibleCandidates` -> `vorticesAttractionCompatibleForDrag` using `meta.kindCompatibility` in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (~3229, ~3014). All `b-*` ports are mutually compatible; `c-*` are not compatible with `b-*`, so columns are already excluded.
 - Collision: `brushCollisionFreeCandidates` -> `brushCandidateCollidesAtPose` -> `brushPreviewCollides` -> `solidOverlapVolume` vs `overlapBudget` (~3636, ~3467). Missing BVH => `unknownPending` (candidate skipped, not free).
-- Candidate -> connector name: catalog vortex index is 1:1 with kit type connectors (`semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left/right.type.semio.json`), verified by position.
+- Candidate -> connector name: catalog vortex index is 1:1 with kit type connectors (`semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left/right.type.semio.json`), verified by position.
 
 ## Step 1 - Add the exact-set test (real geometry)
 Add a vitest in the `Puzzle3dPrecompute`/brush block of [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (next to the existing concrete-forest test at ~12336, which only checks `free.length > 0`). The new test must:
-- Load the REAL GLBs via `GLTFLoader` from `semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.glb` and `-right.glb` (same loader pattern as `.repo/.../FIX-BRUSH-FILL-COLLISION/verify-fix.mts`), and `registerBrushCollisionGltfScene` them. Do NOT use the `BoxGeometry(13,5,3)` stub - the box over-collides and cannot yield the 13.
+- Load the REAL GLBs via `GLTFLoader` from `semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.glb` and `-right.glb` (same loader pattern as `.repo/.../FIX-BRUSH-FILL-COLLISION/verify-fix.mts`), and `registerBrushCollisionGltfScene` them. Do NOT use the `BoxGeometry(13,5,3)` stub - the box over-collides and cannot yield the 13.
 - Build `target`/world pose for `seed-left-001:v0`, call `brushCompatibleCandidates` then `brushCollisionFreeCandidates` with `meshRootForUrl: brushCollisionGltfRoot` and the fixture's overlap budget.
 - Import the two kit type JSONs, read `connectors.items[].name` in order, and map each free `(objectKindId, sourceVortexIndex)` to its connector name (Left -> `b-p1-*`, Right -> `b-p2-*`). Assert position alignment between catalog vortex and connector to guard the index mapping.
 - Assert `unknownPending === false` and the mapped free set equals exactly the 13 names above (set equality, order-independent).

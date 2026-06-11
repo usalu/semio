@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ .storybook/stories/ui/VirtualFileSystem.stories.tsx
+// 🥼︎ .storybook/story/ui/VirtualFileSystem.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 

@@ -1,0 +1,14 @@
+{
+  "title": "Singular Folder Names",
+  "emoji": "📁",
+  "status": "closed",
+  "description": "Rename all plural folder names to singular (e.g. fixtures→fixture, assets→asset, icons→icon) and update all references.",
+  "summary": "Renamed 76 plural directory names to singular across the monorepo (assets→asset, fixtures→fixture, icons→icon, modules→module, etc.) and updated 378+ source references. Package names updated (@semio/asset, @semio/fixture, @puzzle/asset, @ui/asset, @semio/algorithm, @semio/icon, @semio/image). Regenerated bun.lock. Verified @semio/fixture:build and @ui/asset:build succeed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1667"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪4ec7fa8b620041798c0ee873b714f4a3"
+  ]
+}

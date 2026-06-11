@@ -10,51 +10,51 @@ import * as aecBuildingStructure from "@cad/js/module/aec-building-structure";
 
 // #region 📥ModelDefinitionAssets
 const __modelDefinitionTypologyModules = import.meta.glob(
-  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
+  ["../../asset/modelDefinition/**/typology.json", "../../asset/modelDefinition/**/typology/*.json"],
   { eager: true, import: "default" },
 ) as Record<string, unknown>;
 
-const __modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
+const __modelDefinitionActionModules = import.meta.glob("../../asset/modelDefinition/**/action/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const __modelDefinitionInteractionModules = import.meta.glob("../../assets/modelDefinition/**/interaction/*.json", {
+const __modelDefinitionInteractionModules = import.meta.glob("../../asset/modelDefinition/**/interaction/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const __modelDefinitionManifestModules = import.meta.glob("../../assets/modelDefinition/**/modelDefinition.json", {
+const __modelDefinitionManifestModules = import.meta.glob("../../asset/modelDefinition/**/modelDefinition.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const __modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
+const __modelDefinitionAttributeModules = import.meta.glob("../../asset/modelDefinition/**/attributeDefinition/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
 const __modelDefinitionPropertyDefinitionModules = import.meta.glob(
-  ["../../assets/modelDefinition/**/propertyDefinition/*.json", "../../assets/modelDefinition/**/propertyKind/*.json"],
+  ["../../asset/modelDefinition/**/propertyDefinition/*.json", "../../asset/modelDefinition/**/propertyKind/*.json"],
   { eager: true, import: "default" },
 ) as Record<string, unknown>;
 
-const __modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
+const __modelDefinitionPropertyModules = import.meta.glob("../../asset/modelDefinition/**/property/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const __modelDefinitionStatDefinitionModules = import.meta.glob("../../assets/modelDefinition/**/statDefinition/*.json", {
+const __modelDefinitionStatDefinitionModules = import.meta.glob("../../asset/modelDefinition/**/statDefinition/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const __modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
+const __modelDefinitionTransformationModules = import.meta.glob("../../asset/modelDefinition/**/transformation/**/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const __modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
+const __modelDefinitionExtensionManifestModules = import.meta.glob("../../asset/modelDefinition/**/extension.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;

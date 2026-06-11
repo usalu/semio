@@ -109,7 +109,7 @@ flowchart LR
 - Add schema `view.json` (`spatial.view/v1`) capturing the shape already used in assets (`derivedObjects: [{ id, label, description?, properties?, allows? }]`) plus a `sourceTypologies` field for lineage.
 - Add schema `extension.json` (`spatial.extension/v1`) matching the manifests in `assets/extension/<ext>/extension.json`, and extend its `kinds` enum with `"typology"` and `"view"`.
 
-### Reshape assets under [spatial/assets/extension](spatial/assets/extension)
+### Reshape assets under [spatial/asset/extension](spatial/asset/extension)
 
 - Update each `extension.json` (`builtin`, `energy`, `structure`) `kinds` array to include `"typology"` and `"view"` where applicable.
 - Author one typology per existing primitive/construction interaction in `assets/extension/builtin/typology/`, grouped by category (`primitive/box.json`, `curve/line.json`, `solid/sphere.json`, …). Each references the matching interaction id and the kernel-private action id.

@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 .storybook/stories/puzzle/2d/Puzzle2d.stories.tsx
+// 💻 .storybook/story/puzzle/2d/Puzzle2d.stories.tsx
 // Specs: Host the elements puzzle 2d canvas for Storybook + Playwright raster/LOD/selection checks.
 // Summary: Raster modes, full Nakagin puzzle 2d fixture (180 nodes / 179 kit connections), and Playwright harness stories.
 // 2026 Ueli Saluz <ueli@semio-tech.com>

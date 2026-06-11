@@ -194,7 +194,7 @@ export default defineConfig(async ({ mode }) => {
   const shimWithSelector = path.join(useSyncRoot, "use-sync-external-store-shim", prod ? "with-selector.production.js" : "with-selector.development.js");
   const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
-  const statsEntry = path.resolve(__dirname, "../../node_modules/three/examples/jsm/libs/stats.module.js");
+  const statsEntry = path.resolve(__dirname, "../../node_modules/three/example/jsm/libs/stats.module.js");
   const htmlParseStringifyEntry = path.resolve(__dirname, "../../node_modules/html-parse-stringify/dist/html-parse-stringify.js");
   const reactI18nextEntry = path.resolve(__dirname, "../../node_modules/react-i18next/dist/commonjs/index.js");
   const reactRouterEntry = path.resolve(__dirname, "../../node_modules/react-router/dist/development/index.js");
@@ -225,7 +225,7 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
-        { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
+        { find: "@semio/asset", replacement: path.resolve(__dirname, "../asset") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
       ],
     },

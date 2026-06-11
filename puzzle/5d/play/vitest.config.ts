@@ -13,6 +13,8 @@ export default defineConfig({
 		alias: [
 			{ find: "@framework/playground/core", replacement: resolve(root, "../../../framework/product/playground/core/index.ts") },
 			{ find: "@framework/platform/core", replacement: resolve(root, "../../../framework/product/platform/core/index.ts") },
+			{ find: "@infinite/cavas/react-renderer", replacement: resolve(root, "../../../infinite/cavas/react-renderer/index.tsx") },
+			{ find: "@infinite/world/r3f", replacement: resolve(root, "../../../infinite/world/r3f/index.tsx") },
 			{ find: "@puzzle/2d/play", replacement: resolve(root, "../../2d/play/index.ts") },
 			{ find: "@puzzle/3d/play", replacement: resolve(root, "../../3d/play/index.ts") },
 			{ find: "@puzzle/2d/react", replacement: resolve(root, "../../2d/react/index.tsx") },
@@ -21,6 +23,7 @@ export default defineConfig({
 				replacement: resolve(root, "../../3d/react/index.tsx"),
 			},
 			{ find: "@puzzle/5d/react", replacement: resolve(root, "../react/index.tsx") },
+			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
 		],
 	},
 	test: {

@@ -1,7 +1,7 @@
 {
   "schema": "reasoning.wires.fixture/v1",
   "source": {
-    "kitPath": "semio/fixtures/metabolism.kit.light.semio.json",
+    "kitPath": "semio/fixture/metabolism.kit.light.semio.json",
     "kitId": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
     "kitName": "Metabolism"
   },

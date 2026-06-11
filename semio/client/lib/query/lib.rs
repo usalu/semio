@@ -2299,7 +2299,7 @@ mod tests {
 
     //#region 🧪architect_cases
     fn fixtures_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures")
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixture")
     }
 
     fn architect_cases_doc() -> serde_json::Value {

@@ -14,7 +14,7 @@
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Kit, type Type as SemioType, type Design, type Representation } from "@semio/react";
-import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
+import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/asset";
 import "./globals.css";
 
 // #endregion 🔌Adapters

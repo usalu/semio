@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/stories/elements/input/Textarea.stories.tsx
+// 🥼︎ semio/js/.storybook/story/elements/input/Textarea.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -10,7 +10,7 @@
 
 import { Textarea } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { nakagin } from "../../fixtures/nakagin";
+import { nakagin } from "../../fixture/nakagin";
 
 // 📝#region 🎏Textarea
 const meta = {

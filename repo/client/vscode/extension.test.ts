@@ -1332,10 +1332,10 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses folder URI with deep path", () => {
-    const result = parseUri("repo://folder/semio/js/sketchpad/pages/getting-started");
+    const result = parseUri("repo://folder/semio/js/sketchpad/page/getting-started");
     assert.ok(result);
     assert.strictEqual(result!.type, "folder");
-    assert.strictEqual(result!.path, "semio/js/sketchpad/pages/getting-started");
+    assert.strictEqual(result!.path, "semio/js/sketchpad/page/getting-started");
   });
 
   test("Parses files collection URI with folder path", () => {
@@ -1963,12 +1963,12 @@ suite("CodeLens Behavior Test Suite", function () {
 
 suite("Semio VS Code Kit Editor Test Suite", () => {
   test("Kit file detection matches semio kit naming conventions", () => {
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism/wip/initialKit/kit.semio.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/kit-metabolism.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.embedded.semio.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism.kit.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism/wip/initialKit/kit.semio.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/kit-metabolism.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism.kit.embedded.semio.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/jsonschema/kit.json"), false);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.diff.semio.json"), false);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism.kit.diff.semio.json"), false);
   });
 
   test("Sketchpad dist resolution prefers bundled assets and falls back to workspace sketchpad dist", () => {

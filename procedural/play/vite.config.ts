@@ -18,8 +18,8 @@ export default createPlaygroundPlayViteConfig({
 		{ find: "@procedural/react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: "@geometry/brep/js", replacement: path.resolve(repoRoot, "geometry/brep/js/index.ts") },
 		{ find: "@flow/react", replacement: path.resolve(repoRoot, "flow/react/index.tsx") },
-		{ find: "@flow/module-brep", replacement: path.resolve(repoRoot, "flow/modules/brep/pkg/flow_module_brep.js") },
-		{ find: "@flow/module-bim", replacement: path.resolve(repoRoot, "flow/modules/bim/pkg/flow_module_bim.js") },
+		{ find: "@flow/module-brep", replacement: path.resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
+		{ find: "@flow/module-bim", replacement: path.resolve(repoRoot, "flow/module/bim/pkg/flow_module_bim.js") },
 		{ find: /^three$/, replacement: threeModule },
 	],
 	resolveDedupe: ["react", "react-dom", "three", "scheduler", "@flow/react", "@procedural/react"],
@@ -40,7 +40,7 @@ export default createPlaygroundPlayViteConfig({
 	watchIgnored: [
 		"../../flow/core/lib.rs",
 		"../../flow/core/target/**",
-		"../../flow/modules/**/lib.rs",
-		"../../flow/modules/**/target/**",
+		"../../flow/module/**/lib.rs",
+		"../../flow/module/**/target/**",
 	],
 });

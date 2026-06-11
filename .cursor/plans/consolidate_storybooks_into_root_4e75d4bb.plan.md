@@ -1,12 +1,12 @@
 ---
 name: Consolidate Storybooks Into Root
-overview: One root Storybook under `.storybook/` with all duplicate config and helpers merged; all story modules live under a single top-level `.storybook/stories/<technology>/<bundle>/` tree (not merged into fewer story files).
+overview: One root Storybook under `.storybook/` with all duplicate config and helpers merged; all story modules live under a single top-level `.storybook/story/<technology>/<bundle>/` tree (not merged into fewer story files).
 todos:
   - id: ticket
     content: Open repo ticket for the consolidation
     status: completed
   - id: move-stories
-    content: Move *.stories.* into .storybook/stories/<tech>/<bundle>/ (single top-level stories tree); non-story helpers to fixtures/ and semio/algorithms/kit-store/
+    content: Move *.stories.* into .storybook/story/<tech>/<bundle>/ (single top-level stories tree); non-story helpers to fixtures/ and semio/algorithm/kit-store/
     status: completed
   - id: consolidate-helpers
     content: Single root withLevel.tsx (globals.level + optional args.level), withTheme.tsx, vitest.setup.ts; delete all bundle main/preview/with*
@@ -18,7 +18,7 @@ todos:
     content: Rewrite relative imports in moved stories to use @semio/* and @elements/* aliases
     status: completed
   - id: delete-old
-    content: Delete elements/client/lib/react/.storybook, semio/client/lib/react/rendering/.storybook, semio/dev/algorithms/.storybook
+    content: Delete elements/client/lib/react/.storybook, semio/client/lib/react/rendering/.storybook, semio/dev/algorithm/.storybook
     status: completed
   - id: verify
     content: Run dev:storybook and build:storybook; fix breakages
@@ -63,18 +63,18 @@ Technologies = `elements`, `semio` (coda has no stories; skip). Bundle folder na
       kit-store/*         (TSX/helpers for KitStore story; not *.stories.*)
 ```
 
-Rationale: **No per-bundle `stories/` folder** under `elements/` or `semio/` inside `.storybook`. Instead, **one** top-level `.storybook/stories/` groups by technology then bundle. Non-story support code stays outside that tree (`fixtures/`, `semio/algorithms/kit-store/`).
+Rationale: **No per-bundle `stories/` folder** under `elements/` or `semio/` inside `.storybook`. Instead, **one** top-level `.storybook/story/` groups by technology then bundle. Non-story support code stays outside that tree (`fixtures/`, `semio/algorithm/kit-store/`).
 
 ## Steps
 
 1. **Move story modules only** (glob: `**/*.stories.@(ts|tsx|mdx|...)`):
-   - `elements/client/lib/react/.storybook/stories/**` → `.storybook/stories/elements/ui/`
-   - `semio/client/lib/react/rendering/.storybook/stories/**` → `.storybook/stories/semio/ui/`
-   - `semio/dev/algorithms/.storybook/stories/**/*.stories.*` → `.storybook/stories/semio/algorithms/`
+   - `elements/client/lib/react/.storybook/story/**` → `.storybook/story/elements/ui/`
+   - `semio/client/lib/react/rendering/.storybook/story/**` → `.storybook/story/semio/ui/`
+   - `semio/dev/algorithm/.storybook/story/**/*.stories.*` → `.storybook/story/semio/algorithm/`
 
 2. **Move consolidatable non-story files:**
-   - `elements/.../.storybook/nakagin.ts` → `.storybook/fixtures/nakagin.ts`; update element story imports (e.g. `from "../../../fixtures/nakagin"` from `.storybook/stories/elements/ui/`).
-   - `semio/dev/algorithms/.storybook/stories/kit-store/**` → `.storybook/semio/algorithms/kit-store/**`; update `KitStore.stories.tsx` and any other imports to the new path.
+   - `elements/.../.storybook/nakagin.ts` → `.storybook/fixture/nakagin.ts`; update element story imports (e.g. `from "../../../fixture/nakagin"` from `.storybook/story/elements/ui/`).
+   - `semio/dev/algorithm/.storybook/story/kit-store/**` → `.storybook/semio/algorithm/kit-store/**`; update `KitStore.stories.tsx` and any other imports to the new path.
 
 3. **Single root helpers** (delete per-bundle duplicates):
    - **withLevel:** merge behaviors: when `context.args.level` is set (semio ui / algorithms pattern), wrap like current semio `LevelWrapper`; otherwise apply `context.globals.level` like elements (toolbar stays in unified `preview.ts`).
@@ -83,11 +83,11 @@ Rationale: **No per-bundle `stories/` folder** under `elements/` or `semio/` ins
 
 4. **Unified preview:** one [.storybook/preview.ts](.storybook/preview.ts) with **both** `theme` and `level` `globalTypes` + `initialGlobals` (today’s root already does this; bundle semio previews omitted level—root wins for consistency). Import both `globals.css` from elements and semio rendering packages.
 
-5. **Update [.storybook/main.ts](.storybook/main.ts)** `stories` glob to a single tree, e.g. `./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)` (or equivalent). Keep existing Vite aliases in `viteFinal`.
+5. **Update [.storybook/main.ts](.storybook/main.ts)** `stories` glob to a single tree, e.g. `./story/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)` (or equivalent). Keep existing Vite aliases in `viteFinal`.
 
-6. **Import fixes in moved stories:** replace broken relatives with `@semio/algorithms`, `@semio/assets`, `@semio/ui`, `@semio/react`, `@elements/ui`, and stable relatives from `.storybook/stories/...` (e.g. `../../../fixtures/nakagin`, `../../../semio/algorithms/kit-store/...`) or optional Vite aliases if you add them in `main.ts`.
+6. **Import fixes in moved stories:** replace broken relatives with `@semio/algorithm`, `@semio/asset`, `@semio/ui`, `@semio/react`, `@elements/ui`, and stable relatives from `.storybook/story/...` (e.g. `../../../fixture/nakagin`, `../../../semio/algorithm/kit-store/...`) or optional Vite aliases if you add them in `main.ts`.
 
-7. **Delete** entire `elements/client/lib/react/.storybook/`, `semio/client/lib/react/rendering/.storybook/`, `semio/dev/algorithms/.storybook/` after nothing references them.
+7. **Delete** entire `elements/client/lib/react/.storybook/`, `semio/client/lib/react/rendering/.storybook/`, `semio/dev/algorithm/.storybook/` after nothing references them.
 
 8. **Verify:** `bun run dev:storybook`, `bun run build:storybook`; grep repo for stale `.storybook` paths under `elements/` or `semio/client|dev/`.
 

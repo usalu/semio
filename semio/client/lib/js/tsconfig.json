@@ -56,11 +56,11 @@
       "@ui/react/*": [
         "../../../ui/react/*"
       ],
-      "@semio/assets": [
-        "../assets"
+      "@semio/asset": [
+        "../asset"
       ],
-      "@semio/assets/*": [
-        "../assets/*"
+      "@semio/asset/*": [
+        "../asset/*"
       ],
       "@semio/sketchpad": [
         "../client/ui/sketchpad"

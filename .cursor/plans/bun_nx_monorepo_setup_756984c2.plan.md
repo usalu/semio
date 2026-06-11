@@ -65,7 +65,7 @@ Open via `repo/client/client(.exe) ticket open` under the most appropriate goal 
 
 ## 2. Replace inline `node -e "..."` with `bun` TS scripts
 
-Every workspace currently has a `dev`/`build`/`postinstall` script with a long `node -e "...spawn npx vite..."` blob (root `postinstall`, root `git:setup`, root `mcp:inspector*`, all sites/play, sites/docs, ui, algorithms, 3dm/ui, elements/ui, repo/client, repo/server build, semio/desktop, etc.). Replace each with a small file under that workspace's `scripts/` directory (e.g. [semio/sites/docs/scripts/dev.ts](semio/sites/docs/scripts/dev.ts)) and call it via `bun scripts/dev.ts` from the matching Nx target.
+Every workspace currently has a `dev`/`build`/`postinstall` script with a long `node -e "...spawn npx vite..."` blob (root `postinstall`, root `git:setup`, root `mcp:inspector*`, all sites/play, sites/docs, ui, algorithms, 3dm/ui, elements/ui, repo/client, repo/server build, semio/desktop, etc.). Replace each with a small file under that workspace's `scripts/` directory (e.g. [semio/sites/doc/scripts/dev.ts](semio/sites/doc/scripts/dev.ts)) and call it via `bun scripts/dev.ts` from the matching Nx target.
 
 A single shared [scripts/run-vite-dev.ts](scripts/run-vite-dev.ts) at repo root handles the common pattern (host = `0.0.0.0` in devcontainer else `127.0.0.1`, optional polling, configurable port) so each ui workspace becomes a one-liner.
 
@@ -217,6 +217,6 @@ Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, 
 ## Notes
 
 - This is one focused refactor; no need to delegate. Estimated 4-6 hours of edits + verification.
-- `pnpm.overrides` (`@semio/assets`, `@semio/js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
+- `pnpm.overrides` (`@semio/asset`, `@semio/js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
 - `defaultBase = "⛳wip"` is unusual but kept.
 - The repo MCP `ticket_open` is unavailable in this Cursor session's MCP set; the ticket folder will be created via `repo/client/client(.exe) ticket open` once available, or scaffolded manually under `.repo/🎫/26/05/11/bun-nx-monorepo-setup/`.

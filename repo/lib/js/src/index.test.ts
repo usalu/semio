@@ -391,7 +391,7 @@ describe("micro-commit", () => {
       const init = spawnSync("git", ["init"], { cwd: root, encoding: "utf8" });
       expect(init.status).toBe(0);
       installMicroCommitGitHooks(root);
-      const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
+      const hook = readFileSync(join(root, ".git/hook/post-commit"), "utf8");
       expect(hook).toContain("semio_micro_commit_wipe");
       expect(hook).not.toContain("\r");
       expect(existsSync(join(root, ".repo/semio-micro-commit-bun"))).toBe(true);
@@ -576,9 +576,9 @@ describe("commit", () => {
       { label: "🏘️semio✍️sketchpad", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["✍️x"] }] },
       { label: "🏘️semio🗃️fixtures", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["🗃️y"] }] },
     ];
-    const prefixSets = [[], ["semio/fixtures"]];
-    expect(pathMatchesBundleIndex("semio/fixtures/a.json", 0, prefixSets, bundles)).toBe(false);
-    expect(pathMatchesBundleIndex("semio/fixtures/a.json", 1, prefixSets, bundles)).toBe(true);
+    const prefixSets = [[], ["semio/fixture"]];
+    expect(pathMatchesBundleIndex("semio/fixture/a.json", 0, prefixSets, bundles)).toBe(false);
+    expect(pathMatchesBundleIndex("semio/fixture/a.json", 1, prefixSets, bundles)).toBe(true);
   });
 
   test("formatBundleDateLine appends per-day uloc suffix", async () => {

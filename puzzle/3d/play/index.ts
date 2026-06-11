@@ -4066,13 +4066,13 @@ if (import.meta.vitest) {
       const registerBox = (meshUrl: string): void => {
         registerBrushCollisionGltfScene(meshUrl, new Mesh(new BoxGeometry(13, 5, 3)));
       };
-      registerBox("/meshes/hexagonal-cut-concrete-forest-left.glb");
-      registerBox("/meshes/hexagonal-cut-concrete-forest-right.glb");
+      registerBox("/mesh/hexagonal-cut-concrete-forest-left.glb");
+      registerBox("/mesh/hexagonal-cut-concrete-forest-right.glb");
       const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown)!;
       const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
       const host = fixture.objects[0]!;
-      const leftUrl = "/meshes/hexagonal-cut-concrete-forest-left.glb";
+      const leftUrl = "/mesh/hexagonal-cut-concrete-forest-left.glb";
       const hostGroup = new Group();
       hostGroup.userData.puzzle3dMeshUrl = leftUrl;
       hostGroup.userData.puzzle3dObjectId = host.id;
@@ -4122,16 +4122,16 @@ if (import.meta.vitest) {
       const f = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
       expect(resolveObjectKindMeshUrl("Hexagonal Cut Concrete Forest Left", catalogs, f ?? undefined)).toBe(
-        "/meshes/hexagonal-cut-concrete-forest-left.glb",
+        "/mesh/hexagonal-cut-concrete-forest-left.glb",
       );
       expect(resolveObjectKindMeshUrl("Hexagonal Cut Concrete Forest Right", catalogs, f ?? undefined)).toBe(
-        "/meshes/hexagonal-cut-concrete-forest-right.glb",
+        "/mesh/hexagonal-cut-concrete-forest-right.glb",
       );
       const urls = brushMeshUrlsForFillSession(f!, catalogs, parseKindCompatibility(f?.meta as Record<string, unknown> | undefined));
       expect(urls).toEqual(
         expect.arrayContaining([
-          "/meshes/hexagonal-cut-concrete-forest-left.glb",
-          "/meshes/hexagonal-cut-concrete-forest-right.glb",
+          "/mesh/hexagonal-cut-concrete-forest-left.glb",
+          "/mesh/hexagonal-cut-concrete-forest-right.glb",
         ]),
       );
     });
@@ -4142,8 +4142,8 @@ if (import.meta.vitest) {
       const registerBox = (meshUrl: string): void => {
         registerBrushCollisionGltfScene(meshUrl, new Mesh(new BoxGeometry(13, 5, 3)));
       };
-      registerBox("/meshes/hexagonal-cut-concrete-forest-left.glb");
-      registerBox("/meshes/hexagonal-cut-concrete-forest-right.glb");
+      registerBox("/mesh/hexagonal-cut-concrete-forest-left.glb");
+      registerBox("/mesh/hexagonal-cut-concrete-forest-right.glb");
       const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
@@ -4184,8 +4184,8 @@ if (import.meta.vitest) {
       const registerBox = (meshUrl: string): void => {
         registerBrushCollisionGltfScene(meshUrl, new Mesh(new BoxGeometry(13, 5, 3)));
       };
-      registerBox("/meshes/hexagonal-cut-concrete-forest-left.glb");
-      registerBox("/meshes/hexagonal-cut-concrete-forest-right.glb");
+      registerBox("/mesh/hexagonal-cut-concrete-forest-left.glb");
+      registerBox("/mesh/hexagonal-cut-concrete-forest-right.glb");
       const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown)!;
       const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
@@ -4294,10 +4294,10 @@ if (import.meta.vitest) {
     it("nakagin Bridge kind resolves meshUrl from catalog", () => {
       const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
-      expect(resolveObjectKindMeshUrl("Bridge", catalogs, f ?? undefined)).toBe("/meshes/bridge.glb");
+      expect(resolveObjectKindMeshUrl("Bridge", catalogs, f ?? undefined)).toBe("/mesh/bridge.glb");
       for (const object of f?.objects ?? []) {
         if (object.objectKind === "Bridge") {
-          expect(object.meshUrl).toBe("/meshes/bridge.glb");
+          expect(object.meshUrl).toBe("/mesh/bridge.glb");
         }
       }
     });
@@ -4327,12 +4327,12 @@ if (import.meta.vitest) {
         objects: [
           {
             id: "Capsule J",
-            meshUrl: "/meshes/capsule_J.glb",
+            meshUrl: "/mesh/capsule_J.glb",
             vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
           },
           {
             id: "Capsule L",
-            meshUrl: "/meshes/capsule_L.glb",
+            meshUrl: "/mesh/capsule_L.glb",
             vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
           },
         ],
@@ -4424,27 +4424,27 @@ if (import.meta.vitest) {
         objects: [
           {
             id: "Capsule L",
-            meshUrl: "/meshes/capsule_L.glb",
+            meshUrl: "/mesh/capsule_L.glb",
             vortices: [{ vortexKind: "door capsule left", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
           },
           {
             id: "Capsule Z",
-            meshUrl: "/meshes/capsule_z.glb",
+            meshUrl: "/mesh/capsule_z.glb",
             vortices: [{ vortexKind: "door capsule left", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
           },
           {
             id: "Capsule P",
-            meshUrl: "/meshes/capsule_p.glb",
+            meshUrl: "/mesh/capsule_p.glb",
             vortices: [{ vortexKind: "door capsule left", position: [-0.45, -2.1, 0], direction: [0, -1, 0], radius: 0.36 }],
           },
           {
             id: "Capsule Slash",
-            meshUrl: "/meshes/capsule_slash.glb",
+            meshUrl: "/mesh/capsule_slash.glb",
             vortices: [{ vortexKind: "door capsule left", position: [-0.45, -2.1, 0], direction: [0, -1, 0], radius: 0.36 }],
           },
           {
             id: "Bridge",
-            meshUrl: "/meshes/bridge.glb",
+            meshUrl: "/mesh/bridge.glb",
             vortices: [{ vortexKind: "platform left", position: [0, -1.3, 0], direction: [-1, 0, 0], radius: 0.36 }],
           },
         ],
@@ -4475,7 +4475,7 @@ if (import.meta.vitest) {
         objects: [
           {
             id: "Capsule Z",
-            meshUrl: "/meshes/capsule_z.glb",
+            meshUrl: "/mesh/capsule_z.glb",
             vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
           },
         ],
@@ -4621,13 +4621,13 @@ if (import.meta.vitest) {
         meta: {
           kindCatalogs: {
             objects: [
-              { id: "kind-a", meshUrl: "/meshes/a.glb" },
-              { id: "kind-b", meshUrl: "/meshes/b.glb" },
+              { id: "kind-a", meshUrl: "/mesh/a.glb" },
+              { id: "kind-b", meshUrl: "/mesh/b.glb" },
             ],
           },
         },
         attractions: [],
-        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] }],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [] }],
       });
       expect(fixture).not.toBeNull();
       ctrl.patchFixture(() => fixture!);
@@ -4641,7 +4641,7 @@ if (import.meta.vitest) {
       expect(snapshotCount).toBeGreaterThan(snapshotsBeforeKind);
       const updated = ctrl.getFixture()?.objects.find((object) => object.id === "obj");
       expect(updated?.objectKind).toBe("kind-b");
-      expect(updated?.meshUrl).toBe("/meshes/b.glb");
+      expect(updated?.meshUrl).toBe("/mesh/b.glb");
       unsubscribe();
     });
 
@@ -5388,7 +5388,7 @@ if (import.meta.vitest) {
       const { FIXTURE_DRAG_V1_MIME, decodePuzzle3dFixtureFromDragV1 } = await import("../react/index.tsx");
       const catalogs = parseKindCatalogs({
         kindCatalogs: {
-          objects: [{ id: "J", label: "J", name: "J", meshUrl: "/meshes/capsule_J.glb", vortices: [] }],
+          objects: [{ id: "J", label: "J", name: "J", meshUrl: "/mesh/capsule_J.glb", vortices: [] }],
         },
       });
       const tree = buildPuzzle3dPlayKindsTree(catalogs);
@@ -5432,7 +5432,7 @@ if (import.meta.vitest) {
         kindCatalogs: {
           objects: [
             { id: "Balcony", label: "Balcony", name: "Balcony" },
-            { id: "Base", label: "Base", name: "Base", meshUrl: "/meshes/base.glb" },
+            { id: "Base", label: "Base", name: "Base", meshUrl: "/mesh/base.glb" },
           ],
         },
       });
@@ -5451,7 +5451,7 @@ if (import.meta.vitest) {
               id: "base",
               label: "Base",
               name: "Base",
-              meshUrl: "/meshes/base.glb",
+              meshUrl: "/mesh/base.glb",
               vortices: [
                 { vortexKind: "core rectangular bottom", position: [-7.5, -7.7, 7.5] },
                 { vortexKind: "core rectangular bottom", position: [-18.6, -7.7, 7.5] },

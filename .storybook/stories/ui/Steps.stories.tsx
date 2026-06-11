@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// .elements/ui/.storybook/stories/elements/display/Steps.stories.tsx
+// .elements/ui/.storybook/story/elements/display/Steps.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 

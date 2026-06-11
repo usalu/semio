@@ -9,7 +9,7 @@ todos:
    content: Author spatial/schema/json/{factory,topology,expression,display}.json canonical schemas
    status: completed
  - id: fixtures
-   content: Author spatial/fixtures/{factory.json,cell-complex.json,...} language-agnostic test data (box + extrude + offset-surface factories, nakagin cell-complex sample)
+   content: Author spatial/fixture/{factory.json,cell-complex.json,...} language-agnostic test data (box + extrude + offset-surface factories, nakagin cell-complex sample)
    status: completed
  - id: core-scaffold
    content: Scaffold spatial/js/core (package.json, project.json, script.ts, vitest.config.ts, tsconfig.json)
@@ -58,7 +58,7 @@ Mirror `elements/lib/react/topology` exactly (one monolith package, inline tests
 - `spatial/js/script.ts` — copy of `elements/lib/react/topology/script.ts` task router (dev = vite play, build = vite build, test = vitest run)
 - `spatial/js/vitest.config.ts` — jsdom env, `include: ["index.tsx", "r3f.tsx", "play/index.ts"]`, `includeSource` same set
 - `spatial/js/play/{index.html,main.tsx,index.ts,vite.config.ts,globals.css,package.json,project.json,vitest.config.ts}` — interactive demo wiring the box factory through the R3F adapter
-- `spatial/js/play/fixtures/box.factory.json` — canonical static box-factory spec used in tests and demo
+- `spatial/js/play/fixture/box.factory.json` — canonical static box-factory spec used in tests and demo
 - Workspace plumbing: add `"spatial/js"` and `"spatial/js/play"` to root `package.json` workspaces array; nothing else outside the package folder
 
 ## `index.tsx` regions (single source of truth)
@@ -93,7 +93,7 @@ Each region is a self-contained layer; later regions only depend on earlier ones
 
 ## `play/` demo
 
-Self-contained Vite app launching a box factory in an R3F canvas: pick two corners on the ground plane, drag height, confirm. Side panel shows live `FactorySnapshot` JSON, document operation log, undo/redo buttons. Loads `play/fixtures/box.factory.json` via Vite JSON import to prove static-spec loading works end-to-end. Mirrors structure of `elements/lib/react/topology/play`.
+Self-contained Vite app launching a box factory in an R3F canvas: pick two corners on the ground plane, drag height, confirm. Side panel shows live `FactorySnapshot` JSON, document operation log, undo/redo buttons. Loads `play/fixture/box.factory.json` via Vite JSON import to prove static-spec loading works end-to-end. Mirrors structure of `elements/lib/react/topology/play`.
 
 ## Validation gates
 

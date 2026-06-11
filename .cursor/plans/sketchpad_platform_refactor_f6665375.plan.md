@@ -82,7 +82,7 @@ File: [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/ind
   - `DesignScene extends Puzzle5d`, `DesignDiagram extends Puzzle5d`
   - `TypeCad extends Cad`
   - `DocsPanel extends Panel`, `FeedbackPanel extends Panel`
-- Port the rendering logic currently in `MultiWindowApp`/`DesignApp`/`TypeApp`/`render*Surface`/kit-diagram geometry into model production. This is the largest sub-task; split across generalists by app (kit, design, type, home/docs/feedback).
+- Port the rendering logic currently in `MultiWindowApp`/`DesignApp`/`TypeApp`/`render*Surface`/kit-diagram geometry into model production. This is the largest sub-task; split across generalists by app (kit, design, type, home/doc/feedback).
 
 ## Phase 5 — Platform assembly + boot; delete legacy shell
 File: [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts).
@@ -94,7 +94,7 @@ File: [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/ind
 ## Phase 6 — Tests, build, runtime verification
 - Keep the ~8k lines of embedded Playwright tests at the bottom of `index.ts`; update selectors/flows broken by shell removal.
 - Run framework vitest (`@framework/platform/core`, `@framework/platform/renderer/react`) and the sketchpad Playwright target.
-- Verify runtime via dev server + console logs (prefix temporary logs with `[DEBUG] `) that each app (home/kit/design/type/docs/feedback) renders through the Platform with no legacy shell.
+- Verify runtime via dev server + console logs (prefix temporary logs with `[DEBUG] `) that each app (home/kit/design/type/doc/feedback) renders through the Platform with no legacy shell.
 - Confirm `@semio/sketchpad` no longer imports `@framework/platform/renderer/react` for component implementations (only for the boot mount), keeping the definition render-agnostic.
 
 ## Out of scope (note for follow-ups)

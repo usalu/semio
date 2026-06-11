@@ -112,6 +112,6 @@ This guarantees the play app exercises `BrepjsKernel` + `StatelyStateEngine` end
 
 ## What stays unchanged
 
-- All factory JSON specs ([spatial/fixtures/\*.factory.json](spatial/fixtures)).
+- All factory JSON specs ([spatial/fixture/\*.factory.json](spatial/fixtures)).
 - `KernelAdapter`, `BrepjsKernel`, `DerivedViewService`, document/history APIs.
 - `FactoryRuntime` public surface (only options gain an optional field).

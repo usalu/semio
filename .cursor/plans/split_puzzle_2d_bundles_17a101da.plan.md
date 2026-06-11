@@ -21,7 +21,7 @@ todos:
     content: "Build @infinite/cavas/react-renderer: move Adapters, GpuWasmBridge, ReactCanvas reconciler/host/Scene Sync/Hooks; add package.json/project.json/script.ts/vitest/tsconfig; migrate generic React tests."
     status: completed
   - id: puzzle-react
-    content: "Re-home @puzzle/2d/react on the renderer: keep puzzle kinds/paint/stores/objects/scene/fixtures; import @infinite/cavas/react-renderer; add workspace dependency."
+    content: "Re-home @puzzle/2d/react on the renderer: keep puzzle kinds/paint/store/objects/scene/fixtures; import @infinite/cavas/react-renderer; add workspace dependency."
     status: completed
   - id: wiring
     content: Wire launch.json test/build entries for new crates and the react-renderer (following existing grouping/order); ensure each bundle has exactly one script.ts and project.json calls script.ts.

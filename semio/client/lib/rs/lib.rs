@@ -6274,7 +6274,7 @@ pub mod kit {
             if Self::looks_like_speckle_representation_blob_name(&file.name) {
                 return true;
             }
-            if !file.url.is_empty() && file.url.contains("/representations/") {
+            if !file.url.is_empty() && file.url.contains("/representation/") {
                 return true;
             }
             false
@@ -11157,7 +11157,7 @@ pub mod kit_backbone {
 
     //#region 🧾 wire format
 
-    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `semio/assets/semio/metabolism.new.kit.semio.json`.
+    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `semio/asset/semio/metabolism.new.kit.semio.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆26🌙06⬆️1";
 
     /// @emoji 🧾 Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
@@ -18599,9 +18599,9 @@ pub mod kit_store_comprehensive_e2e {
     use crate::gql::{build_schema_for, AppSchema};
 
 
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `semio/assets/semio/`.
+    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `semio/asset/semio/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/semio");
         let ops = base.join("kit-store.golden.ops.semio.json");
         let exp = base.join("kit-store.golden.expected.semio.json");
         if ops.is_file() && exp.is_file() {
@@ -18611,9 +18611,9 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-/// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.semio.json`) under `semio/assets/semio/`.
+/// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.semio.json`) under `semio/asset/semio/`.
     pub fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio/kit-store.comprehensive.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/semio/kit-store.comprehensive.semio.json");
         if path.is_file() {
             Some(path)
         } else {
@@ -18963,9 +18963,9 @@ mod tests {
         out
     }
 
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `semio/assets/semio/` when present in the checkout.
+    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `semio/asset/semio/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/semio");
         let ops = base.join("kit-store.golden.ops.semio.json");
         let exp = base.join("kit-store.golden.expected.semio.json");
         if ops.is_file() && exp.is_file() {
@@ -19839,7 +19839,7 @@ mod tests {
                         {
                             "id": "f-hash",
                             "name": "e5267da44d",
-                            "remote": "https://app.speckle.systems/projects/demo/representations/e5267da44d"
+                            "remote": "https://app.speckle.systems/projects/demo/representation/e5267da44d"
                         },
                         {
                             "id": "f-loose",
@@ -20593,7 +20593,7 @@ mod tests {
     fn kit_store_golden_operations_replay_matches_expected_invariants() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing semio/asset/semio/kit-store.golden.*.json");
                 return;
             };
             let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -20654,7 +20654,7 @@ mod tests {
     fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing semio/asset/semio/kit-store.golden.*.json");
                 return;
             };
             let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -20684,7 +20684,7 @@ mod tests {
     fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing semio/asset/semio/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -20721,7 +20721,7 @@ mod tests {
     fn local_semio_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip local_semio_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip local_semio_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing semio/asset/semio/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -20770,7 +20770,7 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/metabolism.new.kit.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture/metabolism.new.kit.semio.json");
         let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
             assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
@@ -20793,7 +20793,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn architect_fixtures_hydrate_and_cases_catalog() {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture");
         let kit: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(
             &std::fs::read_to_string(base.join("architect.harness.kit.semio.json")).expect("read harness kit"),
         )
@@ -20826,7 +20826,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn metabolism_light_fixture_kinds_for_types_and_ports() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/metabolism.kit.light.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture/metabolism.kit.light.semio.json");
         let v: crate::external_adapters::serde_json::Value =
             crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
@@ -21226,7 +21226,7 @@ mod tests {
     /// @emoji 📦 `metabolism.kit.diff.semio.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
-        const FIXTURE: &str = include_str!("../../../fixtures/metabolism.kit.diff.semio.json");
+        const FIXTURE: &str = include_str!("../../../fixture/metabolism.kit.diff.semio.json");
         let raw: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("typologies").is_some(), "fixture must include typologies collection");

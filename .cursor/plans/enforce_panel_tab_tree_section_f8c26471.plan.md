@@ -18,7 +18,7 @@ todos:
     content: Rebuild DisplayPanel as a declarative tree with Windows and Layout tabs (template drag items + layout action items)
     status: completed
   - id: migrate-puzzle
-    content: Migrate puzzle 2d/3d/5d inspector/settings/status bodies to trees with control items
+    content: Migrate puzzle 2d/3d/5d inspector/setting/status bodies to trees with control items
     status: completed
   - id: migrate-others
     content: Migrate presentation details, cad catalog/details, and playground template workbench/details bodies to trees with control items
@@ -50,7 +50,7 @@ flowchart LR
 
 
 
-Strict means: no `SidePanelTabConfig.panel` escape hatch, no `TreeDataSection.content`, no `mount: nested` bodies, no `playgroundPanelSection`. Form controls (input/select/toggle/vec3/button/keyValue) become a `control` slot on a tree item, so inspector/settings/details panels are real trees.
+Strict means: no `SidePanelTabConfig.panel` escape hatch, no `TreeDataSection.content`, no `mount: nested` bodies, no `playgroundPanelSection`. Form controls (input/select/toggle/vec3/button/keyValue) become a `control` slot on a tree item, so inspector/setting/details panels are real trees.
 
 ## Current divergence (to remove)
 

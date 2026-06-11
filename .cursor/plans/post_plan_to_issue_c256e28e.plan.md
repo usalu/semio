@@ -26,7 +26,7 @@ isProject: false
 
 The repo MCP server is Go code in [repo/client/cli/main.go](repo/client/cli/main.go). A plan is already bound to a ticket through `plan_id`/`spec_id`:
 
-- `ApplyTicketPlanFromIDs` (line 45267) resolves the id via `ResolvePlanSource` (line 45187) and stores `ticket.Plan.Source` (an absolute path to e.g. `.cursor/plans/<slug>_<id>.plan.md`, a `~/.claude/plans/<id>.md`, or a `.kiro/specs/<id>/` directory).
+- `ApplyTicketPlanFromIDs` (line 45267) resolves the id via `ResolvePlanSource` (line 45187) and stores `ticket.Plan.Source` (an absolute path to e.g. `.cursor/plans/<slug>_<id>.plan.md`, a `~/.claude/plan/<id>.md`, or a `.kiro/specs/<id>/` directory).
 - It is called on open (`CreateTicket`, line 22158) and on reopen (`ReopenTicket`, line 24759).
 
 GitHub interaction goes through `GetManagementProvider()` → `ghAddComment` (line 22475). Today the plan is never sent to GitHub; it is only archived into the ticket folder on close (`moveTicketPlanIntoFolder`). Issue comments are posted on open (issue body only), reopen (prompt), and close (summary).

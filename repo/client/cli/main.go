@@ -12844,7 +12844,7 @@ type Breach struct {
 	Line    int     `json:"line,omitempty"`
 	Column  int     `json:"column,omitempty"`
 	Excerpt string  `json:"excerpt,omitempty"`
-	// Optional fields from lint script JSON (`.repo/cache/breaches/*.json`).
+	// Optional fields from lint script JSON (`.repo/cache/breach/*.json`).
 	LintPriority    BreachPriority `json:"priority,omitempty"`
 	LintAutofixable *bool          `json:"autofixable,omitempty"`
 	Reason          string         `json:"reason,omitempty"`
@@ -15360,7 +15360,7 @@ const (
 	BreachCodeCommentBlock                             Statute = "code/comment/block"
 	BreachCodeCommentJSDoc                             Statute = "code/comment/jsdoc"
 	BreachCodeRequirementsSyntax                       Statute = "code/requirements/implementation-syntax"
-	BreachCodeDocsMissingReadme                        Statute = "code/docs/missing-readme"
+	BreachCodeDocsMissingReadme                        Statute = "code/doc/missing-readme"
 	BreachDevDocsMissingFile                           Statute = "dev-docs/missing-file"
 	BreachDevDocsMissingFolder                         Statute = "dev-docs/missing-folder"
 	BreachDevDocsWrongFilePath                         Statute = "dev-docs/wrong-file-path"
@@ -15377,7 +15377,7 @@ const (
 	BreachSketchpadStateCreateActor                    Statute = "sketchpad/state/create-actor-usage"
 	BreachSketchpadStateYjsAppState                    Statute = "sketchpad/state/yjs-app-state"
 	BreachSketchpadStateForbiddenStore                 Statute = "sketchpad/state/forbidden-store"
-	BreachSketchpadHooksNonTriadic                     Statute = "sketchpad/hooks/non-triadic"
+	BreachSketchpadHooksNonTriadic                     Statute = "sketchpad/hook/non-triadic"
 	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
 	BreachRepoMissingCommand                           Statute = "repo/missing-command"
 	BreachRepoMissingTicketTracking                    Statute = "repo/missing-ticket-tracking"
@@ -35685,7 +35685,7 @@ func isRepoExcludedPath(path string) bool {
 	if normalized == ".repo" || strings.HasPrefix(normalized, ".repo/") {
 		return true
 	}
-	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/assets/repo/") {
+	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/asset/repo/") {
 		return true
 	}
 	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") ||
@@ -45786,7 +45786,7 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 	"arg_plan_id": {
 		McpClientCursor:  "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
 		McpClientCopilot: "Set when a Copilot project memory file for this id exists and must be archived into the ticket on close.",
-		McpClientClaude:  "Set when a `.claude/plans/<id>.md` file exists and must be archived into the ticket on close.",
+		McpClientClaude:  "Set when a `.claude/plan/<id>.md` file exists and must be archived into the ticket on close.",
 		McpClientCodex:   "Set when a `.codex/memory/<repo>/<id>.md` file exists and must be archived into the ticket on close.",
 	},
 	"arg_spec_id": {

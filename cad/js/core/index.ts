@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/assets/modelDefinition`. */
+/** @emoji 🧭 `@cad/js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/asset/modelDefinition`. */
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@geometry/brep/js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@geometry/brep/js";
 export type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 };
@@ -1898,7 +1898,7 @@ function parseKernelTypologies(raw: unknown): Readonly<Partial<Record<KernelTopo
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/** @emoji 📚 Lists model-definition manifests under spatial/assets/modelDefinition. */
+/** @emoji 📚 Lists model-definition manifests under spatial/asset/modelDefinition. */
 export function listModelDefinitionManifests(): readonly ModelDefinitionManifest[] {
   return modelDefinitionManifestCatalog()
     .map((raw) => parseModelDefinitionManifest(raw))
@@ -2163,7 +2163,7 @@ function shippedTypologyCatalog(): readonly TypologySpec[] {
   );
 }
 
-/** @emoji 📚 Lists typologies from shipped spatial/assets/modelDefinition assets. */
+/** @emoji 📚 Lists typologies from shipped spatial/asset/modelDefinition assets. */
 export function listModelDefinitionTypologies(): readonly TypologySpec[] {
   return shippedTypologyCatalog();
 }
@@ -3066,7 +3066,7 @@ function shippedTransformationCatalog(): readonly TransformationSpec[] {
   return out;
 }
 
-/** @emoji 📚 Lists transformation assets under spatial/assets/modelDefinition. */
+/** @emoji 📚 Lists transformation assets under spatial/asset/modelDefinition. */
 export function listModelDefinitionTransformations(): readonly TransformationSpec[] {
   return shippedTransformationCatalog();
 }
@@ -3089,7 +3089,7 @@ export function listTransformationsFromModelDefinition(modelDefinitionId: string
 // #region 🧭ModelDefinitionScope
 function modelDefinitionAssetPathRest(assetPath: string): string | null {
   const normalized = assetPath.replace(/\\/g, "/");
-  for (const marker of ["/assets/modelDefinition/", "assets/modelDefinition/"]) {
+  for (const marker of ["/asset/modelDefinition/", "assets/modelDefinition/"]) {
     const idx = normalized.indexOf(marker);
     if (idx >= 0) return normalized.slice(idx + marker.length);
   }
@@ -3120,7 +3120,7 @@ function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
   return map;
 }
 
-/** @emoji 🧭 Resolves manifest `id` from an asset path under `spatial/assets/modelDefinition`. */
+/** @emoji 🧭 Resolves manifest `id` from an asset path under `spatial/asset/modelDefinition`. */
 export function modelDefinitionIdFromAssetPath(assetPath: string): string | null {
   const folder = modelDefinitionFolderFromAssetPath(assetPath);
   if (!folder) return null;
@@ -6878,9 +6878,9 @@ const __spatialCoreTestRuntime = import.meta.vitest ? await import("@cad/js/runt
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
 const __cadInteractionE2EFixtureModules = import.meta.vitest
   ? await Promise.all([
-      import("../../assets/play/geometry-loom.json"),
-      import("../../assets/play/geometry-routes.json"),
-      import("../../assets/play/small-building.model.json"),
+      import("../../asset/play/geometry-loom.json"),
+      import("../../asset/play/geometry-routes.json"),
+      import("../../asset/play/small-building.model.json"),
     ])
   : null;
 
@@ -7196,7 +7196,7 @@ if (import.meta.vitest) {
     it("listModelObjectsForModelDefinition lists BIM class objects for aec.building", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixturePath = resolve(import.meta.dirname, "../../assets/play/hexagonal-cut-concrete-forest-left.model.json");
+      const fixturePath = resolve(import.meta.dirname, "../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const building = space.models["aec.building"]!;

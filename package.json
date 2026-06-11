@@ -4,7 +4,7 @@
   "type": "module",
   "description": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
-    "ui/assets",
+    "ui/asset",
     "ui/react",
     "ui/styling/js",
     "framework/core",
@@ -17,7 +17,7 @@
     "framework/product/presentation/play",
     "infinite/cavas/react-renderer",
     "infinite/world/r3f",
-    "puzzle/assets",
+    "puzzle/asset",
     "puzzle/2d/react",
     "puzzle/2d/play",
     "reasoning/mindmap/react",
@@ -32,7 +32,7 @@
     "gis/map/react",
     "flow/react",
     "flow/play",
-    "flow/modules/*/pkg",
+    "flow/module/*/pkg",
     "geometry/brep/js",
     "procedural/react",
     "procedural/play",
@@ -54,9 +54,9 @@
     "repo/client/mcp/*",
     "repo/lib/*",
     "repo/server/*",
-    "semio/assets",
-    "semio/assets/*",
-    "semio/fixtures",
+    "semio/asset",
+    "semio/asset/*",
+    "semio/fixture",
     "semio/client/bin/*",
     "semio/client/lib/*",
     "semio/client/lib/net/*",
@@ -186,7 +186,7 @@
     "esbuild": "^0.27.2"
   },
   "overrides": {
-    "@semio/assets": "workspace:*",
+    "@semio/asset": "workspace:*",
     "@semio/js": "workspace:*",
     "diff": "^8.0.3",
     "tmp": "^0.2.5"

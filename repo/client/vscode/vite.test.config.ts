@@ -56,7 +56,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@semio/js": path.resolve(__dirname, "../../semio/js"),
-      "@semio/assets": path.resolve(__dirname, "../../semio/assets"),
+      "@semio/asset": path.resolve(__dirname, "../../semio/asset"),
     },
   },
 });

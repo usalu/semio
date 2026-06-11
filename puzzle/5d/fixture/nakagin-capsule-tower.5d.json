@@ -63,7 +63,7 @@
           -3.6499999999999986,
           19.6167
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -116,7 +116,7 @@
           -2.849999999999999,
           16.8667
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -169,7 +169,7 @@
           -9.849999999999998,
           32.45
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -222,7 +222,7 @@
           -12.549999999999999,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -275,7 +275,7 @@
           -12.549999999999999,
           29.7
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -328,7 +328,7 @@
           -12.55,
           9.5333
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -381,7 +381,7 @@
           -9.849999999999998,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -434,7 +434,7 @@
           -2.849999999999999,
           13.2
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -487,7 +487,7 @@
           -9.05,
           11.3667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -540,7 +540,7 @@
           -5.549999999999998,
           35.2
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -593,7 +593,7 @@
           -2.849999999999999,
           11.3667
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -646,7 +646,7 @@
           -2.8499999999999988,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -699,7 +699,7 @@
           -9.85,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -752,7 +752,7 @@
           -5.549999999999999,
           16.8667
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -805,7 +805,7 @@
           -12.549999999999999,
           37.0333
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -858,7 +858,7 @@
           -11.749999999999998,
           27.8667
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -911,7 +911,7 @@
           -6.349999999999999,
           12.2833
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -964,7 +964,7 @@
           -12.55,
           7.700000000000001
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -1017,7 +1017,7 @@
           -9.049999999999999,
           19.6167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1070,7 +1070,7 @@
           -2.849999999999999,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -1329,7 +1329,7 @@
           -7.699999999999999,
           7.500000000000001
         ],
-        "meshUrl": "/meshes/tambour_first-storey.glb",
+        "meshUrl": "/mesh/tambour_first-storey.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1382,7 +1382,7 @@
           -11.75,
           14.1167
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1435,7 +1435,7 @@
           -6.349999999999998,
           36.1167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1488,7 +1488,7 @@
           -6.349999999999999,
           19.6167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1747,7 +1747,7 @@
           -7.699999999999998,
           26.75
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1800,7 +1800,7 @@
           -3.6499999999999977,
           33.3667
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -1853,7 +1853,7 @@
           -12.549999999999999,
           32.45
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -1906,7 +1906,7 @@
           -2.8499999999999996,
           7.7
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -1959,7 +1959,7 @@
           -12.549999999999999,
           21.45
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -2012,7 +2012,7 @@
           -12.549999999999999,
           21.45
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -2065,7 +2065,7 @@
           -9.85,
           12.2833
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -2118,7 +2118,7 @@
           -12.549999999999999,
           20.5333
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -2171,7 +2171,7 @@
           -5.549999999999998,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -2407,7 +2407,7 @@
           -7.699999999999999,
           21.25
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -2458,7 +2458,7 @@
           -8.1,
           13.2
         ],
-        "meshUrl": "/meshes/bridge.glb",
+        "meshUrl": "/mesh/bridge.glb",
         "orientation": [
           0,
           0,
@@ -2717,7 +2717,7 @@
           -7.699999999999999,
           10.25
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -2770,7 +2770,7 @@
           -2.8499999999999983,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -2823,7 +2823,7 @@
           -12.55,
           12.2833
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -2876,7 +2876,7 @@
           -9.849999999999998,
           34.2833
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -3135,7 +3135,7 @@
           -7.699999999999998,
           32.25
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3188,7 +3188,7 @@
           -5.549999999999999,
           13.2
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -3241,7 +3241,7 @@
           -5.549999999999998,
           25.1167
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -3294,7 +3294,7 @@
           -9.849999999999998,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -3347,7 +3347,7 @@
           -2.8499999999999988,
           21.45
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -3400,7 +3400,7 @@
           -6.349999999999998,
           27.8667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3453,7 +3453,7 @@
           -9.049999999999999,
           25.1167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3506,7 +3506,7 @@
           -5.549999999999999,
           17.7833
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -3559,7 +3559,7 @@
           -3.6499999999999995,
           8.6167
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3612,7 +3612,7 @@
           -2.8499999999999983,
           29.7
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -3665,7 +3665,7 @@
           -9.049999999999999,
           16.8667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3718,7 +3718,7 @@
           -9.049999999999999,
           22.3667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3771,7 +3771,7 @@
           -9.85,
           7.700000000000001
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -3824,7 +3824,7 @@
           -11.749999999999998,
           22.3667
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -3877,7 +3877,7 @@
           -12.55,
           13.2
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -3930,7 +3930,7 @@
           -2.8499999999999983,
           26.0333
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -3983,7 +3983,7 @@
           -5.549999999999999,
           7.7
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -4036,7 +4036,7 @@
           -2.8499999999999983,
           32.45
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -4089,7 +4089,7 @@
           -2.8499999999999983,
           28.7833
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -4142,7 +4142,7 @@
           -3.649999999999998,
           27.8667
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -4401,7 +4401,7 @@
           -7.699999999999999,
           10.25
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -4454,7 +4454,7 @@
           -9.05,
           14.1167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -4507,7 +4507,7 @@
           -9.849999999999998,
           15.0333
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -4560,7 +4560,7 @@
           -9.849999999999998,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -4613,7 +4613,7 @@
           -12.549999999999999,
           17.7833
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -4872,7 +4872,7 @@
           -7.699999999999999,
           7.500000000000001
         ],
-        "meshUrl": "/meshes/tambour_first-storey.glb",
+        "meshUrl": "/mesh/tambour_first-storey.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -4925,7 +4925,7 @@
           -12.549999999999999,
           29.7
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -4976,7 +4976,7 @@
           -8.099999999999998,
           21.45
         ],
-        "meshUrl": "/meshes/bridge.glb",
+        "meshUrl": "/mesh/bridge.glb",
         "orientation": [
           0,
           0,
@@ -5029,7 +5029,7 @@
           -5.549999999999999,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -5082,7 +5082,7 @@
           -5.549999999999999,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -5135,7 +5135,7 @@
           -2.8499999999999996,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -5394,7 +5394,7 @@
           -7.699999999999999,
           15.75
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -5653,7 +5653,7 @@
           -7.699999999999998,
           24
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -5706,7 +5706,7 @@
           -12.549999999999999,
           23.2833
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -5759,7 +5759,7 @@
           -6.349999999999998,
           22.3667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -5811,7 +5811,7 @@
           -7.699999999999998,
           34.0833
         ],
-        "meshUrl": "/meshes/capital.glb",
+        "meshUrl": "/mesh/capital.glb",
         "orientation": [
           0,
           0,
@@ -5864,7 +5864,7 @@
           -2.8499999999999983,
           29.7
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -5917,7 +5917,7 @@
           -5.549999999999999,
           13.2
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -5970,7 +5970,7 @@
           -5.549999999999999,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -6023,7 +6023,7 @@
           -12.549999999999999,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -6076,7 +6076,7 @@
           -2.8499999999999988,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -6129,7 +6129,7 @@
           -5.549999999999998,
           26.0333
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -6388,7 +6388,7 @@
           -7.699999999999998,
           35
         ],
-        "meshUrl": "/meshes/tambour_last-storey.glb",
+        "meshUrl": "/mesh/tambour_last-storey.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -6441,7 +6441,7 @@
           -11.75,
           8.6167
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -6494,7 +6494,7 @@
           -9.049999999999999,
           30.6167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -6547,7 +6547,7 @@
           -12.549999999999999,
           31.5333
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -6600,7 +6600,7 @@
           -9.85,
           7.700000000000001
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -6836,7 +6836,7 @@
           -7.699999999999998,
           29.5
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -6887,7 +6887,7 @@
           -8.099999999999998,
           29.7
         ],
-        "meshUrl": "/meshes/bridge.glb",
+        "meshUrl": "/mesh/bridge.glb",
         "orientation": [
           0,
           0,
@@ -7146,7 +7146,7 @@
           -7.699999999999998,
           26.75
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -7221,7 +7221,7 @@
           0,
           0
         ],
-        "meshUrl": "/meshes/base.glb",
+        "meshUrl": "/mesh/base.glb",
         "orientation": [
           0,
           0,
@@ -7274,7 +7274,7 @@
           -2.849999999999999,
           13.2
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -7327,7 +7327,7 @@
           -12.549999999999999,
           28.7833
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -7380,7 +7380,7 @@
           -9.85,
           9.5333
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -7433,7 +7433,7 @@
           -9.849999999999998,
           17.7833
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -7486,7 +7486,7 @@
           -2.849999999999999,
           17.7833
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -7539,7 +7539,7 @@
           -6.349999999999999,
           15.0333
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -7592,7 +7592,7 @@
           -11.749999999999998,
           16.8667
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -7645,7 +7645,7 @@
           -12.549999999999999,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -7698,7 +7698,7 @@
           -5.549999999999998,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -7957,7 +7957,7 @@
           -7.699999999999999,
           13
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -8010,7 +8010,7 @@
           -5.549999999999999,
           21.45
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -8063,7 +8063,7 @@
           -5.549999999999999,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -8116,7 +8116,7 @@
           -12.549999999999999,
           15.0333
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -8169,7 +8169,7 @@
           -6.349999999999999,
           20.5333
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -8222,7 +8222,7 @@
           -12.55,
           13.2
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -8275,7 +8275,7 @@
           -6.349999999999998,
           33.3667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -8328,7 +8328,7 @@
           -2.8499999999999996,
           9.5333
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -8587,7 +8587,7 @@
           -7.699999999999999,
           18.5
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -8846,7 +8846,7 @@
           -7.699999999999998,
           24
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -8899,7 +8899,7 @@
           -2.849999999999999,
           15.95
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -8952,7 +8952,7 @@
           -5.549999999999999,
           21.45
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -9005,7 +9005,7 @@
           -5.549999999999999,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -9058,7 +9058,7 @@
           -11.75,
           11.3667
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9111,7 +9111,7 @@
           -9.849999999999998,
           35.2
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -9164,7 +9164,7 @@
           -6.349999999999998,
           31.5333
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9217,7 +9217,7 @@
           -3.6499999999999986,
           20.5333
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9476,7 +9476,7 @@
           -7.699999999999999,
           21.25
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9712,7 +9712,7 @@
           -7.699999999999999,
           13
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9765,7 +9765,7 @@
           -9.049999999999999,
           27.8667
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9818,7 +9818,7 @@
           -6.349999999999998,
           23.2833
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -9870,7 +9870,7 @@
           -7.6999999999999975,
           39.5833
         ],
-        "meshUrl": "/meshes/capital.glb",
+        "meshUrl": "/mesh/capital.glb",
         "orientation": [
           0,
           0,
@@ -9923,7 +9923,7 @@
           -2.849999999999998,
           36.1167
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -9976,7 +9976,7 @@
           -9.849999999999998,
           20.5333
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -10029,7 +10029,7 @@
           -9.849999999999998,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -10082,7 +10082,7 @@
           -2.8499999999999988,
           23.2833
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -10135,7 +10135,7 @@
           -9.849999999999998,
           28.7833
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -10188,7 +10188,7 @@
           -12.549999999999999,
           34.2833
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -10241,7 +10241,7 @@
           -11.749999999999998,
           19.6167
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -10294,7 +10294,7 @@
           -5.549999999999998,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -10347,7 +10347,7 @@
           -9.849999999999998,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -10606,7 +10606,7 @@
           -7.699999999999999,
           15.75
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -10659,7 +10659,7 @@
           -5.549999999999998,
           30.6167
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -10712,7 +10712,7 @@
           -9.849999999999998,
           23.2833
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -10765,7 +10765,7 @@
           -5.549999999999999,
           9.5333
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -10818,7 +10818,7 @@
           -6.349999999999999,
           8.6167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -10871,7 +10871,7 @@
           -9.85,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -10924,7 +10924,7 @@
           -9.849999999999998,
           37.0333
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -10977,7 +10977,7 @@
           -12.549999999999999,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -11030,7 +11030,7 @@
           -9.849999999999998,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -11083,7 +11083,7 @@
           -2.849999999999998,
           35.2
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -11136,7 +11136,7 @@
           -12.55,
           7.700000000000001
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -11189,7 +11189,7 @@
           -5.549999999999999,
           7.7
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -11242,7 +11242,7 @@
           -12.549999999999999,
           35.2
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -11295,7 +11295,7 @@
           -5.549999999999998,
           29.7
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -11348,7 +11348,7 @@
           -12.549999999999999,
           26.0333
         ],
-        "meshUrl": "/meshes/capsule_p.glb",
+        "meshUrl": "/mesh/capsule_p.glb",
         "orientation": [
           0,
           0,
@@ -11401,7 +11401,7 @@
           -12.55,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -11454,7 +11454,7 @@
           -9.849999999999998,
           26.0333
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -11507,7 +11507,7 @@
           -9.849999999999998,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -11560,7 +11560,7 @@
           -2.849999999999999,
           14.1167
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -11613,7 +11613,7 @@
           -9.849999999999998,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -11666,7 +11666,7 @@
           -12.549999999999999,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -11719,7 +11719,7 @@
           -2.8499999999999988,
           21.45
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -11772,7 +11772,7 @@
           -5.549999999999999,
           11.3667
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -11825,7 +11825,7 @@
           -5.549999999999998,
           24.2
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -11878,7 +11878,7 @@
           -11.749999999999998,
           25.1167
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -11931,7 +11931,7 @@
           -3.649999999999999,
           15.0333
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -11984,7 +11984,7 @@
           -5.549999999999999,
           14.1167
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -12037,7 +12037,7 @@
           -12.549999999999999,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -12090,7 +12090,7 @@
           -2.8499999999999983,
           30.6167
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -12143,7 +12143,7 @@
           -9.849999999999998,
           31.5333
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           0,
           0,
@@ -12196,7 +12196,7 @@
           -11.749999999999998,
           30.6167
         ],
-        "meshUrl": "/meshes/capsule_s.glb",
+        "meshUrl": "/mesh/capsule_s.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -12249,7 +12249,7 @@
           -12.549999999999999,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -12302,7 +12302,7 @@
           -3.649999999999998,
           31.5333
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -12355,7 +12355,7 @@
           -3.649999999999999,
           12.2833
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -12408,7 +12408,7 @@
           -12.549999999999999,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -12461,7 +12461,7 @@
           -2.8499999999999996,
           7.7
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -12514,7 +12514,7 @@
           -2.8499999999999988,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -12773,7 +12773,7 @@
           -7.699999999999999,
           18.5
         ],
-        "meshUrl": "/meshes/tambour.glb",
+        "meshUrl": "/mesh/tambour.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -13032,7 +13032,7 @@
           -7.699999999999998,
           29.5
         ],
-        "meshUrl": "/meshes/tambour_last-storey.glb",
+        "meshUrl": "/mesh/tambour_last-storey.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -13085,7 +13085,7 @@
           -2.8499999999999988,
           25.1167
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -13138,7 +13138,7 @@
           -3.6499999999999986,
           22.3667
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           -5.551115123125783e-17,
           5.551115123125783e-17,
@@ -13191,7 +13191,7 @@
           -12.55,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -13244,7 +13244,7 @@
           -2.8499999999999983,
           26.95
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -13297,7 +13297,7 @@
           -9.05,
           8.6167
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           5.551115123125783e-17,
           5.551115123125783e-17,
@@ -13350,7 +13350,7 @@
           -5.549999999999998,
           32.45
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -13403,7 +13403,7 @@
           -5.549999999999998,
           29.7
         ],
-        "meshUrl": "/meshes/capsule_L.glb",
+        "meshUrl": "/mesh/capsule_L.glb",
         "orientation": [
           0,
           0,
@@ -13456,7 +13456,7 @@
           -2.8499999999999988,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_backslash.glb",
+        "meshUrl": "/mesh/capsule_backslash.glb",
         "orientation": [
           0,
           0,
@@ -13509,7 +13509,7 @@
           -5.549999999999998,
           28.7833
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,
@@ -13562,7 +13562,7 @@
           -2.8499999999999996,
           10.45
         ],
-        "meshUrl": "/meshes/capsule_slash.glb",
+        "meshUrl": "/mesh/capsule_slash.glb",
         "orientation": [
           0,
           0,
@@ -13615,7 +13615,7 @@
           -5.549999999999999,
           18.7
         ],
-        "meshUrl": "/meshes/capsule_J.glb",
+        "meshUrl": "/mesh/capsule_J.glb",
         "orientation": [
           0,
           0,

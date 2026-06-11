@@ -12,11 +12,11 @@ struct GeneratedShortcodes {
 }
 
 fn repo_ui_assets(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../ui/assets")
+    manifest_dir.join("../../../ui/asset")
 }
 
 fn metabolism_icons_dir(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../semio/client/examples/metabolism/icons")
+    manifest_dir.join("../../../semio/client/example/metabolism/icons")
 }
 
 fn main() {
@@ -33,7 +33,7 @@ fn main() {
 
     let raw = fs::read_to_string(&shortcodes_path).unwrap_or_else(|e| {
         panic!(
-            "read {}: {e}. Run `bun nx run @ui/assets:generate` first.",
+            "read {}: {e}. Run `bun nx run @ui/asset:generate` first.",
             shortcodes_path.display()
         )
     });

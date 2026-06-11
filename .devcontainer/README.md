@@ -89,7 +89,7 @@ The devcontainer image installs comprehensive emoji font support including `font
 
 ### Font Configuration
 
-- **Automatic fontconfig setup**: Scripts configure `/etc/fonts/local.conf` with proper emoji font fallbacks
+- **Automatic fontconfig setup**: Scripts configure `/etc/font/local.conf` with proper emoji font fallbacks
 - **Generic font families**: Emoji fonts are added to `sans-serif`, `serif`, and `monospace` font families
 - **Locale support**: UTF-8 locale variables are set for proper emoji encoding
 - **Comprehensive coverage**: Multiple font packages ensure broad emoji support

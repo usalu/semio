@@ -50,7 +50,7 @@ const (
 	Tolerance = 0.0001
 )
 
-const AssetsPath = "../assets/semio"
+const AssetsPath = "../asset/semio"
 
 // #endregion 🎞️Constants
 

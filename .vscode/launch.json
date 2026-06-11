@@ -421,7 +421,7 @@
       "name": "🛠️dev🏘️semio🧪fixtures🔄metabolism-light",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/fixtures:regenerate-metabolism-light",
+      "command": "bun nx run @semio/fixture:regenerate-metabolism-light",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1229,7 +1229,7 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts generate all",
-      "cwd": "${workspaceFolder}/ui/assets",
+      "cwd": "${workspaceFolder}/ui/asset",
       "presentation": {
         "group": "4_build",
         "order": 29

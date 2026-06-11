@@ -12,7 +12,7 @@ todos:
     content: Add BrepkitKernel::retain + flow_module_brep::retain_geometry_handles; collect live handles from FlowHost outputs and sweep orphaned brep shapes each evaluate.
     status: completed
   - id: tess-memo
-    content: Add handle+tolerance mesh memo in flow/modules/brep tessellate_geometry_json, evicted together with handle GC (serves both worker paths).
+    content: Add handle+tolerance mesh memo in flow/module/brep tessellate_geometry_json, evicted together with handle GC (serves both worker paths).
     status: completed
   - id: tests
     content: Extend existing test regions for neural cache, brep retain/mesh-memo, and FlowHost branch-recompute/sweep; run cargo + vitest and verify with temporary [DEBUG] logs.
@@ -60,10 +60,10 @@ flowchart LR
 - `evaluate_internal` (currently rebuilds tree + seeds and runs the full evaluator every edit): call `self.neural_cache.begin_epoch()`, run the `*_cached` evaluator variants with `&self.neural_cache`, then `self.neural_cache.sweep()`. Self-invalidating (changed input -> new hash -> miss); sweep bounds memory to the current graph.
 - Both the bridge path and the in-registry path in `evaluate_internal` use the cached variants.
 
-## Phase 3 - Brep handle GC + tessellation memo (`flow/modules/brep/lib.rs`, `geometry/brep/brepkit/lib.rs`)
+## Phase 3 - Brep handle GC + tessellation memo (`flow/module/brep/lib.rs`, `geometry/brep/brepkit/lib.rs`)
 
 - Add `BrepkitKernel::retain(&self, live: &HashSet<String>)` in [geometry/brep/brepkit/lib.rs](geometry/brep/brepkit/lib.rs) that removes `registry` entries whose handle is not live (reuses the existing `Entry`/`registry` map and `dispose` semantics).
-- In [flow/modules/brep/lib.rs](flow/modules/brep/lib.rs):
+- In [flow/module/brep/lib.rs](flow/module/brep/lib.rs):
   - Add `pub fn retain_geometry_handles(live: &[String])` -> locks `kernel()` and calls `retain`.
   - Add a mesh memo `static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), String>>>` keyed by `(handle, tolerance.to_bits())`; check/fill it in `tessellate_geometry_json`. Evict entries for disposed handles inside `retain_geometry_handles` / `dispose_geometry` so memo invalidation is unified with handle GC.
 - In `FlowHost::evaluate_internal` (after outputs are computed): collect all live geometry handles by recursively scanning `self.outputs` dictionaries for `$schema == "geometry"` -> `handle` (Rust mirror of `collectGeometryHandles` in [flow/worker.ts](flow/worker.ts)), then call `flow_module_brep::retain_geometry_handles(&live)`.

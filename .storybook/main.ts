@@ -35,11 +35,11 @@ const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
 const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
 const semioJsDir = resolve(repoRootPath, "semio/client/lib/js");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
-const semioAssetsDir = resolve(repoRootPath, "semio/assets");
-const semioFixturesDir = resolve(repoRootPath, "semio/fixtures");
-const puzzleAssetsDir = resolve(repoRootPath, "puzzle/assets");
-const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithms/index.ts");
-const uiAssetsRootPath = resolve(repoRootPath, "ui/assets");
+const semioAssetsDir = resolve(repoRootPath, "semio/asset");
+const semioFixturesDir = resolve(repoRootPath, "semio/fixture");
+const puzzleAssetsDir = resolve(repoRootPath, "puzzle/asset");
+const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithm/index.ts");
+const uiAssetsRootPath = resolve(repoRootPath, "ui/asset");
 
 function toVitePath(value: string): string {
 	return value.replaceAll("\\", "/");
@@ -66,7 +66,7 @@ const loadSemioStack = storybookScopeMatches("semio");
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
 	if (loadUiStack || loadPuzzleStack) {
-		alias["@puzzle/assets"] = toVitePath(puzzleAssetsDir);
+		alias["@puzzle/asset"] = toVitePath(puzzleAssetsDir);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 		alias["@framework/playground/core"] = toVitePath(frameworkPlaygroundDir);
@@ -82,9 +82,9 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio/react"] = toVitePath(semioJsDir);
 		alias["@semio/js"] = toVitePath(semioJsDir);
 		alias["@semio/rs-wasm"] = toVitePath(semioRsWasmEntryPath);
-		alias["@semio/assets"] = toVitePath(semioAssetsDir);
-		alias["@semio/fixtures"] = toVitePath(semioFixturesDir);
-		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
+		alias["@semio/asset"] = toVitePath(semioAssetsDir);
+		alias["@semio/fixture"] = toVitePath(semioFixturesDir);
+		alias["@semio/algorithm"] = toVitePath(semioAlgorithmsEntryPath);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 	}
@@ -213,7 +213,7 @@ const config: StorybookConfig = {
 			optimizeExclude.add("@semio/ui");
 			optimizeExclude.add("@semio/react");
 			optimizeExclude.add("@semio/js");
-			optimizeExclude.add("@semio/assets");
+			optimizeExclude.add("@semio/asset");
 		}
 		config.optimizeDeps.exclude = Array.from(optimizeExclude);
 		config.optimizeDeps.esbuildOptions = {

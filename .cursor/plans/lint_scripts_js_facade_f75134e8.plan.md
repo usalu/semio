@@ -1,6 +1,6 @@
 ---
 name: Lint scripts JS facade
-overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@repo/lib` JS facade that spawns `client.exe` per call. An nx inferred plugin discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breaches/<entity-id>.json`.
+overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@repo/lib` JS facade that spawns `client.exe` per call. An nx inferred plugin discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breach/<entity-id>.json`.
 todos:
   - id: scaffold_bundle
     content: Scaffold repo/lib/js bundle (package.json, project.json, tsconfig, README)
@@ -12,7 +12,7 @@ todos:
     content: Implement TechnologyLinter, BundleLinter, FolderLinter, FileLinter, SectionLinter, DefinitionLinter
     status: completed
   - id: runner_bin
-    content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breaches/<id>.json
+    content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breach/<id>.json
     status: completed
   - id: nx_plugin
     content: Implement and register nx inferred plugin that discovers *.lint.script.ts and creates cacheable per-entity targets
@@ -21,7 +21,7 @@ todos:
     content: Remove legacy policy/statute/CheckPolicies/Fix machinery from repo/client/cli/main.go and update main_test.go
     status: completed
   - id: rewire_analyze
-    content: Rewrite analyze command to read .repo/cache/breaches/*.json with scope filtering
+    content: Rewrite analyze command to read .repo/cache/breach/*.json with scope filtering
     status: completed
   - id: example_scripts
     content: Add example lint scripts (one per linter kind) to validate the pipeline
@@ -51,7 +51,7 @@ Create the JS sibling of [repo/lib/go](repo/lib/go):
     - `SectionLinter` — `client section <id> --json`; exposes `content()`, `definitions()`, `startLine`, `endLine`.
     - `DefinitionLinter` — `client definition <id> --json`; exposes `content()`, `kind`, `startLine`, `endLine`.
   - `script.ts` — `defineLint<T extends Linter>(fn: (linter: T) => Breach[] | Promise<Breach[]>)` returns the function unchanged but tags it for the runner. Default export pattern.
-  - `runner.ts` — `runLintScript(scriptPath, entityId)`: dynamic-imports the script, instantiates the right linter subclass based on script filename suffix (file vs folder vs bundle vs technology), invokes default export, writes results to `.repo/cache/breaches/<flat-entity-id>.json`. Exits non-zero if any breach has `priority: high`.
+  - `runner.ts` — `runLintScript(scriptPath, entityId)`: dynamic-imports the script, instantiates the right linter subclass based on script filename suffix (file vs folder vs bundle vs technology), invokes default export, writes results to `.repo/cache/breach/<flat-entity-id>.json`. Exits non-zero if any breach has `priority: high`.
   - `index.ts` — re-exports everything.
   - `bin/lint.ts` — CLI entry: `bun repo/lib/js/bin/lint.ts <script-path>` used by nx targets.
 
@@ -78,7 +78,7 @@ In the runner:
     "cwd": "{workspaceRoot}"
   },
   "inputs": ["{projectRoot}/<scriptPath>", "<targetEntityFiles>", "sharedGlobals"],
-  "outputs": ["{workspaceRoot}/.repo/cache/breaches/<entity-id>.json"],
+  "outputs": ["{workspaceRoot}/.repo/cache/breach/<entity-id>.json"],
   "cache": true
 }
 ```
@@ -91,9 +91,9 @@ In [repo/client/cli/main.go](repo/client/cli/main.go):
 
 - Delete the entire policy/statute/breach detection: `Statute`, `StatuteMeta`, `Policy`, `Territory`, `statuteInfoTable`, `CheckPolicies`, `applyAutofixes`, `applySystemAutofixes`, `policyCommand`, `auditCommand`, all `BreachXxx` statute kinds, the `LanguagePlugin.ScanComments` method, `PolicyContext`, etc. Per `CLAUDE.md` — no backwards compat.
 - Keep `Breach` struct (used as I/O envelope) and `BreachPriority`, `AnalyzeResult`, `FixResult`.
-- Rewrite `repoContext.Analyze(scope)` to read `.repo/cache/breaches/*.json`, filter by scope, and return them. `Fix` is removed (autofix is a per-script concern now; out of scope for v1).
+- Rewrite `repoContext.Analyze(scope)` to read `.repo/cache/breach/*.json`, filter by scope, and return them. `Fix` is removed (autofix is a per-script concern now; out of scope for v1).
 - Drop `analyzeCmd`/`autofixCmd` cobra wrappers; the `analyze` cobra command stays but only reads cached breaches.
-- Update [repo/client/cli/main_test.go](repo/client/cli/main_test.go) — remove tests for deleted policy machinery, add tests asserting `analyze` reads from `.repo/cache/breaches/`.
+- Update [repo/client/cli/main_test.go](repo/client/cli/main_test.go) — remove tests for deleted policy machinery, add tests asserting `analyze` reads from `.repo/cache/breach/`.
 
 ## 5. Worked-example lint scripts
 
@@ -121,7 +121,7 @@ flowchart LR
   linterClass -->|spawns| cli["client.exe file ID --json"]
   cli --> linterClass
   linterClass --> breaches["Breach[]"]
-  breaches --> cache[".repo/cache/breaches/ID.json"]
+  breaches --> cache[".repo/cache/breach/ID.json"]
   cache --> analyzeCmd["client analyze"]
   nxPlugin["nx inferred plugin"] -.discovers.-> scriptTs
   nxPlugin -.creates target.-> runner

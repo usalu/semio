@@ -339,10 +339,10 @@ export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
 		const { dirname, join } = await import("node:path");
 		const { fileURLToPath } = await import("node:url");
 		const here = dirname(fileURLToPath(import.meta.url));
-		const mod = (await import("../../../flow/modules/brep/pkg/flow_module_brep.js")) as BrepWasmModule & {
+		const mod = (await import("../../../flow/module/brep/pkg/flow_module_brep.js")) as BrepWasmModule & {
 			initSync?: (input: { module: BufferSource }) => void;
 		};
-		mod.initSync?.({ module: readFileSync(join(here, "../../../flow/modules/brep/pkg/flow_module_brep_bg.wasm")) });
+		mod.initSync?.({ module: readFileSync(join(here, "../../../flow/module/brep/pkg/flow_module_brep_bg.wasm")) });
 		brepWasm = mod;
 		return mod;
 	}

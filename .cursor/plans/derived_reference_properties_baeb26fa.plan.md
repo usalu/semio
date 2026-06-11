@@ -1,6 +1,6 @@
 ---
 name: Derived reference properties
-overview: "Add computed derived-reference properties to the semio kit graph (Rust source of truth + golden GraphQL schema + JS wrapper): Type→files, and Design→types/designs/files with both direct (one-hop over pieces) and transitive (recursive through nested Design blueprints) variants, plus implementing the existing referencedBy inverse."
+overview: "Add computed derived-reference properties to the semio kit graph (Rust source of truth + golden GraphQL schema + JS wrapper): Type→files, and Design→types/design/files with both direct (one-hop over pieces) and transitive (recursive through nested Design blueprints) variants, plus implementing the existing referencedBy inverse."
 todos:
   - id: ticket
     content: Read repo://goals and open a repo MCP ticket for derived reference computed properties
@@ -9,7 +9,7 @@ todos:
     content: Add Type.files resolver (distinct files across representations) in lib.rs
     status: completed
   - id: rs-design-direct
-    content: Add Design.types/designs/files direct resolvers + dedup helpers; remove references stub
+    content: Add Design.types/design/files direct resolvers + dedup helpers; remove references stub
     status: completed
   - id: rs-design-transitive
     content: Add Design.allTypes/allDesigns/allFiles transitive resolvers with cycle guard
@@ -115,7 +115,7 @@ flowchart TD
 
 ## Tests (extend existing files only)
 
-- Rust `mod tests` ([lib.rs L15684+](semio/client/lib/rs/lib.rs)): extend in the style of `install_projection_graphql_hydrates_kit_types` (L16250) — install a projection with a type that has a representation→file, and a design whose pieces reference that type and a nested design; assert `type.files`, `design.types/designs/files`, transitive `allTypes/allDesigns/allFiles`, and `referencedBy` via GraphQL. Include a cycle case (design referencing a design that references back) to prove the visited guard terminates.
+- Rust `mod tests` ([lib.rs L15684+](semio/client/lib/rs/lib.rs)): extend in the style of `install_projection_graphql_hydrates_kit_types` (L16250) — install a projection with a type that has a representation→file, and a design whose pieces reference that type and a nested design; assert `type.files`, `design.types/design/files`, transitive `allTypes/allDesigns/allFiles`, and `referencedBy` via GraphQL. Include a cycle case (design referencing a design that references back) to prove the visited guard terminates.
 - JS embedded tests ([index.ts L4019+](semio/client/lib/js/index.ts), `SEMIO_JS_RUN_EMBEDDED_TESTS=1`): assert the new accessors are installed (`typeof Type.prototype.files === "function"`, etc.) and exercise them against the in-memory rs pipeline used by the existing "runs the in-memory rs graphql js pipeline" test.
 - Run via `nx`/`bun` per repo tooling: Rust tests (with `SEMIO_GOLDEN_STRICT=1`) and `bunx vitest`.
 

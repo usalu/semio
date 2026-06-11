@@ -50,7 +50,7 @@ git clone --branch "v$(npm view @modelcontextprotocol/ext-apps version)" --depth
 
 ### Framework Templates
 
-Learn and adapt from `/tmp/mcp-ext-apps/examples/basic-server-{framework}/`:
+Learn and adapt from `/tmp/mcp-ext-apps/example/basic-server-{framework}/`:
 
 | Template | Key Files |
 |----------|-----------|
@@ -84,7 +84,7 @@ Read JSDoc documentation directly from `/tmp/mcp-ext-apps/src/`:
 
 ### Advanced Patterns
 
-See `/tmp/mcp-ext-apps/docs/patterns.md` for detailed recipes:
+See `/tmp/mcp-ext-apps/doc/patterns.md` for detailed recipes:
 
 - **App-only tools** — `visibility: ["app"]`, hiding tools from model
 - **Polling** — real-time dashboards, interval management
@@ -101,7 +101,7 @@ See `/tmp/mcp-ext-apps/docs/patterns.md` for detailed recipes:
 
 ### Reference Host Implementation
 
-`/tmp/mcp-ext-apps/examples/basic-host/` shows one way an MCP Apps-capable host could be implemented. Real-world hosts like Claude Desktop are more sophisticated—use basic-host for local testing and protocol understanding, not as a guarantee of host behavior.
+`/tmp/mcp-ext-apps/example/basic-host/` shows one way an MCP Apps-capable host could be implemented. Real-world hosts like Claude Desktop are more sophisticated—use basic-host for local testing and protocol understanding, not as a guarantee of host behavior.
 
 ## Critical Implementation Notes
 
@@ -166,7 +166,7 @@ Test MCP Apps locally with the basic-host example:
 npm run build && npm run serve
 
 # Terminal 2: Run basic-host (from cloned repo)
-cd /tmp/mcp-ext-apps/examples/basic-host
+cd /tmp/mcp-ext-apps/example/basic-host
 npm install
 SERVERS='["http://localhost:3001/mcp"]' npm run start
 # Open http://localhost:8080

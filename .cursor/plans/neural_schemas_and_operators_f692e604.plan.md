@@ -12,10 +12,10 @@ todos:
     content: Update Evaluator (operator_infos, channel wiring, inject_channel_defaults, $schema on outputs) and extend neural tests (dispatch, validation, variadic).
     status: completed
   - id: wasm-glue
-    content: "Update flow/modules/wasm: manifest gains schemas + operators, evaluate_json uses registry.dispatch + channel defaults."
+    content: "Update flow/module/wasm: manifest gains schemas + operators, evaluate_json uses registry.dispatch + channel defaults."
     status: completed
   - id: core-module
-    content: "Create flow/modules/core crate: core schemas (number/text/boolean/list/dictionary/image) + value operators core.number/core.text/core.image; wire Cargo.toml + launch.json + react defaults."
+    content: "Create flow/module/core crate: core schemas (number/text/boolean/list/dictionary/image) + value operators core.number/core.text/core.image; wire Cargo.toml + launch.json + react defaults."
     status: completed
   - id: math-module
     content: "math: register point/vector schemas; multi-impl add/subtract (number/point/vector) + variadic; add constructVector/constructPoint/move; remove channel fallback hacks; update tests."
@@ -30,7 +30,7 @@ todos:
     content: Mirror FlowDocumentV1/OperatorInfo/Schema in flow/react; render chrome/ports/previews from new model; load module-core; update vitest.
     status: completed
   - id: validate-all
-    content: Run neural/modules/flow tests + flow/react vitest and verify ports, schema dispatch, and flow-strip behavior in the play app.
+    content: Run neural/module/flow tests + flow/react vitest and verify ports, schema dispatch, and flow-strip behavior in the play app.
     status: in_progress
 isProject: false
 ---
@@ -62,7 +62,7 @@ flowchart TB
     Reg --> Eval
     Dict --> Eval
   end
-  subgraph modules["flow/modules/*"]
+  subgraph modules["flow/module/*"]
     Core["core: schemas number/text/.. + value ops (core.number/text/image)"]
     Math["math: schemas point/vector + add/move/constructVector (multi-impl)"]
     Others["list / logic / text / dictionary"]
@@ -95,10 +95,10 @@ flowchart TB
 
 ## Part B: module glue + modules
 
-- [flow/modules/wasm/lib.rs](flow/modules/wasm/lib.rs): `FlowModuleContributesV1` gains `schemas: Vec<Schema>` and renames `neuron_kinds` -> `operators: Vec<OperatorInfo>`; `build_manifest_json` pulls `registry.operator_catalogue()` + `registry.schema_catalogue()`; `evaluate_json` calls `registry.dispatch(...)` with `inject_channel_defaults`.
-- NEW crate `flow/modules/core` (necessary, clean): registers core schemas `number`,`text`,`boolean`,`list`,`dictionary`,`image` and **value operators** `core.number`/`core.text`/`core.image` (read their value from params, emit a `$schema`-tagged dict). These back the input widgets so values live in the tree. Follows the exact `script.ts`/`project.json`/`package.json`/`Cargo.toml`/`wasm_ext` pattern of the other modules. Add to root [Cargo.toml](Cargo.toml) workspace members.
-- [flow/modules/math/lib.rs](flow/modules/math/lib.rs): register schemas `point` and `vector` (fields x,y,z decimals). Convert each op to an operator with accurate channels; make `math.add`/`subtract` multi-impl (`["number"]`, `["point"]`, `["vector"]`) + variadic; add `math.constructVector`/`math.constructPoint` (inputs `x`,`y`,`z`, default 0 -> vector/point) and `math.move` (impls `["point"]`,`["vector"]`). Remove the `read_number("a").or_else(read_number("number"))` hacks now that channels are accurate. (Sphere/geometry `move` impls are intentionally out of scope to avoid mixing the `geometry`/`procedural` technology — they would register the same way in that module as a follow-up.)
-- [flow/modules/{list,logic,text,dictionary}/lib.rs](flow/modules): register their schema (`list`/`boolean`/`text`/`dictionary`) and convert kinds to operators with accurate channels; keep variadic where present (e.g. `dictionary.merge`, `text.concat`). Update each module's `#region Tests`.
+- [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs): `FlowModuleContributesV1` gains `schemas: Vec<Schema>` and renames `neuron_kinds` -> `operators: Vec<OperatorInfo>`; `build_manifest_json` pulls `registry.operator_catalogue()` + `registry.schema_catalogue()`; `evaluate_json` calls `registry.dispatch(...)` with `inject_channel_defaults`.
+- NEW crate `flow/module/core` (necessary, clean): registers core schemas `number`,`text`,`boolean`,`list`,`dictionary`,`image` and **value operators** `core.number`/`core.text`/`core.image` (read their value from params, emit a `$schema`-tagged dict). These back the input widgets so values live in the tree. Follows the exact `script.ts`/`project.json`/`package.json`/`Cargo.toml`/`wasm_ext` pattern of the other modules. Add to root [Cargo.toml](Cargo.toml) workspace members.
+- [flow/module/math/lib.rs](flow/module/math/lib.rs): register schemas `point` and `vector` (fields x,y,z decimals). Convert each op to an operator with accurate channels; make `math.add`/`subtract` multi-impl (`["number"]`, `["point"]`, `["vector"]`) + variadic; add `math.constructVector`/`math.constructPoint` (inputs `x`,`y`,`z`, default 0 -> vector/point) and `math.move` (impls `["point"]`,`["vector"]`). Remove the `read_number("a").or_else(read_number("number"))` hacks now that channels are accurate. (Sphere/geometry `move` impls are intentionally out of scope to avoid mixing the `geometry`/`procedural` technology — they would register the same way in that module as a follow-up.)
+- [flow/module/{list,logic,text,dictionary}/lib.rs](flow/module): register their schema (`list`/`boolean`/`text`/`dictionary`) and convert kinds to operators with accurate channels; keep variadic where present (e.g. `dictionary.merge`, `text.concat`). Update each module's `#region Tests`.
 
 ## Part C: flow/core authoritative {flow, tree} ([flow/core/lib.rs](flow/core/lib.rs))
 
@@ -118,8 +118,8 @@ flowchart TB
 
 ## Part E: wiring / infra
 
-- [launch.json](launch.json): register `flow/modules/core` build/test entries following existing module order/grouping/naming.
-- Root [Cargo.toml](Cargo.toml): add `flow/modules/core` to workspace members.
+- [launch.json](launch.json): register `flow/module/core` build/test entries following existing module order/grouping/naming.
+- Root [Cargo.toml](Cargo.toml): add `flow/module/core` to workspace members.
 - Update any `dag` port consumers if `value_type` semantics change ([mathematical/graph/port/directed/dag/lib.rs](mathematical/graph/port/directed/dag/lib.rs) only if needed — likely no change since it already carries `value_type: Option<String>`).
 
 ## Ticket workflow (first execution step)
@@ -128,4 +128,4 @@ Read `repo://goals`, then open a new ticket (e.g. "Neural Schemas And Operators"
 
 ## Validation
 
-Run via nx/launch.json: `neural/engine` tests, all `flow/modules/*` tests, `flow/core` tests (incl. shakability), and `flow/react` vitest. Manually confirm in the flow play app that `add` shows `a`/`b` ports, `constructVector` shows `x`/`y`/`z`, point+point add produces a `$schema:point` dict, and stripping `flow` from a saved document still evaluates.
+Run via nx/launch.json: `neural/engine` tests, all `flow/module/*` tests, `flow/core` tests (incl. shakability), and `flow/react` vitest. Manually confirm in the flow play app that `add` shows `a`/`b` ports, `constructVector` shows `x`/`y`/`z`, point+point add produces a `$schema:point` dict, and stripping `flow` from a saved document still evaluates.

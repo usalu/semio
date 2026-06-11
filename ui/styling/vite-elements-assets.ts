@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🌐 Vite plugin: serve and copy `ui/assets` at `/assets/*` (fonts, cursors, …). */
+/** @emoji 🌐 Vite plugin: serve and copy `ui/asset` at `/asset/*` (fonts, cursors, …). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -111,11 +111,11 @@ function contentTypeForUiAsset(filePath: string): string | undefined {
 function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunction {
   const assetsRootResolved = resolve(assetsRoot);
   return (req, res, next) => {
-    if (!req.url?.startsWith("/assets/")) {
+    if (!req.url?.startsWith("/asset/")) {
       next();
       return;
     }
-    const rel = decodeURIComponent(req.url.slice("/assets/".length).split(/[?#]/, 1)[0] ?? "");
+    const rel = decodeURIComponent(req.url.slice("/asset/".length).split(/[?#]/, 1)[0] ?? "");
     const filePath = resolve(assetsRootResolved, rel);
     const relToRoot = relative(assetsRootResolved, filePath);
     if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
@@ -130,27 +130,27 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
   };
 }
 
-/** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/meshes/*` URLs. */
+/** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/mesh/*` URLs. */
 export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
   return {
     meshRoots: [
-      resolve(repoRoot, "semio/fixtures/kit/folder/metabolism/representations"),
-      resolve(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau"),
+      resolve(repoRoot, "semio/fixture/kit/folder/metabolism/representations"),
+      resolve(repoRoot, "semio/fixture/kit/folder/abbau-aufbau"),
     ],
-    placeholderMesh: resolve(repoRoot, "semio/assets/mesh/placeholder.glb"),
+    placeholderMesh: resolve(repoRoot, "semio/asset/mesh/placeholder.glb"),
   };
 }
 
-/** @emoji 🌐 Connect middleware: serve kit GLBs at `/meshes/<name>.glb` (first matching root wins). */
+/** @emoji 🌐 Connect middleware: serve kit GLBs at `/mesh/<name>.glb` (first matching root wins). */
 export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], placeholderMesh: string): Connect.NextHandleFunction {
   const rootsResolved = meshRoots.map((root) => resolve(root));
   const placeholderResolved = resolve(placeholderMesh);
   return (req, res, next) => {
-    if (!req.url?.startsWith("/meshes/")) {
+    if (!req.url?.startsWith("/mesh/")) {
       next();
       return;
     }
-    const rawName = decodeURIComponent(req.url.slice("/meshes/".length).split(/[?#]/, 1)[0] ?? "");
+    const rawName = decodeURIComponent(req.url.slice("/mesh/".length).split(/[?#]/, 1)[0] ?? "");
     if (rawName === "placeholder.glb") {
       if (!existsSync(placeholderResolved) || !statSync(placeholderResolved).isFile()) {
         next();
@@ -177,7 +177,7 @@ export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], pla
   };
 }
 
-/** @emoji 🧊 Vite: serve and copy kit meshes at `/meshes/*` for puzzle 3d play and sketchpad. */
+/** @emoji 🧊 Vite: serve and copy kit meshes at `/mesh/*` for puzzle 3d play and sketchpad. */
 export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
   const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
   const serveMeshes = createPuzzle3dMeshesMiddleware(meshRoots, placeholderMesh);
@@ -217,7 +217,7 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
   ];
 }
 
-/** @emoji 🌐 Vite: serve and copy `ui/assets` at `/assets/*` for palette fonts and cursors. */
+/** @emoji 🌐 Vite: serve and copy `ui/asset` at `/asset/*` for palette fonts and cursors. */
 export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
   let viteRoot = process.cwd();
   const serveAssets = createUiAssetsMiddleware(assetsRoot);
@@ -243,7 +243,7 @@ export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
         if (!existsSync(assetsRoot)) {
           return;
         }
-        const dest = resolve(viteRoot, "dist", "assets");
+        const dest = resolve(viteRoot, "dist", "asset");
         mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
         cpSync(assetsRoot, dest, { recursive: true });
       },
@@ -745,7 +745,7 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: /^@framework\/platform\/renderer\/react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx") },
     { find: /^@framework\/core$/, replacement: resolve(repoRoot, "framework/core/index.ts") },
     { find: "@ui/react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
-    { find: "@ui/assets", replacement: resolve(repoRoot, "ui/assets/index.ts") },
+    { find: "@ui/asset", replacement: resolve(repoRoot, "ui/asset/index.ts") },
     { find: "@infinite/cavas/react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
     { find: "@infinite/world/r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
     { find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
@@ -764,13 +764,13 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@framework/presentation/renderer/react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
     { find: "@flow/play", replacement: resolve(repoRoot, "flow/play/index.ts") },
     { find: "@flow/react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
-    { find: "@flow/module-core", replacement: resolve(repoRoot, "flow/modules/core/pkg/flow_module_core.js") },
-    { find: "@flow/module-brep", replacement: resolve(repoRoot, "flow/modules/brep/pkg/flow_module_brep.js") },
-    { find: "@flow/module-math", replacement: resolve(repoRoot, "flow/modules/math/pkg/flow_module_math.js") },
-    { find: "@flow/module-text", replacement: resolve(repoRoot, "flow/modules/text/pkg/flow_module_text.js") },
-    { find: "@flow/module-logic", replacement: resolve(repoRoot, "flow/modules/logic/pkg/flow_module_logic.js") },
-    { find: "@flow/module-dictionary", replacement: resolve(repoRoot, "flow/modules/dictionary/pkg/flow_module_dictionary.js") },
-    { find: "@flow/module-list", replacement: resolve(repoRoot, "flow/modules/list/pkg/flow_module_list.js") },
+    { find: "@flow/module-core", replacement: resolve(repoRoot, "flow/module/core/pkg/flow_module_core.js") },
+    { find: "@flow/module-brep", replacement: resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
+    { find: "@flow/module-math", replacement: resolve(repoRoot, "flow/module/math/pkg/flow_module_math.js") },
+    { find: "@flow/module-text", replacement: resolve(repoRoot, "flow/module/text/pkg/flow_module_text.js") },
+    { find: "@flow/module-logic", replacement: resolve(repoRoot, "flow/module/logic/pkg/flow_module_logic.js") },
+    { find: "@flow/module-dictionary", replacement: resolve(repoRoot, "flow/module/dictionary/pkg/flow_module_dictionary.js") },
+    { find: "@flow/module-list", replacement: resolve(repoRoot, "flow/module/list/pkg/flow_module_list.js") },
     { find: "@dag/play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
     { find: "@dag/react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
     { find: "@procedural/play", replacement: resolve(repoRoot, "procedural/play/index.ts") },
@@ -839,7 +839,7 @@ export function infiniteFixtureVitePlugin(repoRoot: string): Plugin[] {
 /** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
-  const uiAssetsRoot = resolve(repoRoot, "ui/assets");
+  const uiAssetsRoot = resolve(repoRoot, "ui/asset");
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
   const rendererIndex = resolve(rendererRoot, "index.tsx");
   const rendererAliases = playgroundRendererResolveAliases(repoRoot);

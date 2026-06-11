@@ -98,7 +98,7 @@ Rationale: the engine stays the generic layer; storage stays per-doc; reveal-on-
 - Muted styling for hidden rows (extend `treeRowStateClasses`, 8705).
 - Hover reveal needs no new code: existing `onPointerEnter` -> hover store -> renderer already drives the 3D reveal once step 3 renders hidden-but-hovered as hovered.
 
-### Icons ([ui/assets/script.ts](ui/assets/script.ts))
+### Icons ([ui/asset/script.ts](ui/asset/script.ts))
 - Add `"lock-open"` to `VENDORED_ICON_IDS` (151) and regenerate via the `build ui assets` launch entry (`eye`/`eye-off`/`lock` already vendored).
 
 ### Platform plumbing ([framework/product/platform/core/index.ts](framework/product/platform/core/index.ts))

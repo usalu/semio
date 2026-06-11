@@ -42,6 +42,7 @@ import {
   puzzle2dFixturePaletteTreeDragController,
 } from "../../2d/react/index.tsx";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
+import concreteForest2dJson from "../../2d/fixture/concrete-forest.2d.json";
 import {
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
   puzzle2dLodAutomaticSelectLabel,
@@ -58,6 +59,7 @@ import {
   type Puzzle2dSelectionTargets,
 } from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
+import concreteForest3dJson from "../../3d/fixture/concrete-forest.3d.json";
 import { type GumballConfig } from "@ui/react";
 import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
@@ -101,6 +103,7 @@ import {
   type V1 as Puzzle5dV1,
 } from "../react/index.tsx";
 import nakagin5dJson from "../fixture/nakagin-capsule-tower.5d.json";
+import concreteForest5dJson from "../fixture/concrete-forest.5d.json";
 
 //#region 🔖Ids
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
@@ -118,8 +121,12 @@ export const PUZZLE_5D_PLAY_KINDS_TAB_ID = "puzzle-5d-play-kinds";
 export const PUZZLE_5D_PLAY_ICON_KINDS = "puzzle.5d-play.icon.kinds";
 
 export const PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
+export const PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID = "concrete-forest";
 
-export const PUZZLE_5D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
+export const PUZZLE_5D_PLAY_FIXTURE_OPTIONS = [
+  { id: PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
+  { id: PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
+] as const;
 
 const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -360,6 +367,18 @@ function loadNakagin5dModel(): Puzzle5dV1 {
   return model;
 }
 
+function loadConcreteForest5dModel(): Puzzle5dV1 {
+  const model = parseV1(concreteForest5dJson as unknown);
+  if (!model) throw new Error("concrete-forest.5d.json must use schema puzzle.5d/v1");
+  return model;
+}
+
+function puzzle5dPlayModelForFixtureId(fixtureId: string): Puzzle5dV1 | null {
+  if (fixtureId === PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID) return loadNakagin5dModel();
+  if (fixtureId === PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID) return loadConcreteForest5dModel();
+  return null;
+}
+
 function puzzle5dPlayEmptyModel(): Puzzle5dV1 {
   return {
     schema: "puzzle.5d/v1",
@@ -396,8 +415,8 @@ export class Puzzle5dStoreBridge extends Store<Puzzle5dStoreSnapshot> {
 /** @emoji 🎛 Puzzle 5d play shell controller shared by declarative 2d and 3d windows. */
 export class Puzzle5dPlayShellController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("main", "Puzzle 5d", undefined);
-  private activeFixtureId = PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID;
-  readonly puzzle5dStore: Puzzle5dStore = createStore(loadNakagin5dModel());
+  private activeFixtureId = PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+  readonly puzzle5dStore: Puzzle5dStore = createStore(loadConcreteForest5dModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
   private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();
@@ -695,7 +714,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   private loadFixtureById(fixtureId: string): void {
-    const model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : fixtureId === PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID ? loadNakagin5dModel() : null;
+    const model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : puzzle5dPlayModelForFixtureId(fixtureId);
     if (!model) return;
     this.puzzle5dStore.replaceModel(model);
     this.selected2d = new Set();
@@ -1148,6 +1167,22 @@ if (import.meta.vitest) {
       expect(model?.schema).toBe("puzzle.5d/v1");
       expect(model?.parts.length).toBeGreaterThan(0);
     });
+    it("parses concrete forest 2d, 3d, and unified puzzle 5d v1", () => {
+      const fixture2d = parsePuzzle2dFixtureV1(concreteForest2dJson as unknown);
+      const fixture3d = parseFixtureV1(concreteForest3dJson as unknown);
+      const model = parseV1(concreteForest5dJson as unknown);
+      expect(fixture2d?.nodes.some((node) => node.id === "seed-left-001")).toBe(true);
+      expect(fixture3d?.objects.some((object) => object.id === "seed-left-001")).toBe(true);
+      expect(model?.schema).toBe("puzzle.5d/v1");
+      expect(model?.parts.some((part) => part.id === "seed-left-001" && part.puzzle2d && part.puzzle3d)).toBe(true);
+    });
+    it("fixture catalog lists concrete forest and nakagin", () => {
+      const runtime = buildPuzzle5dPlayRuntime();
+      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      const catalog = controller.getFixtureCatalog();
+      expect(catalog.activeFixtureId).toBe(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+      expect(catalog.options.map((row) => row.id)).toEqual([PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID, PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID]);
+    });
     it("regenerates nakagin 5d fixture when REGENERATE_NAKAGIN_5D=1", async () => {
       if (process.env.REGENERATE_NAKAGIN_5D !== "1") return;
       const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
@@ -1164,6 +1199,25 @@ if (import.meta.vitest) {
       const { writeFile } = await import("node:fs/promises");
       const { join } = await import("node:path");
       const outPath = join(process.cwd(), "../fixture/nakagin-capsule-tower.5d.json");
+      await writeFile(outPath, `${JSON.stringify(model, null, 2)}\n`, "utf8");
+      expect(model.parts.length).toBeGreaterThan(0);
+    });
+    it("regenerates concrete forest 5d fixture when REGENERATE_CONCRETE_FOREST_5D=1", async () => {
+      if (process.env.REGENERATE_CONCRETE_FOREST_5D !== "1") return;
+      const fixture2d = parsePuzzle2dFixtureV1(concreteForest2dJson as unknown);
+      const fixture3d = parseFixtureV1(concreteForest3dJson as unknown);
+      expect(fixture2d).toBeTruthy();
+      expect(fixture3d).toBeTruthy();
+      const model = {
+        ...compose5d(fixture2d!, fixture3d!),
+        label: "Concrete Forest",
+        meta: {
+          description: "Unified puzzle 5d source for Concrete Forest play; 2d and 3d views project from this model.",
+        },
+      };
+      const { writeFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      const outPath = join(process.cwd(), "../fixture/concrete-forest.5d.json");
       await writeFile(outPath, `${JSON.stringify(model, null, 2)}\n`, "utf8");
       expect(model.parts.length).toBeGreaterThan(0);
     });

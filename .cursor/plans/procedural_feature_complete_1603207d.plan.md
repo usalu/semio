@@ -12,10 +12,10 @@ todos:
     content: Expose all missing kernel ops + new utilities as BREP_FLOW_KINDS/handlers in procedural/react/index.tsx with tests; bump manifest version
     status: completed
   - id: math
-    content: Add math.random (seeded + entropy fallback) and fuller arithmetic/trig/remap to flow/modules/math/lib.rs; add js_sys to Cargo.toml; extend tests
+    content: Add math.random (seeded + entropy fallback) and fuller arithmetic/trig/remap to flow/module/math/lib.rs; add js_sys to Cargo.toml; extend tests
     status: completed
   - id: list
-    content: Add list.range and list.reverse to flow/modules/list/lib.rs with tests
+    content: Add list.range and list.reverse to flow/module/list/lib.rs with tests
     status: completed
   - id: build-verify
     content: Rebuild math/list wasm pkgs via nx; run brep/procedural vitest and Rust cargo tests; confirm nodes evaluate at runtime
@@ -33,7 +33,7 @@ isProject: false
 Two node systems back the procedural editor:
 
 - Brep geometry nodes: catalogue `BREP_FLOW_KINDS` + handlers `BREP_EVAL_HANDLERS` in [procedural/react/index.tsx](procedural/react/index.tsx), backed by `BrepjsGeometryKernel` in [geometry/brep/js/index.ts](geometry/brep/js/index.ts).
-- Generic data nodes: Rust/WASM modules in [flow/modules/math/lib.rs](flow/modules/math/lib.rs), [flow/modules/list/lib.rs](flow/modules/list/lib.rs), etc., built to `pkg/` and loaded by [flow/react/index.tsx](flow/react/index.tsx).
+- Generic data nodes: Rust/WASM modules in [flow/module/math/lib.rs](flow/module/math/lib.rs), [flow/module/list/lib.rs](flow/module/list/lib.rs), etc., built to `pkg/` and loaded by [flow/react/index.tsx](flow/react/index.tsx).
 
 The kernel already implements many ops not surfaced as nodes; the named utilities (reparametrize, random) do not yet exist. Each addition goes where it belongs: geometry in the brep module, numbers/series in the Rust modules.
 
@@ -78,16 +78,16 @@ Bump `BREP_MODULE_MANIFEST.version`. Extend the file's `🧪Tests` region with h
 
 ## 3. Math module: seeded random + fuller arithmetic
 
-In [flow/modules/math/lib.rs](flow/modules/math/lib.rs), add `Function` structs + `register()` entries:
+In [flow/module/math/lib.rs](flow/module/math/lib.rs), add `Function` structs + `register()` entries:
 
 - `math.random` (`seed?`, `min?`=0, `max?`=1 → `number`): deterministic splitmix64 from `seed` when present; when absent, draw from a lazily-seeded `thread_local` RNG. Entropy via a `cfg`-gated `entropy_seed()` (`js_sys::Math::random()` on `wasm32`, `std::time::SystemTime` natively) — keeps it cross-platform and avoids non-determinism in seeded graphs.
 - Arithmetic/utility: `subtract`, `divide`, `power`, `modulo`, `negate`, `abs`, `sqrt`, `min`, `max`, `floor`, `ceil`, `round`, trig `sin`/`cos`/`tan`, and `remap` (`value`, `fromMin`, `fromMax`, `toMin`, `toMax` → `number`).
 
-Add `js_sys` (wasm-only) to [flow/modules/math/Cargo.toml](flow/modules/math/Cargo.toml) as the wasm interface boundary. Extend the in-file `🔖Tests` (seeded determinism, remap, divide-by-zero guard).
+Add `js_sys` (wasm-only) to [flow/module/math/Cargo.toml](flow/module/math/Cargo.toml) as the wasm interface boundary. Extend the in-file `🔖Tests` (seeded determinism, remap, divide-by-zero guard).
 
 ## 4. List module: series generation
 
-In [flow/modules/list/lib.rs](flow/modules/list/lib.rs) add `list.range` (`start`, `step`, `count` → index-keyed list) and `list.reverse`, with tests in the existing `🔖Tests` region. This drives divide/iteration workflows.
+In [flow/module/list/lib.rs](flow/module/list/lib.rs) add `list.range` (`start`, `step`, `count` → index-keyed list) and `list.reverse`, with tests in the existing `🔖Tests` region. This drives divide/iteration workflows.
 
 ## 5. Build, wire, verify
 

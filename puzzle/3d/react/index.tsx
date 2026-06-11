@@ -1980,7 +1980,7 @@ export function puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId(kindId: string):
       continue;
     }
     const tail = name.slice(prefix.length);
-    return `/meshes/capsule_${puzzle3dNakaginCapsuleMeshSuffixFromKindTail(tail)}.glb`;
+    return `/mesh/capsule_${puzzle3dNakaginCapsuleMeshSuffixFromKindTail(tail)}.glb`;
   }
   return undefined;
 }
@@ -5986,8 +5986,14 @@ export function puzzle3dAutoFitMarkInitialApplied(seedKey: string | number): voi
   puzzle3dAutoFitInitialAppliedSeeds.add(String(seedKey));
 }
 
-/** @emoji 🖌️ True while brush preview or suggestion menu is active (suppresses camera auto-fit). */
+/** @emoji 🪣 True while the fill tool is active (suppresses camera auto-fit). */
+export const puzzle3dFillToolActiveRef = { current: false };
+
+/** @emoji 🖌️ True while brush preview, suggestion menu, or brush/fill tools are active (suppresses camera auto-fit). */
 export function puzzle3dBrushSessionActive(): boolean {
+  if (puzzle3dBrushToolActiveRef.current || puzzle3dFillToolActiveRef.current) {
+    return true;
+  }
   const ui = puzzle3dBrushUiStore.getSnapshot();
   return ui.targetActive || ui.menuOpen || ui.preview !== null;
 }
@@ -11042,6 +11048,12 @@ function Inner(props: CanvasProps & {
       puzzle3dBrushAltPressedRef.current = false;
     };
   }, [brushActive]);
+  reactHostPort.useLayoutEffect(() => {
+    puzzle3dFillToolActiveRef.current = fillActive;
+    return () => {
+      puzzle3dFillToolActiveRef.current = false;
+    };
+  }, [fillActive]);
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
@@ -11688,9 +11700,17 @@ if (import.meta.vitest) {
     });
   });
   describe("puzzle3dBrushSessionActive", () => {
-    it("is true while brush target, preview, or menu is active", () => {
+    it("is true while brush target, preview, menu, or brush/fill tools are active", () => {
       puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+      puzzle3dBrushToolActiveRef.current = false;
+      puzzle3dFillToolActiveRef.current = false;
       expect(puzzle3dBrushSessionActive()).toBe(false);
+      puzzle3dBrushToolActiveRef.current = true;
+      expect(puzzle3dBrushSessionActive()).toBe(true);
+      puzzle3dBrushToolActiveRef.current = false;
+      puzzle3dFillToolActiveRef.current = true;
+      expect(puzzle3dBrushSessionActive()).toBe(true);
+      puzzle3dFillToolActiveRef.current = false;
       puzzle3dBrushUiStore.setSnapshot({ ...BRUSH_UI_IDLE, targetActive: true });
       expect(puzzle3dBrushSessionActive()).toBe(true);
       puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
@@ -12683,12 +12703,12 @@ if (import.meta.vitest) {
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [],
-        objects: [{ id: "tower-base", objectKind: "Base", meshUrl: "/meshes/base.glb", origin: [0, 0, 0], vortices: [] }],
+        objects: [{ id: "tower-base", objectKind: "Base", meshUrl: "/mesh/base.glb", origin: [0, 0, 0], vortices: [] }],
       };
-      expect(resolveObjectKindMeshUrl("Base", catalogs, scene)).toBe("/meshes/base.glb");
+      expect(resolveObjectKindMeshUrl("Base", catalogs, scene)).toBe("/mesh/base.glb");
       const dragFixture = buildPaletteObjectDragFixture("Base");
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
-      expect(placed?.meshUrl).toBe("/meshes/base.glb");
+      expect(placed?.meshUrl).toBe("/mesh/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
     });
     it("resolvePuzzle3dFixtureDrop ignores palette object drag when mesh cannot be resolved", () => {
@@ -12699,7 +12719,7 @@ if (import.meta.vitest) {
     });
     it("resolvePuzzle3dFixtureDrop does not replace fixture with palette seed drag payload", () => {
       const catalogs: KindCatalogBundle = {
-        objects: [{ id: "Capsule Z", label: "Capsule Z", meshUrl: "/meshes/capsule_z.glb" }],
+        objects: [{ id: "Capsule Z", label: "Capsule Z", meshUrl: "/mesh/capsule_z.glb" }],
       };
       const scene: FixtureV1 = {
         schema: "puzzle.3d.fixture/v1",
@@ -12714,20 +12734,20 @@ if (import.meta.vitest) {
       if (result.kind !== "palette-object") {
         return;
       }
-      expect(result.object.meshUrl).toBe("/meshes/capsule_z.glb");
+      expect(result.object.meshUrl).toBe("/mesh/capsule_z.glb");
       expect(result.object.origin).toEqual([4, 5, 6]);
       const merged = applyPuzzle3dFixtureDropResult(scene, result);
       expect(merged?.objects).toHaveLength(1);
-      expect(merged?.objects[0]?.meshUrl).toBe("/meshes/capsule_z.glb");
+      expect(merged?.objects[0]?.meshUrl).toBe("/mesh/capsule_z.glb");
     });
     it("nakagin capsule kinds resolve to oriented capsule_* metabolism glbs", () => {
-      expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Capsule With Balcony J")).toBe("/meshes/capsule_J.glb");
-      expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Capsule With Balcony L")).toBe("/meshes/capsule_L.glb");
-      expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Trapezoid Capsule Slash")).toBe("/meshes/capsule_slash.glb");
+      expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Capsule With Balcony J")).toBe("/mesh/capsule_J.glb");
+      expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Capsule With Balcony L")).toBe("/mesh/capsule_L.glb");
+      expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Trapezoid Capsule Slash")).toBe("/mesh/capsule_slash.glb");
       expect(puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId("Capsule")).toBeUndefined();
       expect(resolveObjectKindMeshUrl("Capsule With Balcony Backslash", {
-        objects: [{ id: "Capsule With Balcony Backslash", meshUrl: "/meshes/capsule-with-balcony_backslash.glb" }],
-      })).toBe("/meshes/capsule_backslash.glb");
+        objects: [{ id: "Capsule With Balcony Backslash", meshUrl: "/mesh/capsule-with-balcony_backslash.glb" }],
+      })).toBe("/mesh/capsule_backslash.glb");
     });
 
     it("resolveObjectKindMeshUrl ignores palette drag seed URLs in catalog and scene", () => {
@@ -12741,26 +12761,26 @@ if (import.meta.vitest) {
         attractions: [],
         objects: [
           { id: "palette-seed-object", objectKind: "Capsule q", meshUrl: PALETTE_DRAG_SEED_MESH_URL, origin: [0, 0, 0], vortices: [] },
-          { id: "tower-q", objectKind: "Capsule q", meshUrl: "/meshes/capsule_q.glb", origin: [1, 0, 0], vortices: [] },
+          { id: "tower-q", objectKind: "Capsule q", meshUrl: "/mesh/capsule_q.glb", origin: [1, 0, 0], vortices: [] },
         ],
       };
       expect(isLoadableMeshUrl(PALETTE_DRAG_SEED_MESH_URL)).toBe(false);
-      expect(resolveObjectKindMeshUrl("Capsule q", catalogs, scene)).toBe("/meshes/capsule_q.glb");
+      expect(resolveObjectKindMeshUrl("Capsule q", catalogs, scene)).toBe("/mesh/capsule_q.glb");
       const dragFixture = buildPaletteObjectDragFixture("Capsule q");
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
-      expect(placed?.meshUrl).toBe("/meshes/capsule_q.glb");
+      expect(placed?.meshUrl).toBe("/mesh/capsule_q.glb");
     });
     it("applyObjectKindToFixtureObject swaps meshUrl from the catalog", () => {
       const catalogs: KindCatalogBundle = {
         objects: [
-          { id: "kind-a", meshUrl: "/meshes/a.glb" },
-          { id: "kind-b", meshUrl: "/meshes/b.glb" },
+          { id: "kind-a", meshUrl: "/mesh/a.glb" },
+          { id: "kind-b", meshUrl: "/mesh/b.glb" },
         ],
       };
-      const object: FixtureObjectV1 = { id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] };
+      const object: FixtureObjectV1 = { id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [] };
       const next = applyObjectKindToFixtureObject(object, "kind-b", catalogs);
       expect(next.objectKind).toBe("kind-b");
-      expect(next.meshUrl).toBe("/meshes/b.glb");
+      expect(next.meshUrl).toBe("/mesh/b.glb");
       expect(fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [object] })).not.toBe(
         fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [next] }),
       );
@@ -12772,16 +12792,16 @@ if (import.meta.vitest) {
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [],
-        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] }],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [] }],
       };
       store.initFromFixture(initial);
-      expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/a.glb");
+      expect(store.getRecord("obj")?.meshUrl).toBe("/mesh/a.glb");
       store.syncAppearanceFromFixture({
         ...initial,
-        objects: [{ id: "obj", objectKind: "kind-b", meshUrl: "/meshes/b.glb", origin: [0, 0, 0], vortices: [] }],
+        objects: [{ id: "obj", objectKind: "kind-b", meshUrl: "/mesh/b.glb", origin: [0, 0, 0], vortices: [] }],
       });
       expect(store.getRecord("obj")?.objectKind).toBe("kind-b");
-      expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/b.glb");
+      expect(store.getRecord("obj")?.meshUrl).toBe("/mesh/b.glb");
     });
     it("ObjectStore syncAppearanceFromFixture syncs hidden and locked flags on objects and attractions", () => {
       const store = new ObjectStore();
@@ -12790,13 +12810,13 @@ if (import.meta.vitest) {
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [{ id: "att-1", attracting: "obj:v1", attracted: "obj:v1" }],
-        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] }],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] }],
       };
       store.initFromFixture(initial);
       store.syncAppearanceFromFixture({
         ...initial,
         attractions: [{ id: "att-1", attracting: "obj:v1", attracted: "obj:v1", hidden: true, locked: true }],
-        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], hidden: true, locked: true, vortices: [{ id: "v1", position: [0, 0, 0], hidden: true }] }],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], hidden: true, locked: true, vortices: [{ id: "v1", position: [0, 0, 0], hidden: true }] }],
       });
       expect(store.getRecord("obj")?.hidden).toBe(true);
       expect(store.getRecord("obj")?.locked).toBe(true);
@@ -12894,17 +12914,17 @@ if (import.meta.vitest) {
       objects: [
         {
           id: "Capsule J",
-          meshUrl: "/meshes/capsule_J.glb",
+          meshUrl: "/mesh/capsule_J.glb",
           vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
         },
         {
           id: "Capsule L",
-          meshUrl: "/meshes/capsule_L.glb",
+          meshUrl: "/mesh/capsule_L.glb",
           vortices: [{ vortexKind: "door capsule left", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
         },
         {
           id: "Tambour",
-          meshUrl: "/meshes/tambour.glb",
+          meshUrl: "/mesh/tambour.glb",
           vortices: [
             { vortexKind: "door tambour left", position: [0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
             { vortexKind: "door tambour right", position: [-0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
@@ -13278,7 +13298,7 @@ if (import.meta.vitest) {
         objects: [
           {
             id: "WidgetA",
-            meshUrl: "/meshes/a.glb",
+            meshUrl: "/mesh/a.glb",
             vortices: [
               { vortexKind: "shape rectangular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 },
               { vortexKind: "shape circular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 },
@@ -13286,7 +13306,7 @@ if (import.meta.vitest) {
           },
           {
             id: "WidgetB",
-            meshUrl: "/meshes/b.glb",
+            meshUrl: "/mesh/b.glb",
             vortices: [{ vortexKind: "shape circular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 }],
           },
         ],
@@ -13309,17 +13329,17 @@ if (import.meta.vitest) {
         objects: [
           {
             id: "Foundation",
-            meshUrl: "/meshes/foundation.glb",
+            meshUrl: "/mesh/foundation.glb",
             vortices: [{ vortexKind: "core rectangular bottom", position: [-7.5, -7.7, 7.5], direction: [0, 0, 1], radius: 0.36 }],
           },
           {
             id: "UpperCircular",
-            meshUrl: "/meshes/upper-circular.glb",
+            meshUrl: "/mesh/upper-circular.glb",
             vortices: [{ vortexKind: "core circular top", position: [0, 0, 0], direction: [0, 0, -1], radius: 0.36 }],
           },
           {
             id: "UpperRectangular",
-            meshUrl: "/meshes/upper-rectangular.glb",
+            meshUrl: "/mesh/upper-rectangular.glb",
             vortices: [{ vortexKind: "core rectangular top", position: [0, 0, 0], direction: [0, 0, -1], radius: 0.36 }],
           },
         ],
@@ -13597,7 +13617,7 @@ if (import.meta.vitest) {
           {
             id: "host",
             objectKind: "Tambour",
-            meshUrl: "/meshes/tambour.glb",
+            meshUrl: "/mesh/tambour.glb",
             origin: [0, 0, 0],
             orientation: [0, 0, 0, 1],
             vortices: [
@@ -13609,22 +13629,22 @@ if (import.meta.vitest) {
         attractions: [],
       };
       const urls = brushMeshUrlsForFillSession(fixture, brushCatalogs, brushCompat);
-      expect(urls).toContain("/meshes/tambour.glb");
-      expect(urls).toContain("/meshes/capsule_L.glb");
+      expect(urls).toContain("/mesh/tambour.glb");
+      expect(urls).toContain("/mesh/capsule_L.glb");
       expect(new Set(urls).size).toBe(urls.length);
     });
     it("buildBrushFillSequence places objects when mesh roots are pooled", () => {
       clearBrushCollisionGltfScenes();
-      const meshRoot = registerBrushTestMesh("/meshes/tambour.glb", [4, 4, 4]);
-      registerBrushTestMesh("/meshes/capsule_L.glb", [4, 4, 4]);
-      registerBrushTestMesh("/meshes/capsule_R.glb", [4, 4, 4]);
+      const meshRoot = registerBrushTestMesh("/mesh/tambour.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/capsule_L.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/capsule_R.glb", [4, 4, 4]);
       const fixture: FixtureV1 = {
         version: 1,
         objects: [
           {
             id: "host",
             objectKind: "Tambour",
-            meshUrl: "/meshes/tambour.glb",
+            meshUrl: "/mesh/tambour.glb",
             origin: [0, 0, 0],
             orientation: [0, 0, 0, 1],
             vortices: [
@@ -13649,16 +13669,16 @@ if (import.meta.vitest) {
     });
     it("createBrushFillSequenceStepper matches buildBrushFillSequence and appended prefix composes the same fixture", () => {
       clearBrushCollisionGltfScenes();
-      registerBrushTestMesh("/meshes/tambour.glb", [4, 4, 4]);
-      registerBrushTestMesh("/meshes/capsule_L.glb", [4, 4, 4]);
-      registerBrushTestMesh("/meshes/capsule_R.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/tambour.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/capsule_L.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/capsule_R.glb", [4, 4, 4]);
       const fixture: FixtureV1 = {
         version: 1,
         objects: [
           {
             id: "host",
             objectKind: "Tambour",
-            meshUrl: "/meshes/tambour.glb",
+            meshUrl: "/mesh/tambour.glb",
             origin: [0, 0, 0],
             orientation: [0, 0, 0, 1],
             vortices: [
@@ -13703,7 +13723,7 @@ if (import.meta.vitest) {
           {
             id: "host",
             objectKind: "Tambour",
-            meshUrl: "/meshes/tambour.glb",
+            meshUrl: "/mesh/tambour.glb",
             origin: [0, 0, 0],
             orientation: [0, 0, 0, 1],
             vortices: [
@@ -13727,16 +13747,16 @@ if (import.meta.vitest) {
       clearBrushCollisionGltfScenes();
       const stubGroup = new Group();
       stubGroup.add(new Mesh(new BoxGeometry(1, 1, 1)));
-      registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-left.glb", stubGroup);
-      registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-right.glb", stubGroup);
-      expect(brushCollisionGltfRoot("/meshes/hexagonal-cut-concrete-forest-left.glb")).toBeNull();
+      registerBrushCollisionGltfScene("/mesh/hexagonal-cut-concrete-forest-left.glb", stubGroup);
+      registerBrushCollisionGltfScene("/mesh/hexagonal-cut-concrete-forest-right.glb", stubGroup);
+      expect(brushCollisionGltfRoot("/mesh/hexagonal-cut-concrete-forest-left.glb")).toBeNull();
       const fixture: FixtureV1 = {
         version: 1,
         objects: [
           {
             id: "seed-left-001",
             objectKind: "Hexagonal Cut Concrete Forest Left",
-            meshUrl: "/meshes/hexagonal-cut-concrete-forest-left.glb",
+            meshUrl: "/mesh/hexagonal-cut-concrete-forest-left.glb",
             origin: [0, 0, 0],
             orientation: [0, 0, 0, 1],
             vortices: [{ id: "seed-left-001:v0", vortexKind: "b-l", label: "b-l", position: [1.95, 3.377499, 3], direction: [0, 1, 0] }],
@@ -13748,12 +13768,12 @@ if (import.meta.vitest) {
         objects: [
           {
             id: "Hexagonal Cut Concrete Forest Left",
-            meshUrl: "/meshes/hexagonal-cut-concrete-forest-left.glb",
+            meshUrl: "/mesh/hexagonal-cut-concrete-forest-left.glb",
             vortices: [{ vortexKind: "b-l", position: [1.95, 3.377499, 3], direction: [0, 1, 0] }],
           },
           {
             id: "Hexagonal Cut Concrete Forest Right",
-            meshUrl: "/meshes/hexagonal-cut-concrete-forest-right.glb",
+            meshUrl: "/mesh/hexagonal-cut-concrete-forest-right.glb",
             vortices: [{ vortexKind: "b-l", position: [9.55, 3.377499, 3], direction: [0, 1, 0] }],
           },
         ],
@@ -13773,10 +13793,10 @@ if (import.meta.vitest) {
     });
     it("brushCollisionFreeCandidates returns all compatible kinds when scene is clear", () => {
       clearBrushCollisionGltfScenes();
-      const hostUrl = "/meshes/tambour.glb";
+      const hostUrl = "/mesh/tambour.glb";
       registerBrushTestMesh(hostUrl, [4, 4, 4]);
-      registerBrushTestMesh("/meshes/capsule_L.glb", [4, 4, 4]);
-      registerBrushTestMesh("/meshes/capsule_R.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/capsule_L.glb", [4, 4, 4]);
+      registerBrushTestMesh("/mesh/capsule_R.glb", [4, 4, 4]);
       const clearScene: BrushSceneCollisionSource = { collectObjectGroups: () => [brushSceneGroup("host", hostUrl, [0, 0, 0])] };
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
@@ -14061,7 +14081,7 @@ if (import.meta.vitest) {
           {
             id: "host",
             objectKind: "Tambour",
-            meshUrl: "/meshes/tambour.glb",
+            meshUrl: "/mesh/tambour.glb",
             origin: [0, 0, 0],
             vortices: [{ id: "host:v0", vortexKind: "door tambour left", position: [0.9, 2.75, 0.2], direction: [0, 1, 0] }],
           },
@@ -14191,10 +14211,10 @@ if (import.meta.vitest) {
     });
     it("concrete forest first brush iteration on every seed b-* vortex yields all beam connectors", async () => {
       const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
-      const leftType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+      const leftType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
         connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
       };
-      const rightType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
+      const rightType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
         connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
       };
       const expectedBeamConnectors = [
@@ -14225,7 +14245,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
       const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-      const meshDir = join(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau");
+      const meshDir = join(repoRoot, "semio/fixture/kit/folder/abbau-aufbau");
       const loader = new GLTFLoader();
       const loadGlb = (name: string): Promise<Group> =>
         new Promise((resolveGlb, reject) => {
@@ -14233,8 +14253,8 @@ if (import.meta.vitest) {
           loader.parse(bytes.buffer, meshDir, (gltf) => resolveGlb(gltf.scene), reject);
         });
       clearBrushCollisionGltfScenes();
-      const leftUrl = "/meshes/hexagonal-cut-concrete-forest-left.glb";
-      const rightUrl = "/meshes/hexagonal-cut-concrete-forest-right.glb";
+      const leftUrl = "/mesh/hexagonal-cut-concrete-forest-left.glb";
+      const rightUrl = "/mesh/hexagonal-cut-concrete-forest-right.glb";
       registerBrushCollisionGltfScene(leftUrl, await loadGlb("hexagonal-cut-concrete-forest-left.glb"));
       registerBrushCollisionGltfScene(rightUrl, await loadGlb("hexagonal-cut-concrete-forest-right.glb"));
       for (const kind of catalogs?.objects ?? []) {
@@ -14314,10 +14334,10 @@ if (import.meta.vitest) {
     }, 120_000);
     it("wasm concrete forest brush agrees with mesh-bvh on real geometry beam connector set", async () => {
       const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
-      const leftType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+      const leftType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
         connectors: { items: readonly { name: string }[] };
       };
-      const rightType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
+      const rightType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
         connectors: { items: readonly { name: string }[] };
       };
       const connectorNamesByKind: Record<string, readonly string[]> = {
@@ -14337,10 +14357,10 @@ if (import.meta.vitest) {
       await wasmMod.default();
       const session = new wasmMod.Puzzle3dPrecomputeSession();
       clearBrushCollisionGltfScenes();
-      const leftUrl = "/meshes/hexagonal-cut-concrete-forest-left.glb";
-      const rightUrl = "/meshes/hexagonal-cut-concrete-forest-right.glb";
+      const leftUrl = "/mesh/hexagonal-cut-concrete-forest-left.glb";
+      const rightUrl = "/mesh/hexagonal-cut-concrete-forest-right.glb";
       const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-      const meshDir = join(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau");
+      const meshDir = join(repoRoot, "semio/fixture/kit/folder/abbau-aufbau");
       const loader = new GLTFLoader();
       const loadGlb = (name: string): Promise<Group> =>
         new Promise((resolveGlb, reject) => {

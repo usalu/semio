@@ -101,7 +101,7 @@ const configuration: UserConfig = {
   resolve: {
     alias: {
       "@semio/js": path.resolve(__dirname, "../../../../semio/client/lib/js"),
-      "@semio/assets": path.resolve(__dirname, "../../../../semio/assets"),
+      "@semio/asset": path.resolve(__dirname, "../../../../semio/asset"),
       "@ui/react": path.resolve(__dirname, "../../../../ui/react"),
       "@coda/desktop": path.resolve(__dirname, "."),
     },

@@ -6,13 +6,13 @@ todos:
     content: Read repo://goals and open/reopen a repo MCP ticket for the dictionary module
     status: completed
   - id: crate
-    content: Create flow/modules/dictionary/Cargo.toml (crate flow_module_dictionary, dep neural_engine)
+    content: Create flow/module/dictionary/Cargo.toml (crate flow_module_dictionary, dep neural_engine)
     status: completed
   - id: lib
-    content: Create flow/modules/dictionary/lib.rs with neuron kinds (pack, unpack, get, set, remove, has, keys, size, merge), helpers, register(), and tests region
+    content: Create flow/module/dictionary/lib.rs with neuron kinds (pack, unpack, get, set, remove, has, keys, size, merge), helpers, register(), and tests region
     status: completed
   - id: workspace
-    content: Add flow/modules/dictionary to workspace members in Cargo.toml
+    content: Add flow/module/dictionary to workspace members in Cargo.toml
     status: completed
   - id: core-cargo
     content: Add flow_module_dictionary dependency to flow/core/Cargo.toml
@@ -31,7 +31,7 @@ isProject: false
 
 ## Flow Dictionary Module
 
-Extend `flow` with a dictionary module that follows the exact pattern of the existing modules in [flow/modules/math/lib.rs](flow/modules/math/lib.rs), [flow/modules/text/lib.rs](flow/modules/text/lib.rs), and [flow/modules/logic/lib.rs](flow/modules/logic/lib.rs).
+Extend `flow` with a dictionary module that follows the exact pattern of the existing modules in [flow/module/math/lib.rs](flow/module/math/lib.rs), [flow/module/text/lib.rs](flow/module/text/lib.rs), and [flow/module/logic/lib.rs](flow/module/logic/lib.rs).
 
 ### Operating model
 
@@ -44,8 +44,8 @@ The `Dictionary` public API ([neural/engine/lib.rs](neural/engine/lib.rs): `new`
 
 ### New files (mirror existing module crate layout)
 
-- `flow/modules/dictionary/Cargo.toml` — crate `flow_module_dictionary`, identical shape to [flow/modules/math/Cargo.toml](flow/modules/math/Cargo.toml) (only dep: `neural_engine`).
-- `flow/modules/dictionary/lib.rs` — module doc comment, one `#region` per neuron kind, shared `read_dict`/`read_text`/`remove_key` helpers, a `register(&mut Registry)`, and a `#[cfg(test)]` `tests` region (extend within this single module file; no separate test files).
+- `flow/module/dictionary/Cargo.toml` — crate `flow_module_dictionary`, identical shape to [flow/module/math/Cargo.toml](flow/module/math/Cargo.toml) (only dep: `neural_engine`).
+- `flow/module/dictionary/lib.rs` — module doc comment, one `#region` per neuron kind, shared `read_dict`/`read_text`/`remove_key` helpers, a `register(&mut Registry)`, and a `#[cfg(test)]` `tests` region (extend within this single module file; no separate test files).
 
 ### Neuron kinds (in `register`)
 
@@ -63,8 +63,8 @@ Each registered with a `NeuronKindInfo { id, module: "dictionary", name, summary
 
 ### Wiring
 
-- [Cargo.toml](Cargo.toml): add `"flow/modules/dictionary"` to `members` (after the logic entry).
-- [flow/core/Cargo.toml](flow/core/Cargo.toml): add `flow_module_dictionary = { path = "../modules/dictionary" }`.
+- [Cargo.toml](Cargo.toml): add `"flow/module/dictionary"` to `members` (after the logic entry).
+- [flow/core/Cargo.toml](flow/core/Cargo.toml): add `flow_module_dictionary = { path = "../module/dictionary" }`.
 - [flow/core/lib.rs](flow/core/lib.rs):
   - add `pub use flow_module_dictionary;` (top re-export block).
   - in `build_registry()` add `flow_module_dictionary::register(&mut registry);`.

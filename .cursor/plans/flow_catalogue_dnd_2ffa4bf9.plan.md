@@ -6,7 +6,7 @@ todos:
     content: Add NeuronKindInfo + Registry catalogue() to neural/engine/lib.rs; update register signature and engine tests.
     status: completed
   - id: modules
-    content: Update flow/modules/math register with metadata; add flow/modules/text and flow/modules/logic crates (lib.rs+Cargo.toml) with NeuronKinds; register in root Cargo.toml members and flow/core deps.
+    content: Update flow/module/math register with metadata; add flow/module/text and flow/module/logic crates (lib.rs+Cargo.toml) with NeuronKinds; register in root Cargo.toml members and flow/core deps.
     status: completed
   - id: core-edit-api
     content: "Flow core: add layout positions, catalogue_json, add/remove/move/connect/disconnect, world_from_screen, camera/wheel, and pointer wiring; expose via FlowSession wasm."
@@ -35,15 +35,15 @@ isProject: false
 # Finish flow: catalogue, drag-and-drop, wiring, persistence
 
 ## Current state (verified)
-- The vertical slice exists and evaluates: `neural/engine/lib.rs` (Dictionary/Tree/Registry/Evaluator), `flow/modules/math/lib.rs` (`math.add/multiply/passThrough`), `mathematical/graph/port/directed/dag/lib.rs` (rect IO nodes + layered layout), `flow/core/lib.rs` (`FlowHost`/`FlowSession` wasm), `flow/react/index.tsx` (`FlowCanvas`), `flow/play/index.ts`.
+- The vertical slice exists and evaluates: `neural/engine/lib.rs` (Dictionary/Tree/Registry/Evaluator), `flow/module/math/lib.rs` (`math.add/multiply/passThrough`), `mathematical/graph/port/directed/dag/lib.rs` (rect IO nodes + layered layout), `flow/core/lib.rs` (`FlowHost`/`FlowSession` wasm), `flow/react/index.tsx` (`FlowCanvas`), `flow/play/index.ts`.
 - Gaps: `Registry` has no module/label metadata; only the `math` module exists; `flow/core` renders nodes as plain circles via `render_frame_gpu` and never forwards pointer/drop input; React `FlowCanvas` only has a slider+preview overlay; no catalogue; no add/connect/persist.
 
 ## 1. Catalogue metadata (neural engine + modules)
 - `neural/engine/lib.rs` region `NeuronKind`: add `NeuronKindInfo { id, module, name, summary, inputs: Vec<String>, outputs: Vec<String> }`. Change `Registry` to store `(NeuronKindInfo, Box<dyn Function>)`; `register(info, fn)`; add `Registry::catalogue() -> Vec<NeuronKindInfo>` and keep `get(id)`. Update engine tests.
-- `flow/modules/math/lib.rs`: pass `NeuronKindInfo` (module `"math"`, names/summaries, port keys) in `register`.
+- `flow/module/math/lib.rs`: pass `NeuronKindInfo` (module `"math"`, names/summaries, port keys) in `register`.
 - New crates mirroring math (new `lib.rs` + `Cargo.toml`, added to root [Cargo.toml](Cargo.toml) `members` and to `flow/core` deps):
-  - `flow/modules/text` (`flow_module_text`): e.g. `text.concat`, `text.upper`.
-  - `flow/modules/logic` (`flow_module_logic`): e.g. `logic.greater`, `logic.not`.
+  - `flow/module/text` (`flow_module_text`): e.g. `text.concat`, `text.upper`.
+  - `flow/module/logic` (`flow_module_logic`): e.g. `logic.greater`, `logic.not`.
 
 ## 2. Flow core: positions, editing API, rectangle rendering (`flow/core/lib.rs`)
 - Fixture: add a `layout: BTreeMap<String,{x,y}>` to `FlowFixtureV1` (serde default). Auto-DAG-layout only fills ids missing from `layout`; persisted/dropped positions win.
@@ -61,7 +61,7 @@ isProject: false
 
 ## 4. Framework + build wiring
 - `FlowPlayPaneSurfaceHost` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) already renders `<FlowCanvas/>`; the catalogue is an in-canvas overlay so framework changes are minimal (verify exports still build).
-- Add `flow/modules/text`, `flow/modules/logic` to root [Cargo.toml](Cargo.toml) members and `flow/core/Cargo.toml` deps. Optionally add `🦀rs` cargo-test launch entries near the existing `🌊flow` group in [.vscode/launch.json](.vscode/launch.json) (existing `dev:flow`/validate entries stay).
+- Add `flow/module/text`, `flow/module/logic` to root [Cargo.toml](Cargo.toml) members and `flow/core/Cargo.toml` deps. Optionally add `🦀rs` cargo-test launch entries near the existing `🌊flow` group in [.vscode/launch.json](.vscode/launch.json) (existing `dev:flow`/validate entries stay).
 
 ## 5. Validation (must confirm at runtime)
 - `cargo test -p neural_engine -p flow_module_math -p flow_module_text -p flow_module_logic -p flow_core -p mathematical_graph_port_directed_dag`.

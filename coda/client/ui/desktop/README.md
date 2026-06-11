@@ -9,7 +9,7 @@ Electron desktop shell for visualizing and interacting with coda (ACC design ass
 
 - [Electron](https://www.npmjs.com/package/electron) - `npm`
   - [Docs](https://www.electronjs.org/docs) - `official`
-  - [API](https://www.electronjs.org/docs/latest/api/app) - `reference`
+  - [API](https://www.electronjs.org/doc/latest/api/app) - `reference`
 - [Electron Forge](https://www.npmjs.com/package/electron-forge) - `npm`
   - [Docs](https://www.electronforge.io/docs) - `official`
 - [React](https://react.dev) - `official`

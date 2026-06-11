@@ -585,7 +585,7 @@ export class BuildScript extends Script {
     const slice = segments[0];
     const single: Record<string, string> = {
       "3dm": "@semio/3dm-ui:build",
-      assets: "@semio/assets:build",
+      assets: "@semio/asset:build",
       desktop: "@semio/desktop:build",
       engine: "@semio/engine:build",
       storybook: "workspace:build-storybook",

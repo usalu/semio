@@ -14,7 +14,7 @@ import { playgroundDevPortString, playgroundPortEnv } from "../../ui/styling/pla
 
 const wasmScript = join(import.meta.dir, "../../flow/core/script.ts");
 const moduleWasmScripts = ["core", "math", "text", "logic", "dictionary", "list", "brep", "bim"].map((name) =>
-	join(import.meta.dir, `../../flow/modules/${name}/script.ts`),
+	join(import.meta.dir, `../../flow/module/${name}/script.ts`),
 );
 
 function runFlowModuleWasmBuilds(root: string): void {

@@ -37,15 +37,15 @@ const SKETCHPAD_MDX_COMPONENTS = {
 	TabsTrigger,
 	a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
 		const href = props.href ?? "";
-		if (href.startsWith("/docs/") || href.startsWith("docs/")) {
+		if (href.startsWith("/doc/") || href.startsWith("docs/")) {
 			const path = href.replace(/^\/?docs\//, "");
 			return (
 				<a
 					{...props}
-					href={`/docs/${path}`}
+					href={`/doc/${path}`}
 					onClick={(event) => {
 						event.preventDefault();
-						window.history.pushState({}, "", `/docs/${path}`);
+						window.history.pushState({}, "", `/doc/${path}`);
 						window.dispatchEvent(new PopStateEvent("popstate"));
 					}}
 				/>

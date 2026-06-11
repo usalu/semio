@@ -69,7 +69,7 @@ Default choices: numeric value entry (height/distance/radius/scalar) → `steppe
   - `slider` → `<Slider />`, `stepper` → `<Stepper />` (both already accept `value/min/max/step/onChange`).
   - `ring` → `<Ring />` with `orbs` derived from `options` (even `t = i/options.length`), `selected` = `value`, `onOrbSelect` → `onSelect`.
 - Include in the `if (!hasOptions && !hasInput && !hasStatus)` early-return guard so a control alone keeps the overlay visible.
-- Storybook: add a `WithControl` story variant in `.storybook/stories/ui/Engagement.stories.tsx`.
+- Storybook: add a `WithControl` story variant in `.storybook/story/ui/Engagement.stories.tsx`.
 
 ## 2. Playground core — `framework/product/playground/core/index.ts` (`#region 🔖WindowEngagement`)
 
@@ -85,7 +85,7 @@ Default choices: numeric value entry (height/distance/radius/scalar) → `steppe
 
 - `cad/js/core/index.ts`: extend `InteractionScalarEntrySpec` (`817`) and `InteractionLengthEntrySpec` (`808`) with optional `control?: "slider" | "stepper" | "ring"`, `min?`, `max?`, `step?`, `unit?`, `default?`. Add a helper `interactionControlForState(spec, state)` returning resolved control params (defaults: scalar→stepper, length→stepper, `set.angle` event→ring).
 - `cad/schema/json/interaction.json` (`153`-`188`): add the same optional properties to `lengthEntry` and `scalarEntry` items.
-- `cad/assets/modelDefinition/**/interaction/*.json` (~45 files with `scalarEntry`/`lengthEntry`/`heightDragStates`, e.g. `box.json`, `sphere.json`, `cylinder.json`, `rotate.json`, `scale1d/3d.json`, energy + structure constructors): declare `control`/`min`/`step`/`unit` on the relevant entries (height/radius→stepper min 0; rotate angle→ring; etc.).
+- `cad/asset/modelDefinition/**/interaction/*.json` (~45 files with `scalarEntry`/`lengthEntry`/`heightDragStates`, e.g. `box.json`, `sphere.json`, `cylinder.json`, `rotate.json`, `scale1d/3d.json`, energy + structure constructors): declare `control`/`min`/`step`/`unit` on the relevant entries (height/radius→stepper min 0; rotate angle→ring; etc.).
 - `cad/js/renderer/index.tsx`:
   - Extend `InteractionReplEngagementInputs` (`3775`) with `control?: EngagementControl`.
   - In `buildInteractionReplEngagement` (`3805`) attach `control` to the returned spec.

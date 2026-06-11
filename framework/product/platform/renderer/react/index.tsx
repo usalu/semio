@@ -248,7 +248,7 @@ import {
 // #endregion 🔌Adapters
 
 import type { AppToolCategory } from "@framework/core";
-import { ICONS } from "@ui/assets";
+import { ICONS } from "@ui/asset";
 
 const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToolCategory> = true;
 

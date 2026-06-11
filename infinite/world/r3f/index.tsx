@@ -1819,11 +1819,15 @@ export function orbitCameraViewRigApplyToken(seedKey: string | number, projectio
   return `${seedKey}:${projection}`;
 }
 
+/** @emoji 🔑 Whether {@link WorldOrbitCameraViewRigSeed} should apply props.state (false on camera remount with same token). */
+export function shouldApplyOrbitCameraViewRigSeed(lastToken: string | null, nextToken: string): boolean {
+  return lastToken !== nextToken;
+}
+
 function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const lastApplyToken = reactHostPort.useRef<string | null>(null);
-  const lastCameraUuid = reactHostPort.useRef<string | null>(null);
   const stateRef = reactHostPort.useRef(props.state);
   stateRef.current = props.state;
   const projection = props.state.projection ?? "perspective";
@@ -1832,12 +1836,10 @@ function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; 
       return;
     }
     const token = orbitCameraViewRigApplyToken(props.seedKey, projection);
-    const cameraChanged = lastCameraUuid.current !== camera.uuid;
-    if (!cameraChanged && lastApplyToken.current === token) {
+    if (!shouldApplyOrbitCameraViewRigSeed(lastApplyToken.current, token)) {
       return;
     }
     lastApplyToken.current = token;
-    lastCameraUuid.current = camera.uuid;
     applyWorldCameraState(camera, stateRef.current, controls);
   }, [camera, controls, projection, props.seedKey]);
   return null;
@@ -2780,6 +2782,16 @@ if (import.meta.vitest) {
       expect(orbitCameraViewRigApplyToken("inst:1", "orthographic")).toBe("inst:1:orthographic");
       expect(orbitCameraViewRigApplyToken("inst:1", "perspective")).toBe("inst:1:perspective");
       expect(orbitCameraViewRigApplyToken(7, "perspective")).toBe("7:perspective");
+    });
+  });
+
+  describe("shouldApplyOrbitCameraViewRigSeed", () => {
+    it("applies only when the seed token changes", () => {
+      const token = orbitCameraViewRigApplyToken("win-a:3", "perspective");
+      expect(shouldApplyOrbitCameraViewRigSeed(null, token)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, token)).toBe(false);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:4", "perspective"))).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:3", "orthographic"))).toBe(true);
     });
   });
 

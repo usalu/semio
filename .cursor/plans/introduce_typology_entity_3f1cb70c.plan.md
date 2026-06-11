@@ -110,18 +110,18 @@ Note: `AGENTS.md` files (which contain the math/rank spec for `Kit = (T_K, D_K, 
 ## 7. Sketchpad / UI
 
 - `semio/client/lib/sketchpad/js/index.ts`: register `Typology` VFS node kind (mirror `family` model at ~12240), readers for typology rows; keep family/port hydration. Update kit-tree to nest types/designs under typologies. Extend embedded tests.
-- `.storybook/semio/algorithms/kit-store/commandSchema.ts`: add typology read commands.
+- `.storybook/semio/algorithm/kit-store/commandSchema.ts`: add typology read commands.
 
 ## 8. Fixtures, assets, tooling
 
 - Add `typologies[]` to kit fixtures and assign every type/design an owning typology:
-  - `semio/fixtures/*.kit.semio.json` (metabolism, synthetic, architect, invalid handling) and the dev kit tree `semio/fixtures/kit/dev/metabolism/wip/initialKit/**` (~45+ type/design files): metabolism maps to `base, capsule, tambour, capital, bridge, tower`.
-  - `semio/assets/semio/metabolism/**` and `semio/assets/index.ts` (add `MetabolismKitTypologies*` lookups next to `MetabolismKitFamilies*`).
-- `semio/fixtures/script.ts`: typology-aware iteration if needed.
+  - `semio/fixture/*.kit.semio.json` (metabolism, synthetic, architect, invalid handling) and the dev kit tree `semio/fixture/kit/dev/metabolism/wip/initialKit/**` (~45+ type/design files): metabolism maps to `base, capsule, tambour, capital, bridge, tower`.
+  - `semio/asset/semio/metabolism/**` and `semio/asset/index.ts` (add `MetabolismKitTypologies*` lookups next to `MetabolismKitFamilies*`).
+- `semio/fixture/script.ts`: typology-aware iteration if needed.
 
 ## 9. Grasshopper / engine
 
-- `semio/assets/grasshopper/components.json`: add Typology params/components where Kit exposes types/designs; keep connector `family` param.
+- `semio/asset/grasshopper/components.json`: add Typology params/components where Kit exposes types/designs; keep connector `family` param.
 
 ## 10. Validation
 

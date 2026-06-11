@@ -2242,8 +2242,8 @@ func TestFixApplyAutofixes(t *testing.T) {
 	rootDir = findTestRepoRoot(cwd)
 	defer func() { rootDir = oldRoot }()
 
-	fixtureSrc := "semio/assets/repo/some/folder/file_fixable.tsx"
-	expectedSrc := "semio/assets/repo/some/folder/file_fixable_expected.tsx"
+	fixtureSrc := "semio/asset/repo/some/folder/file_fixable.tsx"
+	expectedSrc := "semio/asset/repo/some/folder/file_fixable_expected.tsx"
 
 	srcAbs := filepath.Join(rootDir, fixtureSrc)
 	expectedAbs := filepath.Join(rootDir, expectedSrc)
@@ -3414,7 +3414,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "semio/assets/repo/some/folder/file_invalid.tsx"
+	path := "semio/asset/repo/some/folder/file_invalid.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)
@@ -4507,7 +4507,7 @@ func TestPolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "semio/assets/repo/some/folder/file_invalid.tsx"
+	path := "semio/asset/repo/some/folder/file_invalid.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -4540,15 +4540,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []Statute
 	}{
 		{
-			path:          "semio/assets/repo/some/folder/file_invalid.py",
+			path:          "semio/asset/repo/some/folder/file_invalid.py",
 			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "semio/assets/repo/some/folder/file_invalid.cs",
+			path:          "semio/asset/repo/some/folder/file_invalid.cs",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "semio/assets/repo/some/folder/file_invalid.go",
+			path:          "semio/asset/repo/some/folder/file_invalid.go",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
@@ -4573,10 +4573,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"semio/assets/repo/some/folder/file_fixed.tsx",
-		"semio/assets/repo/some/folder/file_fixed.py",
-		"semio/assets/repo/some/folder/file_fixed.cs",
-		"semio/assets/repo/some/folder/file_fixed.go",
+		"semio/asset/repo/some/folder/file_fixed.tsx",
+		"semio/asset/repo/some/folder/file_fixed.py",
+		"semio/asset/repo/some/folder/file_fixed.cs",
+		"semio/asset/repo/some/folder/file_fixed.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -4773,25 +4773,25 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 		{
 			name:         "CSharp // comments should flag breach (should use ///)",
 			file:         "src/App.cs",
-			content:      "// #region 🔖Header\n\n// [💻src/App.cs](repo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](repo://section/src/app.cs/types)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/App.cs#Types§AppState](repo://definition/src/app.cs/types/appstate)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/App.cs](repo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](repo://section/src/app.cs/types)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/App.cs#Types§AppState](repo://definition/src/app.cs/type/appstate)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
 			expectBreach: true,
 		},
 		{
 			name:         "CSharp /// comments should NOT flag breach",
 			file:         "src/App.cs",
-			content:      "// #region 🔖Header\n\n// [💻src/App.cs](repo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](repo://section/src/app.cs/types)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/App.cs#Types§AppState](repo://definition/src/app.cs/types/appstate)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/App.cs](repo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](repo://section/src/app.cs/types)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/App.cs#Types§AppState](repo://definition/src/app.cs/type/appstate)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
 			expectBreach: false,
 		},
 		{
 			name:         "Rust // comments should flag breach (should use ///)",
 			file:         "src/lib.rs",
-			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](repo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](repo://section/src/lib.rs/types)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/lib.rs#Types§AppState](repo://definition/src/lib.rs/types/appstate)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](repo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](repo://section/src/lib.rs/types)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/lib.rs#Types§AppState](repo://definition/src/lib.rs/type/appstate)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
 			expectBreach: true,
 		},
 		{
 			name:         "Rust /// comments should NOT flag breach",
 			file:         "src/lib.rs",
-			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](repo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](repo://section/src/lib.rs/types)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/lib.rs#Types§AppState](repo://definition/src/lib.rs/types/appstate)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](repo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](repo://section/src/lib.rs/types)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/lib.rs#Types§AppState](repo://definition/src/lib.rs/type/appstate)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
 			expectBreach: false,
 		},
 	}
@@ -6935,9 +6935,9 @@ func TestGetArtifactID_Bundle(t *testing.T) {
 		{"schema bundle", map[string]interface{}{"name": "repo/graphql", "kind": "schema"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleSchema) + "graphql"},
 		{"binary bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
-		{"example bundle", map[string]interface{}{"name": "coda/examples", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
+		{"example bundle", map[string]interface{}{"name": "coda/example", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
 		{"site bundle", map[string]interface{}{"name": "semio/desktop", "kind": "site"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "desktop"},
-		{"assets bundle", map[string]interface{}{"name": "semio/assets", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
+		{"assets bundle", map[string]interface{}{"name": "semio/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8025,7 +8025,7 @@ func TestBundleListIDs(t *testing.T) {
 		"semio/desktop":    emojiText(EmojiTechnologyUser) + "semio" + emojiText("🖥️") + "desktop",
 		"semio/docs":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
 		"semio/play":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "play",
-		"semio/assets":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
+		"semio/asset":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
 		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
@@ -8240,7 +8240,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 		"semio/js":      emojiText(EmojiTechnologyUser) + "semio" + emojiText("📜") + "js",
 		"semio/go":      emojiText(EmojiTechnologyUser) + "semio" + emojiText("🐹") + "go",
 		"semio/engine":  emojiText(EmojiTechnologyUser) + "semio" + emojiText("⚙️") + "engine",
-		"semio/assets":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
+		"semio/asset":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
 		"semio/desktop": emojiText(EmojiTechnologyUser) + "semio" + emojiText("🖥️") + "desktop",
 		"semio/docs":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
 		"repo/client":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
@@ -8435,8 +8435,8 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"schema bundle semio/graphql", "bundle", map[string]interface{}{"name": "semio/graphql", "kind": "schema"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql"},
 		{"binary bundle repo/client", "bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle repo/vscode", "bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
-		{"example bundle coda/examples", "bundle", map[string]interface{}{"name": "coda/examples", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
-		{"assets bundle semio/assets", "bundle", map[string]interface{}{"name": "semio/assets", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
+		{"example bundle coda/example", "bundle", map[string]interface{}{"name": "coda/example", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
+		{"assets bundle semio/asset", "bundle", map[string]interface{}{"name": "semio/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
 		{"root folders", "folders", map[string]interface{}{"parentId": ""}, emojiText(EmojiFolders)},
 		{"bundle sketchpad folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolders)},
 		{"required folder .github folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiFolderRequired) + "github"}, emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFolders)},
@@ -8509,7 +8509,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"file test kind", "file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtest"},
 		{"file script kind", "file", map[string]interface{}{"path": "semio/engine/build.ts", "kind": "script", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileScript) + "build"},
 		{"file docs kind", "file", map[string]interface{}{"path": "semio/js/README.md", "kind": "docs", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileDocs) + "readme"},
-		{"file asset kind", "file", map[string]interface{}{"path": "semio/js/sketchpad/pages/showcases/metabolism.mdx", "kind": "resource", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases" + emojiText(EmojiFileResource) + "metabolism"},
+		{"file asset kind", "file", map[string]interface{}{"path": "semio/js/sketchpad/page/showcase/metabolism.mdx", "kind": "resource", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases" + emojiText(EmojiFileResource) + "metabolism"},
 		{"file license kind", "file", map[string]interface{}{"path": "semio/go/LICENSE.md", "kind": "license", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go" + emojiText(EmojiFileLicense) + "license"},
 		{"site bundle semio/docs", "bundle", map[string]interface{}{"name": "semio/docs", "kind": "site"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs"},
 	}
@@ -8570,7 +8570,7 @@ func TestGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "semio/assets/repo/some/folder/file_fixed.go") { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "semio/asset/repo/some/folder/file_fixed.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -11104,7 +11104,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "bundle example",
 			kind:    "bundle",
-			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
+			data:    map[string]interface{}{"name": "coda/example", "kind": "library"},
 			wantID:  emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleLibrary) + "examples",
 			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleLibrary) + "examples",
 		},
@@ -11260,7 +11260,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "tickets",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiTickets),
-			wantURI: "repo://tickets/" + emojiText(EmojiTickets),
+			wantURI: "repo://ticket/" + emojiText(EmojiTickets),
 		},
 		{
 			name: "ticket",
@@ -15411,8 +15411,8 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 		"kiro.exe",
 		"mcp",
 		"mcp.exe",
-		"coda/examples/semio-blnbo-roomprogram/.coda/validators/programming",
-		"coda/examples/semio-blnbo-roomprogram/.coda/validators/programming.exe",
+		"coda/example/semio-blnbo-roomprogram/.coda/validators/programming",
+		"coda/example/semio-blnbo-roomprogram/.coda/validators/programming.exe",
 	}
 	ignored := GetGitIgnoredSet(artifacts)
 	for _, path := range artifacts {
@@ -22020,7 +22020,7 @@ func TestIsHeaderMetaLine(t *testing.T) {
 	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
 		t.Error("should detect contributor line starting with year")
 	}
-	if !isHeaderMetaLine("💻semio/assets/repo/some/folder/file.py") {
+	if !isHeaderMetaLine("💻semio/asset/repo/some/folder/file.py") {
 		t.Error("should detect file ID emoji prefix")
 	}
 	if isHeaderMetaLine("This function handles parsing.") {
@@ -22049,7 +22049,7 @@ func TestExtractMarkdownSection(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("semio/assets/repo/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("semio/asset/repo/some/folder/file_empty_region.tsx")
 	if strings.Contains(summary, "GNU") || strings.Contains(summary, "license") || strings.Contains(summary, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", summary)
 	}
@@ -22059,14 +22059,14 @@ func TestExtractFileHeaderSummary(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("semio/assets/repo/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("semio/asset/repo/some/folder/file_empty_region.tsx")
 	if strings.Contains(summary, "free software") {
 		t.Errorf("should not return license as summary, got: %q", summary)
 	}
 }
 
 func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
-	requirements := ExtractFileHeaderRequirements("semio/assets/repo/some/folder/file.py")
+	requirements := ExtractFileHeaderRequirements("semio/asset/repo/some/folder/file.py")
 	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", requirements)
 	}

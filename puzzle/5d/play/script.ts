@@ -26,7 +26,7 @@ class TestScript extends BundleScript {
   }
 }
 
-class Regenerate5dFixtureScript extends BundleScript {
+class RegenerateNakagin5dFixtureScript extends BundleScript {
   run(): void {
     process.env.REGENERATE_NAKAGIN_5D = "1";
     try {
@@ -37,6 +37,22 @@ class Regenerate5dFixtureScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript).register("regenerate-fixture", Regenerate5dFixtureScript);
+class RegenerateConcreteForest5dFixtureScript extends BundleScript {
+  run(): void {
+    process.env.REGENERATE_CONCRETE_FOREST_5D = "1";
+    try {
+      runVitest(this.root, ["-t", "regenerates concrete forest 5d fixture"]);
+    } finally {
+      delete process.env.REGENERATE_CONCRETE_FOREST_5D;
+    }
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir)
+  .register("dev", DevScript)
+  .register("build", BuildScript)
+  .register("test", TestScript)
+  .register("regenerate-fixture", RegenerateNakagin5dFixtureScript)
+  .register("regenerate-concrete-forest-fixture", RegenerateConcreteForest5dFixtureScript);
 
 await runBundleScriptMain(router, import.meta.url);

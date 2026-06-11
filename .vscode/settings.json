@@ -81,7 +81,7 @@
   "sqltools.connections": [
     {
       "name": "metabolism",
-      "database": "./examples/metabolism/.semio/kit.db",
+      "database": "./example/metabolism/.semio/kit.db",
       "driver": "SQLite",
       "previewLimit": 50
     }

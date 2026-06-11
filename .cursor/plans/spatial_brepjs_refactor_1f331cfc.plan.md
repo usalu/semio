@@ -41,7 +41,7 @@ isProject: false
 ## Goals
 
 - Stop main-thread freezes by hosting brepjs/OpenCascade in a Web Worker (matches `temp/brepjs/apps/playground/src/workers/cad.worker.ts`).
-- Stop kernel-handle leaks by wrapping every brepjs call in `using` / `DisposalScope` per `temp/brepjs/docs/memory-management.md`.
+- Stop kernel-handle leaks by wrapping every brepjs call in `using` / `DisposalScope` per `temp/brepjs/doc/memory-management.md`.
 - Replace the home-grown `MeshPreview = { positions, indices, normals? }` with brepjs's official `toGroupedBufferGeometryData` + `toLineGeometryData` outputs (Transferable typed arrays, face/edge groups for picking).
 - Keep `pick/camera-performance` fixes from the SPATIAL-PICK-CAMERA-PERFORMANCE ticket (raycast=none for visuals, demand frameloop, DOM-pointer hover, deferred derived refresh).
 
@@ -102,7 +102,7 @@ geo.setIndex(new THREE.BufferAttribute(data.index, 1));
 for (const g of data.faceGroups) geo.addGroup(g.start, g.count, 0);
 ```
 
-With `polygonOffset` (per [threejs-integration.md](temp/brepjs/docs/threejs-integration.md)). `useEffect` cleanup calls `geo.dispose()`.
+With `polygonOffset` (per [threejs-integration.md](temp/brepjs/doc/threejs-integration.md)). `useEffect` cleanup calls `geo.dispose()`.
 
 - `🧲EdgeOverlay` — new `LineSegments` from `data.edges` (replaces ad-hoc wireframe).
 - `🧲TopologyTargets` — picking now uses `event.faceIndex` + binary search on `faceGroups` to map → `faceId` → topology, instead of one raycast mesh per target. Keeps `raycast={raycastNone}` on visuals.

@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/stories/elements/window/Table.stories.tsx
+// 🥼︎ semio/js/.storybook/story/elements/window/Table.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -30,7 +30,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-import { architects } from "../../fixtures/nakagin";
+import { architects } from "../../fixture/nakagin";
 
 interface Person {
   id: string;

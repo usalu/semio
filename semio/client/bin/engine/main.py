@@ -1474,7 +1474,7 @@ def _normalize_csharp_json_keys(value: typing.Any) -> typing.Any:
 
 
 def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
-    """🔬Run semio/algorithms/native-bridges/go and return parsed JSON result.
+    """🔬Run semio/algorithm/native-bridges/go and return parsed JSON result.
     """
     go_root = _semio_repo_root() / "algorithms" / "native-bridges" / "go"
     proc = subprocess.run(
@@ -1495,7 +1495,7 @@ def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
 
 
 def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
-    """⬛Run semio/algorithms/native-bridges/rs and return parsed JSON result.
+    """⬛Run semio/algorithm/native-bridges/rs and return parsed JSON result.
     """
     rs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "rs"
     proc = subprocess.run(
@@ -1515,7 +1515,7 @@ def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
 
 
 def _csharp_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
-    """🔷Run semio/algorithms/native-bridges/csharp and return parsed JSON result.
+    """🔷Run semio/algorithm/native-bridges/csharp and return parsed JSON result.
     """
     cs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "csharp"
     proc = subprocess.run(
@@ -1761,7 +1761,7 @@ async def delete_kit(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-@rest.put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
+@rest.put("/kits/{encodedKitUri}/type/{encodedTypeNameAndVariant}")
 async def put_type(
     request: fastapi.Request,
     input: TypeInput,
@@ -1783,7 +1783,7 @@ async def put_type(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-@rest.delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
+@rest.delete("/kits/{encodedKitUri}/type/{encodedTypeNameAndVariant}")
 async def delete_type(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
@@ -1804,7 +1804,7 @@ async def delete_type(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-@rest.put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
+@rest.put("/kits/{encodedKitUri}/design/{encodedDesignNameAndVariantAndView}")
 async def put_design(
     request: fastapi.Request,
     input: DesignInput,
@@ -1826,7 +1826,7 @@ async def put_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-@rest.delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
+@rest.delete("/kits/{encodedKitUri}/design/{encodedDesignNameAndVariantAndView}")
 async def delete_design(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
@@ -3882,7 +3882,7 @@ def run(dev_mode: bool | None = None):
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
-        basedir = "../assets"
+        basedir = "../asset"
 
     icon = PySide6.QtGui.QIcon()
     icon.addFile(os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512))
@@ -4513,7 +4513,7 @@ class TestMcp:
         assert "designs" in kit
 
     def test_start_working_in_local_kit_loads_from_metabolism_folder(self):
-        """🖼️start_working_in_local_kit loads kit from the dev metabolism fixture folder (semio/fixtures/kit/dev/metabolism)."""
+        """🖼️start_working_in_local_kit loads kit from the dev metabolism fixture folder (semio/fixture/kit/dev/metabolism)."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
         assert isinstance(result, CallToolResult)
@@ -4540,7 +4540,7 @@ class TestMcp:
         """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns design+kit and diagram points/lines."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         metabolism_path = METABOLISM_DIR.resolve()
-        workspace_default = pathlib.Path("/workspaces/semio/semio/fixtures/kit/dev/metabolism")
+        workspace_default = pathlib.Path("/workspaces/semio/semio/fixture/kit/dev/metabolism")
         path_arg = str(workspace_default) if workspace_default.is_dir() else str(metabolism_path)
 
         kit_result = engine.start_working_in_local_kit(path_arg, mock_ctx)

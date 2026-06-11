@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx
+// 🥼︎ semio/js/.storybook/story/elements/aggregation/Band.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -10,7 +10,7 @@
 
 // #region 🎩Band
 import { Band, Button, Input, Strip, Toggle } from "@ui/react";
-import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/asset";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {

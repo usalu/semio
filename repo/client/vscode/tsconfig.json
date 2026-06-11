@@ -18,8 +18,8 @@
       "semio/js": [
         "../../semio/js/index.ts"
       ],
-      "semio/assets/*": [
-        "../../semio/assets/*"
+      "semio/asset/*": [
+        "../../semio/asset/*"
       ]
     }
   },

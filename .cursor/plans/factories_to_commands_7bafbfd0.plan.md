@@ -55,7 +55,7 @@ Selection is declared per state via `selection: { accept: TopologyEntityKind[], 
 Everywhere in `spatial/`:
 
 - Schema string `spatial.factory/v1` -> `spatial.command/v1`.
-- Fixture filenames: [`spatial/fixtures/factory.json`](spatial/fixtures/factory.json), [`extrude.factory.json`](spatial/fixtures/extrude.factory.json), [`offset-surface.factory.json`](spatial/fixtures/offset-surface.factory.json) -> `box.command.json`, `extrude-wire.command.json`, `offset-surface.command.json`. Add two new fixtures `distance.command.json` and `area.command.json` (read-only).
+- Fixture filenames: [`spatial/fixture/factory.json`](spatial/fixture/factory.json), [`extrude.factory.json`](spatial/fixture/extrude.factory.json), [`offset-surface.factory.json`](spatial/fixture/offset-surface.factory.json) -> `box.command.json`, `extrude-wire.command.json`, `offset-surface.command.json`. Add two new fixtures `distance.command.json` and `area.command.json` (read-only).
 - Types/classes in [`spatial/js/core/index.ts`](spatial/js/core/index.ts): `FactorySpec`->`CommandSpec`, `FactoryRuntime`->`CommandRuntime`, `FactoryRuntimeOptions`->`CommandRuntimeOptions`, `FactorySnapshot`->`CommandSnapshot`, `FactoryEvent`->`CommandEvent`, `FactorySpatialInteractionConfig/Resolved`->`Command...`, `FactoryKeybindRow`->`CommandKeybindRow`, `SpatialFactoryPreset`->`SpatialCommandPreset`. Replace `buildBoxFactorySpec` / `buildExtrudeFactorySpec` / `buildOffsetSurfaceFactorySpec` with `buildBoxCommandSpec` etc. plus new `buildDistanceCommandSpec`, `buildAreaCommandSpec`, `listSpatialCommandPresets`, `loadSpatialCommandPreset`, `resolveSpatialCommandPresetKey`, `createCommandRuntime`. The XState helper kind `factoryKind` -> `commandKind`.
 - Region renames: `🏭Factory` -> `📜Command`, `📦Factories` -> `📦Commands`. `🎬Statechart` keeps name.
 - Workspace package names stay (`@spatial/js-core`, `@spatial/js-machine-stately`, `@spatial/js-kernel-brepjs`, `@spatial/js-renderer-r3f`) — the user said "spatial:" not "rename packages", and a package rename adds noise without value.
@@ -198,11 +198,11 @@ async commit(): Promise<CommandResponse> {
 
 ## 5. New + updated fixtures
 
-- [`spatial/fixtures/box.command.json`](spatial/fixtures/factory.json) (renamed): `schema: "spatial.command/v1"`, no `selection` block (pointer-driven).
-- [`spatial/fixtures/extrude-wire.command.json`](spatial/fixtures/extrude.factory.json) (renamed): `machine.states.selectWire.selection = { accept: ["wire"], multiple: false, prompt: "Pick wire" }`.
-- [`spatial/fixtures/offset-surface.command.json`](spatial/fixtures/offset-surface.factory.json) (renamed): `machine.states.selectSurface.selection = { accept: ["surface", "face"], multiple: false, prompt: "Pick surface" }` (raw `face` allowed as a fallback for kernels without derived view).
-- New `spatial/fixtures/distance.command.json` — read-only. Two selection states each `accept: ["vertex"]`; commit `kind: "measure.distance"`, `outputDataPath: "distance"`.
-- New `spatial/fixtures/area.command.json` — read-only. One selection state `accept: ["face", "surface"]`; commit `kind: "measure.area"`, `outputDataPath: "area"`.
+- [`spatial/fixture/box.command.json`](spatial/fixture/factory.json) (renamed): `schema: "spatial.command/v1"`, no `selection` block (pointer-driven).
+- [`spatial/fixture/extrude-wire.command.json`](spatial/fixture/extrude.factory.json) (renamed): `machine.states.selectWire.selection = { accept: ["wire"], multiple: false, prompt: "Pick wire" }`.
+- [`spatial/fixture/offset-surface.command.json`](spatial/fixture/offset-surface.factory.json) (renamed): `machine.states.selectSurface.selection = { accept: ["surface", "face"], multiple: false, prompt: "Pick surface" }` (raw `face` allowed as a fallback for kernels without derived view).
+- New `spatial/fixture/distance.command.json` — read-only. Two selection states each `accept: ["vertex"]`; commit `kind: "measure.distance"`, `outputDataPath: "distance"`.
+- New `spatial/fixture/area.command.json` — read-only. One selection state `accept: ["face", "surface"]`; commit `kind: "measure.area"`, `outputDataPath: "area"`.
 
 `listSpatialCommandPresets()` returns the 5 entries with keys `q,j,k,d,a`.
 

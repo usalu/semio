@@ -15,7 +15,7 @@ export default createPlaygroundPlayViteConfig({
   playEntryKind: "flow",
   extraAliases: [
     { find: "@flow/react", replacement: path.resolve(playDir, "../react/index.tsx") },
-    { find: "@flow/module-core", replacement: path.resolve(playDir, "../modules/core/pkg/flow_module_core.js") },
+    { find: "@flow/module-core", replacement: path.resolve(playDir, "../module/core/pkg/flow_module_core.js") },
   ],
   resolveDedupe: ["react", "react-dom", "@flow/react"],
   optimizeDeps: {
@@ -29,9 +29,9 @@ export default createPlaygroundPlayViteConfig({
     "../core/Cargo.toml",
     "../core/Cargo.lock",
     "../core/script.ts",
-    "../modules/**/lib.rs",
-    "../modules/**/target/**",
-    "../modules/**/Cargo.toml",
-    "../modules/**/script.ts",
+    "../module/**/lib.rs",
+    "../module/**/target/**",
+    "../module/**/Cargo.toml",
+    "../module/**/script.ts",
   ],
 });

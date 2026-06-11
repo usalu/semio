@@ -18965,7 +18965,7 @@ def computeChildPlane(
 # Tests for the semio py module.
 
 TEST_TOLERANCE = 0.001
-TEST_ASSETS_DIR = "../assets/semio"
+TEST_ASSETS_DIR = "../asset/semio"
 REPORTS_EXPORT_DIR = (
     pathlib.Path(__file__).resolve().parents[2]
     / "reports"

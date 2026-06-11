@@ -42,8 +42,8 @@
   -webkit-app-region: drag !important;
 }
 
-/* https://tailwindcss.com/docs/theme */
-/* https://ui.shadcn.com/docs/theming */
+/* https://tailwindcss.com/doc/theme */
+/* https://ui.shadcn.com/doc/theming */
 
 .body {
 }
@@ -189,22 +189,22 @@
     --color-removed: var(--destructive-border);
     --color-changed-selected: var(--accent);
     --color-changed-hovered: var(--accent-secondary);
-    --cursor-default: url("../../../assets/cursors/cursor.svg") 0 0, default;
-    --cursor-pointer: url("../../../assets/cursors/cursor_pointer.svg") 0 0, pointer;
-    --cursor-grab: url("../../../assets/cursors/cursor_grab.svg") 0 0, grab;
-    --cursor-grabbing: url("../../../assets/cursors/cursor_grabbing.svg") 0 0, grabbing;
-    --cursor-ew-resize: url("../../../assets/cursors/cursor_ew-resize.svg") 16 2, ew-resize;
-    --cursor-col-resize: url("../../../assets/cursors/cursor_ew-resize.svg") 16 2, col-resize;
-    --cursor-ns-resize: url("../../../assets/cursors/cursor_ns-resize.svg") 2 16, ns-resize;
-    --cursor-nesw-resize: url("../../../assets/cursors/cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
-    --cursor-nwse-resize: url("../../../assets/cursors/cursor_nwse-resize.svg") 16 16, nwse-resize;
-    --cursor-move: url("../../../assets/cursors/cursor_move_inkscape.svg") 16 16, move;
-    --cursor-crosshair: url("../../../assets/cursors/cursor_crosshair.svg") 0 0, crosshair;
-    --cursor-crosshair-centered: url("../../../assets/cursors/cursor_crosshair.svg") 16 16, crosshair;
-    --cursor-selectable: url("../../../assets/cursors/cursor_selectable.svg") 0 0, pointer;
-    --cursor-foldable: url("../../../assets/cursors/cursor_foldable.svg") 0 0, pointer;
+    --cursor-default: url("../../../asset/cursor/cursor.svg") 0 0, default;
+    --cursor-pointer: url("../../../asset/cursor/cursor_pointer.svg") 0 0, pointer;
+    --cursor-grab: url("../../../asset/cursor/cursor_grab.svg") 0 0, grab;
+    --cursor-grabbing: url("../../../asset/cursor/cursor_grabbing.svg") 0 0, grabbing;
+    --cursor-ew-resize: url("../../../asset/cursor/cursor_ew-resize.svg") 16 2, ew-resize;
+    --cursor-col-resize: url("../../../asset/cursor/cursor_ew-resize.svg") 16 2, col-resize;
+    --cursor-ns-resize: url("../../../asset/cursor/cursor_ns-resize.svg") 2 16, ns-resize;
+    --cursor-nesw-resize: url("../../../asset/cursor/cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
+    --cursor-nwse-resize: url("../../../asset/cursor/cursor_nwse-resize.svg") 16 16, nwse-resize;
+    --cursor-move: url("../../../asset/cursor/cursor_move_inkscape.svg") 16 16, move;
+    --cursor-crosshair: url("../../../asset/cursor/cursor_crosshair.svg") 0 0, crosshair;
+    --cursor-crosshair-centered: url("../../../asset/cursor/cursor_crosshair.svg") 16 16, crosshair;
+    --cursor-selectable: url("../../../asset/cursor/cursor_selectable.svg") 0 0, pointer;
+    --cursor-foldable: url("../../../asset/cursor/cursor_foldable.svg") 0 0, pointer;
     --cursor-help: help;
-    --cursor-not-allowed: url("../../../assets/cursors/cursor_not-allowed.svg") 0 0, not-allowed;
+    --cursor-not-allowed: url("../../../asset/cursor/cursor_not-allowed.svg") 0 0, not-allowed;
     --cursor-text: text;
     * {
       cursor: var(--cursor-default);
@@ -655,21 +655,21 @@
   --hover-panel: var(--color-gray-400);
   --hover-overlay: var(--color-gray-400);
   --hover-temporary: var(--color-dark-dark-gray-2);
-  --cursor-default: url("../../../assets/cursors/cursor_dark.svg") 0 0, default;
-  --cursor-pointer: url("../../../assets/cursors/cursor_pointer_dark_inkscape.svg") 0 0, pointer;
-  --cursor-grab: url("../../../assets/cursors/cursor_grab_dark.svg") 0 0, grab;
-  --cursor-grabbing: url("../../../assets/cursors/cursor_grabbing.svg") 0 0, grabbing;
-  --cursor-ew-resize: url("../../../assets/cursors/cursor_ew-resize_dark.svg") 16 2, ew-resize;
-  --cursor-col-resize: url("../../../assets/cursors/cursor_ew-resize_dark.svg") 16 2, col-resize;
-  --cursor-ns-resize: url("../../../assets/cursors/cursor_ns-resize_dark.svg") 2 16, ns-resize;
-  --cursor-nesw-resize: url("../../../assets/cursors/cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
-  --cursor-nwse-resize: url("../../../assets/cursors/cursor_nwse-resize_dark.svg") 16 16, nwse-resize;
-  --cursor-move: url("../../../assets/cursors/cursor_move_dark.svg") 16 16, move;
-  --cursor-crosshair: url("../../../assets/cursors/cursor_crosshair_dark.svg") 0 0, crosshair;
-  --cursor-crosshair-centered: url("../../../assets/cursors/cursor_crosshair_dark.svg") 16 16, crosshair;
-  --cursor-selectable: url("../../../assets/cursors/cursor_selectable_dark.svg") 0 0, pointer;
-  --cursor-foldable: url("../../../assets/cursors/cursor_foldable_dark.svg") 0 0, pointer;
-  --cursor-not-allowed: url("../../../assets/cursors/cursor_not-allowed_dark.svg") 0 0, not-allowed;
+  --cursor-default: url("../../../asset/cursor/cursor_dark.svg") 0 0, default;
+  --cursor-pointer: url("../../../asset/cursor/cursor_pointer_dark_inkscape.svg") 0 0, pointer;
+  --cursor-grab: url("../../../asset/cursor/cursor_grab_dark.svg") 0 0, grab;
+  --cursor-grabbing: url("../../../asset/cursor/cursor_grabbing.svg") 0 0, grabbing;
+  --cursor-ew-resize: url("../../../asset/cursor/cursor_ew-resize_dark.svg") 16 2, ew-resize;
+  --cursor-col-resize: url("../../../asset/cursor/cursor_ew-resize_dark.svg") 16 2, col-resize;
+  --cursor-ns-resize: url("../../../asset/cursor/cursor_ns-resize_dark.svg") 2 16, ns-resize;
+  --cursor-nesw-resize: url("../../../asset/cursor/cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
+  --cursor-nwse-resize: url("../../../asset/cursor/cursor_nwse-resize_dark.svg") 16 16, nwse-resize;
+  --cursor-move: url("../../../asset/cursor/cursor_move_dark.svg") 16 16, move;
+  --cursor-crosshair: url("../../../asset/cursor/cursor_crosshair_dark.svg") 0 0, crosshair;
+  --cursor-crosshair-centered: url("../../../asset/cursor/cursor_crosshair_dark.svg") 16 16, crosshair;
+  --cursor-selectable: url("../../../asset/cursor/cursor_selectable_dark.svg") 0 0, pointer;
+  --cursor-foldable: url("../../../asset/cursor/cursor_foldable_dark.svg") 0 0, pointer;
+  --cursor-not-allowed: url("../../../asset/cursor/cursor_not-allowed_dark.svg") 0 0, not-allowed;
   --info-bg: var(--color-dark-8-9);
   --info-foreground: var(--color-light);
   --info-border: var(--color-info);

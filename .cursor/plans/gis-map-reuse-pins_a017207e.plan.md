@@ -33,7 +33,7 @@ Mapping (confirmed): Pins = receiver projekte + donor bauwerke that have coordin
 - React `gis/map/react/index.tsx`: `MapPositionProps` is `{id,lon,lat,label}`; `mapDescriptorToJson` serializes only those; `MapCanvas` never consumes `drainEvents`.
 - Play host `MapPlayPaneSurfaceHost` in `framework/product/playground/renderer/react/index.tsx` hardcodes Zürich/Bern; `MapPlayController.getFixtureCatalog()` returns empty options.
 - Fixture pattern (from `[puzzle/2d/play/index.ts](puzzle/2d/play/index.ts)`): JSON imported as a module with a `schema` field, parsed to a typed fixture, listed in `FIXTURE_OPTIONS`, switched via `setActiveFixture`.
-- Icons: `Icon` + `IconName` exported from `[ui/react/index.tsx](ui/react/index.tsx)` (`@ui/react`), backed by `@ui/assets` `ICONS`.
+- Icons: `Icon` + `IconName` exported from `[ui/react/index.tsx](ui/react/index.tsx)` (`@ui/react`), backed by `@ui/asset` `ICONS`.
 
 ## Fixture schema `gis.map.fixture/v1`
 

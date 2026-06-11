@@ -9,7 +9,7 @@ Electron desktop shell for the semio sketchpad, working primarily with local kit
 
 - [Electron](https://www.npmjs.com/package/electron) - `npm`
   - [Docs](https://www.electronjs.org/docs) - `official`
-  - [API](https://www.electronjs.org/docs/latest/api/app) - `reference`
+  - [API](https://www.electronjs.org/doc/latest/api/app) - `reference`
   - [Issues](https://github.com/electron/electron/issues) - `github`
 - [Electron Forge](https://www.npmjs.com/package/electron-forge) - `npm`
   - [Docs](https://www.electronforge.io/docs) - `official`

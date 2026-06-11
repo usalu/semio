@@ -87,7 +87,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { ICONS, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@ui/assets";
+import { ICONS, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@ui/asset";
 export type { IconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -4191,8 +4191,8 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
 
   const label = useLabel(labelKey);
 
-  const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
-  const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
+  const fullManualPath = manualPath ? `/doc/manual/${manualPath}` : undefined;
+  const fullTutorialPath = tutorialPath ? `/doc/tutorial/${tutorialPath}` : undefined;
 
   const handleHotkeyClick = () => {
     if (labelKey) {
@@ -4294,8 +4294,8 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const showManual = (mode === Expertise.BEGINNER || mode === Expertise.NORMAL) && manualPath;
   const showTutorial = mode === Expertise.BEGINNER && tutorialPath;
 
-  const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
-  const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
+  const fullManualPath = manualPath ? `/doc/manual/${manualPath}` : undefined;
+  const fullTutorialPath = tutorialPath ? `/doc/tutorial/${tutorialPath}` : undefined;
 
   const hasLinks = showManual || showTutorial || hotkey;
 

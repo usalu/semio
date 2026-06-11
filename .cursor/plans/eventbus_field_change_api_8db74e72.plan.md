@@ -15,7 +15,7 @@ todos:
     content: Drop eventKind from FieldSpec/KIT_ARTIFACT_FIELD_SPECS/DESIGN_ARTIFACT_FIELD_SPECS; remove Design.subscribeField; rename Design.onDescriptionChanged → onDescriptionChange
     status: pending
   - id: kit_on_change
-    content: Add on*Change for Kit (Name/Description/Icon/Image/Preview/Remote/Homepage/License/Uri + *IdsChange for types/designs/authors/qualities/tags/concepts)
+    content: Add on*Change for Kit (Name/Description/Icon/Image/Preview/Remote/Homepage/License/Uri + *IdsChange for types/design/authors/qualities/tags/concepts)
     status: pending
   - id: design_on_change
     content: Add on*Change for Design (Name/Description/Icon/Image/Unit/QualitySum + Piece/Connection/AttributeIdsChange)

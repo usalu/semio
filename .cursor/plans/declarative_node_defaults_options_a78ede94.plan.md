@@ -6,7 +6,7 @@ todos:
     content: "neural/engine: add Atom::Boolean + as_bool; add InputSpec {id,type,default?,label?} with builder ctors; change NeuronKindInfo.inputs to Vec<InputSpec>; inject declared defaults in collect_neuron_input for unconnected ports; update variadic/'*' handling and engine tests."
     status: completed
   - id: wasm-glue
-    content: "flow/modules/wasm: verify manifest serializes InputSpec; update test.echo fixtures to typed inputs."
+    content: "flow/module/wasm: verify manifest serializes InputSpec; update test.echo fixtures to typed inputs."
     status: completed
   - id: flow-modules
     content: "math/list/text/logic/dictionary modules: convert all registrations to typed InputSpec with sensible defaults; simplify evaluate to use injected defaults; add new options incl. list.get index default 0 + wrap boolean default false; extend each module's tests."
@@ -39,7 +39,7 @@ isProject: false
 
 ```mermaid
 flowchart LR
-  Mods["flow/modules/*.rs + brep BREP_FLOW_KINDS"] -->|InputSpec type+default| Manifest["flow.module/v1 manifest"]
+  Mods["flow/module/*.rs + brep BREP_FLOW_KINDS"] -->|InputSpec type+default| Manifest["flow.module/v1 manifest"]
   Manifest --> Core["flow/core kind_infos"]
   Core --> Collect["collect_neuron_input: inject defaults for unconnected inputs"]
   Collect -->|merged dict| Dispatch["host.evaluate(kind, json)"]
@@ -59,8 +59,8 @@ flowchart LR
 ## Key edits
 
 - [`neural/engine/lib.rs`](neural/engine/lib.rs): add `Atom::Boolean`, `InputSpec` + builder ctors, change `NeuronKindInfo.inputs` to `Vec<InputSpec>`, inject defaults in `collect_neuron_input`, update `variadic`/`"*"` handling and tests.
-- [`flow/modules/wasm/lib.rs`](flow/modules/wasm/lib.rs): no schema change needed (serde serializes `InputSpec`); fix the `test.echo` fixtures to new input shape.
-- [`flow/modules/math/lib.rs`](flow/modules/math/lib.rs), [`list/lib.rs`](flow/modules/list/lib.rs), [`text/lib.rs`](flow/modules/text/lib.rs), [`logic/lib.rs`](flow/modules/logic/lib.rs), [`dictionary/lib.rs`](flow/modules/dictionary/lib.rs): convert every registration to typed `InputSpec` with sensible defaults; simplify `evaluate` to rely on injected defaults; add new options. Canonical example in `list.get`: `index` default `0` and a new `wrap: boolean` default `false` (wrap-around + negative indexing when true).
+- [`flow/module/wasm/lib.rs`](flow/module/wasm/lib.rs): no schema change needed (serde serializes `InputSpec`); fix the `test.echo` fixtures to new input shape.
+- [`flow/module/math/lib.rs`](flow/module/math/lib.rs), [`list/lib.rs`](flow/module/list/lib.rs), [`text/lib.rs`](flow/module/text/lib.rs), [`logic/lib.rs`](flow/module/logic/lib.rs), [`dictionary/lib.rs`](flow/module/dictionary/lib.rs): convert every registration to typed `InputSpec` with sensible defaults; simplify `evaluate` to rely on injected defaults; add new options. Canonical example in `list.get`: `index` default `0` and a new `wrap: boolean` default `false` (wrap-around + negative indexing when true).
 - [`flow/core/lib.rs`](flow/core/lib.rs): `default_neuron_input_ports` / `neuron_io_layout` read `spec.id`; extend the computation node to carry per-input `type` + `default` + current param `value` + `connected` flag.
 - [`mathematical/graph/port/directed/dag/lib.rs`](mathematical/graph/port/directed/dag/lib.rs): extend `IoPortSpec` (or `Computation.inputs`) with optional `value_type`, `default`, `value`, `connected`; adjust node height for inline fields.
 - [`flow/react/index.tsx`](flow/react/index.tsx): change `FlowModuleNeuronKindV1.inputs` to `readonly InputSpecV1[]`, add `InputSpecV1` interface, render inline default editors dispatching `setNeuronParams`, fix manifest fixtures/tests using `inputs: [...]`.

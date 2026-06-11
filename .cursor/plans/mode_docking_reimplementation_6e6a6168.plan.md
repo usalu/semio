@@ -83,5 +83,5 @@ The prior removal deleted the `golden-layout` dependency and its CSS, but [semio
 ## Tests, stories, verification
 
 - Extend inline `import.meta.vitest` in core: stack renders tabs with only the active window visible; clicking a tab switches the visible window; closing a tab removes the window and collapses an emptied stack; `splitWithWindow` and `removeWindowFromLayout` tree utils; maximize shows only one stack. Run `@elements/ui` vitest (ResizeObserver mock already in `vitest.setup.ts`).
-- Update [.storybook/stories/elements/ui/Mode.stories.tsx](.storybook/stories/elements/ui/Mode.stories.tsx): tab-stack story, drag-to-dock story, maximize story; build Storybook.
+- Update [.storybook/story/elements/ui/Mode.stories.tsx](.storybook/story/elements/ui/Mode.stories.tsx): tab-stack story, drag-to-dock story, maximize story; build Storybook.
 - Runtime-verify one play host (spatial) and the sketchpad in the browser (tabs, drag-dock, splitter resize, maximize, close); run lint across affected packages; then close the ticket.

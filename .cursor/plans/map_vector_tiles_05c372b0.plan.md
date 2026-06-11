@@ -67,7 +67,7 @@ flowchart LR
 
 ### 2. Canvas text/label capability
 
-- In [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs), add a sans label font asset under `infinite/cavas/vello/assets/` (subset, analogous to existing `NotoColorEmoji-subset.ttf`), exposed via `board_icon_assets`-style static bytes.
+- In [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs), add a sans label font asset under `infinite/cavas/vello/asset/` (subset, analogous to existing `NotoColorEmoji-subset.ttf`), exposed via `board_icon_assets`-style static bytes.
 - Add a `text` module (new region) with `append_label(scene, text, origin, px, fill, halo)` that renders glyphs by building an SVG `<text>` and reusing the existing `usvg`/`render_svg_tree_themed` pipeline with a dedicated `usvg::Options` whose `fontdb` loads the sans font (mirrors `usvg_options_board_icons`). Export for map use.
 
 ### 3. MVT decode interface (Rust)

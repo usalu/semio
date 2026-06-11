@@ -4237,7 +4237,7 @@ if (import.meta.vitest) {
 			it(`imports raw Rhino STEP BREP for ${fixture.name}`, async () => {
 				const { readFile } = await import("node:fs/promises");
 				const { resolve } = await import("node:path");
-				const stepPath = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau", fixture.file);
+				const stepPath = resolve(import.meta.dirname, "../../../../semio/fixture/kit/folder/abbau-aufbau", fixture.file);
 				const stepText = await readFile(stepPath, "utf8");
 				const space = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
 				const modelId = defaultModelDefinitionId();
@@ -4266,7 +4266,7 @@ if (import.meta.vitest) {
 			const { resolve } = await import("node:path");
 			const stepPath = resolve(
 				import.meta.dirname,
-				"../../../../semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
+				"../../../../semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
 			);
 			const stepText = await readFile(stepPath, "utf8");
 			const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
@@ -4283,7 +4283,7 @@ if (import.meta.vitest) {
 			const { resolve } = await import("node:path");
 			const stepPath = resolve(
 				import.meta.dirname,
-				"../../../../semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
+				"../../../../semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
 			);
 			const stepText = await readFile(stepPath, "utf8");
 			const space = await kernel.importStepBimToModelSpace(stepText, {
@@ -4311,7 +4311,7 @@ if (import.meta.vitest) {
 		it("concrete forest left play fixture roundtrips shape, building, energy, and structure models", async () => {
 			const { readFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
-			const fixturePath = resolve(import.meta.dirname, "../../../assets/play/hexagonal-cut-concrete-forest-left.model.json");
+			const fixturePath = resolve(import.meta.dirname, "../../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
 			const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
 			const space = ModelSpace.fromJSON(fixtureJson);
 			const shape = space.models[defaultModelDefinitionId()]!;
@@ -4333,7 +4333,7 @@ if (import.meta.vitest) {
 		it("imports energy and classic structure STEP presentation fixtures for concrete forest left", async () => {
 			const { readFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
-			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau");
+			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixture/kit/folder/abbau-aufbau");
 			const energyText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp"), "utf8");
 			const structureText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
 			const energySpace = await kernel.importStepBimToModelSpace(energyText, {
@@ -4371,8 +4371,8 @@ if (import.meta.vitest) {
 			if (process.env.CAD_GENERATE_STEP_FIXTURES !== "1") return;
 			const { readFile, writeFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
-			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau");
-			const playRoot = resolve(import.meta.dirname, "../../../assets/play");
+			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixture/kit/folder/abbau-aufbau");
+			const playRoot = resolve(import.meta.dirname, "../../../asset/play");
 			for (const fixture of semioStepFixtures) {
 				const stepPath = resolve(fixtureRoot, fixture.file);
 				const stepText = await readFile(stepPath, "utf8");

@@ -312,7 +312,7 @@
                 }
             }
         },
-        "/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}": {
+        "/api/kits/{encodedKitUri}/type/{encodedTypeNameAndVariant}": {
             "put": {
                 "summary": "Put Type",
                 "description": "Creates or replaces a type in a kit by encoded URI and type identifier.\nCallers MUST provide a valid TypeInput body with matching name and variant.",
@@ -418,7 +418,7 @@
                 }
             }
         },
-        "/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
+        "/api/kits/{encodedKitUri}/design/{encodedDesignNameAndVariantAndView}": {
             "put": {
                 "summary": "Put Design",
                 "description": "Creates or replaces a design in a kit by encoded URI and design identifier.\nCallers MUST provide a valid DesignInput body with matching name, variant, and view.",

@@ -24,7 +24,7 @@ isProject: false
 
 ## Goal
 
-Every play host under `@elements/playground` gets a **left workbench tab** (icon: `ListTree`) labeled **Hierarchy**, showing a navigable composition tree. Clicking a leaf syncs canvas selection (same as existing inspectors). Right **details** panels stay as-is (inspector/settings/status).
+Every play host under `@elements/playground` gets a **left workbench tab** (icon: `ListTree`) labeled **Hierarchy**, showing a navigable composition tree. Clicking a leaf syncs canvas selection (same as existing inspectors). Right **details** panels stay as-is (inspector/setting/status).
 
 ## Current state
 

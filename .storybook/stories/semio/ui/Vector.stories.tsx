@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 semio/ui/.storybook/stories/Vector.stories.tsx
+// 💻 semio/ui/.storybook/story/Vector.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Default story is uncontrolled.
 // Summary: Vector stories: Default, PartialSelectionAndDisplay.
 // 2026 Ueli Saluz <ueli@semio-tech.com>

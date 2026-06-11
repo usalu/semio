@@ -5,7 +5,7 @@
   "sourceRoot": "semio/client/bin/engine",
   "projectType": "application",
   "devDependencies": {
-    "@semio/assets": "*",
+    "@semio/asset": "*",
     "@semio/ui": "*",
     "vite-plugin-singlefile": "*"
   },

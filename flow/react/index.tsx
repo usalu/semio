@@ -27,23 +27,23 @@ if (import.meta.env.VITEST) {
     { initSync: initBrepSync },
     { initSync: initBimSync },
   ] = await Promise.all([
-    import("../modules/core/pkg/flow_module_core.js"),
-    import("../modules/math/pkg/flow_module_math.js"),
-    import("../modules/text/pkg/flow_module_text.js"),
-    import("../modules/logic/pkg/flow_module_logic.js"),
-    import("../modules/dictionary/pkg/flow_module_dictionary.js"),
-    import("../modules/list/pkg/flow_module_list.js"),
-    import("../modules/brep/pkg/flow_module_brep.js"),
-    import("../modules/bim/pkg/flow_module_bim.js"),
+    import("../module/core/pkg/flow_module_core.js"),
+    import("../module/math/pkg/flow_module_math.js"),
+    import("../module/text/pkg/flow_module_text.js"),
+    import("../module/logic/pkg/flow_module_logic.js"),
+    import("../module/dictionary/pkg/flow_module_dictionary.js"),
+    import("../module/list/pkg/flow_module_list.js"),
+    import("../module/brep/pkg/flow_module_brep.js"),
+    import("../module/bim/pkg/flow_module_bim.js"),
   ]);
-  initCoreSync({ module: readFileSync(join(reactDir, "../modules/core/pkg/flow_module_core_bg.wasm")) });
-  initMathSync({ module: readFileSync(join(reactDir, "../modules/math/pkg/flow_module_math_bg.wasm")) });
-  initTextSync({ module: readFileSync(join(reactDir, "../modules/text/pkg/flow_module_text_bg.wasm")) });
-  initLogicSync({ module: readFileSync(join(reactDir, "../modules/logic/pkg/flow_module_logic_bg.wasm")) });
-  initDictionarySync({ module: readFileSync(join(reactDir, "../modules/dictionary/pkg/flow_module_dictionary_bg.wasm")) });
-  initListSync({ module: readFileSync(join(reactDir, "../modules/list/pkg/flow_module_list_bg.wasm")) });
-  initBrepSync({ module: readFileSync(join(reactDir, "../modules/brep/pkg/flow_module_brep_bg.wasm")) });
-  initBimSync({ module: readFileSync(join(reactDir, "../modules/bim/pkg/flow_module_bim_bg.wasm")) });
+  initCoreSync({ module: readFileSync(join(reactDir, "../module/core/pkg/flow_module_core_bg.wasm")) });
+  initMathSync({ module: readFileSync(join(reactDir, "../module/math/pkg/flow_module_math_bg.wasm")) });
+  initTextSync({ module: readFileSync(join(reactDir, "../module/text/pkg/flow_module_text_bg.wasm")) });
+  initLogicSync({ module: readFileSync(join(reactDir, "../module/logic/pkg/flow_module_logic_bg.wasm")) });
+  initDictionarySync({ module: readFileSync(join(reactDir, "../module/dictionary/pkg/flow_module_dictionary_bg.wasm")) });
+  initListSync({ module: readFileSync(join(reactDir, "../module/list/pkg/flow_module_list_bg.wasm")) });
+  initBrepSync({ module: readFileSync(join(reactDir, "../module/brep/pkg/flow_module_brep_bg.wasm")) });
+  initBimSync({ module: readFileSync(join(reactDir, "../module/bim/pkg/flow_module_bim_bg.wasm")) });
 } else {
   await initFlowWasm({ module_or_path: flowCoreWasmUrl });
 }
@@ -206,15 +206,15 @@ async function loadFlowWasmModule(
 }
 
 const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
-  core: () => loadFlowWasmModule(import("../modules/core/pkg/flow_module_core.js"), import("../modules/core/pkg/flow_module_core_bg.wasm?url")),
-  math: () => loadFlowWasmModule(import("../modules/math/pkg/flow_module_math.js"), import("../modules/math/pkg/flow_module_math_bg.wasm?url")),
-  text: () => loadFlowWasmModule(import("../modules/text/pkg/flow_module_text.js"), import("../modules/text/pkg/flow_module_text_bg.wasm?url")),
-  logic: () => loadFlowWasmModule(import("../modules/logic/pkg/flow_module_logic.js"), import("../modules/logic/pkg/flow_module_logic_bg.wasm?url")),
+  core: () => loadFlowWasmModule(import("../module/core/pkg/flow_module_core.js"), import("../module/core/pkg/flow_module_core_bg.wasm?url")),
+  math: () => loadFlowWasmModule(import("../module/math/pkg/flow_module_math.js"), import("../module/math/pkg/flow_module_math_bg.wasm?url")),
+  text: () => loadFlowWasmModule(import("../module/text/pkg/flow_module_text.js"), import("../module/text/pkg/flow_module_text_bg.wasm?url")),
+  logic: () => loadFlowWasmModule(import("../module/logic/pkg/flow_module_logic.js"), import("../module/logic/pkg/flow_module_logic_bg.wasm?url")),
   dictionary: () =>
-    loadFlowWasmModule(import("../modules/dictionary/pkg/flow_module_dictionary.js"), import("../modules/dictionary/pkg/flow_module_dictionary_bg.wasm?url")),
-  list: () => loadFlowWasmModule(import("../modules/list/pkg/flow_module_list.js"), import("../modules/list/pkg/flow_module_list_bg.wasm?url")),
-  brep: () => loadFlowWasmModule(import("../modules/brep/pkg/flow_module_brep.js"), import("../modules/brep/pkg/flow_module_brep_bg.wasm?url")),
-  bim: () => loadFlowWasmModule(import("../modules/bim/pkg/flow_module_bim.js"), import("../modules/bim/pkg/flow_module_bim_bg.wasm?url")),
+    loadFlowWasmModule(import("../module/dictionary/pkg/flow_module_dictionary.js"), import("../module/dictionary/pkg/flow_module_dictionary_bg.wasm?url")),
+  list: () => loadFlowWasmModule(import("../module/list/pkg/flow_module_list.js"), import("../module/list/pkg/flow_module_list_bg.wasm?url")),
+  brep: () => loadFlowWasmModule(import("../module/brep/pkg/flow_module_brep.js"), import("../module/brep/pkg/flow_module_brep_bg.wasm?url")),
+  bim: () => loadFlowWasmModule(import("../module/bim/pkg/flow_module_bim.js"), import("../module/bim/pkg/flow_module_bim_bg.wasm?url")),
 };
 
 export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep", "bim"] as const;

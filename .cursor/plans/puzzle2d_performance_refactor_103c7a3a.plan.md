@@ -6,7 +6,7 @@ todos:
     content: "framework/core: add chromeGeneration + notifyChrome/subscribeChrome; route panel visibility, active app/mode, navigation, panel sizes through chrome channel"
     status: completed
   - id: playgroundview-memo
-    content: "PlaygroundView: memoize tabs/tools/footer/navbar/context value; dedupe mergePanelTabs resolveSidePanelTabSource; cache sideTabsToPlaygroundPanelTabs + augment resolveTab"
+    content: "PlaygroundView: memoize tabs/tool/footer/navbar/context value; dedupe mergePanelTabs resolveSidePanelTabSource; cache sideTabsToPlaygroundPanelTabs + augment resolveTab"
     status: completed
   - id: sidepanel-no-unmount
     content: "ui/react Layout: hide side panels via CSS instead of conditional unmount so hierarchy/inspector trees persist across toggles"

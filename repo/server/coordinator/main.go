@@ -1107,7 +1107,7 @@ func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 		s.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	path := strings.TrimPrefix(r.URL.Path, "/tickets/")
+	path := strings.TrimPrefix(r.URL.Path, "/ticket/")
 	if path == "" {
 		s.respondError(w, http.StatusNotFound, "ticket not found")
 		return
@@ -1132,7 +1132,7 @@ func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	path := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/tickets/"), "/claims")
+	path := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/ticket/"), "/claims")
 	if path == "" {
 		s.respondError(w, http.StatusNotFound, "ticket not found")
 		return
@@ -1806,11 +1806,11 @@ func main() {
 	defer bus.Stop()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", server.handleHealth)
-	mux.HandleFunc("/tickets/open", server.handleTicketOpen)
-	mux.HandleFunc("/tickets/close", server.handleTicketClose)
-	mux.HandleFunc("/tickets/reopen", server.handleTicketReopen)
+	mux.HandleFunc("/ticket/open", server.handleTicketOpen)
+	mux.HandleFunc("/ticket/close", server.handleTicketClose)
+	mux.HandleFunc("/ticket/reopen", server.handleTicketReopen)
 	mux.HandleFunc("/tickets", server.handleTicketsQuery)
-	mux.HandleFunc("/tickets/", server.handleTicketDetail)
+	mux.HandleFunc("/ticket/", server.handleTicketDetail)
 	mux.HandleFunc("/diff/ingest", server.handleDiffIngest)
 	mux.HandleFunc("/repo/reindex", server.handleReindex)
 	mux.HandleFunc("/repo/index-file", server.handleIndexFile)

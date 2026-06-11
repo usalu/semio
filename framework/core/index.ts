@@ -494,7 +494,7 @@ export interface FindItem {
 //#endregion 🔖CommandsPalette
 
 //#region 🔖SideTab
-/** @emoji 📐 Fixed platform shell panel slot (left: display/workbench/overview; right: details/settings/chat). */
+/** @emoji 📐 Fixed platform shell panel slot (left: display/workbench/overview; right: details/setting/chat). */
 export type PanelKind = "display" | "overview" | "workbench" | "details" | "settings" | "chat";
 
 export const LEFT_PANEL_KINDS: readonly PanelKind[] = ["display", "workbench", "overview"];

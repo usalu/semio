@@ -94,7 +94,7 @@ export default defineConfig(async ({ mode }) => {
           "@semio/sketchpad": path.resolve(__dirname, "../sketchpad"),
           "@semio/js": path.resolve(__dirname, "../js"),
           "@ui/react": path.resolve(__dirname, "../../../../ui/react"),
-          "@semio/assets": path.resolve(__dirname, "../assets"),
+          "@semio/asset": path.resolve(__dirname, "../asset"),
         },
       },
     };

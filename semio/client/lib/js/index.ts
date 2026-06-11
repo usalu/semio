@@ -1595,7 +1595,7 @@ function semioKitRootFileHiddenFromVfs(node: JsonObject): boolean {
   const name = String(node["name"] ?? "");
   if (semioLooksLikeSpeckleRepresentationBlobName(name)) return true;
   const url = String(node["url"] ?? node["remote"] ?? "");
-  return url.includes("/representations/");
+  return url.includes("/representation/");
 }
 
 function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly SemioRelayVfsBranchSpec[]): readonly SemioFileSystemChildRef[] {
@@ -5320,7 +5320,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixture/nakagin-capsule-tower.filtered.kit.semio.json");
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
         const store = (await session.stores())[0]!;
@@ -5345,7 +5345,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixture/architect.harness.kit.semio.json");
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
         const store = (await session.stores())[0]!;
@@ -5374,7 +5374,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixture/metabolism.shallow.kit.semio.json");
       const representationsFolderId = "019adc83-0113-75e0-90b2-9d0912f1d60f";
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
@@ -5411,7 +5411,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixture/metabolism.shallow.kit.semio.json");
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
         const store = (await session.stores())[0]!;
@@ -5449,7 +5449,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixture/architect.harness.kit.semio.json");
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
         const store = (await session.stores())[0]!;

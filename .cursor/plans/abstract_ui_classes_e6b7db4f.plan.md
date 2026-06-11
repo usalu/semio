@@ -116,7 +116,7 @@ Same pattern (pure `App` + `Controller` class + thin `*-react.ts` registering wi
 - [elements/client/lib/topology/play/react.tsx](elements/client/lib/topology/play/react.tsx) + [elements/client/lib/topology/play/index.tsx](elements/client/lib/topology/play/index.tsx)
 - [semio/client/lib/sketchpad/react/index.tsx](semio/client/lib/sketchpad/react/index.tsx) — sketchpad becomes `class SketchpadApp extends App` with `class SketchpadController`. (Sketchpad has many panels/tabs; this is the largest single migration.)
 - [semio/client/lib/react/rendering/index.tsx](semio/client/lib/react/rendering/index.tsx) — update wrapper to construct `UI` + mount via `ReactUI`.
-- [.storybook/stories/elements/ui/UI.stories.tsx](.storybook/stories/elements/ui/UI.stories.tsx) — rewrite stories to instantiate `UI`/`App` classes.
+- [.storybook/story/elements/ui/UI.stories.tsx](.storybook/story/elements/ui/UI.stories.tsx) — rewrite stories to instantiate `UI`/`App` classes.
 
 ### Tests
 

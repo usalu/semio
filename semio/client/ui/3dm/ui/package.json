@@ -9,7 +9,7 @@
     "@ui/react": "workspace:*",
     "@semio/js": "*",
     "@semio/react": "*",
-    "@semio/assets": "*",
+    "@semio/asset": "*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "zod": "^4.3.5"

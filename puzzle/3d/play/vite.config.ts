@@ -20,7 +20,7 @@ export default createPlaygroundPlayViteConfig({
 	extraAliases: [
 		{ find: "@puzzle/3d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: /^three$/, replacement: threeModule },
-		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
+		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/example/jsm/$1` },
 	],
 	build: { outDir: "dist", emptyOutDir: true },
 	resolveDedupe: ["react", "react-dom", "three", "@puzzle/3d/react"],

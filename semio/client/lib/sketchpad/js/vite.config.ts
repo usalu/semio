@@ -27,7 +27,7 @@ import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 import { puzzle3dMeshesVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
-import { readInitialKitFixtureFromPath } from "../../../../fixtures/script.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -52,7 +52,7 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
         file.startsWith(`${root}/cad/`) ||
         file.startsWith(`${root}/semio/client/lib/sketchpad/`) ||
         file.startsWith(`${root}/semio/client/lib/react/`) ||
-        file.startsWith(`${root}/semio/assets/`) ||
+        file.startsWith(`${root}/semio/asset/`) ||
         file.startsWith(`${root}/framework/product/playground/`) ||
         file.startsWith(`${root}/infinite/`) ||
         file.startsWith(`${root}/gis/`) ||
@@ -172,12 +172,12 @@ const __filename = fileURLToPath(import.meta.url);
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
-const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "representations", "semio"]);
+const RUNTIME_ASSET_DIRECTORIES = new Set(["badge", "cursor", "font", "icon", "image", "logo", "representation", "semio"]);
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
-  const assetsPath = path.resolve(__dirname, "../../../../assets");
-  const fixturesPath = path.resolve(__dirname, "../../../../fixtures");
+  const assetsPath = path.resolve(__dirname, "../../../../asset");
+  const fixturesPath = path.resolve(__dirname, "../../../../fixture");
   server.middlewares.use((req: any, res: any, next: any) => {
     if (req.url?.endsWith(".wasm")) {
       const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -187,8 +187,8 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
         return;
       }
     }
-    if (req.url?.startsWith("/fixtures/")) {
-      const requestedFixturePath = req.url.replace("/fixtures/", "").split(/[?#]/, 1)[0];
+    if (req.url?.startsWith("/fixture/")) {
+      const requestedFixturePath = req.url.replace("/fixture/", "").split(/[?#]/, 1)[0];
       if (requestedFixturePath && !requestedFixturePath.includes("..")) {
         const filePath = path.join(fixturesPath, requestedFixturePath);
         if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
@@ -205,8 +205,8 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
         }
       }
     }
-    if (req.url?.startsWith("/assets/")) {
-      const requestedAssetPath = req.url.replace("/assets/", "").split(/[?#]/, 1)[0];
+    if (req.url?.startsWith("/asset/")) {
+      const requestedAssetPath = req.url.replace("/asset/", "").split(/[?#]/, 1)[0];
       const [assetDirectory] = requestedAssetPath.split("/");
       if (!RUNTIME_ASSET_DIRECTORIES.has(assetDirectory)) {
         next();
@@ -245,11 +245,11 @@ export default defineConfig(async ({ mode }) => {
     { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
     { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
     { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
-    { find: "@ui/assets", replacement: path.resolve(__dirname, "../../../../../ui/assets/index.ts") },
+    { find: "@ui/asset", replacement: path.resolve(__dirname, "../../../../../ui/asset/index.ts") },
     { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
     { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
-    { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
-    { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
+    { find: "@semio/asset/icon", replacement: path.resolve(__dirname, "../../../../asset/index.ts") },
+    { find: "@semio/asset", replacement: path.resolve(__dirname, "../../../../asset") },
     { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
     { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
     { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
@@ -292,7 +292,7 @@ export default defineConfig(async ({ mode }) => {
       alias: workspaceAliases,
     },
     plugins: [
-      ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
+      ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/asset")),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),
       monorepoPlaywrightDevStubPlugin(),
       monorepoWorkspaceResolvePlugin(workspaceAliases),

@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 semio/ui/.storybook/stories/Type.stories.tsx
+// 💻 semio/ui/.storybook/story/Type.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses a type prop directly. Kit is optional for 3D representations.
 // Summary: Type stories: Default, ConnectorsOnly, RepresentationOnly, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -9,7 +9,7 @@ import type { ConnectorGraphDto as Connector, Kit, Type as SemioKind } from "@se
 import { SemioType as TypeView } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
-import { MetabolismKit as metabolismKit } from "@semio/assets";
+import { MetabolismKit as metabolismKit } from "@semio/asset";
 
 // #region 🖥️Data
 

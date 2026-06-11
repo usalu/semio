@@ -1,13 +1,13 @@
 // #region 🧲Header
-// 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
+// 💻 semio/ui/.storybook/story/Diagram.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designId).
 // Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import { Design, Kit, type Design as DesignType, type DesignPlain } from "@semio/react";
-import { MetabolismKit as metabolismKit } from "@semio/assets";
-import { NakaginCapsuleTowerDiffDesign as nakaginDiff } from "@semio/fixtures";
+import { MetabolismKit as metabolismKit } from "@semio/asset";
+import { NakaginCapsuleTowerDiffDesign as nakaginDiff } from "@semio/fixture";
 import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";

@@ -21,7 +21,7 @@ todos:
     content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @semio/react."
     status: completed
   - id: sketchpad-rest
-    content: Re-wire remaining apps (design/type/quality/docs/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
+    content: Re-wire remaining apps (design/type/quality/doc/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
     status: completed
   - id: consumers-build
     content: Update desktop/vscode consumers and fix sketchpad package.json exports (index.tsx->index.ts) and project.json cwd (react->js); grep+fix all stale ProductRuntime/board/scene3d references.
@@ -102,7 +102,7 @@ flowchart TB
   - kit: `table` -> `table`, `diagram` -> `puzzle2d`
   - design: `scene`/`diagram` -> `puzzle5d`; type -> `cad`; docs/feedback/quality -> `panel`/existing.
 - Migrate the slice cleanly: home table, kit table, kit diagram. Implement `registerSurfaceBinding` adapters that read kit state (via `@semio/react`) and return `table`/`puzzle2d` props. Kit diagram is re-wired from today's FiveD-flat onto the `puzzle2d` component per the chosen mapping.
-- Keep remaining apps (design/type/quality/docs/feedback) functional by binding them to `puzzle5d`/`cad`/`panel` with thin adapters wrapping their current React implementations; deeper clean-rewrite of those deferred to follow-up tickets.
+- Keep remaining apps (design/type/quality/doc/feedback) functional by binding them to `puzzle5d`/`cad`/`panel` with thin adapters wrapping their current React implementations; deeper clean-rewrite of those deferred to follow-up tickets.
 - Render via `<PlatformView platform={...} />`. Update boot path and `Sketchpad` export. Reorganize regions so the file stays a single clean `index.ts`.
 
 ## D. consumers + build fixes

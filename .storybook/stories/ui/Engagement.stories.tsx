@@ -1,5 +1,5 @@
 // #region 🧲Header
-// .storybook/stories/elements/ui/Engagement.stories.tsx
+// .storybook/story/elements/ui/Engagement.stories.tsx
 // #endregion 🧲Header
 
 import { Engagement, Window } from "@ui/react";

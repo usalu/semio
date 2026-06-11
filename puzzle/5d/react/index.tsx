@@ -46,7 +46,6 @@ import {
   type Puzzle2dFixtureNodeV1,
   type Puzzle2dKindHover,
   type Puzzle2dHoverPayload,
-  puzzle2dKindHoversEqual,
 } from "@puzzle/2d/react";
 import {
   ObjectStateProvider as Puzzle3dPartStateProvider,
@@ -76,8 +75,6 @@ import {
   type HoverTarget,
   type Puzzle3dHoverPayload,
   type Puzzle3dKindHover,
-  puzzle3dHoverTargetsEqual,
-  puzzle3dKindHoversEqual,
   buildBrushFillSequence,
   brushPlacementUsesHostOrientation,
   computeBrushPlacementPose,
@@ -396,24 +393,6 @@ export function fiveD3dHoverFromStore(focus: HoverFocusSnapshot): { hoverTarget:
   };
 }
 
-function pruneHoverFocusAfterModelEdit(focus: HoverFocusSnapshot, model: V1): HoverFocusSnapshot {
-  if (!focus.instance && !focus.kindHover) {
-    return focus;
-  }
-  const fixture2d = project2d(model);
-  let instance = focus.instance;
-  if (instance) {
-    const resolved = instance.kind === "part"
-      ? model.parts.some((part) => part.id === instance!.id)
-      : instance.kind === "anchor"
-        ? model.parts.some((part) => part.anchors.some((anchor) => anchorFullId(part.id, anchor.id) === instance!.fullId))
-        : model.ties.some((tie) => tie.id === instance!.id);
-    if (!resolved) {
-      instance = null;
-    }
-  }
-  return instance || focus.kindHover ? { instance, kindHover: focus.kindHover } : EMPTY_HOVER_FOCUS;
-}
 //#endregion 🔖Hover
 
 export interface V1 {
@@ -2913,6 +2892,53 @@ if (import.meta.vitest) {
       });
     });
   });
+  describe("paired hover focus", () => {
+    const fixture2d: Puzzle2dFixtureV1 = {
+      schema: "puzzle.2d.fixture/v1",
+      camera: { x: 0, y: 0, zoom: 1 },
+      nodes: [
+        { id: "p1", shape: "circle", x: 0, y: 0, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] },
+      ],
+      edges: [{ id: "t1", source: "p1:h", target: "p1" }],
+    };
+
+    it("maps flat part hover to volume object hover", () => {
+      const focus = hoverFocusFrom2dPayload(fixture2d, { id: "p1", kind: null });
+      expect(fiveD3dHoverFromStore(focus)).toEqual({ hoverTarget: { kind: "object", id: "p1" }, kindHover: null });
+      expect(fiveD2dHoverFromStore(focus)).toEqual({ hoveredId: "p1", kindHover: null });
+    });
+
+    it("maps flat handle hover to volume vortex hover", () => {
+      const focus = hoverFocusFrom2dPayload(fixture2d, { id: "p1:h", kind: null });
+      expect(fiveD3dHoverFromStore(focus)).toEqual({ hoverTarget: { kind: "vortex", fullId: "p1:h" }, kindHover: null });
+    });
+
+    it("maps volume object hover back to flat node hover", () => {
+      const focus = hoverFocusFrom3dPayload({ hoverTarget: { kind: "object", id: "p1" }, kindHover: null });
+      expect(fiveD2dHoverFromStore(focus)).toEqual({ hoveredId: "p1", kindHover: null });
+    });
+
+    it("syncs transitive kind hover across surfaces", () => {
+      const focus = hoverFocusFrom3dPayload({ hoverTarget: null, kindHover: { domain: "object", kindId: "tower" } });
+      expect(fiveD2dHoverFromStore(focus)).toEqual({ hoveredId: null, kindHover: { domain: "node", kindId: "tower" } });
+      expect(fiveD3dHoverFromStore(focus)).toEqual({ hoverTarget: null, kindHover: { domain: "object", kindId: "tower" } });
+    });
+
+    it("stores hover focus in the shared store", () => {
+      const store = createStore({
+        schema: "puzzle.5d/v1",
+        domain: "architecture",
+        camera2d: { x: 0, y: 0, zoom: 1 },
+        camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        parts: [],
+        ties: [],
+      });
+      store.setHoverFocusFrom2d(fixture2d, { id: "p1", kind: null });
+      expect(store.getSnapshot().hoverFocus).toEqual({ instance: { kind: "part", id: "p1" }, kindHover: null });
+      store.setHoverFocusFrom3d({ hoverTarget: null, kindHover: null });
+      expect(store.getSnapshot().hoverFocus).toEqual({ instance: null, kindHover: null });
+    });
+  });
   describe("nodeCenterFromTopLeft", () => {
     it("offsets by half frame", () => {
       expect(nodeCenterFromTopLeft({ x: 10, y: 20 }, { width: 40, height: 60 })).toEqual({ x: 30, y: 50 });
@@ -2981,7 +3007,7 @@ if (import.meta.vitest) {
           id: "host",
           partKind: "Host",
           puzzle2d: { x: 0, y: 0, shape: "rectangle", width: 40, height: 40 },
-          puzzle3d: { origin: [0, 0, 0], meshUrl: "/meshes/host.glb", orientation: [0, 0, 0, 1] },
+          puzzle3d: { origin: [0, 0, 0], meshUrl: "/mesh/host.glb", orientation: [0, 0, 0, 1] },
           anchors: [
             {
               id: "port",
@@ -2995,7 +3021,7 @@ if (import.meta.vitest) {
           id: "peer",
           partKind: "Capsule",
           puzzle2d: { x: 100, y: 0, shape: "rectangle", width: 40, height: 40 },
-          puzzle3d: { origin: [10, 0, 0], meshUrl: "/meshes/capsule.glb", orientation: [0, 0, 0, 1] },
+          puzzle3d: { origin: [10, 0, 0], meshUrl: "/mesh/capsule.glb", orientation: [0, 0, 0, 1] },
           anchors: [
             {
               id: "mate",
@@ -3047,7 +3073,7 @@ if (import.meta.vitest) {
       if (result.kind !== "placed") return;
       const placed = result.model.parts.find((part) => part.id === result.partId);
       expect(placed?.puzzle2d?.x).toBe(80);
-      expect(placed?.puzzle3d?.meshUrl).toBe("/meshes/capsule.glb");
+      expect(placed?.puzzle3d?.meshUrl).toBe("/mesh/capsule.glb");
     });
   });
 
@@ -3063,7 +3089,7 @@ if (import.meta.vitest) {
             id: "host",
             partKind: "Host",
             puzzle2d: { x: 0, y: 0, shape: "rectangle", width: 40, height: 40 },
-            puzzle3d: { origin: [0, 0, 0], meshUrl: "/meshes/host.glb", orientation: [0, 0, 0, 1] },
+            puzzle3d: { origin: [0, 0, 0], meshUrl: "/mesh/host.glb", orientation: [0, 0, 0, 1] },
             anchors: [
               {
                 id: "port",
@@ -3077,7 +3103,7 @@ if (import.meta.vitest) {
             id: "peer",
             partKind: "Capsule",
             puzzle2d: { x: 100, y: 0, shape: "rectangle", width: 40, height: 40 },
-            puzzle3d: { origin: [10, 0, 0], meshUrl: "/meshes/capsule.glb", orientation: [0, 0, 0, 1] },
+            puzzle3d: { origin: [10, 0, 0], meshUrl: "/mesh/capsule.glb", orientation: [0, 0, 0, 1] },
             anchors: [
               {
                 id: "mate",

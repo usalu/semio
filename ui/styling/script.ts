@@ -13,8 +13,8 @@ const rustGeneratedDir = join(stylingRoot, "rs", "src");
 const pyGeneratedDir = join(stylingRoot, "py", "styling");
 const repoRoot = join(stylingRoot, "..", "..");
 
-/** @emoji 📁 Canonical `ui/assets` directory (fonts, cursors, …). */
-export const ELEMENTS_ASSETS_ROOT = join(stylingRoot, "..", "assets");
+/** @emoji 📁 Canonical `ui/asset` directory (fonts, cursors, …). */
+export const ELEMENTS_ASSETS_ROOT = join(stylingRoot, "..", "asset");
 const elementsAssetsRoot = ELEMENTS_ASSETS_ROOT;
 const semioNetPaletteDir = join(repoRoot, "semio", "client", "lib", "net", "Elements.Styling", "Generated");
 
@@ -22,10 +22,10 @@ const GOOGLE_FONTS_UA =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 const GOOGLE_FONT_QUERIES: Record<string, string> = {
-	"fonts/anta": "Anta",
-	"fonts/kelly-slab": "Kelly Slab",
-	"fonts/share-tech-mono": "Share Tech Mono",
-	"fonts/noto-emoji": "Noto Emoji",
+	"font/anta": "Anta",
+	"font/kelly-slab": "Kelly Slab",
+	"font/share-tech-mono": "Share Tech Mono",
+	"font/noto-emoji": "Noto Emoji",
 };
 
 type Rgba8 = [number, number, number, number];
@@ -156,7 +156,7 @@ function resolveThemes(tokens: Tokens): Record<string, Record<string, Record<str
 }
 
 function emitPaletteFonts(tokens: Tokens): string {
-	const assetBase = "/assets";
+	const assetBase = "/asset";
 	const lines: string[] = ["/* Generated from ui/styling/tokens.json — run `bun ./script.ts generate`. */"];
 	for (const face of tokens.fontFaces) {
 		const fam = face.family.includes(" ") ? JSON.stringify(face.family) : `"${face.family}"`;
@@ -437,7 +437,7 @@ function parseGoogleFontWoff2Map(css: string): Map<string, string> {
 
 function resolveFontFaceUrl(src: string, woff2ByKey: Map<string, string>): string | undefined {
 	const base = src.split("/").pop()?.replace(/\.woff2$/, "") ?? "";
-	if (src.startsWith("fonts/noto-emoji/")) {
+	if (src.startsWith("font/noto-emoji/")) {
 		if (base === "emoji-400") {
 			return woff2ByKey.get("2") ?? woff2ByKey.get("0");
 		}
@@ -447,7 +447,7 @@ function resolveFontFaceUrl(src: string, woff2ByKey: Map<string, string>): strin
 	return woff2ByKey.get(base);
 }
 
-/** @emoji ⬇️ Downloads token font woff2 files into `ui/assets/fonts`. */
+/** @emoji ⬇️ Downloads token font woff2 files into `ui/asset/font`. */
 export async function fetchElementsFonts(): Promise<void> {
 	const tokens = loadTokens();
 	const cssByFamilyDir = new Map<string, Map<string, string>>();
@@ -488,7 +488,7 @@ export async function fetchElementsFonts(): Promise<void> {
 		writeFileSync(dest, bytes);
 		wrote += 1;
 	}
-	console.log(`ui/styling: fonts ready under ui/assets (${wrote} downloaded, ${tokens.fontFaces.length} total)`);
+	console.log(`ui/styling: fonts ready under ui/asset (${wrote} downloaded, ${tokens.fontFaces.length} total)`);
 }
 
 /** @emoji 🎨 Writes all styling artifacts from {@link tokens.json}. */

@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx
+// 🥼︎ semio/js/.storybook/story/elements/input/ToggleGroup.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -18,7 +18,7 @@ namespace Semio.Benchmark;
 
 class Program
 {
-    const string AssetsPath = "../assets/semio";
+    const string AssetsPath = "../asset/semio";
     const int Iterations = 3;
     static readonly string[] BenchmarkCsvLanguages = { "go", "typescript", "python", "rust", "csharp" };
 

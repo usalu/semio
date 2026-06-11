@@ -34,11 +34,11 @@ isProject: false
 
 ## Goal
 
-The generic layers (`@cad/js/core`, `@cad/js/kernel/brepjs`, `@cad/js/renderer`) must contain zero concrete model-definition IDs. All domain knowledge moves into per-domain **cad modules** that self-register against generic core registries, mirroring `flow/core` + `flow/modules/`* (each module depends only on the engine; the host composes them).
+The generic layers (`@cad/js/core`, `@cad/js/kernel/brepjs`, `@cad/js/renderer`) must contain zero concrete model-definition IDs. All domain knowledge moves into per-domain **cad modules** that self-register against generic core registries, mirroring `flow/core` + `flow/module/`* (each module depends only on the engine; the host composes them).
 
 ## Current leaks (production code only)
 
-- `cad/js/core/index.ts`: eager `import.meta.glob("../../assets/modelDefinition/**")` ([lines 97-160](cad/js/core/index.ts)); property derivation branch on `spatial.shape.volume`/`energy.heatedvolume` (lines 2528-2534); `registerStatComputer("spatial.shape.geometry"|"energy.demand"|"structure.stability", ...)` (lines 2886-2888) with `computeShapeGeometryStat`/`computeEnergyDemandStat`/`computeStructureStabilityStat`; `BUILDING_TO_STRUCTURE_TYPOLOGY` + `applyBuildingToStructureTransformation` + `registerTransformationApplier(... "aec.building.structure","from_building" ...)` (lines 3757-3792); default typology `"spatial.shape.object"` (line 1333).
+- `cad/js/core/index.ts`: eager `import.meta.glob("../../asset/modelDefinition/**")` ([lines 97-160](cad/js/core/index.ts)); property derivation branch on `spatial.shape.volume`/`energy.heatedvolume` (lines 2528-2534); `registerStatComputer("spatial.shape.geometry"|"energy.demand"|"structure.stability", ...)` (lines 2886-2888) with `computeShapeGeometryStat`/`computeEnergyDemandStat`/`computeStructureStabilityStat`; `BUILDING_TO_STRUCTURE_TYPOLOGY` + `applyBuildingToStructureTransformation` + `registerTransformationApplier(... "aec.building.structure","from_building" ...)` (lines 3757-3792); default typology `"spatial.shape.object"` (line 1333).
 - `cad/js/kernel/brepjs/index.ts`: `BUILDING_BIM_MODEL_DEFINITION_ID`/`ENERGY_MODEL_DEFINITION_ID`/`STRUCTURE_CLASSIC_MODEL_DEFINITION_ID` (2102-2108); `BIM_LAYER_TYPOLOGY`/`ENERGY_LAYER_TYPOLOGY`/`STRUCTURE_LAYER_TYPOLOGY` + `typologyFromStepLayer` (2110-2424); defaults `"spatial.shape.kernel.solid"` (2580), `"building.building.slab"` (3307).
 - `cad/js/renderer/play/index.tsx`: `CAD_PLAY_*` pane constants (103-105) — acceptable host config, but `transformationSourceScore` special-cases building→structure (1329-1330) and `ensureCadPlayQuadModels` hardcodes `"aec.building.structure"` (1369).
 - `cad/js/renderer/index.tsx`: only doc-comment references to `spatial.shape` (lines 4, 3449, 4244) — production is already generic.
@@ -72,7 +72,7 @@ flowchart TD
 
 
 
-Split rule: executable domain compute (stat formulas, volume property, transformation appliers) lives in module TS code self-registered via core registries; pure-data mappings (STEP layer→typology, fallback/base typologies) live in module `register()` code that populates generic core registries. Declarative JSON assets stay under `cad/assets/modelDefinition/` (consumed generically), so `cad/assets/AGENTS.md` stays accurate.
+Split rule: executable domain compute (stat formulas, volume property, transformation appliers) lives in module TS code self-registered via core registries; pure-data mappings (STEP layer→typology, fallback/base typologies) live in module `register()` code that populates generic core registries. Declarative JSON assets stay under `cad/asset/modelDefinition/` (consumed generically), so `cad/asset/AGENTS.md` stays accurate.
 
 ## Steps
 
@@ -101,7 +101,7 @@ Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.js
 
 ### 7. Create `@cad/js/runtime` composition root
 
-- New package depending on core + all four modules; does the single generic `import.meta.glob("../../assets/modelDefinition/**")` and calls `registerModelDefinitionAssets`, then calls each module's `register()` (shape first). Export `bootstrapCadModules()`.
+- New package depending on core + all four modules; does the single generic `import.meta.glob("../../asset/modelDefinition/**")` and calls `registerModelDefinitionAssets`, then calls each module's `register()` (shape first). Export `bootstrapCadModules()`.
 - Add Vite/Vitest aliases for the new packages in `cad/js/renderer/play/vite.config.ts` and `vitest.config.ts`; add packages to `cad/js/package.json` workspaces; register new `test` targets in `.vscode/launch.json` following existing grouping/order.
 
 ### 8. Wire host + generalize play (`cad/js/renderer/play/index.tsx`)
@@ -118,5 +118,5 @@ Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.js
 
 - Work under a single repo ticket; add temp logs/scripts inside the ticket folder only.
 - Module granularity: four sibling modules (shape, building, energy, structure); structure module covers classic + fem variants since they share `structure.*` and the same transformation/import lineage.
-- Assets are not physically moved (keeps `cad/assets/AGENTS.md` accurate); modules own only code + registrations.
+- Assets are not physically moved (keeps `cad/asset/AGENTS.md` accurate); modules own only code + registrations.
 

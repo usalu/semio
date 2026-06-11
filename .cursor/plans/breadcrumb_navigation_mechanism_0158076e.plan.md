@@ -24,7 +24,7 @@ isProject: false
 
 ## Concept
 
-Replace the URL-derived `Platform.breadcrumb` hook with a navigation-tree model in `framework/core`. Each breadcrumb level carries the chosen node plus the **alternatives** reachable from it; the `@ui/react` `Breadcrumb` already renders these alternatives as a dropdown on each `>` separator (`ui/react/index.tsx` lines 10271-10277, 10360-10424). The tree is its own model, independent of the URL path and the virtual file system, so sketchpad can show `Typologies > {Typology}` levels even though the URL is `/kits/{kit}/designs/{design}`.
+Replace the URL-derived `Platform.breadcrumb` hook with a navigation-tree model in `framework/core`. Each breadcrumb level carries the chosen node plus the **alternatives** reachable from it; the `@ui/react` `Breadcrumb` already renders these alternatives as a dropdown on each `>` separator (`ui/react/index.tsx` lines 10271-10277, 10360-10424). The tree is its own model, independent of the URL path and the virtual file system, so sketchpad can show `Typologies > {Typology}` levels even though the URL is `/kits/{kit}/design/{design}`.
 
 ```mermaid
 flowchart LR
@@ -60,8 +60,8 @@ Replace the `🔖PlatformBreadcrumb` region (lines 742-750) and the `breadcrumb`
   - **Kit/design/type routes** produce levels:
     - `Home` (alternatives as above), `Kits` (alternatives = every open kit -> `/kits/{kitId}`), `{Kit}` (alternatives = `[Typologies]`).
     - `Typologies` (alternatives = each typology), `{Typology}` (alternatives = `[Designs, Types]` for the non-empty groupings). Typology-level nodes have no URL route, so their `uri` points at `/kits/{kitId}` (kit view) — this is where breadcrumb intentionally diverges from the URL.
-    - For a design route: `Designs` (alternatives = sibling designs in the typology -> `/kits/{kitId}/designs/{designId}`), `{Design}`. For a type route: `Types` / `{Type}` analogously.
-  - **Docs** (`/docs/...`): `Home`, `Documentation` (alternatives = doc sections via `sketchpadBuildDocsRegistry`), then section/page from `docsPath`.
+    - For a design route: `Designs` (alternatives = sibling designs in the typology -> `/kits/{kitId}/design/{designId}`), `{Design}`. For a type route: `Types` / `{Type}` analogously.
+  - **Docs** (`/doc/...`): `Home`, `Documentation` (alternatives = doc sections via `sketchpadBuildDocsRegistry`), then section/page from `docsPath`.
   - **Feedback** (`/feedback`): `Home`, `Feedback`.
 - Add small helpers near `🔖KitHelpers` (line 11216): resolve a design's/type's owning typology by scanning `sketchpadKitTypologyRows`, and list designs/types within a typology.
 

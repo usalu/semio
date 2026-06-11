@@ -30,14 +30,14 @@ isProject: false
 
 ## Goal
 Create two new CAD fixtures by importing the `spatial.shape` geometry from:
-- `semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.stp`
-- `semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-right.stp`
+- `semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.stp`
+- `semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-right.stp`
 
 and make them load and render end-to-end in the CAD play harness, fixing kernel/import errors along the way.
 
 ## Key facts established
 - Each `.stp` is one `MANIFOLD_SOLID_BREP` / `CLOSED_SHELL` with 57 `PLANE` faces and degree-1 `B_SPLINE_CURVE_WITH_KNOTS` edges (straight lines) -> exact polyhedron, so topology extraction is lossless.
-- CAD fixtures are `spatial.modelspace/v1` JSON under [cad/assets/play/](cad/assets/play/), model id `spatial.shape`, with per-object inline primitives (`vertex` -> `edge` -> `wire` -> `face` -> `shell` -> `solid`). On load, `Model.fromJSON` + `materializeInlineObjectPrimitives` lift them into the kernel graph; `syncSolidsFromModel` -> `sewShells`/`solidFromShell` rebuilds the brep; `mesh()` tessellates for display.
+- CAD fixtures are `spatial.modelspace/v1` JSON under [cad/asset/play/](cad/asset/play/), model id `spatial.shape`, with per-object inline primitives (`vertex` -> `edge` -> `wire` -> `face` -> `shell` -> `solid`). On load, `Model.fromJSON` + `materializeInlineObjectPrimitives` lift them into the kernel graph; `syncSolidsFromModel` -> `sewShells`/`solidFromShell` rebuilds the brep; `mesh()` tessellates for display.
 - The brepjs kernel imports `getFaces`, `getEdges`, `getVertices`, `vertexPosition`, `getSurfaceType`, `getCurveType`, `normalAt`, `importSTEP` from `brepjs` (see [cad/js/kernel/brepjs/index.ts](cad/js/kernel/brepjs/index.ts) lines 10-62) - everything needed for topology extraction.
 - Existing `importStepToModelSpace` (line ~2596) only handles spatial-UDA STEP; raw Rhino BREP falls through with empty topology. This is the core gap.
 - OpenCascade WASM only initializes in the Vite/Vitest env (the top-level `?url` wasm import breaks under plain `bun`). Generation + validation must run through the kernel's in-file Vitest tests.
@@ -62,8 +62,8 @@ In [cad/js/kernel/brepjs/index.ts](cad/js/kernel/brepjs/index.ts), add a new reg
 Extend the existing in-file kernel test block in [cad/js/kernel/brepjs/index.ts](cad/js/kernel/brepjs/index.ts):
 - Read both `.stp` via Node `fs`, run `importStepBrepToModelSpace`, assert: one solid, 57 faces, `measureVolume > 0`, and a successful tessellation.
 - Behind an env guard (e.g. `CAD_GENERATE_STEP_FIXTURES`), serialize each imported model space to `spatial.modelspace/v1` JSON and write:
-  - `cad/assets/play/hexagonal-cut-concrete-forest-left.model.json`
-  - `cad/assets/play/hexagonal-cut-concrete-forest-right.model.json`
+  - `cad/asset/play/hexagonal-cut-concrete-forest-left.model.json`
+  - `cad/asset/play/hexagonal-cut-concrete-forest-right.model.json`
 
 ### 4. Script + launch wiring
 - Add a `fixture` command to [cad/js/kernel/brepjs/script.ts](cad/js/kernel/brepjs/script.ts) that runs the kernel Vitest with `CAD_GENERATE_STEP_FIXTURES` set (reuses the proven WASM env; obeys "only script.ts" rule).
@@ -79,7 +79,7 @@ In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx):
 - Launch `dev:cad` play, select both new fixtures, confirm they render as the hexagonal-cut shapes (add `[DEBUG]` logs if needed, remove after). Fix any kernel/import/sew errors at the root.
 
 ### 7. Close ticket
-- `ticket_close` with summary and all touched files: kernel `index.ts`, kernel `script.ts`, `launch.json`, play `index.tsx`, the two new `cad/assets/play/*.model.json`.
+- `ticket_close` with summary and all touched files: kernel `index.ts`, kernel `script.ts`, `launch.json`, play `index.tsx`, the two new `cad/asset/play/*.model.json`.
 
 ## Notes / decisions
 - Fixtures use the standard `spatial.modelspace/v1` JSON format and appear in the play navbar, consistent with existing shape fixtures (no schema or brep-blob changes).

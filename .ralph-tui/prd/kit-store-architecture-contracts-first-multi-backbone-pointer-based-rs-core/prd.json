@@ -6,10 +6,10 @@
     {
       "id": "US-001",
       "title": "Align Kit Asset Contracts With Snapshot + Change History Model",
-      "description": "As a contributor, I want the canonical kit asset shapes under semio/assets/semio (including patterns exemplified by semio/assets/semio/metabolism.new.kit.semio.json) to match the target architecture so contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.",
+      "description": "As a contributor, I want the canonical kit asset shapes under semio/asset/semio (including patterns exemplified by semio/asset/semio/metabolism.new.kit.semio.json) to match the target architecture so contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.",
       "acceptanceCriteria": [
         "Document and encode the intended kit graph model as one root snapshot + ordered semantic changes, consistent with how checkpoints/drafts/transactions reference history (same ordered op persistence model, differing by metadata/lifecycle).",
-        "Update or replace incompatible example assets/schemas in semio/assets/semio needed for the new model (greenfield replacement, no legacy compatibility requirement).",
+        "Update or replace incompatible example assets/schemas in semio/asset/semio needed for the new model (greenfield replacement, no legacy compatibility requirement).",
         "Provide at least one minimal golden fixture pair: (persisted op log inputs) → (expected derived snapshot hash or structural invariant checks) suitable for automated testing (exact mechanism chosen in RS tests).",
         "Repository root defines pnpm typecheck and pnpm lint that validate all packages and files touched by this story (epic may introduce root pnpm workspace config and scripts until this is real).",
         "pnpm typecheck && pnpm lint passes when run from repo root.",

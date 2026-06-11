@@ -80,7 +80,7 @@ Mount the selector inside the three kit-editing app footers only:
 - `DesignAppFooter` ([line 29005](semio/sketchpad/index.tsx))
 - `TypeAppFooter` ([line 40460](semio/sketchpad/index.tsx))
 
-Each footer simply renders `<KitAlternativeFooterSelector />` once; the inner add/remove effect is keyed on `appType` already (kit/design/type) so it auto-deregisters when the user navigates to home/docs/feedback.
+Each footer simply renders `<KitAlternativeFooterSelector />` once; the inner add/remove effect is keyed on `appType` already (kit/design/type) so it auto-deregisters when the user navigates to home/doc/feedback.
 
 Wrap `KitScope` with `KitAlternativeSelectionProvider` at the single tab-shell wrapper ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx) lines 7307–7327):
 

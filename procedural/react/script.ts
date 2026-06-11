@@ -5,7 +5,7 @@ import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain
 
 const flowWasmScript = join(import.meta.dir, "../../flow/core/script.ts");
 const moduleWasmScripts = ["math", "text", "logic", "dictionary", "list", "bim"].map((name) =>
-	join(import.meta.dir, `../../flow/modules/${name}/script.ts`),
+	join(import.meta.dir, `../../flow/module/${name}/script.ts`),
 );
 
 function runFlowModuleWasmBuilds(): void {

@@ -3,7 +3,7 @@ name: Building BIM Import
 overview: Add canonical BIM class typologies to the aec.building model definition, teach the BREP importer to classify imported STEP solids by their presentation-layer name, and regenerate the concrete-forest-left play fixture so its Building pane shows the layer-classified BIM model.
 todos:
   - id: typologies
-    content: Add canonical BIM class typologies (Column, Beam, Slab, Wall, Roof, Foundation, Stair, Ceiling, Railing, Door, Window) under cad/assets/modelDefinition/aec.building/typology/ with building.building.<name> ids and styles
+    content: Add canonical BIM class typologies (Column, Beam, Slab, Wall, Roof, Foundation, Stair, Ceiling, Railing, Door, Window) under cad/asset/modelDefinition/aec.building/typology/ with building.building.<name> ids and styles
     status: completed
   - id: importer
     content: Add STEP presentation-layer parser, BIM_LAYER_TYPOLOGY map, typology option on modelFromImportedBrepSolid, and importStepBimToModelSpace in cad/js/kernel/brepjs/index.ts
@@ -24,8 +24,8 @@ isProject: false
 
 ## Context
 
-- New asset: [`hexagonal-cut-concrete-forest-left-bim.stp`](semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp). It contains 12 `MANIFOLD_SOLID_BREP` solids grouped by `PRESENTATION_LAYER_ASSIGNMENT` into 3 layers: `Slab` (1), `Beams` (8), `Column` (3).
-- [`aec.building/modelDefinition.json`](cad/assets/modelDefinition/aec.building/modelDefinition.json) currently declares `kinds: ["action","typology"]` but defines **no** typologies, so the Building pane is empty.
+- New asset: [`hexagonal-cut-concrete-forest-left-bim.stp`](semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp). It contains 12 `MANIFOLD_SOLID_BREP` solids grouped by `PRESENTATION_LAYER_ASSIGNMENT` into 3 layers: `Slab` (1), `Beams` (8), `Column` (3).
+- [`aec.building/modelDefinition.json`](cad/asset/modelDefinition/aec.building/modelDefinition.json) currently declares `kinds: ["action","typology"]` but defines **no** typologies, so the Building pane is empty.
 - The current importer [`importStepBrepToModelSpace`](cad/js/kernel/brepjs/index.ts) ignores STEP layers and tags every solid `spatial.shape.kernel.solid`; [`modelFromImportedBrepSolid`](cad/js/kernel/brepjs/index.ts) hardcodes that typology.
 - Objects render/list in a pane only when their typology is owned by the pane's model definition (`listModelObjectsForModelDefinition` -> `listTypologiesForModelDefinition`).
 - Fixtures are plain `ModelSpace.toJSON()` (`spatial.modelspace/v1`); selecting a shape asset runs `modelsFromCadJson` which loads **every** model in the space, so co-locating shape + building models in one fixture is the cleanest "keyed" wiring (no play code change).
@@ -34,7 +34,7 @@ Confirmed decisions: canonical BIM set; building model auto-loads into the Build
 
 ## 1. Add canonical BIM typologies to `aec.building`
 
-Create `cad/assets/modelDefinition/aec.building/typology/<Name>/typology.json` for the canonical set, each `schema: "spatial.typology/v1"`, `primitiveKinds: ["solid"]`, a `style` block (color/edgeColor/opacity, mirroring [energy Roof](cad/assets/modelDefinition/aec.building.energy/typology/Roof/typology.json)), and id `building.building.<name>` (matches the `energy.energy.*` / `structure.structure.*` base-definition convention):
+Create `cad/asset/modelDefinition/aec.building/typology/<Name>/typology.json` for the canonical set, each `schema: "spatial.typology/v1"`, `primitiveKinds: ["solid"]`, a `style` block (color/edgeColor/opacity, mirroring [energy Roof](cad/asset/modelDefinition/aec.building.energy/typology/Roof/typology.json)), and id `building.building.<name>` (matches the `energy.energy.*` / `structure.structure.*` base-definition convention):
 
 - `Column` -> `building.building.column`
 - `Beam` -> `building.building.beam`
@@ -64,7 +64,7 @@ Solid<->layer matching uses the declared `MANIFOLD_SOLID_BREP` order, which equa
 ## 3. Multi-model fixture serialization + regeneration
 
 - The combined space serializes via existing `ModelSpace.toJSON()` (round-trips through `ModelSpace.fromJSON`); `inlineModelSpaceFixtureJson` (single-object) is not used here.
-- Extend the gated generator test (`CAD_GENERATE_STEP_FIXTURES=1`, ~line 3842) in [`cad/js/kernel/brepjs/index.ts`](cad/js/kernel/brepjs/index.ts): for concrete-forest-left, build a space with the **shape** model (from `.stp`, under `spatial.shape`) and the **building** model (from `-bim.stp`, under `aec.building`), emit with the `models` array ordered **shape-first** so the Shape pane stays active, and write [`cad/assets/play/hexagonal-cut-concrete-forest-left.model.json`](cad/assets/play/hexagonal-cut-concrete-forest-left.model.json). Right keeps shape-only.
+- Extend the gated generator test (`CAD_GENERATE_STEP_FIXTURES=1`, ~line 3842) in [`cad/js/kernel/brepjs/index.ts`](cad/js/kernel/brepjs/index.ts): for concrete-forest-left, build a space with the **shape** model (from `.stp`, under `spatial.shape`) and the **building** model (from `-bim.stp`, under `aec.building`), emit with the `models` array ordered **shape-first** so the Shape pane stays active, and write [`cad/asset/play/hexagonal-cut-concrete-forest-left.model.json`](cad/asset/play/hexagonal-cut-concrete-forest-left.model.json). Right keeps shape-only.
 - Run the generator to regenerate the fixture.
 
 ## 4. Wiring (no play code change)

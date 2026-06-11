@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 semio/ui/.storybook/stories/Vec.stories.tsx
+// 💻 semio/ui/.storybook/story/Vec.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Default story is uncontrolled.
 // Summary: Vec stories: Default, NoAxes, NoOrigin, PositiveDomain, Large.
 // 2026 Ueli Saluz <ueli@semio-tech.com>

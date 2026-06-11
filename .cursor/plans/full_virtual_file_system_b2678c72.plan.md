@@ -71,7 +71,7 @@ Per repo rules, open a ticket via repo MCP first; associate to goal `semio` (tic
 ## 6. semio/sketchpad (`semio/client/lib/sketchpad/js/index.ts`) - rewire kit/design VFS
 
 - Extend `SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL` (~12187): add `representation`, `port`, `connector` fileNodeKinds and give every kind a distinct `icon` (kit/folder/file/design/type/family/piece/connection/representation/port/connector).
-- Add a kind map `rs FileSystemNodeKind -> sketchpad fileNodeKindId`, and a builder turning fetched child refs into `VirtualFileSystemNodeRecord` (name, path, `hasChildren`, `navigateUri`, `descriptorValues`). `navigateUri` per kind: type `/kits/{kit}/types/{id}`, design `/kits/{kit}/designs/{id}`, representation -> `sketchpadTypeRepresentationSurfaceId`-based route, folder `?folder=`, file `?file=`, piece/connection -> design route-selection query.
+- Add a kind map `rs FileSystemNodeKind -> sketchpad fileNodeKindId`, and a builder turning fetched child refs into `VirtualFileSystemNodeRecord` (name, path, `hasChildren`, `navigateUri`, `descriptorValues`). `navigateUri` per kind: type `/kits/{kit}/type/{id}`, design `/kits/{kit}/design/{id}`, representation -> `sketchpadTypeRepresentationSurfaceId`-based route, folder `?folder=`, file `?file=`, piece/connection -> design route-selection query.
 - In `SketchpadShellController` (~13115): for `SKETCHPAD_KIT_APP_ID` and `SKETCHPAD_DESIGN_APP_ID`, override `loadChildrenAsync` to call the react helper against `getKitStore(kitId)` (the `SemioJsKitStore`); remove the kit/design branches from the sync `sketchpadKitVfsChildren` path. Keep `SKETCHPAD_HOME_APP_ID` client-side (open kits + Documentation are sketchpad concepts, not kit entities).
 - Map node ids consistently with rs entity ids so expand/selection/route state keep working; root remains the kit/design node.
 
@@ -85,7 +85,7 @@ Per repo rules, open a ticket via repo MCP first; associate to goal `semio` (tic
 - js test region: `fileSystemChildren` resolves new kinds + `fileSystemHasChildren`.
 - framework core test region: async `loadChildrenAsync` populates children + emits.
 - sketchpad test region: kit/design VFS builds rs-driven rows (folder nesting, type->representations).
-- Update `.storybook/stories/ui/VirtualFileSystem.stories.tsx` demo to show the richer kind set/icons.
+- Update `.storybook/story/ui/VirtualFileSystem.stories.tsx` demo to show the richer kind set/icons.
 
 ## Validation
 

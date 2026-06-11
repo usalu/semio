@@ -40,7 +40,7 @@ export default createPlaygroundPlayViteConfig({
 		{ find: /^react-dom$/, replacement: resolve(reactDomRoot, "index.js") },
 		{ find: /^react-dom\/client$/, replacement: resolve(reactDomRoot, "client.js") },
 		{ find: /^three$/, replacement: threeModule },
-		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
+		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/example/jsm/$1` },
 	],
 	resolveDedupe: ["react", "react-dom", "three", "scheduler"],
 	optimizeDeps: {

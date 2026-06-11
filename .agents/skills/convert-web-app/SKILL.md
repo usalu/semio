@@ -41,7 +41,7 @@ Read JSDoc documentation directly from `/tmp/mcp-ext-apps/src/`:
 
 ### Framework Templates
 
-Learn and adapt from `/tmp/mcp-ext-apps/examples/basic-server-{framework}/`:
+Learn and adapt from `/tmp/mcp-ext-apps/example/basic-server-{framework}/`:
 
 | Template | Key Files |
 |----------|-----------|
@@ -507,7 +507,7 @@ Test the MCP App mode with the basic-host example:
 npm run build && npm run serve
 
 # Terminal 2: Run basic-host (from cloned repo)
-cd /tmp/mcp-ext-apps/examples/basic-host
+cd /tmp/mcp-ext-apps/example/basic-host
 npm install
 SERVERS='["http://localhost:3001/mcp"]' npm run start
 # Open http://localhost:8080
