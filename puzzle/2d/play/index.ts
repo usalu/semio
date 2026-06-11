@@ -156,7 +156,7 @@ export function puzzle2dPlayPaneFromShellWindowId(shellWindowId: string): Puzzle
 	return null;
 }
 
-function puzzle2dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+export function puzzle2dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
 	return { controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command, args: args as never };
 }
 
@@ -1827,6 +1827,26 @@ export class Puzzle2dPlayShellController extends Controller {
 				} else {
 					this.hostBridge?.runHostCommand(command, args);
 				}
+				break;
+			}
+			case "patchInspectorNodes":
+			case "patchInspectorHandles":
+			case "patchInspectorEdges":
+			case "setPuzzle2dRedrawMode":
+			case "setPuzzle2dRedrawHandlesAfterNodes":
+			case "setPuzzle2dRedrawProgressiveEnabled":
+			case "setPuzzle2dRedrawProgressiveAutoStopMs":
+			case "setPuzzle2dRedrawPlayMaxItersPerFrame":
+			case "setForceLayoutFullIterations":
+			case "setForceLayoutIdealEdgeLength":
+			case "setForceLayoutRepulsionStrength":
+			case "setForceLayoutGravity":
+			case "setTreeLayoutLayerSpacing":
+			case "setTreeLayoutSiblingGap":
+			case "setTreeLayoutDirection":
+			case "applyPuzzle2dRedrawOnce":
+			case "applyPuzzle2dRedrawHandlesOnce": {
+				this.hostBridge?.runHostCommand(command, args);
 				break;
 			}
 			default:

@@ -178,6 +178,12 @@ enum NodeHandlePaintLayer {
     Icons,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct BrushCandidate {
+    node_kind_id: String,
+    target_handle_index: usize,
+}
+
 #[derive(Clone, Debug)]
 struct BrushPreviewSnapshot {
     source_handle_id: String,
@@ -304,7 +310,7 @@ pub struct BoardHost {
     brush_flush_distance: f64,
     brush_node_size: f64,
     brush_slot_source_id: Option<String>,
-    brush_candidate_kinds: Vec<String>,
+    brush_candidates: Vec<BrushCandidate>,
     brush_candidate_index: usize,
     brush_preview: Option<BrushPreviewSnapshot>,
     fixture_drop_preview: Option<FixtureDropPreviewSnapshot>,
@@ -369,7 +375,7 @@ impl Default for BoardHost {
             brush_flush_distance: DEFAULT_BRUSH_FLUSH_DISTANCE,
             brush_node_size: DEFAULT_BRUSH_NODE_SIZE,
             brush_slot_source_id: None,
-            brush_candidate_kinds: Vec::new(),
+            brush_candidates: Vec::new(),
             brush_candidate_index: 0,
             brush_preview: None,
             fixture_drop_preview: None,
@@ -1665,21 +1671,63 @@ impl BoardHost {
         }
     }
 
-    fn brush_compatible_node_kind_ids(&self, source: &HandleData) -> Vec<String> {
+    fn brush_compatible_candidates(&self, source: &HandleData) -> Vec<BrushCandidate> {
         let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
         let sh = source.handle_kind.as_str();
-        let mut out: Vec<String> = Vec::new();
+        let mut out: Vec<BrushCandidate> = Vec::new();
         for (kind_id, kind) in &self.node_kinds {
             if kind.handles.is_empty() {
                 continue;
             }
             let tn = kind_id.as_str();
-            let compatible = kind.handles.iter().any(|t| self.link_kinds_compatible_for_brush(sn, sh, tn, t.handle_kind.as_str()));
-            if compatible {
-                out.push(kind_id.clone());
+            for (i, tmpl) in kind.handles.iter().enumerate() {
+                if self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
+                    out.push(BrushCandidate {
+                        node_kind_id: kind_id.clone(),
+                        target_handle_index: i,
+                    });
+                }
             }
         }
+        out.sort_by(|left, right| {
+            left.node_kind_id
+                .cmp(&right.node_kind_id)
+                .then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
+        });
         out
+    }
+
+    fn brush_weighted_order_candidates(
+        candidates: &mut Vec<BrushCandidate>,
+        seed: u64,
+        node_weights: &HashMap<String, f64>,
+        handle_weights: &HashMap<String, f64>,
+        node_kinds: &BTreeMap<String, NodeKindDef>,
+    ) {
+        if candidates.len() < 2 {
+            return;
+        }
+        let uniform = 1.0 / candidates.len() as f64;
+        let mut remaining = std::mem::take(candidates);
+        let mut state = seed;
+        while !remaining.is_empty() {
+            let weights: Vec<f64> = remaining
+                .iter()
+                .map(|candidate| {
+                    let node_w = Self::brush_kind_weight(node_weights, candidate.node_kind_id.as_str(), uniform);
+                    let handle_kind = node_kinds
+                        .get(candidate.node_kind_id.as_str())
+                        .and_then(|kind| kind.handles.get(candidate.target_handle_index))
+                        .map(|tmpl| tmpl.handle_kind.as_str())
+                        .unwrap_or("");
+                    let handle_w = Self::brush_kind_weight(handle_weights, handle_kind, 1.0);
+                    node_w * handle_w
+                })
+                .collect();
+            state = Self::brush_next_seed(state);
+            let pick = Self::brush_weighted_sample_index(&weights, state);
+            candidates.push(remaining.remove(pick));
+        }
     }
 
     fn brush_template_world_pos(&self, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, angle: f64) -> Point {
@@ -1689,34 +1737,15 @@ impl BoardHost {
         }
     }
 
-    fn brush_pick_target_handle_index(&self, source: &HandleData, node_kind_id: &str, kind: &NodeKindDef, cx: f64, cy: f64) -> Option<usize> {
-        let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
-        let sh = source.handle_kind.as_str();
-        let tn = node_kind_id;
-        let _ = (cx, cy);
-        let mut compatible: Vec<(usize, f64)> = Vec::new();
-        for (i, tmpl) in kind.handles.iter().enumerate() {
-            if !self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
-                continue;
-            }
-            let w = Self::brush_kind_weight(&self.brush_handle_kind_weights, tmpl.handle_kind.as_str(), 1.0);
-            compatible.push((i, w));
-        }
-        if compatible.is_empty() {
+    fn brush_build_preview(&self, source_handle_id: &str, candidate: &BrushCandidate) -> Option<BrushPreviewSnapshot> {
+        let source = self.handles.get(source_handle_id)?;
+        let kind = self.node_kinds.get(candidate.node_kind_id.as_str())?;
+        let center = self.brush_slot_center_world(source)?;
+        let target_handle_index = candidate.target_handle_index;
+        if kind.handles.get(target_handle_index).is_none() {
             return None;
         }
-        let weights: Vec<f64> = compatible.iter().map(|(_, w)| *w).collect();
-        let seed = Self::brush_candidate_seed(node_kind_id)
-            ^ source.id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)));
-        let pick = Self::brush_weighted_sample_index(&weights, seed);
-        Some(compatible[pick].0)
-    }
-
-    fn brush_build_preview(&self, source_handle_id: &str, node_kind_id: &str) -> Option<BrushPreviewSnapshot> {
-        let source = self.handles.get(source_handle_id)?;
-        let kind = self.node_kinds.get(node_kind_id)?;
-        let center = self.brush_slot_center_world(source)?;
-        let target_handle_index = self.brush_pick_target_handle_index(source, node_kind_id, kind, center.x, center.y)?;
+        let node_kind_id = candidate.node_kind_id.as_str();
         let radius = self.brush_node_size * 0.5 * kind.scale;
         let (width, height) = if kind.shape == NodeShape::Rectangle {
             (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
@@ -1814,7 +1843,7 @@ impl BoardHost {
         let key = self
             .brush_preview
             .as_ref()
-            .map(|p| format!("{}|{}|{}|{}", p.source_handle_id, p.node_kind_id, p.x, p.y))
+            .map(|p| format!("{}|{}|{}|{}|{}", p.source_handle_id, p.node_kind_id, p.target_handle_index, p.x, p.y))
             .unwrap_or_default();
         if self.brush_preview_emit_key.as_deref() != Some(key.as_str()) {
             self.brush_preview_emit_key = Some(key.clone());
@@ -1827,16 +1856,30 @@ impl BoardHost {
         let candidates_key = format!(
             "{}|{}|{}",
             self.brush_slot_source_id.as_deref().unwrap_or(""),
-            self.brush_candidate_kinds.join(","),
+            self.brush_candidates
+                .iter()
+                .map(|c| format!("{}#{}", c.node_kind_id, c.target_handle_index))
+                .collect::<Vec<_>>()
+                .join(","),
             self.brush_candidate_index
         );
         if self.brush_candidates_emit_key.as_deref() != Some(candidates_key.as_str()) {
             self.brush_candidates_emit_key = Some(candidates_key);
+            let candidates: Vec<_> = self
+                .brush_candidates
+                .iter()
+                .map(|c| {
+                    json!({
+                        "nodeKind": c.node_kind_id,
+                        "targetHandleIndex": c.target_handle_index,
+                    })
+                })
+                .collect();
             self.push_event(
                 "brushCandidates",
                 json!({
                     "sourceHandleId": self.brush_slot_source_id.clone().unwrap_or_default(),
-                    "candidates": self.brush_candidate_kinds,
+                    "candidates": candidates,
                     "index": self.brush_candidate_index,
                     "suggestionsActive": self.brush_slot_suggestions_active,
                 }),
@@ -1849,7 +1892,7 @@ impl BoardHost {
         let clear_hover = self.brush_slot_suggestions_active;
         self.brush_slot_suggestions_active = false;
         self.brush_slot_source_id = None;
-        self.brush_candidate_kinds.clear();
+        self.brush_candidates.clear();
         self.brush_candidate_index = 0;
         self.brush_preview = None;
         if clear_hover {
@@ -2208,7 +2251,7 @@ impl BoardHost {
         if json.trim().is_empty() {
             self.brush_slot_suggestions_active = false;
             self.brush_slot_source_id = None;
-            self.brush_candidate_kinds.clear();
+            self.brush_candidates.clear();
             self.brush_candidate_index = 0;
             self.brush_preview = None;
             self.brush_preview_emit_key = None;
@@ -2219,20 +2262,33 @@ impl BoardHost {
         let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setBrushSessionJson: {e}"))?;
         let source = v.get("sourceHandleId").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
         self.brush_slot_source_id = source.clone();
-        self.brush_candidate_kinds = v
+        self.brush_candidates = v
             .get("candidates")
             .and_then(|x| x.as_array())
             .map(|arr| {
                 arr.iter()
-                    .filter_map(|x| x.as_str().map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string()))
+                    .filter_map(|x| {
+                        if let Some(kind_id) = x.as_str().map(str::trim).filter(|s| !s.is_empty()) {
+                            return Some(BrushCandidate {
+                                node_kind_id: kind_id.to_string(),
+                                target_handle_index: 0,
+                            });
+                        }
+                        let node_kind = x.get("nodeKind").or_else(|| x.get("nodeKindId")).and_then(|n| n.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
+                        let target_handle_index = x.get("targetHandleIndex").and_then(|i| i.as_u64()).unwrap_or(0) as usize;
+                        Some(BrushCandidate {
+                            node_kind_id: node_kind.to_string(),
+                            target_handle_index,
+                        })
+                    })
                     .collect()
             })
             .unwrap_or_default();
         self.brush_candidate_index = v.get("index").and_then(|x| x.as_u64()).map(|i| i as usize).unwrap_or(0);
-        if self.brush_candidate_kinds.is_empty() {
+        if self.brush_candidates.is_empty() {
             self.brush_candidate_index = 0;
         } else {
-            self.brush_candidate_index %= self.brush_candidate_kinds.len();
+            self.brush_candidate_index %= self.brush_candidates.len();
         }
         self.brush_preview = match (source.as_deref(), v.get("preview")) {
             (Some(source_id), Some(preview)) if !preview.is_null() => {
@@ -2263,14 +2319,16 @@ impl BoardHost {
         let mut candidates = self
             .handles
             .get(source_handle_id.as_str())
-            .map(|h| self.brush_compatible_node_kind_ids(h))
+            .map(|h| self.brush_compatible_candidates(h))
             .unwrap_or_default();
-        Self::brush_weighted_order_strings(
+        Self::brush_weighted_order_candidates(
             &mut candidates,
             Self::brush_candidate_seed(&source_handle_id),
             &self.brush_node_kind_weights,
+            &self.brush_handle_kind_weights,
+            &self.node_kinds,
         );
-        self.brush_candidate_kinds = candidates;
+        self.brush_candidates = candidates;
         self.brush_candidate_index = 0;
         self.brush_rebuild_preview();
     }
@@ -2281,8 +2339,8 @@ impl BoardHost {
             self.brush_sync_preview_events();
             return;
         };
-        let kind_id = self.brush_candidate_kinds.get(self.brush_candidate_index).cloned();
-        self.brush_preview = kind_id.as_deref().and_then(|k| self.brush_build_preview(source_id, k));
+        let candidate = self.brush_candidates.get(self.brush_candidate_index).cloned();
+        self.brush_preview = candidate.as_ref().and_then(|c| self.brush_build_preview(source_id, c));
         if self.brush_preview.is_some() {
             self.bump_content_scene_generation();
         }
@@ -2378,10 +2436,10 @@ impl BoardHost {
     }
 
     pub fn brush_cycle_candidate(&mut self, forward: bool) {
-        if self.brush_candidate_kinds.len() < 2 {
+        if self.brush_candidates.len() < 2 {
             return;
         }
-        let len = self.brush_candidate_kinds.len();
+        let len = self.brush_candidates.len();
         self.brush_candidate_index = if forward {
             (self.brush_candidate_index + 1) % len
         } else {
@@ -2391,10 +2449,10 @@ impl BoardHost {
     }
 
     pub fn brush_set_candidate_index(&mut self, index: usize) {
-        if self.brush_candidate_kinds.is_empty() {
+        if self.brush_candidates.is_empty() {
             return;
         }
-        self.brush_candidate_index = index % self.brush_candidate_kinds.len();
+        self.brush_candidate_index = index % self.brush_candidates.len();
         self.brush_rebuild_preview();
     }
 

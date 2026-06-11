@@ -123,6 +123,10 @@ import {
 	type UiToggleNode,
 	type UiVec3Node,
 	type UiKeyValueNode,
+	type UiSliderNode,
+	type UiNumberStepperNode,
+	type UiRingNode,
+	type UiIconSelectNode,
 	type UiFieldNode,
 	type CommandDescriptor,
 	collectUiTreeItemDragData,
@@ -139,7 +143,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
 import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
 import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
-import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController } from "@puzzle/2d/react";
+import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController, classifyPuzzle2dIconSelectorMode } from "@puzzle/2d/react";
 import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -169,6 +173,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 	Slider,
+	Ring,
+	IconSelector,
 	staticSidePanelTabDefinition,
 	staticTreePanelDefinition,
 	Stepper,
@@ -1145,6 +1151,62 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 						</React.Fragment>
 					))}
 				</dl>
+			);
+		case "slider":
+			return (
+				<Slider
+					id={control.id}
+					className="w-full min-w-0"
+					max={control.max}
+					min={control.min}
+					step={control.step}
+					value={[control.value]}
+					onValueChange={(values) => dispatchUiCommand(commandBus, control.onChange, { value: values[0] ?? control.value })}
+				/>
+			);
+		case "numberStepper": {
+			const node = control;
+			return (
+				<div className="flex min-w-0 w-full items-center gap-1">
+					<Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiCommand(commandBus, node.onDelta, { delta: -node.step })} type="button" variant="outline">
+						−
+					</Button>
+					<Input
+						className="h-medium min-w-0 flex-1 font-mono text-xs"
+						id={node.id}
+						onChange={(event) => {
+							const parsed = Number(event.target.value);
+							if (Number.isFinite(parsed)) {
+								dispatchUiCommand(commandBus, node.onAbsolute, { value: parsed });
+							}
+						}}
+						placeholder={node.uniform ? undefined : "Mixed"}
+						type="number"
+						value={node.uniform && Number.isFinite(node.value) ? String(node.value) : ""}
+					/>
+					<Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiCommand(commandBus, node.onDelta, { delta: node.step })} type="button" variant="outline">
+						+
+					</Button>
+				</div>
+			);
+		}
+		case "ring":
+			return (
+				<Ring
+					id={control.id}
+					onOrbChange={(_orbId, _oldT, newT) => dispatchUiCommand(commandBus, control.onChange, { t: newT })}
+					orbs={[{ disabled: control.disabled, id: control.orbId, selected: true, t: control.t }]}
+				/>
+			);
+		case "iconSelect":
+			return (
+				<IconSelector
+					classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyPuzzle2dIconSelectorMode : undefined}
+					id={control.id}
+					onChange={(next) => dispatchUiCommand(commandBus, control.onChange, { value: next })}
+					uniform={control.uniform}
+					value={control.value}
+				/>
 			);
 		case "button":
 			return (

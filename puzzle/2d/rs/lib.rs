@@ -3157,9 +3157,62 @@ mod host_tests {
                 .and_then(|p| p.get("candidates"))
                 .and_then(|c| c.as_array())
                 .and_then(|c| c.first())
-                .and_then(|x| x.as_str())
+                .and_then(|x| x.get("nodeKind").and_then(|n| n.as_str()).or_else(|| x.as_str()))
         });
         assert_eq!(first, Some("heavy"));
+    }
+
+    #[test]
+    fn board_host_brush_lists_every_compatible_handle_per_node_kind() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "dual",
+                    "name": "Dual",
+                    "handles": [
+                        {"handleKind": "child", "angle": 0.0},
+                        {"handleKind": "child", "angle": 3.141592653589793}
+                    ]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(inside.x, inside.y, false, false, false);
+        let ev = h.drain_events_json();
+        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let candidates = v
+            .as_array()
+            .and_then(|rows| {
+                rows.iter()
+                    .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
+                    .and_then(|row| row.get("payload"))
+                    .and_then(|p| p.get("candidates"))
+                    .and_then(|c| c.as_array())
+                    .cloned()
+            })
+            .unwrap_or_default();
+        assert_eq!(candidates.len(), 2, "expected one row per compatible handle, got: {ev}");
+        let indices: Vec<u64> = candidates
+            .iter()
+            .filter_map(|row| row.get("targetHandleIndex").and_then(|i| i.as_u64()))
+            .collect();
+        assert!(indices.contains(&0));
+        assert!(indices.contains(&1));
     }
 
     #[test]

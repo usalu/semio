@@ -139,8 +139,7 @@ export const CAD_PLAY_ENERGY_SCENE_SURFACE_ID = "cad.play.scene3d/energy";
 export const CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "cad.play.scene3d/structure-classic";
 
 export const CAD_PLAY_DEFAULT_WORLD_REFERENCES: WorldReferenceProps[] = [
-  { id: "ref-sketch", source: { url: "/infinite-fixture/sketch.png", mediaKind: "image" }, origin: [-24, -18, 0.01], widthWorld: 22 },
-  { id: "ref-site-pdf", source: { url: "/infinite-fixture/site.pdf", mediaKind: "pdf", page: 1 }, origin: [12, 8, 0.01], widthWorld: 28 },
+  { id: "ref-concrete-forest", source: { url: "/cad-fixture/concrete-forest-reference.png", mediaKind: "image" }, origin: [-24, -18, 0.01], widthWorld: 22 },
 ];
 
 export type CadPlayReferencesByModelDefinitionId = Readonly<Record<string, readonly WorldReferenceProps[]>>;
@@ -1129,9 +1128,10 @@ import {
   StaticTreePanelDefinition,
   engagementSpecControlMirror,
   mountPlaygroundApp,
-  playgroundPanelSection,
+  uiTreeNodeToTreePanelConfig,
   type SidePanelTabConfig,
 } from "@framework/playground/renderer/react/shell";
+import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode } from "@framework/playground/core";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
 import { defaultConstructRunner } from "@cad/js/query";
 import geometryNakagin from "../../../asset/play/geometry.json";
@@ -1547,6 +1547,7 @@ export interface CadPlayChromeSnapshot {
   readonly selection: readonly SelectionTarget[];
   readonly selectedReference: CadPlaySelectedReference | null;
   readonly hoveredKey: string | null;
+  readonly fileStatus: string;
   readonly selectTarget: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly hoverTarget: (modelDefinitionId: string, target: SelectionTarget | null) => void;
   readonly toggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void;
@@ -2289,6 +2290,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       selection: selectionInScope,
       selectedReference,
       hoveredKey: pointerFocus.hover,
+      fileStatus,
       selectTarget: selectHierarchyTarget,
       hoverTarget: hoverHierarchyTarget,
       toggleHidden: toggleHierarchyHidden,
@@ -2302,6 +2304,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   }, [
     activeModelDefinitionId,
     flushedModelsByDefinitionId,
+    fileStatus,
     flushedModelsDigest,
     hoverHierarchyReference,
     hoverHierarchyTarget,
@@ -2912,30 +2915,87 @@ function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): 
   );
 }
 
+function buildCadPlayCatalogTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
+  if (!snapshot) {
+    return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.loading", label: "Catalog", children: [{ type: "text", value: "…" }] }]);
+  }
+  const children: UiNode[] = [];
+  if (!isShapeModelDefinition(snapshot.activeModelDefinitionId)) {
+    children.push({
+      type: "text",
+      value: `Shape fixtures apply to ${defaultModelDefinitionId()}. Use the navbar fixture menu or focus the Shape pane.`,
+    });
+  }
+  if (snapshot.fileStatus) {
+    children.push({ type: "text", value: snapshot.fileStatus });
+  }
+  if (children.length === 0) {
+    children.push({ type: "text", value: "Use the navbar fixture menu or toolbar save/load." });
+  }
+  return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.section", label: "Catalog", children }]);
+}
+
+function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
+  if (!snapshot) {
+    return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-details.loading", label: "Selection", children: [{ type: "text", value: "…" }] }]);
+  }
+  if (snapshot.selection.length === 0) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "cad-play-details.empty",
+        label: "Selection",
+        children: [{ type: "text", value: "Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties." }],
+      },
+    ]);
+  }
+  return uiDeclarativeSectionsToTree([
+    {
+      type: "section",
+      id: "cad-play-details.selection",
+      label: "Selection",
+      children: [
+        {
+          type: "keyValue",
+          entries: [
+            { label: "Model definition", value: snapshot.activeModelDefinitionId },
+            { label: "Selected targets", value: String(snapshot.selection.length) },
+            { label: "Reference", value: snapshot.selectedReference?.id ?? "—" },
+          ],
+        },
+      ],
+    },
+  ]);
+}
+
 class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
+  constructor(private readonly readSnapshot: () => CadPlayChromeSnapshot | null) {
+    super();
+  }
+
   resolveTab(): SidePanelTabConfig {
     return {
       id: "cad-play-catalog",
       icon: Shapes,
       name: "Catalog",
       order: 1,
-      tree: new StaticTreePanelDefinition({
-        sections: [playgroundPanelSection("cad-play-catalog.section", "Catalog", <CadPlayCatalogAside />)],
-      }),
+      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildCadPlayCatalogTree(this.readSnapshot()), new CommandBus())),
     };
   }
 }
 
 class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
+  constructor(private readonly readSnapshot: () => CadPlayChromeSnapshot | null) {
+    super();
+  }
+
   resolveTab(): SidePanelTabConfig {
     return {
       id: "cad-play-details",
       icon: ListTree,
       name: "Selection",
       order: 0,
-      tree: new StaticTreePanelDefinition({
-        sections: [playgroundPanelSection("cad-play-details.section", "Selection", <CadPlayDetailsAside />)],
-      }),
+      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(this.readSnapshot()), new CommandBus())),
     };
   }
 }
@@ -2991,7 +3051,7 @@ function CadPlayRoot(): ReactNode {
   }, [chromeSnapshot?.hoveredKey, hierarchyBuild.highlightKeyToItemIds]);
   const workbenchTabs = reactHostPort.useMemo(
     () => [
-      new CadPlayCatalogPanelDefinition().resolveTab(),
+      new CadPlayCatalogPanelDefinition(() => chromeSnapshot).resolveTab(),
       ...(chromeSnapshot
         ? [
             new CadPlayHierarchyPanelDefinition(
@@ -3003,7 +3063,7 @@ function CadPlayRoot(): ReactNode {
     ],
     [chromeSnapshot, hierarchyBuild.sections, hierarchyHighlightedIds],
   );
-  const detailsTabs = reactHostPort.useMemo(() => [new CadPlayDetailsPanelDefinition().resolveTab()], []);
+  const detailsTabs = reactHostPort.useMemo(() => [new CadPlayDetailsPanelDefinition(() => chromeSnapshot).resolveTab()], [chromeSnapshot]);
   const slotNavbarCenter = reactHostPort.useMemo(() => <CadPlayFixtureNavbarSelect />, []);
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>

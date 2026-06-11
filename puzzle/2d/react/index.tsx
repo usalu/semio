@@ -1191,9 +1191,56 @@ export interface Puzzle2dBrushPlacePayload {
   readonly nodeId?: string;
 }
 
-/** @emoji 🖌️ Brush candidate node kinds while hovering a slot. */
+/** @emoji 🖌️ One brush suggestion row (node kind + target handle), aligned with puzzle3d {@link BrushCompatibleCandidate}. */
+export interface Puzzle2dBrushCompatibleCandidate {
+  readonly nodeKind: string;
+  readonly targetHandleIndex: number;
+}
+
+/** @emoji 🖌️ Parses WASM / mirror brush candidate rows. */
+export function puzzle2dParseBrushCompatibleCandidates(raw: unknown): readonly Puzzle2dBrushCompatibleCandidate[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const out: Puzzle2dBrushCompatibleCandidate[] = [];
+  for (const row of raw) {
+    if (typeof row === "string") {
+      const nodeKind = row.trim();
+      if (nodeKind.length > 0) {
+        out.push({ nodeKind, targetHandleIndex: 0 });
+      }
+      continue;
+    }
+    if (!row || typeof row !== "object") {
+      continue;
+    }
+    const rec = row as Record<string, unknown>;
+    const nodeKind = String(rec.nodeKind ?? rec.nodeKindId ?? "").trim();
+    if (nodeKind === "") {
+      continue;
+    }
+    const targetHandleIndex = Number(rec.targetHandleIndex ?? 0);
+    out.push({ nodeKind, targetHandleIndex: Number.isFinite(targetHandleIndex) ? targetHandleIndex : 0 });
+  }
+  return out;
+}
+
+/** @emoji 🏷️ Human labels for a brush suggestion row (node kind + handle kind). */
+export function puzzle2dBrushCandidateDisplayLabels(
+  candidate: Puzzle2dBrushCompatibleCandidate,
+  catalogs?: KindCatalogBundle,
+): { readonly object: string; readonly handle: string } {
+  const bundle = catalogs ?? DEFAULT_KIND_CATALOG_BUNDLE;
+  const nodeKindRow = bundle.nodes?.find((row) => row.id === candidate.nodeKind);
+  const object = nodeKindRow?.name?.trim() || candidate.nodeKind;
+  const template = nodeKindRow?.handles?.[candidate.targetHandleIndex];
+  const handle = puzzle2dHandleKindOverlayLabel(template?.handleKind ?? BUILTIN_PORT_HANDLE_KIND, bundle);
+  return { object, handle };
+}
+
+/** @emoji 🖌️ Brush compatible node+handle rows while hovering a slot. */
 export interface Puzzle2dBrushCandidatesPayload {
-  readonly candidates: readonly string[];
+  readonly candidates: readonly Puzzle2dBrushCompatibleCandidate[];
   readonly index: number;
   readonly sourceHandleId: string;
   readonly suggestionsActive?: boolean;
@@ -1202,7 +1249,7 @@ export interface Puzzle2dBrushCandidatesPayload {
 /** @emoji 🖌️ Shared brush slot state mirrored across play authoring panes. */
 export interface Puzzle2dBrushSessionSnapshot {
   readonly candidateIndex: number;
-  readonly candidates: readonly string[];
+  readonly candidates: readonly Puzzle2dBrushCompatibleCandidate[];
   readonly preview: Puzzle2dEventMap["brushPreview"] | null;
   readonly sourceHandleId: string | null;
   readonly suggestionsActive?: boolean;
@@ -3894,6 +3941,28 @@ export class Puzzle2dRenderer {
     this.hostDeclarativeSceneDescriptor = this.descriptorWithoutAuthoritativeRemovals(descriptor);
   }
 
+  /** @emoji 📌 Remembers host descriptor unless JSX props lag behind an imperative fixture sync. */
+  rememberHostDeclarativeSceneDescriptorIfNotBehind(candidate: Puzzle2dSceneDescriptor): void {
+    const host = this.hostDeclarativeSceneDescriptor;
+    if (!host) {
+      this.rememberHostDeclarativeSceneDescriptor(candidate);
+      return;
+    }
+    const hostFp = puzzle2dSceneDescriptorFingerprint(host);
+    const candidateFp = puzzle2dSceneDescriptorFingerprint(candidate);
+    if (candidateFp === hostFp) {
+      this.rememberHostDeclarativeSceneDescriptor(candidate);
+      return;
+    }
+    if (
+      this.lastSyncedDescriptorFingerprint === hostFp &&
+      (host.edges.length > candidate.edges.length || host.nodes.length > candidate.nodes.length)
+    ) {
+      return;
+    }
+    this.rememberHostDeclarativeSceneDescriptor(candidate);
+  }
+
   /** @emoji ⏭️ Prefers the imperative-synced host descriptor when JSX props lag behind a brush place. */
   preferSyncedHostSceneDescriptor(jsxDescriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
     const host = this.hostDeclarativeSceneDescriptor;
@@ -4992,6 +5061,25 @@ export class Puzzle2dRenderer {
     } catch (err) {
       console.error("[DEBUG] brushCancelSlot failed", err);
     }
+  }
+
+  /** @emoji 🖌️ Clears WASM suggestions slot without draining topology back into JS (driving pane after fixture commit). */
+  clearBrushSuggestionsSlotQuietly(): void {
+    if (this.lastBrushSessionJsonForWasm === "") {
+      return;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.pendingBrushSessionJsonForWasm = "";
+      this.invalidated = true;
+      return;
+    }
+    try {
+      this.session.clearBrushSessionJson();
+      this.lastBrushSessionJsonForWasm = "";
+    } catch (err) {
+      console.error("[DEBUG] clearBrushSuggestionsSlotQuietly failed", err);
+    }
+    this.markDirty();
   }
 
   /** @emoji 📐 Brush preview node span in world units. */
@@ -6350,10 +6438,10 @@ export class Puzzle2dRenderer {
             break;
           }
           case "brushCandidates": {
-            const p = row.payload as { sourceHandleId?: string; candidates?: string[]; index?: number; suggestionsActive?: boolean };
+            const p = row.payload as { sourceHandleId?: string; candidates?: unknown; index?: number; suggestionsActive?: boolean };
             const candidatesPayload: Puzzle2dBrushCandidatesPayload = {
               sourceHandleId: String(p.sourceHandleId ?? ""),
-              candidates: Array.isArray(p.candidates) ? p.candidates.map(String) : [],
+              candidates: puzzle2dParseBrushCompatibleCandidates(p.candidates),
               index: Number(p.index ?? 0),
               suggestionsActive: p.suggestionsActive === true,
             };
@@ -7587,6 +7675,59 @@ if (puzzle2dVitest) {
       syncPuzzle2dScene(renderer, descriptor);
       expect(renderer.scene.edges.size).toBe(1);
       renderer.dispose();
+    });
+
+    it("puzzle2dCommitBrushPlacementToPlay finalizes driving pane without mirror setBrushSession drain", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const drivingCanvas = createMockCanvas();
+      const mirrorCanvas = createMockCanvas();
+      const driving = new Puzzle2dRenderer({ canvas: drivingCanvas.canvas, renderMode: "headless-test" });
+      const mirror = new Puzzle2dRenderer({ canvas: mirrorCanvas.canvas, renderMode: "headless-test" });
+      const fixture: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 40, handles: [{ id: "a:h0", angle: 0, handleKind: "port" }] }],
+        edges: [],
+      };
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture);
+      driving.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      driving.setKindCompatibility([{ source: "port", target: "port" }]);
+      driving.setBrushFlushDistance(80);
+      driving.setBrushNodeSize(40);
+      driving.brushOpenSlot("a:h0");
+      puzzle2dBrushSuggestionsDrivingRendererRef.current = driving;
+      const drivingSetBrush = vi.spyOn(driving, "setBrushSession");
+      const quietClear = vi.spyOn(driving, "clearBrushSuggestionsSlotQuietly");
+      const mirrorSetBrush = vi.spyOn(mirror, "setBrushSession");
+      let nextFixture = fixture;
+      const placed = puzzle2dCommitBrushPlacementToPlay(
+        {
+          handles: [{ angle: Math.PI, handleKind: "port" }],
+          nodeKind: "brush.kind",
+          sourceHandleId: "a:h0",
+          targetHandleIndex: 0,
+          x: 80,
+          y: 0,
+        },
+        {
+          catalogsForFixture: () => undefined,
+          patchFixture: (updater) => {
+            nextFixture = updater(nextFixture);
+          },
+        },
+      );
+      expect(placed).toBe(true);
+      expect(nextFixture.nodes).toHaveLength(2);
+      expect(driving.scene.nodes.size).toBe(2);
+      expect(driving.scene.edges.size).toBe(1);
+      expect(drivingSetBrush).not.toHaveBeenCalled();
+      expect(quietClear).toHaveBeenCalledTimes(1);
+      expect(mirrorSetBrush).toHaveBeenCalledWith(null);
+      driving.dispose();
+      mirror.dispose();
     });
 
     it("preferSyncedHostSceneDescriptor keeps brush-placed graph when JSX props lag", () => {
@@ -9779,10 +9920,34 @@ if (puzzle2dVitest) {
       expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
+    it("puzzle2dParseBrushCompatibleCandidates expands node kinds to handle rows", () => {
+      expect(
+        puzzle2dParseBrushCompatibleCandidates([
+          { nodeKind: "a", targetHandleIndex: 1 },
+          { nodeKind: "b", targetHandleIndex: 0 },
+        ]),
+      ).toEqual([
+        { nodeKind: "a", targetHandleIndex: 1 },
+        { nodeKind: "b", targetHandleIndex: 0 },
+      ]);
+    });
+
+    it("puzzle2dBrushCandidateDisplayLabels shows node and handle kind names", () => {
+      const labels = puzzle2dBrushCandidateDisplayLabels(
+        { nodeKind: "brush.kind", targetHandleIndex: 0 },
+        {
+          handles: [{ id: "port", name: "Port", color: "#888" }],
+          nodes: [{ id: "brush.kind", name: "Brush Kind", handles: [{ handleKind: "port", angle: Math.PI }] }],
+        },
+      );
+      expect(labels.object).toBe("Brush Kind");
+      expect(labels.handle).toBe("Port");
+    });
+
     it("puzzle2dBrushPlacePayloadFromSessionSnapshot maps preview session to place payload", () => {
       const session: Puzzle2dBrushSessionSnapshot = {
         candidateIndex: 0,
-        candidates: ["brush.kind"],
+        candidates: [{ nodeKind: "brush.kind", targetHandleIndex: 0 }],
         sourceHandleId: "a:h0",
         suggestionsActive: true,
         preview: {
@@ -9807,7 +9972,7 @@ if (puzzle2dVitest) {
       });
       const snapshot: Puzzle2dBrushSessionSnapshot = {
         candidateIndex: 0,
-        candidates: ["brush.kind"],
+        candidates: [{ nodeKind: "brush.kind", targetHandleIndex: 0 }],
         preview: { edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 }, node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0 } },
         sourceHandleId: "a:h0",
       };
@@ -9846,7 +10011,7 @@ if (puzzle2dVitest) {
       setup(mirror);
       const snapshot: Puzzle2dBrushSessionSnapshot = {
         candidateIndex: 0,
-        candidates: ["brush.kind"],
+        candidates: [{ nodeKind: "brush.kind", targetHandleIndex: 0 }],
         preview: {
           edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 },
           node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0, handles: [{ handleKind: "port", angle: Math.PI }] },
@@ -9877,7 +10042,7 @@ if (puzzle2dVitest) {
       mirror.render();
       const pendingJson = JSON.stringify({
         sourceHandleId: "a:h0",
-        candidates: ["brush.kind"],
+        candidates: [{ nodeKind: "brush.kind", targetHandleIndex: 0 }],
         index: 0,
         preview: {
           edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 },
@@ -11637,7 +11802,12 @@ export function puzzle2dCommitBrushPlacementToPlay(
   if (placed) {
     puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
   }
-  puzzle2dSyncBrushSessionToAllAuthoringPeers(null, undefined, { force: true });
+  const driving = puzzle2dBrushSuggestionsDrivingRendererRef.current;
+  puzzle2dSyncBrushSessionToAllAuthoringPeers(null, driving ?? undefined, { force: true });
+  if (placed && driving) {
+    puzzle2dFinalizeBrushPlacementOnDrivingPane(driving);
+    puzzle2dBrushSuggestionsDrivingRendererRef.current = null;
+  }
   return placed;
 }
 
@@ -12452,6 +12622,15 @@ export const puzzle2dOpenSlotSuggestionsRef: { current: Puzzle2dOpenSlotSuggesti
   current: { openFor: () => {}, close: () => {} },
 };
 
+const puzzle2dBrushSuggestionsDrivingRendererRef: { current: Puzzle2dRenderer | null } = { current: null };
+
+export const puzzle2dBrushKindCatalogsRef: { current: KindCatalogBundle | undefined } = { current: undefined };
+
+function puzzle2dFinalizeBrushPlacementOnDrivingPane(driving: Puzzle2dRenderer): void {
+  driving.clearBrushSuggestionsSlotQuietly();
+  driving.pushAuthoritativeSceneToWasmHost();
+}
+
 interface Puzzle2dBrushMenuSnapshot {
   readonly menuOpen: boolean;
   readonly menuAnchor: Puzzle2dScreenPoint | null;
@@ -12558,11 +12737,12 @@ function Puzzle2dBrushCandidateMenu(): React.ReactElement | null {
   const candidates = session?.candidates ?? [];
   const body =
     candidates.length > 0 ? (
-      candidates.map((kindId, index) => {
+      candidates.map((candidate, index) => {
         const active = ui.menuHoverIndex === index;
+        const labels = puzzle2dBrushCandidateDisplayLabels(candidate, puzzle2dBrushKindCatalogsRef.current);
         return (
           <button
-            key={`${kindId}:${index}`}
+            key={`${candidate.nodeKind}:${candidate.targetHandleIndex}`}
             aria-selected={active}
             className={cn(puzzle2dBrushMenuItemClassName, active && "bg-hover-temporary")}
             onMouseEnter={() => puzzle2dBrushMenuSourceRef.current.hoverCandidate(index)}
@@ -12574,13 +12754,14 @@ function Puzzle2dBrushCandidateMenu(): React.ReactElement | null {
             role="menuitem"
             type="button"
           >
-            <span className="truncate">{normalizeEngagementCommandText(kindId)}</span>
+            <span className="truncate">{normalizeEngagementCommandText(labels.object)}</span>
+            <span className="ml-auto pl-tiny text-xs text-muted-foreground truncate">{labels.handle}</span>
           </button>
         );
       })
     ) : (
       <div className="p-single text-sm text-muted-foreground" role="status">
-        No compatible node kinds at this connector
+        No compatible nodes at this connector
       </div>
     );
   if (typeof document === "undefined") {
@@ -12869,6 +13050,7 @@ export function Puzzle2dCanvas({
   reactHostPort.useLayoutEffect(() => {
     puzzle2dFixturePaletteDragPreviewOptionsRef.catalogs = kindCatalogsRef.current;
     puzzle2dFixturePaletteDragPreviewOptionsRef.brushNodeSize = resolvedBrushNodeSize;
+    puzzle2dBrushKindCatalogsRef.current = kindCatalogsRef.current;
   }, [kindCatalogs, resolvedBrushNodeSize]);
 
   const pushPalettePreviewAtClient = reactHostPort.useCallback((clientX: number, clientY: number): void => {
@@ -13371,6 +13553,7 @@ export function Puzzle2dCanvas({
         closePuzzle2dBrushMenu();
       }
       renderer.brushCancelSlot();
+      puzzle2dBrushSuggestionsDrivingRendererRef.current = null;
     };
     const hoverMenuCandidate = (index: number) => {
       const session = puzzle2dGetBrushSessionSnapshot();
@@ -13392,6 +13575,7 @@ export function Puzzle2dCanvas({
     puzzle2dOpenSlotSuggestionsRef.current = {
       openFor: (handleId, anchor) => {
         dismissMenu();
+        puzzle2dBrushSuggestionsDrivingRendererRef.current = renderer;
         renderer.brushOpenSlot(handleId);
         const session = puzzle2dGetBrushSessionSnapshot();
         const hoverIndex = session && session.candidates.length > 0 ? session.candidateIndex : null;
@@ -13446,7 +13630,7 @@ export function Puzzle2dCanvas({
       return;
     }
     const descriptor = renderer.preferSyncedHostSceneDescriptor(puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children));
-    renderer.rememberHostDeclarativeSceneDescriptor(descriptor);
+    renderer.rememberHostDeclarativeSceneDescriptorIfNotBehind(descriptor);
     renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
     puzzle2dEnsureSceneEdgesFromDescriptor(renderer, descriptor);
   }, [children, contextRenderer, declarativeSceneDescriptor]);

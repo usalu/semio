@@ -75,7 +75,7 @@ import {
 	type SelectionMergeMode,
 	type SelectionMarqueeCoverage,
 } from "@ui/react";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 const THREE = sceneHostPort.three;
 // #endregion 🔌Adapters
@@ -125,8 +125,8 @@ export const proceduralExtensionHost = new ProceduralExtensionHost();
 
 /** @emoji 🔌 Resolves the brep WASM bridge after extension defaults are activated. */
 export function useProceduralBrepBridge(host: ProceduralExtensionHost = proceduralExtensionHost): BrepWasmBridge | null {
-	const [bridge, setBridge] = useState<BrepWasmBridge | null>(host.tryGetBrepBridge());
-	useEffect(() => {
+	const [bridge, setBridge] = reactHostPort.useState<BrepWasmBridge | null>(host.tryGetBrepBridge());
+	reactHostPort.useEffect(() => {
 		let cancelled = false;
 		void host.activateDefaults().then(() => {
 			if (cancelled) return;
@@ -656,9 +656,39 @@ function createPreviewPointerHandlers(
 	};
 }
 
+function boundsFromMeshTransfer(mesh: MeshTransfer, pad: number): { min: Vec3; max: Vec3 } | null {
+	const positions = mesh.position;
+	if (!positions.length) return null;
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let minZ = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+	let maxZ = Number.NEGATIVE_INFINITY;
+	for (let i = 0; i < positions.length; i += 3) {
+		const x = positions[i]!;
+		const y = positions[i + 1]!;
+		const z = positions[i + 2]!;
+		minX = Math.min(minX, x);
+		minY = Math.min(minY, y);
+		minZ = Math.min(minZ, z);
+		maxX = Math.max(maxX, x);
+		maxY = Math.max(maxY, y);
+		maxZ = Math.max(maxZ, z);
+	}
+	if (!Number.isFinite(minX)) return null;
+	return {
+		min: [minX - pad, minY - pad, minZ - pad],
+		max: [maxX + pad, maxY + pad, maxZ + pad],
+	};
+}
+
 function worldBoundsForPreviewItem(item: ProceduralPreviewItem, _kernel: BrepWasmBridge): { min: Vec3; max: Vec3 } | null {
 	const pad = PROCEDURAL_PREVIEW_BOUNDS_PAD;
 	if (item.kind === "geometry") {
+		if (item.mesh && isRenderableMeshTransfer(item.mesh)) {
+			return boundsFromMeshTransfer(item.mesh, pad);
+		}
 		return null;
 	}
 	if (item.kind === "point") {
@@ -690,17 +720,17 @@ function BrepPreviewLayer({
 } & PreviewLayerChrome): ReactNode {
 	const { renderMode, colors, opacity } = previewLayerPaint(chrome);
 	const handlers = createPreviewPointerHandlers(previewItemChannel(item), chrome.onHover, chrome.onPick, chrome.pickEnabled);
-	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
+	const [buffers, setBuffers] = reactHostPort.useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
 	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const geometryRef = item.kind === "geometry" ? item.handle : null;
 	const lineOnlyGeometry = item.kind === "geometry" && !buffers.surface && Boolean(buffers.lines);
-	const pickProxy = useMemo(() => {
+	const pickProxy = reactHostPort.useMemo(() => {
 		if (!lineOnlyGeometry) return null;
 		const bounds = worldBoundsForPreviewItem(item, kernel);
 		return bounds ? previewPickProxyFromBounds(bounds) : null;
 	}, [item, kernel, lineOnlyGeometry]);
 	const lineColor = previewLineColor(colors, renderMode.asHover, Boolean(buffers.surface));
-	const arrow = useMemo(() => {
+	const arrow = reactHostPort.useMemo(() => {
 		if (item.kind !== "vector") return null;
 		const tip = new THREE.Vector3(item.directionVec[0], item.directionVec[1], item.directionVec[2]);
 		const length = tip.length();
@@ -716,7 +746,7 @@ function BrepPreviewLayer({
 		return { shaft, head, headPosition, quaternion };
 	}, [item]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (!geometryRef) return;
 		if (item.kind === "geometry" && item.mesh && isRenderableMeshTransfer(item.mesh)) {
 			setBuffers(buildMeshBuffers(meshTransferToGeometryData(item.mesh)));
@@ -877,10 +907,27 @@ function ProceduralPreviewCameraBridge({
 	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const camera = sceneHostPort.fiber.useThree((state) => state.camera);
 	const size = sceneHostPort.fiber.useThree((state) => state.size);
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		onCamera(camera, size);
 		invalidate();
 	}, [camera, invalidate, onCamera, size, size.height, size.width]);
+	return null;
+}
+
+function ProceduralPreviewSceneInvalidator(props: { readonly token: string }): null {
+	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
+	reactHostPort.useLayoutEffect(() => {
+		invalidate();
+		let frame = 0;
+		let raf = 0;
+		const tick = () => {
+			invalidate();
+			frame += 1;
+			if (frame < 3) raf = requestAnimationFrame(tick);
+		};
+		raf = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(raf);
+	}, [invalidate, props.token]);
 	return null;
 }
 
@@ -908,19 +955,19 @@ function ProceduralPreviewMarqueeBridge({
 }): null {
 	const gl = sceneHostPort.fiber.useThree((state) => state.gl);
 	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
-	const marqueeRef = useRef<{ tracking: boolean; active: boolean; start: { x: number; y: number }; points: { x: number; y: number }[]; initial: string[] }>({
+	const marqueeRef = reactHostPort.useRef<{ tracking: boolean; active: boolean; start: { x: number; y: number }; points: { x: number; y: number }[]; initial: string[] }>({
 		tracking: false,
 		active: false,
 		start: { x: 0, y: 0 },
 		points: [],
 		initial: [],
 	});
-	const resolveMarqueeHitsRef = useRef(resolveMarqueeHits);
-	const commitSelectionRef = useRef(commitSelection);
-	const onMarqueeOverlayRef = useRef(onMarqueeOverlay);
-	const onLivePreselectRef = useRef(onLivePreselect);
-	const selectionMethodRef = useRef(selectionMethod);
-	const selectedNodeIdsRef = useRef(selectedNodeIds);
+	const resolveMarqueeHitsRef = reactHostPort.useRef(resolveMarqueeHits);
+	const commitSelectionRef = reactHostPort.useRef(commitSelection);
+	const onMarqueeOverlayRef = reactHostPort.useRef(onMarqueeOverlay);
+	const onLivePreselectRef = reactHostPort.useRef(onLivePreselect);
+	const selectionMethodRef = reactHostPort.useRef(selectionMethod);
+	const selectedNodeIdsRef = reactHostPort.useRef(selectedNodeIds);
 	resolveMarqueeHitsRef.current = resolveMarqueeHits;
 	commitSelectionRef.current = commitSelection;
 	onMarqueeOverlayRef.current = onMarqueeOverlay;
@@ -928,7 +975,7 @@ function ProceduralPreviewMarqueeBridge({
 	selectionMethodRef.current = selectionMethod;
 	selectedNodeIdsRef.current = selectedNodeIds;
 
-	const clientToLocal = useCallback(
+	const clientToLocal = reactHostPort.useCallback(
 		(clientX: number, clientY: number) => {
 			const host = containerRef.current;
 			if (!host) return { x: clientX, y: clientY };
@@ -938,7 +985,7 @@ function ProceduralPreviewMarqueeBridge({
 		[containerRef],
 	);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		const canvas = gl.domElement;
 		if (!canvas) return;
 		const resetGesture = () => {
@@ -1039,28 +1086,28 @@ export function ProceduralPreview({
 	tolerance = 0.02,
 	className,
 }: ProceduralPreviewProps): ReactNode {
-	const containerRef = useRef<HTMLDivElement>(null);
-	const cameraRef = useRef<THREE.Camera | null>(null);
-	const sizeRef = useRef({ width: 1, height: 1 });
-	const lodRef = useRef(DEFAULT_MANUAL_LOD);
-	const [camera, setCamera] = useState<WorldCameraState>(PROCEDURAL_PREVIEW_DEFAULT_CAMERA);
-	const [cameraSeed, setCameraSeed] = useState(0);
+	const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
+	const cameraRef = reactHostPort.useRef<THREE.Camera | null>(null);
+	const sizeRef = reactHostPort.useRef({ width: 1, height: 1 });
+	const lodRef = reactHostPort.useRef(DEFAULT_MANUAL_LOD);
+	const [camera, setCamera] = reactHostPort.useState<WorldCameraState>(PROCEDURAL_PREVIEW_DEFAULT_CAMERA);
+	const [cameraSeed, setCameraSeed] = reactHostPort.useState(0);
 	const cameraSeedKey = proceduralPreviewCameraSeed(cameraSeed);
 	const projection = camera.projection ?? "perspective";
-	const [marqueeOverlay, setMarqueeOverlay] = useState<{
+	const [marqueeOverlay, setMarqueeOverlay] = reactHostPort.useState<{
 		coverage: SelectionMarqueeCoverage;
 		shape: "rect" | "polygon";
 		rect?: { x: number; y: number; width: number; height: number };
 		points?: readonly { x: number; y: number }[];
 	} | null>(null);
-	const [livePreselect, setLivePreselect] = useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
-	const [gumballInteractionWidgetId, setGumballInteractionWidgetId] = useState<string | null>(null);
-	const gumballHighlightIds = useMemo(() => new Set(gumballActiveWidgetIds), [gumballActiveWidgetIds]);
+	const [livePreselect, setLivePreselect] = reactHostPort.useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
+	const [gumballInteractionWidgetId, setGumballInteractionWidgetId] = reactHostPort.useState<string | null>(null);
+	const gumballHighlightIds = reactHostPort.useMemo(() => new Set(gumballActiveWidgetIds), [gumballActiveWidgetIds]);
 	const gumballDragActive = gumballInteractionWidgetId !== null;
-	const [canvasBackground, setCanvasBackground] = useState(() => resolveSemanticColorHex("--canvas", "light-8-9"));
-	const [resolvedKernel, setResolvedKernel] = useState<BrepWasmBridge | null>(kernel ?? null);
+	const [canvasBackground, setCanvasBackground] = reactHostPort.useState(() => resolveSemanticColorHex("--canvas", "light-8-9"));
+	const [resolvedKernel, setResolvedKernel] = reactHostPort.useState<BrepWasmBridge | null>(kernel ?? null);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (kernel) {
 			setResolvedKernel(kernel);
 			return;
@@ -1074,7 +1121,7 @@ export function ProceduralPreview({
 		};
 	}, [kernel]);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		if (typeof document === "undefined") return;
 		const sync = () => {
 			clearColorResolveCache();
@@ -1086,7 +1133,7 @@ export function ProceduralPreview({
 		return () => obs.disconnect();
 	}, []);
 
-	const visibleItems = useMemo(
+	const visibleItems = reactHostPort.useMemo(
 		() =>
 			filterVisiblePreviewItems(items, {
 				showMode,
@@ -1122,19 +1169,19 @@ export function ProceduralPreview({
 		);
 	}, [gumballAnchorId, visibleItems]);
 
-	const effectiveSelected = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
-	const effectivePreselect = useMemo(() => new Set(livePreselect.ids.length ? livePreselect.ids : preselectNodeIds), [livePreselect.ids, preselectNodeIds]);
-	const effectivePreselectRemoved = useMemo(
+	const effectiveSelected = reactHostPort.useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
+	const effectivePreselect = reactHostPort.useMemo(() => new Set(livePreselect.ids.length ? livePreselect.ids : preselectNodeIds), [livePreselect.ids, preselectNodeIds]);
+	const effectivePreselectRemoved = reactHostPort.useMemo(
 		() => new Set(livePreselect.removedIds.length ? livePreselect.removedIds : preselectRemovedNodeIds),
 		[livePreselect.removedIds, preselectRemovedNodeIds],
 	);
 
-	const handleCamera = useCallback((camera: THREE.Camera, size: { width: number; height: number }) => {
+	const handleCamera = reactHostPort.useCallback((camera: THREE.Camera, size: { width: number; height: number }) => {
 		cameraRef.current = camera;
 		sizeRef.current = { width: size.width, height: size.height };
 	}, []);
 
-	const screenBoundsForItem = useCallback(
+	const screenBoundsForItem = reactHostPort.useCallback(
 		(item: ProceduralPreviewItem): ScreenBounds | null => {
 			const camera = cameraRef.current;
 			if (!camera) return null;
@@ -1146,7 +1193,7 @@ export function ProceduralPreview({
 		[resolvedKernel],
 	);
 
-	const resolveMarqueeHits = useCallback(
+	const resolveMarqueeHits = reactHostPort.useCallback(
 		(points: readonly { x: number; y: number }[], crossing: boolean): string[] => {
 			const marqueeRect = screenRectFromPoints(points);
 			if (!marqueeRect) return [];
@@ -1165,14 +1212,14 @@ export function ProceduralPreview({
 		[screenBoundsForItem, visibleItems],
 	);
 
-	const commitSelection = useCallback(
+	const commitSelection = reactHostPort.useCallback(
 		(ids: readonly string[], mode: ProceduralSelectionMode) => {
 			onSelectionChange?.(ids, mode);
 		},
 		[onSelectionChange],
 	);
 
-	const onPick = useCallback(
+	const onPick = reactHostPort.useCallback(
 		(channel: ProceduralChannelRef, mode: ProceduralSelectionMode) => {
 			onSelect?.(channel);
 			const next = selectionMergeIds(mode, selectedNodeIds, [channel.widgetId]);
@@ -1181,7 +1228,7 @@ export function ProceduralPreview({
 		[commitSelection, onSelect, selectedNodeIds],
 	);
 
-	const resolvedHoverTargets = useMemo(() => {
+	const resolvedHoverTargets = reactHostPort.useMemo(() => {
 		if (hoveredGeometryTargets.length > 0) return hoveredGeometryTargets;
 		if (hoveredChannel?.direction === "out") return [hoveredChannel];
 		if (hoveredNodeId) {
@@ -1192,22 +1239,24 @@ export function ProceduralPreview({
 		return [];
 	}, [hoveredChannel, hoveredGeometryTargets, hoveredNodeId, items]);
 
-	const resolvedSelectedTargets = useMemo(() => {
+	const resolvedSelectedTargets = reactHostPort.useMemo(() => {
 		if (selectedGeometryTargets.length > 0) return selectedGeometryTargets;
 		return selectedChannels.filter((channel) => channel.direction === "out");
 	}, [selectedChannels, selectedGeometryTargets]);
 
 	const hasChannelSelection = selectedChannels.length > 0 || selectedGeometryTargets.length > 0;
 
-	const onProjectionChange = useCallback((nextProjection: OrbitCameraProjection) => {
+	const onProjectionChange = reactHostPort.useCallback((nextProjection: OrbitCameraProjection) => {
 		setCamera((prev) => applyOrbitProjectionToCameraState(prev, nextProjection));
 		setCameraSeed((seed) => seed + 1);
 	}, []);
 
-	const onViewportGizmoCameraChange = useCallback((next: WorldCameraState) => {
+	const onViewportGizmoCameraChange = reactHostPort.useCallback((next: WorldCameraState) => {
 		setCamera(next);
 		setCameraSeed((seed) => seed + 1);
 	}, []);
+
+	const sceneInvalidationToken = `${resolvedKernel ? 1 : 0}:${visibleItems.length}:${cameraSeedKey}`;
 
 	if (!resolvedKernel) return null;
 
@@ -1235,6 +1284,7 @@ export function ProceduralPreview({
 						<WorldOrbitGated controlsKey={cameraSeedKey} projection={projection} zoom={camera.zoom} />
 						<WorldOrbitViewControls onCameraChange={onViewportGizmoCameraChange} />
 						<ProceduralPreviewCameraBridge onCamera={handleCamera} />
+						<ProceduralPreviewSceneInvalidator token={sceneInvalidationToken} />
 						<ProceduralPreviewMarqueeBridge
 							containerRef={containerRef}
 							selectionMethod={selectionMethod}
@@ -1383,9 +1433,9 @@ export function ProceduralFlowEditor({
 	onLodChange,
 	proximityDistance,
 }: ProceduralFlowEditorProps): ReactNode {
-	const hostRef = useRef(extensionHost);
+	const hostRef = reactHostPort.useRef(extensionHost);
 
-	useEffect(() => {
+	reactHostPort.useEffect(() => {
 		hostRef.current = extensionHost;
 		void extensionHost.activateDefaults();
 	}, [extensionHost]);

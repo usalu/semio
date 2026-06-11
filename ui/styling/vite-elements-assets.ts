@@ -779,6 +779,63 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
   ];
 }
 
+/** @emoji 🖼️ Vite: serve and copy `cad/fixture` at `/cad-fixture/*` for CAD world reference planes. */
+export function cadFixtureVitePlugin(repoRoot: string): Plugin[] {
+  const fixtureRoot = resolve(repoRoot, "cad/fixture");
+  const serveFixture: Connect.NextHandleFunction = (req, res, next) => {
+    if (!req.url?.startsWith("/cad-fixture/")) {
+      next();
+      return;
+    }
+    const rel = decodeURIComponent(req.url.slice("/cad-fixture/".length).split(/[?#]/, 1)[0] ?? "");
+    const filePath = resolve(fixtureRoot, rel);
+    const relToRoot = relative(fixtureRoot, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+      next();
+      return;
+    }
+    if (filePath.endsWith(".png")) {
+      res.setHeader("Content-Type", "image/png");
+    } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
+      res.setHeader("Content-Type", "image/jpeg");
+    } else if (filePath.endsWith(".pdf")) {
+      res.setHeader("Content-Type", "application/pdf");
+    } else if (filePath.endsWith(".svg")) {
+      res.setHeader("Content-Type", "image/svg+xml");
+    }
+    createReadStream(filePath).pipe(res);
+  };
+  let viteRoot = process.cwd();
+  return [
+    {
+      name: "cad-fixture-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveFixture);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveFixture);
+      },
+    },
+    {
+      name: "cad-fixture-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        if (!existsSync(fixtureRoot)) {
+          return;
+        }
+        const dest = resolve(viteRoot, "dist", "cad-fixture");
+        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        cpSync(fixtureRoot, dest, { recursive: true });
+      },
+    },
+  ];
+}
+
 /** @emoji 🌐 Vite: serve and copy `infinite/fixture` at `/infinite-fixture/*` for world reference planes. */
 export function infiniteFixtureVitePlugin(repoRoot: string): Plugin[] {
   const fixtureRoot = resolve(repoRoot, "infinite/fixture");
@@ -852,6 +909,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     define: playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : undefined,
     plugins: [
       ...uiAssetsVitePlugin(uiAssetsRoot),
+      ...cadFixtureVitePlugin(repoRoot),
       infiniteFixtureVitePlugin(repoRoot),
       ...(playEntryKind === "3d" || playEntryKind === "5d" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
       ...(playEntryKind === "map" ? [osmTileProxyVitePlugin(repoRoot), mapLibreVectorTileProxyVitePlugin(repoRoot)] : []),

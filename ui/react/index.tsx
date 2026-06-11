@@ -9143,8 +9143,6 @@ export interface TreeDataSection {
   id: string;
   label?: React.ReactNode;
   icon?: React.ReactNode;
-  /** @emoji 🧩 Arbitrary section body (window measures rail, side-panel hosts, …). */
-  content?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
   actions?: TreeHeaderAction[];
@@ -10181,7 +10179,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
-  if (layoutKind === "property" && resolvedLabel) {
+  if (layoutKind === "property") {
     return (
       <TreeItemRowContextMenu items={contextMenu}>
       <div
@@ -10895,7 +10893,9 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
     >
       {hasControl ? (
         <Label id={item.id} label="">
-          {item.control}
+          <div data-slot="tree-item-control" className="min-w-0 w-full">
+            {item.control}
+          </div>
         </Label>
       ) : null}
       {childItems.map((childItem, index) => (
@@ -10918,9 +10918,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
   const items = getTreeSectionItems(section, sectionItemsById);
   const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
   const hasDynamicChildren = Boolean(section.getItems);
-  const hasContent = section.content != null;
-  const isContentHost = hasContent && items.length === 0 && !hasDynamicChildren && !section.emptyState;
-  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasContent;
+  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
 
   reactHostPort.useEffect(() => {
     if (treeOpenState.open && hasDynamicChildren) {
@@ -10943,11 +10941,10 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       onPointerEnter={section.onPointerEnter}
       onPointerLeave={section.onPointerLeave}
       onDoubleClick={section.onDoubleClick}
-      onDragOver={isContentHost ? undefined : handleDragOver}
-      onDrop={isContentHost ? undefined : (event) => handleDropOnSection(event, section)}
+      onDragOver={handleDragOver}
+      onDrop={(event) => handleDropOnSection(event, section)}
       isLastSection={isLastSection}
     >
-      {hasContent ? section.content : null}
       {items.map((item, index) => (
         <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
       ))}
@@ -11420,23 +11417,16 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
     <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
       <HelperRow>{`Local chat for ${title}. Use Enter to send and Shift+Enter for a new line.`}</HelperRow>
       <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-[3px] border", borderClass)}>
-        <Tree
-          className="min-w-0 p-single"
-          sections={[
-            {
-              id: `${id}.messages`,
-              label: null,
-              content: messages.map((message) => (
-                <TreeRow key={message.id}>
-                  <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
-                    <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
-                  </div>
-                </TreeRow>
-              )),
-            },
-          ]}
-        />
+        <div className="flex min-w-0 flex-col p-single">
+          {messages.map((message) => (
+            <TreeRow key={message.id}>
+              <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
+                <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
+              </div>
+            </TreeRow>
+          ))}
+        </div>
       </div>
       <div className="flex shrink-0 flex-col gap-single">
         <Textarea
@@ -11865,21 +11855,17 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
   const sorted = reactHostPort.useMemo(() => sortControlTreeNodes(tree), [tree]);
   return (
     <div data-slot="control-tree" className={cn("w-full min-w-0", classNames?.panel, className)}>
-      <Tree
-        sections={[
-          {
-            id: "control-tree-root",
-            label: null,
-            content: sorted.map((node) =>
-              node.kind === "folder" ? (
-                <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
-              ) : (
-                <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
-              ),
+      <TreeStateProvider>
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          {sorted.map((node) =>
+            node.kind === "folder" ? (
+              <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
+            ) : (
+              <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
             ),
-          },
-        ]}
-      />
+          )}
+        </TreeContext.Provider>
+      </TreeStateProvider>
     </div>
   );
 };

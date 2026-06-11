@@ -107,6 +107,48 @@ export interface UiKeyValueNode {
 	readonly entries: readonly { readonly label: string; readonly value: string }[];
 }
 
+/** @emoji 🎚️ Slider control bound to a command (`value` in args). */
+export interface UiSliderNode {
+	readonly type: "slider";
+	readonly id: string;
+	readonly value: number;
+	readonly min: number;
+	readonly max: number;
+	readonly step: number;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 🔢 Numeric stepper with absolute input and ± delta buttons. */
+export interface UiNumberStepperNode {
+	readonly type: "numberStepper";
+	readonly id: string;
+	readonly value: number;
+	readonly step: number;
+	readonly uniform: boolean;
+	readonly onAbsolute: CommandDescriptor;
+	readonly onDelta: CommandDescriptor;
+}
+
+/** @emoji ⭕ Ring orb picker bound to a command (`t` in args). */
+export interface UiRingNode {
+	readonly type: "ring";
+	readonly id: string;
+	readonly orbId: string;
+	readonly t: number;
+	readonly disabled?: boolean;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 🖼️ Icon picker with a registered classifier kind. */
+export interface UiIconSelectNode {
+	readonly type: "iconSelect";
+	readonly id: string;
+	readonly value: string;
+	readonly uniform: boolean;
+	readonly classifierKind: "puzzle2d";
+	readonly onChange: CommandDescriptor;
+}
+
 /** @emoji 🏷️ Labeled field wrapping one declarative control. */
 export interface UiFieldNode {
 	readonly type: "field";
@@ -123,6 +165,10 @@ export type UiControlNode =
 	| UiVec3Node
 	| UiButtonNode
 	| UiKeyValueNode
+	| UiSliderNode
+	| UiNumberStepperNode
+	| UiRingNode
+	| UiIconSelectNode
 	| UiFieldNode
 	| UiTableHostSurfaceNode
 	| UiPanelHostSurfaceNode;
@@ -378,7 +424,17 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 	if (node.type === "button") {
 		return { id: node.id ?? fallbackId, label: node.label, control: node };
 	}
-	if (node.type === "input" || node.type === "select" || node.type === "toggle" || node.type === "vec3" || node.type === "keyValue") {
+	if (
+		node.type === "input" ||
+		node.type === "select" ||
+		node.type === "toggle" ||
+		node.type === "vec3" ||
+		node.type === "keyValue" ||
+		node.type === "slider" ||
+		node.type === "numberStepper" ||
+		node.type === "ring" ||
+		node.type === "iconSelect"
+	) {
 		return { id: "id" in node ? String(node.id) : fallbackId, label: "", control: node };
 	}
 	if (node.type === "separator") {
@@ -398,6 +454,10 @@ export type UiNode =
 	| UiToggleNode
 	| UiVec3Node
 	| UiKeyValueNode
+	| UiSliderNode
+	| UiNumberStepperNode
+	| UiRingNode
+	| UiIconSelectNode
 	| UiFieldNode
 	| UiTreeNode
 	| UiComponentHostSurfaceNode;

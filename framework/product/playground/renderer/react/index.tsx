@@ -108,6 +108,7 @@ import {
   type UiTreeSectionNode,
   type UiVec3Node,
   collectUiTreeItemDragData,
+  uiDeclarativeSectionsToTree,
   type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
   enforcePlaygroundWindowEngagementInput,
@@ -965,13 +966,9 @@ function DeclarativeTreeWorkbenchPanel(props: { readonly tabId: string; readonly
   const factory = getSidePanelBodyFactory(props.bodyKey);
   const node = factory?.(ctx);
   if (node?.type !== "tree") {
-    return <PlaygroundPanelBody><div className="p-2 text-xs text-destructive">Expected tree panel {props.bodyKey}</div></PlaygroundPanelBody>;
+    return <div className="text-destructive p-single text-xs">Expected tree panel {props.bodyKey}</div>;
   }
-  return (
-    <PlaygroundPanelBody>
-      <PlaygroundDeclarativeTree treeNode={node} commandBus={bus} />
-    </PlaygroundPanelBody>
-  );
+  return <PlaygroundDeclarativeTree treeNode={node} commandBus={bus} />;
 }
 
 /** @emoji 📑 Declarative side-panel body: tree nodes mount as a root {@link Tree} (not nested via {@link UiRenderer}). */
@@ -994,17 +991,9 @@ function DeclarativeSidePanelBody(props: { readonly tabId: string; readonly body
   const factory = getSidePanelBodyFactory(props.bodyKey);
   const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${props.bodyKey}"` };
   if (node.type === "tree") {
-    return (
-      <PlaygroundPanelBody>
-        <PlaygroundDeclarativeTree treeNode={node} commandBus={bus} />
-      </PlaygroundPanelBody>
-    );
+    return <PlaygroundDeclarativeTree treeNode={node} commandBus={bus} />;
   }
-  return (
-    <PlaygroundPanelBody>
-      <UiRenderer node={node} commandBus={bus} />
-    </PlaygroundPanelBody>
-  );
+  return <div className="text-destructive p-single text-xs">Side panel {props.bodyKey} must be type tree.</div>;
 }
 
 const declarativeSidePanelBodyComponents = new Map<string, React.FC>();
@@ -1553,20 +1542,6 @@ export function PlaygroundShell({ children }: { readonly children: React.ReactNo
   );
 }
 
-/** @emoji 📦 Standard side-panel body; playgrounds must not use inline styles on panel chrome. */
-export function PlaygroundPanelBody({ children }: { readonly children: React.ReactNode }): React.ReactElement {
-  return <div className="text-element flex min-h-0 min-w-0 flex-1 flex-col gap-single overflow-hidden p-single text-xs">{children}</div>;
-}
-
-/** @emoji 🌲 Tree section whose sole row hosts arbitrary React as an inline control (inspector batches). */
-export function playgroundPanelSection(id: string, label: string, body: React.ReactNode, options?: { readonly defaultOpen?: boolean }): TreeDataSection {
-  return {
-    id,
-    label,
-    defaultOpen: options?.defaultOpen ?? true,
-    items: [{ id: `${id}.host`, label: "", control: <PlaygroundPanelBody>{body}</PlaygroundPanelBody> }],
-  };
-}
 //#endregion 🔖PlaygroundShell
 
 //#region 🔖Mount
@@ -2549,52 +2524,39 @@ function usePuzzle5dPlayStore(): Puzzle5dStore {
 }
 //#endregion 🔖HostBridge
 
-//#region 🔖DetailsPanel
-function Puzzle5dPlayStatusPanel(): React.ReactElement {
-  const { snapshot } = usePuzzle5dPlaySnapshot();
+const puzzle5dPlayControllerRef: { current: Puzzle5dPlayShellController | null } = { current: null };
+
+function buildPuzzle5dPlayStatusTree(): UiTreeNode {
+  const snapshot = puzzle5dPlayControllerRef.current?.getSnapshot() ?? null;
   if (!snapshot) {
-    return <p className="text-muted-foreground p-2 text-xs">No puzzle 5d snapshot</p>;
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "puzzle-5d-play-status.empty", label: "Paired play", children: [{ type: "text", value: "No puzzle 5d snapshot" }] },
+    ]);
   }
-  return (
-    <dl className="grid gap-2 p-2 text-xs">
-      <div>
-        <dt className="text-muted-foreground font-medium">Manifest</dt>
-        <dd>{snapshot.manifestLabel ?? "—"}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground font-medium">2d selection</dt>
-        <dd>{snapshot.selected2d.size} id(s)</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground font-medium">3d selection</dt>
-        <dd>{snapshot.selected3d ?? "—"}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground font-medium">Relocate</dt>
-        <dd>{JSON.stringify(snapshot.gumballConfig)}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground font-medium">Connect events</dt>
-        <dd>
-          2d {snapshot.connect2d} · 3d {snapshot.connect3d}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground font-medium">Proximity events</dt>
-        <dd>
-          2d {snapshot.proximity2d} · 3d {snapshot.proximity3d}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground font-medium">Tool</dt>
-        <dd>
-          {snapshot.activeTool} · fill {snapshot.fillCount}
-        </dd>
-      </div>
-    </dl>
-  );
+  return uiDeclarativeSectionsToTree([
+    {
+      type: "section",
+      id: "puzzle-5d-play-status.section",
+      label: "Paired play",
+      children: [
+        {
+          type: "keyValue",
+          entries: [
+            { label: "Manifest", value: snapshot.manifestLabel ?? "—" },
+            { label: "2d selection", value: `${snapshot.selected2d.size} id(s)` },
+            { label: "3d selection", value: snapshot.selected3d ?? "—" },
+            { label: "Relocate", value: JSON.stringify(snapshot.gumballConfig) },
+            { label: "Connect events", value: `2d ${snapshot.connect2d} · 3d ${snapshot.connect3d}` },
+            { label: "Proximity events", value: `2d ${snapshot.proximity2d} · 3d ${snapshot.proximity3d}` },
+            { label: "Tool", value: `${snapshot.activeTool} · fill ${snapshot.fillCount}` },
+          ],
+        },
+      ],
+    },
+  ]);
 }
 
+//#region 🔖DetailsPanel
 class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   constructor(private readonly buildTree: () => import("@framework/playground/core").UiTreeNode) {
     super();
@@ -2606,7 +2568,11 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       icon: createIconComponent("list-tree"),
       name: "Hierarchy",
       order: 0,
-      tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
+      tree: new CallbackTreePanelDefinition(() => {
+        const treeNode = this.buildTree();
+        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
     };
   }
 }
@@ -2644,8 +2610,9 @@ class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
       icon: createIconComponent("clipboard-list"),
       name: "Status",
       order: 0,
-      tree: new StaticTreePanelDefinition({
-        sections: [playgroundPanelSection("puzzle-5d-play-status.section", "Paired play", <Puzzle5dPlayStatusPanel />)],
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildPuzzle5dPlayStatusTree(), bus);
       }),
     };
   }
@@ -2864,6 +2831,7 @@ function Puzzle5dPlayChrome({
   );
   void generation;
   const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
+  puzzle5dPlayControllerRef.current = controller ?? null;
   const snapshot = controller?.getSnapshot() ?? null;
   const bus = runtime.commandBus;
   const puzzle5dStore = controller?.puzzle5dStore;
@@ -3004,6 +2972,7 @@ import {
   puzzle2dPlayDuplicateSelection,
   puzzle2dPlaySelectSameKindIds,
   puzzle2dPlayToggleEntityFlag,
+  puzzle2dPlayCmd,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
@@ -3480,10 +3449,14 @@ class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
       tree: new CallbackTreePanelDefinition(() => {
         const shell = puzzle2dPlayShellRef.current;
         const selection = puzzle2dPlaySelectionRef.current;
+        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
         if (!shell || !selection) {
-          return [{ id: "puzzle-2d-play-inspector.loading", label: "Detail", items: [{ id: "loading", label: "…" }] }];
+          return uiTreeNodeToTreePanelConfig(
+            uiDeclarativeSectionsToTree([{ type: "section", id: "puzzle-2d-play-inspector.loading", label: "Detail", children: [{ type: "text", value: "…" }] }]),
+            bus,
+          );
         }
-        return buildPuzzle2dPlayInspectorSections(shell.fixture, selection.selectionIds, shell.patchFixture);
+        return uiTreeNodeToTreePanelConfig(buildPuzzle2dPlayInspectorTree(shell.fixture, selection.selectionIds), bus);
       }),
     };
   }
@@ -3496,7 +3469,17 @@ class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
       icon: createIconComponent("settings"),
       name: "Settings",
       order: 1,
-      tree: new CallbackTreePanelDefinition(() => [playgroundPanelSection("puzzle-2d-play-settings.section", "Settings", <Puzzle2dPlaySettingsPanel />)]),
+      tree: new CallbackTreePanelDefinition(() => {
+        const shell = puzzle2dPlayShellRef.current;
+        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
+        if (!shell) {
+          return uiTreeNodeToTreePanelConfig(
+            uiDeclarativeSectionsToTree([{ type: "section", id: "puzzle-2d-play-settings.loading", label: "Settings", children: [{ type: "text", value: "…" }] }]),
+            bus,
+          );
+        }
+        return uiTreeNodeToTreePanelConfig(buildPuzzle2dPlaySettingsTree(shell), bus);
+      }),
     };
   }
 }
@@ -3634,138 +3617,225 @@ function puzzle2dPlayLiveForceGraphDragState(
 // #endregion 🔖PlayRedrawHelpers
 
 // #region 🔖SettingsPanel
-/** @emoji ⚙️ Puzzle 2d play redraw settings: play uses requestAnimationFrame (packed WASM per frame), progressive ramp, and per-mode layout parameters. */
-function Puzzle2dPlaySettingsPanel(): ReactElement {
-  const {
-    activePaneId,
-    applyPuzzle2dRedrawHandlesOnce,
-    applyPuzzle2dRedrawOnce,
-    puzzle2dRedrawHandlesAfterNodes,
-    puzzle2dRedrawMode,
-    puzzle2dRedrawPlayMaxItersPerFrame,
-    puzzle2dRedrawProgressiveAutoStopMs,
-    puzzle2dRedrawProgressiveEnabled,
-    forceLayoutFullIterations,
-    forceLayoutGravity,
-    forceLayoutIdealEdgeLength,
-    forceLayoutRepulsionStrength,
-    setPuzzle2dRedrawMode,
-    setPuzzle2dRedrawHandlesAfterNodes,
-    setPuzzle2dRedrawPlayMaxItersPerFrame,
-    setPuzzle2dRedrawProgressiveAutoStopMs,
-    setPuzzle2dRedrawProgressiveEnabled,
-    setForceLayoutFullIterations,
-    setForceLayoutGravity,
-    setForceLayoutIdealEdgeLength,
-    setForceLayoutRepulsionStrength,
-    setTreeLayoutLayerSpacing,
-    setTreeLayoutDirection,
-    setTreeLayoutSiblingGap,
-    treeLayoutLayerSpacing,
-    treeLayoutDirection,
-    treeLayoutSiblingGap,
-  } = usePuzzle2dPlayShell();
-
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
-      <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-normal pb-2">
-        <Icon icon="settings" size={16} className="shrink-0" />
-        <div>
-          <div className={cn(shellChromeTitleClassName, "uppercase tracking-wide")}>Settings</div>
-          <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
-        </div>
-      </div>
-      <div className={cn(shellChromeSectionTitleClassName, "shrink-0 text-[11px]")}>Redraw</div>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-        <div className={cn(shellChromeSectionTitleClassName, "text-[11px]")}>Redraw nodes</div>
-        <Label id="puzzle2d.play.settings.redraw.mode" label="Layout kind">
-          <Select onValueChange={(v) => setPuzzle2dRedrawMode(v as Puzzle2dRedrawModeKind)} value={puzzle2dRedrawMode}>
-            <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-redraw-mode" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="force-graph">Graph</SelectItem>
-              <SelectItem value="hierarchical-tree">Tree</SelectItem>
-            </SelectContent>
-          </Select>
-        </Label>
-        <div className="flex items-center gap-2">
-          <input checked={puzzle2dRedrawHandlesAfterNodes} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-handles-after-nodes" onChange={(e) => setPuzzle2dRedrawHandlesAfterNodes(e.target.checked)} type="checkbox" />
-          <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="puzzle-2d-play-redraw-handles-after-nodes">
-            Also redraw handles after node redraw
-          </label>
-        </div>
-        <div className="flex items-center gap-2">
-          <input checked={puzzle2dRedrawProgressiveEnabled} className="accent-accent size-3.5 shrink-0" id="puzzle-2d-play-redraw-progressive" onChange={(e) => setPuzzle2dRedrawProgressiveEnabled(e.target.checked)} type="checkbox" />
-          <label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="puzzle-2d-play-redraw-progressive">
-            Progressive iterations while play is on (graph ramps up; tree still one pass per frame)
-          </label>
-        </div>
-        <Label id="puzzle2d.play.settings.redraw.autoStopMs" label="Auto-stop play after (ms, 0 = off)">
-          <Slider id="puzzle-2d-play-slider-redraw-autostop" max={12000} min={0} step={250} value={[puzzle2dRedrawProgressiveAutoStopMs]} onValueChange={(vals) => setPuzzle2dRedrawProgressiveAutoStopMs(vals[0] ?? 3000)} />
-        </Label>
-        {puzzle2dRedrawMode === "force-graph" ? (
-          <Label id="puzzle2d.play.settings.redraw.playMaxIters" label="Max iterations per WASM call (play ramp ceiling)">
-            <Slider id="puzzle-2d-play-slider-redraw-play-max-iters" max={220} min={12} step={2} value={[puzzle2dRedrawPlayMaxItersPerFrame]} onValueChange={(vals) => setPuzzle2dRedrawPlayMaxItersPerFrame(vals[0] ?? 96)} />
-          </Label>
-        ) : (
-          <p className="text-muted-foreground text-[11px] leading-snug">Tree redraw runs once per animation frame while play is on; use auto-stop to end play after a duration.</p>
-        )}
-        {puzzle2dRedrawMode === "force-graph" ? (
-          <>
-            <div className={cn(shellChromeSectionTitleClassName, "pt-1 text-[11px]")}>Graph</div>
-            <Label id="puzzle2d.play.settings.force.fullIterations" label="Iterations (apply once)">
-              <Slider id="puzzle-2d-play-slider-force-full-iters" max={720} min={24} step={4} value={[forceLayoutFullIterations]} onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)} />
-            </Label>
-            <Label id="puzzle2d.play.settings.force.idealEdge" label="Ideal edge (px)">
-              <Slider id="puzzle-2d-play-slider-force-ideal" max={160} min={20} step={2} value={[forceLayoutIdealEdgeLength]} onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)} />
-            </Label>
-            <Label id="puzzle2d.play.settings.force.repulsion" label="Repulsion (medium 80, ±40)">
-              <Slider id="puzzle-2d-play-slider-force-repulsion" max={120} min={40} step={2} value={[forceLayoutRepulsionStrength]} onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 80)} />
-            </Label>
-            <Label id="puzzle2d.play.settings.force.gravity" label="Gravity">
-              <Slider id="puzzle-2d-play-slider-force-gravity" max={0.05} min={0} step={0.002} value={[forceLayoutGravity]} onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)} />
-            </Label>
-          </>
-        ) : (
-          <>
-            <div className={cn(shellChromeSectionTitleClassName, "pt-1 text-[11px]")}>Tree</div>
-            <Label id="puzzle2d.play.settings.tree.layerSpacing" label="Layer spacing (px)">
-              <Slider id="puzzle-2d-play-slider-tree-layer" max={280} min={40} step={4} value={[treeLayoutLayerSpacing]} onValueChange={(vals) => setTreeLayoutLayerSpacing(vals[0] ?? 120)} />
-            </Label>
-            <Label id="puzzle2d.play.settings.tree.siblingGap" label="Sibling gap (px)">
-              <Slider id="puzzle-2d-play-slider-tree-sibling" max={120} min={0} step={2} value={[treeLayoutSiblingGap]} onValueChange={(vals) => setTreeLayoutSiblingGap(vals[0] ?? 28)} />
-            </Label>
-            <Label id="puzzle2d.play.settings.tree.direction" label="Direction">
-              <Select onValueChange={(v) => setTreeLayoutDirection(v as Puzzle2dHierarchicalTreeDirectionKind)} value={treeLayoutDirection}>
-                <SelectTrigger className="h-8 w-full" id="puzzle-2d-play-tree-direction" size="sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="downwards">Downwards</SelectItem>
-                  <SelectItem value="upwards">Upwards</SelectItem>
-                  <SelectItem value="right">Right</SelectItem>
-                  <SelectItem value="left">Left</SelectItem>
-                </SelectContent>
-              </Select>
-            </Label>
-          </>
-        )}
-        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-nodes" type="button" variant="secondary" onClick={applyPuzzle2dRedrawOnce}>
-          Redraw nodes
-        </Button>
-        <div className={cn(shellChromeSectionTitleClassName, "border-t border-normal pt-2 text-[11px]")}>Redraw handles</div>
-        <p className="text-muted-foreground text-[11px] leading-snug">Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).</p>
-        <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-handles" type="button" variant="secondary" onClick={applyPuzzle2dRedrawHandlesOnce}>
-          Redraw handles
-        </Button>
-        <p className="text-muted-foreground text-[11px] leading-snug">
-          While play is on, cameras ease each tick toward a bbox fit of the current layout (damped). After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to the final bbox
-          fit without a jump. Dragging a node resets progressive ramp and the auto-stop timer.
-        </p>
-      </div>
-    </div>
-  );
+function buildPuzzle2dPlaySettingsTree(shell: Puzzle2dPlayShellValue): UiTreeNode {
+  const redrawChildren: UiNode[] = [
+    {
+      type: "field",
+      id: "puzzle2d.play.settings.redraw.mode",
+      label: "Layout kind",
+      child: {
+        type: "select",
+        id: "puzzle-2d-play-redraw-mode",
+        value: shell.puzzle2dRedrawMode,
+        items: [
+          { value: "force-graph", label: "Graph" },
+          { value: "hierarchical-tree", label: "Tree" },
+        ],
+        onChange: puzzle2dPlayCmd("setPuzzle2dRedrawMode"),
+      },
+    },
+    {
+      type: "field",
+      id: "puzzle2d.play.settings.redraw.handlesAfter",
+      label: "Also redraw handles after node redraw",
+      child: {
+        type: "toggle",
+        id: "puzzle-2d-play-redraw-handles-after-nodes",
+        iconId: "check",
+        pressed: shell.puzzle2dRedrawHandlesAfterNodes,
+        onChange: puzzle2dPlayCmd("setPuzzle2dRedrawHandlesAfterNodes"),
+      },
+    },
+    {
+      type: "field",
+      id: "puzzle2d.play.settings.redraw.progressive",
+      label: "Progressive iterations while play is on",
+      child: {
+        type: "toggle",
+        id: "puzzle-2d-play-redraw-progressive",
+        iconId: "check",
+        pressed: shell.puzzle2dRedrawProgressiveEnabled,
+        onChange: puzzle2dPlayCmd("setPuzzle2dRedrawProgressiveEnabled"),
+      },
+    },
+    {
+      type: "field",
+      id: "puzzle2d.play.settings.redraw.autoStopMs",
+      label: "Auto-stop play after (ms, 0 = off)",
+      child: {
+        type: "slider",
+        id: "puzzle-2d-play-slider-redraw-autostop",
+        value: shell.puzzle2dRedrawProgressiveAutoStopMs,
+        min: 0,
+        max: 12000,
+        step: 250,
+        onChange: puzzle2dPlayCmd("setPuzzle2dRedrawProgressiveAutoStopMs"),
+      },
+    },
+  ];
+  if (shell.puzzle2dRedrawMode === "force-graph") {
+    redrawChildren.push({
+      type: "field",
+      id: "puzzle2d.play.settings.redraw.playMaxIters",
+      label: "Max iterations per WASM call (play ramp ceiling)",
+      child: {
+        type: "slider",
+        id: "puzzle-2d-play-slider-redraw-play-max-iters",
+        value: shell.puzzle2dRedrawPlayMaxItersPerFrame,
+        min: 12,
+        max: 220,
+        step: 2,
+        onChange: puzzle2dPlayCmd("setPuzzle2dRedrawPlayMaxItersPerFrame"),
+      },
+    });
+  } else {
+    redrawChildren.push({ type: "text", value: "Tree redraw runs once per animation frame while play is on; use auto-stop to end play after a duration." });
+  }
+  redrawChildren.push({
+    type: "button",
+    id: "puzzle-2d-play-redraw-nodes",
+    iconId: "refresh-cw",
+    label: "Redraw nodes",
+    command: puzzle2dPlayCmd("applyPuzzle2dRedrawOnce"),
+  });
+  const sections: UiSectionNode[] = [{ type: "section", id: "puzzle-2d-play-settings.redraw", label: "Redraw", children: redrawChildren }];
+  if (shell.puzzle2dRedrawMode === "force-graph") {
+    sections.push({
+      type: "section",
+      id: "puzzle-2d-play-settings.graph",
+      label: "Graph",
+      children: [
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.force.fullIterations",
+          label: "Iterations (apply once)",
+          child: {
+            type: "slider",
+            id: "puzzle-2d-play-slider-force-full-iters",
+            value: shell.forceLayoutFullIterations,
+            min: 24,
+            max: 720,
+            step: 4,
+            onChange: puzzle2dPlayCmd("setForceLayoutFullIterations"),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.force.idealEdge",
+          label: "Ideal edge (px)",
+          child: {
+            type: "slider",
+            id: "puzzle-2d-play-slider-force-ideal",
+            value: shell.forceLayoutIdealEdgeLength,
+            min: 20,
+            max: 160,
+            step: 2,
+            onChange: puzzle2dPlayCmd("setForceLayoutIdealEdgeLength"),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.force.repulsion",
+          label: "Repulsion (medium 80, ±40)",
+          child: {
+            type: "slider",
+            id: "puzzle-2d-play-slider-force-repulsion",
+            value: shell.forceLayoutRepulsionStrength,
+            min: 40,
+            max: 120,
+            step: 2,
+            onChange: puzzle2dPlayCmd("setForceLayoutRepulsionStrength"),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.force.gravity",
+          label: "Gravity",
+          child: {
+            type: "slider",
+            id: "puzzle-2d-play-slider-force-gravity",
+            value: shell.forceLayoutGravity,
+            min: 0,
+            max: 0.05,
+            step: 0.002,
+            onChange: puzzle2dPlayCmd("setForceLayoutGravity"),
+          },
+        },
+      ],
+    });
+  } else {
+    sections.push({
+      type: "section",
+      id: "puzzle-2d-play-settings.tree",
+      label: "Tree",
+      children: [
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.tree.layerSpacing",
+          label: "Layer spacing (px)",
+          child: {
+            type: "slider",
+            id: "puzzle-2d-play-slider-tree-layer",
+            value: shell.treeLayoutLayerSpacing,
+            min: 40,
+            max: 280,
+            step: 4,
+            onChange: puzzle2dPlayCmd("setTreeLayoutLayerSpacing"),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.tree.siblingGap",
+          label: "Sibling gap (px)",
+          child: {
+            type: "slider",
+            id: "puzzle-2d-play-slider-tree-sibling",
+            value: shell.treeLayoutSiblingGap,
+            min: 0,
+            max: 120,
+            step: 2,
+            onChange: puzzle2dPlayCmd("setTreeLayoutSiblingGap"),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle2d.play.settings.tree.direction",
+          label: "Direction",
+          child: {
+            type: "select",
+            id: "puzzle-2d-play-tree-direction",
+            value: shell.treeLayoutDirection,
+            items: [
+              { value: "downwards", label: "Downwards" },
+              { value: "upwards", label: "Upwards" },
+              { value: "right", label: "Right" },
+              { value: "left", label: "Left" },
+            ],
+            onChange: puzzle2dPlayCmd("setTreeLayoutDirection"),
+          },
+        },
+      ],
+    });
+  }
+  sections.push({
+    type: "section",
+    id: "puzzle-2d-play-settings.handles",
+    label: "Redraw handles",
+    children: [
+      {
+        type: "text",
+        value: "Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape.",
+      },
+      {
+        type: "button",
+        id: "puzzle-2d-play-redraw-handles",
+        iconId: "refresh-cw",
+        label: "Redraw handles",
+        command: puzzle2dPlayCmd("applyPuzzle2dRedrawHandlesOnce"),
+      },
+    ],
+  });
+  return uiDeclarativeSectionsToTree(sections);
 }
 // #endregion 🔖SettingsPanel
 
@@ -4056,415 +4126,286 @@ function puzzle2dInspectorKindSelectItems(
   return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
 }
 
-function InspectorKindSelect({
-  id,
-  items,
-  label,
-  onValueChange,
-  uniform,
-  value,
-}: {
-  id: string;
-  items: readonly { readonly value: string; readonly label: string }[];
-  label: string;
-  onValueChange: (next: string) => void;
-  uniform: boolean;
-  value: string;
-}): ReactElement {
-  const selectValue = uniform && value !== "" ? value : undefined;
-  return (
-    <Label id={id} label={label}>
-      <Select
-        key={uniform && value ? `${id}-${value}` : `${id}-mixed`}
-        onValueChange={onValueChange}
-        value={selectValue}
-      >
-        <SelectTrigger className="h-7 font-mono text-xs">
-          <SelectValue placeholder={uniform ? "kind" : "Mixed"} />
-        </SelectTrigger>
-        <SelectContent>
-          {items.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Label>
-  );
-}
-
-function NumericStepperRow({ id, label, onAbsolute, onDelta, step, uniform, value }: { id: string; label: string; onAbsolute: (next: number) => void; onDelta: (delta: number) => void; step: number; uniform: boolean; value: number }): ReactElement {
-  return (
-    <Label id={id} label={label}>
-      <div className="flex min-w-0 items-center gap-1">
-        <Button className="h-7 shrink-0 px-2" onClick={() => onDelta(-step)} type="button" variant="outline">
-          −
-        </Button>
-        <Input
-          className="h-7 min-w-0 flex-1 font-mono text-xs"
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const parsed = Number(e.target.value);
-            if (Number.isFinite(parsed)) {
-              onAbsolute(parsed);
-            }
-          }}
-          placeholder={uniform ? undefined : "Mixed"}
-          value={uniform && Number.isFinite(value) ? String(value) : ""}
-        />
-        <Button className="h-7 shrink-0 px-2" onClick={() => onDelta(step)} type="button" variant="outline">
-          +
-        </Button>
-      </div>
-    </Label>
-  );
-}
-
-/** @emoji 🟠 Batch node inspector: name (`text`), shape, center, size fields apply to every selected node. */
-function InspectorNodeBatch({
-  fixture,
-  kindCatalogs,
-  nodeIds,
-  patchFixture,
-}: {
-  fixture: Puzzle2dFixtureV1;
-  kindCatalogs: KindCatalogBundle;
-  nodeIds: readonly string[];
-  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
-}): ReactElement {
-  const idSet = reactHostPort.useMemo(() => new Set(nodeIds), [nodeIds]);
-  const targets = reactHostPort.useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
-
-  const textValues = targets.map((n) => puzzle2dFixtureNodeCaption(n) ?? "");
-  const textUniform = allEqual(textValues);
-  const textValue = textUniform ? (textValues[0] ?? "") : "";
-
-  const iconKinds = targets.map((n) => n.iconKind ?? "");
-  const iconKindUniform = allEqual(iconKinds);
-  const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
-
-  const nodeKinds = targets.map((n) => n.nodeKind ?? "");
-  const nodeKindUniform = allEqual(nodeKinds);
-  const nodeKindValue = nodeKindUniform ? (nodeKinds[0] ?? "") : "";
-  const nodeKindItems = reactHostPort.useMemo(
-    () => puzzle2dInspectorKindSelectItems(kindCatalogs.nodes, nodeKinds, (kindId) => puzzle2dNodeKindOverlayLabel(kindId, kindCatalogs)),
-    [kindCatalogs, nodeKinds],
-  );
-
-  const xs = targets.map((n) => n.x);
-  const ys = targets.map((n) => n.y);
-  const xUniform = allEqual(xs);
-  const yUniform = allEqual(ys);
-  const xValue = xUniform ? xs[0] : Number.NaN;
-  const yValue = yUniform ? ys[0] : Number.NaN;
-
-  const patchNodes = reactHostPort.useCallback(
-    (updater: (n: Puzzle2dFixtureNodeV1) => Puzzle2dFixtureNodeV1) => {
-      patchFixture((prev) => ({
-        ...prev,
-        nodes: prev.nodes.map((n) => (idSet.has(n.id) ? updater(n) : n)),
-      }));
-    },
-    [idSet, patchFixture],
-  );
-
-  const onText = reactHostPort.useCallback(
-    (next: string) => {
-      const trimmed = next.trim();
-      patchNodes((n) => (trimmed === "" ? { ...n, text: undefined } : { ...n, text: trimmed }));
-    },
-    [patchNodes],
-  );
-
-  const onIconKind = reactHostPort.useCallback(
-    (next: string) => {
-      const t = next.trim();
-      patchNodes((n) => ({ ...n, ...(t === "" ? { iconKind: undefined } : { iconKind: t }) }));
-    },
-    [patchNodes],
-  );
-
-  const onNodeKind = reactHostPort.useCallback(
-    (next: string) => {
-      patchNodes((n) => puzzle2dApplyNodeKindToFixtureNode(n, next, kindCatalogs));
-    },
-    [kindCatalogs, patchNodes],
-  );
-
-  return (
-    <div className="border-normal/60 space-y-3 border-l pl-2">
-      <Label id="puzzle-2d-play.inspector.node.name" label={PUZZLE_2D_PLAY_IS_WIRES ? "Label" : "Name"}>
-        <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
-      </Label>
-      <InspectorKindSelect
-        id="puzzle-2d-play.inspector.node.kind"
-        items={nodeKindItems}
-        label={PUZZLE_2D_PLAY_IS_WIRES ? "Identity kind" : "Node kind"}
-        onValueChange={onNodeKind}
-        uniform={nodeKindUniform}
-        value={nodeKindValue}
-      />
-      <Label id="puzzle-2d-play.inspector.node.icon" label="Icon">
-        <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
-      </Label>
-      <NumericStepperRow id="puzzle-2d-play.inspector.node.x" label="x" onAbsolute={(v) => patchNodes((n) => ({ ...n, x: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, x: n.x + d }))} step={1} uniform={xUniform} value={xValue} />
-      <NumericStepperRow id="puzzle-2d-play.inspector.node.y" label="y" onAbsolute={(v) => patchNodes((n) => ({ ...n, y: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, y: n.y + d }))} step={1} uniform={yUniform} value={yValue} />
-    </div>
-  );
-}
-
-/** @emoji 🟣 Batch handle inspector: polar `t`, hit radius, optional id when single selection. */
-function InspectorHandleBatch({
-  fixture,
-  kindCatalogs,
-  handleIds,
-  patchFixture,
-}: {
-  fixture: Puzzle2dFixtureV1;
-  kindCatalogs: KindCatalogBundle;
-  handleIds: readonly string[];
-  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
-}): ReactElement {
-  const idSet = reactHostPort.useMemo(() => new Set(handleIds), [handleIds]);
-  const handles = reactHostPort.useMemo(() => handleIds.map((id) => findHandle(fixture, id)).filter((h): h is Puzzle2dFixtureHandleV1 => Boolean(h)), [fixture, handleIds]);
-  const angles = handles.map((h) => h.angle);
-  const angleUniform = allEqual(angles);
-  const angleValue = angleUniform ? angles[0]! : 0;
-  const radii = handles.map((h) => h.radius ?? 8);
-  const radiusUniform = allEqual(radii);
-  const radiusValue = radiusUniform ? radii[0]! : Number.NaN;
-
-  const iconKinds = handles.map((h) => h.iconKind ?? "");
-  const iconKindUniform = allEqual(iconKinds);
-  const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
-
-  const handleKinds = handles.map((h) => h.handleKind);
-  const handleKindUniform = allEqual(handleKinds);
-  const handleKindValue = handleKindUniform ? (handleKinds[0] ?? "") : "";
-  const handleKindItems = reactHostPort.useMemo(
-    () => puzzle2dInspectorKindSelectItems(kindCatalogs.handles, handleKinds, (kindId) => puzzle2dHandleKindOverlayLabel(kindId, kindCatalogs)),
-    [handleKinds, kindCatalogs],
-  );
-
-  const patchHandles = reactHostPort.useCallback(
-    (updater: (h: Puzzle2dFixtureHandleV1) => Puzzle2dFixtureHandleV1) => {
-      patchFixture((prev) => ({
-        ...prev,
-        nodes: prev.nodes.map((node) => ({
-          ...node,
-          handles: node.handles.map((h) => (idSet.has(h.id) ? updater(h) : h)),
-        })),
-      }));
-    },
-    [idSet, patchFixture],
-  );
-
-  const onIconKind = reactHostPort.useCallback(
-    (next: string) => {
-      const t = next.trim();
-      patchHandles((h) => ({ ...h, ...(t === "" ? { iconKind: undefined } : { iconKind: t }) }));
-    },
-    [patchHandles],
-  );
-
-  const onHandleKind = reactHostPort.useCallback(
-    (next: string) => {
-      const trimmed = next.trim();
-      if (trimmed === "") {
-        return;
-      }
-      patchHandles((h) => ({ ...h, handleKind: trimmed }));
-    },
-    [patchHandles],
-  );
-
-  const ringParentNodes = reactHostPort.useMemo(
-    () =>
-      handles
-        .map((h) => findHandleOwner(fixture, h.id)?.node)
-        .filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n)),
-    [fixture, handles],
-  );
-  const ringParentShapes = ringParentNodes.map((n) => n.shape ?? "circle");
-  const ringParentShapeUniform = allEqual(ringParentShapes);
-  const ringParentNode = ringParentShapeUniform ? ringParentNodes[0] : undefined;
-  const ringEnabled = angleUniform && ringParentNode !== undefined;
-  const ringOrbT = ringEnabled ? puzzle2dHandleAngleToRingT(ringParentNode, angleValue) : 0;
-
-  const onRingOrbChange = reactHostPort.useCallback(
-    (_orbId: string, _oldT: number, newT: number) => {
-      if (!ringParentNode) {
-        return;
-      }
-      const next = normalizeAngleRad(puzzle2dHandleAngleFromRingT(ringParentNode, newT));
-      patchHandles((h) => ({ ...h, angle: next }));
-    },
-    [patchHandles, ringParentNode],
-  );
-
-  return (
-    <div className="border-normal/60 space-y-3 border-l pl-2">
-      <InspectorKindSelect
-        id="puzzle-2d-play.inspector.handle.kind"
-        items={handleKindItems}
-        label="Handle kind"
-        onValueChange={onHandleKind}
-        uniform={handleKindUniform}
-        value={handleKindValue}
-      />
-      <Label id="puzzle-2d-play.inspector.handle.t.ring" label="t">
-        <Ring
-          id="puzzle-2d-play.inspector.handle.t.ring.control"
-          onOrbChange={onRingOrbChange}
-          orbs={[{ disabled: !ringEnabled, id: "angle", selected: true, t: ringOrbT }]}
-        />
-      </Label>
-      <NumericStepperRow
-        id="puzzle-2d-play.inspector.handle.t"
-        label="t (rad)"
-        onAbsolute={(v) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(v) }))}
-        onDelta={(d) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(h.angle + d) }))}
-        step={0.05}
-        uniform={angleUniform}
-        value={angleUniform ? angleValue : Number.NaN}
-      />
-      <NumericStepperRow
-        id="puzzle-2d-play.inspector.handle.radius"
-        label="Hit radius"
-        onAbsolute={(v) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, v) }))}
-        onDelta={(d) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, (h.radius ?? 8) + d) }))}
-        step={1}
-        uniform={radiusUniform}
-        value={radiusValue}
-      />
-      <Label id="puzzle-2d-play.inspector.handle.icon" label="Icon">
-        <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
-      </Label>
-    </div>
-  );
-}
-
-/** @emoji 🪢 Batch edge inspector: endpoints and id (single). */
-function InspectorEdgeBatch({
-  fixture,
-  edgeIds,
-  kindCatalogs,
-  patchFixture,
-}: {
-  fixture: Puzzle2dFixtureV1;
-  edgeIds: readonly string[];
-  kindCatalogs: KindCatalogBundle;
-  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
-}): ReactElement {
-  const idSet = reactHostPort.useMemo(() => new Set(edgeIds), [edgeIds]);
-  const edges = reactHostPort.useMemo(() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is Puzzle2dFixtureEdgeV1 => Boolean(e)), [edgeIds, fixture]);
-  const sources = edges.map((e) => e.source);
-  const targets = edges.map((e) => e.target);
-  const sourceUniform = allEqual(sources);
-  const targetUniform = allEqual(targets);
-  const handleOptions = reactHostPort.useMemo(
-    () => (PUZZLE_2D_PLAY_IS_WIRES ? fixture.nodes.map((node) => node.id) : listHandleIds(fixture)),
-    [fixture],
-  );
-  const endpointLabel = reactHostPort.useCallback(
-    (endpointId: string) =>
-      PUZZLE_2D_PLAY_IS_WIRES ? (wiresPlayIdentityLabelForNodeId(endpointId) ?? endpointId) : puzzle2dFixtureHandleEndpointDisplayLabel(endpointId, fixture, kindCatalogs),
-    [fixture, kindCatalogs],
-  );
-  const edgeKinds = edges.map((e) => e.edgeKind ?? "");
-  const edgeKindUniform = allEqual(edgeKinds);
-  const edgeKindValue = edgeKindUniform ? (edgeKinds[0] ?? "") : "";
-  const edgeKindItems = reactHostPort.useMemo(
-    () => puzzle2dInspectorKindSelectItems(kindCatalogs.edges, edgeKinds, (kindId) => puzzle2dEdgeKindOverlayLabel(kindId, kindCatalogs)),
-    [edgeKinds, kindCatalogs],
-  );
-  const wiresRelationshipKinds = reactHostPort.useMemo(
-    () => edges.map((edge) => wiresPlayRelationshipKindDisplayName(edge.id) ?? ""),
-    [edges],
-  );
-  const wiresRelationshipKindUniform = allEqual(wiresRelationshipKinds);
-  const wiresRelationshipKindValue = wiresRelationshipKindUniform ? (wiresRelationshipKinds[0] ?? "") : "";
-
-  const patchEdges = reactHostPort.useCallback(
-    (updater: (e: Puzzle2dFixtureEdgeV1) => Puzzle2dFixtureEdgeV1) => {
-      patchFixture((prev) => ({
-        ...prev,
-        edges: prev.edges.map((e) => (idSet.has(e.id) ? updater(e) : e)),
-      }));
-    },
-    [idSet, patchFixture],
-  );
-
-  const onEdgeKind = reactHostPort.useCallback(
-    (next: string) => {
-      const trimmed = next.trim();
-      patchEdges((edge) => {
-        if (trimmed === "") {
-          const { edgeKind: _drop, ...rest } = edge;
-          return rest;
-        }
-        return { ...edge, edgeKind: trimmed };
+export function buildPuzzle2dPlayInspectorTree(fixture: Puzzle2dFixtureV1, selectionIds: ReadonlySet<string>): UiTreeNode {
+  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+  const { nodeIds, handleIds, edgeIds, unknownIds } = classifyPuzzle2dPlayInspectorSelection(fixture, selectionIds);
+  const sections: UiSectionNode[] = [];
+  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0 && unknownIds.length === 0) {
+    sections.push({
+      type: 'section',
+      id: 'puzzle-2d-play-inspector.empty',
+      label: 'Detail',
+      children: [{
+        type: 'text',
+        value: PUZZLE_2D_PLAY_IS_WIRES
+          ? 'No selection. Click the graph or pick an identity or relationship in the hierarchy.'
+          : 'No selection. Click the graph or pick a row in the hierarchy.',
+      }],
+    });
+    return uiDeclarativeSectionsToTree(sections);
+  }
+  if (nodeIds.length > 0) {
+    const targets = nodeIds.map((id) => findNode(fixture, id)).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n));
+    const textValues = targets.map((n) => puzzle2dFixtureNodeCaption(n) ?? '');
+    const textUniform = allEqual(textValues);
+    const nodeKinds = targets.map((n) => n.nodeKind ?? '');
+    const nodeKindUniform = allEqual(nodeKinds);
+    const iconKinds = targets.map((n) => n.iconKind ?? '');
+    const iconKindUniform = allEqual(iconKinds);
+    const xs = targets.map((n) => n.x);
+    const ys = targets.map((n) => n.y);
+    const xUniform = allEqual(xs);
+    const yUniform = allEqual(ys);
+    sections.push({
+      type: 'section',
+      id: 'puzzle-2d-play-inspector-nodes',
+      label: PUZZLE_2D_PLAY_IS_WIRES ? (nodeIds.length === 1 ? 'Identity' : 'Identities') : puzzle2dPlayInspectorKindSectionLabel('node', nodeIds.length),
+      children: [
+        {
+          type: 'field',
+          id: 'puzzle-2d-play.inspector.node.name',
+          label: PUZZLE_2D_PLAY_IS_WIRES ? 'Label' : 'Name',
+          child: {
+            type: 'input',
+            id: 'puzzle-2d-play.inspector.node.name.input',
+            inputKind: 'text',
+            value: textUniform ? (textValues[0] ?? '') : '',
+            placeholder: textUniform ? undefined : 'Mixed',
+            onChange: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'text' }),
+          },
+        },
+        {
+          type: 'field',
+          id: 'puzzle-2d-play.inspector.node.kind',
+          label: PUZZLE_2D_PLAY_IS_WIRES ? 'Identity kind' : 'Node kind',
+          child: {
+            type: 'select',
+            id: 'puzzle-2d-play.inspector.node.kind.select',
+            value: nodeKindUniform ? (nodeKinds[0] ?? '') : '',
+            placeholder: nodeKindUniform ? 'kind' : 'Mixed',
+            items: puzzle2dInspectorKindSelectItems(kindCatalogs.nodes, nodeKinds, (kindId) => puzzle2dNodeKindOverlayLabel(kindId, kindCatalogs)),
+            onChange: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'nodeKind' }),
+          },
+        },
+        {
+          type: 'field',
+          id: 'puzzle-2d-play.inspector.node.icon',
+          label: 'Icon',
+          child: {
+            type: 'iconSelect',
+            id: 'puzzle-2d-play.inspector.node.icon.selector',
+            value: iconKindUniform ? (iconKinds[0] ?? '') : '',
+            uniform: iconKindUniform,
+            classifierKind: 'puzzle2d',
+            onChange: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'iconKind' }),
+          },
+        },
+        {
+          type: 'field',
+          id: 'puzzle-2d-play.inspector.node.x',
+          label: 'x',
+          child: {
+            type: 'numberStepper',
+            id: 'puzzle-2d-play.inspector.node.x.stepper',
+            value: xUniform ? xs[0]! : Number.NaN,
+            step: 1,
+            uniform: xUniform,
+            onAbsolute: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'x' }),
+            onDelta: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'xDelta' }),
+          },
+        },
+        {
+          type: 'field',
+          id: 'puzzle-2d-play.inspector.node.y',
+          label: 'y',
+          child: {
+            type: 'numberStepper',
+            id: 'puzzle-2d-play.inspector.node.y.stepper',
+            value: yUniform ? ys[0]! : Number.NaN,
+            step: 1,
+            uniform: yUniform,
+            onAbsolute: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'y' }),
+            onDelta: puzzle2dPlayCmd('patchInspectorNodes', { ids: nodeIds, field: 'yDelta' }),
+          },
+        },
+      ],
+    });
+  }
+  if (handleIds.length > 0) {
+    const handles = handleIds.map((id) => findHandle(fixture, id)).filter((h): h is Puzzle2dFixtureHandleV1 => Boolean(h));
+    const handleKinds = handles.map((h) => h.handleKind);
+    const handleKindUniform = allEqual(handleKinds);
+    const angles = handles.map((h) => h.angle);
+    const angleUniform = allEqual(angles);
+    const angleValue = angleUniform ? angles[0]! : 0;
+    const radii = handles.map((h) => h.radius ?? 8);
+    const radiusUniform = allEqual(radii);
+    const iconKinds = handles.map((h) => h.iconKind ?? '');
+    const iconKindUniform = allEqual(iconKinds);
+    const ringParentNodes = handles.map((h) => findHandleOwner(fixture, h.id)?.node).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n));
+    const ringParentShapes = ringParentNodes.map((n) => n.shape ?? 'circle');
+    const ringParentShapeUniform = allEqual(ringParentShapes);
+    const ringParentNode = ringParentShapeUniform ? ringParentNodes[0] : undefined;
+    const ringEnabled = angleUniform && ringParentNode !== undefined;
+    const ringOrbT = ringEnabled ? puzzle2dHandleAngleToRingT(ringParentNode, angleValue) : 0;
+    const handleFields: UiNode[] = [
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.handle.kind',
+        label: 'Handle kind',
+        child: {
+          type: 'select',
+          id: 'puzzle-2d-play.inspector.handle.kind.select',
+          value: handleKindUniform ? (handleKinds[0] ?? '') : '',
+          placeholder: handleKindUniform ? 'kind' : 'Mixed',
+          items: puzzle2dInspectorKindSelectItems(kindCatalogs.handles, handleKinds, (kindId) => puzzle2dHandleKindOverlayLabel(kindId, kindCatalogs)),
+          onChange: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'handleKind' }),
+        },
+      },
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.handle.t.ring',
+        label: 't',
+        child: {
+          type: 'ring',
+          id: 'puzzle-2d-play.inspector.handle.t.ring.control',
+          orbId: 'angle',
+          t: ringOrbT,
+          disabled: !ringEnabled,
+          onChange: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'ringT', parentNodeId: ringParentNode?.id }),
+        },
+      },
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.handle.t',
+        label: 't (rad)',
+        child: {
+          type: 'numberStepper',
+          id: 'puzzle-2d-play.inspector.handle.t.stepper',
+          value: angleUniform ? angleValue : Number.NaN,
+          step: 0.05,
+          uniform: angleUniform,
+          onAbsolute: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'angle' }),
+          onDelta: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'angleDelta' }),
+        },
+      },
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.handle.radius',
+        label: 'Hit radius',
+        child: {
+          type: 'numberStepper',
+          id: 'puzzle-2d-play.inspector.handle.radius.stepper',
+          value: radiusUniform ? radii[0]! : Number.NaN,
+          step: 1,
+          uniform: radiusUniform,
+          onAbsolute: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'radius' }),
+          onDelta: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'radiusDelta' }),
+        },
+      },
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.handle.icon',
+        label: 'Icon',
+        child: {
+          type: 'iconSelect',
+          id: 'puzzle-2d-play.inspector.handle.icon.selector',
+          value: iconKindUniform ? (iconKinds[0] ?? '') : '',
+          uniform: iconKindUniform,
+          classifierKind: 'puzzle2d',
+          onChange: puzzle2dPlayCmd('patchInspectorHandles', { ids: handleIds, field: 'iconKind' }),
+        },
+      },
+    ];
+    sections.push({
+      type: 'section',
+      id: 'puzzle-2d-play-inspector-handles',
+      label: puzzle2dPlayInspectorKindSectionLabel('handle', handleIds.length),
+      children: handleFields,
+    });
+  }
+  if (edgeIds.length > 0) {
+    const edges = edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is Puzzle2dFixtureEdgeV1 => Boolean(e));
+    const sources = edges.map((e) => e.source);
+    const targets = edges.map((e) => e.target);
+    const sourceUniform = allEqual(sources);
+    const targetUniform = allEqual(targets);
+    const edgeKinds = edges.map((e) => e.edgeKind ?? '');
+    const edgeKindUniform = allEqual(edgeKinds);
+    const handleOptions = PUZZLE_2D_PLAY_IS_WIRES ? fixture.nodes.map((node) => node.id) : listHandleIds(fixture);
+    const endpointItems = handleOptions.map((hid) => ({
+      value: hid,
+      label: PUZZLE_2D_PLAY_IS_WIRES ? (wiresPlayIdentityLabelForNodeId(hid) ?? hid) : puzzle2dFixtureHandleEndpointDisplayLabel(hid, fixture, kindCatalogs),
+    }));
+    const edgeFields: UiNode[] = [];
+    if (PUZZLE_2D_PLAY_IS_WIRES) {
+      const wiresRelationshipKinds = edges.map((edge) => wiresPlayRelationshipKindDisplayName(edge.id) ?? '');
+      const wiresRelationshipKindUniform = allEqual(wiresRelationshipKinds);
+      edgeFields.push({
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.edge.relationship-kind',
+        label: 'Relationship kind',
+        child: { type: 'text', value: wiresRelationshipKindUniform ? (wiresRelationshipKinds[0] ?? '') : 'Mixed' },
       });
-    },
-    [patchEdges],
-  );
-
-  return (
-    <div className="border-normal/60 space-y-3 border-l pl-2">
-      {PUZZLE_2D_PLAY_IS_WIRES ? (
-        <Label id="puzzle-2d-play.inspector.edge.relationship-kind" label="Relationship kind">
-          <Input className="h-7 font-mono text-xs" readOnly value={wiresRelationshipKindUniform ? wiresRelationshipKindValue : "Mixed"} />
-        </Label>
-      ) : (
-        <InspectorKindSelect
-          id="puzzle-2d-play.inspector.edge.kind"
-          items={edgeKindItems}
-          label="Edge kind"
-          onValueChange={onEdgeKind}
-          uniform={edgeKindUniform}
-          value={edgeKindValue}
-        />
-      )}
-      <Label id="puzzle-2d-play.inspector.edge.source" label={PUZZLE_2D_PLAY_IS_WIRES ? "From identity" : "Source"}>
-        <Select
-          onValueChange={(v) => {
-            patchEdges((e) => ({ ...e, source: v }));
-          }}
-          value={sourceUniform ? sources[0] : undefined}
-        >
-          <SelectTrigger className="h-7 font-mono text-xs">
-            <SelectValue placeholder={sourceUniform ? undefined : "Mixed"} />
-          </SelectTrigger>
-          <SelectContent>
-            {handleOptions.map((hid) => (
-              <SelectItem key={hid} value={hid}>
-                {endpointLabel(hid)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Label>
-      <Label id="puzzle-2d-play.inspector.edge.target" label={PUZZLE_2D_PLAY_IS_WIRES ? "To identity" : "Target"}>
-        <Select
-          onValueChange={(v) => {
-            patchEdges((e) => ({ ...e, target: v }));
-          }}
-          value={targetUniform ? targets[0] : undefined}
-        >
-          <SelectTrigger className="h-7 font-mono text-xs">
-            <SelectValue placeholder={targetUniform ? undefined : "Mixed"} />
-          </SelectTrigger>
-          <SelectContent>
-            {handleOptions.map((hid) => (
-              <SelectItem key={`target-${hid}`} value={hid}>
-                {endpointLabel(hid)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Label>
-    </div>
-  );
+    } else {
+      edgeFields.push({
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.edge.kind',
+        label: 'Edge kind',
+        child: {
+          type: 'select',
+          id: 'puzzle-2d-play.inspector.edge.kind.select',
+          value: edgeKindUniform ? (edgeKinds[0] ?? '') : '',
+          placeholder: edgeKindUniform ? 'kind' : 'Mixed',
+          items: puzzle2dInspectorKindSelectItems(kindCatalogs.edges, edgeKinds, (kindId) => puzzle2dEdgeKindOverlayLabel(kindId, kindCatalogs)),
+          onChange: puzzle2dPlayCmd('patchInspectorEdges', { ids: edgeIds, field: 'edgeKind' }),
+        },
+      });
+    }
+    edgeFields.push(
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.edge.source',
+        label: PUZZLE_2D_PLAY_IS_WIRES ? 'From identity' : 'Source',
+        child: {
+          type: 'select',
+          id: 'puzzle-2d-play.inspector.edge.source.select',
+          value: sourceUniform ? (sources[0] ?? '') : '',
+          placeholder: sourceUniform ? undefined : 'Mixed',
+          items: endpointItems,
+          onChange: puzzle2dPlayCmd('patchInspectorEdges', { ids: edgeIds, field: 'source' }),
+        },
+      },
+      {
+        type: 'field',
+        id: 'puzzle-2d-play.inspector.edge.target',
+        label: PUZZLE_2D_PLAY_IS_WIRES ? 'To identity' : 'Target',
+        child: {
+          type: 'select',
+          id: 'puzzle-2d-play.inspector.edge.target.select',
+          value: targetUniform ? (targets[0] ?? '') : '',
+          placeholder: targetUniform ? undefined : 'Mixed',
+          items: endpointItems,
+          onChange: puzzle2dPlayCmd('patchInspectorEdges', { ids: edgeIds, field: 'target' }),
+        },
+      },
+    );
+    sections.push({
+      type: 'section',
+      id: 'puzzle-2d-play-inspector-edges',
+      label: PUZZLE_2D_PLAY_IS_WIRES ? (edgeIds.length === 1 ? 'Relationship' : 'Relationships') : puzzle2dPlayInspectorKindSectionLabel('edge', edgeIds.length),
+      children: edgeFields,
+    });
+  }
+  if (unknownIds.length > 0) {
+    sections.push({
+      type: 'section',
+      id: 'puzzle-2d-play-inspector-unknown',
+      label: 'Selection',
+      children: [{ type: 'text', value: unknownIds.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(', ') }],
+    });
+  }
+  return uiDeclarativeSectionsToTree(sections);
 }
 
 function classifyPuzzle2dPlayInspectorSelection(fixture: Puzzle2dFixtureV1, selectionIds: ReadonlySet<string>): {
@@ -4492,85 +4433,6 @@ function classifyPuzzle2dPlayInspectorSelection(fixture: Puzzle2dFixtureV1, sele
   return { nodeIds, handleIds, edgeIds, unknownIds };
 }
 
-/** @emoji 🔎 Playground tree inspector sections for the active selection (up to three kind sections). */
-export function buildPuzzle2dPlayInspectorSections(
-  fixture: Puzzle2dFixtureV1,
-  selectionIds: ReadonlySet<string>,
-  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void,
-): TreeDataSection[] {
-  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
-  const { nodeIds, handleIds, edgeIds, unknownIds } = classifyPuzzle2dPlayInspectorSelection(fixture, selectionIds);
-  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0 && unknownIds.length === 0) {
-    return [
-      playgroundPanelSection(
-        "puzzle-2d-play-inspector.empty",
-        "Detail",
-        <p className="text-muted-foreground leading-snug">
-          {PUZZLE_2D_PLAY_IS_WIRES
-            ? "No selection. Click the graph or pick an identity or relationship in the hierarchy."
-            : "No selection. Click the graph or pick a row in the hierarchy."}
-        </p>,
-      ),
-    ];
-  }
-  const sections: TreeDataSection[] = [];
-  if (nodeIds.length > 0) {
-    sections.push(
-      playgroundPanelSection(
-        "puzzle-2d-play-inspector-nodes",
-        PUZZLE_2D_PLAY_IS_WIRES
-          ? nodeIds.length === 1
-            ? "Identity"
-            : "Identities"
-          : puzzle2dPlayInspectorKindSectionLabel("node", nodeIds.length),
-        <InspectorNodeBatch fixture={fixture} kindCatalogs={kindCatalogs} nodeIds={nodeIds} patchFixture={patchFixture} />,
-      ),
-    );
-  }
-  if (handleIds.length > 0) {
-    sections.push(
-      playgroundPanelSection(
-        "puzzle-2d-play-inspector-handles",
-        puzzle2dPlayInspectorKindSectionLabel("handle", handleIds.length),
-        <InspectorHandleBatch fixture={fixture} kindCatalogs={kindCatalogs} handleIds={handleIds} patchFixture={patchFixture} />,
-      ),
-    );
-  }
-  if (edgeIds.length > 0) {
-    sections.push(
-      playgroundPanelSection(
-        "puzzle-2d-play-inspector-edges",
-        PUZZLE_2D_PLAY_IS_WIRES
-          ? edgeIds.length === 1
-            ? "Relationship"
-            : "Relationships"
-          : puzzle2dPlayInspectorKindSectionLabel("edge", edgeIds.length),
-        <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} kindCatalogs={kindCatalogs} patchFixture={patchFixture} />,
-      ),
-    );
-  }
-  if (unknownIds.length > 0) {
-    sections.push(
-      playgroundPanelSection(
-        "puzzle-2d-play-inspector-unknown",
-        "Selection",
-        <p className="text-[11px] text-warning-foreground leading-snug">{unknownIds.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(", ")}</p>,
-      ),
-    );
-  }
-  return sections;
-}
-
-/** @emoji 🔎 Details side panel bound to play fixture + selection (reacts to context, not shell generation). */
-function Puzzle2dPlayInspectorPanel(): ReactElement {
-  const { fixture, patchFixture } = usePuzzle2dPlayShell();
-  const { selectionIds } = usePuzzle2dPlaySelection();
-  const sections = reactHostPort.useMemo(
-    () => buildPuzzle2dPlayInspectorSections(fixture, selectionIds, patchFixture),
-    [fixture, patchFixture, selectionIds],
-  );
-  return <Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={sections} />;
-}
 // #endregion 🔖SidePanels
 
 // #region 🔖Layout
@@ -5609,26 +5471,52 @@ function Puzzle2dPlayInner({
   const puzzle2dPlayToolbarHostRef = reactHostPort.useRef({
     activePaneId: "2d-overview" as Puzzle2dPlayPaneId,
     applyPuzzle2dRedrawHandlesOnce: () => {},
+    applyPuzzle2dRedrawOnce: () => {},
     camerasByPane: puzzle2dPlayInitialCameras(),
     patchFixture: (_updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {},
+    setForceLayoutFullIterations: (_value: number) => {},
+    setForceLayoutGravity: (_value: number) => {},
+    setForceLayoutIdealEdgeLength: (_value: number) => {},
+    setForceLayoutRepulsionStrength: (_value: number) => {},
     setPuzzle2dGridSnapEnabled: (_value: boolean | ((prev: boolean) => boolean)) => {},
+    setPuzzle2dRedrawHandlesAfterNodes: (_value: boolean) => {},
+    setPuzzle2dRedrawMode: (_value: Puzzle2dRedrawModeKind) => {},
+    setPuzzle2dRedrawPlayMaxItersPerFrame: (_value: number) => {},
     setPuzzle2dRedrawPlaying: (_value: boolean | ((prev: boolean) => boolean)) => {},
+    setPuzzle2dRedrawProgressiveAutoStopMs: (_value: number) => {},
+    setPuzzle2dRedrawProgressiveEnabled: (_value: boolean) => {},
     setPuzzle2dSelectionMethod: (_value: Puzzle2dSelectionMethod) => {},
     setPuzzle2dSelectionMode: (_value: Puzzle2dSelectionMode) => {},
     setPuzzle2dSelectionTargets: (_value: Puzzle2dSelectionTargets | ((prev: Puzzle2dSelectionTargets) => Puzzle2dSelectionTargets)) => {},
     setSelectionIds: (_ids: readonly string[]) => {},
+    setTreeLayoutDirection: (_value: Puzzle2dHierarchicalTreeDirectionKind) => {},
+    setTreeLayoutLayerSpacing: (_value: number) => {},
+    setTreeLayoutSiblingGap: (_value: number) => {},
   });
   puzzle2dPlayToolbarHostRef.current = {
     activePaneId,
     applyPuzzle2dRedrawHandlesOnce,
+    applyPuzzle2dRedrawOnce,
     camerasByPane,
     patchFixture,
+    setForceLayoutFullIterations,
+    setForceLayoutGravity,
+    setForceLayoutIdealEdgeLength,
+    setForceLayoutRepulsionStrength,
     setPuzzle2dGridSnapEnabled,
+    setPuzzle2dRedrawHandlesAfterNodes,
+    setPuzzle2dRedrawMode,
+    setPuzzle2dRedrawPlayMaxItersPerFrame,
     setPuzzle2dRedrawPlaying,
+    setPuzzle2dRedrawProgressiveAutoStopMs,
+    setPuzzle2dRedrawProgressiveEnabled,
     setPuzzle2dSelectionMethod,
     setPuzzle2dSelectionMode,
     setPuzzle2dSelectionTargets,
     setSelectionIds,
+    setTreeLayoutDirection,
+    setTreeLayoutLayerSpacing,
+    setTreeLayoutSiblingGap,
   };
 
   reactHostPort.useEffect(() => {
@@ -5783,6 +5671,152 @@ function Puzzle2dPlayInner({
               break;
             }
             patchFixture((prev) => puzzle2dPlayToggleEntityFlag(prev, graphId, flag));
+            break;
+          }
+          case "setPuzzle2dRedrawMode":
+            h.setPuzzle2dRedrawMode((args as { value?: Puzzle2dRedrawModeKind }).value ?? "force-graph");
+            break;
+          case "setPuzzle2dRedrawHandlesAfterNodes":
+            h.setPuzzle2dRedrawHandlesAfterNodes((args as { pressed?: boolean }).pressed ?? false);
+            break;
+          case "setPuzzle2dRedrawProgressiveEnabled":
+            h.setPuzzle2dRedrawProgressiveEnabled((args as { pressed?: boolean }).pressed ?? false);
+            break;
+          case "setPuzzle2dRedrawProgressiveAutoStopMs":
+            h.setPuzzle2dRedrawProgressiveAutoStopMs(Number((args as { value?: number }).value) || 0);
+            break;
+          case "setPuzzle2dRedrawPlayMaxItersPerFrame":
+            h.setPuzzle2dRedrawPlayMaxItersPerFrame(Number((args as { value?: number }).value) || 96);
+            break;
+          case "setForceLayoutFullIterations":
+            h.setForceLayoutFullIterations(Number((args as { value?: number }).value) || 200);
+            break;
+          case "setForceLayoutIdealEdgeLength":
+            h.setForceLayoutIdealEdgeLength(Number((args as { value?: number }).value) || 64);
+            break;
+          case "setForceLayoutRepulsionStrength":
+            h.setForceLayoutRepulsionStrength(Number((args as { value?: number }).value) || 80);
+            break;
+          case "setForceLayoutGravity":
+            h.setForceLayoutGravity(Number((args as { value?: number }).value) || 0);
+            break;
+          case "setTreeLayoutLayerSpacing":
+            h.setTreeLayoutLayerSpacing(Number((args as { value?: number }).value) || 120);
+            break;
+          case "setTreeLayoutSiblingGap":
+            h.setTreeLayoutSiblingGap(Number((args as { value?: number }).value) || 28);
+            break;
+          case "setTreeLayoutDirection":
+            h.setTreeLayoutDirection((args as { value?: Puzzle2dHierarchicalTreeDirectionKind }).value ?? "downwards");
+            break;
+          case "applyPuzzle2dRedrawOnce":
+            h.applyPuzzle2dRedrawOnce();
+            break;
+          case "applyPuzzle2dRedrawHandlesOnce":
+            h.applyPuzzle2dRedrawHandlesOnce();
+            break;
+          case "patchInspectorNodes": {
+            const payload = args as { ids?: readonly string[]; field?: string; value?: unknown; delta?: number };
+            const ids = payload.ids ?? [];
+            const idSet = new Set(ids);
+            const catalogs = puzzle2dFixtureMergedKindCatalogs(fixtureRef.current);
+            h.patchFixture((prev) => ({
+              ...prev,
+              nodes: prev.nodes.map((node) => {
+                if (!idSet.has(node.id)) return node;
+                switch (payload.field) {
+                  case "text": {
+                    const trimmed = String(payload.value ?? "").trim();
+                    return trimmed === "" ? { ...node, text: undefined } : { ...node, text: trimmed };
+                  }
+                  case "nodeKind":
+                    return puzzle2dApplyNodeKindToFixtureNode(node, String(payload.value ?? ""), catalogs);
+                  case "iconKind": {
+                    const t = String(payload.value ?? "").trim();
+                    return t === "" ? { ...node, iconKind: undefined } : { ...node, iconKind: t };
+                  }
+                  case "x":
+                    return { ...node, x: Number(payload.value) };
+                  case "xDelta":
+                    return { ...node, x: node.x + Number(payload.delta ?? 0) };
+                  case "y":
+                    return { ...node, y: Number(payload.value) };
+                  case "yDelta":
+                    return { ...node, y: node.y + Number(payload.delta ?? 0) };
+                  default:
+                    return node;
+                }
+              }),
+            }));
+            break;
+          }
+          case "patchInspectorHandles": {
+            const payload = args as { ids?: readonly string[]; field?: string; value?: unknown; delta?: number; parentNodeId?: string; t?: number };
+            const ids = payload.ids ?? [];
+            const idSet = new Set(ids);
+            h.patchFixture((prev) => ({
+              ...prev,
+              nodes: prev.nodes.map((node) => ({
+                ...node,
+                handles: node.handles.map((handle) => {
+                  if (!idSet.has(handle.id)) return handle;
+                  switch (payload.field) {
+                    case "handleKind": {
+                      const trimmed = String(payload.value ?? "").trim();
+                      return trimmed === "" ? handle : { ...handle, handleKind: trimmed };
+                    }
+                    case "iconKind": {
+                      const t = String(payload.value ?? "").trim();
+                      return t === "" ? { ...handle, iconKind: undefined } : { ...handle, iconKind: t };
+                    }
+                    case "angle":
+                      return { ...handle, angle: normalizeAngleRad(Number(payload.value)) };
+                    case "angleDelta":
+                      return { ...handle, angle: normalizeAngleRad(handle.angle + Number(payload.delta ?? 0)) };
+                    case "radius":
+                      return { ...handle, radius: Math.max(1e-6, Number(payload.value)) };
+                    case "radiusDelta":
+                      return { ...handle, radius: Math.max(1e-6, (handle.radius ?? 8) + Number(payload.delta ?? 0)) };
+                    case "ringT": {
+                      const parentNode = payload.parentNodeId ? findNode(prev, payload.parentNodeId) : undefined;
+                      if (!parentNode) return handle;
+                      const nextT = typeof payload.t === "number" ? payload.t : Number(payload.value);
+                      return { ...handle, angle: normalizeAngleRad(puzzle2dHandleAngleFromRingT(parentNode, nextT)) };
+                    }
+                    default:
+                      return handle;
+                  }
+                }),
+              })),
+            }));
+            break;
+          }
+          case "patchInspectorEdges": {
+            const payload = args as { ids?: readonly string[]; field?: string; value?: unknown };
+            const ids = payload.ids ?? [];
+            const idSet = new Set(ids);
+            h.patchFixture((prev) => ({
+              ...prev,
+              edges: prev.edges.map((edge) => {
+                if (!idSet.has(edge.id)) return edge;
+                switch (payload.field) {
+                  case "edgeKind": {
+                    const trimmed = String(payload.value ?? "").trim();
+                    if (trimmed === "") {
+                      const { edgeKind: _drop, ...rest } = edge;
+                      return rest;
+                    }
+                    return { ...edge, edgeKind: trimmed };
+                  }
+                  case "source":
+                    return { ...edge, source: String(payload.value ?? "") };
+                  case "target":
+                    return { ...edge, target: String(payload.value ?? "") };
+                  default:
+                    return edge;
+                }
+              }),
+            }));
             break;
           }
           default:
@@ -7591,11 +7625,13 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("playgroundPanelSection", () => {
-    it("wraps panel bodies in a tree item control", () => {
-      const section = playgroundPanelSection("panel.test", "Test", <span data-testid="body">x</span>);
-      expect(section.items?.length).toBe(1);
-      expect(section.items?.[0]?.control).toBeTruthy();
+  describe("buildPuzzle2dPlayInspectorTree", () => {
+    it("returns declarative tree sections for empty selection", async () => {
+      const { puzzle2dPlayFixtureForId } = await import("@puzzle/2d/play");
+      const fixture = puzzle2dPlayFixtureForId();
+      const tree = buildPuzzle2dPlayInspectorTree(fixture, new Set());
+      expect(tree.type).toBe("tree");
+      expect(tree.sections.length).toBeGreaterThan(0);
     });
   });
 

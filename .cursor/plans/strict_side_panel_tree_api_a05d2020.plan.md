@@ -4,25 +4,25 @@ overview: Remove the last escape hatches (TreeDataSection.content, playgroundPan
 todos:
   - id: ticket
     content: Read repo://goals and reopen/open the repo-MCP ticket
-    status: pending
+    status: completed
   - id: ui-react
     content: "ui/react: remove TreeDataSection.content, migrate BasicChatPanel + ControlTree off it, standardize property-row control slot"
-    status: pending
+    status: completed
   - id: control-kinds
     content: Add UiSliderNode/UiNumberStepperNode/UiRingNode/UiIconSelectNode to UiControlNode and renderUiControl
-    status: pending
+    status: completed
   - id: escape-hatches
     content: Delete playgroundPanelSection/PlaygroundPanelBody; playground tabs accept UiTreeNode only
-    status: pending
+    status: completed
   - id: puzzle2d
     content: Migrate puzzle 2d inspector batches and settings panel to declarative control items
-    status: pending
+    status: completed
   - id: puzzle5d
     content: Migrate puzzle 5d status panel to keyValue items
-    status: pending
+    status: completed
   - id: cad
     content: Migrate CAD play catalog/details asides to declarative tree sections
-    status: pending
+    status: in_progress
   - id: audit-tests
     content: Spacing audit, extend existing tests, runtime-verify all playground/platform panels
     status: pending

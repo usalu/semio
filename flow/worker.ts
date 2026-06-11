@@ -44,7 +44,13 @@ async function ensureSession(): Promise<FlowSession> {
   return session;
 }
 
+const GEOMETRY_HANDLE_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|curve|surface|drawing)-/;
+
 function collectGeometryHandles(value: unknown, out: Array<{ readonly key: string; readonly handle: string }>, key: string): void {
+  if (typeof value === "string" && GEOMETRY_HANDLE_PATTERN.test(value)) {
+    out.push({ key, handle: value });
+    return;
+  }
   if (!value || typeof value !== "object" || Array.isArray(value)) return;
   const dict = value as Record<string, unknown>;
   if (dict.$schema === "geometry" && typeof dict.handle === "string") {

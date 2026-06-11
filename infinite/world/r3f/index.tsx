@@ -845,6 +845,7 @@ function applyLodGridLayerStyle(grid: GridHelper, opacity: number): void {
 /** @emoji 📐 Progressive multi-band world grid at the placement anchor. */
 export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactElement | null {
   const lod = useLod();
+  const invalidate = useThree((s) => s.invalidate);
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
   const anchor = controls?.target;
   const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
@@ -864,6 +865,10 @@ export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactE
     },
     [grids],
   );
+  reactHostPort.useLayoutEffect(() => {
+    if (!grids.length) return;
+    invalidate();
+  }, [grids, invalidate]);
   if (!grids.length) return null;
   const placementCad = gridPlacementAnchorCad(anchor ?? null, props.gridDatum ?? DEFAULT_GRID_PLANE_ANCHOR_CAD);
   const [px, py, pz] = placementCad;
@@ -890,6 +895,7 @@ function LodFrameRunner(props: {
 }): null {
   const cam = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
+  const invalidate = useThree((s) => s.invalidate);
   const tmpT = reactHostPort.useMemo(() => new Vector3(), []);
   const prevLod = reactHostPort.useRef<number | null>(null);
   const ctxSig = reactHostPort.useRef("");
@@ -909,10 +915,12 @@ function LodFrameRunner(props: {
     if (ctxSig.current !== sig) {
       ctxSig.current = sig;
       props.onLod({ sceneLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
+      invalidate();
     }
     if (prevLod.current === null || Math.abs(prevLod.current - sceneLod) > WORLD_LOD_EPSILON) {
       prevLod.current = sceneLod;
       props.onLodChange?.(sceneLod);
+      invalidate();
     }
   });
   return null;
@@ -1827,21 +1835,24 @@ export function shouldApplyOrbitCameraViewRigSeed(lastToken: string | null, next
 function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
+  const invalidate = useThree((s) => s.invalidate);
   const lastApplyToken = reactHostPort.useRef<string | null>(null);
   const stateRef = reactHostPort.useRef(props.state);
   stateRef.current = props.state;
   const projection = props.state.projection ?? "perspective";
+  const controlsReady = controls != null;
   reactHostPort.useLayoutEffect(() => {
     if (!camera) {
       return;
     }
-    const token = orbitCameraViewRigApplyToken(props.seedKey, projection);
+    const token = `${orbitCameraViewRigApplyToken(props.seedKey, projection)}:controls:${controlsReady ? 1 : 0}`;
     if (!shouldApplyOrbitCameraViewRigSeed(lastApplyToken.current, token)) {
       return;
     }
     lastApplyToken.current = token;
     applyWorldCameraState(camera, stateRef.current, controls);
-  }, [camera, controls, projection, props.seedKey]);
+    invalidate();
+  }, [camera, controls, controlsReady, invalidate, projection, props.seedKey]);
   return null;
 }
 // #endregion 📷OrbitCameraView
@@ -1973,11 +1984,20 @@ export function useWorldOrbitRightMouseBindings(
 // #region 🎬WorldCanvas
 type OrbitControlsBinding = WorldOrbitControlsBinding;
 
-/** @emoji 🎞️ Kicks one R3F frame when `frameloop="demand"`. */
+/** @emoji 🎞️ Kicks demand-frameloop renders across mount + orbit/grid setup frames. */
 export function DemandFrameloopKick(): null {
   const invalidate = useThree((state) => state.invalidate);
-  reactHostPort.useEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     invalidate();
+    let frame = 0;
+    let raf = 0;
+    const tick = () => {
+      invalidate();
+      frame += 1;
+      if (frame < 4) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [invalidate]);
   return null;
 }
@@ -2792,6 +2812,14 @@ if (import.meta.vitest) {
       expect(shouldApplyOrbitCameraViewRigSeed(token, token)).toBe(false);
       expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:4", "perspective"))).toBe(true);
       expect(shouldApplyOrbitCameraViewRigSeed(token, orbitCameraViewRigApplyToken("win-a:3", "orthographic"))).toBe(true);
+    });
+
+    it("re-applies when orbit controls become ready after the rig camera mounts", () => {
+      const beforeControls = `${orbitCameraViewRigApplyToken("preview", "perspective")}:controls:0`;
+      const afterControls = `${orbitCameraViewRigApplyToken("preview", "perspective")}:controls:1`;
+      expect(shouldApplyOrbitCameraViewRigSeed(null, beforeControls)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(beforeControls, afterControls)).toBe(true);
+      expect(shouldApplyOrbitCameraViewRigSeed(afterControls, afterControls)).toBe(false);
     });
   });
 
