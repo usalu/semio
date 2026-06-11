@@ -2517,7 +2517,7 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
           case "clearSelection": {
             controller.run("set2dSelection", { ids: [] });
             controller.run("set3dSelection", { objectIds: [] });
-            store.setSelection({ partIds: [], anchorIds: [] });
+            store.setSelection({ partIds: [], gripIds: [] });
             break;
           }
           default:
@@ -2861,23 +2861,37 @@ function Puzzle5dPlayChrome({
   const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
   const snapshot = controller?.getSnapshot() ?? null;
   const bus = runtime.commandBus;
-  const snapshotKey = snapshot ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.selected3d ?? ""}\u0001${[...snapshot.selected2d].sort().join(",")}` : "";
+  const puzzle5dStore = controller?.puzzle5dStore;
+  const snapshotKey = snapshot
+    ? `${snapshot.manifestLabel ?? ""}\u0001${snapshot.selection.partIds.join(",")}\u0001${snapshot.selection.gripIds.join(",")}`
+    : "";
   const workbenchTabs = reactHostPort.useMemo(
     () =>
       snapshot && controller
         ? [
             new Puzzle5dPlayHierarchyPanelDefinition(() =>
               buildPuzzle5dPlayHierarchySections(snapshot, {
-                onSelect2d: (id) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [id] }),
-                onSelect3dObject: (objectId) => bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [objectId] }),
-                onSelect3dVortex: () => {},
-                onSelect3dAttraction: () => {},
+                onSelectPart: (partId) => {
+                  puzzle5dStore?.setSelection({ partIds: [partId], gripIds: [] });
+                  bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [partId] });
+                  bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [partId] });
+                },
+                onSelectGrip: (gripFullId) => {
+                  puzzle5dStore?.setSelection({ partIds: [], gripIds: [gripFullId] });
+                  bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [gripFullId] });
+                  bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [] });
+                },
+                onSelectFastener: (fastenerId) => {
+                  puzzle5dStore?.setSelection({ partIds: [], gripIds: [] });
+                  bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [fastenerId] });
+                  bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [] });
+                },
               }),
             ).resolveTab(),
             new Puzzle5dPlayKindsPanelDefinition(() => buildPuzzle5dPlayKindsTree(snapshot), bus).resolveTab(),
           ]
         : [],
-    [snapshot, snapshotKey, controller, bus],
+    [snapshot, snapshotKey, controller, bus, puzzle5dStore],
   );
   const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition().resolveTab()], []);
   const shell = (
@@ -2892,10 +2906,10 @@ function Puzzle5dPlayChrome({
     return shell;
   }
   const puzzle5dBridge = controller.getStore(PUZZLE_5D_PLAY_STORE_ID) as Puzzle5dStoreBridge | undefined;
-  const puzzle5dStore = puzzle5dBridge?.inner ?? controller.puzzle5dStore;
+  const storeForProvider = puzzle5dBridge?.inner ?? controller.puzzle5dStore;
   return (
-    <StoreProvider store={puzzle5dStore}>
-      <Puzzle5dPlayHostBridgeInstaller controller={controller} store={puzzle5dStore} />
+    <StoreProvider store={storeForProvider}>
+      <Puzzle5dPlayHostBridgeInstaller controller={controller} store={storeForProvider} />
       {shell}
     </StoreProvider>
   );
@@ -2933,8 +2947,10 @@ import {
   PUZZLE_2D_PLAY_CONTROLLER_ID,
   PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
   PUZZLE_2D_PLAY_EMPTY_FIXTURE,
+  PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
   PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
   PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
+  puzzle2dPlayFixtureForId,
 } from "@puzzle/2d/play";
 import {
   buildWiresPlayHierarchySections,
@@ -4676,7 +4692,7 @@ const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS = PUZZLE_2D_PLAY_IS_WIRES
   ? WIRES_PLAY_FIXTURE_OPTIONS
   : [...PUZZLE_2D_PLAY_FIXTURE_OPTIONS, { id: WIRES_PLAY_FIXTURE_METABOLISM_ID, label: "Metabolism (WIRES)" }];
 
-const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID;
+const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
 
 function puzzle2dPlayFixtureForNavbarId(fixtureId: string): Puzzle2dFixtureV1 {
   if (isPlaygroundNoFixtureId(fixtureId)) {
@@ -4684,6 +4700,9 @@ function puzzle2dPlayFixtureForNavbarId(fixtureId: string): Puzzle2dFixtureV1 {
   }
   if (fixtureId === WIRES_PLAY_FIXTURE_METABOLISM_ID) {
     return clonePuzzle2dFixtureV1(WIRES_PLAY_DEFAULT_FIXTURE);
+  }
+  if (fixtureId === PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID || fixtureId === PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID) {
+    return clonePuzzle2dFixtureV1(puzzle2dPlayFixtureForId(fixtureId));
   }
   return clonePuzzle2dFixtureV1(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
 }

@@ -1,5 +1,5 @@
 {
-  "schema": "puzzle.5d/v1",
+  "schema": "puzzle.5d",
   "domain": "architecture",
   "camera2d": {
     "x": -230.72767272727273,
@@ -23,7 +23,7 @@
     {
       "id": "seed-left-001",
       "partKind": "Hexagonal Cut Concrete Forest Left",
-      "puzzle2d": {
+      "2d": {
         "x": 230.72767272727273,
         "y": 93.53074909090908,
         "shape": "rectangle",
@@ -31,16 +31,16 @@
         "height": 248,
         "text": "Hexagonal Cut Concrete Forest Left"
       },
-      "anchors": [
+      "grips": [
         {
           "id": "v0",
-          "anchorKind": "b-l",
-          "puzzle2d": {
+          "gripKind": "b-l",
+          "2d": {
             "angle": -1.5707963267948966,
-            "anchorKind": "b-l",
+            "gripKind": "b-l",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               4.05001,
               4.676537,
@@ -57,13 +57,13 @@
         },
         {
           "id": "v1",
-          "anchorKind": "b-l-m",
-          "puzzle2d": {
+          "gripKind": "b-l-m",
+          "2d": {
             "angle": -0.9995976625058433,
-            "anchorKind": "b-l-m",
+            "gripKind": "b-l-m",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               6.75001,
               4.676537,
@@ -80,13 +80,13 @@
         },
         {
           "id": "v2",
-          "anchorKind": "b-l",
-          "puzzle2d": {
+          "gripKind": "b-l",
+          "2d": {
             "angle": -0.42839899821678995,
-            "anchorKind": "b-l",
+            "gripKind": "b-l",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               9.45001,
               4.676537,
@@ -103,13 +103,13 @@
         },
         {
           "id": "v3",
-          "anchorKind": "b-s-m",
-          "puzzle2d": {
+          "gripKind": "b-s-m",
+          "2d": {
             "angle": 0.14279966607226324,
-            "anchorKind": "b-s-m",
+            "gripKind": "b-s-m",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               6.75001,
               0,
@@ -126,13 +126,13 @@
         },
         {
           "id": "v4",
-          "anchorKind": "b-s",
-          "puzzle2d": {
+          "gripKind": "b-s",
+          "2d": {
             "angle": 0.7139983303613167,
-            "anchorKind": "b-s",
+            "gripKind": "b-s",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               4.05001,
               0,
@@ -149,13 +149,13 @@
         },
         {
           "id": "v5",
-          "anchorKind": "b-s-m",
-          "puzzle2d": {
+          "gripKind": "b-s-m",
+          "2d": {
             "angle": 1.28519699465037,
-            "anchorKind": "b-s-m",
+            "gripKind": "b-s-m",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               1.35001,
               0,
@@ -172,13 +172,13 @@
         },
         {
           "id": "v6",
-          "anchorKind": "b-s",
-          "puzzle2d": {
+          "gripKind": "b-s",
+          "2d": {
             "angle": 1.856395658939423,
-            "anchorKind": "b-s",
+            "gripKind": "b-s",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               9.45001,
               2.338269,
@@ -195,13 +195,13 @@
         },
         {
           "id": "v7",
-          "anchorKind": "c-b",
-          "puzzle2d": {
+          "gripKind": "c-b",
+          "2d": {
             "angle": 2.4275943232284765,
-            "anchorKind": "c-b",
+            "gripKind": "c-b",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               2.70001,
               2.338269,
@@ -218,13 +218,13 @@
         },
         {
           "id": "v8",
-          "anchorKind": "c-t",
-          "puzzle2d": {
+          "gripKind": "c-t",
+          "2d": {
             "angle": 2.99879298751753,
-            "anchorKind": "c-t",
+            "gripKind": "c-t",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               2.70001,
               2.338269,
@@ -241,13 +241,13 @@
         },
         {
           "id": "v9",
-          "anchorKind": "c-b",
-          "puzzle2d": {
+          "gripKind": "c-b",
+          "2d": {
             "angle": 3.569991651806583,
-            "anchorKind": "c-b",
+            "gripKind": "c-b",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               8.10001,
               2.338269,
@@ -264,13 +264,13 @@
         },
         {
           "id": "v10",
-          "anchorKind": "c-t",
-          "puzzle2d": {
+          "gripKind": "c-t",
+          "2d": {
             "angle": 4.141190316095637,
-            "anchorKind": "c-t",
+            "gripKind": "c-t",
             "radius": 3
           },
-          "puzzle3d": {
+          "3d": {
             "position": [
               8.10001,
               2.338269,
@@ -286,7 +286,7 @@
           }
         }
       ],
-      "puzzle3d": {
+      "3d": {
         "origin": [
           0,
           0,
@@ -303,7 +303,7 @@
       }
     }
   ],
-  "ties": [],
+  "fasteners": [],
   "meta": {
     "description": "Unified puzzle 5d source for Concrete Forest play; 2d and 3d views project from this model."
   },
@@ -368,103 +368,103 @@
       "source": "b-l",
       "target": "b-l",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l",
       "target": "b-l-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l",
       "target": "b-s",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l",
       "target": "b-s-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l-m",
       "target": "b-l",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l-m",
       "target": "b-l-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l-m",
       "target": "b-s",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-l-m",
       "target": "b-s-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s",
       "target": "b-l",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s",
       "target": "b-l-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s",
       "target": "b-s",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s",
       "target": "b-s-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s-m",
       "target": "b-l",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s-m",
       "target": "b-l-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s-m",
       "target": "b-s",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "b-s-m",
       "target": "b-s-m",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     },
     {
       "source": "c-b",
       "target": "c-t",
       "bidirectional": true,
-      "specificity": "vortex"
+      "specificity": "grip"
     }
   ],
   "label": "Concrete Forest"

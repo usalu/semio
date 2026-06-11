@@ -2260,11 +2260,6 @@ export function buildMicroCommitMessage(
   return `${lines.join("\n")}\n`;
 }
 
-function gitDir(root: string): string {
-  const out = git(root, ["rev-parse", "--git-dir"]).out;
-  return out.startsWith("/") ? out : join(root, out);
-}
-
 export function writeMicroCommitTemplates(root: string, message: string): void {
   const dir = gitDir(root);
   const gkCommitTemplate = join(dir, GK_COMMIT_TEMPLATE_FILE);

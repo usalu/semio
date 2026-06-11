@@ -5,10 +5,10 @@ use std::path::PathBuf;
 fn main() {
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR"));
-    let emoji_font = manifest_dir.join("assets/NotoColorEmoji-subset.ttf");
+    let emoji_font = manifest_dir.join("asset/NotoColorEmoji-subset.ttf");
     println!("cargo:rerun-if-changed={}", emoji_font.display());
 
-    let icons_src = manifest_dir.join("../../../semio/client/example/metabolism/icons");
+    let icons_src = manifest_dir.join("../../../semio/client/example/metabolism/icon");
     println!("cargo:rerun-if-changed={}", icons_src.display());
 
     let mut arms = String::new();

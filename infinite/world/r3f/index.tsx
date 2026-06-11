@@ -2317,14 +2317,13 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const groupRef = reactHostPort.useRef<Group>(null);
   const [pointerHovered, setPointerHovered] = reactHostPort.useState(false);
   const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
-  const interactionHovered = props.hovered || pointerHovered;
+  const selectable = worldEntitySelectable(props.reference);
+  const interactionHovered = selectable && (props.hovered || pointerHovered);
   const renderMode = worldEntityRenderMode(props.reference, {
     hovered: interactionHovered,
     selected: props.selected,
-    revealed: props.revealed || pointerHovered,
+    revealed: props.revealed || (selectable && pointerHovered),
   });
-  const pickable = props.reference.hidden !== true;
-  const editable = worldEntitySelectable(props.reference);
   reactHostPort.useEffect(() => {
     let cancelled = false;
     referenceMediaPort
@@ -2356,10 +2355,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const [planeWidth, planeHeight] = reactHostPort.useMemo(() => worldReferencePlaneSize(props.reference, mediaAspect), [props.reference, mediaAspect]);
   const opacityBase = props.reference.opacity ?? 1;
   const opacityDimmed = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
-  const appearance = worldReferenceAppearance(
-    { ...renderMode, showSelectedOutline: props.selected && pickable },
-    opacityDimmed,
-  );
+  const appearance = worldReferenceAppearance(renderMode, opacityDimmed);
   const planeOutlineGeo = reactHostPort.useMemo(() => {
     const plane = new PlaneGeometry(planeWidth, planeHeight);
     const edges = new EdgesGeometry(plane);
@@ -2371,7 +2367,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
     return null;
   }
   const config = props.reference.relocate === false ? null : { ...(props.reference.relocate ?? {}), translationSnap: props.translationSnap };
-  const showGumball = props.selected && editable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
+  const showGumball = props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
   return (
     <>
       <group
@@ -2379,7 +2375,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         visible={renderMode.visible}
         userData={{ worldReferenceId: props.reference.id }}
         onPointerDown={(event) => {
-          if (!pickable) {
+          if (!selectable) {
             return;
           }
           event.stopPropagation();
@@ -2387,13 +2383,17 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         }}
         onPointerOver={(event) => {
           event.stopPropagation();
-          setPointerHovered(true);
-          if (pickable) {
-            props.onHover?.(props.reference.id);
+          if (!selectable) {
+            return;
           }
+          setPointerHovered(true);
+          props.onHover?.(props.reference.id);
         }}
         onPointerOut={(event) => {
           event.stopPropagation();
+          if (!selectable) {
+            return;
+          }
           setPointerHovered(false);
           props.onHover?.(null);
         }}
@@ -2404,7 +2404,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
             <meshBasicMaterial attach="material" color={appearance.backgroundColor} transparent opacity={1} depthWrite={false} side={DoubleSide} toneMapped={false} />
           </mesh>
         ) : null}
-        <mesh renderOrder={-10}>
+        <mesh renderOrder={-10} raycast={selectable ? undefined : worldRaycastNone}>
           <planeGeometry args={[planeWidth, planeHeight]} />
           <meshBasicMaterial attach="material" map={media.texture} transparent opacity={appearance.contentOpacity} depthWrite={false} side={DoubleSide} toneMapped={false} />
         </mesh>
@@ -2989,6 +2989,12 @@ if (import.meta.vitest) {
         visible: true,
         asHover: false,
         dim: true,
+        showSelectedOutline: false,
+      });
+      expect(worldEntityRenderMode({ hidden: true, locked: true }, { revealed: true, hovered: true, selected: true })).toMatchObject({
+        visible: true,
+        asHover: true,
+        dim: false,
         showSelectedOutline: false,
       });
     });

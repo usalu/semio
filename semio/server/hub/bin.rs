@@ -3699,7 +3699,7 @@ use super::*;
     pub fn load_metabolism_kit_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
-            .join("assets/semio/metabolism/wip/initialKit/kit.semio.json");
+            .join("asset/semio/metabolism/wip/initialKit/kit.semio.json");
         let data = std::fs::read_to_string(&path).expect("metabolism kit JSON");
         serde_json::from_str(&data).expect("parse metabolism kit JSON")
     }
@@ -3791,7 +3791,7 @@ use super::*;
     pub fn load_nakagin_design_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
-            .join("assets/semio/nakagin-capsule-tower.shallow.design.semio.json");
+            .join("asset/semio/nakagin-capsule-tower.shallow.design.semio.json");
         let data = std::fs::read_to_string(&path).expect("nakagin design JSON");
         serde_json::from_str(&data).expect("parse nakagin design JSON")
     }
@@ -3799,7 +3799,7 @@ use super::*;
     pub fn load_nakagin_diff_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
-            .join("assets/semio/nakagin-capsule-tower.with-diff.design.semio.json");
+            .join("asset/semio/nakagin-capsule-tower.with-diff.design.semio.json");
         let data = std::fs::read_to_string(&path).expect("nakagin diff JSON");
         serde_json::from_str(&data).expect("parse nakagin diff JSON")
     }
@@ -4177,7 +4177,7 @@ use super::*;
     pub fn load_metabolism_diff_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
-            .join("assets/semio/metabolism.kit.diff.semio.json");
+            .join("asset/semio/metabolism.kit.diff.semio.json");
         let data = std::fs::read_to_string(&path).expect("metabolism diff JSON");
         serde_json::from_str(&data).expect("parse metabolism diff JSON")
     }

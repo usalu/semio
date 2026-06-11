@@ -11,9 +11,11 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
+			{ find: "@infinite/world/r3f", replacement: resolve(root, "../../../infinite/world/r3f/index.tsx") },
 			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
 			{ find: "@puzzle/2d/react", replacement: resolve(root, "../../2d/react/index.tsx") },
 			{ find: "@puzzle/3d/react", replacement: resolve(root, "../../3d/react/index.tsx") },
+			{ find: "@puzzle/3d/rs", replacement: resolve(root, "../../3d/rs/pkg/puzzle_3d.js") },
 		],
 	},
 	test: {

@@ -13,9 +13,9 @@ pub mod theme;
 pub mod icon_assets {
     //! @emoji 📎 Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
 
-    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
+    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("asset/NotoColorEmoji-subset.ttf");
 
-    pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("assets/MapLabelSans.ttf");
+    pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("asset/MapLabelSans.ttf");
 }
 
 // #endregion 🏷️IconAssets

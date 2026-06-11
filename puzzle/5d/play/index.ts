@@ -34,15 +34,13 @@ import {
   collectUiTreeItemDragData,
 } from "@framework/playground/core";
 
-import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+import { buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
 import {
   PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
   beginPuzzle2dFixturePalettePointerDrag,
   cancelPuzzle2dFixturePalettePointerDrag,
   puzzle2dFixturePaletteTreeDragController,
 } from "../../2d/react/index.tsx";
-import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
-import concreteForest2dJson from "../../2d/fixture/concrete-forest.2d.json";
 import {
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
   puzzle2dLodAutomaticSelectLabel,
@@ -57,11 +55,10 @@ import {
   type Puzzle2dSelectionMethod,
   type Puzzle2dSelectionMode,
   type Puzzle2dSelectionTargets,
+  puzzle2dPlayNodeKindDragData,
 } from "../../2d/react/index.tsx";
-import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
-import concreteForest3dJson from "../../3d/fixture/concrete-forest.3d.json";
 import { type GumballConfig } from "@ui/react";
-import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+import { PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
   FIXTURE_DRAG_V1_MIME,
   beginPuzzle3dFixturePalettePointerDrag,
@@ -81,16 +78,20 @@ import {
   DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
   BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
+  isLoadableMeshUrl,
+  puzzle3dPlayObjectKindDragData,
+  resolveObjectKindMeshUrl,
 } from "../../3d/react/index.tsx";
 import {
   createStore,
-  parseV1,
+  parseModel,
   project2d,
   project3d,
   project2dKindCatalogs,
   project3dKindCatalogs,
   compose5d,
   sharedKindsFromMetas,
+  PUZZLE_5D_SCHEMA,
   type KindCatalogBundle as Puzzle5dKindCatalogBundle,
   PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID,
   PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID,
@@ -100,10 +101,14 @@ import {
   type Puzzle5dBrushPlacement,
   type Store as Puzzle5dStore,
   type StoreSnapshot as Puzzle5dStoreSnapshot,
-  type V1 as Puzzle5dV1,
+  type Model as Puzzle5dModel,
+  gripFullId,
+  type FastenerKind,
+  type GripKind,
+  type PartKind,
+  type RopeKind,
+  type SelectionSnapshot as Puzzle5dSelectionSnapshot,
 } from "../react/index.tsx";
-import nakagin5dJson from "../fixture/nakagin-capsule-tower.5d.json";
-import concreteForest5dJson from "../fixture/concrete-forest.5d.json";
 
 //#region 🔖Ids
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
@@ -114,8 +119,8 @@ export const PUZZLE_5D_PLAY_2D_WINDOW_LABEL = "Puzzle 2d";
 export const PUZZLE_5D_PLAY_3D_WINDOW_LABEL = "Puzzle 3d";
 export const PUZZLE_5D_PLAY_2D_BODY_KEY = "puzzle.5d.play.2d";
 export const PUZZLE_5D_PLAY_3D_BODY_KEY = "puzzle.5d.play.3d";
-export const PUZZLE_5D_PLAY_2D_SURFACE_ID = "puzzle.5d.play.2d/v1";
-export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d/v1";
+export const PUZZLE_5D_PLAY_2D_SURFACE_ID = "puzzle.5d.play.2d";
+export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 export const PUZZLE_5D_PLAY_KINDS_TAB_ID = "puzzle-5d-play-kinds";
 export const PUZZLE_5D_PLAY_ICON_KINDS = "puzzle.5d-play.icon.kinds";
@@ -127,6 +132,11 @@ export const PUZZLE_5D_PLAY_FIXTURE_OPTIONS = [
   { id: PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
   { id: PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
 ] as const;
+
+const PUZZLE_5D_PLAY_FIXTURE_URL_BY_ID: Readonly<Record<string, string>> = {
+  [PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID]: "/puzzle-5d-fixture/concrete-forest.5d.json",
+  [PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID]: "/puzzle-5d-fixture/nakagin-capsule-tower.5d.json",
+};
 
 const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -147,71 +157,160 @@ export interface Puzzle5dPlayHostBridge {
 
 //#region 🔖Puzzle5dPlayHierarchy
 export interface Puzzle5dPlayHierarchySelectHandlers {
-  readonly onSelect2d: (id: string) => void;
-  readonly onSelect3dObject: (objectId: string) => void;
-  readonly onSelect3dVortex: (vortexFullId: string) => void;
-  readonly onSelect3dAttraction: (attractionId: string) => void;
+  readonly onSelectPart: (partId: string) => void;
+  readonly onSelectGrip: (gripFullId: string) => void;
+  readonly onSelectFastener: (fastenerId: string) => void;
 }
 
-/** @emoji 🌳 Puzzle 5d hierarchy: flat 2d and 3d composition sections. */
-function puzzle5dPlayHierarchyTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
-  if (tree.type !== "tree") {
-    return [];
-  }
-  return tree.sections.map((section) => ({
-    ...section,
-    id: section.id.replace(/^puzzle-(?:2d|3d)-play-hierarchy\./, `puzzle-5d-play-hierarchy.${domain}.`),
-    label: `${labelPrefix} · ${section.label}`,
-  }));
+function puzzle5dPartDisplayLabel(part: Puzzle5dModel["parts"][number]): string {
+  const kind = part.partKind?.trim();
+  if (kind) return kind;
+  const flatText = part["2d"]?.text?.trim();
+  if (flatText) return flatText;
+  const volumeLabel = part["3d"]?.label?.trim();
+  if (volumeLabel) return volumeLabel;
+  return part.id;
 }
 
+function puzzle5dGripDisplayLabel(grip: Puzzle5dModel["parts"][number]["grips"][number]): string {
+  const kind = grip.gripKind?.trim();
+  if (kind) return kind;
+  const volumeLabel = grip["3d"]?.label?.trim();
+  if (volumeLabel) return volumeLabel;
+  return grip.id;
+}
+
+function puzzle5dFastenerDisplayLabel(fastener: Puzzle5dModel["fasteners"][number], model: Puzzle5dModel): string {
+  if (fastener.fastenerKind?.trim()) return fastener.fastenerKind;
+  const sourcePart = model.parts.find((part) => part.grips.some((grip) => gripFullId(part.id, grip.id) === fastener.source));
+  const targetPart = model.parts.find((part) => part.grips.some((grip) => gripFullId(part.id, grip.id) === fastener.target));
+  if (sourcePart && targetPart) return `${puzzle5dPartDisplayLabel(sourcePart)} → ${puzzle5dPartDisplayLabel(targetPart)}`;
+  return fastener.id;
+}
+
+/** @emoji 🌳 Puzzle 5d hierarchy: Parts (with nested Grips) and Fasteners. */
 export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayHierarchySelectHandlers): UiTreeNode {
-  const sections: UiTreeSectionNode[] = [];
-  if (snapshot.fixture2d) {
-    const tree2d = buildPuzzle2dPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d);
-    sections.push(...puzzle5dPlayHierarchyTreeSections("2d", "2d", tree2d));
+  const model = snapshot.model;
+  const selectedPartIds = new Set(snapshot.selection.partIds);
+  const selectedGripIds = new Set(snapshot.selection.gripIds);
+  const partItems: UiTreeItemNode[] = model.parts.map((part) => {
+    const gripItems: UiTreeItemNode[] = part.grips.map((grip) => {
+      const fullId = gripFullId(part.id, grip.id);
+      return {
+        id: `puzzle-5d-play-hierarchy.grip.${fullId}`,
+        label: puzzle5dGripDisplayLabel(grip),
+        description: fullId,
+        isSelected: selectedGripIds.has(fullId),
+        onClick: () => handlers.onSelectGrip(fullId),
+      };
+    });
+    return {
+      id: `puzzle-5d-play-hierarchy.part.${part.id}`,
+      label: puzzle5dPartDisplayLabel(part),
+      description: part.id,
+      defaultOpen: gripItems.length > 0,
+      isSelected: selectedPartIds.has(part.id),
+      onClick: () => handlers.onSelectPart(part.id),
+      ...(gripItems.length ? { items: gripItems } : {}),
+    };
+  });
+  const fastenerItems: UiTreeItemNode[] = model.fasteners.map((fastener) => ({
+    id: `puzzle-5d-play-hierarchy.fastener.${fastener.id}`,
+    label: puzzle5dFastenerDisplayLabel(fastener, model),
+    description: `${fastener.source} → ${fastener.target}`,
+    onClick: () => handlers.onSelectFastener(fastener.id),
+  }));
+  if (!partItems.length && !fastenerItems.length) {
+    return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [{ id: "puzzle-5d-play-hierarchy.empty", label: "(no parts)" }]);
   }
-  if (snapshot.fixture3d) {
-    const selection3d = snapshot.selected3d ? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.selected3d] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
-    const tree3d = buildPuzzle3dPlayHierarchyTree(snapshot.fixture3d, selection3d);
-    sections.push(...puzzle5dPlayHierarchyTreeSections("3d", "3d", tree3d));
-  }
-  if (!sections.length) {
-    return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [{ id: "puzzle-5d-play-hierarchy.empty", label: "(no fixtures)" }]);
-  }
-  return { type: "tree", sections };
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "puzzle-5d-play-hierarchy.parts",
+        label: "Parts",
+        defaultOpen: true,
+        items: partItems.length ? partItems : [{ id: "puzzle-5d-play-hierarchy.parts.empty", label: "(none)" }],
+      },
+      {
+        id: "puzzle-5d-play-hierarchy.fasteners",
+        label: "Fasteners",
+        defaultOpen: true,
+        items: fastenerItems.length ? fastenerItems : [{ id: "puzzle-5d-play-hierarchy.fasteners.empty", label: "(none)" }],
+      },
+    ],
+  };
 }
 //#endregion 🔖Puzzle5dPlayHierarchy
 
 //#region 🔖Puzzle5dPlayKinds
-function puzzle5dPlayKindTreeItem(domain: "2d" | "3d", item: UiTreeItemNode): UiTreeItemNode {
-  return {
-    ...item,
-    id: item.id.replace(/^puzzle-(?:2d|3d)-play-kinds\./, `puzzle-5d-play-kinds.${domain}.`),
-    ...(item.items ? { items: item.items.map((child) => puzzle5dPlayKindTreeItem(domain, child)) } : {}),
-  };
+type Puzzle5dCatalogKind = PartKind | GripKind | RopeKind | FastenerKind;
+
+function puzzle5dCatalogKindLabel(entry: Puzzle5dCatalogKind): string {
+  const display = entry.label?.trim() || entry.name?.trim();
+  return display && display.length > 0 ? display : entry.id;
 }
 
-function puzzle5dPlayKindTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
-  if (tree.type !== "tree") {
-    return [];
-  }
-  return tree.sections.map((section) => ({
-    ...section,
-    id: section.id.replace(/^puzzle-(?:2d|3d)-play-kinds\./, `puzzle-5d-play-kinds.${domain}.`),
-    label: `${labelPrefix} · ${section.label}`,
-    items: section.items?.map((item) => puzzle5dPlayKindTreeItem(domain, item)),
+function puzzle5dCatalogGripKindLabel(gripKindId: string, gripKinds: readonly GripKind[] | undefined): string {
+  const entry = gripKinds?.find((row) => row.id === gripKindId);
+  return entry ? puzzle5dCatalogKindLabel(entry) : gripKindId;
+}
+
+function puzzle5dPartKindGripCatalogItems(sectionId: string, partIndex: number, partKindId: string, gripKinds: readonly GripKind[] | undefined): readonly UiTreeItemNode[] {
+  return (gripKinds ?? []).map((grip, gripIndex) => ({
+    id: `${sectionId}.${partIndex}.${partKindId}.grip.${gripIndex}`,
+    label: puzzle5dCatalogGripKindLabel(grip.id, gripKinds),
+    description: grip.id,
   }));
 }
 
-/** @emoji 🏷️ Workbench kinds tab: flat (2d) and volume (3d) palette rows with drag payloads. */
-export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTreeNode {
-  const bundle: Puzzle5dKindCatalogBundle | undefined = snapshot.kindCatalogs ?? snapshot.sharedKinds.kindCatalogs;
+function puzzle5dPlayKindCatalogSection(
+  sectionId: string,
+  label: string,
+  entries: readonly Puzzle5dCatalogKind[] | undefined,
+  gripKinds?: readonly GripKind[],
+  sectionDefaultOpen = true,
+  bundle?: Puzzle5dKindCatalogBundle,
+  fixture3d?: Puzzle3dFixtureV1 | null,
+): UiTreeSectionNode | null {
+  if (!entries?.length) {
+    return null;
+  }
   const catalogs2d = project2dKindCatalogs(bundle);
   const catalogs3d = project3dKindCatalogs(bundle);
-  const flat = buildPuzzle2dPlayKindsTree(catalogs2d);
-  const volume = buildPuzzle3dPlayKindsTree(catalogs3d, snapshot.fixture3d ?? undefined);
-  const sections = [...puzzle5dPlayKindTreeSections("2d", "2d", flat), ...puzzle5dPlayKindTreeSections("3d", "3d", volume)];
+  const isPartPalette = sectionId === "puzzle-5d-play-kinds.parts";
+  const items: UiTreeItemNode[] = [...entries]
+    .sort((a, b) => puzzle5dCatalogKindLabel(a).localeCompare(puzzle5dCatalogKindLabel(b)))
+    .map((entry, index) => {
+      const partKind = isPartPalette ? (entry as PartKind) : null;
+      const gripItems = partKind ? puzzle5dPartKindGripCatalogItems(sectionId, index, entry.id, gripKinds) : [];
+      const flatDrag = isPartPalette ? puzzle2dPlayNodeKindDragData(entry.id, catalogs2d) : undefined;
+      const volumeDrag =
+        isPartPalette && isLoadableMeshUrl(resolveObjectKindMeshUrl(entry.id, catalogs3d, fixture3d ?? undefined))
+          ? puzzle3dPlayObjectKindDragData(entry.id, fixture3d?.domain)
+          : undefined;
+      const dragData = flatDrag || volumeDrag ? { ...(flatDrag ?? {}), ...(volumeDrag ?? {}) } : undefined;
+      return {
+        id: `${sectionId}.${index}.${entry.id}`,
+        label: puzzle5dCatalogKindLabel(entry),
+        description: entry.id,
+        defaultOpen: gripItems.length === 0,
+        ...(gripItems.length ? { items: gripItems } : {}),
+        ...(dragData ? { draggable: true, dragData } : {}),
+      };
+    });
+  return { id: sectionId, label, defaultOpen: sectionDefaultOpen, items };
+}
+
+/** @emoji 🏷️ Workbench kinds tab: Parts, Grips, Fasteners, Ropes. */
+export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTreeNode {
+  const bundle: Puzzle5dKindCatalogBundle | undefined = snapshot.kindCatalogs ?? snapshot.sharedKinds.kindCatalogs;
+  const sections = [
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.parts", "Parts", bundle?.parts, bundle?.grips, true, bundle, snapshot.fixture3d),
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.grips", "Grips", bundle?.grips, undefined, false, bundle, snapshot.fixture3d),
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.fasteners", "Fasteners", bundle?.fasteners, undefined, true, bundle, snapshot.fixture3d),
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.ropes", "Ropes", bundle?.ropes, undefined, true, bundle, snapshot.fixture3d),
+  ].filter((section): section is UiTreeSectionNode => section !== null);
   if (!sections.length) {
     return {
       type: "tree",
@@ -331,6 +430,8 @@ function sameCamera(a: CameraState | null, b: CameraState): boolean {
 
 //#region 🔖Controller
 export interface Puzzle5dPlaySnapshot {
+  readonly model: Puzzle5dModel;
+  readonly selection: Puzzle5dSelectionSnapshot;
   readonly manifestLabel: string | undefined;
   readonly fixture2d: Puzzle2dFixtureV1 | null;
   readonly fixture3d: Puzzle3dFixtureV1 | null;
@@ -361,32 +462,38 @@ export interface Puzzle5dPlaySnapshot {
   readonly selectionMode: Puzzle2dSelectionMode;
 }
 
-function loadNakagin5dModel(): Puzzle5dV1 {
-  const model = parseV1(nakagin5dJson as unknown);
-  if (!model) throw new Error("nakagin-capsule-tower.5d.json must use schema puzzle.5d/v1");
-  return model;
+async function readPuzzle5dPlayModelFromDisk(fixtureId: string): Promise<Puzzle5dModel | null> {
+  const url = PUZZLE_5D_PLAY_FIXTURE_URL_BY_ID[fixtureId];
+  if (!url) return null;
+  const fileName = url.split("/").pop();
+  if (!fileName) return null;
+  const { readFile } = await import("node:fs/promises");
+  const { join, dirname } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const filePath = join(dirname(fileURLToPath(import.meta.url)), "../fixture", fileName);
+  return parseModel(JSON.parse(await readFile(filePath, "utf8")) as unknown);
 }
 
-function loadConcreteForest5dModel(): Puzzle5dV1 {
-  const model = parseV1(concreteForest5dJson as unknown);
-  if (!model) throw new Error("concrete-forest.5d.json must use schema puzzle.5d/v1");
-  return model;
+/** @emoji 📥 Loads a play sample by catalog id (browser fetch or disk in non-browser hosts). */
+export async function fetchPuzzle5dPlayModel(fixtureId: string): Promise<Puzzle5dModel | null> {
+  const url = PUZZLE_5D_PLAY_FIXTURE_URL_BY_ID[fixtureId];
+  if (!url) return null;
+  if (typeof window === "undefined") {
+    return readPuzzle5dPlayModelFromDisk(fixtureId);
+  }
+  const response = await fetch(url);
+  if (!response.ok) return null;
+  return parseModel((await response.json()) as unknown);
 }
 
-function puzzle5dPlayModelForFixtureId(fixtureId: string): Puzzle5dV1 | null {
-  if (fixtureId === PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID) return loadNakagin5dModel();
-  if (fixtureId === PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID) return loadConcreteForest5dModel();
-  return null;
-}
-
-function puzzle5dPlayEmptyModel(): Puzzle5dV1 {
+function puzzle5dPlayEmptyModel(): Puzzle5dModel {
   return {
-    schema: "puzzle.5d/v1",
+    schema: PUZZLE_5D_SCHEMA,
     domain: "architecture",
     camera2d: { x: 0, y: 0, zoom: 1 },
     camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
     parts: [],
-    ties: [],
+    fasteners: [],
     label: "",
   };
 }
@@ -416,7 +523,7 @@ export class Puzzle5dStoreBridge extends Store<Puzzle5dStoreSnapshot> {
 export class Puzzle5dPlayShellController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("main", "Puzzle 5d", undefined);
   private activeFixtureId = PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
-  readonly puzzle5dStore: Puzzle5dStore = createStore(loadConcreteForest5dModel());
+  readonly puzzle5dStore: Puzzle5dStore = createStore(puzzle5dPlayEmptyModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
   private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();
@@ -449,7 +556,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   private puzzle2dGridSnapEnabled = true;
   private puzzle2dRedrawPlaying = false;
 
-  private lastStoreShellModel: Puzzle5dV1 | null = null;
+  private lastStoreShellModel: Puzzle5dModel | null = null;
   private lastStoreShellSelectionKey = "";
   private lastStoreShellFillCount = 0;
   private lastStoreShellFillBuildDone = true;
@@ -460,11 +567,12 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     this.provideStore(PUZZLE_5D_PLAY_STORE_ID, this.puzzle5dStoreBridge);
     this.puzzle5dStore.subscribe(() => this.notifyStoreShellIfNeeded());
     this.rebuildShellMode();
+    void this.loadFixtureById(this.activeFixtureId);
   }
 
   private notifyStoreShellIfNeeded(): void {
     const snap = this.puzzle5dStore.getSnapshot();
-    const selectionKey = `${snap.selection.partIds.join("\u0001")}\u0002${snap.selection.anchorIds.join("\u0001")}`;
+    const selectionKey = `${snap.selection.partIds.join("\u0001")}\u0002${snap.selection.gripIds.join("\u0001")}`;
     if (
       this.lastStoreShellModel === snap.model &&
       this.lastStoreShellSelectionKey === selectionKey &&
@@ -713,8 +821,8 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return { activeFixtureId: this.activeFixtureId, options: PUZZLE_5D_PLAY_FIXTURE_OPTIONS };
   }
 
-  private loadFixtureById(fixtureId: string): void {
-    const model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : puzzle5dPlayModelForFixtureId(fixtureId);
+  private async loadFixtureById(fixtureId: string): Promise<void> {
+    const model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : await fetchPuzzle5dPlayModel(fixtureId);
     if (!model) return;
     this.puzzle5dStore.replaceModel(model);
     this.selected2d = new Set();
@@ -740,7 +848,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
           break;
         }
         this.activeFixtureId = nextId;
-        this.loadFixtureById(nextId);
+        void this.loadFixtureById(nextId);
         changed = false;
         break;
       }
@@ -1010,11 +1118,14 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   getSnapshot(): Puzzle5dPlaySnapshot {
-    const model = this.puzzle5dStore.read();
+    const storeSnap = this.puzzle5dStore.getSnapshot();
+    const model = storeSnap.model;
     const fixture2d = project2d(model);
     const fixture3d = project3d(model);
     const toolbar = this.toolbarState();
     return {
+      model,
+      selection: storeSnap.selection,
       manifestLabel: model.label,
       fixture2d,
       fixture3d,
@@ -1043,8 +1154,8 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       activeTool: this.activeTool,
       brushFlushDistance: this.brushFlushDistance,
       brushOverlapBudget: this.brushOverlapBudget,
-      fillCount: this.puzzle5dStore.getSnapshot().fillCount,
-      fillBuildDone: this.puzzle5dStore.getSnapshot().fillBuildDone,
+      fillCount: storeSnap.fillCount,
+      fillBuildDone: storeSnap.fillBuildDone,
       selectionMethod: toolbar.puzzle2dSelectionMethod,
       selectionMode: toolbar.puzzle2dSelectionMode,
     };
@@ -1112,69 +1223,86 @@ export function buildPuzzle5d3dDeclarativeBody(ctx: WindowBodyViewContext): UiNo
 //#region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+
+  async function puzzle5dPlaySnapshotWithConcreteForest(controller: Puzzle5dPlayShellController): Promise<Puzzle5dPlaySnapshot> {
+    const { default: raw } = await import("../fixture/concrete-forest.5d.json");
+    const model = parseModel(raw as unknown);
+    if (!model) throw new Error("concrete-forest model required for test");
+    controller.puzzle5dStore.replaceModel(model);
+    return controller.getSnapshot();
+  }
+
   describe("puzzle 5d play hierarchy", () => {
-    it("buildPuzzle5dPlayKindsTree exposes draggable flat and volume palette rows", () => {
+    it("buildPuzzle5dPlayKindsTree exposes draggable part palette rows with flat and volume payloads", async () => {
       const runtime = buildPuzzle5dPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
       expect(controller).toBeTruthy();
-      const tree = buildPuzzle5dPlayKindsTree(controller!.getSnapshot());
+      const snapshot = await puzzle5dPlaySnapshotWithConcreteForest(controller!);
+      const tree = buildPuzzle5dPlayKindsTree(snapshot);
       expect(tree.type).toBe("tree");
-      const flatNodes = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.2d.nodes");
-      const volumeObjects = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.3d.objects");
-      expect(flatNodes?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
-      expect(volumeObjects?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
+      const parts = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.parts");
+      expect(parts?.items?.some((row) => row.draggable === true && row.dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME] && row.dragData?.[FIXTURE_DRAG_V1_MIME])).toBe(true);
     });
 
-    it("puzzle5dFixturePaletteTreeDragController routes flat and volume palette rows", () => {
+    it("puzzle5dFixturePaletteTreeDragController routes flat and volume palette rows", async () => {
       const runtime = buildPuzzle5dPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
-      const tree = buildPuzzle5dPlayKindsTree(controller!.getSnapshot());
+      const snapshot = await puzzle5dPlaySnapshotWithConcreteForest(controller!);
+      const tree = buildPuzzle5dPlayKindsTree(snapshot);
       const dragByItemId = collectUiTreeItemDragData(tree.sections);
       const dragController = puzzle5dFixturePaletteTreeDragController(dragByItemId);
-      const flatRow = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.2d.nodes")?.items?.find((row) => row.dragData);
-      const volumeRow = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.3d.objects")?.items?.find((row) => row.dragData);
-      expect(flatRow?.dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]).toBeTruthy();
-      expect(volumeRow?.dragData?.[FIXTURE_DRAG_V1_MIME]).toBeTruthy();
-      expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(flatRow!.dragData!)).toBeTruthy();
-      expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(volumeRow!.dragData!)).toBeTruthy();
+      const partRow = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.parts")?.items?.find((row) => row.dragData);
+      expect(partRow?.dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]).toBeTruthy();
+      expect(partRow?.dragData?.[FIXTURE_DRAG_V1_MIME]).toBeTruthy();
+      expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(partRow!.dragData!)).toBeTruthy();
     });
 
-    it("buildPuzzle5dPlayHierarchySections includes 2d and 3d branches", () => {
+    it("buildPuzzle5dPlayHierarchySections includes Parts and Fasteners sections", async () => {
       const runtime = buildPuzzle5dPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
       expect(controller).toBeTruthy();
-      const tree = buildPuzzle5dPlayHierarchySections(controller!.getSnapshot(), {
-        onSelect2d: () => {},
-        onSelect3dObject: () => {},
-        onSelect3dVortex: () => {},
-        onSelect3dAttraction: () => {},
+      const snapshot = await puzzle5dPlaySnapshotWithConcreteForest(controller!);
+      const tree = buildPuzzle5dPlayHierarchySections(snapshot, {
+        onSelectPart: () => {},
+        onSelectGrip: () => {},
+        onSelectFastener: () => {},
       });
       const sectionLabels = tree.sections.map((section) => section.label);
-      expect(sectionLabels.some((label) => label?.startsWith("2d ·"))).toBe(true);
-      expect(sectionLabels.some((label) => label?.startsWith("3d ·"))).toBe(true);
+      expect(sectionLabels).toContain("Parts");
+      expect(sectionLabels).toContain("Fasteners");
     });
   });
 
   describe("puzzle 5d play fixtures", () => {
-    it("parses nakagin 2d and 3d fixtures", () => {
+    it("parses nakagin 2d and 3d fixtures", async () => {
+      const [{ default: nakagin2dJson }, { default: nakagin3dJson }] = await Promise.all([
+        import("../../2d/fixture/nakagin-capsule-tower.2d.json"),
+        import("../../3d/fixture/nakagin-capsule-tower.3d.json"),
+      ]);
       const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
       const fixture3d = parseFixtureV1(nakagin3dJson as unknown);
       expect(fixture2d?.nodes.length).toBeGreaterThan(0);
       expect(fixture3d?.objects.length).toBeGreaterThan(0);
     });
-    it("parses nakagin unified puzzle 5d v1", () => {
-      const model = parseV1(nakagin5dJson as unknown);
-      expect(model?.schema).toBe("puzzle.5d/v1");
+    it("parses nakagin unified puzzle 5d model", async () => {
+      const { default: nakagin5dJson } = await import("../fixture/nakagin-capsule-tower.5d.json");
+      const model = parseModel(nakagin5dJson as unknown);
+      expect(model?.schema).toBe(PUZZLE_5D_SCHEMA);
       expect(model?.parts.length).toBeGreaterThan(0);
     });
-    it("parses concrete forest 2d, 3d, and unified puzzle 5d v1", () => {
+    it("parses concrete forest 2d, 3d, and unified puzzle 5d model", async () => {
+      const [{ default: concreteForest2dJson }, { default: concreteForest3dJson }, { default: concreteForest5dJson }] = await Promise.all([
+        import("../../2d/fixture/concrete-forest.2d.json"),
+        import("../../3d/fixture/concrete-forest.3d.json"),
+        import("../fixture/concrete-forest.5d.json"),
+      ]);
       const fixture2d = parsePuzzle2dFixtureV1(concreteForest2dJson as unknown);
       const fixture3d = parseFixtureV1(concreteForest3dJson as unknown);
-      const model = parseV1(concreteForest5dJson as unknown);
+      const model = parseModel(concreteForest5dJson as unknown);
       expect(fixture2d?.nodes.some((node) => node.id === "seed-left-001")).toBe(true);
       expect(fixture3d?.objects.some((object) => object.id === "seed-left-001")).toBe(true);
-      expect(model?.schema).toBe("puzzle.5d/v1");
-      expect(model?.parts.some((part) => part.id === "seed-left-001" && part.puzzle2d && part.puzzle3d)).toBe(true);
+      expect(model?.schema).toBe(PUZZLE_5D_SCHEMA);
+      expect(model?.parts.some((part) => part.id === "seed-left-001" && part["2d"] && part["3d"])).toBe(true);
     });
     it("fixture catalog lists concrete forest and nakagin", () => {
       const runtime = buildPuzzle5dPlayRuntime();
@@ -1185,6 +1313,10 @@ if (import.meta.vitest) {
     });
     it("regenerates nakagin 5d fixture when REGENERATE_NAKAGIN_5D=1", async () => {
       if (process.env.REGENERATE_NAKAGIN_5D !== "1") return;
+      const [{ default: nakagin2dJson }, { default: nakagin3dJson }] = await Promise.all([
+        import("../../2d/fixture/nakagin-capsule-tower.2d.json"),
+        import("../../3d/fixture/nakagin-capsule-tower.3d.json"),
+      ]);
       const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
       const fixture3d = parseFixtureV1(nakagin3dJson as unknown);
       expect(fixture2d).toBeTruthy();
@@ -1204,6 +1336,10 @@ if (import.meta.vitest) {
     });
     it("regenerates concrete forest 5d fixture when REGENERATE_CONCRETE_FOREST_5D=1", async () => {
       if (process.env.REGENERATE_CONCRETE_FOREST_5D !== "1") return;
+      const [{ default: concreteForest2dJson }, { default: concreteForest3dJson }] = await Promise.all([
+        import("../../2d/fixture/concrete-forest.2d.json"),
+        import("../../3d/fixture/concrete-forest.3d.json"),
+      ]);
       const fixture2d = parsePuzzle2dFixtureV1(concreteForest2dJson as unknown);
       const fixture3d = parseFixtureV1(concreteForest3dJson as unknown);
       expect(fixture2d).toBeTruthy();
@@ -1236,18 +1372,19 @@ if (import.meta.vitest) {
       expect(controller.getActiveTool()).toBe("brush");
     });
 
-    it("addBrushPart grows unified store parts when placement is valid", () => {
+    it("addBrushPart grows unified store parts when placement is valid", async () => {
       const runtime = buildPuzzle5dPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      await puzzle5dPlaySnapshotWithConcreteForest(controller);
       const host = controller.puzzle5dStore.read().parts[0];
-      const hostAnchor = host?.anchors[0]?.id;
+      const hostAnchor = host?.grips[0]?.id;
       if (!host?.id || !hostAnchor) return;
       const peerKind = controller.puzzle5dStore.read().parts.find((part) => part.partKind && part.id !== host.id)?.partKind;
       if (!peerKind) return;
       const before = controller.puzzle5dStore.read().parts.length;
       controller.run("addBrushPart", {
         partKind: peerKind,
-        sourceAnchorFullId: `${host.id}:${hostAnchor}`,
+        sourceGripFullId: `${host.id}:${hostAnchor}`,
         aspect3d: {
           targetVortexFullId: `${host.id}:${hostAnchor}`,
           objectKindId: peerKind,
@@ -1259,8 +1396,8 @@ if (import.meta.vitest) {
       });
       expect(controller.puzzle5dStore.read().parts.length).toBeGreaterThan(before);
       const placed = controller.puzzle5dStore.read().parts.find((part) => part.id === "brush-test-part");
-      expect(placed?.puzzle2d).toBeTruthy();
-      expect(placed?.puzzle3d).toBeTruthy();
+      expect(placed?.["2d"]).toBeTruthy();
+      expect(placed?.["3d"]).toBeTruthy();
     });
 
     it("builds declarative 2d and 3d canvas-only bodies", () => {

@@ -36,6 +36,7 @@ import {
 } from "@framework/playground/core";
 
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.2d.json";
+import concreteForestFixtureJson from "../fixture/concrete-forest.2d.json";
 import {
 	DEFAULT_KIND_CATALOG_BUNDLE,
 	PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -168,12 +169,32 @@ function puzzle2dPlayEngagementCommandToken(text: string): string {
 
 export const PUZZLE_2D_PLAY_PACKAGE_ROOT = import.meta.url;
 
-export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 =
-	parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as Puzzle2dFixtureV1);
-
 export const PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
+export const PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID = "concrete-forest";
 
-export const PUZZLE_2D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
+export const PUZZLE_2D_PLAY_FIXTURE_OPTIONS = [
+	{ id: PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
+	{ id: PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
+] as const;
+
+const PUZZLE_2D_PLAY_FIXTURE_JSON_BY_ID: Record<string, unknown> = {
+	[PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID]: nakaginFixtureJson,
+	[PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID]: concreteForestFixtureJson,
+};
+
+/** @emoji 🧪 Resolves imported puzzle 2d fixture JSON by catalog id. */
+export function puzzle2dPlayFixtureJson(fixtureId: string = PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID): unknown {
+	return PUZZLE_2D_PLAY_FIXTURE_JSON_BY_ID[fixtureId] ?? concreteForestFixtureJson;
+}
+
+/** @emoji 📋 Parses a puzzle 2d play fixture by catalog id. */
+export function puzzle2dPlayFixtureForId(fixtureId: string): Puzzle2dFixtureV1 {
+	const parsed = parsePuzzle2dFixtureV1(puzzle2dPlayFixtureJson(fixtureId) as unknown);
+	if (!parsed) throw new Error(`puzzle 2d fixture "${fixtureId}" is invalid`);
+	return parsed;
+}
+
+export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
 
 export const PUZZLE_2D_PLAY_EMPTY_FIXTURE: Puzzle2dFixtureV1 = {
 	schema: "puzzle.2d.fixture/v1",
@@ -1742,12 +1763,23 @@ if (import.meta.vitest) {
 			);
 		});
 
-		it("default nakagin fixture parses with puzzle 2d graph nodes", () => {
-			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length).toBeGreaterThan(0);
-			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.edges.length).toBeGreaterThan(0);
-			expect(parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(
-				PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length,
-			);
+		it("default concrete forest fixture parses with seed node", () => {
+			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.some((node) => node.id === "seed-left-001")).toBe(true);
+			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes[0]?.handles.length).toBeGreaterThan(0);
+		});
+
+		it("nakagin fixture parses with puzzle 2d graph nodes", () => {
+			const nakagin = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID);
+			expect(nakagin.nodes.length).toBeGreaterThan(0);
+			expect(nakagin.edges.length).toBeGreaterThan(0);
+			expect(parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(nakagin.nodes.length);
+		});
+
+		it("fixture catalog lists concrete forest and nakagin", () => {
+			expect(PUZZLE_2D_PLAY_FIXTURE_OPTIONS.map((row) => row.id)).toEqual([
+				PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+				PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
+			]);
 		});
 
 		it("nakagin hierarchy kind catalog uses specific human-readable node names", () => {
@@ -1760,7 +1792,7 @@ if (import.meta.vitest) {
 		});
 
 		it("buildPuzzle2dPlayKindsTree mirrors puzzle 3d catalog slices with 2d names", () => {
-			const catalogs = puzzle2dFixtureMergedKindCatalogs(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
+			const catalogs = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID));
 			const tree = buildPuzzle2dPlayKindsTree(catalogs);
 			expect(tree.type).toBe("tree");
 			if (tree.type !== "tree") return;
@@ -2115,7 +2147,7 @@ if (import.meta.vitest) {
 		it("brush distribution measures label node kinds from catalog names not uuid tails", () => {
 			const bus = new CommandBus();
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
-			const catalogs = puzzle2dFixtureMergedKindCatalogs(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
+			const catalogs = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID));
 			ctrl.setKindCatalogs(catalogs);
 			const collectLabels = (measures: readonly WindowMeasure[] | undefined): string[] => {
 				const out: string[] = [];
@@ -2352,8 +2384,8 @@ if (import.meta.vitest) {
 		});
 	});
 
-	it("nakagin default fixture yields a populated hierarchy nodes group", () => {
-		const tree = buildPuzzle2dPlayHierarchySections(PUZZLE_2D_PLAY_DEFAULT_FIXTURE, [], () => {});
+	it("nakagin fixture yields a populated hierarchy nodes group", () => {
+		const tree = buildPuzzle2dPlayHierarchySections(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID), [], () => {});
 		const nodesSection = tree.sections.find((section) => section.label === "Nodes");
 		expect(nodesSection?.items?.length).toBeGreaterThan(0);
 		expect(nodesSection?.items?.[0]?.label).not.toBe("(none)");

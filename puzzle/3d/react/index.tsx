@@ -3233,8 +3233,20 @@ export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(pro
   reactHostPort.useEffect(() => {
     onReferenceRelocateRef.current = puzzle3dReferenceRelocateBridgeRef.current.onRelocate ?? (() => {});
   });
-  const selectedIds = reactHostPort.useMemo(() => new Set(selection.referenceIds), [selection.referenceIds]);
-  const hoveredId = hoverTarget?.kind === "reference" ? hoverTarget.id : null;
+  const referenceById = reactHostPort.useMemo(() => new Map(props.references.map((row) => [row.id, row])), [props.references]);
+  const registryHoverReferenceId = hoverTarget?.kind === "reference" ? hoverTarget.id : null;
+  const hoveredReference = registryHoverReferenceId ? referenceById.get(registryHoverReferenceId) : undefined;
+  const selectedIds = reactHostPort.useMemo(
+    () => new Set(selection.referenceIds.filter((id) => worldEntitySelectable(referenceById.get(id)))),
+    [referenceById, selection.referenceIds],
+  );
+  const hoveredId = hoveredReference && worldEntitySelectable(hoveredReference) ? registryHoverReferenceId : null;
+  const revealedIds = reactHostPort.useMemo(() => {
+    if (!registryHoverReferenceId || hoveredReference?.hidden !== true) {
+      return undefined;
+    }
+    return new Set([registryHoverReferenceId]);
+  }, [hoveredReference?.hidden, registryHoverReferenceId]);
   const translationSnap = lodCtx.gridSnapEnabled ? lodCtx.gridStepWorld : undefined;
   const config = props.relocate === false ? false : (props.relocate ?? gumballConfig);
   return (
@@ -3242,6 +3254,7 @@ export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(pro
       references={props.references}
       selectedIds={selectedIds}
       hoveredId={hoveredId}
+      revealedIds={revealedIds}
       gumballConfig={config === false ? undefined : config}
       relocateActive={config !== false}
       translationSnap={translationSnap}
@@ -3249,10 +3262,18 @@ export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(pro
         if (puzzle3dTargetVolumeToolActiveRef.current) {
           return;
         }
+        const reference = referenceById.get(id);
+        if (!reference || !worldEntitySelectable(reference)) {
+          return;
+        }
         commitSelection({ kind: "reference", id });
       }}
       onHover={(id) => {
         if (id) {
+          const reference = referenceById.get(id);
+          if (!reference || !worldEntitySelectable(reference)) {
+            return;
+          }
           setHover({ kind: "reference", id });
           return;
         }

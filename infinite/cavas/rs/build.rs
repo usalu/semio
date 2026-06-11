@@ -16,15 +16,15 @@ fn repo_ui_assets(manifest_dir: &Path) -> PathBuf {
 }
 
 fn metabolism_icons_dir(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../semio/client/example/metabolism/icons")
+    manifest_dir.join("../../../semio/client/example/metabolism/icon")
 }
 
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
     let ui_assets = repo_ui_assets(&manifest_dir);
-    let shortcodes_path = ui_assets.join("icons/generated/shortcodes.json");
-    let icons_dir = ui_assets.join("icons");
+    let shortcodes_path = ui_assets.join("icon/generated/shortcodes.json");
+    let icons_dir = ui_assets.join("icon");
     let metabolism_dir = metabolism_icons_dir(&manifest_dir);
 
     println!("cargo:rerun-if-changed={}", shortcodes_path.display());
