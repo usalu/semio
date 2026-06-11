@@ -1974,6 +1974,9 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     }
     const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
     const appearanceChanged = fixtureAppearanceFingerprint(next) !== fixtureAppearanceFingerprint(prev);
+    if (appearanceChanged) {
+      this.hierarchySectionsCache = null;
+    }
     if (structureChanged) {
       this.syncShell();
     } else if (poseChanged || appearanceChanged) {
@@ -5346,6 +5349,25 @@ if (import.meta.vitest) {
       expect(treeA.sections).toBe(treeB.sections);
       expect(treeA.selectedIds).toEqual([`puzzle-3d-play-hierarchy.object.${objectId}`]);
       expect(treeB.selectedIds).toEqual([]);
+    });
+
+    it("getHierarchyPanelTree rebuilds sections when hidden flags change without structure revision bump", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = ctrl.getFixture();
+      expect(fixture).not.toBeNull();
+      const objectId = fixture!.objects[0]!.id;
+      const revisionBefore = ctrl.getFixtureRevision();
+      const treeBefore = ctrl.getHierarchyPanelTree(PUZZLE_3D_PLAY_EMPTY_SELECTION);
+      const objectRowBefore = treeBefore.sections[0]?.items?.find((row) => row.id === `puzzle-3d-play-hierarchy.object.${objectId}`);
+      expect(objectRowBefore?.isHidden).not.toBe(true);
+      ctrl.patchFixture((current) => updatePuzzle3dObjectInFixture(current, objectId, { hidden: true }));
+      expect(ctrl.getFixtureRevision()).toBe(revisionBefore);
+      const treeAfter = ctrl.getHierarchyPanelTree(PUZZLE_3D_PLAY_EMPTY_SELECTION);
+      expect(treeAfter.sections).not.toBe(treeBefore.sections);
+      const objectRowAfter = treeAfter.sections[0]?.items?.find((row) => row.id === `puzzle-3d-play-hierarchy.object.${objectId}`);
+      expect(objectRowAfter?.isHidden).toBe(true);
     });
 
     it("buildPuzzle3dPlayKindsSections lists object, vortex, cable, and attraction kind categories", () => {

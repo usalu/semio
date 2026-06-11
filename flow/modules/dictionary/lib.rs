@@ -1,6 +1,6 @@
 //! 📚 Flow dictionary module: operators for dictionary manipulation.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, ValueType, VariadicSpec};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, VariadicSpec};
 
 // #region 🔖Pack
 /// 📦 Wraps input into a dictionary schema.
@@ -8,7 +8,7 @@ pub struct Pack;
 
 impl Operation for Pack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("dictionary").merge(input))
+        Ok(channel_output("dictionary", Dictionary::with_schema("dictionary").merge(input)))
     }
 }
 // #endregion 🔖Pack
@@ -19,7 +19,7 @@ pub struct Unpack;
 
 impl Operation for Unpack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(read_dict(input, "dictionary")?.clone())
+        Ok(channel_output("dictionary", read_dict(input, "dictionary")?.clone()))
     }
 }
 // #endregion 🔖Unpack
@@ -33,8 +33,8 @@ impl Operation for Get {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         match dict.get(&key).cloned().ok_or_else(|| EvalError::MissingInput(key))? {
-            Value::Dictionary(value) => Ok(value),
-            value => Ok(Dictionary::with_schema("dictionary").insert("value", value)),
+            Value::Dictionary(value) => Ok(channel_output("value", value)),
+            value => Ok(channel_output("value", Dictionary::with_schema("dictionary").insert("value", value))),
         }
     }
 }
@@ -49,7 +49,7 @@ impl Operation for Set {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
-        Ok(dict.clone().insert(key, value))
+        Ok(channel_output("dictionary", dict.clone().insert(key, value)))
     }
 }
 // #endregion 🔖Set
@@ -62,7 +62,7 @@ impl Operation for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
-        Ok(remove_key(dict, &key))
+        Ok(channel_output("dictionary", remove_key(dict, &key)))
     }
 }
 // #endregion 🔖Remove
@@ -75,7 +75,7 @@ impl Operation for Has {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
-        Ok(boolean_dictionary(dict.get(&key).is_some()))
+        Ok(channel_output("exists", boolean_dictionary(dict.get(&key).is_some())))
     }
 }
 // #endregion 🔖Has
@@ -86,7 +86,10 @@ pub struct Keys;
 
 impl Operation for Keys {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(text_dictionary(read_dict(input, "dictionary")?.keys().map(String::as_str).filter(|key| *key != "$schema").collect::<Vec<_>>().join(",")))
+        Ok(channel_output(
+            "keys",
+            text_dictionary(read_dict(input, "dictionary")?.keys().map(String::as_str).filter(|key| *key != "$schema").collect::<Vec<_>>().join(",")),
+        ))
     }
 }
 // #endregion 🔖Keys
@@ -98,7 +101,7 @@ pub struct Size;
 impl Operation for Size {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let count = read_dict(input, "dictionary")?.keys().filter(|key| key.as_str() != "$schema").count();
-        Ok(number_dictionary(count as f64))
+        Ok(channel_output("count", number_dictionary(count as f64)))
     }
 }
 // #endregion 🔖Size
@@ -119,7 +122,7 @@ impl Operation for Merge {
         for index in indices {
             merged = merged.merge(read_dict(items, &index.to_string())?);
         }
-        Ok(merged)
+        Ok(channel_output("dictionary", merged))
     }
 }
 // #endregion 🔖Merge
@@ -158,10 +161,6 @@ fn dict_channel(id: &str, operator_id: &str) -> ChannelSpec {
 
 fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::text_default(id, "", &[operator_id])
-}
-
-fn out_channel() -> ChannelSpec {
-    ChannelSpec::provides("out", vec![])
 }
 
 fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
@@ -212,8 +211,26 @@ fn module_registry() -> Registry {
 
 /// 📦 Registers all dictionary operators.
 pub fn register(registry: &mut Registry) {
-    register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], out_channel()), Box::new(Pack), vec![], &["dictionary"]);
-    register_simple(registry, info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary", "dictionary.unpack")], out_channel()), Box::new(Unpack), vec!["dictionary"], &["dictionary"]);
+    register_simple(
+        registry,
+        info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::named("D", "Dic", "dictionary", "PackedDictionary")),
+        Box::new(Pack),
+        vec![],
+        &["dictionary"],
+    );
+    register_simple(
+        registry,
+        info(
+            "dictionary.unpack",
+            "Unpack",
+            "Forwards a dictionary",
+            vec![dict_channel("dictionary", "dictionary.unpack")],
+            ChannelSpec::named("D", "Dic", "dictionary", "UnpackedDictionary"),
+        ),
+        Box::new(Unpack),
+        vec!["dictionary"],
+        &["dictionary"],
+    );
     register_simple(
         registry,
         info(
@@ -221,7 +238,7 @@ pub fn register(registry: &mut Registry) {
             "Get",
             "Reads a value by key",
             vec![dict_channel("dictionary", "dictionary.get"), text_channel("key", "dictionary.get")],
-            ChannelSpec::any("out"),
+            ChannelSpec::named("V", "Val", "value", "DictionaryValue"),
         ),
         Box::new(Get),
         vec!["dictionary", "text"],
@@ -234,7 +251,7 @@ pub fn register(registry: &mut Registry) {
             "Set",
             "Inserts or replaces a key",
             vec![dict_channel("dictionary", "dictionary.set"), text_channel("key", "dictionary.set"), ChannelSpec::any("value")],
-            out_channel(),
+            ChannelSpec::named("D", "Dic", "dictionary", "UpdatedDictionary"),
         ),
         Box::new(Set),
         vec![],
@@ -242,24 +259,60 @@ pub fn register(registry: &mut Registry) {
     );
     register_simple(
         registry,
-        info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary", "dictionary.remove"), text_channel("key", "dictionary.remove")], out_channel()),
+        info(
+            "dictionary.remove",
+            "Remove",
+            "Removes a key",
+            vec![dict_channel("dictionary", "dictionary.remove"), text_channel("key", "dictionary.remove")],
+            ChannelSpec::named("D", "Dic", "dictionary", "ReducedDictionary"),
+        ),
         Box::new(Remove),
         vec!["dictionary", "text"],
         &["dictionary"],
     );
     register_simple(
         registry,
-        info("dictionary.has", "Has", "Checks whether a key exists", vec![dict_channel("dictionary", "dictionary.has"), text_channel("key", "dictionary.has")], out_channel()),
+        info(
+            "dictionary.has",
+            "Has",
+            "Checks whether a key exists",
+            vec![dict_channel("dictionary", "dictionary.has"), text_channel("key", "dictionary.has")],
+            ChannelSpec::named("E", "Exs", "exists", "KeyExists"),
+        ),
         Box::new(Has),
         vec!["dictionary", "text"],
         &["boolean"],
     );
-    register_simple(registry, info("dictionary.keys", "Keys", "Lists keys as comma-separated text", vec![dict_channel("dictionary", "dictionary.keys")], out_channel()), Box::new(Keys), vec!["dictionary"], &["text"]);
-    register_simple(registry, info("dictionary.size", "Size", "Reports the number of keys", vec![dict_channel("dictionary", "dictionary.size")], out_channel()), Box::new(Size), vec!["dictionary"], &["number"]);
+    register_simple(
+        registry,
+        info(
+            "dictionary.keys",
+            "Keys",
+            "Lists keys as comma-separated text",
+            vec![dict_channel("dictionary", "dictionary.keys")],
+            ChannelSpec::named("K", "Key", "keys", "DictionaryKeys"),
+        ),
+        Box::new(Keys),
+        vec!["dictionary"],
+        &["text"],
+    );
+    register_simple(
+        registry,
+        info(
+            "dictionary.size",
+            "Size",
+            "Reports the number of keys",
+            vec![dict_channel("dictionary", "dictionary.size")],
+            ChannelSpec::named("C", "Cnt", "count", "DictionaryCount"),
+        ),
+        Box::new(Size),
+        vec!["dictionary"],
+        &["number"],
+    );
     registry.register_operator(
         OperatorInfo {
             variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-            ..info("dictionary.merge", "Merge", "Merges ordered dictionary inputs", vec![], out_channel())
+            ..info("dictionary.merge", "Merge", "Merges ordered dictionary inputs", vec![], ChannelSpec::named("D", "Dic", "dictionary", "MergedDictionary"))
         },
         vec![OperatorImpl { schemas: vec!["dictionary".into(), "dictionary".into()], operation: Box::new(Merge) }],
         &["dictionary"],
@@ -283,7 +336,8 @@ mod tests {
         register(&mut reg);
         let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict())).insert("key", Value::Dictionary(text_dictionary("number".into())));
         let out = reg.dispatch("dictionary.get", &input).unwrap();
-        assert_eq!(out.schema(), Some("number"));
+        let value = out.get("value").and_then(|v| v.as_dictionary()).expect("value channel");
+        assert_eq!(value.schema(), Some("number"));
     }
 
     #[test]
@@ -295,7 +349,8 @@ mod tests {
             .insert("key", Value::Dictionary(text_dictionary("text".into())))
             .insert("value", Value::Dictionary(text_dictionary("new".into())));
         let out = reg.dispatch("dictionary.set", &input).unwrap();
-        assert!(out.get("text").is_some());
+        let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
+        assert!(dictionary.get("text").is_some());
     }
 
     #[test]
@@ -304,9 +359,10 @@ mod tests {
         register(&mut reg);
         let items = Dictionary::new().insert("0", Value::Dictionary(Dictionary::with_schema("dictionary").insert("a", Value::Dictionary(number_dictionary(1.0))))).insert("1", Value::Dictionary(Dictionary::with_schema("dictionary").insert("b", Value::Dictionary(text_dictionary("x".into())))));
         let out = reg.dispatch("dictionary.merge", &Dictionary::new().insert("items", Value::Dictionary(items))).unwrap();
-        assert_eq!(out.schema(), Some("dictionary"));
-        assert!(out.get("a").is_some());
-        assert!(out.get("b").is_some());
+        let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
+        assert_eq!(dictionary.schema(), Some("dictionary"));
+        assert!(dictionary.get("a").is_some());
+        assert!(dictionary.get("b").is_some());
     }
 
     #[test]
@@ -328,7 +384,8 @@ mod tests {
     fn evaluate_json_pack() {
         let out_json = evaluate_json(&module_registry(), "dictionary.pack", &serde_json::to_string(&sample_dict()).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.schema(), Some("dictionary"));
+        let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
+        assert_eq!(dictionary.schema(), Some("dictionary"));
     }
 }
 // #endregion 🔖Tests

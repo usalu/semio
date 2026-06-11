@@ -1,0 +1,13 @@
+{
+  "title": "Accurate Flow Channel Naming",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Rename flow/procedural operator channels so naming is accurate: inputs use the most general name of what the input actually accepts, outputs use the most specific name of what the output actually produces. Neural trees stay dictionary-in/dictionary-out, but flow exposes all keys of the input dictionary as input channels and all keys of the output dictionary as output channels (no generic 'out' port).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1661"
+  },
+  "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
+  "sessions": [
+    "⚪7443fbac8199477c98469c9bda29231f"
+  ]
+}

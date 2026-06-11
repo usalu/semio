@@ -1535,6 +1535,7 @@ dependencies = [
 name = "flow_module_brep"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "flow_module_wasm",
  "geometry_brep_brepkit",
  "geometry_brep_engine",

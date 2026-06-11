@@ -17,7 +17,7 @@ use brepkit_math::nurbs::surface::NurbsSurface;
 use brepkit_math::nurbs::surface_fitting::interpolate_surface;
 use brepkit_math::surfaces::{ConicalSurface, CylindricalSurface, SphericalSurface, ToroidalSurface};
 use brepkit_math::vec::{Point3, Vec3 as BkVec3};
-use brepkit_operations::boolean::{boolean, compound_cut, BooleanOp, BooleanOptions};
+use brepkit_operations::boolean::{boolean, compound_cut, BooleanOp};
 use brepkit_operations::chamfer::{chamfer, chamfer_asymmetric};
 use brepkit_operations::copy::copy_solid;
 use brepkit_operations::draft::draft;
@@ -545,7 +545,8 @@ impl BrepkitKernel {
             .collect();
         let oriented: Vec<OrientedEdge> = edges.iter().map(|&e| OrientedEdge::new(e, true)).collect();
         let wire = Wire::new(oriented, false).map_err(Self::map_topo_err)?;
-        Ok(self.register_entity(GeometryKind::Wire, Entity::Wire(self.topo.add_wire(wire))))
+        let wid = self.topo.add_wire(wire);
+        Ok(self.register_entity(GeometryKind::Wire, Entity::Wire(wid)))
     }
 
     pub fn rectangle_wire_sync(&mut self, width: f64, height: f64) -> Result<GeometryHandle, BrepError> {
@@ -664,6 +665,16 @@ impl BrepkitKernel {
         Ok(self.register_solid(solid))
     }
 
+    pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: Vec3) -> Result<GeometryHandle, BrepError> {
+        let distance = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
+        if distance < 1e-12 {
+            return Err(BrepError::InvalidInput("extrude vector magnitude must be positive".into()));
+        }
+        let direction = [vector[0] / distance, vector[1] / distance, vector[2] / distance];
+        let face = self.planar_face_from_wire_sync(wire)?;
+        self.extrude_sync(&face, direction, distance)
+    }
+
     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: Vec3, distance: f64) -> Result<GeometryHandle, BrepError> {
         let face_id = self.face_id(face)?;
         let solid = extrude(&mut self.topo, face_id, v3(direction), distance).map_err(Self::map_err)?;
@@ -698,12 +709,12 @@ impl BrepkitKernel {
             Entity::Curve(c) => Self::curve_to_nurbs(c)?,
             Entity::Edge(e) => self.edge_to_nurbs(*e)?,
             Entity::Wire(w) => {
-                let wire = self.topo.wire(*w)?;
+                let wire = self.topo.wire(*w).map_err(Self::map_topo_err)?;
                 let mut points = Vec::new();
                 for oe in wire.edges() {
-                    let edge = self.topo.edge(oe.edge())?;
-                    points.push(self.topo.vertex(edge.start())?.point());
-                    points.push(self.topo.vertex(edge.end())?.point());
+                    let edge = self.topo.edge(oe.edge()).map_err(Self::map_topo_err)?;
+                    points.push(self.topo.vertex(edge.start()).map_err(Self::map_topo_err)?.point());
+                    points.push(self.topo.vertex(edge.end()).map_err(Self::map_topo_err)?.point());
                 }
                 interpolate(&points, 3).map_err(|e| BrepError::Operation(e.to_string()))?
             }
@@ -768,7 +779,13 @@ impl BrepkitKernel {
     pub fn compound_cut_sync(&mut self, target: &GeometryHandle, tools: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let target_id = self.solid_id(target)?;
         let tool_ids: Vec<SolidId> = tools.iter().map(|h| self.solid_id(h)).collect::<Result<_, _>>()?;
-        let solid = compound_cut(&mut self.topo, target_id, &tool_ids, brepkit_operations::boolean::BooleanOptions::default()).map_err(Self::map_err)?;
+        let solid = compound_cut(
+            &mut self.topo,
+            target_id,
+            &tool_ids,
+            brepkit_operations::boolean::BooleanOptions::default(),
+        )
+        .map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
     }
 
@@ -795,9 +812,8 @@ impl BrepkitKernel {
 
     pub fn mirror_sync(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
         let solid_id = self.solid_id(shape)?;
-        Ok(self.register_solid(
-            mirror(&mut self.topo, solid_id, p3(origin), v3(normal)).map_err(Self::map_err)?,
-        ))
+        let solid = mirror(&mut self.topo, solid_id, p3(origin), v3(normal)).map_err(Self::map_err)?;
+        Ok(self.register_solid(solid))
     }
 
     pub fn copy_shape_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
@@ -913,9 +929,9 @@ impl BrepkitKernel {
     ) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let face_ids: Vec<FaceId> = faces.iter().map(|h| self.face_id(h)).collect::<Result<_, _>>()?;
-        Ok(self.register_solid(
-            draft(&mut self.topo, solid, &face_ids, v3(pull_direction), p3(neutral_point), angle).map_err(Self::map_err)?,
-        ))
+        let solid = draft(&mut self.topo, solid, &face_ids, v3(pull_direction), p3(neutral_point), angle)
+            .map_err(Self::map_err)?;
+        Ok(self.register_solid(solid))
     }
 
     pub fn offset_solid_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
@@ -958,7 +974,7 @@ impl BrepkitKernel {
     }
 
     pub fn curve_curve_intersect_sync(
-        &self,
+        &mut self,
         a: &GeometryHandle,
         b: &GeometryHandle,
         tolerance: f64,
@@ -978,7 +994,7 @@ impl BrepkitKernel {
     }
 
     pub fn curve_surface_intersect_sync(
-        &self,
+        &mut self,
         curve: &GeometryHandle,
         surface: &GeometryHandle,
         tolerance: f64,
@@ -991,21 +1007,20 @@ impl BrepkitKernel {
         let nurbs_s = match &self.entry(surface)?.entity {
             Entity::Surface(s) => Self::surface_to_nurbs(s)?,
             Entity::Face(f) => {
-                let face = self.topo.face(*f)?;
+                let face = self.topo.face(*f).map_err(Self::map_topo_err)?;
                 match face.surface() {
                     FaceSurface::Nurbs(ns) => ns.clone(),
                     other => Self::surface_to_nurbs(&match other {
                         FaceSurface::Plane { normal, d } => {
-                            let frame = Frame3::from_normal(Point3::new(0.0, 0.0, 0.0), normal).map_err(|e| BrepError::Operation(e.to_string()))?;
                             KernelSurface::Plane {
                                 origin: Point3::new(normal.x() * *d, normal.y() * *d, normal.z() * *d),
                                 normal: *normal,
                             }
                         }
-                        FaceSurface::Cylinder(c) => KernelSurface::Cylinder(*c),
-                        FaceSurface::Cone(c) => KernelSurface::Cone(*c),
-                        FaceSurface::Sphere(s) => KernelSurface::Sphere(*s),
-                        FaceSurface::Torus(t) => KernelSurface::Torus(*t),
+                        FaceSurface::Cylinder(c) => KernelSurface::Cylinder(c.clone()),
+                        FaceSurface::Cone(c) => KernelSurface::Cone(c.clone()),
+                        FaceSurface::Sphere(s) => KernelSurface::Sphere(s.clone()),
+                        FaceSurface::Torus(t) => KernelSurface::Torus(t.clone()),
                         FaceSurface::Nurbs(_) => unreachable!(),
                     })?
                 }
@@ -1020,18 +1035,25 @@ impl BrepkitKernel {
         &mut self,
         a: &GeometryHandle,
         b: &GeometryHandle,
-        tolerance: f64,
+        _tolerance: f64,
     ) -> Result<Vec<GeometryHandle>, BrepError> {
         let nurbs_a = match &self.entry(a)?.entity {
             Entity::Surface(s) => Self::surface_to_nurbs(s)?,
             Entity::Face(f) => {
-                let face = self.topo.face(*f)?;
+                let face = self.topo.face(*f).map_err(Self::map_topo_err)?;
                 match face.surface() {
                     FaceSurface::Nurbs(ns) => ns.clone(),
-                    _ => Self::surface_to_nurbs(&KernelSurface::Nurbs(
-                        NurbsSurface::new(1, 1, vec![vec![Point3::origin()]], vec![vec![1.0]], vec![0.0, 1.0], vec![0.0, 1.0])
-                            .map_err(|e| BrepError::Operation(e.to_string()))?,
-                    ))?,
+                    other => Self::surface_to_nurbs(&match other {
+                        FaceSurface::Plane { normal, d } => {
+                            let origin = Point3::new(normal.x() * *d, normal.y() * *d, normal.z() * *d);
+                            KernelSurface::Plane { origin, normal: *normal }
+                        }
+                        FaceSurface::Cylinder(c) => KernelSurface::Cylinder(c.clone()),
+                        FaceSurface::Cone(c) => KernelSurface::Cone(c.clone()),
+                        FaceSurface::Sphere(s) => KernelSurface::Sphere(s.clone()),
+                        FaceSurface::Torus(t) => KernelSurface::Torus(t.clone()),
+                        FaceSurface::Nurbs(_) => unreachable!(),
+                    })?,
                 }
             }
             _ => return Err(BrepError::InvalidInput("a must be surface or face".into())),
@@ -1039,18 +1061,25 @@ impl BrepkitKernel {
         let nurbs_b = match &self.entry(b)?.entity {
             Entity::Surface(s) => Self::surface_to_nurbs(s)?,
             Entity::Face(f) => {
-                let face = self.topo.face(*f)?;
+                let face = self.topo.face(*f).map_err(Self::map_topo_err)?;
                 match face.surface() {
                     FaceSurface::Nurbs(ns) => ns.clone(),
-                    _ => Self::surface_to_nurbs(&KernelSurface::Nurbs(
-                        NurbsSurface::new(1, 1, vec![vec![Point3::origin()]], vec![vec![1.0]], vec![0.0, 1.0], vec![0.0, 1.0])
-                            .map_err(|e| BrepError::Operation(e.to_string()))?,
-                    ))?,
+                    other => Self::surface_to_nurbs(&match other {
+                        FaceSurface::Plane { normal, d } => {
+                            let origin = Point3::new(normal.x() * *d, normal.y() * *d, normal.z() * *d);
+                            KernelSurface::Plane { origin, normal: *normal }
+                        }
+                        FaceSurface::Cylinder(c) => KernelSurface::Cylinder(c.clone()),
+                        FaceSurface::Cone(c) => KernelSurface::Cone(c.clone()),
+                        FaceSurface::Sphere(s) => KernelSurface::Sphere(s.clone()),
+                        FaceSurface::Torus(t) => KernelSurface::Torus(t.clone()),
+                        FaceSurface::Nurbs(_) => unreachable!(),
+                    })?,
                 }
             }
             _ => return Err(BrepError::InvalidInput("b must be surface or face".into())),
         };
-        let curves = intersect_nurbs_nurbs(&nurbs_a, &nurbs_b, tolerance).map_err(|e| BrepError::Operation(e.to_string()))?;
+        let curves = intersect_nurbs_nurbs(&nurbs_a, &nurbs_b, 32, 0.0).map_err(|e| BrepError::Operation(e.to_string()))?;
         Ok(curves
             .into_iter()
             .map(|ic| self.register_entity(GeometryKind::Curve, Entity::Curve(KernelCurve::Nurbs(ic.curve))))
@@ -1061,9 +1090,9 @@ impl BrepkitKernel {
         match &self.entry(curve)?.entity {
             Entity::Curve(c) => Ok(from_p3(Self::curve_evaluate(c, parameter))),
             Entity::Edge(e) => {
-                let edge = self.topo.edge(*e)?;
-                let start = self.topo.vertex(edge.start())?.point();
-                let end = self.topo.vertex(edge.end())?.point();
+                let edge = self.topo.edge(*e).map_err(Self::map_topo_err)?;
+                let start = self.topo.vertex(edge.start()).map_err(Self::map_topo_err)?.point();
+                let end = self.topo.vertex(edge.end()).map_err(Self::map_topo_err)?.point();
                 match edge.curve() {
                     EdgeCurve::Line => {
                         let len = (end - start).length();
@@ -1087,11 +1116,11 @@ impl BrepkitKernel {
         match &self.entry(curve)?.entity {
             Entity::Curve(c) => Ok(from_v3(Self::curve_tangent_inner(c, parameter))),
             Entity::Edge(e) => {
-                let edge = self.topo.edge(*e)?;
+                let edge = self.topo.edge(*e).map_err(Self::map_topo_err)?;
                 match edge.curve() {
                     EdgeCurve::Line => {
-                        let start = self.topo.vertex(edge.start())?.point();
-                        let end = self.topo.vertex(edge.end())?.point();
+                        let start = self.topo.vertex(edge.start()).map_err(Self::map_topo_err)?.point();
+                        let end = self.topo.vertex(edge.end()).map_err(Self::map_topo_err)?.point();
                         let dir = end - start;
                         let len = dir.length();
                         if len < 1e-15 {
@@ -1116,11 +1145,11 @@ impl BrepkitKernel {
         match &self.entry(curve)?.entity {
             Entity::Curve(c) => Ok(Self::curve_domain_inner(c)),
             Entity::Edge(e) => {
-                let edge = self.topo.edge(*e)?;
+                let edge = self.topo.edge(*e).map_err(Self::map_topo_err)?;
                 match edge.curve() {
                     EdgeCurve::Line => {
-                        let start = self.topo.vertex(edge.start())?.point();
-                        let end = self.topo.vertex(edge.end())?.point();
+                        let start = self.topo.vertex(edge.start()).map_err(Self::map_topo_err)?.point();
+                        let end = self.topo.vertex(edge.end()).map_err(Self::map_topo_err)?.point();
                         Ok(ParamDomain { min: 0.0, max: (end - start).length() })
                     }
                     EdgeCurve::NurbsCurve(c) => {
@@ -1138,17 +1167,24 @@ impl BrepkitKernel {
         match &self.entry(curve)?.entity {
             Entity::Curve(c) => Ok(Self::curve_curvature_inner(c, parameter)),
             Entity::Edge(e) => {
-                let edge = self.topo.edge(*e)?;
+                let edge = self.topo.edge(*e).map_err(Self::map_topo_err)?;
                 match edge.curve() {
                     EdgeCurve::Line => Ok(0.0),
                     EdgeCurve::Circle(c) => Ok(1.0 / c.radius()),
                     EdgeCurve::Ellipse(el) => {
-                        let tan = el.tangent(parameter);
-                        let tan_len = tan.length();
-                        if tan_len < 1e-15 {
+                        let nurbs = ellipse_to_nurbs(el, 0.0, TAU).map_err(|e| BrepError::Operation(e.to_string()))?;
+                        let d = nurbs.derivatives(parameter, 2);
+                        if d.len() < 2 {
                             Ok(0.0)
                         } else {
-                            Ok(tan.cross(el.second_derivative(parameter)).length() / tan_len.powi(3))
+                            let tan = d[1];
+                            let tan_len = tan.length();
+                            if tan_len < 1e-15 {
+                                Ok(0.0)
+                            } else {
+                                let d2 = if d.len() > 2 { d[2] } else { BkVec3::new(0.0, 0.0, 0.0) };
+                                Ok(tan.cross(d2).length() / tan_len.powi(3))
+                            }
                         }
                     }
                     EdgeCurve::NurbsCurve(c) => {
@@ -1175,8 +1211,8 @@ impl BrepkitKernel {
     pub fn surface_point_sync(&self, surface: &GeometryHandle, u: f64, v: f64) -> Result<Vec3, BrepError> {
         match &self.entry(surface)?.entity {
             Entity::Surface(KernelSurface::Plane { origin, normal }) => {
-                let frame = Frame3::from_normal(Point3::new(0.0, 0.0, 0.0), normal).map_err(|e| BrepError::Operation(e.to_string()))?;
-                Ok(from_p3(*origin + frame.x * u + frame.y * v))
+                let frame = Frame3::from_normal(*origin, *normal).map_err(|e| BrepError::Operation(e.to_string()))?;
+                Ok(from_p3(frame.origin + frame.x * u + frame.y * v))
             }
             Entity::Surface(KernelSurface::Cylinder(c)) => Ok(from_p3(c.evaluate(u, v))),
             Entity::Surface(KernelSurface::Cone(c)) => Ok(from_p3(c.evaluate(u, v))),
@@ -1184,13 +1220,13 @@ impl BrepkitKernel {
             Entity::Surface(KernelSurface::Torus(t)) => Ok(from_p3(t.evaluate(u, v))),
             Entity::Surface(KernelSurface::Nurbs(ns)) => Ok(from_p3(ns.evaluate(u, v))),
             Entity::Face(f) => {
-                let face = self.topo.face(*f)?;
+                let face = self.topo.face(*f).map_err(Self::map_topo_err)?;
                 match face.surface() {
                     FaceSurface::Nurbs(ns) => Ok(from_p3(ns.evaluate(u, v))),
                     FaceSurface::Plane { normal, d } => {
-                        let frame = Frame3::from_normal(Point3::new(0.0, 0.0, 0.0), normal).map_err(|e| BrepError::Operation(e.to_string()))?;
                         let origin = Point3::new(normal.x() * *d, normal.y() * *d, normal.z() * *d);
-                        Ok(from_p3(origin + frame.x * u + frame.y * v))
+                        let frame = Frame3::from_normal(origin, *normal).map_err(|e| BrepError::Operation(e.to_string()))?;
+                        Ok(from_p3(frame.origin + frame.x * u + frame.y * v))
                     }
                     FaceSurface::Cylinder(c) => Ok(from_p3(c.evaluate(u, v))),
                     FaceSurface::Cone(c) => Ok(from_p3(c.evaluate(u, v))),
@@ -1211,20 +1247,24 @@ impl BrepkitKernel {
             Entity::Surface(KernelSurface::Torus(t)) => Ok(from_v3(t.normal(u, v))),
             Entity::Surface(KernelSurface::Nurbs(ns)) => {
                 let d = ns.derivatives(u, v, 1);
-                if d.len() >= 2 {
-                    Ok(from_v3(d[0].cross(d[1]).normalize().unwrap_or(BkVec3::new(0.0, 0.0, 1.0))))
+                let du = d.get(1).and_then(|row| row.first()).copied();
+                let dv = d.first().and_then(|row| row.get(1)).copied();
+                if let (Some(du), Some(dv)) = (du, dv) {
+                    Ok(from_v3(du.cross(dv).normalize().unwrap_or(BkVec3::new(0.0, 0.0, 1.0))))
                 } else {
                     Ok([0.0, 0.0, 1.0])
                 }
             }
             Entity::Face(f) => {
-                let face = self.topo.face(*f)?;
+                let face = self.topo.face(*f).map_err(Self::map_topo_err)?;
                 match face.surface() {
                     FaceSurface::Plane { normal, .. } => Ok(from_v3(*normal)),
                     FaceSurface::Nurbs(ns) => {
                         let d = ns.derivatives(u, v, 1);
-                        if d.len() >= 2 {
-                            Ok(from_v3(d[0].cross(d[1]).normalize().unwrap_or(BkVec3::new(0.0, 0.0, 1.0))))
+                        let du = d.get(1).and_then(|row| row.first()).copied();
+                        let dv = d.first().and_then(|row| row.get(1)).copied();
+                        if let (Some(du), Some(dv)) = (du, dv) {
+                            Ok(from_v3(du.cross(dv).normalize().unwrap_or(BkVec3::new(0.0, 0.0, 1.0))))
                         } else {
                             Ok([0.0, 0.0, 1.0])
                         }
@@ -1254,7 +1294,7 @@ impl BrepkitKernel {
             Entity::Solid(s) => measure::solid_surface_area(&self.topo, *s, 0.1).map_err(Self::map_err),
             Entity::Compound(c) => {
                 let mut total = 0.0;
-                for &s in self.topo.compound(*c)?.solids() {
+                for &s in self.topo.compound(*c).map_err(Self::map_topo_err)?.solids() {
                     total += measure::solid_surface_area(&self.topo, s, 0.1).map_err(Self::map_err)?;
                 }
                 Ok(total)
@@ -1267,7 +1307,7 @@ impl BrepkitKernel {
         match &self.entry(shape)?.entity {
             Entity::Edge(e) => measure::edge_length(&self.topo, *e).map_err(Self::map_err),
             Entity::Wire(w) => {
-                let wire = self.topo.wire(*w)?;
+                let wire = self.topo.wire(*w).map_err(Self::map_topo_err)?;
                 let mut total = 0.0;
                 for oe in wire.edges() {
                     total += measure::edge_length(&self.topo, oe.edge()).map_err(Self::map_err)?;
@@ -1279,7 +1319,7 @@ impl BrepkitKernel {
                 let nurbs = Self::curve_to_nurbs(c)?;
                 let (a, b) = nurbs.domain();
                 let samples = sample_deflection(&nurbs, a, b, 0.01);
-                if samples.len() < 2 {
+                Ok(if samples.len() < 2 {
                     domain.max - domain.min
                 } else {
                     let mut len = 0.0;
@@ -1287,7 +1327,7 @@ impl BrepkitKernel {
                         len += (w[1].1 - w[0].1).length();
                     }
                     len
-                }
+                })
             }
             _ => Err(BrepError::InvalidInput(format!("{} cannot compute length", shape.as_str()))),
         }
@@ -1497,7 +1537,7 @@ impl BrepkitKernel {
             }
             Entity::Compound(c) => {
                 let mut transfer = MeshTransfer::default();
-                for &solid in self.topo.compound(*c)?.solids() {
+                for &solid in self.topo.compound(*c).map_err(Self::map_topo_err)?.solids() {
                     let mesh = tessellate_solid_with_tolerance(&self.topo, solid, tol, 0.2).map_err(Self::map_err)?;
                     let edges = sample_solid_edges(&self.topo, solid, tol).map_err(Self::map_err)?;
                     let base = transfer.position.len() / 3;
@@ -1507,13 +1547,15 @@ impl BrepkitKernel {
                     transfer
                         .normal
                         .extend(mesh.normals.iter().flat_map(|n| [n.x() as f32, n.y() as f32, n.z() as f32]));
+                    let tri_start = transfer.index.len() as u32;
+                    let tri_count = mesh.indices.len() as u32;
                     for idx in mesh.indices {
                         transfer.index.push(idx + base as u32);
                     }
                     transfer.edges.extend(Self::edge_lines_flat(&edges));
                     transfer.face_groups.push(FaceGroup {
-                        start: transfer.index.len() as u32 - mesh.indices.len() as u32,
-                        count: mesh.indices.len() as u32,
+                        start: tri_start,
+                        count: tri_count,
                         entity_id: handle.as_str().to_string(),
                     });
                 }
@@ -1531,22 +1573,21 @@ impl BrepkitKernel {
                     .iter()
                     .flat_map(|n| [n.x() as f32, n.y() as f32, n.z() as f32])
                     .collect();
-                let index = mesh.indices;
+                let triangle_count = mesh.indices.len() as u32;
                 Ok(MeshTransfer {
                     position,
                     normal,
-                    index,
+                    index: mesh.indices,
                     edges: Vec::new(),
                     points: Vec::new(),
                     face_groups: vec![FaceGroup {
                         start: 0,
-                        count: index.len() as u32,
+                        count: triangle_count,
                         entity_id: handle.as_str().to_string(),
                     }],
                 })
             }
             Entity::Curve(c) => {
-                let domain = Self::curve_domain_inner(c);
                 let nurbs = Self::curve_to_nurbs(c)?;
                 let (a, b) = nurbs.domain();
                 let samples = sample_deflection(&nurbs, a, b, tol);
@@ -1573,7 +1614,7 @@ impl BrepkitKernel {
                 })
             }
             Entity::Vertex(v) => {
-                let p = self.topo.vertex(*v)?.point();
+                let p = self.topo.vertex(*v).map_err(Self::map_topo_err)?.point();
                 Ok(MeshTransfer {
                     position: Vec::new(),
                     normal: Vec::new(),
@@ -1583,13 +1624,14 @@ impl BrepkitKernel {
                     face_groups: Vec::new(),
                 })
             }
-            Entity::Edge(e) | Entity::Wire(_) => {
+            Entity::Edge(_) | Entity::Wire(_) => {
                 let mut edges = Vec::new();
                 let edge_ids: Vec<EdgeId> = match &entry.entity {
                     Entity::Edge(e) => vec![*e],
                     Entity::Wire(w) => self
                         .topo
-                        .wire(*w)?
+                        .wire(*w)
+                        .map_err(Self::map_topo_err)?
                         .edges()
                         .iter()
                         .map(|oe| oe.edge())
@@ -1647,6 +1689,7 @@ impl BrepkitKernel {
                         index.extend([i0 as u32, i2 as u32, i1 as u32, i1 as u32, i2 as u32, i3 as u32]);
                     }
                 }
+                let triangle_count = index.len() as u32;
                 Ok(MeshTransfer {
                     position,
                     normal,
@@ -1655,7 +1698,7 @@ impl BrepkitKernel {
                     points: Vec::new(),
                     face_groups: vec![FaceGroup {
                         start: 0,
-                        count: index.len() as u32,
+                        count: triangle_count,
                         entity_id: handle.as_str().to_string(),
                     }],
                 })
@@ -1779,6 +1822,10 @@ impl BrepKernel for BrepkitKernel {
     async fn thicken_face(&mut self, face: &GeometryHandle, thickness: f64) -> Result<GeometryHandle, BrepError> {
         self.thicken_face_sync(face, thickness)
     }
+    async fn extrude_wire(&mut self, wire: &GeometryHandle, vector: Vec3) -> Result<GeometryHandle, BrepError> {
+        self.extrude_wire_sync(wire, vector)
+    }
+
     async fn extrude(&mut self, face: &GeometryHandle, direction: Vec3, distance: f64) -> Result<GeometryHandle, BrepError> {
         self.extrude_sync(face, direction, distance)
     }
@@ -1925,7 +1972,7 @@ impl BrepKernel for BrepkitKernel {
         self.split_sync(solid, plane_origin, plane_normal)
     }
     async fn curve_curve_intersect(
-        &self,
+        &mut self,
         a: &GeometryHandle,
         b: &GeometryHandle,
         tolerance: f64,
@@ -1933,7 +1980,7 @@ impl BrepKernel for BrepkitKernel {
         self.curve_curve_intersect_sync(a, b, tolerance)
     }
     async fn curve_surface_intersect(
-        &self,
+        &mut self,
         curve: &GeometryHandle,
         surface: &GeometryHandle,
         tolerance: f64,

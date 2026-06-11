@@ -266,6 +266,7 @@ interface RawMeshTransfer {
 	readonly normal?: readonly number[];
 	readonly index?: readonly number[];
 	readonly edges?: readonly number[];
+	readonly points?: readonly number[];
 	readonly face_groups?: readonly { readonly start: number; readonly count: number; readonly entity_id: string }[];
 	readonly faceGroups?: readonly { readonly start: number; readonly count: number; readonly entityId: string }[];
 	readonly error?: string;
@@ -298,6 +299,7 @@ function rawMeshToTransfer(raw: RawMeshTransfer): MeshTransfer {
 		normal: new Float32Array(raw.normal ?? []),
 		index: new Uint32Array(raw.index ?? []),
 		edges: new Float32Array(raw.edges ?? []),
+		points: new Float32Array(raw.points ?? []),
 		faceGroups: (raw.faceGroups ?? raw.face_groups ?? []).map((group) => ({
 			start: group.start,
 			count: group.count,

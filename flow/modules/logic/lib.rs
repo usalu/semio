@@ -1,6 +1,6 @@
 //! 🔀 Flow logic module: boolean operators over schema dictionaries.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖Greater
 /// 📈 Compares two numbers.
@@ -8,7 +8,10 @@ pub struct Greater;
 
 impl Operation for Greater {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?))
+        Ok(channel_output(
+            "boolean",
+            boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?),
+        ))
     }
 }
 // #endregion 🔖Greater
@@ -19,7 +22,7 @@ pub struct Not;
 
 impl Operation for Not {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(boolean_dictionary(!read_channel_bool(input, "boolean")?))
+        Ok(channel_output("boolean", boolean_dictionary(!read_channel_bool(input, "boolean")?)))
     }
 }
 // #endregion 🔖Not
@@ -62,7 +65,7 @@ fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::boolean_default(id, false, &[operator_id])
 }
 
-fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
+fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
         module: "logic".into(),
@@ -71,7 +74,7 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> Operat
         icon: "emoji:🔀".into(),
         summary: summary.into(),
         inputs,
-        outputs: vec![ChannelSpec::provides("out", vec![])],
+        outputs: vec![output],
         ..Default::default()
     }
 }
@@ -87,12 +90,24 @@ fn module_registry() -> Registry {
 /// 📦 Registers all logic operators.
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
-        info("logic.greater", "Greater", "True when a > b", vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")]),
+        info(
+            "logic.greater",
+            "Greater",
+            "True when a > b",
+            vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")],
+            ChannelSpec::named("B", "Boo", "boolean", "Greater"),
+        ),
         vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Greater) }],
         &["boolean"],
     );
     registry.register_operator(
-        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean", "logic.not")]),
+        info(
+            "logic.not",
+            "Not",
+            "Inverts a boolean",
+            vec![boolean_channel("boolean", "logic.not")],
+            ChannelSpec::named("B", "Boo", "boolean", "Negated"),
+        ),
         vec![OperatorImpl { schemas: vec!["boolean".into()], operation: Box::new(Not) }],
         &["boolean"],
     );
@@ -111,8 +126,9 @@ mod tests {
         register(&mut reg);
         let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
         let out = reg.dispatch("logic.greater", &input).unwrap();
-        assert_eq!(out.schema(), Some("boolean"));
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
+        let boolean = out.get("boolean").and_then(|v| v.as_dictionary()).expect("boolean channel");
+        assert_eq!(boolean.schema(), Some("boolean"));
+        assert_eq!(boolean.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
     }
 
     #[test]
@@ -135,7 +151,8 @@ mod tests {
         let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
         let out_json = evaluate_json(&module_registry(), "logic.greater", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
+        let boolean = out.get("boolean").and_then(|v| v.as_dictionary()).expect("boolean channel");
+        assert_eq!(boolean.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
     }
 }
 // #endregion 🔖Tests

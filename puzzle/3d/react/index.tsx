@@ -2893,17 +2893,23 @@ export class ObjectStore {
         cur.meshUrl === nextRecord.meshUrl &&
         cur.label === nextRecord.label &&
         cur.wormhole === nextRecord.wormhole &&
+        cur.hidden === nextRecord.hidden &&
+        cur.locked === nextRecord.locked &&
         JSON.stringify(cur.vortices) === JSON.stringify(nextRecord.vortices)
       ) {
         continue;
       }
-      this.records.set(object.id, { ...cur, ...nextRecord });
+      this.records.set(object.id, nextRecord);
       changed.push(object.id);
     }
     for (const objectId of changed) {
       this.notifyObject(objectId);
     }
-    if (changed.length > 0) {
+    const attractionsChanged = JSON.stringify(this.attractions) !== JSON.stringify(fixture.attractions);
+    if (attractionsChanged) {
+      this.attractions = fixture.attractions;
+    }
+    if (changed.length > 0 || attractionsChanged) {
       this.bumpStructure();
     }
   }
@@ -12776,6 +12782,32 @@ if (import.meta.vitest) {
       });
       expect(store.getRecord("obj")?.objectKind).toBe("kind-b");
       expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/b.glb");
+    });
+    it("ObjectStore syncAppearanceFromFixture syncs hidden and locked flags on objects and attractions", () => {
+      const store = new ObjectStore();
+      const initial: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [{ id: "att-1", attracting: "obj:v1", attracted: "obj:v1" }],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] }],
+      };
+      store.initFromFixture(initial);
+      store.syncAppearanceFromFixture({
+        ...initial,
+        attractions: [{ id: "att-1", attracting: "obj:v1", attracted: "obj:v1", hidden: true, locked: true }],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], hidden: true, locked: true, vortices: [{ id: "v1", position: [0, 0, 0], hidden: true }] }],
+      });
+      expect(store.getRecord("obj")?.hidden).toBe(true);
+      expect(store.getRecord("obj")?.locked).toBe(true);
+      expect(store.getRecord("obj")?.vortices[0]?.hidden).toBe(true);
+      expect(store.getAttractions()[0]?.hidden).toBe(true);
+      expect(store.getAttractions()[0]?.locked).toBe(true);
+      store.syncAppearanceFromFixture(initial);
+      expect(store.getRecord("obj")?.hidden).toBeUndefined();
+      expect(store.getRecord("obj")?.locked).toBeUndefined();
+      expect(store.getRecord("obj")?.vortices[0]?.hidden).toBeUndefined();
+      expect(store.getAttractions()[0]?.hidden).toBeUndefined();
     });
     it("puzzle3dGridPlacementAnchorCad uses orbit XY and datum Z", () => {
       const targetThree = new Vector3(...cadVec3ToThree([12, -8, 40]));

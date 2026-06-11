@@ -539,7 +539,7 @@ function buildMeshBuffers(data: ReturnType<typeof meshTransferToGeometryData>): 
 const PROCEDURAL_PREVIEW_POINT_RADIUS = 0.08;
 const PROCEDURAL_PREVIEW_BOUNDS_PAD = 0.05;
 const PROCEDURAL_PREVIEW_LINE_PICK_MIN = 0.08;
-const PROCEDURAL_GEOMETRY_REF_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|drawing)-/;
+const PROCEDURAL_GEOMETRY_REF_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|curve|surface|drawing)-/;
 
 export function previewPickProxyFromBounds(bounds: { min: Vec3; max: Vec3 }): { position: Vec3; size: Vec3 } {
 	const [minX, minY, minZ] = bounds.min;

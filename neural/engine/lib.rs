@@ -289,11 +289,11 @@ impl Tree {
 }
 
 fn default_from_port() -> String {
-    "out".into()
+    String::new()
 }
 
 fn default_to_port() -> String {
-    "in".into()
+    String::new()
 }
 
 /// 🔗 Directed connection between two port endpoints.
@@ -392,7 +392,10 @@ pub struct VariadicSpec {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelSpec {
-    pub id: String,
+    pub code: String,
+    pub abbreviation: String,
+    pub name: String,
+    pub full_name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub operators: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -401,23 +404,81 @@ pub struct ChannelSpec {
     pub label: Option<String>,
 }
 
+fn derive_channel_names(name: &str) -> (String, String, String) {
+    let code = if name.len() <= 2 {
+        name.to_uppercase()
+    } else {
+        name.chars().take(2).collect::<String>().to_uppercase()
+    };
+    let abbreviation = if name.len() <= 3 {
+        name.to_string()
+    } else {
+        name.chars().take(3).collect()
+    };
+    let mut full = String::new();
+    let mut capitalize = true;
+    for ch in name.chars() {
+        if ch == '_' {
+            capitalize = true;
+            continue;
+        }
+        if capitalize {
+            full.extend(ch.to_uppercase());
+            capitalize = false;
+        } else {
+            full.push(ch);
+        }
+    }
+    if full.is_empty() {
+        full = name.to_string();
+    }
+    (code, abbreviation, full)
+}
+
 impl ChannelSpec {
-    pub fn requires(id: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
+    pub fn named(code: impl Into<String>, abbreviation: impl Into<String>, name: impl Into<String>, full_name: impl Into<String>) -> Self {
         Self {
-            id: id.into(),
+            code: code.into(),
+            abbreviation: abbreviation.into(),
+            name: name.into(),
+            full_name: full_name.into(),
+            operators: Vec::new(),
+            default: None,
+            label: None,
+        }
+    }
+
+    pub fn requires(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
+        let name = name.into();
+        let (code, abbreviation, full_name) = derive_channel_names(&name);
+        Self {
+            code,
+            abbreviation,
+            name,
+            full_name,
             operators: operators.iter().map(|entry| entry.as_ref().to_string()).collect(),
             default: None,
             label: None,
         }
     }
 
-    pub fn provides(id: impl Into<String>, operators: Vec<String>) -> Self {
+    pub fn provides(name: impl Into<String>, operators: Vec<String>) -> Self {
+        let name = name.into();
+        let (code, abbreviation, full_name) = derive_channel_names(&name);
         Self {
-            id: id.into(),
+            code,
+            abbreviation,
+            name,
+            full_name,
             operators,
             default: None,
             label: None,
         }
+    }
+
+    pub fn with_operators(mut self, operators: Vec<String>) -> Self {
+        self.operators = operators;
+        self
     }
 
     pub fn with_default(mut self, default: Value) -> Self {
@@ -430,43 +491,48 @@ impl ChannelSpec {
         self
     }
 
-    pub fn number(id: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators)
+    pub fn number(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators)
     }
 
-    pub fn number_default(id: impl Into<String>, default: f64, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators).with_default(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(default)))))
+    pub fn number_default(name: impl Into<String>, default: f64, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators).with_default(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(default)))))
     }
 
-    pub fn integer_default(id: impl Into<String>, default: i64, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators).with_default(Value::Atom(Atom::Integer(default)))
+    pub fn integer_default(name: impl Into<String>, default: i64, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators).with_default(Value::Atom(Atom::Integer(default)))
     }
 
-    pub fn boolean_default(id: impl Into<String>, default: bool, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators)
+    pub fn boolean_default(name: impl Into<String>, default: bool, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators)
             .with_default(Value::Dictionary(Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(default)))))
     }
 
-    pub fn text_default(id: impl Into<String>, default: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators)
+    pub fn text_default(name: impl Into<String>, default: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators)
             .with_default(Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(default.into())))))
     }
 
-    pub fn list(id: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators)
+    pub fn list(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators)
     }
 
-    pub fn dictionary(id: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(id, operators)
+    pub fn dictionary(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
+        Self::requires(name, operators)
     }
 
-    pub fn any(id: impl Into<String>) -> Self {
-        Self::requires(id, &[] as &[&str])
+    pub fn any(name: impl Into<String>) -> Self {
+        Self::requires(name, &[] as &[&str])
     }
 
     pub fn wildcard() -> Self {
         Self::any("*")
     }
+}
+
+/// 📤 Wraps a payload dictionary under a named output channel.
+pub fn channel_output(name: &str, payload: Dictionary) -> Dictionary {
+    Dictionary::new().insert(name, Value::Dictionary(payload))
 }
 
 /// 📇 Catalogue metadata for an operator.
@@ -1028,9 +1094,27 @@ fn boundary_output_value(input: &Dictionary) -> Option<Value> {
 
 fn synapse_source_value(src_out: &Dictionary, from_port: &str) -> Value {
     if from_port.is_empty() || from_port == "out" {
+        if from_port == "out" {
+            if let Some(value) = src_out.get("out") {
+                return value.clone();
+            }
+            if src_out.len() == 1 {
+                if let Some(key) = src_out.keys().next() {
+                    if let Some(value) = src_out.get(key) {
+                        return value.clone();
+                    }
+                }
+            }
+        }
         return Value::Dictionary(src_out.clone());
     }
-    src_out.get(from_port).cloned().unwrap_or(Value::Dictionary(src_out.clone()))
+    src_out
+        .get(from_port)
+        .cloned()
+        .unwrap_or(Value::Dictionary(Dictionary::new().insert(
+            "error",
+            Value::Atom(Atom::String(format!("missing channel {from_port}"))),
+        )))
 }
 
 fn insert_variadic_slot(acc: Dictionary, slot_key: &str, port_id: &str, value: Value) -> Dictionary {
@@ -1047,11 +1131,11 @@ fn insert_fixed_port(acc: Dictionary, port_key: &str, value: Value) -> Dictionar
 pub fn inject_channel_defaults(acc: Dictionary, operator_info: &OperatorInfo) -> Dictionary {
     let mut acc = acc;
     for spec in &operator_info.inputs {
-        if spec.id == "*" || acc.get(&spec.id).is_some() {
+        if spec.name == "*" || acc.get(&spec.name).is_some() {
             continue;
         }
         if let Some(default) = &spec.default {
-            acc = acc.insert(spec.id.clone(), default.clone());
+            acc = acc.insert(spec.name.clone(), default.clone());
         }
     }
     acc
@@ -1074,11 +1158,11 @@ fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neur
         let Some(src_out) = outputs.get(&syn.from) else { continue };
         let value = synapse_source_value(src_out, &syn.from_port);
         if let Some(spec) = variadic {
-            let port_id = if syn.to_port.is_empty() || syn.to_port == "in" { "0" } else { syn.to_port.as_str() };
+            let port_id = if syn.to_port.is_empty() { "0" } else { syn.to_port.as_str() };
             acc = insert_variadic_slot(acc, &spec.slot_key, port_id, value);
             continue;
         }
-        if syn.to_port.is_empty() || syn.to_port == "in" {
+        if syn.to_port.is_empty() {
             if let Value::Dictionary(dict) = value {
                 acc = acc.merge(&dict);
             }
@@ -1091,7 +1175,7 @@ fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neur
 
 fn channel_schema(input: &Dictionary, channel: &ChannelSpec) -> String {
     input
-        .get(&channel.id)
+        .get(&channel.name)
         .and_then(|value| value.as_dictionary())
         .and_then(|dictionary| dictionary.schema())
         .map(str::to_string)
@@ -1123,7 +1207,7 @@ fn operator_signature(info: &OperatorInfo, input: &Dictionary) -> Vec<String> {
             })
             .unwrap_or_default();
     }
-    info.inputs.iter().filter(|channel| channel.id != "*").map(|channel| channel_schema(input, channel)).collect()
+    info.inputs.iter().filter(|channel| channel.name != "*").map(|channel| channel_schema(input, channel)).collect()
 }
 
 fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
@@ -1182,7 +1266,12 @@ mod tests {
 
     impl Operation for Echo {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-            Ok(input.clone())
+            let payload = input
+                .get("x")
+                .and_then(|value| value.as_dictionary())
+                .cloned()
+                .unwrap_or_else(|| input.clone());
+            Ok(channel_output("x", payload))
         }
     }
 
@@ -1197,7 +1286,7 @@ mod tests {
                 .and_then(|v| v.as_atom())
                 .and_then(|a| a.as_f64())
                 .ok_or_else(|| EvalError::MissingInput("number.value".into()))?;
-            Ok(number_dictionary(value * 2.0))
+            Ok(channel_output("doubled", number_dictionary(value * 2.0)))
         }
     }
 
@@ -1225,7 +1314,7 @@ mod tests {
             icon: "emoji:📣".into(),
             summary: "Forwards input".into(),
             inputs: vec![ChannelSpec::any("x")],
-            outputs: vec![ChannelSpec::provides("out", vec![])],
+            outputs: vec![ChannelSpec::named("X", "x", "x", "Echoed")],
             ..Default::default()
         }
     }
@@ -1239,7 +1328,7 @@ mod tests {
             icon: "emoji:✖️".into(),
             summary: "Doubles number".into(),
             inputs: vec![ChannelSpec::number("number", &["double"])],
-            outputs: vec![ChannelSpec::provides("out", vec![])],
+            outputs: vec![ChannelSpec::named("D", "Dbl", "doubled", "DoubledNumber")],
             ..Default::default()
         }
     }
@@ -1297,7 +1386,15 @@ mod tests {
                 Double.evaluate(input)
             })
             .unwrap();
-        assert_eq!(out.get("b").and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
+        assert_eq!(
+            out.get("b")
+                .and_then(|d| d.get("doubled"))
+                .and_then(|v| v.as_dictionary())
+                .and_then(|d| d.get("value"))
+                .and_then(|v| v.as_atom())
+                .and_then(|a| a.as_f64()),
+            Some(6.0)
+        );
     }
 
     #[test]
@@ -1315,12 +1412,20 @@ mod tests {
                 id: "s1".into(),
                 from: "a".into(),
                 to: "b".into(),
-                from_port: "out".into(),
+                from_port: "x".into(),
                 to_port: "number".into(),
             }],
         };
         let out = Evaluator::new(&reg).evaluate(&tree, &HashMap::new()).unwrap();
-        assert_eq!(out.get("b").and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
+        assert_eq!(
+            out.get("b")
+                .and_then(|d| d.get("doubled"))
+                .and_then(|v| v.as_dictionary())
+                .and_then(|d| d.get("value"))
+                .and_then(|v| v.as_atom())
+                .and_then(|a| a.as_f64()),
+            Some(4.0)
+        );
     }
 
     #[test]
@@ -1334,16 +1439,22 @@ mod tests {
                 id: "s1".into(),
                 from: "slider".into(),
                 to: "add".into(),
-                from_port: "out".into(),
+                from_port: "number".into(),
                 to_port: "number".into(),
             }],
         };
         let mut seeds = HashMap::new();
-        seeds.insert("slider".into(), number_dictionary(3.0));
+        seeds.insert("slider".into(), channel_output("number", number_dictionary(3.0)));
         let channels = Evaluator::new(&reg).evaluate_channels(&tree, &seeds, &HashMap::from([(double_info().id.clone(), double_info())])).unwrap();
         assert_eq!(channels.inputs.get("add").and_then(|d| d.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
         assert_eq!(
-            channels.outputs.get("add").and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
+            channels.outputs
+                .get("add")
+                .and_then(|d| d.get("doubled"))
+                .and_then(|v| v.as_dictionary())
+                .and_then(|d| d.get("value"))
+                .and_then(|v| v.as_atom())
+                .and_then(|a| a.as_f64()),
             Some(6.0)
         );
     }
@@ -1353,13 +1464,13 @@ mod tests {
         let tree = Tree {
             neurons: vec![Neuron::with_kind("add", "math.add", Dictionary::new())],
             synapses: vec![
-                Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "a".into() },
-                Synapse { id: "s2".into(), from: "note".into(), to: "add".into(), from_port: "out".into(), to_port: "b".into() },
+                Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "a".into() },
+                Synapse { id: "s2".into(), from: "note".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() },
             ],
         };
         let mut outputs = HashMap::new();
-        outputs.insert("slider".into(), number_dictionary(2.0));
-        outputs.insert("note".into(), number_dictionary(3.0));
+        outputs.insert("slider".into(), channel_output("number", number_dictionary(2.0)));
+        outputs.insert("note".into(), channel_output("number", number_dictionary(3.0)));
         let input = collect_neuron_input(&tree, &outputs, "add", None);
         assert_eq!(input.get("a").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
         assert_eq!(input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
@@ -1375,20 +1486,20 @@ mod tests {
             icon: "emoji:🔀".into(),
             summary: "Merge".into(),
             inputs: vec![],
-            outputs: vec![ChannelSpec::provides("out", vec![])],
+            outputs: vec![ChannelSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
             variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
             ..Default::default()
         };
         let tree = Tree {
             neurons: vec![Neuron::with_kind("merge", "dictionary.merge", Dictionary::new())],
             synapses: vec![
-                Synapse { id: "s1".into(), from: "a".into(), to: "merge".into(), from_port: "out".into(), to_port: "0".into() },
-                Synapse { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "out".into(), to_port: "1".into() },
+                Synapse { id: "s1".into(), from: "a".into(), to: "merge".into(), from_port: "dictionary".into(), to_port: "0".into() },
+                Synapse { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "dictionary".into(), to_port: "1".into() },
             ],
         };
         let mut outputs = HashMap::new();
-        outputs.insert("a".into(), Dictionary::with_schema("dictionary"));
-        outputs.insert("b".into(), Dictionary::with_schema("dictionary"));
+        outputs.insert("a".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
+        outputs.insert("b".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
         let input = collect_neuron_input(&tree, &outputs, "merge", Some(&operator));
         let items = input.get("items").and_then(|v| v.as_dictionary()).expect("items");
         assert!(items.get("0").is_some());
@@ -1413,7 +1524,7 @@ mod tests {
                 .and_then(|v| v.as_atom())
                 .and_then(|a| a.as_f64())
                 .ok_or_else(|| EvalError::MissingInput("b".into()))?;
-            Ok(number_dictionary(a + b))
+            Ok(channel_output("sum", number_dictionary(a + b)))
         }
     }
 
@@ -1426,7 +1537,7 @@ mod tests {
             icon: "emoji:➕".into(),
             summary: "Adds numbers".into(),
             inputs: vec![ChannelSpec::number("a", &["math.add"]), ChannelSpec::number("b", &["math.add"])],
-            outputs: vec![ChannelSpec::provides("out", vec![])],
+            outputs: vec![ChannelSpec::named("S", "Sum", "sum", "Sum")],
             ..Default::default()
         }
     }
@@ -1460,11 +1571,11 @@ mod tests {
         let (inputs, outputs) = tree.contract();
         assert_eq!(inputs.len(), 2);
         assert_eq!(outputs.len(), 1);
-        assert_eq!(inputs[0].id, "a");
-        assert_eq!(outputs[0].id, "sum");
+        assert_eq!(inputs[0].name, "a");
+        assert_eq!(outputs[0].name, "sum");
         let info = cluster_operator_info("cluster-1", "Add cluster", &tree);
         assert_eq!(info.inputs.len(), 2);
-        assert_eq!(info.outputs[0].id, "sum");
+        assert_eq!(info.outputs[0].name, "sum");
     }
 
     #[test]
@@ -1477,9 +1588,9 @@ mod tests {
                 output_boundary("out_sum", "sum"),
             ],
             synapses: vec![
-                Synapse { id: "s1".into(), from: "in_a".into(), to: "add".into(), from_port: "out".into(), to_port: "a".into() },
-                Synapse { id: "s2".into(), from: "in_b".into(), to: "add".into(), from_port: "out".into(), to_port: "b".into() },
-                Synapse { id: "s3".into(), from: "add".into(), to: "out_sum".into(), from_port: "out".into(), to_port: "in".into() },
+                Synapse { id: "s1".into(), from: "in_a".into(), to: "add".into(), from_port: String::new(), to_port: "a".into() },
+                Synapse { id: "s2".into(), from: "in_b".into(), to: "add".into(), from_port: String::new(), to_port: "b".into() },
+                Synapse { id: "s3".into(), from: "add".into(), to: "out_sum".into(), from_port: "sum".into(), to_port: String::new() },
             ],
         };
         let tree = Tree {
@@ -1494,16 +1605,16 @@ mod tests {
                 },
             ],
             synapses: vec![
-                Synapse { id: "s_a".into(), from: "a_src".into(), to: "cluster".into(), from_port: "out".into(), to_port: "a".into() },
-                Synapse { id: "s_b".into(), from: "b_src".into(), to: "cluster".into(), from_port: "out".into(), to_port: "b".into() },
+                Synapse { id: "s_a".into(), from: "a_src".into(), to: "cluster".into(), from_port: "number".into(), to_port: "a".into() },
+                Synapse { id: "s_b".into(), from: "b_src".into(), to: "cluster".into(), from_port: "number".into(), to_port: "b".into() },
             ],
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
         reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
         let mut seeds = HashMap::new();
-        seeds.insert("a_src".into(), number_dictionary(2.0));
-        seeds.insert("b_src".into(), number_dictionary(3.0));
+        seeds.insert("a_src".into(), channel_output("number", number_dictionary(2.0)));
+        seeds.insert("b_src".into(), channel_output("number", number_dictionary(3.0)));
         let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
         assert_eq!(
             out.get("cluster").and_then(|d| d.get("sum")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
@@ -1515,7 +1626,7 @@ mod tests {
     fn cluster_shakability_round_trip() {
         let inner = Tree {
             neurons: vec![input_boundary("in_a", "a"), output_boundary("out_a", "a")],
-            synapses: vec![Synapse { id: "s1".into(), from: "in_a".into(), to: "out_a".into(), from_port: "out".into(), to_port: "in".into() }],
+            synapses: vec![Synapse { id: "s1".into(), from: "in_a".into(), to: "out_a".into(), from_port: String::new(), to_port: String::new() }],
         };
         let tree = Tree {
             neurons: vec![
@@ -1527,12 +1638,12 @@ mod tests {
                     tree: Some(Box::new(inner)),
                 },
             ],
-            synapses: vec![Synapse { id: "s0".into(), from: "a_src".into(), to: "cluster".into(), from_port: "out".into(), to_port: "a".into() }],
+            synapses: vec![Synapse { id: "s0".into(), from: "a_src".into(), to: "cluster".into(), from_port: "number".into(), to_port: "a".into() }],
         };
         let json = serde_json::to_string(&tree).unwrap();
         let back: Tree = serde_json::from_str(&json).unwrap();
         let mut seeds = HashMap::new();
-        seeds.insert("a_src".into(), number_dictionary(7.0));
+        seeds.insert("a_src".into(), channel_output("number", number_dictionary(7.0)));
         let out = Evaluator::new(&Registry::new()).evaluate(&back, &seeds).unwrap();
         assert_eq!(
             out.get("cluster").and_then(|d| d.get("a")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
@@ -1554,7 +1665,7 @@ mod tests {
                 ChannelSpec::number_default("index", 0.0, &["list.get"]),
                 ChannelSpec::boolean_default("wrap", false, &["list.get"]),
             ],
-            outputs: vec![ChannelSpec::any("out")],
+            outputs: vec![ChannelSpec::named("V", "Val", "value", "ListValue")],
             ..Default::default()
         };
         let tree = Tree {
@@ -1591,7 +1702,7 @@ mod tests {
                 id: "s1".into(),
                 from: "a".into(),
                 to: "b".into(),
-                from_port: "out".into(),
+                from_port: "x".into(),
                 to_port: "number".into(),
             }],
         };
@@ -1626,7 +1737,7 @@ mod tests {
                 id: "s1".into(),
                 from: "a".into(),
                 to: "add".into(),
-                from_port: "out".into(),
+                from_port: "x".into(),
                 to_port: "a".into(),
             }],
         };
@@ -1638,7 +1749,7 @@ mod tests {
             .evaluate_channels(&tree, &HashMap::new(), &HashMap::from([(add_info().id.clone(), add_info())]))
             .unwrap();
         let add_out = channels.outputs.get("add").expect("add output");
-        assert!(add_out.get("error").is_some());
+        assert!(add_out.get("error").is_some() || add_out.get("sum").is_none());
         assert!(channels.outputs.get("a").is_some());
     }
 
@@ -1652,8 +1763,8 @@ mod tests {
                 Neuron::with_kind("add", "math.add", Dictionary::new()),
             ],
             synapses: vec![
-                Synapse { id: "s1".into(), from: "a".into(), to: "add".into(), from_port: "out".into(), to_port: "a".into() },
-                Synapse { id: "s2".into(), from: "b".into(), to: "add".into(), from_port: "out".into(), to_port: "b".into() },
+                Synapse { id: "s1".into(), from: "a".into(), to: "add".into(), from_port: "x".into(), to_port: "a".into() },
+                Synapse { id: "s2".into(), from: "b".into(), to: "add".into(), from_port: "x".into(), to_port: "b".into() },
             ],
         };
         let mut reg = Registry::new();

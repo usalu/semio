@@ -1,6 +1,6 @@
 //! 🏗️ Flow bim module: semantic building information modeling operators.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
 
 // #region 🔖Schemas
 fn material_schema() -> Schema {
@@ -142,11 +142,56 @@ fn text_channel(id: &str, operator_id: &str, default: &str) -> ChannelSpec {
     ChannelSpec::requires(id, &[operator_id]).with_default(Value::Dictionary(text_dictionary(default)))
 }
 
-fn out_channel() -> ChannelSpec {
-    ChannelSpec::provides("out", vec![])
+fn out_material() -> ChannelSpec {
+    ChannelSpec::named("M", "Mat", "material", "Material")
 }
 
-fn operator_info(id: &str, name: &str, abbreviation: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, group: &[&str]) -> OperatorInfo {
+fn out_space() -> ChannelSpec {
+    ChannelSpec::named("S", "Spc", "space", "Space")
+}
+
+fn out_wall() -> ChannelSpec {
+    ChannelSpec::named("W", "Wal", "wall", "Wall")
+}
+
+fn out_slab() -> ChannelSpec {
+    ChannelSpec::named("S", "Slb", "slab", "Slab")
+}
+
+fn out_column() -> ChannelSpec {
+    ChannelSpec::named("C", "Col", "column", "Column")
+}
+
+fn out_window() -> ChannelSpec {
+    ChannelSpec::named("W", "Win", "window", "Window")
+}
+
+fn out_story() -> ChannelSpec {
+    ChannelSpec::named("S", "Sty", "story", "Story")
+}
+
+fn out_building() -> ChannelSpec {
+    ChannelSpec::named("B", "Bld", "building", "Building")
+}
+
+fn out_floor_area() -> ChannelSpec {
+    ChannelSpec::named("A", "FlA", "floorArea", "FloorArea")
+}
+
+fn out_gross_volume() -> ChannelSpec {
+    ChannelSpec::named("V", "GrV", "grossVolume", "GrossVolume")
+}
+
+fn operator_info(
+    id: &str,
+    name: &str,
+    abbreviation: &str,
+    icon: &str,
+    summary: &str,
+    inputs: Vec<ChannelSpec>,
+    output: ChannelSpec,
+    group: &[&str],
+) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
         module: "bim".into(),
@@ -155,7 +200,7 @@ fn operator_info(id: &str, name: &str, abbreviation: &str, icon: &str, summary: 
         icon: icon.into(),
         summary: summary.into(),
         inputs,
-        outputs: vec![out_channel()],
+        outputs: vec![output],
         group: group.iter().map(|entry| (*entry).to_string()).collect(),
         ..Default::default()
     }
@@ -266,11 +311,14 @@ struct MaterialElement;
 
 impl Operation for MaterialElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("material")
-            .insert("name", Value::Atom(Atom::String(read_channel_text(input, "name").unwrap_or_else(|_| "Concrete".into()))))
-            .insert("density", Value::Atom(Atom::Decimal(read_channel_number(input, "density")?)))
-            .insert("conductivity", Value::Atom(Atom::Decimal(read_channel_number(input, "conductivity")?)))
-            .insert("strength", Value::Atom(Atom::Decimal(read_channel_number(input, "strength")?))))
+        Ok(channel_output(
+            "material",
+            Dictionary::with_schema("material")
+                .insert("name", Value::Atom(Atom::String(read_channel_text(input, "name").unwrap_or_else(|_| "Concrete".into()))))
+                .insert("density", Value::Atom(Atom::Decimal(read_channel_number(input, "density")?)))
+                .insert("conductivity", Value::Atom(Atom::Decimal(read_channel_number(input, "conductivity")?)))
+                .insert("strength", Value::Atom(Atom::Decimal(read_channel_number(input, "strength")?))),
+        ))
     }
 }
 
@@ -278,10 +326,13 @@ struct SpaceElement;
 
 impl Operation for SpaceElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("space")
-            .insert("name", Value::Atom(Atom::String(read_channel_text(input, "name").unwrap_or_else(|_| "Space".into()))))
-            .insert("area", Value::Atom(Atom::Decimal(read_channel_number(input, "area")?)))
-            .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?))))
+        Ok(channel_output(
+            "space",
+            Dictionary::with_schema("space")
+                .insert("name", Value::Atom(Atom::String(read_channel_text(input, "name").unwrap_or_else(|_| "Space".into()))))
+                .insert("area", Value::Atom(Atom::Decimal(read_channel_number(input, "area")?)))
+                .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?))),
+        ))
     }
 }
 
@@ -289,10 +340,13 @@ struct WallElement;
 
 impl Operation for WallElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("wall")
-            .insert("length", Value::Atom(Atom::Decimal(read_channel_number(input, "length")?)))
-            .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?)))
-            .insert("thickness", Value::Atom(Atom::Decimal(read_channel_number(input, "thickness")?))))
+        Ok(channel_output(
+            "wall",
+            Dictionary::with_schema("wall")
+                .insert("length", Value::Atom(Atom::Decimal(read_channel_number(input, "length")?)))
+                .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?)))
+                .insert("thickness", Value::Atom(Atom::Decimal(read_channel_number(input, "thickness")?))),
+        ))
     }
 }
 
@@ -300,10 +354,13 @@ struct SlabElement;
 
 impl Operation for SlabElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("slab")
-            .insert("width", Value::Atom(Atom::Decimal(read_channel_number(input, "width")?)))
-            .insert("depth", Value::Atom(Atom::Decimal(read_channel_number(input, "depth")?)))
-            .insert("thickness", Value::Atom(Atom::Decimal(read_channel_number(input, "thickness")?))))
+        Ok(channel_output(
+            "slab",
+            Dictionary::with_schema("slab")
+                .insert("width", Value::Atom(Atom::Decimal(read_channel_number(input, "width")?)))
+                .insert("depth", Value::Atom(Atom::Decimal(read_channel_number(input, "depth")?)))
+                .insert("thickness", Value::Atom(Atom::Decimal(read_channel_number(input, "thickness")?))),
+        ))
     }
 }
 
@@ -311,10 +368,13 @@ struct ColumnElement;
 
 impl Operation for ColumnElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("column")
-            .insert("width", Value::Atom(Atom::Decimal(read_channel_number(input, "width")?)))
-            .insert("depth", Value::Atom(Atom::Decimal(read_channel_number(input, "depth")?)))
-            .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?))))
+        Ok(channel_output(
+            "column",
+            Dictionary::with_schema("column")
+                .insert("width", Value::Atom(Atom::Decimal(read_channel_number(input, "width")?)))
+                .insert("depth", Value::Atom(Atom::Decimal(read_channel_number(input, "depth")?)))
+                .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?))),
+        ))
     }
 }
 
@@ -322,10 +382,13 @@ struct WindowElement;
 
 impl Operation for WindowElement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("window")
-            .insert("width", Value::Atom(Atom::Decimal(read_channel_number(input, "width")?)))
-            .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?)))
-            .insert("sill", Value::Atom(Atom::Decimal(read_channel_number(input, "sill")?))))
+        Ok(channel_output(
+            "window",
+            Dictionary::with_schema("window")
+                .insert("width", Value::Atom(Atom::Decimal(read_channel_number(input, "width")?)))
+                .insert("height", Value::Atom(Atom::Decimal(read_channel_number(input, "height")?)))
+                .insert("sill", Value::Atom(Atom::Decimal(read_channel_number(input, "sill")?))),
+        ))
     }
 }
 // #endregion 🔖Elements
@@ -346,7 +409,7 @@ impl Operation for AssembleStory {
         if let Some(slab) = input.get("slab").and_then(|value| value.as_dictionary()) {
             story = story.insert("slab", Value::Dictionary(slab.clone()));
         }
-        Ok(story)
+        Ok(channel_output("story", story))
     }
 }
 
@@ -356,9 +419,12 @@ impl Operation for AssembleBuilding {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let name = read_channel_text(input, "name").unwrap_or_else(|_| "Building".into());
         let stories = list_from_variadic(input.get("stories").and_then(|value| value.as_dictionary()));
-        Ok(Dictionary::with_schema("building")
-            .insert("name", Value::Atom(Atom::String(name)))
-            .insert("stories", Value::Dictionary(stories)))
+        Ok(channel_output(
+            "building",
+            Dictionary::with_schema("building")
+                .insert("name", Value::Atom(Atom::String(name)))
+                .insert("stories", Value::Dictionary(stories)),
+        ))
     }
 }
 // #endregion 🔖Assembly
@@ -377,7 +443,7 @@ impl Operation for FloorArea {
                 }
             }
         }
-        Ok(number_dictionary(total))
+        Ok(channel_output("floorArea", number_dictionary(total)))
     }
 }
 
@@ -394,7 +460,7 @@ impl Operation for GrossVolume {
                 }
             }
         }
-        Ok(number_dictionary(total))
+        Ok(channel_output("grossVolume", number_dictionary(total)))
     }
 }
 
@@ -432,6 +498,7 @@ pub fn register(registry: &mut Registry) {
                 number_channel("conductivity", "bim.element.material", 1.4),
                 number_channel("strength", "bim.element.material", 30.0),
             ],
+            out_material(),
             &["Elements"],
         ),
         Box::new(MaterialElement),
@@ -450,6 +517,7 @@ pub fn register(registry: &mut Registry) {
                 number_channel("area", "bim.element.space", 20.0),
                 number_channel("height", "bim.element.space", 2.8),
             ],
+            out_space(),
             &["Elements"],
         ),
         Box::new(SpaceElement),
@@ -468,6 +536,7 @@ pub fn register(registry: &mut Registry) {
                 number_channel("height", "bim.element.wall", 2.8),
                 number_channel("thickness", "bim.element.wall", 0.2),
             ],
+            out_wall(),
             &["Elements"],
         ),
         Box::new(WallElement),
@@ -486,6 +555,7 @@ pub fn register(registry: &mut Registry) {
                 number_channel("depth", "bim.element.slab", 8.0),
                 number_channel("thickness", "bim.element.slab", 0.25),
             ],
+            out_slab(),
             &["Elements"],
         ),
         Box::new(SlabElement),
@@ -504,6 +574,7 @@ pub fn register(registry: &mut Registry) {
                 number_channel("depth", "bim.element.column", 0.4),
                 number_channel("height", "bim.element.column", 3.0),
             ],
+            out_column(),
             &["Elements"],
         ),
         Box::new(ColumnElement),
@@ -522,6 +593,7 @@ pub fn register(registry: &mut Registry) {
                 number_channel("height", "bim.element.window", 1.4),
                 number_channel("sill", "bim.element.window", 0.9),
             ],
+            out_window(),
             &["Elements"],
         ),
         Box::new(WindowElement),
@@ -542,6 +614,7 @@ pub fn register(registry: &mut Registry) {
                     number_channel("height", "bim.assemble.story", 3.0),
                     ChannelSpec::requires("slab", &["bim.element.slab"]),
                 ],
+                out_story(),
                 &["Assembly"],
             )
         },
@@ -558,6 +631,7 @@ pub fn register(registry: &mut Registry) {
                 "emoji:🏗️",
                 "Assembles a building from stories",
                 vec![text_channel("name", "bim.assemble.building", "Building")],
+                out_building(),
                 &["Assembly"],
             )
         },
@@ -573,6 +647,7 @@ pub fn register(registry: &mut Registry) {
             "emoji:📐",
             "Total floor area across all stories",
             vec![ChannelSpec::requires("building", &["bim.assemble.building"])],
+            out_floor_area(),
             &["Measure"],
         ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(FloorArea) }],
@@ -586,6 +661,7 @@ pub fn register(registry: &mut Registry) {
             "emoji:📦",
             "Gross building volume across all stories",
             vec![ChannelSpec::requires("building", &["bim.assemble.building"])],
+            out_gross_volume(),
             &["Measure"],
         ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(GrossVolume) }],
@@ -608,6 +684,10 @@ mod tests {
     use super::*;
     use flow_module_wasm::{build_manifest_json, evaluate_json};
 
+    fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
+        out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload")
+    }
+
     #[test]
     fn wall_element_emits_wall_schema() {
         let mut reg = Registry::new();
@@ -621,43 +701,50 @@ mod tests {
                     .insert("thickness", Value::Dictionary(number_dictionary(0.2))),
             )
             .unwrap();
-        assert_eq!(out.schema(), Some("wall"));
-        assert_eq!(read_field_number(&out, "length"), Some(5.0));
+        let wall = channel_payload(&out, "wall");
+        assert_eq!(wall.schema(), Some("wall"));
+        assert_eq!(read_field_number(&wall, "length"), Some(5.0));
     }
 
     #[test]
     fn assemble_story_splits_spaces() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let wall = reg
-            .dispatch(
+        let wall = channel_payload(
+            &reg.dispatch(
                 "bim.element.wall",
                 &Dictionary::new()
                     .insert("length", Value::Dictionary(number_dictionary(4.0)))
                     .insert("height", Value::Dictionary(number_dictionary(2.8)))
                     .insert("thickness", Value::Dictionary(number_dictionary(0.2))),
             )
-            .unwrap();
-        let space = reg
-            .dispatch(
+            .unwrap(),
+            "wall",
+        );
+        let space = channel_payload(
+            &reg.dispatch(
                 "bim.element.space",
                 &Dictionary::new()
                     .insert("name", Value::Dictionary(text_dictionary("Lobby")))
                     .insert("area", Value::Dictionary(number_dictionary(40.0)))
                     .insert("height", Value::Dictionary(number_dictionary(3.0))),
             )
-            .unwrap();
-        let slab = reg
-            .dispatch(
+            .unwrap(),
+            "space",
+        );
+        let slab = channel_payload(
+            &reg.dispatch(
                 "bim.element.slab",
                 &Dictionary::new()
                     .insert("width", Value::Dictionary(number_dictionary(10.0)))
                     .insert("depth", Value::Dictionary(number_dictionary(8.0)))
                     .insert("thickness", Value::Dictionary(number_dictionary(0.25))),
             )
-            .unwrap();
-        let story = reg
-            .dispatch(
+            .unwrap(),
+            "slab",
+        );
+        let story = channel_payload(
+            &reg.dispatch(
                 "bim.assemble.story",
                 &Dictionary::new()
                     .insert("elevation", Value::Dictionary(number_dictionary(0.0)))
@@ -672,7 +759,9 @@ mod tests {
                         ),
                     ),
             )
-            .unwrap();
+            .unwrap(),
+            "story",
+        );
         assert_eq!(story.schema(), Some("story"));
         let elements = story.get("elements").and_then(|value| value.as_dictionary()).unwrap();
         let spaces = story.get("spaces").and_then(|value| value.as_dictionary()).unwrap();
@@ -685,34 +774,43 @@ mod tests {
     fn assemble_building_and_measure_floor_area() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let slab = reg
-            .dispatch(
+        let slab = channel_payload(
+            &reg.dispatch(
                 "bim.element.slab",
                 &Dictionary::new()
                     .insert("width", Value::Dictionary(number_dictionary(10.0)))
                     .insert("depth", Value::Dictionary(number_dictionary(8.0)))
                     .insert("thickness", Value::Dictionary(number_dictionary(0.25))),
             )
-            .unwrap();
-        let story = reg
-            .dispatch(
+            .unwrap(),
+            "slab",
+        );
+        let story = channel_payload(
+            &reg.dispatch(
                 "bim.assemble.story",
                 &Dictionary::new()
                     .insert("height", Value::Dictionary(number_dictionary(3.0)))
                     .insert("slab", Value::Dictionary(slab))
                     .insert("elements", Value::Dictionary(Dictionary::new())),
             )
-            .unwrap();
-        let building = reg
-            .dispatch(
+            .unwrap(),
+            "story",
+        );
+        let building = channel_payload(
+            &reg.dispatch(
                 "bim.assemble.building",
                 &Dictionary::new()
                     .insert("name", Value::Dictionary(text_dictionary("Tower")))
                     .insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story)))),
             )
-            .unwrap();
+            .unwrap(),
+            "building",
+        );
         assert_eq!(building.schema(), Some("building"));
-        let area = reg.dispatch("bim.measure.floorArea", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap();
+        let area = channel_payload(
+            &reg.dispatch("bim.measure.floorArea", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(),
+            "floorArea",
+        );
         assert_eq!(area.schema(), Some("number"));
         assert_eq!(read_field_number(&area, "value"), Some(80.0));
     }
@@ -721,33 +819,42 @@ mod tests {
     fn measure_gross_volume() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let slab = reg
-            .dispatch(
+        let slab = channel_payload(
+            &reg.dispatch(
                 "bim.element.slab",
                 &Dictionary::new()
                     .insert("width", Value::Dictionary(number_dictionary(10.0)))
                     .insert("depth", Value::Dictionary(number_dictionary(10.0)))
                     .insert("thickness", Value::Dictionary(number_dictionary(0.25))),
             )
-            .unwrap();
-        let story = reg
-            .dispatch(
+            .unwrap(),
+            "slab",
+        );
+        let story = channel_payload(
+            &reg.dispatch(
                 "bim.assemble.story",
                 &Dictionary::new()
                     .insert("height", Value::Dictionary(number_dictionary(3.0)))
                     .insert("slab", Value::Dictionary(slab))
                     .insert("elements", Value::Dictionary(Dictionary::new())),
             )
-            .unwrap();
-        let building = reg
-            .dispatch(
+            .unwrap(),
+            "story",
+        );
+        let building = channel_payload(
+            &reg.dispatch(
                 "bim.assemble.building",
                 &Dictionary::new()
                     .insert("name", Value::Dictionary(text_dictionary("Block")))
                     .insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story)))),
             )
-            .unwrap();
-        let volume = reg.dispatch("bim.measure.grossVolume", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap();
+            .unwrap(),
+            "building",
+        );
+        let volume = channel_payload(
+            &reg.dispatch("bim.measure.grossVolume", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(),
+            "grossVolume",
+        );
         assert_eq!(read_field_number(&volume, "value"), Some(300.0));
     }
 
@@ -770,7 +877,7 @@ mod tests {
             .insert("thickness", Value::Dictionary(number_dictionary(0.2)));
         let out_json = evaluate_json(&reg, "bim.element.wall", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.schema(), Some("wall"));
+        assert_eq!(channel_payload(&out, "wall").schema(), Some("wall"));
     }
 }
 // #endregion 🔖Tests

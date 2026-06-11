@@ -1111,7 +1111,14 @@ fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> serd
 
 fn output_ports_json(dict: &Dictionary) -> serde_json::Map<String, serde_json::Value> {
     let mut ports = serde_json::Map::new();
-    ports.insert("out".into(), serde_json::to_value(dict).unwrap_or(serde_json::Value::Null));
+    for key in dict.keys() {
+        if let Some(value) = dict.get(key) {
+            ports.insert(key.clone(), serde_json::to_value(value).unwrap_or(serde_json::Value::Null));
+        }
+    }
+    if ports.is_empty() {
+        ports.insert("out".into(), serde_json::to_value(dict).unwrap_or(serde_json::Value::Null));
+    }
     ports
 }
 

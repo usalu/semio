@@ -1,6 +1,6 @@
 //! 🧱 Flow core module: schema constructors for primitive dictionaries.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 
 // #region 🔖Number
 /// 🔢 Emits a number dictionary.
@@ -8,7 +8,7 @@ pub struct Number;
 
 impl Operation for Number {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(number_dictionary(read_number(input, "value").or_else(|_| read_number(input, "number"))?))
+        Ok(channel_output("number", number_dictionary(read_number(input, "value").or_else(|_| read_number(input, "number"))?)))
     }
 }
 // #endregion 🔖Number
@@ -19,7 +19,7 @@ pub struct Text;
 
 impl Operation for Text {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(text_dictionary(read_text(input, "value").or_else(|_| read_text(input, "text"))?))
+        Ok(channel_output("text", text_dictionary(read_text(input, "value").or_else(|_| read_text(input, "text"))?)))
     }
 }
 // #endregion 🔖Text
@@ -30,7 +30,10 @@ pub struct Boolean;
 
 impl Operation for Boolean {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(boolean_dictionary(read_bool(input, "value").or_else(|_| read_bool(input, "boolean")).unwrap_or(false)))
+        Ok(channel_output(
+            "boolean",
+            boolean_dictionary(read_bool(input, "value").or_else(|_| read_bool(input, "boolean")).unwrap_or(false)),
+        ))
     }
 }
 // #endregion 🔖Boolean
@@ -41,7 +44,10 @@ pub struct Image;
 
 impl Operation for Image {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(Dictionary::with_schema("image").insert("dataUrl", Value::Atom(Atom::String(read_text(input, "dataUrl").unwrap_or_default()))))
+        Ok(channel_output(
+            "image",
+            Dictionary::with_schema("image").insert("dataUrl", Value::Atom(Atom::String(read_text(input, "dataUrl").unwrap_or_default()))),
+        ))
     }
 }
 // #endregion 🔖Image
@@ -129,13 +135,13 @@ pub fn register(registry: &mut Registry) {
     registry.register_schema(schema("dictionary", "Dictionary", "Arbitrary dictionary", vec![]));
     registry.register_schema(schema("image", "Image", "Image data URL", vec![FieldSpec::new("dataUrl", ValueType::Text).with_default(Value::Atom(Atom::String(String::new())))]));
 
-    let (info, implementations) = operator("core.number", "Number", "Produces a number dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Number));
+    let (info, implementations) = operator("core.number", "Number", "Produces a number dictionary", vec![ChannelSpec::named("N", "Num", "number", "Number")], Box::new(Number));
     registry.register_operator(info, implementations, &["number"]);
-    let (info, implementations) = operator("core.text", "Text", "Produces a text dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Text));
+    let (info, implementations) = operator("core.text", "Text", "Produces a text dictionary", vec![ChannelSpec::named("T", "Txt", "text", "Text")], Box::new(Text));
     registry.register_operator(info, implementations, &["text"]);
-    let (info, implementations) = operator("core.boolean", "Bool", "Produces a boolean dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Boolean));
+    let (info, implementations) = operator("core.boolean", "Bool", "Produces a boolean dictionary", vec![ChannelSpec::named("B", "Boo", "boolean", "Boolean")], Box::new(Boolean));
     registry.register_operator(info, implementations, &["boolean"]);
-    let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::provides("out", vec![])], Box::new(Image));
+    let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::named("I", "Img", "image", "Image")], Box::new(Image));
     registry.register_operator(info, implementations, &["image"]);
     registry.finalize();
 }
@@ -151,8 +157,9 @@ mod tests {
         let mut registry = Registry::new();
         register(&mut registry);
         let out = registry.dispatch("core.number", &Dictionary::new().insert("value", Value::Atom(Atom::Decimal(2.5)))).unwrap();
-        assert_eq!(out.schema(), Some("number"));
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.5));
+        let number = out.get("number").and_then(|v| v.as_dictionary()).expect("number channel");
+        assert_eq!(number.schema(), Some("number"));
+        assert_eq!(number.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.5));
     }
 
     #[test]
@@ -168,8 +175,9 @@ mod tests {
         let input = Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())));
         let out_json = evaluate_json(&module_registry(), "core.text", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.schema(), Some("text"));
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi"));
+        let text = out.get("text").and_then(|v| v.as_dictionary()).expect("text channel");
+        assert_eq!(text.schema(), Some("text"));
+        assert_eq!(text.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi"));
     }
 }
 // #endregion 🔖Tests

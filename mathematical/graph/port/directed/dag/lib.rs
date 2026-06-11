@@ -92,7 +92,7 @@ fn io_port_column_width(ports: &[IoPortSpec], px: f64) -> f64 {
     if ports.is_empty() {
         return 0.0;
     }
-    let text_w = ports.iter().map(|port| port_label_text_width(&port.label, px)).fold(0.0, f64::max);
+    let text_w = ports.iter().map(|port| port_label_text_width(port.display_code(), px)).fold(0.0, f64::max);
     text_w.clamp(DAG_IO_COLUMN_MIN, DAG_IO_COLUMN_MAX)
 }
 
@@ -223,6 +223,12 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 pub struct IoPortSpec {
     pub id: String,
     pub label: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub code: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub abbreviation: String,
+    #[serde(rename = "fullName", default, skip_serializing_if = "String::is_empty")]
+    pub full_name: String,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub value_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -234,12 +240,47 @@ pub struct IoPortSpec {
 }
 
 impl IoPortSpec {
-    pub fn simple(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn named(code: impl Into<String>, abbreviation: impl Into<String>, id: impl Into<String>, full_name: impl Into<String>) -> Self {
+        let id = id.into();
+        let abbreviation = abbreviation.into();
         Self {
-            id: id.into(),
-            label: label.into(),
+            code: code.into(),
+            abbreviation: abbreviation.clone(),
+            label: abbreviation,
+            id,
+            full_name: full_name.into(),
             ..Default::default()
         }
+    }
+
+    pub fn simple(id: impl Into<String>, label: impl Into<String>) -> Self {
+        let id = id.into();
+        let label = label.into();
+        let code = if id.len() <= 2 {
+            id.to_uppercase()
+        } else {
+            id.chars().take(2).collect::<String>().to_uppercase()
+        };
+        let abbreviation = if label.len() <= 3 {
+            label.clone()
+        } else {
+            label.chars().take(3).collect()
+        };
+        Self {
+            id: id.clone(),
+            label: label.clone(),
+            code,
+            abbreviation: abbreviation.clone(),
+            full_name: label,
+            ..Default::default()
+        }
+    }
+
+    pub fn display_code(&self) -> &str {
+        if !self.code.is_empty() {
+            return self.code.as_str();
+        }
+        self.label.as_str()
     }
 }
 
@@ -3236,7 +3277,7 @@ impl DagHost {
             (hw - handle_inset).max(8.0)
         };
         for (i, port) in inputs.iter().enumerate() {
-            let label = port.label.trim();
+            let label = port.display_code().trim();
             if label.is_empty() {
                 continue;
             }
@@ -3259,7 +3300,7 @@ impl DagHost {
             }));
         }
         for (i, port) in outputs.iter().enumerate() {
-            let label = port.label.trim();
+            let label = port.display_code().trim();
             if label.is_empty() {
                 continue;
             }
@@ -3418,7 +3459,7 @@ impl DagHost {
             };
             append_label(
                 scene,
-                &port.label,
+                port.display_code(),
                 world_to_screen(cam, viewport, Point::new(world_x, world_y)),
                 port_paint_px,
                 label_fill,
@@ -3428,14 +3469,14 @@ impl DagHost {
         for (i, port) in outputs.iter().enumerate() {
             let world_y = port_center_y(node, i, outputs.len());
             let world_x = if computation {
-                computation_output_label_x(node, &port.label, port_layout_px)
+                computation_output_label_x(node, port.display_code(), port_layout_px)
             } else {
-                let (label_w, _) = label_extent(&port.label, layout_px);
+                let (label_w, _) = label_extent(port.display_code(), layout_px);
                 node.x + hw - handle_inset - label_w / cam.zoom.max(0.05)
             };
             append_label(
                 scene,
-                &port.label,
+                port.display_code(),
                 world_to_screen(cam, viewport, Point::new(world_x, world_y)),
                 port_paint_px,
                 label_fill,

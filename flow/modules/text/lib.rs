@@ -1,6 +1,6 @@
 //! 📝 Flow text module: operators for text dictionaries.
 
-use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖Concat
 /// 🔗 Joins two text inputs.
@@ -8,7 +8,10 @@ pub struct Concat;
 
 impl Operation for Concat {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(text_dictionary(format!("{}{}", read_channel_text(input, "a")?, read_channel_text(input, "b")?)))
+        Ok(channel_output(
+            "text",
+            text_dictionary(format!("{}{}", read_channel_text(input, "a")?, read_channel_text(input, "b")?)),
+        ))
     }
 }
 // #endregion 🔖Concat
@@ -19,7 +22,7 @@ pub struct Upper;
 
 impl Operation for Upper {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(text_dictionary(read_channel_text(input, "text")?.to_uppercase()))
+        Ok(channel_output("text", text_dictionary(read_channel_text(input, "text")?.to_uppercase())))
     }
 }
 // #endregion 🔖Upper
@@ -44,7 +47,7 @@ fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::text_default(id, "", &[operator_id])
 }
 
-fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
+fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
         module: "text".into(),
@@ -53,7 +56,7 @@ fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>) -> Operat
         icon: "emoji:📝".into(),
         summary: summary.into(),
         inputs,
-        outputs: vec![ChannelSpec::provides("out", vec![])],
+        outputs: vec![output],
         ..Default::default()
     }
 }
@@ -69,12 +72,24 @@ fn module_registry() -> Registry {
 /// 📦 Registers all text operators.
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
-        info("text.concat", "Concat", "Joins two text values", vec![text_channel("a", "text.concat"), text_channel("b", "text.concat")]),
+        info(
+            "text.concat",
+            "Concat",
+            "Joins two text values",
+            vec![text_channel("a", "text.concat"), text_channel("b", "text.concat")],
+            ChannelSpec::named("T", "Txt", "text", "JoinedText"),
+        ),
         vec![OperatorImpl { schemas: vec!["text".into(), "text".into()], operation: Box::new(Concat) }],
         &["text"],
     );
     registry.register_operator(
-        info("text.upper", "Upper", "Uppercases text", vec![text_channel("text", "text.upper")]),
+        info(
+            "text.upper",
+            "Upper",
+            "Uppercases text",
+            vec![text_channel("text", "text.upper")],
+            ChannelSpec::named("T", "Txt", "text", "UppercasedText"),
+        ),
         vec![OperatorImpl { schemas: vec!["text".into()], operation: Box::new(Upper) }],
         &["text"],
     );
@@ -93,8 +108,9 @@ mod tests {
         register(&mut reg);
         let input = Dictionary::new().insert("a", Value::Dictionary(text_dictionary("hi".into()))).insert("b", Value::Dictionary(text_dictionary("!".into())));
         let out = reg.dispatch("text.concat", &input).unwrap();
-        assert_eq!(out.schema(), Some("text"));
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi!"));
+        let text = out.get("text").and_then(|v| v.as_dictionary()).expect("text channel");
+        assert_eq!(text.schema(), Some("text"));
+        assert_eq!(text.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi!"));
     }
 
     #[test]
@@ -118,8 +134,9 @@ mod tests {
         let input = Dictionary::new().insert("text", Value::Dictionary(text_dictionary("hi".into())));
         let out_json = evaluate_json(&module_registry(), "text.upper", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out.schema(), Some("text"));
-        assert_eq!(out.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("HI"));
+        let text = out.get("text").and_then(|v| v.as_dictionary()).expect("text channel");
+        assert_eq!(text.schema(), Some("text"));
+        assert_eq!(text.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("HI"));
     }
 }
 // #endregion 🔖Tests

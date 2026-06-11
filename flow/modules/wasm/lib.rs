@@ -116,7 +116,7 @@ pub fn command_json(command_id: &str, args_json: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neural_engine::{Atom, ChannelSpec, EvalError, Operation, OperatorImpl, Value};
+    use neural_engine::{channel_output, Atom, ChannelSpec, EvalError, Operation, OperatorImpl, Value};
 
     struct Echo;
 
@@ -138,7 +138,7 @@ mod tests {
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
                 inputs: vec![ChannelSpec::any("x")],
-                outputs: vec![ChannelSpec::provides("out", vec![])],
+                outputs: vec![ChannelSpec::named("X", "x", "x", "Echoed")],
                 ..Default::default()
             },
             vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
@@ -161,7 +161,7 @@ mod tests {
                 icon: "emoji:📣".into(),
                 summary: "Echo".into(),
                 inputs: vec![ChannelSpec::any("x")],
-                outputs: vec![ChannelSpec::provides("out", vec![])],
+                outputs: vec![ChannelSpec::named("X", "x", "x", "Echoed")],
                 ..Default::default()
             },
             vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }],
@@ -170,7 +170,7 @@ mod tests {
         let input = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0)));
         let out_json = evaluate_json(&reg, "test.echo", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(out, input);
+        assert_eq!(out.get("x").and_then(|v| v.as_dictionary()), Some(&input));
     }
 }
 // #endregion 🔖Tests
