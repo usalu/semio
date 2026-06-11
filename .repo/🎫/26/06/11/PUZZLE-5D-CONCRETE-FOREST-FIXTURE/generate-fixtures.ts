@@ -6,6 +6,7 @@ import concreteForest3d from "../../../../../../puzzle/3d/fixture/concrete-fores
 import { compose5d, flatHandleConnectorAngle } from "../../../../../../puzzle/5d/react/index.tsx";
 import { parseFixtureV1, type FixtureV1 } from "../../../../../../puzzle/3d/react/index.tsx";
 import { parsePuzzle2dFixtureV1, type Puzzle2dFixtureV1 } from "../../../../../../puzzle/2d/react/index.tsx";
+import { puzzle2dPlayViewportCameraFromFixture } from "../../../../../../puzzle/2d/play/index.ts";
 
 const fixture3d = parseFixtureV1(concreteForest3d as unknown);
 if (!fixture3d) throw new Error("concrete-forest.3d.json invalid");
@@ -58,7 +59,7 @@ const cy = seed.vortices.reduce((sum, v) => sum + v.position[1], 0) / Math.max(s
 
 const fixture2d: Puzzle2dFixtureV1 = {
   schema: "puzzle.2d.fixture/v1",
-  camera: { x: -cx * scale, y: -cy * scale, zoom: 1.2 },
+  camera: { x: 0, y: 0, zoom: 1 },
   nodes: [
     {
       id: seed.id,
@@ -83,8 +84,10 @@ const fixture2d: Puzzle2dFixtureV1 = {
 
 if (!parsePuzzle2dFixtureV1(fixture2d)) throw new Error("generated 2d fixture invalid");
 
+const composed = compose5d(fixture2d, fixture3d);
 const model5d = {
-  ...compose5d(fixture2d, fixture3d),
+  ...composed,
+  camera2d: puzzle2dPlayViewportCameraFromFixture(fixture2d),
   label: "Concrete Forest",
   meta: {
     description: "Unified puzzle 5d source for Concrete Forest play; 2d and 3d views project from this model.",

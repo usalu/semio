@@ -12834,6 +12834,7 @@ export function sketchpadApplyPuzzle2dSelection(
 	const ctrl = controller ?? getSketchpadShellController();
 	if (!ctrl || !scope.kitId) return;
 	if (scope.pane === "kit-wires") {
+		ctrl.setKitWiresPreselect(SKETCHPAD_KIT_WIRES_PRESELECT_EMPTY);
 		ctrl.setRouteSelection({ ...ctrl.routeSelection, kitWiresNodeIds: [...puzzle2dIds] });
 		return;
 	}
@@ -13791,10 +13792,38 @@ function sketchpadSameStringIds(left: readonly string[] | undefined, right: read
 	return true;
 }
 
+/** @emoji 👁️ Kit wires rectangle/lasso preview ids while area-select is in progress. */
+export interface SketchpadKitWiresPreselectSnapshot {
+	readonly ids: readonly string[];
+	readonly removedIds: readonly string[];
+}
+
+const SKETCHPAD_KIT_WIRES_PRESELECT_EMPTY: SketchpadKitWiresPreselectSnapshot = { ids: [], removedIds: [] };
+
+function sketchpadKitWiresPreselectSnapshotsEqual(
+	left: SketchpadKitWiresPreselectSnapshot,
+	right: SketchpadKitWiresPreselectSnapshot,
+): boolean {
+	return sketchpadSameStringIds(left.ids, [...right.ids]) && sketchpadSameStringIds(left.removedIds, [...right.removedIds]);
+}
+
+/** @emoji 🎯 Committed kit wires ids merged with an in-progress area-select preview. */
+export function sketchpadKitWiresEffectiveSelectionIds(
+	committed: readonly string[],
+	preselect: SketchpadKitWiresPreselectSnapshot,
+): string[] {
+	if (!preselect.ids.length && !preselect.removedIds.length) return [...committed];
+	const out = new Set(committed);
+	for (const id of preselect.ids) out.add(id);
+	for (const id of preselect.removedIds) out.delete(id);
+	return [...out];
+}
+
 /** @emoji 📁 Per-app virtual file system surface backed by {@link SketchpadShellController}. */
 class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFileSystemModel> {
 	private readonly detachKitWiresHover?: () => void;
 	private readonly detachKitWiresSelection?: () => void;
+	private readonly detachKitWiresPreselect?: () => void;
 
 	constructor(
 		readonly vfsAppId: string,
@@ -13805,23 +13834,26 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 		const ctrl = getSketchpadShellController();
 		const shellStore = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
 		if (!ctrl || !shellStore) return;
+		const syncKitVfsSelectionSnapshot = (): void => {
+			const selectedRowIds = ctrl.kitWiresEffectiveSelectedRowIds();
+			const snap = this.getSnapshot();
+			if (sketchpadSameStringIds(snap.selectedRowIds, selectedRowIds)) return;
+			this.setSnapshot({ ...snap, selectedRowIds });
+		};
 		this.detachKitWiresHover = ctrl.kitWiresHoverStore.subscribe(() => {
 			const hoveredRowId = ctrl.kitWiresHoverStore.getSnapshot();
 			const snap = this.getSnapshot();
 			if (snap.hoveredRowId === hoveredRowId) return;
 			this.setSnapshot({ ...snap, hoveredRowId });
 		});
-		this.detachKitWiresSelection = shellStore.subscribe(() => {
-			const selectedRowIds = [...shellStore.getSnapshot().routeSelection.kitWiresNodeIds];
-			const snap = this.getSnapshot();
-			if (sketchpadSameStringIds(snap.selectedRowIds, selectedRowIds)) return;
-			this.setSnapshot({ ...snap, selectedRowIds });
-		});
+		this.detachKitWiresSelection = shellStore.subscribe(syncKitVfsSelectionSnapshot);
+		this.detachKitWiresPreselect = ctrl.kitWiresPreselectStore.subscribe(syncKitVfsSelectionSnapshot);
 	}
 
 	override dispose(): void {
 		this.detachKitWiresHover?.();
 		this.detachKitWiresSelection?.();
+		this.detachKitWiresPreselect?.();
 		super.dispose();
 	}
 
@@ -14316,6 +14348,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	private readonly kitWiresReferenceCache = new Map<string, SketchpadKitWiresReferenceData>();
 	private kitWiresSyncGeneration = 0;
 	readonly kitWiresHoverStore = new ObservableCell<string | null>(null);
+	readonly kitWiresPreselectStore = new ObservableCell<SketchpadKitWiresPreselectSnapshot>(SKETCHPAD_KIT_WIRES_PRESELECT_EMPTY);
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SKETCHPAD_SHELL_CONTROLLER_ID, commandBus, hostNotify);
@@ -14420,6 +14453,21 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	setKitWiresHoveredNodeId(nodeId: string | null): void {
 		if (this.kitWiresHoverStore.getSnapshot() === nodeId) return;
 		this.kitWiresHoverStore.set(nodeId);
+	}
+
+	/** @emoji 👁️ Updates kit wires area-select preview (rectangle/lasso ↔ VFS), without URL query sync. */
+	setKitWiresPreselect(preselect: SketchpadKitWiresPreselectSnapshot): void {
+		const snap = this.kitWiresPreselectStore.getSnapshot();
+		if (sketchpadKitWiresPreselectSnapshotsEqual(snap, preselect)) return;
+		this.kitWiresPreselectStore.set({ ids: [...preselect.ids], removedIds: [...preselect.removedIds] });
+	}
+
+	/** @emoji 🎯 Kit VFS row ids including any in-progress wires area-select preview. */
+	kitWiresEffectiveSelectedRowIds(): string[] {
+		return sketchpadKitWiresEffectiveSelectionIds(
+			this.shellStore.get().routeSelection.kitWiresNodeIds,
+			this.kitWiresPreselectStore.getSnapshot(),
+		);
 	}
 
 	/** @emoji 🔗 Rebuilds kit wires topology from visible VFS nodes and rust reference queries. */
@@ -14789,6 +14837,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		this.pendingChildrenLoadsByScope.delete(scopeKey);
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
 			this.kitWiresHoverStore.set(null);
+			this.kitWiresPreselectStore.set(SKETCHPAD_KIT_WIRES_PRESELECT_EMPTY);
 			this.syncKitWiresTopology(rootNodeId);
 		}
 	}
@@ -14820,10 +14869,9 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			return { ...model, dragDropEnabled: false };
 		}
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
-			const routeSelection = this.shellStore.get().routeSelection;
 			return {
 				...model,
-				selectedRowIds: [...routeSelection.kitWiresNodeIds],
+				selectedRowIds: this.kitWiresEffectiveSelectedRowIds(),
 				hoveredRowId: this.kitWiresHoverStore.getSnapshot(),
 			};
 		}
@@ -14845,6 +14893,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				}
 				const kitId = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath).kitId;
 				if (kitId) {
+					this.setKitWiresPreselect(SKETCHPAD_KIT_WIRES_PRESELECT_EMPTY);
 					this.setRouteSelection({ ...this.routeSelection, kitWiresNodeIds: rowIds });
 				} else {
 					this.emit();
@@ -15054,6 +15103,14 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				const { pane } = parseSketchpadPuzzleInstanceId(payload.instanceId);
 				if (pane === "kit-wires") {
 					this.setKitWiresHoveredNodeId(payload.nodeId);
+				}
+				break;
+			}
+			case "puzzle5dPreselect": {
+				const payload = args as { instanceId: string; preselect: SketchpadKitWiresPreselectSnapshot };
+				const { pane } = parseSketchpadPuzzleInstanceId(payload.instanceId);
+				if (pane === "kit-wires") {
+					this.setKitWiresPreselect(payload.preselect);
 				}
 				break;
 			}
@@ -16883,6 +16940,49 @@ if (import.meta.vitest) {
 			const wires = platform.getComponent(SKETCHPAD_SURFACE_KIT_WIRES);
 			expect(vfs?.getSnapshot().selectedRowIds ?? []).toEqual([]);
 			expect(wires?.getSnapshot().puzzle2dSelection ?? []).toEqual([]);
+			ctrl.dispose();
+		});
+
+		it("merges kit wires preselect preview into effective vfs selection ids", () => {
+			expect(sketchpadKitWiresEffectiveSelectionIds([], { ids: ["a", "b"], removedIds: [] })).toEqual(["a", "b"]);
+			expect(sketchpadKitWiresEffectiveSelectionIds(["a"], { ids: ["b"], removedIds: [] })).toEqual(["a", "b"]);
+			expect(sketchpadKitWiresEffectiveSelectionIds(["a", "b"], { ids: [], removedIds: ["a"] })).toEqual(["b"]);
+			expect(sketchpadKitWiresEffectiveSelectionIds(["a"], { ids: [], removedIds: [] })).toEqual(["a"]);
+		});
+
+		it("syncs kit wires rectangle preselect to vfs without manual refresh", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeA = "11111111-2222-3333-4444-555555555555";
+			const typeB = "22222222-3333-4444-5555-666666666666";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "K",
+					types: [
+						{ id: typeA, name: "A" },
+						{ id: typeB, name: "B" },
+					],
+					designs: [],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			platform.uri = `/kits/${kitId}`;
+			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
+			const vfs = platform.getComponent(virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID));
+			expect(vfs?.getSnapshot().selectedRowIds ?? []).toEqual([]);
+			platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dPreselect", {
+				instanceId: sketchpadKitWiresInstanceId(kitId),
+				preselect: { ids: [typeA, typeB], removedIds: [] },
+			});
+			expect(vfs?.getSnapshot().selectedRowIds).toEqual([typeA, typeB]);
+			platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dPreselect", {
+				instanceId: sketchpadKitWiresInstanceId(kitId),
+				preselect: { ids: [], removedIds: [] },
+			});
+			expect(vfs?.getSnapshot().selectedRowIds ?? []).toEqual([]);
 			ctrl.dispose();
 		});
 

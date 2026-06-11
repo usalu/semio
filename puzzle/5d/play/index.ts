@@ -34,7 +34,12 @@ import {
   collectUiTreeItemDragData,
 } from "@framework/playground/core";
 
-import { buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+import {
+  buildPuzzle2dPlayToolbarTools,
+  puzzle2dPlayViewportCameraForFixtureId,
+  puzzle2dPlayViewportCameraFromFixture,
+  type Puzzle2dPlayToolbarState,
+} from "../../2d/play/index.ts";
 import {
   PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
   beginPuzzle2dFixturePalettePointerDrag,
@@ -860,8 +865,15 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   private async loadFixtureById(fixtureId: string): Promise<void> {
-    const model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : await fetchPuzzle5dPlayModel(fixtureId);
+    let model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : await fetchPuzzle5dPlayModel(fixtureId);
     if (!model) return;
+    if (!isPlaygroundNoFixtureId(fixtureId)) {
+      const camera2d =
+        fixtureId === PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID || fixtureId === PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID
+          ? puzzle2dPlayViewportCameraForFixtureId(fixtureId)
+          : puzzle2dPlayViewportCameraFromFixture(project2d(model));
+      model = { ...model, camera2d };
+    }
     this.puzzle5dStore.replaceModel(model);
     this.selected2d = new Set();
     this.selected3d = null;

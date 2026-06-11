@@ -2848,6 +2848,7 @@ mod host_tests {
     fn board_host_brush_open_slot_suggestions_commit_and_cancel() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 2.0);
         h.set_active_tool("select");
         h.set_brush_flush_distance(40.0);
         h.set_brush_node_size(40.0);
@@ -2905,6 +2906,10 @@ mod host_tests {
         let ev = h.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
         assert!(ev.contains("brushPreview"), "expected brushPreview, got: {ev}");
+        assert!(ev.contains("\"id\":\"a:h0\""), "expected hovered source handle, got: {ev}");
+        let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+        let expected_x = hp.x + (hp.x - 0.0) * (40.0 / 40.0);
+        assert!(ev.contains(&format!("\"x\":{expected_x}")), "preview should flush along handle normal, got: {ev}");
         h.brush_commit_slot();
         let ev_commit = h.drain_events_json();
         assert!(ev_commit.contains("brushPlace"), "expected brushPlace on commit, got: {ev_commit}");

@@ -3,12 +3,13 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Kit Wires Vfs Hover Selection Sync",
-  "summary": "Fixed live hover and selection sync between kit wires diagram and kit VFS in sketchpad. FiveD2d now respects host-controlled puzzle2d hover/selection props instead of always using its internal store. SketchpadKitWires always publishes puzzle2dSelection (including empty clears) and subscribes to shell route selection. Platform puzzle5d renderer passes empty selection arrays. Kit VFS model always reads kitWiresNodeIds from route selection. Added vitest coverage for hover and selection clearing sync.",
+  "summary": "Extended kit wires ↔ VFS live sync to rectangle/lasso area-select preview. Wired puzzle2d onPreselect through FiveD2d and platform puzzle5d renderer into sketchpad puzzle5dPreselect command. Added kitWiresPreselectStore and sketchpadKitWiresEffectiveSelectionIds so VFS selectedRowIds update during drag before commit. Clears preview on VFS click, route commit, and kit switch.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1670"
   },
   "goal": "🎯semio🎯sketchpad",
   "sessions": [
-    "⚪2022a9d8d9b84ad4bb005b1a5dff4000"
+    "⚪2022a9d8d9b84ad4bb005b1a5dff4000",
+    "⚪b4dba7aa1cdf4856bfee3063239a9270"
   ]
 }

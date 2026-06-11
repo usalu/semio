@@ -2,9 +2,9 @@
   "schema": "puzzle.5d",
   "domain": "architecture",
   "camera2d": {
-    "x": -230.72767272727273,
-    "y": -93.53074909090908,
-    "zoom": 1.2
+    "x": 230.72767272727276,
+    "y": 93.53074909090907,
+    "zoom": 0.42139917695473256
   },
   "camera3d": {
     "position": [
@@ -367,104 +367,87 @@
     {
       "source": "b-l",
       "target": "b-l",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l",
       "target": "b-l-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l",
       "target": "b-s",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l",
       "target": "b-s-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l-m",
       "target": "b-l",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l-m",
       "target": "b-l-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l-m",
       "target": "b-s",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-l-m",
       "target": "b-s-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s",
       "target": "b-l",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s",
       "target": "b-l-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s",
       "target": "b-s",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s",
       "target": "b-s-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s-m",
       "target": "b-l",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s-m",
       "target": "b-l-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s-m",
       "target": "b-s",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "b-s-m",
       "target": "b-s-m",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     },
     {
       "source": "c-b",
       "target": "c-t",
-      "bidirectional": true,
-      "specificity": "grip"
+      "bidirectional": true
     }
   ],
   "label": "Concrete Forest"

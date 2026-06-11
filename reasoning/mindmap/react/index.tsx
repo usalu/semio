@@ -7,7 +7,6 @@ export type {
   Puzzle2dFixtureCircleNodeV1,
   Puzzle2dFixtureEdgeV1 as MindmapFixtureEdgeV1,
   Puzzle2dFixtureNodeV1 as MindmapFixtureNodeV1,
-  Puzzle2dFixtureRectangleNodeV1,
   Puzzle2dFixtureV1 as MindmapFixtureV1,
 } from "@puzzle/2d/react";
 

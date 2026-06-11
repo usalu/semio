@@ -1875,6 +1875,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onBrushCandidates: onBrushCandidatesHost,
     onDelete: onDeleteHost,
     onHover: onHoverHost,
+    onPreselect: onPreselectHost,
     selection: selectionHost,
     hoveredId: hoveredIdHost,
     kindHover: kindHoverHost,
@@ -1907,6 +1908,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const onBrushCandidatesHostRef = reactHostPort.useRef(onBrushCandidatesHost);
   const onDeleteHostRef = reactHostPort.useRef(onDeleteHost);
   const onHoverHostRef = reactHostPort.useRef(onHoverHost);
+  const onPreselectHostRef = reactHostPort.useRef(onPreselectHost);
   const selectionHostControlledRef = reactHostPort.useRef(selectionHostControlled);
   storeRef.current = store;
   onSelectHostRef.current = onSelectHost;
@@ -1919,6 +1921,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   onBrushCandidatesHostRef.current = onBrushCandidatesHost;
   onDeleteHostRef.current = onDeleteHost;
   onHoverHostRef.current = onHoverHost;
+  onPreselectHostRef.current = onPreselectHost;
   selectionHostControlledRef.current = selectionHostControlled;
   const onCamera = reactHostPort.useCallback((c: Puzzle2dCameraState) => {
     storeRef.current.set2dCamera(props.instanceId, c);
@@ -1972,6 +1975,9 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     }
     onCanvasHover(payload);
   }, [onCanvasHover]);
+  const onPreselect = reactHostPort.useCallback((snapshot: { readonly ids: readonly string[]; readonly removedIds: readonly string[] }) => {
+    onPreselectHostRef.current?.(snapshot);
+  }, []);
   const onLinkCompatibleNodes = reactHostPort.useCallback((p: { source: string | null; nodeIds: readonly string[] }) => {
     if (!p.source) {
       storeRef.current.setConnectSession(null);
@@ -2058,6 +2064,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         hoveredId={resolvedHover.hoveredId}
         kindHover={resolvedHover.kindHover}
         onHover={onHover}
+        onPreselect={onPreselectHost ? onPreselect : undefined}
       />
     </div>
   );

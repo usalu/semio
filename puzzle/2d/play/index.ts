@@ -56,6 +56,8 @@ import {
 	isPuzzle2dDrawLodKind,
 	getPuzzle2dLodScale,
 	parsePuzzle2dFixtureV1,
+	PUZZLE_2D_CAMERA_ZOOM_MAX,
+	PUZZLE_2D_CAMERA_ZOOM_MIN,
 	DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
 	DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
 	type EdgeKind,
@@ -75,6 +77,7 @@ import {
 	type Puzzle2dKindHover,
 	type Puzzle2dKindHoverDomain,
 	type Puzzle2dHoverPayload,
+	type CameraState,
 } from "../react/index.tsx";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
@@ -197,6 +200,141 @@ export function puzzle2dPlayFixtureForId(fixtureId: string): Puzzle2dFixtureV1 {
 }
 
 export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+
+const PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX = 640;
+const PUZZLE_2D_PLAY_VIEWPORT_MARGIN = 0.18;
+const PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE = 2.25;
+const PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE: Record<Puzzle2dPlayPaneId, number> = {
+	"2d-overview": 0.68,
+	"2d-detail": 2.15,
+	"2d-selection": 0.36,
+};
+
+function clampPuzzle2dPlayViewportZoom(value: number): number {
+	return Math.min(PUZZLE_2D_CAMERA_ZOOM_MAX, Math.max(PUZZLE_2D_CAMERA_ZOOM_MIN, value));
+}
+
+function puzzle2dPlayNodeWorldExtents(node: Record<string, unknown>): { minX: number; minY: number; maxX: number; maxY: number } | null {
+	const x = Number(node.x);
+	const y = Number(node.y);
+	if (!Number.isFinite(x) || !Number.isFinite(y)) {
+		return null;
+	}
+	if (node.shape === "rectangle") {
+		const width = Number(node.width);
+		const height = Number(node.height);
+		if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+			return null;
+		}
+		const hw = width / 2;
+		const hh = height / 2;
+		return { minX: x - hw, maxX: x + hw, minY: y - hh, maxY: y + hh };
+	}
+	const radius = Number(node.radius);
+	if (!Number.isFinite(radius) || radius <= 0) {
+		return null;
+	}
+	return { minX: x - radius, maxX: x + radius, minY: y - radius, maxY: y + radius };
+}
+
+function puzzle2dPlayFixtureWorldBoundsFromNodeRecords(nodes: readonly Record<string, unknown>[]): { cx: number; cy: number; halfSpan: number } {
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+	for (const node of nodes) {
+		const extents = puzzle2dPlayNodeWorldExtents(node);
+		if (!extents) continue;
+		minX = Math.min(minX, extents.minX);
+		maxX = Math.max(maxX, extents.maxX);
+		minY = Math.min(minY, extents.minY);
+		maxY = Math.max(maxY, extents.maxY);
+	}
+	if (!Number.isFinite(minX)) {
+		return { cx: 0, cy: 0, halfSpan: 400 };
+	}
+	const cx = (minX + maxX) / 2;
+	const cy = (minY + maxY) / 2;
+	const halfSpan = Math.max(maxX - minX, maxY - minY, 1) / 2;
+	return { cx, cy, halfSpan };
+}
+
+function puzzle2dPlayFixtureWorldBounds(fixture: Puzzle2dFixtureV1): { cx: number; cy: number; halfSpan: number } {
+	return puzzle2dPlayFixtureWorldBoundsFromNodeRecords(fixture.nodes as unknown as Record<string, unknown>[]);
+}
+
+function puzzle2dPlayFixtureWorldBoundsFromJson(raw: unknown): { cx: number; cy: number; halfSpan: number } | null {
+	if (!raw || typeof raw !== "object") return null;
+	const nodes = (raw as Record<string, unknown>).nodes;
+	if (!Array.isArray(nodes)) return null;
+	const records = nodes.filter((node): node is Record<string, unknown> => Boolean(node) && typeof node === "object");
+	if (!records.length) return null;
+	return puzzle2dPlayFixtureWorldBoundsFromNodeRecords(records);
+}
+
+function puzzle2dPlayViewportCameraFromBounds(
+	fixture: Puzzle2dFixtureV1,
+	bounds: { cx: number; cy: number; halfSpan: number },
+): CameraState {
+	const usable = PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX * (1 - 2 * PUZZLE_2D_PLAY_VIEWPORT_MARGIN);
+	const worldSpan = Math.max(2 * bounds.halfSpan * PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE, 1);
+	const zoom = clampPuzzle2dPlayViewportZoom(usable / worldSpan);
+	return {
+		x: bounds.cx + fixture.camera.x,
+		y: bounds.cy + fixture.camera.y,
+		zoom,
+	};
+}
+
+/** @emoji 📷 Viewport camera centered on fixture node bounds; `fixture.camera` is a pan offset (use zero to center). */
+export function puzzle2dPlayViewportCameraFromFixture(fixture: Puzzle2dFixtureV1, rawFixture?: unknown): CameraState {
+	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
+	return puzzle2dPlayViewportCameraFromBounds(fixture, bounds);
+}
+
+/** @emoji 📷 Viewport camera for a play fixture catalog id (uses raw JSON bounds before circle normalization). */
+export function puzzle2dPlayViewportCameraForFixtureId(fixtureId: string): CameraState {
+	const raw = puzzle2dPlayFixtureJson(fixtureId);
+	return puzzle2dPlayViewportCameraFromFixture(puzzle2dPlayFixtureForId(fixtureId), raw);
+}
+
+function puzzle2dPlayTriptychCameraForPane(
+	pane: Puzzle2dPlayPaneId,
+	fixture: Puzzle2dFixtureV1,
+	bounds: { cx: number; cy: number; halfSpan: number },
+	baseZoom: number,
+): CameraState {
+	const camOffset = fixture.camera;
+	const detailNode = fixture.nodes[Math.min(42, Math.max(0, fixture.nodes.length - 1))];
+	const zoom = clampPuzzle2dPlayViewportZoom(baseZoom * PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE[pane]);
+	switch (pane) {
+		case "2d-overview":
+			return { x: bounds.cx + camOffset.x * 0.04, y: bounds.cy + camOffset.y * 0.03, zoom };
+		case "2d-detail":
+			return {
+				x: (detailNode?.x ?? bounds.cx) + camOffset.x * 0.02,
+				y: (detailNode?.y ?? bounds.cy) + camOffset.y * 0.02,
+				zoom,
+			};
+		case "2d-selection":
+			return {
+				x: bounds.cx - bounds.halfSpan * 0.28 + camOffset.x * 0.06,
+				y: bounds.cy + bounds.halfSpan * 0.22 + camOffset.y * 0.05,
+				zoom,
+			};
+	}
+}
+
+/** @emoji 📷 Default cameras for all puzzle 2d play panes (wide overview, tight detail, regional selection). */
+export function puzzle2dPlayTriptychCamerasFromFixture(fixture: Puzzle2dFixtureV1, rawFixture?: unknown): Record<Puzzle2dPlayPaneId, CameraState> {
+	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
+	const base = puzzle2dPlayViewportCameraFromBounds(fixture, bounds);
+	return {
+		"2d-overview": puzzle2dPlayTriptychCameraForPane("2d-overview", fixture, bounds, base.zoom),
+		"2d-detail": puzzle2dPlayTriptychCameraForPane("2d-detail", fixture, bounds, base.zoom),
+		"2d-selection": puzzle2dPlayTriptychCameraForPane("2d-selection", fixture, bounds, base.zoom),
+	};
+}
 
 export const PUZZLE_2D_PLAY_EMPTY_FIXTURE: Puzzle2dFixtureV1 = {
 	schema: "puzzle.2d.fixture/v1",
@@ -1122,10 +1260,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 				command: "toggleGridSnap",
 			},
 		],
-		create: [
-			{ id: "puzzle2d.create.circle", kind: "button", iconId: "circle", label: "Circle", order: 0, controllerId, command: "appendCircle" },
-			{ id: "puzzle2d.create.rectangle", kind: "button", iconId: "square", label: "Rectangle", order: 1, controllerId, command: "appendRectangle" },
-		],
+		create: [{ id: "puzzle2d.create.circle", kind: "button", iconId: "circle", label: "Circle", order: 0, controllerId, command: "appendCircle" }],
 		actions: [
 			{
 				id: "puzzle2d.redraw.play",
@@ -1204,7 +1339,6 @@ export class Puzzle2dPlayShellController extends Controller {
 						{ id: "puzzle2d.select.rectangle", label: "Rectangle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.rectangle" }) },
 						{ id: "puzzle2d.select.lasso", label: "Lasso", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.lasso" }) },
 						{ id: "puzzle2d.create.circle", label: "Circle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.circle" }) },
-						{ id: "puzzle2d.create.rectangle", label: "RectangleShape", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.rectangle" }) },
 						{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
 					];
 		const sessionActive = this.activeTool === "brush" || this.activeTool === "fill";
@@ -1422,10 +1556,6 @@ export class Puzzle2dPlayShellController extends Controller {
 			runHost("appendCircle", {});
 			return remember("puzzle2d.create.circle");
 		}
-		if (possibleIdOrText === "puzzle2d.create.rectangle" || token === "rectangleshape" || token === "rectangle") {
-			runHost("appendRectangle", {});
-			return remember("puzzle2d.create.rectangle");
-		}
 		if (possibleIdOrText === PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID || token === "brush") {
 			this.setPlayActiveTool("brush");
 			return remember(PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID);
@@ -1570,7 +1700,6 @@ export class Puzzle2dPlayShellController extends Controller {
 			}
 			case "toggleGridSnap":
 			case "appendCircle":
-			case "appendRectangle":
 			case "toggleRedrawPlaying":
 			case "redrawHandlesOnce":
 			case "addBrushNode":
@@ -2045,6 +2174,31 @@ if (import.meta.vitest) {
 				PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
 				PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
 			]);
+		});
+
+		it("concrete forest viewport camera centers on the seed node with room to grow", () => {
+			const raw = puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID) as { nodes: { x: number; y: number }[] };
+			const fixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			const authoredNode = raw.nodes[0];
+			expect(authoredNode).toBeTruthy();
+			const camera = puzzle2dPlayViewportCameraForFixtureId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			expect(camera.x).toBeCloseTo(authoredNode!.x, 3);
+			expect(camera.y).toBeCloseTo(authoredNode!.y, 3);
+			expect(camera.zoom).toBeGreaterThan(0);
+			expect(camera.zoom).toBeLessThan(0.75);
+			expect(fixture.nodes[0]?.shape).toBe("circle");
+		});
+
+		it("triptych cameras use distinct zoom per pane", () => {
+			const fixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			const raw = puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			const cameras = puzzle2dPlayTriptychCamerasFromFixture(fixture, raw);
+			expect(cameras["2d-detail"].zoom).toBeGreaterThan(cameras["2d-overview"].zoom);
+			expect(cameras["2d-overview"].zoom).toBeGreaterThan(cameras["2d-selection"].zoom);
+			expect(cameras["2d-detail"].zoom / cameras["2d-overview"].zoom).toBeCloseTo(
+				PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE["2d-detail"] / PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE["2d-overview"],
+				4,
+			);
 		});
 
 		it("nakagin hierarchy kind catalog uses specific human-readable node names", () => {

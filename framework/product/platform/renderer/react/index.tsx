@@ -137,7 +137,7 @@ import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
-import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
+import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
 import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
 import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController } from "@puzzle/2d/react";
 import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
@@ -2858,6 +2858,12 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 							: {}),
 						onHover: (payload: { readonly id: string | null }) => {
 							commandBus.dispatch(component.controllerId, "puzzle5dHover", { instanceId, nodeId: payload.id });
+						},
+						onPreselect: (snapshot: Puzzle2dPreselectSnapshot) => {
+							commandBus.dispatch(component.controllerId, "puzzle5dPreselect", {
+								instanceId,
+								preselect: { ids: [...snapshot.ids], removedIds: [...snapshot.removedIds] },
+							});
 						},
 					}
 				: undefined,

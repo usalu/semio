@@ -1932,8 +1932,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
         kindCatalogs,
+        sceneFixture: snap.fixture,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, kindCatalogs, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushDimension, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushDimensions],
+    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, kindCatalogs, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushDimension, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.fixture, snap.selection.targetVolumeIds.length, snap.voxelBrushDimensions],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -2955,6 +2956,8 @@ import {
   PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
   PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
   puzzle2dPlayFixtureForId,
+  puzzle2dPlayFixtureJson,
+  puzzle2dPlayTriptychCamerasFromFixture,
 } from "@puzzle/2d/play";
 import {
   buildWiresPlayHierarchySections,
@@ -3031,6 +3034,7 @@ import {
   puzzle2dApplyLiveForceGraphLayoutTick,
   puzzle2dFinalizeLiveForceGraphLayoutTick,
   puzzle2dFixtureWithDragAnchors,
+  puzzle2dBrushSuggestionsMenuOpen,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
   puzzle2dCommitBrushPlacementToPlay,
   puzzle2dSetBrushPlaceCommitHandler,
@@ -3054,7 +3058,6 @@ import {
   normalizePuzzle2dSelectionProp,
   type Puzzle2dFixtureV1,
   type Puzzle2dFixtureNodeV1,
-  type Puzzle2dFixtureRectangleNodeV1,
   type Puzzle2dFixtureCircleNodeV1,
   type Puzzle2dFixtureHandleV1,
   type Puzzle2dFixtureEdgeV1,
@@ -3134,60 +3137,29 @@ const puzzle2dPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", la
 // #endregion 🔖Kinds
 
 // #region 🔖Geometry
-const REF_VIEWPORT_SHORT_PX = 640;
-
 function clampZoom(value: number): number {
   return Math.min(PUZZLE_2D_CAMERA_ZOOM_MAX, Math.max(PUZZLE_2D_CAMERA_ZOOM_MIN, value));
 }
 
-/** @emoji 📐 Axis-aligned bounds of all fixture nodes (world units). */
-function fixtureWorldBounds(fixture: Puzzle2dFixtureV1): { cx: number; cy: number; halfSpan: number } {
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  for (const node of fixture.nodes) {
-    if (node.shape === "rectangle") {
-      const hw = node.width / 2;
-      const hh = node.height / 2;
-      minX = Math.min(minX, node.x - hw);
-      maxX = Math.max(maxX, node.x + hw);
-      minY = Math.min(minY, node.y - hh);
-      maxY = Math.max(maxY, node.y + hh);
-    } else {
-      minX = Math.min(minX, node.x - node.radius);
-      maxX = Math.max(maxX, node.x + node.radius);
-      minY = Math.min(minY, node.y - node.radius);
-      maxY = Math.max(maxY, node.y + node.radius);
-    }
-  }
-  if (!Number.isFinite(minX)) {
-    return { cx: 0, cy: 0, halfSpan: 400 };
-  }
-  const cx = (minX + maxX) / 2;
-  const cy = (minY + maxY) / 2;
-  const halfSpan = Math.max(maxX - minX, maxY - minY, 1) / 2;
-  return { cx, cy, halfSpan };
+function triptychCamerasFromFixture(fixture: Puzzle2dFixtureV1, rawFixture?: unknown): Record<Puzzle2dPlayPaneId, CameraState> {
+  return puzzle2dPlayTriptychCamerasFromFixture(fixture, rawFixture);
 }
 
-/** @emoji 📷 Default cameras for all play panes: center on fixture bounds; zoom fits the graph’s longest axis into the reference short viewport (margin padding). */
-function triptychCamerasFromFixture(fixture: Puzzle2dFixtureV1): Record<Puzzle2dPlayPaneId, CameraState> {
-  const { cx, cy, halfSpan } = fixtureWorldBounds(fixture);
-  const base = fixture.camera;
-  const margin = 0.06;
-  const usable = REF_VIEWPORT_SHORT_PX * (1 - 2 * margin);
-  const worldSpan = Math.max(2 * halfSpan, 1);
-  const zoom = clampZoom(usable / worldSpan);
-  const cam: CameraState = { x: cx + base.x, y: cy + base.y, zoom };
-  return {
-    "2d-detail": { ...cam },
-    "2d-overview": { ...cam },
-    "2d-selection": { ...cam },
-  };
+function puzzle2dPlayRawFixtureJsonForNavbarId(fixtureId: string): unknown | undefined {
+  if (isPlaygroundNoFixtureId(fixtureId) || fixtureId === WIRES_PLAY_FIXTURE_METABOLISM_ID) {
+    return undefined;
+  }
+  if (fixtureId === PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID || fixtureId === PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID) {
+    return puzzle2dPlayFixtureJson(fixtureId);
+  }
+  return undefined;
 }
 
 function puzzle2dPlayInitialCameras(): Record<Puzzle2dPlayPaneId, CameraState> {
-  return triptychCamerasFromFixture(puzzle2dPlayResolvedDefaultFixture());
+  return triptychCamerasFromFixture(
+    puzzle2dPlayResolvedDefaultFixture(),
+    puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID),
+  );
 }
 
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
@@ -4040,10 +4012,6 @@ function findHandle(fixture: Puzzle2dFixtureV1, handleId: string): Puzzle2dFixtu
   return undefined;
 }
 
-function nodeIsRectangle(n: Puzzle2dFixtureNodeV1): n is Puzzle2dFixtureRectangleNodeV1 {
-  return n.shape === "rectangle";
-}
-
 function allEqual<T>(values: T[]): boolean {
   if (values.length === 0) {
     return true;
@@ -4061,17 +4029,6 @@ function listHandleIds(fixture: Puzzle2dFixtureV1): string[] {
   }
   out.sort((a, b) => a.localeCompare(b));
   return out;
-}
-
-function toCircleNode(n: Puzzle2dFixtureRectangleNodeV1): Puzzle2dFixtureCircleNodeV1 {
-  const { width, height, shape: _s, ...rest } = n;
-  const radius = Math.min(width, height) / 2;
-  return { ...rest, radius, shape: "circle" };
-}
-
-function toRectangleNode(n: Puzzle2dFixtureCircleNodeV1): Puzzle2dFixtureRectangleNodeV1 {
-  const { radius, shape: _s, ...rest } = n;
-  return { ...rest, shape: "rectangle", width: radius * 2, height: radius * 2 };
 }
 
 /** @emoji 🎯 Normalizes θ to `[0, 2π)`. */
@@ -4194,26 +4151,12 @@ function InspectorNodeBatch({
     [kindCatalogs, nodeKinds],
   );
 
-  const shapes = targets.map((n) => (nodeIsRectangle(n) ? "rectangle" : "circle"));
-  const shapeUniform = allEqual(shapes);
-  const shapeValue = shapeUniform ? shapes[0] : undefined;
-
   const xs = targets.map((n) => n.x);
   const ys = targets.map((n) => n.y);
   const xUniform = allEqual(xs);
   const yUniform = allEqual(ys);
   const xValue = xUniform ? xs[0] : Number.NaN;
   const yValue = yUniform ? ys[0] : Number.NaN;
-
-  const radii = targets.filter((n) => !nodeIsRectangle(n)).map((n) => n.radius);
-  const widths = targets.filter(nodeIsRectangle).map((n) => n.width);
-  const heights = targets.filter(nodeIsRectangle).map((n) => n.height);
-  const rUniform = radii.length > 0 && allEqual(radii);
-  const wUniform = widths.length > 0 && allEqual(widths);
-  const hUniform = heights.length > 0 && allEqual(heights);
-  const rValue = rUniform ? radii[0] : Number.NaN;
-  const wValue = wUniform ? widths[0] : Number.NaN;
-  const hValue = hUniform ? heights[0] : Number.NaN;
 
   const patchNodes = reactHostPort.useCallback(
     (updater: (n: Puzzle2dFixtureNodeV1) => Puzzle2dFixtureNodeV1) => {
@@ -4241,21 +4184,6 @@ function InspectorNodeBatch({
     [patchNodes],
   );
 
-  const onShape = reactHostPort.useCallback(
-    (next: "circle" | "rectangle") => {
-      patchNodes((n) => {
-        if (next === "rectangle" && !nodeIsRectangle(n)) {
-          return toRectangleNode(n);
-        }
-        if (next === "circle" && nodeIsRectangle(n)) {
-          return toCircleNode(n);
-        }
-        return n;
-      });
-    },
-    [patchNodes],
-  );
-
   const onNodeKind = reactHostPort.useCallback(
     (next: string) => {
       patchNodes((n) => puzzle2dApplyNodeKindToFixtureNode(n, next, kindCatalogs));
@@ -4279,60 +4207,8 @@ function InspectorNodeBatch({
       <Label id="puzzle-2d-play.inspector.node.icon" label="Icon">
         <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
       </Label>
-      <Label id="puzzle-2d-play.inspector.node.shape" label="Shape">
-        <Select
-          key={shapeUniform && shapeValue ? `shape-${shapeValue}` : "shape-mixed"}
-          onValueChange={(v) => {
-            if (v === "circle" || v === "rectangle") {
-              onShape(v);
-            }
-          }}
-          value={shapeUniform && shapeValue ? shapeValue : undefined}
-        >
-          <SelectTrigger className="h-7 font-mono text-xs">
-            <SelectValue placeholder={shapeUniform ? "shape" : "Mixed"} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="circle">circle</SelectItem>
-            <SelectItem value="rectangle">rectangle</SelectItem>
-          </SelectContent>
-        </Select>
-      </Label>
       <NumericStepperRow id="puzzle-2d-play.inspector.node.x" label="x" onAbsolute={(v) => patchNodes((n) => ({ ...n, x: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, x: n.x + d }))} step={1} uniform={xUniform} value={xValue} />
       <NumericStepperRow id="puzzle-2d-play.inspector.node.y" label="y" onAbsolute={(v) => patchNodes((n) => ({ ...n, y: v }))} onDelta={(d) => patchNodes((n) => ({ ...n, y: n.y + d }))} step={1} uniform={yUniform} value={yValue} />
-      {targets.some((n) => !nodeIsRectangle(n)) ? (
-        <NumericStepperRow
-          id="puzzle-2d-play.inspector.node.r"
-          label="radius"
-          onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, v) }))}
-          onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, n.radius + d) }))}
-          step={1}
-          uniform={rUniform}
-          value={rValue}
-        />
-      ) : null}
-      {targets.some(nodeIsRectangle) ? (
-        <>
-          <NumericStepperRow
-            id="puzzle-2d-play.inspector.node.w"
-            label="width"
-            onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, v) } : n))}
-            onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, n.width + d) } : n))}
-            step={1}
-            uniform={wUniform}
-            value={wValue}
-          />
-          <NumericStepperRow
-            id="puzzle-2d-play.inspector.node.h"
-            label="height"
-            onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, v) } : n))}
-            onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, n.height + d) } : n))}
-            step={1}
-            uniform={hUniform}
-            value={hValue}
-          />
-        </>
-      ) : null}
     </div>
   );
 }
@@ -4749,6 +4625,12 @@ function Puzzle2dPlayInner({
   const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(() => clonePuzzle2dFixtureV1(initialFixture));
   const fixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   fixtureRef.current = fixture;
+  const catalogRawFixtureRef = reactHostPort.useRef<unknown | undefined>(
+    puzzle2dPlayRawFixtureJsonForNavbarId(PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID),
+  );
+  const triptychCamerasForFixture = reactHostPort.useCallback((next: Puzzle2dFixtureV1) => {
+    return triptychCamerasFromFixture(next, catalogRawFixtureRef.current);
+  }, []);
   const [puzzle2dPlayPaneCamerasBaseline, setPuzzle2dPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => puzzle2dPlayInitialCameras());
   const puzzle2dPlayPaneCamerasBaselineRef = reactHostPort.useRef(puzzle2dPlayPaneCamerasBaseline);
   puzzle2dPlayPaneCamerasBaselineRef.current = puzzle2dPlayPaneCamerasBaseline;
@@ -4968,12 +4850,14 @@ function Puzzle2dPlayInner({
     setHoveredId(null);
     hoverSourcePaneRef.current = null;
     setHoverSourcePane(null);
-    setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
-  }, [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes]);
+    catalogRawFixtureRef.current = undefined;
+    setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasForFixture(next));
+  }, [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes, triptychCamerasForFixture]);
 
   const patchFixture = reactHostPort.useCallback(
     (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {
       guardFixtureAuthoringFromStructuralDeletes(80);
+      catalogRawFixtureRef.current = undefined;
       setFixtureState((prev) => updater(prev));
       bumpSceneAuthoringEpoch();
     },
@@ -5068,7 +4952,7 @@ function Puzzle2dPlayInner({
   }, [commitBrushPlacement]);
 
   reactHostPort.useEffect(() => {
-    if (puzzle2dActiveTool !== "brush") {
+    if (puzzle2dActiveTool !== "brush" && !puzzle2dBrushSuggestionsMenuOpen()) {
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
       return;
     }
@@ -5198,7 +5082,7 @@ function Puzzle2dPlayInner({
       return;
     }
     const pane = activePaneIdRef.current;
-    const target = triptychCamerasFromFixture(fixture);
+    const target = triptychCamerasForFixture(fixture);
     setPuzzle2dPlayPaneCamerasBaseline((baselinePrev) => {
       const prevChase = puzzle2dPlayRedrawCameraChaseRef.current ?? baselinePrev;
       const damped = dampCameraStateLinear(prevChase[pane], target[pane], PUZZLE_2D_PLAY_REDRAW_CAMERA_CHASE_BLEND);
@@ -5211,7 +5095,7 @@ function Puzzle2dPlayInner({
       puzzle2dPlayRedrawCameraChaseRef.current = nextChase;
       return nextChase;
     });
-  }, [puzzle2dRedrawPlaying, fixture]);
+  }, [puzzle2dRedrawPlaying, fixture, triptychCamerasForFixture]);
 
   reactHostPort.useEffect(() => {
     if (puzzle2dRedrawPlaying) {
@@ -5239,7 +5123,7 @@ function Puzzle2dPlayInner({
       "2d-selection": { ...puzzle2dPlayPaneCamerasBaseline["2d-selection"] },
     };
     cameraBasisFixtureRef.current = snapshotFixture;
-    const to = triptychCamerasFromFixture(snapshotFixture);
+    const to = triptychCamerasForFixture(snapshotFixture);
     const postPlayEasePaneId = activePaneIdRef.current;
     suppressCameraBasisSyncRef.current = true;
     if (puzzle2dPlayNodesRedrawCameraAnimRafRef.current != null) {
@@ -5263,7 +5147,7 @@ function Puzzle2dPlayInner({
         cameraBasisFixtureRef.current = fixtureRef.current;
         cameraPlayEndAnimRafRef.current = requestAnimationFrame(() => {
           setCameraDisplayOverrideByPane(null);
-          const fit = triptychCamerasFromFixture(fixtureRef.current);
+          const fit = triptychCamerasForFixture(fixtureRef.current);
           const p = postPlayEasePaneId;
           setPuzzle2dPlayPaneCamerasBaseline((prev) => ({ ...prev, [p]: { ...fit[p] } }));
           cameraPlayEndAnimRafRef.current = null;
@@ -5316,7 +5200,7 @@ function Puzzle2dPlayInner({
       "2d-overview": { ...fromSnapshot["2d-overview"] },
       "2d-selection": { ...fromSnapshot["2d-selection"] },
     };
-    const to = triptychCamerasFromFixture(snapshotFixture);
+    const to = triptychCamerasForFixture(snapshotFixture);
     const nodesRedrawEasePaneId = activePaneIdRef.current;
     const total = PUZZLE_2D_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
     const holdEnd = total / 3;
@@ -5792,24 +5676,7 @@ function Puzzle2dPlayInner({
               handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: handleId }],
               id,
               radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2,
-              x: camera.x,
-              y: camera.y,
-            };
-            h.patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
-            h.setSelectionIds([id]);
-            break;
-          }
-          case "appendRectangle": {
-            const camera = h.camerasByPane[h.activePaneId];
-            const id = newPuzzle2dAuthoringId("node");
-            const handleId = `${id}.h0`;
-            const d = PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX;
-            const node: Puzzle2dFixtureRectangleNodeV1 = {
-              handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: handleId }],
-              height: d,
-              id,
-              shape: "rectangle",
-              width: d,
+              shape: "circle",
               x: camera.x,
               y: camera.y,
             };
@@ -5963,13 +5830,14 @@ function Puzzle2dPlayInner({
       if (nextId === activeFixtureId) return;
       setActiveFixtureId(nextId);
       const next = puzzle2dPlayFixtureForNavbarId(nextId);
+      catalogRawFixtureRef.current = puzzle2dPlayRawFixtureJsonForNavbarId(nextId);
       setFixtureState(next);
       setSelectionIdsState(isPlaygroundNoFixtureId(nextId) ? new Set() : selectionSeedForFixture(next));
-      setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
+      setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasForFixture(next));
       puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
       bumpSceneAuthoringEpoch();
     },
-    [activeFixtureId, bumpSceneAuthoringEpoch],
+    [activeFixtureId, bumpSceneAuthoringEpoch, triptychCamerasForFixture],
   );
 
   const slotNavbarCenter = reactHostPort.useMemo(

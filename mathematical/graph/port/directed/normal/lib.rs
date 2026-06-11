@@ -315,6 +315,8 @@ pub struct BoardHost {
     brush_handle_kind_weights: HashMap<String, f64>,
     /// @emoji ⌥ Alt held while brushing — enables flush offset and commit-on-leave.
     brush_alt_pressed: bool,
+    /// @emoji ✨ Suggestions menu opened a slot outside brush tool — use flush offset and highlight source handle.
+    brush_slot_suggestions_active: bool,
     pub port_mode: GraphPortMode,
 }
 
@@ -377,6 +379,7 @@ impl Default for BoardHost {
             brush_node_kind_weights: HashMap::new(),
             brush_handle_kind_weights: HashMap::new(),
             brush_alt_pressed: false,
+            brush_slot_suggestions_active: false,
             port_mode: GraphPortMode::Ported,
         }
     }
@@ -1553,7 +1556,7 @@ impl BoardHost {
     }
 
     fn brush_effective_flush_distance(&self) -> f64 {
-        if self.brush_alt_pressed {
+        if self.brush_alt_pressed || self.brush_slot_suggestions_active {
             self.brush_flush_distance
         } else {
             0.0
@@ -1835,6 +1838,7 @@ impl BoardHost {
                     "sourceHandleId": self.brush_slot_source_id.clone().unwrap_or_default(),
                     "candidates": self.brush_candidate_kinds,
                     "index": self.brush_candidate_index,
+                    "suggestionsActive": self.brush_slot_suggestions_active,
                 }),
             );
         }
@@ -1842,10 +1846,15 @@ impl BoardHost {
 
     fn brush_clear_slot(&mut self) {
         let had_preview = self.brush_preview.is_some();
+        let clear_hover = self.brush_slot_suggestions_active;
+        self.brush_slot_suggestions_active = false;
         self.brush_slot_source_id = None;
         self.brush_candidate_kinds.clear();
         self.brush_candidate_index = 0;
         self.brush_preview = None;
+        if clear_hover {
+            self.set_hovered_id(None);
+        }
         if had_preview {
             self.bump_content_scene_generation();
             self.brush_preview_emit_key = None;
@@ -2197,6 +2206,7 @@ impl BoardHost {
     /// @emoji 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
     pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), String> {
         if json.trim().is_empty() {
+            self.brush_slot_suggestions_active = false;
             self.brush_slot_source_id = None;
             self.brush_candidate_kinds.clear();
             self.brush_candidate_index = 0;
@@ -2237,6 +2247,7 @@ impl BoardHost {
         };
         self.brush_preview_emit_key = None;
         self.brush_candidates_emit_key = None;
+        self.brush_slot_suggestions_active = v.get("suggestionsActive").and_then(|x| x.as_bool()).unwrap_or(false);
         self.bump_content_scene_generation();
         Ok(())
     }
@@ -2393,6 +2404,9 @@ impl BoardHost {
             return;
         }
         self.brush_enter_slot(handle_id.to_string());
+        self.brush_slot_suggestions_active = true;
+        self.brush_rebuild_preview();
+        self.set_hovered_id(Some(handle_id.to_string()));
     }
 
     /// @emoji 🖌️ Commits the active brush preview and clears the slot.

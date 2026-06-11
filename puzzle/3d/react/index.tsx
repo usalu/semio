@@ -416,6 +416,8 @@ export interface VortexKind {
 /** @emoji 🌀 Explicit local vortex template on an {@link ObjectKind} for brush placement. */
 export interface ObjectKindVortexTemplate {
   readonly vortexKind: string;
+  /** @emoji 🏷️ Port label for play UI; defaults to {@link vortexKind} when omitted. */
+  readonly label?: string;
   readonly position: Vec3;
   readonly direction?: Vec3;
   readonly radius?: number;
@@ -2017,7 +2019,7 @@ function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, or
   const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
     id: `${objectId}:v${index}`,
     vortexKind: entry.vortexKind,
-    label: entry.vortexKind,
+    label: entry.label?.trim() || entry.vortexKind,
     position: entry.position,
     ...(entry.direction ? { direction: entry.direction } : {}),
     ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
@@ -3849,20 +3851,45 @@ function catalogKindDisplayLabel(entry: { readonly id: string; readonly label?: 
   return display && display.length > 0 ? display : entry.id;
 }
 
-function catalogVortexKindDisplayLabel(vortexKindId: string, kindCatalogs: KindCatalogBundle | undefined): string {
-  const entry = kindCatalogs?.vortices?.find((row) => row.id === vortexKindId);
-  return entry ? catalogKindDisplayLabel(entry) : vortexKindId;
+/** @emoji 🏷️ Specific source-port label for a brush candidate (template or scene instance, not vortex-kind catalog). */
+export function brushCandidateSourceVortexLabel(
+  candidate: BrushCompatibleCandidate,
+  kindCatalogs: KindCatalogBundle | undefined,
+  sceneFixture?: FixtureV1,
+): string {
+  const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
+  const template = kind?.vortices?.[candidate.sourceVortexIndex];
+  if (!template) {
+    return "";
+  }
+  const templateLabel = template.label?.trim();
+  if (templateLabel) {
+    return templateLabel;
+  }
+  if (sceneFixture) {
+    for (const object of sceneFixture.objects) {
+      if (object.objectKind !== candidate.objectKindId) {
+        continue;
+      }
+      const vortex = object.vortices[candidate.sourceVortexIndex];
+      const label = vortex?.label?.trim();
+      if (vortex && label && (!template.vortexKind || vortex.vortexKind === template.vortexKind)) {
+        return label;
+      }
+    }
+  }
+  return template.vortexKind;
 }
 
-/** @emoji 🏷️ Human labels for a brush candidate row (object kind + source vortex kind). */
+/** @emoji 🏷️ Human labels for a brush candidate row (object kind + specific source vortex label). */
 export function brushCandidateDisplayLabels(
   candidate: BrushCompatibleCandidate,
   kindCatalogs: KindCatalogBundle | undefined,
+  sceneFixture?: FixtureV1,
 ): { readonly object: string; readonly vortex: string } {
   const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
   const object = kind ? catalogKindDisplayLabel(kind) : candidate.objectKindId;
-  const vortexKindId = kind?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
-  const vortex = catalogVortexKindDisplayLabel(vortexKindId, kindCatalogs);
+  const vortex = brushCandidateSourceVortexLabel(candidate, kindCatalogs, sceneFixture);
   return { object, vortex };
 }
 
@@ -3988,6 +4015,8 @@ export const puzzle3dBrushKindWeightsRef: { current: Puzzle3dBrushKindWeights } 
 
 export const puzzle3dBrushKindCatalogsRef: { current: KindCatalogBundle | undefined } = { current: undefined };
 
+export const puzzle3dBrushSceneFixtureRef: { current: FixtureV1 | undefined } = { current: undefined };
+
 /** @emoji 🎚️ Publishes brush kind weights for {@link BrushSession} weighted candidate ordering. */
 export function publishPuzzle3dBrushKindWeights(objectWeights: Readonly<Record<string, number>>, vortexWeights: Readonly<Record<string, number>>): void {
   puzzle3dBrushKindWeightsRef.current = { objectWeights, vortexWeights };
@@ -3996,6 +4025,11 @@ export function publishPuzzle3dBrushKindWeights(objectWeights: Readonly<Record<s
 /** @emoji 📚 Publishes kind catalogs for brush suggestion menus and engagement labels. */
 export function publishPuzzle3dBrushKindCatalogs(kindCatalogs: KindCatalogBundle | undefined): void {
   puzzle3dBrushKindCatalogsRef.current = kindCatalogs;
+}
+
+/** @emoji 🧩 Publishes the live scene fixture for brush suggestion vortex labels. */
+export function publishPuzzle3dBrushSceneFixture(sceneFixture: FixtureV1 | undefined): void {
+  puzzle3dBrushSceneFixtureRef.current = sceneFixture;
 }
 
 function brushKindWeightValue(weights: Readonly<Record<string, number>>, id: string): number {
@@ -4346,7 +4380,7 @@ export function applyBrushPlacementToFixture(fixture: FixtureV1, payload: BrushP
   const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
     id: `${objectId}:v${index}`,
     vortexKind: entry.vortexKind,
-    label: entry.vortexKind,
+    label: entry.label?.trim() || entry.vortexKind,
     position: entry.position,
     ...(entry.direction ? { direction: entry.direction } : {}),
     ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
@@ -5702,6 +5736,9 @@ function HoverMissBridge(): null {
 function HoverInvalidateBridge(): null {
   const { hoverTarget, kindHover } = useRegistryHover();
   const invalidate = useThree((state) => state.invalidate);
+  reactHostPort.useLayoutEffect(() => {
+    puzzle3dHoverTargetRef.current = hoverTarget;
+  }, [hoverTarget]);
   reactHostPort.useEffect(() => {
     invalidate();
   }, [hoverTarget, kindHover, invalidate]);
@@ -7072,6 +7109,9 @@ export const PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX = 4;
 /** @emoji 🖱️ True while a right-button camera drag is active (suppress context menu on drag). */
 export const puzzle3dRightDragActiveRef = { current: false };
 
+/** @emoji 🎯 Latest exclusive hover target (for Alt+right suggestion shortcut without React context). */
+export const puzzle3dHoverTargetRef: { current: HoverTarget | null } = { current: null };
+
 /** @emoji 🖱️ True after a marquee gesture consumed the click (mesh picks skip onClick). */
 export const puzzle3dMarqueeSuppressClickRef = { current: false };
 
@@ -7853,6 +7893,11 @@ export const puzzle3dOpenVortexSuggestionsRef: { current: Puzzle3dOpenVortexSugg
   current: { openFor: () => {}, close: () => {} },
 };
 
+/** @emoji ⌨️ True when Alt+right-click should open brush suggestions on a vortex. */
+export function puzzle3dVortexAcceptsSuggestionShortcut(target: HoverTarget | null, vortexMeta: VortexBindingMeta | null): boolean {
+  return target?.kind === "vortex" && vortexMeta !== null;
+}
+
 /** @emoji 🎯 Maps exclusive hover target to a canvas selection pick. */
 export function hoverTargetToSelectionPick(target: HoverTarget): SelectionPick {
   switch (target.kind) {
@@ -8026,6 +8071,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly brushTargetActive: boolean;
   readonly brushPlacementProbePending?: boolean;
   readonly kindCatalogs?: KindCatalogBundle;
+  readonly sceneFixture?: FixtureV1;
 }
 
 /** @emoji 💬 Builds window {@link EngagementSpec}: command input, possibles, options, status (CAD play layout). */
@@ -8064,7 +8110,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
   ];
 
   const brushPossibles = inputs.brushCandidates.map((candidate, index) => {
-    const labels = brushCandidateDisplayLabels(candidate, inputs.kindCatalogs);
+    const labels = brushCandidateDisplayLabels(candidate, inputs.kindCatalogs, inputs.sceneFixture);
     return {
       id: `puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`,
       label: labels.object,
@@ -8328,6 +8374,10 @@ function OrbitGated(props: {
     dragThresholdPx: PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX,
     onRightPointerDown: (event) => {
       if (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current) {
+        return false;
+      }
+      if (event.altKey && puzzle3dHoverTargetRef.current?.kind === "vortex") {
+        puzzle3dRightDragActiveRef.current = false;
         return false;
       }
       puzzle3dRightDragActiveRef.current = event.altKey;
@@ -9774,7 +9824,7 @@ function SelectionContextMenuBinder(): null {
   reactHostPort.useEffect(() => {
     const onContextMenu = (event: MouseEvent) => {
       const target = hoverTargetRef.current;
-      if (puzzle3dRightDragActiveRef.current || !target) {
+      if (!target) {
         return;
       }
       event.preventDefault();
@@ -9782,9 +9832,18 @@ function SelectionContextMenuBinder(): null {
       puzzle3dBrushMenuSourceRef.current.closeMenu();
       const pick = hoverTargetToSelectionPick(target);
       commitSelection(pick);
+      const vortexMeta = target.kind === "vortex" ? (reg.listVortexBindings().find((entry) => entry.fullId === target.fullId) ?? null) : null;
+      if (event.altKey && puzzle3dVortexAcceptsSuggestionShortcut(target, vortexMeta) && vortexMeta) {
+        puzzle3dRightDragActiveRef.current = false;
+        closePuzzle3dSelectionMenu();
+        puzzle3dOpenVortexSuggestionsRef.current.openFor(target.fullId, vortexMeta, { x: event.clientX, y: event.clientY });
+        return;
+      }
+      if (puzzle3dRightDragActiveRef.current) {
+        return;
+      }
       const selection = puzzle3dSelectionFromPick(pick);
       const entityFlags = puzzle3dSelectionEntityFlagsFromStore(store, selection);
-      const vortexMeta = target.kind === "vortex" ? (reg.listVortexBindings().find((entry) => entry.fullId === target.fullId) ?? null) : null;
       puzzle3dSelectionMenuStore.setSnapshot({
         open: true,
         anchor: { x: event.clientX, y: event.clientY },
@@ -9835,7 +9894,7 @@ function Puzzle3dBrushCandidateMenu() {
     ui.candidates.length > 0 ? (
       ui.candidates.map((candidate, index) => {
         const active = ui.menuHoverIndex === index;
-        const labels = brushCandidateDisplayLabels(candidate, puzzle3dBrushKindCatalogsRef.current);
+        const labels = brushCandidateDisplayLabels(candidate, puzzle3dBrushKindCatalogsRef.current, puzzle3dBrushSceneFixtureRef.current);
         return (
           <button
             key={`${candidate.objectKindId}:${candidate.sourceVortexIndex}`}
@@ -11101,7 +11160,8 @@ function Inner(props: CanvasProps & {
   );
   reactHostPort.useLayoutEffect(() => {
     publishPuzzle3dBrushKindCatalogs(kindCatalogs);
-  }, [kindCatalogs]);
+    publishPuzzle3dBrushSceneFixture(sceneFixture);
+  }, [kindCatalogs, sceneFixture]);
   reactHostPort.useEffect(() => {
     puzzle3dBrushToolActiveRef.current = brushActive;
     if (!brushActive) {
@@ -13579,26 +13639,52 @@ if (import.meta.vitest) {
         ),
       ).toEqual([]);
     });
-    it("brushCandidateDisplayLabels resolves object kind and vortex kind labels", () => {
+    it("brushCandidateDisplayLabels resolves object kind and source vortex label", () => {
       const labels = brushCandidateDisplayLabels({ objectKindId: "Capsule L", sourceVortexIndex: 0 }, brushCatalogs);
       expect(labels.object).toBe("Capsule L");
       expect(labels.vortex).toBe("door capsule left");
     });
-    it("brushCandidateDisplayLabels prefers catalog vortex kind label", () => {
+    it("brushCandidateDisplayLabels prefers template vortex label over vortex kind", () => {
       const catalogs: KindCatalogBundle = {
         objects: [
           {
             id: "Tambour",
             label: "Tambour Unit",
             meshUrl: "/mesh/tambour.glb",
-            vortices: [{ vortexKind: "door tambour left", position: [0, 0, 0] }],
+            vortices: [{ vortexKind: "door tambour left", label: "Left Tambour Port", position: [0, 0, 0] }],
           },
         ],
-        vortices: [{ id: "door tambour left", label: "Left Tambour Port" }],
+        vortices: [{ id: "door tambour left", label: "Door Tambour Left Kind" }],
       };
       const labels = brushCandidateDisplayLabels({ objectKindId: "Tambour", sourceVortexIndex: 0 }, catalogs);
       expect(labels.object).toBe("Tambour Unit");
       expect(labels.vortex).toBe("Left Tambour Port");
+    });
+    it("brushCandidateDisplayLabels uses scene vortex label when template omits label", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Tambour",
+            meshUrl: "/mesh/tambour.glb",
+            vortices: [{ vortexKind: "door tambour left", position: [0, 0, 0] }],
+          },
+        ],
+      };
+      const fixture: FixtureV1 = {
+        version: 1,
+        objects: [
+          {
+            id: "host",
+            objectKind: "Tambour",
+            meshUrl: "/mesh/tambour.glb",
+            origin: [0, 0, 0],
+            vortices: [{ id: "host:v0", vortexKind: "door tambour left", label: "Facade west", position: [0, 0, 0] }],
+          },
+        ],
+        attractions: [],
+      };
+      const labels = brushCandidateDisplayLabels({ objectKindId: "Tambour", sourceVortexIndex: 0 }, catalogs, fixture);
+      expect(labels.vortex).toBe("Facade west");
     });
     it("brushTargetVortexAllowsSuggestion rejects zero target vortex weight", () => {
       expect(brushTargetVortexAllowsSuggestion("c-t", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(false);
@@ -13962,6 +14048,12 @@ if (import.meta.vitest) {
       );
       expect(items.find((row) => row.id === "hidden")?.label).toBe("Show");
       expect(items.find((row) => row.id === "locked")?.label).toBe("Unlock");
+    });
+    it("puzzle3dVortexAcceptsSuggestionShortcut is true only for vortices with binding meta", () => {
+      const meta = { objectId: "obj", objectKind: "Forest", vortexKind: "c-b" };
+      expect(puzzle3dVortexAcceptsSuggestionShortcut({ kind: "vortex", fullId: "obj:v1" }, meta)).toBe(true);
+      expect(puzzle3dVortexAcceptsSuggestionShortcut({ kind: "vortex", fullId: "obj:v1" }, null)).toBe(false);
+      expect(puzzle3dVortexAcceptsSuggestionShortcut({ kind: "object", id: "obj" }, meta)).toBe(false);
     });
     it("buildPuzzle3dSelectionMenuItems prepends Suggest objects for a single vortex", () => {
       let suggested = false;
