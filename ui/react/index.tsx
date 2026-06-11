@@ -805,12 +805,29 @@ function isIconSource(value: ControlIcon): value is IconSource {
   return false;
 }
 
+const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
+  trash: "trash-2",
+};
+
 function coerceIconSource(source: IconSource): Icon {
   if (typeof source === "string") {
-    if ((ICONS as Record<string, string>)[source]) {
-      return { kind: "catalog", key: source };
+    const key = source.trim();
+    const alias = CATALOG_ICON_ALIASES[key];
+    if (alias) {
+      return { kind: "catalog", key: alias };
     }
-    return decodeIcon(source) ?? { kind: "catalog", key: source };
+    if ((ICONS as Record<string, string>)[key]) {
+      return { kind: "catalog", key };
+    }
+    const emoji = shortcodeEmoji(key.toLowerCase());
+    if (emoji) {
+      return { kind: "emoji", emoji };
+    }
+    const catalog = shortcodeCatalogKey(key);
+    if (catalog) {
+      return { kind: "catalog", key: catalog };
+    }
+    return decodeIcon(key) ?? { kind: "catalog", key };
   }
   if ("kind" in source) {
     return source;
@@ -1100,10 +1117,6 @@ export interface ContextMenuItem {
 function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
   if (!icon) {
     return null;
-  }
-  if (typeof icon === "string") {
-    if (icon in ICONS) return <Icon icon={icon as IconName} size="small" className="shrink-0" />;
-    return <span className="text-base shrink-0">{icon}</span>;
   }
   return <Icon icon={icon} size="small" className="shrink-0" />;
 }
@@ -20327,6 +20340,28 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(screen.getByRole("menuitem", { name: "Demo action" })).toBeTruthy();
       });
+    });
+
+    it("renders catalog and shortcode menu icons instead of raw labels", async () => {
+      render(
+        <ContextMenu
+          items={[
+            { id: "delete", label: "Delete", icon: "trash" },
+            { id: "suggest", label: "Suggest", icon: "sparkles" },
+            { id: "copy", label: "Copy", icon: "copy" },
+          ]}
+        >
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }));
+      await waitFor(() => {
+        expect(screen.getByRole("menuitem", { name: "Delete" }).querySelector("[data-icon='trash-2'] svg")).toBeTruthy();
+        expect(screen.getByRole("menuitem", { name: "Suggest" }).querySelector("[data-icon='sparkles'] svg")).toBeTruthy();
+        expect(screen.getByRole("menuitem", { name: "Copy" }).querySelector("[data-icon='copy'] svg")).toBeTruthy();
+      });
+      expect(screen.queryByText("trash")).toBeNull();
+      expect(screen.queryByText("sparkles")).toBeNull();
     });
   });
 

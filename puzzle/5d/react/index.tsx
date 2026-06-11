@@ -1874,11 +1874,21 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onBrushPlace: onBrushPlaceHost,
     onBrushCandidates: onBrushCandidatesHost,
     onDelete: onDeleteHost,
+    onHover: onHoverHost,
+    selection: selectionHost,
+    hoveredId: hoveredIdHost,
+    kindHover: kindHoverHost,
     activeTool: activeToolHost,
     brushFlushDistance: brushFlushDistanceHost,
     graphPortMode: puzzle2dGraphPortMode,
     ...rest2d
   } = extra2d;
+  const selectionHostControlled = selectionHost !== undefined;
+  const hoverHostControlled = hoveredIdHost !== undefined || kindHoverHost !== undefined || onHoverHost !== undefined;
+  const resolvedSelection = selectionHostControlled ? selectionHost : canvasSelection;
+  const resolvedHover = hoverHostControlled
+    ? { hoveredId: hoveredIdHost ?? null, kindHover: kindHoverHost ?? null }
+    : flatHover;
   const activeTool = props.activeTool ?? activeToolHost ?? "select";
   const brushFlushDistance = props.brushFlushDistance ?? brushFlushDistanceHost;
   const graphPortMode = props.graphPortMode ?? puzzle2dGraphPortMode;
@@ -1896,6 +1906,8 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const onBrushPlaceHostRef = reactHostPort.useRef(onBrushPlaceHost);
   const onBrushCandidatesHostRef = reactHostPort.useRef(onBrushCandidatesHost);
   const onDeleteHostRef = reactHostPort.useRef(onDeleteHost);
+  const onHoverHostRef = reactHostPort.useRef(onHoverHost);
+  const selectionHostControlledRef = reactHostPort.useRef(selectionHostControlled);
   storeRef.current = store;
   onSelectHostRef.current = onSelectHost;
   onConnectHostRef.current = onConnectHost;
@@ -1906,6 +1918,8 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   onBrushPlaceHostRef.current = onBrushPlaceHost;
   onBrushCandidatesHostRef.current = onBrushCandidatesHost;
   onDeleteHostRef.current = onDeleteHost;
+  onHoverHostRef.current = onHoverHost;
+  selectionHostControlledRef.current = selectionHostControlled;
   const onCamera = reactHostPort.useCallback((c: Puzzle2dCameraState) => {
     storeRef.current.set2dCamera(props.instanceId, c);
   }, [props.instanceId]);
@@ -1936,7 +1950,9 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onDragEndHostRef.current?.(p);
   }, []);
   const onSelect = reactHostPort.useCallback((s: { ids: readonly string[] }) => {
-    storeRef.current.setSelection({ partIds: s.ids, gripIds: [] });
+    if (!selectionHostControlledRef.current) {
+      storeRef.current.setSelection({ partIds: s.ids, gripIds: [] });
+    }
     onSelectHostRef.current?.(s);
   }, []);
   const onDelete = reactHostPort.useCallback((payload: Puzzle2dStructureDeletePayload) => {
@@ -1949,6 +1965,13 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const onCanvasHover = reactHostPort.useCallback((payload: Puzzle2dHoverPayload) => {
     storeRef.current.setHoverFocusFrom2d(project2d(storeRef.current.read()), payload);
   }, []);
+  const onHover = reactHostPort.useCallback((payload: Puzzle2dHoverPayload) => {
+    if (onHoverHostRef.current) {
+      onHoverHostRef.current(payload);
+      return;
+    }
+    onCanvasHover(payload);
+  }, [onCanvasHover]);
   const onLinkCompatibleNodes = reactHostPort.useCallback((p: { source: string | null; nodeIds: readonly string[] }) => {
     if (!p.source) {
       storeRef.current.setConnectSession(null);
@@ -2013,7 +2036,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         {...(graphPortMode !== undefined ? { graphPortMode } : {})}
         declarativeSceneDescriptor={declarativeSceneDescriptor}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
-        selection={canvasSelection}
+        selection={resolvedSelection}
         kindCatalogs={flatKindCatalogs}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
@@ -2032,9 +2055,9 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         {...(onBrushPlaceHost ? { onBrushPlace } : {})}
         {...(onBrushCandidatesHost ? { onBrushCandidates } : {})}
         {...rest2d}
-        hoveredId={flatHover.hoveredId}
-        kindHover={flatHover.kindHover}
-        onHover={onCanvasHover}
+        hoveredId={resolvedHover.hoveredId}
+        kindHover={resolvedHover.kindHover}
+        onHover={onHover}
       />
     </div>
   );

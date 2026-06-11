@@ -54,7 +54,7 @@ const DAG_COMPUTATION_HEADER_ROWS: usize = 0;
 
 const DAG_NODE_EDGE_INSET: f64 = ui_styling::metrics::dag::NODE_EDGE_INSET;
 const DAG_IO_COLUMN_WIDTH: f64 = ui_styling::metrics::dag::IO_COLUMN_WIDTH;
-const DAG_COMPONENT_WIDTH: f64 = ui_styling::metrics::dag::COMPONENT_WIDTH;
+const DAG_COMPONENT_WIDTH: f64 = DAG_IO_COLUMN_WIDTH * 2.0;
 const DAG_DISTRIBUTE_MIN_GAP: f64 = ui_styling::metrics::board::LAYOUT_SIBLING_GAP;
 const DAG_IO_WIDGET_HEIGHT: f64 = ui_styling::metrics::dag::IO_WIDGET_HEIGHT;
 const DAG_SLIDER_KNOB_SCREEN_PX: f64 = ui_styling::metrics::dag::SLIDER_KNOB_SCREEN_PX;
@@ -101,12 +101,9 @@ pub fn computation_node_width(_name: &str, _inputs: &[IoPortSpec], _outputs: &[I
     DAG_COMPONENT_WIDTH
 }
 
-/// 📐 IO widget width from vertically rotated title metrics.
-pub fn io_widget_width(name: &str) -> f64 {
-    use cavas::text::label_extent;
-    let name_px = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_SCALE_MULT;
-    let (_, label_h) = label_extent(name, name_px);
-    (label_h + DAG_NODE_EDGE_INSET * 2.0 + 2.0).max(24.0)
+/// 📐 IO widget width aligned with all flow components.
+pub fn io_widget_width(_name: &str) -> f64 {
+    DAG_COMPONENT_WIDTH
 }
 
 /// 📐 IO widget height from vertically rotated title metrics plus a control band.
@@ -476,13 +473,17 @@ pub fn measure_preview_content(content: &DagPreviewContent, expanded: &BTreeSet<
 }
 
 fn preview_content_node_size(content: &DagPreviewContent, expanded: &BTreeSet<String>) -> (f64, f64) {
-    let (cw, ch) = measure_preview_content(content, expanded);
-    (cw + DAG_PREVIEW_PAD * 2.0, ch + DAG_PREVIEW_PAD * 2.0)
+    let (_, ch) = measure_preview_content(content, expanded);
+    (DAG_COMPONENT_WIDTH, ch + DAG_PREVIEW_PAD * 2.0)
 }
 
 fn preview_image_node_size(src: &str) -> (f64, f64) {
-    let (cw, ch) = clamp_preview_image_size(preview_media_natural_size(src).0, preview_media_natural_size(src).1);
-    (cw + DAG_PREVIEW_PAD * 2.0, ch + DAG_PREVIEW_PAD * 2.0)
+    let inner_w = (DAG_COMPONENT_WIDTH - DAG_PREVIEW_PAD * 2.0).max(1.0);
+    let (nw, nh) = preview_media_natural_size(src);
+    let (cw, ch) = clamp_preview_image_size(nw, nh);
+    let aspect = if cw > 0.0 { ch / cw } else { 1.0 };
+    let inner_h = (inner_w * aspect).max(DAG_PREVIEW_MIN_SIZE);
+    (DAG_COMPONENT_WIDTH, inner_h + DAG_PREVIEW_PAD * 2.0)
 }
 
 /// 📐 Image input node size from media source.
@@ -756,11 +757,9 @@ fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
 }
 
 /// 📐 Note node size from its text payload.
-pub fn note_widget_size(text: &str) -> (f64, f64) {
-    let display = if text.is_empty() { "…" } else { text };
-    let tw = preview_scalar_text_width(display);
+pub fn note_widget_size(_text: &str) -> (f64, f64) {
     (
-        tw.max(DAG_PREVIEW_MIN_SIZE) + DAG_PREVIEW_PAD * 2.0,
+        DAG_COMPONENT_WIDTH,
         DAG_PREVIEW_ROW_HEIGHT.max(DAG_PREVIEW_MIN_SIZE) + DAG_PREVIEW_PAD * 2.0,
     )
 }
@@ -5130,12 +5129,12 @@ mod tests {
         });
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
-        host.set_forced_draw_lod_label("micro");
+        host.set_forced_draw_lod_label("normal");
         let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let labels = raw["labels"].as_array().expect("labels");
         let port_rows: Vec<_> = labels
             .iter()
-            .filter(|row| row["align"].as_str().is_some())
+            .filter(|row| row["kind"].as_str() == Some("port"))
             .map(|row| (row["text"].as_str().unwrap_or(""), row["align"].as_str().unwrap_or("")))
             .collect();
         assert_eq!(port_rows.len(), 3);
@@ -5882,6 +5881,11 @@ mod tests {
     }
 
     #[test]
+    fn component_width_is_twice_channel_width() {
+        assert_eq!(DAG_COMPONENT_WIDTH, DAG_IO_COLUMN_WIDTH * 2.0);
+    }
+
+    #[test]
     fn computation_node_width_is_uniform_for_all_components() {
         let inputs = vec![
             IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
@@ -5945,10 +5949,10 @@ mod tests {
     }
 
     #[test]
-    fn io_widget_size_fits_vertical_title() {
+    fn io_widget_width_matches_component_width() {
         let width = io_widget_width("Amount");
         let height = io_widget_height("Amount");
-        assert!(width < height, "control nodes should be taller than wide for vertical titles");
+        assert_eq!(width, DAG_COMPONENT_WIDTH);
         assert!(height >= 40.0);
     }
 
@@ -6060,7 +6064,6 @@ mod tests {
         let (output_left, output_right) = computation_output_column_x_bounds(&node).expect("output column");
         assert!(input_left < input_right);
         assert!(output_left < output_right);
-        assert!(input_right < output_left);
         let divider_x = computation_column_divider_x(&node).expect("divider");
         let (input_span_left, input_span_right) = computation_channel_row_divider_x_span(&node, ComputationChannelRowSide::Input);
         let (output_span_left, output_span_right) = computation_channel_row_divider_x_span(&node, ComputationChannelRowSide::Output);
@@ -6068,8 +6071,7 @@ mod tests {
         assert!((input_span_right - divider_x).abs() < 1e-6);
         assert!((output_span_left - divider_x).abs() < 1e-6);
         assert!((output_span_right - (node.x + width * 0.5)).abs() < 1e-6);
-        assert!(input_span_right > input_right);
-        assert!(output_span_left < output_left);
+        assert!((divider_x - node.x).abs() < 1e-6, "2× channel width nodes split IO at center");
         let divider_y = channel_row_divider_y(node.y, node.height, 1);
         let (_, _row0_top, _, row0_bottom) = channel_row_bounds(&node, 0);
         let (_, row1_top, _, _row1_bottom) = channel_row_bounds(&node, 1);
@@ -6365,11 +6367,11 @@ mod tests {
     }
 
     #[test]
-    fn note_widget_size_grows_with_text() {
+    fn note_widget_size_uses_uniform_component_width() {
         let short = note_widget_size("hi");
         let long = note_widget_size("some longer note text");
-        assert!(long.0 > short.0);
-        assert!(short.0 >= DAG_PREVIEW_MIN_SIZE + DAG_PREVIEW_PAD * 2.0);
+        assert_eq!(short.0, DAG_COMPONENT_WIDTH);
+        assert_eq!(long.0, DAG_COMPONENT_WIDTH);
     }
 
     #[test]
@@ -6397,7 +6399,7 @@ mod tests {
         *text = "a much longer note body".into();
         host.fit_note_sizes();
         assert!(host.fixture.nodes[0].height >= short_h);
-        assert!(host.fixture.nodes[0].width > note_widget_size("hi").0);
+        assert_eq!(host.fixture.nodes[0].width, DAG_COMPONENT_WIDTH);
     }
 
     #[test]

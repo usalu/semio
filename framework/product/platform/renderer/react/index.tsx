@@ -242,6 +242,7 @@ import {
   WindowMeasuresTree,
 	type AssertUiToolbarParentKeysCovered,
 	Icon,
+	renderControlIcon,
 	type IconName,
 	type IconSource,
 } from "@ui/react";
@@ -1190,6 +1191,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 			id: item.id,
 			label: item.label,
 			description: item.description,
+			icon: item.icon ? renderControlIcon(item.icon, 12) : undefined,
 			control: item.control ? renderUiControl(item.control, commandBus, platform) : undefined,
 			defaultOpen: item.defaultOpen,
 			isSelected: item.selected,
@@ -2839,7 +2841,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 		() =>
 			model.presentation === "flat"
 				? {
-						...(model.puzzle2dSelection?.length ? { selection: { ids: [...model.puzzle2dSelection] } } : {}),
+						...(model.puzzle2dSelection !== undefined ? { selection: { ids: [...model.puzzle2dSelection] } } : {}),
 						...(model.puzzle2dHoveredId !== undefined ? { hoveredId: model.puzzle2dHoveredId } : {}),
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
 							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "flat", snapshot));

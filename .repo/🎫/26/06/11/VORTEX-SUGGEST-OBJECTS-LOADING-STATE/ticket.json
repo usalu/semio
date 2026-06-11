@@ -1,0 +1,15 @@
+{
+  "title": "Vortex Suggest Objects Loading State",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When right-clicking a vortex and clicking Suggest objects, the menu briefly shows no collision-free placement before results arrive. Fix so waiting is not displayed as no solution.",
+  "summary": "Suggest-objects menu and engagement rows now show human-readable object kind and vortex kind labels via brushCandidateDisplayLabels (catalog label/name/id lookup). Replaced generic v0/v1 indices. Kind catalogs are published to puzzle3dBrushKindCatalogsRef for the viewport menu and passed into buildPuzzle3dPlayEngagement from the play shell.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1671"
+  },
+  "goal": "🎯puzzle🎯3d",
+  "sessions": [
+    "⚪d901a026b4f34361901d603bebe902f4",
+    "⚪616e24ed49a14cf9a75caa34ed1c0b36"
+  ]
+}

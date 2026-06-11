@@ -31,6 +31,8 @@ pub struct HandleDescJson {
     #[serde(default)]
     pub visible: Option<bool>,
     #[serde(default)]
+    pub locked: Option<bool>,
+    #[serde(default)]
     pub scale: Option<f64>,
 }
 // #endregion 🔖HandleDescJson
@@ -62,6 +64,7 @@ pub struct HandleData {
     pub scale: f64,
     pub selected: bool,
     pub visible: bool,
+    pub locked: bool,
     pub style: Option<String>,
     pub handle_kind: String,
     /// Parsed from descriptor `color` when set (overrides catalog fill).

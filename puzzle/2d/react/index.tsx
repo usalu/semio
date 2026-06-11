@@ -19,7 +19,8 @@ import {
   type GraphWasmSession,
   type RenderMode,
 } from "@infinite/cavas/react-renderer";
-import { type TreeDragAndDropController, resolveIconUrlsInBoardJson } from "@ui/react";
+import { type TreeDragAndDropController, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson } from "@ui/react";
+import { createPortal } from "react-dom";
 import {
   blendTokenHex,
   currentStylingThemeName,
@@ -851,7 +852,9 @@ export interface Puzzle2dFixtureHandleV1 {
   angle: number;
   /** @emoji 🔗 Required after {@link parsePuzzle2dFixtureV1}; JSON may omit it and receive {@link BUILTIN_PORT_HANDLE_KIND}. */
   handleKind: string;
+  hidden?: boolean;
   id: string;
+  locked?: boolean;
   /** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
   color?: string;
   /** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
@@ -863,7 +866,9 @@ export interface Puzzle2dFixtureHandleV1 {
 export interface Puzzle2dFixtureCircleNodeV1 {
   cad?: { x: number; y: number; z: number } | null;
   handles: Puzzle2dFixtureHandleV1[];
+  hidden?: boolean;
   id: string;
+  locked?: boolean;
   /** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
   root?: boolean;
   radius: number;
@@ -891,7 +896,9 @@ export interface Puzzle2dFixtureRectangleNodeV1 {
   cad?: { x: number; y: number; z: number } | null;
   handles: Puzzle2dFixtureHandleV1[];
   height: number;
+  hidden?: boolean;
   id: string;
+  locked?: boolean;
   /** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
   root?: boolean;
   shape: "rectangle";
@@ -921,7 +928,9 @@ export type Puzzle2dFixtureNodeV1 = Puzzle2dFixtureCircleNodeV1 | Puzzle2dFixtur
 export interface Puzzle2dFixtureEdgeV1 {
   /** @emoji 🧩 Optional semantic edge-kind id for catalog defaults and compatibility. */
   edgeKind?: string;
+  hidden?: boolean;
   id: string;
+  locked?: boolean;
   source: string;
   sourceTip?: string;
   target: string;
@@ -1237,8 +1246,10 @@ export interface Puzzle2dEventMap {
 
 export interface Puzzle2dSceneObjectOptions {
   draggable?: boolean;
+  hidden?: boolean;
   highlighted?: boolean;
   id: string;
+  locked?: boolean;
   selected?: boolean;
   style?: string;
   userData?: Record<string, unknown>;
@@ -1321,6 +1332,7 @@ export interface Puzzle2dHandleProps {
   iconKind?: string;
   radius?: number;
   highlighted?: boolean;
+  locked?: boolean;
   selected?: boolean;
   style?: string;
   userData?: Record<string, unknown>;
@@ -1332,8 +1344,10 @@ export interface Puzzle2dEdgeProps {
   contextMenu?: ContextMenuItem[];
   /** @emoji 🧩 Semantic edge-kind id for catalog defaults and compatibility (`edge` specificity). */
   edgeKind?: string;
+  hidden?: boolean;
   id: string;
   highlighted?: boolean;
+  locked?: boolean;
   selected?: boolean;
   source: string;
   /** @emoji 🔺 Per-instance source tip id (`none` disables). */
@@ -1822,6 +1836,25 @@ function fixtureOptionalTextAlignment(node: Record<string, unknown>): Puzzle2dNo
   return typeof v === "string" && isPuzzle2dNodeTextAlignment(v) ? v : undefined;
 }
 
+/** @emoji 🙈 Resolves descriptor/scene visibility from explicit `visible` or fixture `hidden`. */
+export function puzzle2dDescriptorVisible(props: { hidden?: boolean; visible?: boolean }): boolean {
+  if (props.hidden === true) {
+    return false;
+  }
+  return props.visible ?? true;
+}
+
+function puzzle2dFixtureOptionalEntityFlags(record: Record<string, unknown>): { hidden?: boolean; locked?: boolean } {
+  const out: { hidden?: boolean; locked?: boolean } = {};
+  if (record.hidden === true) {
+    out.hidden = true;
+  }
+  if (record.locked === true) {
+    out.locked = true;
+  }
+  return out;
+}
+
 /** @emoji 🧾 Validates unknown JSON into {@link Puzzle2dFixtureV1} or returns null. */
 export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
   if (!raw || typeof raw !== "object") {
@@ -1891,6 +1924,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
         ...(colorTrim !== undefined ? { color: colorTrim } : {}),
         ...(withRadius ? { radius: hradius } : {}),
         ...(iconTrim !== undefined ? { iconKind: iconTrim } : {}),
+        ...puzzle2dFixtureOptionalEntityFlags(hr),
       };
       handles.push(base);
     }
@@ -1931,6 +1965,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
         ...(rootFlag ? { root: true } : {}),
         ...(iconKind !== undefined ? { iconKind } : {}),
         ...(nodeKind !== undefined ? { nodeKind } : {}),
+        ...puzzle2dFixtureOptionalEntityFlags(node),
         handles,
         height,
         id,
@@ -1958,6 +1993,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
       ...(rootFlag ? { root: true } : {}),
       ...(iconKind !== undefined ? { iconKind } : {}),
       ...(nodeKind !== undefined ? { nodeKind } : {}),
+      ...puzzle2dFixtureOptionalEntityFlags(node),
       handles,
       id,
       radius,
@@ -1993,6 +2029,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
       ...(edgeKind !== undefined ? { edgeKind } : {}),
       ...(sourceTip !== undefined ? { sourceTip } : {}),
       ...(targetTip !== undefined ? { targetTip } : {}),
+      ...puzzle2dFixtureOptionalEntityFlags(edge),
     });
   }
   const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
@@ -2975,6 +3012,7 @@ class TypedEmitter<TEvents extends object> {
 export class Puzzle2dSceneObject {
   draggable: boolean;
   highlighted: boolean;
+  locked: boolean;
   parent: Puzzle2dScene | null = null;
   selected: boolean;
   style: string | null;
@@ -2989,6 +3027,7 @@ export class Puzzle2dSceneObject {
   ) {
     this.draggable = options.draggable ?? false;
     this.highlighted = options.highlighted ?? false;
+    this.locked = options.locked ?? false;
     this.selected = options.selected ?? false;
     this.style = options.style ?? null;
     this.userData = { ...(options.userData ?? {}) };
@@ -4993,6 +5032,51 @@ export class Puzzle2dRenderer {
     }
   }
 
+  /** @emoji 🖌️ Opens a brush slot on a free handle (suggestions menu). */
+  brushOpenSlot(handleId: string): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    try {
+      this.session.brushOpenSlot(handleId);
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.scheduleInputInvalidate();
+    } catch (err) {
+      console.error("[DEBUG] brushOpenSlot failed", err);
+    }
+  }
+
+  /** @emoji 🖌️ Commits the active brush preview and clears the slot. */
+  brushCommitSlot(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    try {
+      this.session.brushCommitSlot();
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.scheduleInputInvalidate();
+    } catch (err) {
+      console.error("[DEBUG] brushCommitSlot failed", err);
+    }
+  }
+
+  /** @emoji 🖌️ Discards the active brush slot without placing. */
+  brushCancelSlot(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    try {
+      this.session.brushCancelSlot();
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.scheduleInputInvalidate();
+    } catch (err) {
+      console.error("[DEBUG] brushCancelSlot failed", err);
+    }
+  }
+
   /** @emoji 📐 Brush preview node span in world units. */
   setBrushNodeSize(size: number): void {
     const next = Number.isFinite(size) && size > 0 ? size : DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
@@ -5700,6 +5784,7 @@ export class Puzzle2dRenderer {
         style: node.style,
         text: node.text,
         visible: node.visible,
+        ...(node.locked ? { locked: true } : {}),
       };
       if (node.iconKind) {
         base.iconKind = node.iconKind;
@@ -5745,6 +5830,7 @@ export class Puzzle2dRenderer {
         selected: committedSelection.has(handle.id),
         style: handle.style,
         visible: handle.visible,
+        ...(handle.locked ? { locked: true } : {}),
         handleKind: handle.handleKind,
       };
       if (handle.color) {
@@ -5764,6 +5850,7 @@ export class Puzzle2dRenderer {
         selected: committedSelection.has(edge.id),
         style: edge.style,
         visible: edge.visible,
+        ...(edge.locked ? { locked: true } : {}),
       };
       if (edge.edgeKind.trim() !== "") {
         er.edgeKind = edge.edgeKind;
@@ -5784,6 +5871,7 @@ export class Puzzle2dRenderer {
         selected: committedSelection.has(wire.id),
         style: wire.style,
         visible: wire.visible,
+        ...(wire.locked ? { locked: true } : {}),
       };
       if (wire.target) {
         row.target = wire.target.id;
@@ -10504,7 +10592,8 @@ function applyNodeProps(renderer: Puzzle2dRenderer, instance: Puzzle2dSceneNode,
   instance.draggable = props.draggable ?? true;
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
-  instance.visible = props.visible ?? true;
+  instance.locked = props.locked === true;
+  instance.visible = puzzle2dDescriptorVisible(props);
   instance.root = props.root === true;
   instance.textAutofit = props.textAutofit ?? false;
   instance.textAlignment = props.textAlignment ?? PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT;
@@ -10531,7 +10620,8 @@ function applyHandleProps(instance: Puzzle2dSceneHandle, props: Puzzle2dHandlePr
   }
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
-  instance.visible = props.visible ?? true;
+  instance.locked = props.locked === true;
+  instance.visible = puzzle2dDescriptorVisible(props);
   instance.radius = props.radius ?? 8;
   instance.handleKind = (props.handleKind ?? "").trim();
   instance.iconKind = typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
@@ -10544,7 +10634,8 @@ function applyHandleProps(instance: Puzzle2dSceneHandle, props: Puzzle2dHandlePr
 function applyEdgeProps(instance: Puzzle2dSceneEdge, props: Puzzle2dEdgeProps, source: Puzzle2dSceneEdgeAnchor, target: Puzzle2dSceneEdgeAnchor): void {
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
-  instance.visible = props.visible ?? true;
+  instance.locked = props.locked === true;
+  instance.visible = puzzle2dDescriptorVisible(props);
   instance.edgeKind = typeof props.edgeKind === "string" ? props.edgeKind.trim() : "";
   instance.sourceTip = typeof props.sourceTip === "string" ? props.sourceTip.trim() : "";
   instance.targetTip = typeof props.targetTip === "string" ? props.targetTip.trim() : "";
@@ -10554,7 +10645,8 @@ function applyEdgeProps(instance: Puzzle2dSceneEdge, props: Puzzle2dEdgeProps, s
 function applyWireProps(instance: Puzzle2dSceneWire, props: Puzzle2dWireProps, sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle | null): void {
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
-  instance.visible = props.visible ?? true;
+  instance.locked = props.locked === true;
+  instance.visible = puzzle2dDescriptorVisible(props);
   instance.wireKind = typeof props.wireKind === "string" ? props.wireKind.trim() : "";
   const tid = (props.target ?? "").trim();
   const nextTarget = tid !== "" ? targetHandle : null;
@@ -11244,7 +11336,9 @@ export type Puzzle2dNodeCircleProps = {
   radius: number;
   /** @emoji 🌳 Declares a directed subtree root (edges: parent {@link Handle} → child {@link Handle}). */
   root?: boolean;
+  hidden?: boolean;
   highlighted?: boolean;
+  locked?: boolean;
   selected?: boolean;
   shape?: "circle";
   style?: string;
@@ -11275,7 +11369,9 @@ export type Puzzle2dNodeRectangleProps = {
   id: string;
   /** @emoji 🌳 Declares a directed subtree root (edges: parent {@link Handle} → child {@link Handle}). */
   root?: boolean;
+  hidden?: boolean;
   highlighted?: boolean;
+  locked?: boolean;
   selected?: boolean;
   shape: "rectangle";
   style?: string;
@@ -11468,6 +11564,9 @@ export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture
       ...(handle.color !== undefined ? { color: handle.color } : {}),
       ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
       ...(handle.iconKind !== undefined ? { iconKind: handle.iconKind } : {}),
+      ...(handle.hidden === true ? { hidden: true } : {}),
+      ...(handle.locked === true ? { locked: true } : {}),
+      visible: puzzle2dDescriptorVisible(handle),
     }));
     handles.push(...nodeHandles);
     const caption = puzzle2dFixtureNodeCaption(node);
@@ -11483,6 +11582,9 @@ export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture
       ...(node.root === true ? { root: true as const } : {}),
       ...(node.iconKind !== undefined ? { iconKind: node.iconKind } : {}),
       ...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {}),
+      ...(node.hidden === true ? { hidden: true as const } : {}),
+      ...(node.locked === true ? { locked: true as const } : {}),
+      visible: puzzle2dDescriptorVisible(node),
       x: node.x,
       y: node.y,
     };
@@ -11499,6 +11601,9 @@ export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture
     ...(edge.edgeKind !== undefined ? { edgeKind: edge.edgeKind } : {}),
     ...(edge.sourceTip !== undefined ? { sourceTip: edge.sourceTip } : {}),
     ...(edge.targetTip !== undefined ? { targetTip: edge.targetTip } : {}),
+    ...(edge.hidden === true ? { hidden: true } : {}),
+    ...(edge.locked === true ? { locked: true } : {}),
+    visible: puzzle2dDescriptorVisible(edge),
   }));
   return { edges, handles, nodes, wires: [] };
 }
@@ -12407,6 +12512,344 @@ function Puzzle2dFixturePaletteDragEscapeBridge(props: { readonly enabled: boole
 }
 //#endregion 🔖FixturePaletteDragPreview
 
+//#region 🖱️SelectionContextMenu
+
+/** @emoji 📍 Screen-space anchor for anchored overlay menus. */
+export interface Puzzle2dScreenPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** @emoji 🖌️ Brush candidate menu actions for the viewport overlay. */
+export interface Puzzle2dBrushMenuSource {
+  readonly hoverCandidate: (index: number) => void;
+  readonly selectCandidate: (index: number) => void;
+  readonly closeMenu: () => void;
+}
+
+export const puzzle2dBrushMenuSourceRef: { current: Puzzle2dBrushMenuSource } = {
+  current: { hoverCandidate: () => {}, selectCandidate: () => {}, closeMenu: () => {} },
+};
+
+/** @emoji 🖌️ Opens brush-compatible node suggestions for a free handle (published by {@link Puzzle2dCanvas}). */
+export interface Puzzle2dOpenSlotSuggestions {
+  readonly openFor: (handleId: string, anchor: Puzzle2dScreenPoint) => void;
+  readonly close: () => void;
+}
+
+export const puzzle2dOpenSlotSuggestionsRef: { current: Puzzle2dOpenSlotSuggestions } = {
+  current: { openFor: () => {}, close: () => {} },
+};
+
+interface Puzzle2dBrushMenuSnapshot {
+  readonly menuOpen: boolean;
+  readonly menuAnchor: Puzzle2dScreenPoint | null;
+  readonly menuHoverIndex: number | null;
+}
+
+const PUZZLE_2D_BRUSH_MENU_IDLE: Puzzle2dBrushMenuSnapshot = {
+  menuOpen: false,
+  menuAnchor: null,
+  menuHoverIndex: null,
+};
+
+function createPuzzle2dBrushMenuStore(initial: Puzzle2dBrushMenuSnapshot = PUZZLE_2D_BRUSH_MENU_IDLE) {
+  let snapshot = initial;
+  const listeners = new Set<() => void>();
+  return {
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot(): Puzzle2dBrushMenuSnapshot {
+      return snapshot;
+    },
+    setSnapshot(next: Puzzle2dBrushMenuSnapshot): void {
+      snapshot = next;
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+  };
+}
+
+const puzzle2dBrushMenuStore = createPuzzle2dBrushMenuStore();
+
+function patchPuzzle2dBrushMenu(patch: Partial<Puzzle2dBrushMenuSnapshot>): void {
+  const prev = puzzle2dBrushMenuStore.getSnapshot();
+  puzzle2dBrushMenuStore.setSnapshot({
+    menuOpen: patch.menuOpen !== undefined ? patch.menuOpen : prev.menuOpen,
+    menuAnchor: patch.menuAnchor !== undefined ? patch.menuAnchor : prev.menuAnchor,
+    menuHoverIndex: patch.menuHoverIndex !== undefined ? patch.menuHoverIndex : prev.menuHoverIndex,
+  });
+}
+
+function closePuzzle2dBrushMenu(): void {
+  puzzle2dBrushMenuStore.setSnapshot(PUZZLE_2D_BRUSH_MENU_IDLE);
+}
+
+/** @emoji 🖌️ True when a handle may accept brush slot suggestions (visible, unlocked, no incident link). */
+export function puzzle2dHandleIsFreeBrushSlot(scene: Puzzle2dScene, handleId: string): boolean {
+  const object = scene.getObjectById(handleId);
+  if (!isPuzzle2dSceneHandleObject(object) || !object.visible || object.locked) {
+    return false;
+  }
+  for (const edge of scene.edges.values()) {
+    if ((isPuzzle2dSceneHandleObject(edge.source) && edge.source.id === handleId) || (isPuzzle2dSceneHandleObject(edge.target) && edge.target.id === handleId)) {
+      return false;
+    }
+  }
+  for (const wire of scene.wires.values()) {
+    if (wire.source.id === handleId) {
+      return false;
+    }
+    if (wire.target?.id === handleId) {
+      return false;
+    }
+  }
+  return true;
+}
+
+const puzzle2dBrushMenuItemClassName =
+  "text-element hover:bg-hover-interactive-fill hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized relative flex w-full items-center gap-single p-single text-left text-sm outline-none whitespace-nowrap cursor-default select-none disabled:pointer-events-none disabled:opacity-50";
+
+function Puzzle2dBrushCandidateMenu(): React.ReactElement | null {
+  const ui = reactHostPort.useSyncExternalStore(puzzle2dBrushMenuStore.subscribe, puzzle2dBrushMenuStore.getSnapshot, puzzle2dBrushMenuStore.getSnapshot);
+  const session = reactHostPort.useSyncExternalStore(puzzle2dSubscribeBrushSession, puzzle2dGetBrushSessionSnapshot, puzzle2dGetBrushSessionSnapshot);
+  const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const closeMenu = reactHostPort.useCallback(() => {
+    puzzle2dBrushMenuSourceRef.current.closeMenu();
+  }, []);
+  reactHostPort.useEffect(() => {
+    if (!ui.menuOpen || !ui.menuAnchor) {
+      return undefined;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && menuRef.current?.contains(target)) {
+        return;
+      }
+      closeMenu();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    };
+    const bindings = new Puzzle2dEventBindingController();
+    bindings.listen(window, "pointerdown", onPointerDown, false);
+    bindings.listen(window, "keydown", onKeyDown, false);
+    return () => bindings.dispose();
+  }, [closeMenu, ui.menuAnchor, ui.menuOpen]);
+  if (!ui.menuOpen || !ui.menuAnchor) {
+    return null;
+  }
+  const candidates = session?.candidates ?? [];
+  const body =
+    candidates.length > 0 ? (
+      candidates.map((kindId, index) => {
+        const active = ui.menuHoverIndex === index;
+        return (
+          <button
+            key={`${kindId}:${index}`}
+            aria-selected={active}
+            className={cn(puzzle2dBrushMenuItemClassName, active && "bg-hover-temporary")}
+            onClick={() => puzzle2dBrushMenuSourceRef.current.selectCandidate(index)}
+            onMouseEnter={() => puzzle2dBrushMenuSourceRef.current.hoverCandidate(index)}
+            role="menuitem"
+            type="button"
+          >
+            <span className="truncate">{normalizeEngagementCommandText(kindId)}</span>
+          </button>
+        );
+      })
+    ) : (
+      <div className="p-single text-sm text-muted-foreground" role="status">
+        No compatible node kinds at this connector
+      </div>
+    );
+  if (typeof document === "undefined") {
+    return null;
+  }
+  return createPortal(
+    <div
+      className={cn(glassMenuClass, "w-auto min-w-[10rem] max-h-[min(24rem,70vh)] overflow-y-auto border p-single z-temporary text-element")}
+      onContextMenu={(event) => event.preventDefault()}
+      ref={menuRef}
+      role="menu"
+      style={{ left: ui.menuAnchor.x, position: "fixed", top: ui.menuAnchor.y }}
+    >
+      {body}
+    </div>,
+    document.body,
+  );
+}
+
+/** @emoji 🎯 Per-entity hidden/locked flags for selection context menu labels. */
+export interface Puzzle2dSelectionEntityFlags {
+  readonly hidden: boolean;
+  readonly locked: boolean;
+}
+
+/** @emoji 🖱️ Host callbacks for selection context menu actions (published by play canvas). */
+export interface Puzzle2dSelectionMenuActions {
+  readonly toggleHidden: (value: boolean) => void;
+  readonly toggleLocked: (value: boolean) => void;
+  readonly deleteSelection: () => void;
+  readonly duplicateSelection: () => void;
+  readonly selectSameKind: () => void;
+}
+
+export const puzzle2dSelectionActionsRef: { current: Puzzle2dSelectionMenuActions } = {
+  current: {
+    toggleHidden: () => {},
+    toggleLocked: () => {},
+    deleteSelection: () => {},
+    duplicateSelection: () => {},
+    selectSameKind: () => {},
+  },
+};
+
+/** @emoji 🎯 Resolves hidden/locked flags for every row in a selection id list. */
+export function puzzle2dSelectionEntityFlagsFromScene(scene: Puzzle2dScene, ids: readonly string[]): readonly Puzzle2dSelectionEntityFlags[] {
+  const flags: Puzzle2dSelectionEntityFlags[] = [];
+  for (const id of ids) {
+    const object = scene.getObjectById(id);
+    if (!object) {
+      continue;
+    }
+    flags.push({ hidden: !object.visible, locked: object.locked });
+  }
+  return flags;
+}
+
+/** @emoji 🔍 Frames the viewport on the world bounds of the current selection. */
+export function requestPuzzle2dZoomToSelection(renderer: Puzzle2dRenderer, ids: readonly string[]): void {
+  if (ids.length === 0) {
+    return;
+  }
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  let any = false;
+  const includeDisc = (x: number, y: number, radius: number): void => {
+    any = true;
+    minX = Math.min(minX, x - radius);
+    maxX = Math.max(maxX, x + radius);
+    minY = Math.min(minY, y - radius);
+    maxY = Math.max(maxY, y + radius);
+  };
+  for (const id of ids) {
+    const object = renderer.scene.getObjectById(id);
+    if (isPuzzle2dSceneNodeObject(object)) {
+      if (object.shape === "rectangle") {
+        includeDisc(object.x, object.y, Math.max(object.width, object.height) / 2);
+      } else {
+        includeDisc(object.x, object.y, object.radius);
+      }
+      continue;
+    }
+    if (isPuzzle2dSceneHandleObject(object)) {
+      const world = computeHandlePosition(object.node, object.angle);
+      includeDisc(world.x, world.y, object.radius);
+      continue;
+    }
+    if (isPuzzle2dSceneEdgeObject(object)) {
+      const sourceNode = renderer.scene.getObjectById(puzzle2dSceneEdgeAnchorNodeId(object.source));
+      const targetNode = renderer.scene.getObjectById(puzzle2dSceneEdgeAnchorNodeId(object.target));
+      if (isPuzzle2dSceneNodeObject(sourceNode)) {
+        includeDisc(sourceNode.x, sourceNode.y, sourceNode.shape === "rectangle" ? Math.max(sourceNode.width, sourceNode.height) / 2 : sourceNode.radius);
+      }
+      if (isPuzzle2dSceneNodeObject(targetNode)) {
+        includeDisc(targetNode.x, targetNode.y, targetNode.shape === "rectangle" ? Math.max(targetNode.width, targetNode.height) / 2 : targetNode.radius);
+      }
+    }
+  }
+  if (!any || !Number.isFinite(minX)) {
+    return;
+  }
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const halfSpan = Math.max(maxX - minX, maxY - minY, 1) / 2;
+  const margin = 0.12;
+  const shortPx = 512;
+  const usable = shortPx * (1 - 2 * margin);
+  const zoom = clamp(usable / Math.max(2 * halfSpan, 1), MIN_ZOOM, MAX_ZOOM);
+  renderer.setCamera(cx, cy, zoom);
+}
+
+/** @emoji 🖱️ Builds context menu rows for the current puzzle2d selection. */
+export function buildPuzzle2dSelectionMenuItems(
+  selectionIds: readonly string[],
+  entityFlags: readonly Puzzle2dSelectionEntityFlags[],
+  scene: Puzzle2dScene,
+  actions: Puzzle2dSelectionMenuActions,
+  zoom: () => void,
+  onSuggest?: () => void,
+): ContextMenuItem[] {
+  if (selectionIds.length === 0) {
+    return [];
+  }
+  const items: ContextMenuItem[] = [];
+  const anyNotHidden = entityFlags.some((row) => !row.hidden);
+  const anyNotLocked = entityFlags.some((row) => !row.locked);
+  const selectedNodeIds = selectionIds.filter((id) => isPuzzle2dSceneNodeObject(scene.getObjectById(id)));
+  if (onSuggest) {
+    items.push({
+      id: "suggest",
+      label: "Suggest nodes",
+      icon: "sparkles",
+      onSelect: () => onSuggest(),
+    });
+    items.push({ id: "suggest-sep", separator: true });
+  }
+  items.push({
+    id: "hidden",
+    label: anyNotHidden ? "Hide" : "Show",
+    icon: anyNotHidden ? "eye-off" : "eye",
+    onSelect: () => actions.toggleHidden(anyNotHidden),
+  });
+  items.push({
+    id: "locked",
+    label: anyNotLocked ? "Lock" : "Unlock",
+    icon: anyNotLocked ? "lock" : "lock-open",
+    onSelect: () => actions.toggleLocked(anyNotLocked),
+  });
+  if (selectedNodeIds.length > 0) {
+    items.push({
+      id: "duplicate",
+      label: "Duplicate",
+      icon: "copy",
+      onSelect: () => actions.duplicateSelection(),
+    });
+    items.push({
+      id: "select-same-kind",
+      label: "Select all of same kind",
+      icon: "layers",
+      onSelect: () => actions.selectSameKind(),
+    });
+  }
+  items.push({ id: "zoom-sep", separator: true });
+  items.push({
+    id: "zoom",
+    label: "Zoom to selection",
+    icon: "crosshair",
+    onSelect: () => zoom(),
+  });
+  items.push({ id: "delete-sep", separator: true });
+  items.push({
+    id: "delete",
+    label: "Delete",
+    icon: "trash-2",
+    destructive: true,
+    onSelect: () => actions.deleteSelection(),
+  });
+  return items;
+}
+
+//#endregion 🖱️SelectionContextMenu
+
 //#region 🔖Canvas
 /** 🖼️ React puzzle 2d root that keeps the hot path inside the imperative renderer. */
 export function Puzzle2dCanvas({
@@ -12958,13 +13401,93 @@ export function Puzzle2dCanvas({
     }
     return contextRenderer.on("contextmenu", (payload) => {
       onContextMenu?.(payload);
-      const items = payload.id ? (puzzle2dTargetMenusRef.current.get(payload.id) ?? []) : (contextMenu ?? []);
+      let selectionIds = [...contextRenderer.getSelectionSnapshot().ids];
+      if (payload.id && !selectionIds.includes(payload.id)) {
+        contextRenderer.setSelectionIds([payload.id]);
+        selectionIds = [payload.id];
+      }
+      const declarativeItems = payload.id ? (puzzle2dTargetMenusRef.current.get(payload.id) ?? []) : (contextMenu ?? []);
+      const entityFlags = puzzle2dSelectionEntityFlagsFromScene(contextRenderer.scene, selectionIds);
+      const canSuggest =
+        Boolean(payload.id) &&
+        selectionIds.length === 1 &&
+        selectionIds[0] === payload.id &&
+        puzzle2dHandleIsFreeBrushSlot(contextRenderer.scene, payload.id!);
+      const onSuggest = canSuggest
+        ? () => {
+            setSurfaceContextMenu(null);
+            puzzle2dBrushMenuSourceRef.current.closeMenu();
+            puzzle2dOpenSlotSuggestionsRef.current.openFor(payload.id!, { x: payload.clientX, y: payload.clientY });
+          }
+        : undefined;
+      const selectionItems = buildPuzzle2dSelectionMenuItems(
+        selectionIds,
+        entityFlags,
+        contextRenderer.scene,
+        puzzle2dSelectionActionsRef.current,
+        () => requestPuzzle2dZoomToSelection(contextRenderer, selectionIds),
+        onSuggest,
+      );
+      const items: ContextMenuItem[] = [...declarativeItems];
+      if (declarativeItems.length > 0 && selectionItems.length > 0) {
+        items.push({ id: "puzzle2d-selection-menu-sep", separator: true });
+      }
+      items.push(...selectionItems);
       if (!items.length) {
         return;
       }
       setSurfaceContextMenu({ clientX: payload.clientX, clientY: payload.clientY, items });
     });
   }, [contextMenu, contextRenderer, onContextMenu]);
+
+  reactHostPort.useEffect(() => {
+    if (!contextRenderer) {
+      return () => undefined;
+    }
+    const renderer = contextRenderer;
+    const dismissMenu = () => {
+      if (!puzzle2dBrushMenuStore.getSnapshot().menuOpen) {
+        return;
+      }
+      renderer.brushCancelSlot();
+      closePuzzle2dBrushMenu();
+    };
+    const hoverMenuCandidate = (index: number) => {
+      const session = puzzle2dGetBrushSessionSnapshot();
+      if (!session?.sourceHandleId || index < 0 || index >= session.candidates.length) {
+        return;
+      }
+      renderer.setBrushCandidateIndex(index);
+      patchPuzzle2dBrushMenu({ menuHoverIndex: index });
+    };
+    const selectMenuCandidate = (index: number) => {
+      const session = puzzle2dGetBrushSessionSnapshot();
+      if (!session?.sourceHandleId || index < 0 || index >= session.candidates.length) {
+        return;
+      }
+      renderer.setBrushCandidateIndex(index);
+      closePuzzle2dBrushMenu();
+      renderer.brushCommitSlot();
+    };
+    puzzle2dBrushMenuSourceRef.current = {
+      hoverCandidate: hoverMenuCandidate,
+      selectCandidate: selectMenuCandidate,
+      closeMenu: dismissMenu,
+    };
+    puzzle2dOpenSlotSuggestionsRef.current = {
+      openFor: (handleId, anchor) => {
+        dismissMenu();
+        renderer.brushOpenSlot(handleId);
+        patchPuzzle2dBrushMenu({ menuOpen: true, menuAnchor: anchor, menuHoverIndex: null });
+      },
+      close: dismissMenu,
+    };
+    return () => {
+      puzzle2dBrushMenuSourceRef.current = { hoverCandidate: () => {}, selectCandidate: () => {}, closeMenu: () => {} };
+      puzzle2dOpenSlotSuggestionsRef.current = { openFor: () => {}, close: () => {} };
+      dismissMenu();
+    };
+  }, [contextRenderer]);
 
   reactHostPort.useLayoutEffect(() => {
     if (!canvasRef.current) {
@@ -13287,6 +13810,7 @@ export function Puzzle2dCanvas({
           open={surfaceContextMenu !== null}
           position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
         />
+        <Puzzle2dBrushCandidateMenu />
       </div>
     </Puzzle2dContext.Provider>
   );
@@ -14514,6 +15038,86 @@ if (puzzle2dReactVitest) {
         root.unmount();
       });
       restoreCanvas();
+    });
+  });
+
+  describe("buildPuzzle2dSelectionMenuItems", () => {
+    it("labels Hide and Delete for visible selection", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      syncPuzzle2dScene(
+        renderer,
+        buildPuzzle2dSceneDescriptor(
+          <Node id="a" radius={12} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>,
+        ),
+      );
+      const actions = {
+        toggleHidden: vi.fn(),
+        toggleLocked: vi.fn(),
+        deleteSelection: vi.fn(),
+        duplicateSelection: vi.fn(),
+        selectSameKind: vi.fn(),
+      };
+      const items = buildPuzzle2dSelectionMenuItems(["a"], [{ hidden: false, locked: false }], renderer.scene, actions, () => {});
+      expect(items.find((row) => row.id === "hidden")?.label).toBe("Hide");
+      expect(items.find((row) => row.id === "delete")?.destructive).toBe(true);
+      expect(items.some((row) => row.id === "duplicate")).toBe(true);
+      renderer.dispose();
+    });
+
+    it("labels Show when all selected entities are hidden", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const items = buildPuzzle2dSelectionMenuItems(
+        ["a"],
+        [{ hidden: true, locked: true }],
+        renderer.scene,
+        {
+          toggleHidden: () => {},
+          toggleLocked: () => {},
+          deleteSelection: () => {},
+          duplicateSelection: () => {},
+          selectSameKind: () => {},
+        },
+        () => {},
+      );
+      expect(items.find((row) => row.id === "hidden")?.label).toBe("Show");
+      expect(items.find((row) => row.id === "locked")?.label).toBe("Unlock");
+      renderer.dispose();
+    });
+
+    it("prepends Suggest nodes when onSuggest is provided", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      syncPuzzle2dScene(
+        renderer,
+        buildPuzzle2dSceneDescriptor(
+          <Node id="a" radius={12} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>,
+        ),
+      );
+      let suggested = false;
+      const items = buildPuzzle2dSelectionMenuItems(
+        ["a:h0"],
+        [{ hidden: false, locked: false }],
+        renderer.scene,
+        {
+          toggleHidden: () => {},
+          toggleLocked: () => {},
+          deleteSelection: () => {},
+          duplicateSelection: () => {},
+          selectSameKind: () => {},
+        },
+        () => {},
+        () => {
+          suggested = true;
+        },
+      );
+      expect(items[0]?.id).toBe("suggest");
+      expect(items[0]?.label).toBe("Suggest nodes");
+      items[0]?.onSelect?.(new Event("select"));
+      expect(suggested).toBe(true);
+      renderer.dispose();
     });
   });
 }

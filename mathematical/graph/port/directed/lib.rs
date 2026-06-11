@@ -32,6 +32,8 @@ pub struct EdgeDescJson {
     pub user_data: Option<serde_json::Value>,
     #[serde(default)]
     pub visible: Option<bool>,
+    #[serde(default)]
+    pub locked: Option<bool>,
 }
 
 /// @emoji 🧵 Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
@@ -57,6 +59,8 @@ pub struct WireDescJson {
     pub user_data: Option<serde_json::Value>,
     #[serde(default)]
     pub visible: Option<bool>,
+    #[serde(default)]
+    pub locked: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -178,6 +182,7 @@ pub struct NodeData {
     pub draggable: bool,
     pub selected: bool,
     pub visible: bool,
+    pub locked: bool,
     pub root: bool,
     pub style: Option<String>,
     pub text: Option<String>,
@@ -315,6 +320,7 @@ pub struct EdgeData {
     pub target: String,
     pub selected: bool,
     pub visible: bool,
+    pub locked: bool,
     pub style: Option<String>,
     pub edge_kind: String,
     pub source_tip: Option<String>,
@@ -330,6 +336,7 @@ pub struct WireData {
     pub end_y: Option<f64>,
     pub selected: bool,
     pub visible: bool,
+    pub locked: bool,
     pub style: Option<String>,
     pub wire_kind: String,
 }

@@ -1410,6 +1410,40 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
   return ids;
 }
 
+//#region 🔖Puzzle3dPlayHierarchy
+/** @emoji 🖼️ Default tree-row icons for puzzle 3D entity kinds (Lucide catalog ids). */
+export const PUZZLE3D_PLAY_ENTITY_TREE_ICON = {
+  object: "box",
+  vortex: "circle-dot",
+  attraction: "link",
+  cable: "plug",
+  reference: "globe",
+  targetVolume: "cylinder",
+} as const;
+
+type Puzzle3dPlayEntityTreeKind = keyof typeof PUZZLE3D_PLAY_ENTITY_TREE_ICON;
+
+/** @emoji 🖼️ Resolves the tree-row icon id for a puzzle 3D entity kind. */
+export function puzzle3dPlayEntityTreeIcon(kind: Puzzle3dPlayEntityTreeKind): string {
+  return PUZZLE3D_PLAY_ENTITY_TREE_ICON[kind];
+}
+
+function puzzle3dPlayKindSectionTreeIcon(sectionId: string): string | undefined {
+  if (sectionId === "puzzle-3d-play-kinds.objects") {
+    return puzzle3dPlayEntityTreeIcon("object");
+  }
+  if (sectionId === "puzzle-3d-play-kinds.vortices") {
+    return puzzle3dPlayEntityTreeIcon("vortex");
+  }
+  if (sectionId === "puzzle-3d-play-kinds.cables") {
+    return puzzle3dPlayEntityTreeIcon("cable");
+  }
+  if (sectionId === "puzzle-3d-play-kinds.attractions") {
+    return puzzle3dPlayEntityTreeIcon("attraction");
+  }
+  return undefined;
+}
+
 /** @emoji 🌳 Structural hierarchy sections: Objects, References, Target Volumes, Attractions. */
 export function buildPuzzle3dPlayHierarchySections(
   fixture: FixtureV1,
@@ -1422,6 +1456,7 @@ export function buildPuzzle3dPlayHierarchySections(
       return {
         id: `puzzle-3d-play-hierarchy.vortex.${fullId}`,
         ...puzzle3dPlayFixtureTreeRowFields(vortex.label, fullId),
+        icon: puzzle3dPlayEntityTreeIcon("vortex"),
         command: puzzle3dPlaySelectVortexCommand(fullId),
         ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "vortex", fullId }),
         ...puzzle3dPlayHierarchyEntityChrome(vortex, { kind: "vortex", fullId }, options),
@@ -1430,6 +1465,7 @@ export function buildPuzzle3dPlayHierarchySections(
     return {
       id: `puzzle-3d-play-hierarchy.object.${object.id}`,
       ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
+      icon: puzzle3dPlayEntityTreeIcon("object"),
       defaultOpen: true,
       command: puzzle3dPlaySelectObjectCommand(object.id),
       ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
@@ -1441,6 +1477,7 @@ export function buildPuzzle3dPlayHierarchySections(
     id: `puzzle-3d-play-hierarchy.attraction.${attraction.id}`,
     label: attraction.id,
     description: `${attraction.attracting} → ${attraction.attracted}`,
+    icon: puzzle3dPlayEntityTreeIcon("attraction"),
     command: puzzle3dPlaySelectAttractionCommand(attraction.id),
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
     ...puzzle3dPlayHierarchyEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
@@ -1449,6 +1486,7 @@ export function buildPuzzle3dPlayHierarchySections(
     id: `puzzle-3d-play-hierarchy.reference.${reference.id}`,
     label: reference.id,
     description: reference.source.url,
+    icon: puzzle3dPlayEntityTreeIcon("reference"),
     command: puzzle3dPlaySelectReferenceCommand(reference.id),
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
     ...puzzle3dPlayHierarchyEntityChrome(reference, { kind: "reference", id: reference.id }, options),
@@ -1456,6 +1494,7 @@ export function buildPuzzle3dPlayHierarchySections(
   const targetVolumeItems: UiTreeItemNode[] = (fixture.targetVolumes ?? []).map((volume) => ({
     id: `puzzle-3d-play-hierarchy.target-volume.${volume.id}`,
     label: volume.id,
+    icon: puzzle3dPlayEntityTreeIcon("targetVolume"),
     command: puzzle3dPlaySelectTargetVolumeCommand(volume.id),
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
     ...puzzle3dPlayHierarchyEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
@@ -1534,6 +1573,7 @@ function puzzle3dPlayObjectKindVortexCatalogItems(
     id: `${sectionId}.${objectIndex}.${objectKindId}.vortex.${vortexIndex}`,
     label: puzzle3dCatalogVortexKindLabel(template.vortexKind, vortexKinds),
     description: puzzle3dObjectKindVortexTemplateCatalogDescription(template),
+    icon: puzzle3dPlayEntityTreeIcon("vortex"),
   }));
 }
 
@@ -1552,6 +1592,7 @@ function puzzle3dPlayKindCatalogSection(
   }
   const isObjectPalette = sectionId === "puzzle-3d-play-kinds.objects";
   const sectionDomain = puzzle3dPlayKindsSectionDomain(sectionId);
+  const sectionTreeIcon = puzzle3dPlayKindSectionTreeIcon(sectionId);
   const items: UiTreeItemNode[] = [...entries]
     .sort((a, b) => puzzle3dCatalogKindLabel(a).localeCompare(puzzle3dCatalogKindLabel(b)))
     .map((entry, index) => {
@@ -1564,6 +1605,7 @@ function puzzle3dPlayKindCatalogSection(
         id: `${sectionId}.${index}.${entry.id}`,
         label: puzzle3dCatalogKindLabel(entry),
         description: entry.id,
+        icon: sectionTreeIcon,
         defaultOpen: vortexItems.length === 0,
         ...(vortexItems.length ? { items: vortexItems } : {}),
         ...(kindHover ? puzzle3dPlayKindRowHoverHandlers(onHover, kindHover) : {}),
@@ -5199,10 +5241,13 @@ if (import.meta.vitest) {
       expect(objectsSection?.items?.length).toBe(2);
       const firstObject = objectsSection?.items?.[0];
       expect(firstObject?.label).toBe("Alpha");
+      expect(firstObject?.icon).toBe("box");
       expect(firstObject?.items?.[0]?.label).toBe("Handle A");
+      expect(firstObject?.items?.[0]?.icon).toBe("circle-dot");
       expect(firstObject?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
       const attractionsSection = tree.sections.find((section) => section.label === "Attractions");
       expect(attractionsSection?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
+      expect(attractionsSection?.items?.[0]?.icon).toBe("link");
     });
 
     it("buildPuzzle3dPlayHierarchySections omits per-row selected flags", () => {
@@ -5466,8 +5511,10 @@ if (import.meta.vitest) {
       expect(tree.sections.find((section) => section.id === "puzzle-3d-play-kinds.vortices")?.defaultOpen).toBe(false);
       const base = tree.sections[0]?.items?.find((item) => item.label === "Base");
       expect(base?.defaultOpen).toBe(false);
+      expect(base?.icon).toBe("box");
       expect(base?.items).toHaveLength(2);
       expect(base?.items?.[0]?.label).toBe("Core rectangular bottom");
+      expect(base?.items?.[0]?.icon).toBe("circle-dot");
       expect(base?.items?.[0]?.description).toBe("-7.5, -7.7, 7.5");
       expect(base?.items?.[1]?.description).toBe("-18.6, -7.7, 7.5");
       expect(base?.items?.[0]?.draggable).toBeUndefined();

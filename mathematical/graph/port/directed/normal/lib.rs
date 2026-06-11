@@ -20,7 +20,7 @@ use infinite_cavas::geom_sel::{
 };
 use infinite_cavas::camera::Camera;
 use crate::{
-    board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
+    board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle,
     handle_position_on_rectangle, merge_ids_into_selection,
     merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
@@ -1036,11 +1036,19 @@ impl BoardHost {
         BoardElementStyleKind::Neutral
     }
 
+    fn locked_style_dim(kind: BoardElementStyleKind, locked: bool) -> BoardElementStyleKind {
+        if locked && !matches!(kind, BoardElementStyleKind::Selected | BoardElementStyleKind::Highlighted | BoardElementStyleKind::Hovered) {
+            BoardElementStyleKind::Disabled
+        } else {
+            kind
+        }
+    }
+
     fn resolve_node_style_kind(&self, n: &NodeData, pass: StyleChromePass) -> BoardElementStyleKind {
         if let Some(kind) = Self::explicit_style_kind(n.style.as_deref()) {
-            return kind;
+            return Self::locked_style_dim(kind, n.locked);
         }
-        match pass {
+        let kind = match pass {
             StyleChromePass::CachedBase => {
                 if self.preserve_original_element_style {
                     BoardElementStyleKind::Original
@@ -1050,18 +1058,19 @@ impl BoardHost {
             }
             StyleChromePass::InteractionOverlay => {
                 if let Some(kind) = self.hovered_style_kind(n.id.as_str(), "node", n.node_kind.as_str()) {
-                    return kind;
+                    return Self::locked_style_dim(kind, n.locked);
                 }
                 self.resolve_interaction_style_kind(n.id.as_str())
             }
-        }
+        };
+        Self::locked_style_dim(kind, n.locked)
     }
 
     fn resolve_handle_style_kind(&self, h: &HandleData, pass: StyleChromePass) -> BoardElementStyleKind {
         if let Some(kind) = Self::explicit_style_kind(h.style.as_deref()) {
-            return kind;
+            return Self::locked_style_dim(kind, h.locked);
         }
-        match pass {
+        let kind = match pass {
             StyleChromePass::CachedBase => {
                 if self.preserve_original_element_style {
                     BoardElementStyleKind::Original
@@ -1071,41 +1080,44 @@ impl BoardHost {
             }
             StyleChromePass::InteractionOverlay => {
                 if let Some(kind) = self.hovered_style_kind(h.id.as_str(), "handle", h.handle_kind.as_str()) {
-                    return kind;
+                    return Self::locked_style_dim(kind, h.locked);
                 }
                 self.resolve_interaction_style_kind(h.id.as_str())
             }
-        }
+        };
+        Self::locked_style_dim(kind, h.locked)
     }
 
     fn resolve_edge_style_kind(&self, e: &EdgeData, pass: StyleChromePass) -> BoardElementStyleKind {
         if let Some(kind) = Self::explicit_style_kind(e.style.as_deref()) {
-            return kind;
+            return Self::locked_style_dim(kind, e.locked);
         }
-        match pass {
+        let kind = match pass {
             StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
             StyleChromePass::InteractionOverlay => {
                 if let Some(kind) = self.hovered_style_kind(e.id.as_str(), "edge", e.edge_kind.as_str()) {
-                    return kind;
+                    return Self::locked_style_dim(kind, e.locked);
                 }
                 self.resolve_interaction_style_kind(e.id.as_str())
             }
-        }
+        };
+        Self::locked_style_dim(kind, e.locked)
     }
 
     fn resolve_wire_style_kind(&self, w: &WireData, pass: StyleChromePass) -> BoardElementStyleKind {
         if let Some(kind) = Self::explicit_style_kind(w.style.as_deref()) {
-            return kind;
+            return Self::locked_style_dim(kind, w.locked);
         }
-        match pass {
+        let kind = match pass {
             StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
             StyleChromePass::InteractionOverlay => {
                 if let Some(kind) = self.hovered_style_kind(w.id.as_str(), "wire", w.wire_kind.as_str()) {
-                    return kind;
+                    return Self::locked_style_dim(kind, w.locked);
                 }
                 self.resolve_interaction_style_kind(w.id.as_str())
             }
-        }
+        };
+        Self::locked_style_dim(kind, w.locked)
     }
 
     /// @emoji 💠 Entity ids whose selection/preselect/hover chrome tints fills and strokes without rebuilding {@link BoardHost.world_content_cache}.
@@ -2375,6 +2387,25 @@ impl BoardHost {
         self.brush_rebuild_preview();
     }
 
+    /// @emoji 🖌️ Opens a brush slot on a free handle (suggestions menu; works outside brush tool).
+    pub fn brush_open_slot(&mut self, handle_id: &str) {
+        if !self.handles.contains_key(handle_id) {
+            return;
+        }
+        self.brush_enter_slot(handle_id.to_string());
+    }
+
+    /// @emoji 🖌️ Commits the active brush preview and clears the slot.
+    pub fn brush_commit_slot(&mut self) {
+        self.brush_commit_preview();
+        self.brush_clear_slot();
+    }
+
+    /// @emoji 🖌️ Discards the active brush slot without placing.
+    pub fn brush_cancel_slot(&mut self) {
+        self.brush_clear_slot();
+    }
+
     fn append_brush_node_icon_paint(
         &self,
         scene: &mut Scene,
@@ -3396,6 +3427,7 @@ impl BoardHost {
                     target: tid.clone(),
                     selected: w.selected,
                     visible: w.visible,
+                    locked: w.locked,
                     style: w.style.clone(),
                     edge_kind: String::new(),
                     source_tip: None,
@@ -3466,7 +3498,7 @@ impl BoardHost {
             }
             if let Some(ring_node_id) = self.indirect_ring_node_id(lod) {
                 for h in self.handles.values().rev() {
-                    if h.node_id != ring_node_id || !self.handle_effectively_visible(h.id.as_str()) {
+                    if h.node_id != ring_node_id || !self.handle_selectable(h.id.as_str()) {
                         continue;
                     }
                     if !self.indirect_ring_handle_eligible(h.id.as_str(), ring_node_id.as_str()) {
@@ -3481,7 +3513,7 @@ impl BoardHost {
             }
             if matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
                 for h in self.handles.values().rev() {
-                    if !self.handle_effectively_visible(h.id.as_str()) {
+                    if !self.handle_selectable(h.id.as_str()) {
                         continue;
                     }
                     let Some(pos) = self.handle_world_pos(h) else { continue };
@@ -3493,12 +3525,14 @@ impl BoardHost {
             }
             if matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
                 if let Some(hid) = self.sole_indirect_handle_hit_idle_selected_node(point) {
-                    return Some(hid);
+                    if self.handle_selectable(hid.as_str()) {
+                        return Some(hid);
+                    }
                 }
             }
         }
         for n in self.nodes.values().rev() {
-            if !n.visible {
+            if !self.node_selectable(n.id.as_str()) {
                 continue;
             }
             match n.shape {
@@ -3517,7 +3551,7 @@ impl BoardHost {
             }
         }
         for w in self.wires.values().rev() {
-            if !self.wire_effectively_visible(w) {
+            if !self.wire_selectable(w) {
                 continue;
             }
             if let Some(c) = self.wire_curve(w) {
@@ -3527,7 +3561,7 @@ impl BoardHost {
             }
         }
         for e in self.edges.values().rev() {
-            if !self.edge_effectively_visible(e) {
+            if !self.edge_selectable(e) {
                 continue;
             }
             if let Some(c) = self.edge_curve(e) {
@@ -3558,7 +3592,7 @@ impl BoardHost {
             }
             if let Some(ring_node_id) = self.indirect_ring_node_id(self.current_draw_lod()) {
                 for h in self.handles.values().rev() {
-                    if h.node_id != ring_node_id || !self.handle_effectively_visible(h.id.as_str()) {
+                    if h.node_id != ring_node_id || !self.handle_selectable(h.id.as_str()) {
                         continue;
                     }
                     if !self.indirect_ring_handle_eligible(h.id.as_str(), ring_node_id.as_str()) {
@@ -3573,7 +3607,7 @@ impl BoardHost {
             }
             if matches!(self.current_draw_lod(), BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
                 for h in self.handles.values().rev() {
-                    if !self.handle_effectively_visible(h.id.as_str()) {
+                    if !self.handle_selectable(h.id.as_str()) {
                         continue;
                     }
                     let Some(pos) = self.handle_world_pos(h) else { continue };
@@ -3591,7 +3625,7 @@ impl BoardHost {
         }
         if o.select_nodes {
             for n in self.nodes.values().rev() {
-                if !n.visible {
+                if !self.node_selectable(n.id.as_str()) {
                     continue;
                 }
                 match n.shape {
@@ -3612,7 +3646,7 @@ impl BoardHost {
         }
         if o.select_edges {
             for e in self.edges.values().rev() {
-                if !self.edge_effectively_visible(e) {
+                if !self.edge_selectable(e) {
                     continue;
                 }
                 if let Some(c) = self.edge_curve(e) {
@@ -3682,6 +3716,7 @@ impl BoardHost {
                     draggable: n.draggable.unwrap_or(true),
                     selected: n.selected.unwrap_or(false),
                     visible: n.visible.unwrap_or(true),
+                    locked: n.locked.unwrap_or(false),
                     root: n.root.unwrap_or(false),
                     style: n.style.clone(),
                     text: n.text.clone(),
@@ -3707,6 +3742,7 @@ impl BoardHost {
                     scale: h.scale.filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0),
                     selected: h.selected.unwrap_or(false),
                     visible: h.visible.unwrap_or(true),
+                    locked: h.locked.unwrap_or(false),
                     style: h.style.clone(),
                     handle_kind: kind,
                     color_fill,
@@ -3727,6 +3763,7 @@ impl BoardHost {
                     target: e.target.clone(),
                     selected: e.selected.unwrap_or(false),
                     visible: e.visible.unwrap_or(true),
+                    locked: e.locked.unwrap_or(false),
                     style: e.style.clone(),
                     edge_kind,
                     source_tip,
@@ -3763,7 +3800,7 @@ impl BoardHost {
                 .filter(|s| !s.is_empty())
                 .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
                 .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
-            self.wires.insert(w.id.clone(), WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), style: w.style.clone(), wire_kind });
+            self.wires.insert(w.id.clone(), WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), locked: w.locked.unwrap_or(false), style: w.style.clone(), wire_kind });
         }
         if !self.is_preselect_active() {
             let mut new_selection = BTreeSet::new();
@@ -3914,6 +3951,7 @@ impl BoardHost {
                         icon_kind: handle_icon_kind,
                         user_data: None,
                         visible: board_json_visible_option(ho),
+                        locked: board_json_locked_option(ho),
                     });
                 }
                 desc.handles.extend(handles);
@@ -3947,6 +3985,7 @@ impl BoardHost {
                     node_kind: fixture_node_kind.clone(),
                     user_data: None,
                     visible: board_json_visible_option(obj),
+                    locked: board_json_locked_option(obj),
                     root,
                     shape: Some("rectangle".into()),
                     radius: None,
@@ -3975,6 +4014,7 @@ impl BoardHost {
                     node_kind: fixture_node_kind.clone(),
                     user_data: None,
                     visible: board_json_visible_option(obj),
+                    locked: board_json_locked_option(obj),
                     root,
                     shape: Some("circle".into()),
                     radius: Some(radius),
@@ -4026,6 +4066,7 @@ impl BoardHost {
                 style: None,
                 user_data: None,
                 visible: board_json_visible_option(e),
+                locked: board_json_locked_option(e),
             });
         }
         if self.sync_descriptor(&desc).is_err() {
@@ -4856,7 +4897,7 @@ impl BoardHost {
         let Some(h) = self.handles.get(target_handle_id) else {
             return false;
         };
-        if !self.handle_effectively_visible(target_handle_id) {
+        if !self.handle_selectable(target_handle_id) {
             return false;
         }
         let Some(pw) = self.handle_world_pos(h) else {
@@ -4886,7 +4927,7 @@ impl BoardHost {
         if !self.lod_allows_node_proximity_connect() {
             return None;
         }
-        if !self.node_effectively_visible(moving_node_id) {
+        if !self.node_selectable(moving_node_id) {
             return None;
         }
         if self.node_has_any_incident_edge(moving_node_id) {
@@ -4896,15 +4937,15 @@ impl BoardHost {
         let moving_bounds = self.node_world_bounds(moving, 0.0);
         let mut best: Option<(f64, String, String)> = None;
         for (target_id, target) in &self.nodes {
-            if target_id == moving_node_id || !self.node_effectively_visible(target_id.as_str()) {
+            if target_id == moving_node_id || !self.node_selectable(target_id.as_str()) {
                 continue;
             }
             let target_bounds = self.node_world_bounds(target, 0.0);
             if !world_boxes_overlap(moving_bounds, target_bounds) {
                 continue;
             }
-            let moving_handles: Vec<_> = self.handles.iter().filter(|(id, h)| h.node_id == moving_node_id && self.handle_effectively_visible(id.as_str()) && !self.handle_has_incident_edge(id.as_str())).collect();
-            let target_handles: Vec<_> = self.handles.iter().filter(|(id, h)| h.node_id == target_id.as_str() && self.handle_effectively_visible(id.as_str()) && !self.handle_has_incident_edge(id.as_str())).collect();
+            let moving_handles: Vec<_> = self.handles.iter().filter(|(id, h)| h.node_id == moving_node_id && self.handle_selectable(id.as_str()) && !self.handle_has_incident_edge(id.as_str())).collect();
+            let target_handles: Vec<_> = self.handles.iter().filter(|(id, h)| h.node_id == target_id.as_str() && self.handle_selectable(id.as_str()) && !self.handle_has_incident_edge(id.as_str())).collect();
             for (src_id, src_h) in &moving_handles {
                 let Some(src_pos) = self.handle_world_pos(src_h) else {
                     continue;
@@ -4936,6 +4977,50 @@ impl BoardHost {
         self.nodes.get(node_id).is_some_and(|n| n.visible)
     }
 
+    fn node_selectable(&self, node_id: &str) -> bool {
+        self.nodes.get(node_id).is_some_and(|n| n.visible && !n.locked)
+    }
+
+    fn handle_selectable(&self, handle_id: &str) -> bool {
+        self.handles.get(handle_id).is_some_and(|h| h.visible && !h.locked && self.node_selectable(h.node_id.as_str()))
+    }
+
+    fn edge_selectable(&self, edge: &EdgeData) -> bool {
+        if !edge.visible || edge.locked {
+            return false;
+        }
+        if !self.has_ports() {
+            return self.node_selectable(edge.source.as_str()) && self.node_selectable(edge.target.as_str());
+        }
+        self.handle_selectable(edge.source.as_str()) && self.handle_selectable(edge.target.as_str())
+    }
+
+    fn wire_selectable(&self, wire: &WireData) -> bool {
+        if !wire.visible || wire.locked {
+            return false;
+        }
+        if !self.handle_selectable(wire.source.as_str()) {
+            return false;
+        }
+        wire.target.as_ref().map(|id| self.handle_selectable(id.as_str())).unwrap_or(true)
+    }
+
+    fn entity_selectable_by_id(&self, id: &str) -> bool {
+        if let Some(n) = self.nodes.get(id) {
+            return self.node_selectable(n.id.as_str());
+        }
+        if let Some(h) = self.handles.get(id) {
+            return self.handle_selectable(h.id.as_str());
+        }
+        if let Some(e) = self.edges.get(id) {
+            return self.edge_selectable(e);
+        }
+        if let Some(w) = self.wires.get(id) {
+            return self.wire_selectable(w);
+        }
+        false
+    }
+
     fn handle_effectively_visible(&self, handle_id: &str) -> bool {
         self.handles.get(handle_id).is_some_and(|h| h.visible && self.node_effectively_visible(h.node_id.as_str()))
     }
@@ -4953,7 +5038,7 @@ impl BoardHost {
 
     /// @emoji 💫 True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`overview`/`normal` LOD).
     fn handle_eligible_indirect_connect_ring(&self, handle_id: &str) -> bool {
-        self.handle_effectively_visible(handle_id) && !self.handle_has_incident_edge(handle_id)
+        self.handle_selectable(handle_id) && !self.handle_has_incident_edge(handle_id)
     }
 
     /// @emoji 📍 Drag-phase link snap tests **screen px** to the handle anchor so detail/micro zoom keeps a stable hit halo; pointer-up re-checks with `link_snap_commit_proximity_ok` before `proximityConnect`.
@@ -4962,14 +5047,14 @@ impl BoardHost {
             return None;
         }
         let source_handle = self.handles.get(source_handle_id)?;
-        if !self.handle_effectively_visible(source_handle_id) {
+        if !self.handle_selectable(source_handle_id) {
             return None;
         }
         let source_node_id = source_handle.node_id.as_str();
         let p_scr = self.world_to_screen(world);
         let mut best: Option<(f64, String)> = None;
         for (id, h) in &self.handles {
-            if id == source_handle_id || !self.handle_effectively_visible(id.as_str()) {
+            if id == source_handle_id || !self.handle_selectable(id.as_str()) {
                 continue;
             }
             if self.handle_has_incident_edge(id.as_str()) {
@@ -4996,7 +5081,7 @@ impl BoardHost {
         if source_handle_id == target_handle_id {
             return false;
         }
-        if !self.handle_effectively_visible(source_handle_id) || !self.handle_effectively_visible(target_handle_id) {
+        if !self.handle_selectable(source_handle_id) || !self.handle_selectable(target_handle_id) {
             return false;
         }
         let Some(source_row) = self.handles.get(source_handle_id) else {
@@ -5036,6 +5121,7 @@ impl BoardHost {
                 target: target_handle_id.to_string(),
                 selected: false,
                 visible: true,
+                locked: false,
                 style: None,
                 edge_kind,
                 source_tip: None,
@@ -5115,7 +5201,7 @@ impl BoardHost {
         }
         if let Some(ref hid) = hit {
             if let Some(node) = self.nodes.get(hid) {
-                if node.draggable {
+                if node.draggable && !node.locked {
                     let nid = hid.clone();
                     let nx = node.x;
                     let ny = node.y;
@@ -5581,21 +5667,21 @@ impl BoardHost {
         let o = &self.selection_options;
         if o.select_nodes {
             for n in self.nodes.values() {
-                if n.visible && self.selection_contains_node(n, box_, enclosing, polygon) {
+                if self.node_selectable(n.id.as_str()) && self.selection_contains_node(n, box_, enclosing, polygon) {
                     hits.insert(n.id.clone());
                 }
             }
         }
         if o.select_handles {
             for h in self.handles.values() {
-                if self.handle_effectively_visible(h.id.as_str()) && self.selection_contains_handle(h, box_, enclosing, polygon) {
+                if self.handle_selectable(h.id.as_str()) && self.selection_contains_handle(h, box_, enclosing, polygon) {
                     hits.insert(h.id.clone());
                 }
             }
         }
         if o.select_edges {
             for e in self.edges.values() {
-                if !self.edge_effectively_visible(e) {
+                if !self.edge_selectable(e) {
                     continue;
                 }
                 if let Some(c) = self.edge_curve(e) {

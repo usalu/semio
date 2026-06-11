@@ -76,6 +76,16 @@ function loadTokens(): Tokens {
 	return JSON.parse(raw) as Tokens;
 }
 
+/** @emoji 📏 Derives dag component width as twice the IO channel column width. */
+function resolveMetrics(metrics: Tokens["metrics"]): NonNullable<Tokens["metrics"]> {
+	const out = structuredClone(metrics ?? {}) as NonNullable<Tokens["metrics"]>;
+	const dag = out.dag;
+	if (dag && typeof dag.ioColumnWidth === "number") {
+		dag.componentWidth = dag.ioColumnWidth * 2;
+	}
+	return out;
+}
+
 function parseHex6(hex: string): [number, number, number] {
 	const s = hex.trim().replace(/^#/, "");
 	if (s.length === 3) {
@@ -207,7 +217,7 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedThemes: ReturnType<typeof 
 	lines.push(emitJsonConst("STYLING_STROKES", tokens.strokes ?? {}));
 	lines.push(emitJsonConst("STYLING_RADII", tokens.radii ?? {}));
 	lines.push(emitJsonConst("STYLING_OPACITIES", tokens.opacities ?? {}));
-	lines.push(emitJsonConst("STYLING_METRICS", tokens.metrics ?? {}));
+	lines.push(emitJsonConst("STYLING_METRICS", resolveMetrics(tokens.metrics)));
 	lines.push(emitJsonConst("STYLING_CANVAS_FONTS", tokens.canvasFonts ?? {}));
 	const wasmThemes: Record<string, Record<string, number[]>> = {};
 	for (const [themeName, groups] of Object.entries(resolvedThemes)) {
@@ -306,7 +316,7 @@ function emitRust(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveTheme
 		lines.push("");
 	}
 	lines.push("pub mod metrics {");
-	for (const [section, values] of Object.entries(tokens.metrics ?? {})) {
+	for (const [section, values] of Object.entries(resolveMetrics(tokens.metrics))) {
 		lines.push(`    pub mod ${section} {`);
 		for (const [k, v] of Object.entries(values)) {
 			const name = toScreamingSnake(k);
@@ -375,7 +385,7 @@ function emitPython(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveThe
 	lines.push(`STYLING_STROKES: Final[dict[str, float | list[float]]] = ${JSON.stringify(tokens.strokes ?? {}, null, 4)}`);
 	lines.push(`STYLING_RADII: Final[dict[str, float]] = ${JSON.stringify(tokens.radii ?? {}, null, 4)}`);
 	lines.push(`STYLING_OPACITIES: Final[dict[str, float]] = ${JSON.stringify(tokens.opacities ?? {}, null, 4)}`);
-	lines.push(`STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = ${JSON.stringify(tokens.metrics ?? {}, null, 4)}`);
+	lines.push(`STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = ${JSON.stringify(resolveMetrics(tokens.metrics), null, 4)}`);
 	lines.push("");
 	for (const group of ["board", "map", "canvas"] as const) {
 		lines.push("@dataclass(frozen=True, slots=True)");

@@ -116,6 +116,7 @@ const VENDORED_ICON_IDS = [
   "skip-forward",
   "smartphone",
   "smile",
+  "sparkles",
   "square",
   "sun",
   "tablet",

@@ -121,6 +121,7 @@ Do not edit files under `icons/*.svg` by hand — run **build ui assets** (`bun 
 - `skip-forward` (from Lucide `skip-forward`)
 - `smartphone` (from Lucide `smartphone`)
 - `smile` (from Lucide `smile`)
+- `sparkles` (from Lucide `sparkles`)
 - `square` (from Lucide `square`)
 - `sun` (from Lucide `sun`)
 - `table-2` (from Lucide `table-2`)

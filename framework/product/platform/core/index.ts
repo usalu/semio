@@ -160,6 +160,8 @@ export interface UiTreeItemNode {
 	readonly id: string;
 	readonly label: string;
 	readonly description?: string;
+	/** @emoji 🖼️ Lucide catalog id (or registered element icon id) for the row glyph. */
+	readonly icon?: string;
 	readonly selected?: boolean;
 	readonly defaultOpen?: boolean;
 	readonly command?: CommandDescriptor;

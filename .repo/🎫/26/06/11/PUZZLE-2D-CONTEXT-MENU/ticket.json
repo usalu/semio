@@ -1,0 +1,18 @@
+{
+  "title": "Puzzle 2D Context Menu Parity",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Replicate puzzle3d viewport selection context menu and hierarchy tree context menu in puzzle2d, with full hidden/locked flag parity and suggest-nodes brush menu.",
+  "goal": "🎯puzzle🎯2d",
+  "summary": "Added hidden/locked entity flags, viewport selection context menu, hierarchy row chrome, playground wiring, and suggest-nodes parity: right-click on a free handle shows Suggest nodes (sparkles) opening an anchored brush-candidate menu via puzzle2dOpenSlotSuggestionsRef, reusing WASM brush_open_slot/brush_commit_slot/brush_cancel_slot and existing brushPlace commit pipeline.",
+  "files": [
+    "mathematical/graph/lib.rs",
+    "mathematical/graph/port/lib.rs",
+    "mathematical/graph/port/directed/normal/lib.rs",
+    "puzzle/2d/react/index.tsx",
+    "puzzle/2d/play/index.ts",
+    "puzzle/2d/rs/lib.rs",
+    "framework/product/playground/renderer/react/index.tsx"
+  ],
+  "sessions": []
+}

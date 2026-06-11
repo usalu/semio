@@ -163,8 +163,7 @@ pub mod metrics {
         pub const CHANNEL_ROW_HEIGHT: f64 = 14.0;
         pub const NODE_EDGE_INSET: f64 = 2.0;
         pub const NODE_COLUMN_GAP: f64 = 2.0;
-        pub const IO_COLUMN_WIDTH: f64 = 34.0;
-        pub const COMPONENT_WIDTH: f64 = 74.0;
+        pub const IO_COLUMN_WIDTH: f64 = 28.0;
         pub const IO_WIDGET_HEIGHT: f64 = 28.0;
         pub const SLIDER_KNOB_SCREEN_PX: f64 = 8.0;
         pub const PREVIEW_PAD: f64 = 4.0;
@@ -176,6 +175,7 @@ pub mod metrics {
         pub const VARIADIC_PLUS_ZOOM_THRESHOLD: f64 = 1.5;
         pub const LOD_ZOOM_SHIFT: f64 = 0.25;
         pub const LOD_BAND_FLOOR_ZOOM: &[f64] = &[0.05, 0.15, 0.35, 0.55, 1.25, 2.5];
+        pub const COMPONENT_WIDTH: f64 = 56.0;
     }
     pub mod map {
         pub const LABEL_PX_BANDS: &[f64] = &[26.0, 26.0, 20.0, 14.0, 12.5, 12.0, 10.5, 10.5];

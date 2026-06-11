@@ -4098,7 +4098,7 @@ mod tests {
     }
 
     #[test]
-    fn set_note_text_resizes_node() {
+    fn set_note_text_keeps_uniform_component_width() {
         let mut host = host_with_test_bridge();
         let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
         let short_w = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node").width;
@@ -4108,7 +4108,7 @@ mod tests {
             panic!("expected note node");
         };
         assert_eq!(text, "a much longer note string");
-        assert!(node.width > short_w);
+        assert_eq!(node.width, short_w);
     }
 
     #[test]

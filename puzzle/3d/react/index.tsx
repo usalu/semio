@@ -3844,6 +3844,28 @@ export function brushCompatibleCandidates(
   return scored.map((row) => row.candidate);
 }
 
+function catalogKindDisplayLabel(entry: { readonly id: string; readonly label?: string; readonly name?: string }): string {
+  const display = entry.label?.trim() || entry.name?.trim();
+  return display && display.length > 0 ? display : entry.id;
+}
+
+function catalogVortexKindDisplayLabel(vortexKindId: string, kindCatalogs: KindCatalogBundle | undefined): string {
+  const entry = kindCatalogs?.vortices?.find((row) => row.id === vortexKindId);
+  return entry ? catalogKindDisplayLabel(entry) : vortexKindId;
+}
+
+/** @emoji 🏷️ Human labels for a brush candidate row (object kind + source vortex kind). */
+export function brushCandidateDisplayLabels(
+  candidate: BrushCompatibleCandidate,
+  kindCatalogs: KindCatalogBundle | undefined,
+): { readonly object: string; readonly vortex: string } {
+  const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
+  const object = kind ? catalogKindDisplayLabel(kind) : candidate.objectKindId;
+  const vortexKindId = kind?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
+  const vortex = catalogVortexKindDisplayLabel(vortexKindId, kindCatalogs);
+  return { object, vortex };
+}
+
 /** @emoji 🖌️ Object pose so a source vortex coincides with the target point and directions oppose. */
 export function computeBrushPlacementPose(args: {
   readonly sourceLocalPosition: Vec3;
@@ -3964,9 +3986,16 @@ export const puzzle3dBrushKindWeightsRef: { current: Puzzle3dBrushKindWeights } 
   current: { objectWeights: {}, vortexWeights: {} },
 };
 
+export const puzzle3dBrushKindCatalogsRef: { current: KindCatalogBundle | undefined } = { current: undefined };
+
 /** @emoji 🎚️ Publishes brush kind weights for {@link BrushSession} weighted candidate ordering. */
 export function publishPuzzle3dBrushKindWeights(objectWeights: Readonly<Record<string, number>>, vortexWeights: Readonly<Record<string, number>>): void {
   puzzle3dBrushKindWeightsRef.current = { objectWeights, vortexWeights };
+}
+
+/** @emoji 📚 Publishes kind catalogs for brush suggestion menus and engagement labels. */
+export function publishPuzzle3dBrushKindCatalogs(kindCatalogs: KindCatalogBundle | undefined): void {
+  puzzle3dBrushKindCatalogsRef.current = kindCatalogs;
 }
 
 function brushKindWeightValue(weights: Readonly<Record<string, number>>, id: string): number {
@@ -7924,7 +7953,7 @@ export function buildPuzzle3dSelectionMenuItems(
   items.push({
     id: "delete",
     label: "Delete",
-    icon: "trash",
+    icon: "trash-2",
     destructive: true,
     onSelect: () => actions.deleteSelection(),
   });
@@ -7996,6 +8025,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly brushCandidates: readonly BrushCompatibleCandidate[];
   readonly brushTargetActive: boolean;
   readonly brushPlacementProbePending?: boolean;
+  readonly kindCatalogs?: KindCatalogBundle;
 }
 
 /** @emoji 💬 Builds window {@link EngagementSpec}: command input, possibles, options, status (CAD play layout). */
@@ -8033,12 +8063,15 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     { id: "puzzle3d.tool.select", label: "Select", onSelect: inputs.onSelectTool },
   ];
 
-  const brushPossibles = inputs.brushCandidates.map((candidate, index) => ({
-    id: `puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`,
-    label: normalizeEngagementCommandText(candidate.objectKindId),
-    detail: `v${candidate.sourceVortexIndex}`,
-    onSelect: () => inputs.onPickBrushCandidate(index),
-  }));
+  const brushPossibles = inputs.brushCandidates.map((candidate, index) => {
+    const labels = brushCandidateDisplayLabels(candidate, inputs.kindCatalogs);
+    return {
+      id: `puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`,
+      label: labels.object,
+      detail: labels.vortex,
+      onSelect: () => inputs.onPickBrushCandidate(index),
+    };
+  });
 
   const zoomOptions =
     inputs.selectionCount > 0 ? [{ id: PUZZLE_3D_ENGAGEMENT_ZOOM_ID, label: "Zoom", onPress: inputs.onZoomToSelection }] : [];
@@ -9019,12 +9052,18 @@ function BrushSession(props: {
     [applyBootstrapPreview, applyCandidateIndex, invalidate, publishBrushEngagement],
   );
 
+  const markPlacementProbePending = reactHostPort.useCallback(() => {
+    placementProbePendingRef.current = true;
+    publishBrushEngagement();
+  }, [publishBrushEngagement]);
+
   const reconcilePlacementCandidates = reactHostPort.useCallback(() => {
     if (!targetRef.current || probeOrderRef.current.length === 0) {
       return;
     }
+    markPlacementProbePending();
     void probePlacementCandidates().then(applyPlacementProbeResult);
-  }, [applyPlacementProbeResult, probePlacementCandidates]);
+  }, [applyPlacementProbeResult, markPlacementProbePending, probePlacementCandidates]);
 
   const scheduleReconcileAfterCatalogPreload = reactHostPort.useCallback(() => {
     if (preloadReconcileTimerRef.current !== null) {
@@ -9095,9 +9134,12 @@ function BrushSession(props: {
       placementCandidatesRef.current = [];
       indexRef.current = 0;
       setCatalogPreloadUrls(brushMeshUrlsForCompatibleCandidates(probeOrderRef.current, props.kindCatalogs, props.sceneFixture));
+      if (probeOrderRef.current.length > 0) {
+        markPlacementProbePending();
+      }
       void probePlacementCandidates().then(applyPlacementProbeResult);
     },
-    [applyPlacementProbeResult, props.kindCatalogs, props.kindCompatibility, props.sceneFixture, probePlacementCandidates, store],
+    [applyPlacementProbeResult, markPlacementProbePending, props.kindCatalogs, props.kindCompatibility, props.sceneFixture, probePlacementCandidates, store],
   );
 
   const leaveTarget = reactHostPort.useCallback(() => {
@@ -9180,7 +9222,6 @@ function BrushSession(props: {
         enterTarget(fullId, meta);
         openMenu(anchor);
         invalidate();
-        console.log("[DEBUG] puzzle3dOpenVortexSuggestions", fullId);
       },
       close: dismissMenu,
     };
@@ -9794,6 +9835,7 @@ function Puzzle3dBrushCandidateMenu() {
     ui.candidates.length > 0 ? (
       ui.candidates.map((candidate, index) => {
         const active = ui.menuHoverIndex === index;
+        const labels = brushCandidateDisplayLabels(candidate, puzzle3dBrushKindCatalogsRef.current);
         return (
           <button
             key={`${candidate.objectKindId}:${candidate.sourceVortexIndex}`}
@@ -9804,8 +9846,8 @@ function Puzzle3dBrushCandidateMenu() {
             role="menuitem"
             type="button"
           >
-            <span className="truncate">{normalizeEngagementCommandText(candidate.objectKindId)}</span>
-            <span className="ml-auto text-xs text-muted-foreground pl-tiny">v{candidate.sourceVortexIndex}</span>
+            <span className="truncate">{labels.object}</span>
+            <span className="ml-auto text-xs text-muted-foreground pl-tiny truncate">{labels.vortex}</span>
           </button>
         );
       })
@@ -11057,6 +11099,9 @@ function Inner(props: CanvasProps & {
     () => resolvePuzzle3dKindCompatibility(kindCompatibilityProp, sceneFixture?.meta as Record<string, unknown> | undefined),
     [kindCompatibilityProp, sceneFixture],
   );
+  reactHostPort.useLayoutEffect(() => {
+    publishPuzzle3dBrushKindCatalogs(kindCatalogs);
+  }, [kindCatalogs]);
   reactHostPort.useEffect(() => {
     puzzle3dBrushToolActiveRef.current = brushActive;
     if (!brushActive) {
@@ -13534,6 +13579,27 @@ if (import.meta.vitest) {
         ),
       ).toEqual([]);
     });
+    it("brushCandidateDisplayLabels resolves object kind and vortex kind labels", () => {
+      const labels = brushCandidateDisplayLabels({ objectKindId: "Capsule L", sourceVortexIndex: 0 }, brushCatalogs);
+      expect(labels.object).toBe("Capsule L");
+      expect(labels.vortex).toBe("door capsule left");
+    });
+    it("brushCandidateDisplayLabels prefers catalog vortex kind label", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Tambour",
+            label: "Tambour Unit",
+            meshUrl: "/mesh/tambour.glb",
+            vortices: [{ vortexKind: "door tambour left", position: [0, 0, 0] }],
+          },
+        ],
+        vortices: [{ id: "door tambour left", label: "Left Tambour Port" }],
+      };
+      const labels = brushCandidateDisplayLabels({ objectKindId: "Tambour", sourceVortexIndex: 0 }, catalogs);
+      expect(labels.object).toBe("Tambour Unit");
+      expect(labels.vortex).toBe("Left Tambour Port");
+    });
     it("brushTargetVortexAllowsSuggestion rejects zero target vortex weight", () => {
       expect(brushTargetVortexAllowsSuggestion("c-t", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(false);
       expect(brushTargetVortexAllowsSuggestion("c-b", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(true);
@@ -13977,6 +14043,28 @@ if (import.meta.vitest) {
       });
       expect(spec.possibleEngagements?.map((row) => row.id)).toEqual(["puzzle3d.tool.brush", PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID, "puzzle3d.tool.select"]);
       expect(spec.status?.some((row) => row.id === "puzzle3d.brush.none")).toBe(true);
+    });
+    it("buildPuzzle3dPlayEngagement shows probe status while collision probe is pending", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "brush",
+        cmdLine: "",
+        fillCount: 0,
+        selectionCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onFillTool: () => {},
+        onFillCount: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: true,
+        brushPlacementProbePending: true,
+      });
+      expect(spec.status?.some((row) => row.id === "puzzle3d.brush.probe")).toBe(true);
+      expect(spec.status?.some((row) => row.id === "puzzle3d.brush.none")).toBe(false);
     });
     it("buildPuzzle3dPlayEngagement exposes fill slider when fill tool is active", () => {
       const counts: number[] = [];

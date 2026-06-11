@@ -24,6 +24,7 @@ import {
 	type WindowEngagement,
 	type WindowMeasure,
 	type UiNode,
+	type UiTreeContextMenuItem,
 	type UiTreeItemNode,
 	type UiTreeSectionNode,
 	type UiTreeNode,
@@ -51,6 +52,7 @@ import {
 	puzzle2dNodeKindOverlayLabel,
 	decodePuzzle2dFixtureFromDragV1,
 	puzzle2dPlayNodeKindDragData,
+	puzzle2dNodeKindCatalogIcon,
 	isPuzzle2dDrawLodKind,
 	getPuzzle2dLodScale,
 	parsePuzzle2dFixtureV1,
@@ -322,6 +324,45 @@ function puzzle2dPlayKindsSectionDomain(sectionId: string): Puzzle2dKindHoverDom
 //#endregion 🔖Puzzle2dPlayHover
 
 //#region 🔖Puzzle2dPlayHierarchy
+/** @emoji 🖼️ Default tree-row icons for puzzle 2D entity kinds (Lucide catalog ids). */
+export const PUZZLE2D_PLAY_ENTITY_TREE_ICON = {
+	node: "shapes",
+	handle: "circle-dot",
+	edge: "link",
+	wire: "plug",
+} as const;
+
+type Puzzle2dPlayEntityTreeKind = keyof typeof PUZZLE2D_PLAY_ENTITY_TREE_ICON;
+
+/** @emoji 🖼️ Resolves the tree-row icon id for a puzzle 2D entity kind. */
+export function puzzle2dPlayEntityTreeIcon(kind: Puzzle2dPlayEntityTreeKind): string {
+	return PUZZLE2D_PLAY_ENTITY_TREE_ICON[kind];
+}
+
+function puzzle2dPlayKindSectionTreeIcon(sectionId: string): string | undefined {
+	if (sectionId === "puzzle-2d-play-kinds.nodes") {
+		return puzzle2dPlayEntityTreeIcon("node");
+	}
+	if (sectionId === "puzzle-2d-play-kinds.handles") {
+		return puzzle2dPlayEntityTreeIcon("handle");
+	}
+	if (sectionId === "puzzle-2d-play-kinds.edges") {
+		return puzzle2dPlayEntityTreeIcon("edge");
+	}
+	if (sectionId === "puzzle-2d-play-kinds.wires") {
+		return puzzle2dPlayEntityTreeIcon("wire");
+	}
+	return undefined;
+}
+
+function puzzle2dPlayNodeHierarchyTreeIcon(node: Puzzle2dFixtureNodeV1, kindCatalogs: KindCatalogBundle): string {
+	const kindId = node.nodeKind?.trim();
+	if (!kindId) {
+		return puzzle2dPlayEntityTreeIcon("node");
+	}
+	return puzzle2dNodeKindCatalogIcon(kindCatalogs.nodes?.find((row) => row.id === kindId)) ?? puzzle2dPlayEntityTreeIcon("node");
+}
+
 function puzzle2dFixtureHandleToNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<string, string> {
 	const out = new Map<string, string>();
 	for (const node of fixture.nodes) {
@@ -445,7 +486,213 @@ export type Puzzle2dPlayHierarchyBuildOptions = {
 	readonly omitItemSelection?: boolean;
 	/** @emoji 🖱️ Optional hover sink for hierarchy row pointer enter/leave. */
 	readonly onHover?: (payload: Puzzle2dHoverPayload) => void;
+	readonly onToggleHidden?: (graphId: string) => void;
+	readonly onToggleLocked?: (graphId: string) => void;
 };
+
+/** @emoji 🎯 Reads hidden/locked flags for a fixture graph id. */
+export function puzzle2dPlayEntityFlagsFromFixture(fixture: Puzzle2dFixtureV1, graphId: string): { hidden: boolean; locked: boolean } {
+	for (const node of fixture.nodes) {
+		if (node.id === graphId) {
+			return { hidden: node.hidden === true, locked: node.locked === true };
+		}
+		for (const handle of node.handles) {
+			if (handle.id === graphId) {
+				return { hidden: handle.hidden === true, locked: handle.locked === true };
+			}
+		}
+	}
+	const edge = fixture.edges.find((row) => row.id === graphId);
+	if (edge) {
+		return { hidden: edge.hidden === true, locked: edge.locked === true };
+	}
+	return { hidden: false, locked: false };
+}
+
+/** @emoji 🙈 Sets hidden/locked on every selected fixture row. */
+export function puzzle2dPlayApplySelectionFlag(
+	fixture: Puzzle2dFixtureV1,
+	selectionIds: readonly string[],
+	flag: "hidden" | "locked",
+	value: boolean,
+): Puzzle2dFixtureV1 {
+	const selected = new Set(selectionIds);
+	return {
+		...fixture,
+		nodes: fixture.nodes.map((node) => {
+			const handles = node.handles.map((handle) => (selected.has(handle.id) ? { ...handle, [flag]: value } : handle));
+			const nodeSelected = selected.has(node.id);
+			if (!nodeSelected && handles === node.handles) {
+				return node;
+			}
+			return {
+				...node,
+				...(nodeSelected ? { [flag]: value } : {}),
+				handles,
+			};
+		}),
+		edges: fixture.edges.map((edge) => (selected.has(edge.id) ? { ...edge, [flag]: value } : edge)),
+	};
+}
+
+/** @emoji 🔁 Toggles hidden/locked on one hierarchy row. */
+export function puzzle2dPlayToggleEntityFlag(fixture: Puzzle2dFixtureV1, graphId: string, flag: "hidden" | "locked"): Puzzle2dFixtureV1 {
+	const flags = puzzle2dPlayEntityFlagsFromFixture(fixture, graphId);
+	return puzzle2dPlayApplySelectionFlag(fixture, [graphId], flag, !(flags[flag] === true));
+}
+
+/** @emoji 🗑️ Removes selected nodes, handles, and edges from a fixture. */
+export function puzzle2dPlayDeleteSelectionFromFixture(fixture: Puzzle2dFixtureV1, selectionIds: readonly string[]): Puzzle2dFixtureV1 {
+	const nodeIds = selectionIds.filter((id) => fixture.nodes.some((node) => node.id === id));
+	const edgeIds = new Set(selectionIds.filter((id) => fixture.edges.some((edge) => edge.id === id)));
+	const handleIds = new Set(
+		selectionIds.filter((id) => fixture.nodes.some((node) => node.handles.some((handle) => handle.id === id))),
+	);
+	let next = fixture;
+	for (const nodeId of nodeIds) {
+		next = puzzle2dPlayApplyNodeStructuralDeleteToFixture(next, nodeId);
+	}
+	const nodes = next.nodes.map((node) => ({
+		...node,
+		handles: node.handles.filter((handle) => !handleIds.has(handle.id)),
+	}));
+	const edges = next.edges.filter((edge) => !edgeIds.has(edge.id));
+	return { ...next, nodes, edges };
+}
+
+/** @emoji 📋 Clones selected nodes with fresh ids and offset positions. */
+export function puzzle2dPlayDuplicateSelection(
+	fixture: Puzzle2dFixtureV1,
+	selectionIds: readonly string[],
+): { fixture: Puzzle2dFixtureV1; newIds: readonly string[] } {
+	const nodeIds = selectionIds.filter((id) => fixture.nodes.some((node) => node.id === id));
+	if (nodeIds.length === 0) {
+		return { fixture, newIds: [] };
+	}
+	const existingIds = new Set(fixture.nodes.map((node) => node.id));
+	const clones: Puzzle2dFixtureNodeV1[] = [];
+	const newIds: string[] = [];
+	for (const nodeId of nodeIds) {
+		const node = fixture.nodes.find((row) => row.id === nodeId);
+		if (!node) {
+			continue;
+		}
+		let newId = `${nodeId}-copy`;
+		let suffix = 2;
+		while (existingIds.has(newId)) {
+			newId = `${nodeId}-copy-${suffix}`;
+			suffix += 1;
+		}
+		existingIds.add(newId);
+		const handles = node.handles.map((handle, index) => ({
+			...handle,
+			id: `${newId}.h${index}`,
+		}));
+		clones.push({
+			...node,
+			handles,
+			id: newId,
+			x: node.x + 32,
+			y: node.y + 32,
+		});
+		newIds.push(newId);
+	}
+	return { fixture: { ...fixture, nodes: [...fixture.nodes, ...clones] }, newIds };
+}
+
+/** @emoji 🧩 Expands selection to every entity sharing a kind id with the current selection. */
+export function puzzle2dPlaySelectSameKindIds(fixture: Puzzle2dFixtureV1, selectionIds: readonly string[]): readonly string[] {
+	const out = new Set<string>();
+	for (const id of selectionIds) {
+		const node = fixture.nodes.find((row) => row.id === id);
+		if (node?.nodeKind) {
+			for (const row of fixture.nodes) {
+				if (row.nodeKind === node.nodeKind) {
+					out.add(row.id);
+				}
+			}
+			continue;
+		}
+		for (const rowNode of fixture.nodes) {
+			const handle = rowNode.handles.find((row) => row.id === id);
+			if (!handle?.handleKind) {
+				continue;
+			}
+			for (const n of fixture.nodes) {
+				for (const h of n.handles) {
+					if (h.handleKind === handle.handleKind) {
+						out.add(h.id);
+					}
+				}
+			}
+			break;
+		}
+		const edge = fixture.edges.find((row) => row.id === id);
+		if (edge?.edgeKind) {
+			for (const row of fixture.edges) {
+				if (row.edgeKind === edge.edgeKind) {
+					out.add(row.id);
+				}
+			}
+		}
+	}
+	return [...out];
+}
+
+function puzzle2dPlayHierarchyEntityChrome(
+	flags: { readonly hidden?: boolean; readonly locked?: boolean },
+	graphId: string,
+	options: Puzzle2dPlayHierarchyBuildOptions | undefined,
+): Pick<UiTreeItemNode, "isHidden" | "actions" | "contextMenu"> {
+	if (!options?.onToggleHidden && !options?.onToggleLocked) {
+		return { isHidden: flags.hidden === true };
+	}
+	const contextMenu: UiTreeContextMenuItem[] = [];
+	if (options.onToggleHidden) {
+		contextMenu.push({
+			id: "hidden",
+			label: flags.hidden ? "Show" : "Hide",
+			icon: flags.hidden ? "eye" : "eye-off",
+			onSelect: () => options.onToggleHidden!(graphId),
+		});
+	}
+	if (options.onToggleLocked) {
+		contextMenu.push({
+			id: "locked",
+			label: flags.locked ? "Unlock" : "Lock",
+			icon: flags.locked ? "lock-open" : "lock",
+			onSelect: () => options.onToggleLocked!(graphId),
+		});
+	}
+	return {
+		isHidden: flags.hidden === true,
+		actions: [
+			...(options.onToggleHidden
+				? [
+						{
+							id: "hidden",
+							icon: flags.hidden ? "eye-off" : "eye",
+							title: flags.hidden ? "Show" : "Hide",
+							onClick: () => options.onToggleHidden!(graphId),
+							revealOnHover: flags.hidden !== true,
+						},
+					]
+				: []),
+			...(options.onToggleLocked
+				? [
+						{
+							id: "locked",
+							icon: flags.locked ? "lock-open" : "lock",
+							title: flags.locked ? "Unlock" : "Lock",
+							onClick: () => options.onToggleLocked!(graphId),
+							revealOnHover: flags.locked !== true,
+						},
+					]
+				: []),
+		],
+		contextMenu,
+	};
+}
 
 function puzzle2dPlayHierarchyHoverHandlers(
 	onHover: ((payload: Puzzle2dHoverPayload) => void) | undefined,
@@ -470,7 +717,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 	onSelect: (id: string) => void,
 	visiting: Set<string>,
 	omitItemSelection: boolean,
-	onHover?: (payload: Puzzle2dHoverPayload) => void,
+	options?: Puzzle2dPlayHierarchyBuildOptions,
 ): UiTreeItemNode | null {
 	if (visiting.has(nodeId)) {
 		return null;
@@ -482,27 +729,32 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
   visiting.add(nodeId);
   const childItems: UiTreeItemNode[] = [];
   for (const childId of childrenByParent.get(nodeId) ?? []) {
-    const childItem = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, childId, childrenByParent, selectedIds, onSelect, visiting, omitItemSelection, onHover);
+    const childItem = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, childId, childrenByParent, selectedIds, onSelect, visiting, omitItemSelection, options);
     if (childItem) {
       childItems.push(childItem);
     }
   }
   visiting.delete(nodeId);
+  const onHover = options?.onHover;
   const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
     id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
     label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
+    icon: puzzle2dPlayEntityTreeIcon("handle"),
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
     onClick: () => onSelect(handle.id),
     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
+    ...puzzle2dPlayHierarchyEntityChrome(handle, handle.id, options),
   }));
   return {
     id: `puzzle-2d-play-hierarchy.node.${nodeId}`,
     label: puzzle2dFixtureNodeDisplayLabel(node, kindCatalogs),
     description: puzzle2dFixtureNodeDisplayDescription(node, kindCatalogs),
+    icon: puzzle2dPlayNodeHierarchyTreeIcon(node, kindCatalogs),
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(nodeId) }),
     defaultOpen: true,
     onClick: () => onSelect(nodeId),
     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, nodeId),
+    ...puzzle2dPlayHierarchyEntityChrome(node, nodeId, options),
     items: [...handleItems, ...childItems],
   };
 }
@@ -595,14 +847,13 @@ export function buildPuzzle2dPlayHierarchySections(
 	options?: Puzzle2dPlayHierarchyBuildOptions,
 ): UiTreeNode {
 	const omitItemSelection = options?.omitItemSelection === true;
-	const onHover = options?.onHover;
 	const selectedIds = omitItemSelection ? new Set<string>() : new Set(selectionIds);
 	const childrenByParent = puzzle2dFixtureChildrenByNodeId(fixture);
 	const rootIds = puzzle2dFixtureRootNodeIds(fixture, childrenByParent);
 	const visiting = new Set<string>();
 	const nodeItems: UiTreeItemNode[] = [];
 	for (const rootId of rootIds) {
-		const item = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, rootId, childrenByParent, selectedIds, onSelect, visiting, omitItemSelection, onHover);
+		const item = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, rootId, childrenByParent, selectedIds, onSelect, visiting, omitItemSelection, options);
 		if (item) {
 			nodeItems.push(item);
 		}
@@ -610,9 +861,11 @@ export function buildPuzzle2dPlayHierarchySections(
 	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
 		id: `puzzle-2d-play-hierarchy.edge.${edge.id}`,
 		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
+		icon: puzzle2dPlayEntityTreeIcon("edge"),
 		...(omitItemSelection ? {} : { isSelected: selectedIds.has(edge.id) }),
 		onClick: () => onSelect(edge.id),
-		...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, edge.id),
+		...puzzle2dPlayHierarchyHoverHandlers(options?.onHover, fixture, edge.id),
+		...puzzle2dPlayHierarchyEntityChrome(edge, edge.id, options),
 	}));
 	return {
 		type: "tree",
@@ -663,6 +916,7 @@ function puzzle2dPlayNodeKindHandleCatalogItems(
 		id: `${sectionId}.${nodeIndex}.${nodeKindId}.handle.${handleIndex}`,
 		label: puzzle2dCatalogHandleKindLabel(template.handleKind, handleKinds),
 		description: puzzle2dNodeKindHandleTemplateCatalogDescription(template),
+		icon: puzzle2dPlayEntityTreeIcon("handle"),
 	}));
 }
 
@@ -680,6 +934,7 @@ function puzzle2dPlayKindCatalogSection(
 	}
 	const isNodePalette = sectionId === "puzzle-2d-play-kinds.nodes";
 	const sectionDomain = puzzle2dPlayKindsSectionDomain(sectionId);
+	const sectionTreeIcon = puzzle2dPlayKindSectionTreeIcon(sectionId);
 	const items: UiTreeItemNode[] = [...entries]
 		.sort((a, b) => puzzle2dCatalogKindLabel(a).localeCompare(puzzle2dCatalogKindLabel(b)))
 		.map((entry, index) => {
@@ -688,10 +943,12 @@ function puzzle2dPlayKindCatalogSection(
 				? puzzle2dPlayNodeKindHandleCatalogItems(sectionId, index, entry.id, nodeKind.handles, handleKinds)
 				: [];
 			const kindHover = sectionDomain ? { domain: sectionDomain, kindId: entry.id } satisfies Puzzle2dKindHover : null;
+			const nodeKindIcon = isNodePalette ? (puzzle2dNodeKindCatalogIcon(entry as NodeKind) ?? sectionTreeIcon) : sectionTreeIcon;
 			return {
 				id: `${sectionId}.${index}.${entry.id}`,
 				label: puzzle2dCatalogKindLabel(entry),
 				description: entry.id,
+				icon: nodeKindIcon,
 				defaultOpen: handleItems.length === 0,
 				...(handleItems.length ? { items: handleItems } : {}),
 				...(kindHover ? puzzle2dPlayKindRowHoverHandlers(onHover, kindHover) : {}),
@@ -1303,6 +1560,14 @@ export class Puzzle2dPlayShellController extends Controller {
 			case "toggleSelectionTarget":
 			case "clearSelection":
 			case "selectAllSelection":
+			case "deleteSelection":
+			case "setSelectionFlag":
+			case "duplicateSelection":
+			case "selectSameKind":
+			case "toggleEntityFlag": {
+				this.hostBridge?.runHostCommand(command, args);
+				break;
+			}
 			case "toggleGridSnap":
 			case "appendCircle":
 			case "appendRectangle":
@@ -2411,6 +2676,39 @@ if (import.meta.vitest) {
 			expect(puzzle2dPlayInspectorKindSectionLabel("edge", 3)).toBe("Edges");
 			expect(puzzle2dPlayInspectorKindSectionLabel("handle", 1)).toBe("Handle");
 			expect(puzzle2dPlayInspectorKindSectionLabel("handle", 4)).toBe("Handles");
+		});
+	});
+
+	describe("puzzle2d play selection context menu helpers", () => {
+		const baseFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
+
+		it("applySelectionFlag sets hidden on selected nodes", () => {
+			const nodeId = baseFixture.nodes[0]!.id;
+			const next = puzzle2dPlayApplySelectionFlag(baseFixture, [nodeId], "hidden", true);
+			expect(next.nodes.find((row) => row.id === nodeId)?.hidden).toBe(true);
+		});
+
+		it("toggleEntityFlag flips locked on a handle row", () => {
+			const handleId = baseFixture.nodes[0]!.handles[0]!.id;
+			const next = puzzle2dPlayToggleEntityFlag(baseFixture, handleId, "locked");
+			expect(puzzle2dPlayEntityFlagsFromFixture(next, handleId).locked).toBe(true);
+		});
+
+		it("duplicateSelection clones nodes with new ids", () => {
+			const nodeId = baseFixture.nodes[0]!.id;
+			const { fixture: next, newIds } = puzzle2dPlayDuplicateSelection(baseFixture, [nodeId]);
+			expect(newIds.length).toBe(1);
+			expect(next.nodes.some((row) => row.id === newIds[0])).toBe(true);
+			expect(newIds[0]).not.toBe(nodeId);
+		});
+
+		it("selectSameKindIds expands nodeKind matches", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				...baseFixture,
+				nodes: baseFixture.nodes.map((node, index) => ({ ...node, nodeKind: index === 0 ? "kind-a" : node.nodeKind })),
+			};
+			const ids = puzzle2dPlaySelectSameKindIds(fixture, [fixture.nodes[0]!.id]);
+			expect(ids).toContain(fixture.nodes[0]!.id);
 		});
 	});
 }

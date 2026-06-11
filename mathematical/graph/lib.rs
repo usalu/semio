@@ -423,6 +423,8 @@ pub struct NodeDescJson {
     #[serde(default)]
     pub visible: Option<bool>,
     #[serde(default)]
+    pub locked: Option<bool>,
+    #[serde(default)]
     pub root: Option<bool>,
     pub shape: Option<String>,
     #[serde(default)]
@@ -451,6 +453,11 @@ pub fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value
 pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
     board_json_visible_option(obj).unwrap_or(true)
 }
+
+/// 🔒 Resolves fixture element locked flag from JSON (`locked` only).
+pub fn board_json_locked_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+    obj.get("locked").and_then(|v| v.as_bool())
+}
 // #endregion scene_json
 }
 
@@ -462,7 +469,7 @@ pub use geometry::{
     handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero,
     ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
 };
-pub use scene_json::{board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
+pub use scene_json::{board_json_locked_option, board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
 
 pub use infinite_cavas as cavas;
 pub use mathematical_core::{self as core, Directed, Directedness, Edge as CoreEdge, EdgeId, HandleId, NodeId, Normal, PortModel, Ported, Undirected};

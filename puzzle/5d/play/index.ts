@@ -188,6 +188,38 @@ function puzzle5dFastenerDisplayLabel(fastener: Puzzle5dModel["fasteners"][numbe
   return fastener.id;
 }
 
+//#region 🔖Puzzle5dPlayHierarchy
+/** @emoji 🖼️ Default tree-row icons for puzzle 5D entity kinds (Lucide catalog ids). */
+export const PUZZLE5D_PLAY_ENTITY_TREE_ICON = {
+  part: "box",
+  grip: "circle-dot",
+  fastener: "link",
+  rope: "plug",
+} as const;
+
+type Puzzle5dPlayEntityTreeKind = keyof typeof PUZZLE5D_PLAY_ENTITY_TREE_ICON;
+
+/** @emoji 🖼️ Resolves the tree-row icon id for a puzzle 5D entity kind. */
+export function puzzle5dPlayEntityTreeIcon(kind: Puzzle5dPlayEntityTreeKind): string {
+  return PUZZLE5D_PLAY_ENTITY_TREE_ICON[kind];
+}
+
+function puzzle5dPlayKindSectionTreeIcon(sectionId: string): string | undefined {
+  if (sectionId === "puzzle-5d-play-kinds.parts") {
+    return puzzle5dPlayEntityTreeIcon("part");
+  }
+  if (sectionId === "puzzle-5d-play-kinds.grips") {
+    return puzzle5dPlayEntityTreeIcon("grip");
+  }
+  if (sectionId === "puzzle-5d-play-kinds.fasteners") {
+    return puzzle5dPlayEntityTreeIcon("fastener");
+  }
+  if (sectionId === "puzzle-5d-play-kinds.ropes") {
+    return puzzle5dPlayEntityTreeIcon("rope");
+  }
+  return undefined;
+}
+
 /** @emoji 🌳 Puzzle 5d hierarchy: Parts (with nested Grips) and Fasteners. */
 export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayHierarchySelectHandlers): UiTreeNode {
   const model = snapshot.model;
@@ -200,6 +232,7 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
         id: `puzzle-5d-play-hierarchy.grip.${fullId}`,
         label: puzzle5dGripDisplayLabel(grip),
         description: fullId,
+        icon: puzzle5dPlayEntityTreeIcon("grip"),
         isSelected: selectedGripIds.has(fullId),
         onClick: () => handlers.onSelectGrip(fullId),
       };
@@ -208,6 +241,7 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
       id: `puzzle-5d-play-hierarchy.part.${part.id}`,
       label: puzzle5dPartDisplayLabel(part),
       description: part.id,
+      icon: puzzle5dPlayEntityTreeIcon("part"),
       defaultOpen: gripItems.length > 0,
       isSelected: selectedPartIds.has(part.id),
       onClick: () => handlers.onSelectPart(part.id),
@@ -218,6 +252,7 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
     id: `puzzle-5d-play-hierarchy.fastener.${fastener.id}`,
     label: puzzle5dFastenerDisplayLabel(fastener, model),
     description: `${fastener.source} → ${fastener.target}`,
+    icon: puzzle5dPlayEntityTreeIcon("fastener"),
     onClick: () => handlers.onSelectFastener(fastener.id),
   }));
   if (!partItems.length && !fastenerItems.length) {
@@ -261,6 +296,7 @@ function puzzle5dPartKindGripCatalogItems(sectionId: string, partIndex: number, 
     id: `${sectionId}.${partIndex}.${partKindId}.grip.${gripIndex}`,
     label: puzzle5dCatalogGripKindLabel(grip.id, gripKinds),
     description: grip.id,
+    icon: puzzle5dPlayEntityTreeIcon("grip"),
   }));
 }
 
@@ -279,6 +315,7 @@ function puzzle5dPlayKindCatalogSection(
   const catalogs2d = project2dKindCatalogs(bundle);
   const catalogs3d = project3dKindCatalogs(bundle);
   const isPartPalette = sectionId === "puzzle-5d-play-kinds.parts";
+  const sectionTreeIcon = puzzle5dPlayKindSectionTreeIcon(sectionId);
   const items: UiTreeItemNode[] = [...entries]
     .sort((a, b) => puzzle5dCatalogKindLabel(a).localeCompare(puzzle5dCatalogKindLabel(b)))
     .map((entry, index) => {
@@ -294,6 +331,7 @@ function puzzle5dPlayKindCatalogSection(
         id: `${sectionId}.${index}.${entry.id}`,
         label: puzzle5dCatalogKindLabel(entry),
         description: entry.id,
+        icon: sectionTreeIcon,
         defaultOpen: gripItems.length === 0,
         ...(gripItems.length ? { items: gripItems } : {}),
         ...(dragData ? { draggable: true, dragData } : {}),

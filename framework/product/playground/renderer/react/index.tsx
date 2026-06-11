@@ -171,6 +171,7 @@ export {
   playgroundTreePanelRootItems,
   buildCadWindowBody,
 } from "@framework/playground/core";
+import { renderControlIcon } from "@ui/react";
 import {
   ProductShell,
   createBrowserStoragePort,
@@ -501,6 +502,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
       id: item.id,
       label: item.label,
       description: item.description,
+      icon: item.icon ? renderControlIcon(item.icon, 12) : undefined,
       control: item.control ? renderUiControl(item.control, commandBus) : undefined,
       defaultOpen: item.defaultOpen,
       isSelected: item.selected,
@@ -1730,6 +1732,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
   readonly bus: CommandBus;
 }): null {
   const { ctrl, snap, bus } = props;
+  const kindCatalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture.meta), [snap.fixture.meta]);
   const [cmdLine, setCmdLine] = reactHostPort.useState("");
   const [fillCount, setFillCount] = reactHostPort.useState(0);
   const fillSessionReadyEpoch = reactHostPort.useSyncExternalStore(
@@ -1928,8 +1931,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushCandidates: brushSource.candidates,
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
+        kindCatalogs,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushDimension, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushDimensions],
+    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, kindCatalogs, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushDimension, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushDimensions],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -2992,6 +2996,11 @@ import {
   puzzle2dPlayRehydrateFixtureEdgesIfMissing,
   puzzle2dPlayInspectorKindSectionLabel,
   puzzle2dPlayKindCatalogSelectItems,
+  puzzle2dPlayApplySelectionFlag,
+  puzzle2dPlayDeleteSelectionFromFixture,
+  puzzle2dPlayDuplicateSelection,
+  puzzle2dPlaySelectSameKindIds,
+  puzzle2dPlayToggleEntityFlag,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
@@ -3067,6 +3076,7 @@ import {
   type Puzzle2dHoverPayload,
   type KindCatalogBundle,
   type CameraState,
+  puzzle2dSelectionActionsRef,
 } from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground/core";
 // #endregion 🔌Adapters
@@ -3342,6 +3352,12 @@ function Puzzle2dPlayHierarchyPanel(): ReactElement {
   const { selectionIds, setSelectionIds } = usePuzzle2dPlaySelection();
   const onHierarchySelect = reactHostPort.useCallback((id: string) => setSelectionIds([id]), [setSelectionIds]);
   const onHierarchyHover = reactHostPort.useCallback((payload: Puzzle2dHoverPayload) => setHierarchyHover(payload), [setHierarchyHover]);
+  const onToggleHidden = reactHostPort.useCallback((graphId: string) => {
+    puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "toggleEntityFlag", { graphId, flag: "hidden" });
+  }, []);
+  const onToggleLocked = reactHostPort.useCallback((graphId: string) => {
+    puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "toggleEntityFlag", { graphId, flag: "locked" });
+  }, []);
   const sections = reactHostPort.useMemo(() => {
     if (PUZZLE_2D_PLAY_IS_WIRES) {
       return buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, fixture, [], onHierarchySelect, {
@@ -3352,8 +3368,10 @@ function Puzzle2dPlayHierarchyPanel(): ReactElement {
     return buildPuzzle2dPlayHierarchySections(fixture, [], onHierarchySelect, undefined, {
       omitItemSelection: true,
       onHover: onHierarchyHover,
+      onToggleHidden,
+      onToggleLocked,
     }).sections as TreeDataSection[];
-  }, [fixture, onHierarchyHover, onHierarchySelect]);
+  }, [fixture, onHierarchyHover, onHierarchySelect, onToggleHidden, onToggleLocked]);
   const treeSelectedIds = reactHostPort.useMemo(
     () => puzzle2dPlayHierarchyTreeSelectedIdsForFixture(fixture, [...selectionIds]),
     [fixture, selectionIds],
@@ -3401,6 +3419,8 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
           }
           const onHierarchySelect = (id: string) => selection.setSelectionIds([id]);
           const onHierarchyHover = (payload: Puzzle2dHoverPayload) => shell.setHierarchyHover(payload);
+          const onToggleHidden = (graphId: string) => bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "toggleEntityFlag", { graphId, flag: "hidden" });
+          const onToggleLocked = (graphId: string) => bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "toggleEntityFlag", { graphId, flag: "locked" });
           const treeNode = PUZZLE_2D_PLAY_IS_WIRES
             ? (buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, shell.fixture, [...selection.selectionIds], onHierarchySelect, {
                 omitItemSelection: true,
@@ -3409,6 +3429,8 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
             : buildPuzzle2dPlayHierarchySections(shell.fixture, [...selection.selectionIds], onHierarchySelect, undefined, {
                 omitItemSelection: true,
                 onHover: onHierarchyHover,
+                onToggleHidden,
+                onToggleLocked,
               });
           return uiTreeNodeToTreePanelConfig(
             {
@@ -3852,6 +3874,15 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const { applyCanvasSelection } = usePuzzle2dPlayCanvasSelection();
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => applyCanvasSelection(snapshot.ids), [applyCanvasSelection]);
+  reactHostPort.useEffect(() => {
+    puzzle2dSelectionActionsRef.current = {
+      toggleHidden: (value) => puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value }),
+      toggleLocked: (value) => puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value }),
+      deleteSelection: () => puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "deleteSelection"),
+      duplicateSelection: () => puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "duplicateSelection"),
+      selectSameKind: () => puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "selectSameKind"),
+    };
+  }, []);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   const kindCompatibility = reactHostPort.useMemo(() => puzzle2dFixtureMetaKindCompatibility(fixture), [fixture]);
@@ -5837,6 +5868,56 @@ function Puzzle2dPlayInner({
             }
             break;
           }
+          case "setSelectionFlag": {
+            const { flag, value } = args as { flag?: "hidden" | "locked"; value?: boolean };
+            if (flag !== "hidden" && flag !== "locked") {
+              break;
+            }
+            const ids = [...selectionIds];
+            patchFixture((prev) => puzzle2dPlayApplySelectionFlag(prev, ids, flag, value === true));
+            break;
+          }
+          case "deleteSelection": {
+            const ids = [...selectionIds];
+            if (!ids.length) {
+              break;
+            }
+            patchFixture((prev) => {
+              const next = puzzle2dPlayDeleteSelectionFromFixture(prev, ids);
+              puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+              return next;
+            });
+            setSelectionIds([]);
+            break;
+          }
+          case "duplicateSelection": {
+            const ids = [...selectionIds];
+            const { fixture: nextFixture, newIds } = puzzle2dPlayDuplicateSelection(fixtureRef.current, ids);
+            if (newIds.length === 0) {
+              break;
+            }
+            patchFixture(() => {
+              puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(nextFixture);
+              return nextFixture;
+            });
+            setSelectionIds([...newIds]);
+            break;
+          }
+          case "selectSameKind": {
+            const ids = puzzle2dPlaySelectSameKindIds(fixtureRef.current, [...selectionIds]);
+            if (ids.length > 0) {
+              h.setSelectionIds(ids);
+            }
+            break;
+          }
+          case "toggleEntityFlag": {
+            const { graphId, flag } = args as { graphId?: string; flag?: "hidden" | "locked" };
+            if (!graphId || (flag !== "hidden" && flag !== "locked")) {
+              break;
+            }
+            patchFixture((prev) => puzzle2dPlayToggleEntityFlag(prev, graphId, flag));
+            break;
+          }
           default:
             break;
         }
@@ -5857,8 +5938,10 @@ function Puzzle2dPlayInner({
     preparePuzzle2dFillSession,
     fixture,
     patchFixture,
+    selectionIds,
     setPuzzle2dActiveTool,
     setPuzzle2dBrushFlushDistance,
+    setSelectionIds,
   ]);
   // #endregion 🔖ToolbarHostBridge
 

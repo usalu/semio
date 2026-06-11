@@ -1,0 +1,14 @@
+{
+  "title": "Flow Uniform Component Width",
+  "emoji": "📏",
+  "status": "closed",
+  "description": "Reduce the width of all flow components. All components must have the same width (2x channel width).",
+  "summary": "Reduced and unified flow component width to 2× channel width (ioColumnWidth 34→28, component 56). DAG_COMPONENT_WIDTH is now derived as IO_COLUMN_WIDTH * 2; all widget sizers (computation, slider, io/action, note, preview, image) use the same width. Token generator derives componentWidth from ioColumnWidth. Updated tests for center-split IO layout and uniform note width.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1668"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪3edeb4bdf9da4fa584f569457ec9f9d5"
+  ]
+}
