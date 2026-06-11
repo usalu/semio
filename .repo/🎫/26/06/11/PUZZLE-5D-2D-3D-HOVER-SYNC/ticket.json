@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 5d 2d 3d Hover Sync",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "The hover between 2d and 3d views in puzzle 5d is not synchronized. Wire shared hover focus through the unified Store so hovering in one surface highlights the corresponding element in the other.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1664"
+  },
+  "goal": "🎯puzzle🎯5d",
+  "sessions": [
+    "⚪fbd691afa47c45a396fae3f4dc7cb7c3"
+  ]
+}

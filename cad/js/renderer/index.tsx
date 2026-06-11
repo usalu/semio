@@ -3643,6 +3643,7 @@ export interface InteractionSpatialViewProps {
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
   readonly hoveredReferenceId?: string | null;
+  readonly revealedReferenceIds?: ReadonlySet<string>;
   readonly referenceRelocateActive?: boolean;
   readonly onReferenceSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
   readonly onReferenceHover?: (id: string | null) => void;
@@ -3714,6 +3715,7 @@ export function InteractionSpatialView({
   worldReferences = [],
   selectedReferenceIds,
   hoveredReferenceId = null,
+  revealedReferenceIds,
   referenceRelocateActive = true,
   onReferenceSelect,
   onReferenceHover,
@@ -3820,6 +3822,7 @@ export function InteractionSpatialView({
             references={worldReferences}
             selectedIds={selectedReferenceIds}
             hoveredId={hoveredReferenceId}
+            revealedIds={revealedReferenceIds}
             gumballConfig={transformGumballConfig ?? undefined}
             relocateActive={referenceRelocateActive && cadGumballConfigVisible(transformGumballConfig ?? {})}
             onSelect={onReferenceSelect}
@@ -4482,6 +4485,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
   readonly hoveredReferenceId?: string | null;
+  readonly revealedReferenceIds?: ReadonlySet<string>;
   readonly referenceRelocateActive?: boolean;
   readonly onReferenceSelect?: InteractionSpatialViewProps["onReferenceSelect"];
   readonly onReferenceHover?: InteractionSpatialViewProps["onReferenceHover"];
@@ -4727,6 +4731,7 @@ export function InteractionRepl({
   worldReferences = [],
   selectedReferenceIds,
   hoveredReferenceId = null,
+  revealedReferenceIds,
   referenceRelocateActive = true,
   onReferenceSelect,
   onReferenceHover,
@@ -5860,6 +5865,7 @@ export function InteractionRepl({
             worldReferences={worldReferences}
             selectedReferenceIds={selectedReferenceIds}
             hoveredReferenceId={hoveredReferenceId}
+            revealedReferenceIds={revealedReferenceIds}
             referenceRelocateActive={referenceRelocateActive}
             onReferenceSelect={onReferenceSelect}
             onReferenceHover={onReferenceHover}

@@ -153,10 +153,10 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 		{ kind: "outputPreview", id: "preview" },
 	],
 	synapses: [
-		{ id: "s1", from: "box", to: "fillet", fromPort: "out", toPort: "geometry" },
-		{ id: "s2", from: "fillet", to: "move", fromPort: "out", toPort: "geometry" },
-		{ id: "s3", from: "offset", to: "move", fromPort: "out", toPort: "offset" },
-		{ id: "s4", from: "move", to: "preview", fromPort: "out", toPort: "in" },
+		{ id: "s1", from: "box", to: "fillet", fromPort: "solid", toPort: "geometry" },
+		{ id: "s2", from: "fillet", to: "move", fromPort: "solid", toPort: "geometry" },
+		{ id: "s3", from: "offset", to: "move", fromPort: "vector", toPort: "offset" },
+		{ id: "s4", from: "move", to: "preview", fromPort: "geometry", toPort: "" },
 	],
 };
 
@@ -1454,6 +1454,11 @@ if (import.meta.vitest) {
 		return { $schema: "geometry", handle, kind: "solid" };
 	}
 
+	function channelPayload<T extends Record<string, unknown>>(out: T, channel: string): T {
+		const payload = out[channel];
+		return (typeof payload === "object" && payload !== null ? payload : out) as T;
+	}
+
 	describe("@procedural/react", () => {
 		let host: ProceduralExtensionHost;
 		let bridge: Awaited<ReturnType<typeof host.getBrepBridge>>;
@@ -1474,54 +1479,75 @@ if (import.meta.vitest) {
 		});
 
 		it("brep.prim3d.box evaluates to geometry handle", () => {
-			const out = JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({}))) as { handle?: string; error?: string };
+			const out = JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({}))) as { solid?: { handle?: string }; error?: string };
 			expect(out.error).toBeUndefined();
-			expect(out.handle).toMatch(/^solid-/);
+			expect(channelPayload(out, "solid").handle).toMatch(/^solid-/);
 		});
 
 		it("box fillet translate chain tessellates", async () => {
-			const box = JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({}))) as { handle: string };
-			const fillet = JSON.parse(
-				host.evaluate(
-					"brep.solid.fillet",
-					JSON.stringify({ geometry: geometryDict(box.handle), radius: numberDict(0.1) }),
-				),
-			) as { handle: string };
-			const moved = JSON.parse(
-				host.evaluate(
-					"brep.xform.translate",
-					JSON.stringify({
-						geometry: geometryDict(fillet.handle),
-						offset: { $schema: "vector", x: 1, y: 0, z: 0 },
-					}),
-				),
-			) as { handle: string };
+			const box = channelPayload(
+				JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({}))) as { solid: { handle: string } },
+				"solid",
+			);
+			const fillet = channelPayload(
+				JSON.parse(
+					host.evaluate(
+						"brep.solid.fillet",
+						JSON.stringify({ geometry: geometryDict(box.handle), radius: numberDict(0.1) }),
+					),
+				) as { solid: { handle: string } },
+				"solid",
+			);
+			const moved = channelPayload(
+				JSON.parse(
+					host.evaluate(
+						"brep.xform.translate",
+						JSON.stringify({
+							geometry: geometryDict(fillet.handle),
+							offset: { $schema: "vector", x: 1, y: 0, z: 0 },
+						}),
+					),
+				) as { geometry: { handle: string } },
+				"geometry",
+			);
 			const mesh = await bridge.tessellateGeometry(moved.handle as import("@geometry/brep/js").GeometryRef, 0.05);
 			expect(isRenderableMeshTransfer(mesh)).toBe(true);
 		});
 
 		it("brep.bool.cut evaluates without error", () => {
-			const base = JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({ width: numberDict(2), depth: numberDict(2), height: numberDict(2) }))) as {
-				handle: string;
-			};
-			const tool = JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({ width: numberDict(1), depth: numberDict(1), height: numberDict(1) }))) as {
-				handle: string;
-			};
-			const cut = JSON.parse(
-				host.evaluate("brep.bool.cut", JSON.stringify({ a: geometryDict(base.handle), b: geometryDict(tool.handle) })),
-			) as { handle?: string; error?: string };
-			expect(cut.error).toBeUndefined();
+			const base = channelPayload(
+				JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({ width: numberDict(2), depth: numberDict(2), height: numberDict(2) }))) as {
+					solid: { handle: string };
+				},
+				"solid",
+			);
+			const tool = channelPayload(
+				JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({ width: numberDict(1), depth: numberDict(1), height: numberDict(1) }))) as {
+					solid: { handle: string };
+				},
+				"solid",
+			);
+			const cut = channelPayload(
+				JSON.parse(
+					host.evaluate("brep.bool.cut", JSON.stringify({ a: geometryDict(base.handle), b: geometryDict(tool.handle) })),
+				) as { solid?: { handle?: string }; error?: string },
+				"solid",
+			);
+			expect((cut as { error?: string }).error).toBeUndefined();
 			expect(cut.handle).toMatch(/^solid-/);
 		});
 
 		it("extractChannelPreviewItems collects geometry outputs", () => {
-			const box = JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({}))) as { handle: string };
+			const box = channelPayload(
+				JSON.parse(host.evaluate("brep.prim3d.box", JSON.stringify({}))) as { solid: { handle: string } },
+				"solid",
+			);
 			const items = extractPreviewItems(
 				JSON.stringify({
-					box: { in: {}, out: { out: geometryDict(box.handle) } },
+					box: { in: {}, out: { solid: geometryDict(box.handle) } },
 				}),
 			);
-			expect(items).toContainEqual({ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: box.handle });
+			expect(items).toContainEqual({ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: box.handle });
 		});
 
 		it("previewOffForItem is ignored in show selected mode", async () => {
@@ -1536,13 +1562,13 @@ if (import.meta.vitest) {
 			const torusHandle = "solid-torus";
 			const cutHandle = "solid-cut";
 			const items = [
-				{ widgetId: "sphere", port: "out", direction: "out" as const, kind: "geometry" as const, handle: sphereHandle },
-				{ widgetId: "torus", port: "out", direction: "out" as const, kind: "geometry" as const, handle: torusHandle },
-				{ widgetId: "cut", port: "out", direction: "out" as const, kind: "geometry" as const, handle: cutHandle },
+				{ widgetId: "sphere", port: "solid", direction: "out" as const, kind: "geometry" as const, handle: sphereHandle },
+				{ widgetId: "torus", port: "solid", direction: "out" as const, kind: "geometry" as const, handle: torusHandle },
+				{ widgetId: "cut", port: "solid", direction: "out" as const, kind: "geometry" as const, handle: cutHandle },
 			];
 			const edges = [
-				{ source: "sphere:out", target: "cut:a" },
-				{ source: "torus:out", target: "cut:b" },
+				{ source: "sphere:solid", target: "cut:a" },
+				{ source: "torus:solid", target: "cut:b" },
 			];
 			const visibleForA = filterVisiblePreviewItems(items, {
 				showMode: "selected",
@@ -1565,7 +1591,7 @@ if (import.meta.vitest) {
 			const visibleForOut = filterVisiblePreviewItems(items, {
 				showMode: "selected",
 				selectedNodeIds: ["cut"],
-				selectedChannels: [{ widgetId: "cut", port: "out", direction: "out" }],
+				selectedChannels: [{ widgetId: "cut", port: "solid", direction: "out" }],
 				edges,
 				hoveredNodeId: null,
 				hoveredChannel: null,
@@ -1577,9 +1603,9 @@ if (import.meta.vitest) {
 			const sections = host.catalogueSections();
 			const brep = sections.find((section) => section.id === "brep");
 			expect(brep?.groups?.some((group) => group.title === "Primitives 3D")).toBe(true);
-			const kinds = JSON.parse(host.kindInfosJson()) as Array<{ id: string; inputs: Array<{ id: string; operators: string[] }> }>;
+			const kinds = JSON.parse(host.kindInfosJson()) as Array<{ id: string; inputs: Array<{ name: string; operators: string[] }> }>;
 			const box = kinds.find((item) => item.id === "brep.prim3d.box");
-			expect(box?.inputs.some((port) => port.id === "width")).toBe(true);
+			expect(box?.inputs.some((port) => port.name === "width")).toBe(true);
 			expect(box?.inputs[0]?.operators?.length).toBeGreaterThan(0);
 		});
 
@@ -1587,40 +1613,55 @@ if (import.meta.vitest) {
 			const sections = host.catalogueSections();
 			const bim = sections.find((section) => section.id === "bim");
 			expect(bim?.groups?.some((group) => group.title === "Elements")).toBe(true);
-			const wall = JSON.parse(host.evaluate("bim.element.wall", JSON.stringify({}))) as { $schema?: string; length?: number };
+			const wall = channelPayload(
+				JSON.parse(host.evaluate("bim.element.wall", JSON.stringify({}))) as { wall: { $schema?: string } },
+				"wall",
+			);
 			expect(wall.$schema).toBe("wall");
-			const slab = JSON.parse(
-				host.evaluate(
-					"bim.element.slab",
-					JSON.stringify({
-						width: { $schema: "number", value: 10 },
-						depth: { $schema: "number", value: 8 },
-						thickness: { $schema: "number", value: 0.25 },
-					}),
-				),
-			) as { $schema?: string };
-			const story = JSON.parse(
-				host.evaluate(
-					"bim.assemble.story",
-					JSON.stringify({
-						height: { $schema: "number", value: 3 },
-						slab,
-						elements: {},
-					}),
-				),
-			) as { $schema?: string };
-			const building = JSON.parse(
-				host.evaluate(
-					"bim.assemble.building",
-					JSON.stringify({
-						name: { $schema: "text", value: "Tower" },
-						stories: { 0: story },
-					}),
-				),
-			) as { $schema?: string; name?: string };
-			const area = JSON.parse(
-				host.evaluate("bim.measure.floorArea", JSON.stringify({ building })),
-			) as { $schema?: string; value?: number };
+			const slab = channelPayload(
+				JSON.parse(
+					host.evaluate(
+						"bim.element.slab",
+						JSON.stringify({
+							width: { $schema: "number", value: 10 },
+							depth: { $schema: "number", value: 8 },
+							thickness: { $schema: "number", value: 0.25 },
+						}),
+					),
+				) as { slab: { $schema?: string } },
+				"slab",
+			);
+			const story = channelPayload(
+				JSON.parse(
+					host.evaluate(
+						"bim.assemble.story",
+						JSON.stringify({
+							height: { $schema: "number", value: 3 },
+							slab,
+							elements: {},
+						}),
+					),
+				) as { story: { $schema?: string } },
+				"story",
+			);
+			const building = channelPayload(
+				JSON.parse(
+					host.evaluate(
+						"bim.assemble.building",
+						JSON.stringify({
+							name: { $schema: "text", value: "Tower" },
+							stories: { 0: story },
+						}),
+					),
+				) as { building: { $schema?: string; name?: string } },
+				"building",
+			);
+			const area = channelPayload(
+				JSON.parse(host.evaluate("bim.measure.floorArea", JSON.stringify({ building }))) as {
+					floorArea: { $schema?: string; value?: number };
+				},
+				"floorArea",
+			);
 			expect(building.$schema).toBe("building");
 			expect(area.$schema).toBe("number");
 			expect(area.value).toBe(80);

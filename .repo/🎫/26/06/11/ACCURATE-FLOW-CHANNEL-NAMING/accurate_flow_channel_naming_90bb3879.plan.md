@@ -10,19 +10,19 @@ todos:
     status: completed
   - id: flowcore
     content: "flow/core + dag crate: source channels, output ports from dict keys, IoPortSpec naming levels, cluster IO, builtin test kinds"
-    status: in_progress
+    status: completed
   - id: flowreact
     content: "flow/react + flow/play: named ports in fixtures, tests, fallbacks"
-    status: pending
+    status: completed
   - id: procedural
     content: procedural react/play + hand-fix all fixtures with named ports (incl. mushroom planarFaceWire)
-    status: pending
+    status: completed
   - id: tests
     content: Run cargo + vitest suites, verify runtime previews with [DEBUG] logs, fix fallout
-    status: pending
+    status: completed
   - id: close
     content: Close ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

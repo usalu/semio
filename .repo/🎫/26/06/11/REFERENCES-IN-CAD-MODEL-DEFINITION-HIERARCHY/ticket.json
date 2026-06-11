@@ -1,0 +1,14 @@
+{
+  "title": "References in Cad Model Definition Hierarchy",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "CAD references should appear in the workbench hierarchy under each model definition branch. References must support hide, lock, selection, and hover reveal like other entities.",
+  "summary": "CAD reference planes are stored per model definition in shared play state and listed in the workbench hierarchy under each model definition (References group). Rows support hide, lock, selection, hover highlight, and hidden-reference reveal on tree hover. Renderer passes revealedReferenceIds to WorldReferenceLayer.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1663"
+  },
+  "goal": "🎯cad🎯cadplay",
+  "sessions": [
+    "⚪535f8656bf884166a38f2b685a1d753c"
+  ]
+}

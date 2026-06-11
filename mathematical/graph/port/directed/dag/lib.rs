@@ -53,9 +53,9 @@ pub const DAG_CHANNEL_ROW_HEIGHT: f64 = ui_styling::metrics::dag::CHANNEL_ROW_HE
 const DAG_COMPUTATION_HEADER_ROWS: usize = 0;
 
 const DAG_NODE_EDGE_INSET: f64 = ui_styling::metrics::dag::NODE_EDGE_INSET;
-const DAG_NODE_COLUMN_GAP: f64 = ui_styling::metrics::dag::NODE_COLUMN_GAP;
-const DAG_IO_COLUMN_MIN: f64 = ui_styling::metrics::dag::IO_COLUMN_MIN;
-const DAG_IO_COLUMN_MAX: f64 = ui_styling::metrics::dag::IO_COLUMN_MAX;
+const DAG_IO_COLUMN_WIDTH: f64 = ui_styling::metrics::dag::IO_COLUMN_WIDTH;
+const DAG_COMPONENT_WIDTH: f64 = ui_styling::metrics::dag::COMPONENT_WIDTH;
+const DAG_DISTRIBUTE_MIN_GAP: f64 = ui_styling::metrics::board::LAYOUT_SIBLING_GAP;
 const DAG_IO_WIDGET_HEIGHT: f64 = ui_styling::metrics::dag::IO_WIDGET_HEIGHT;
 const DAG_SLIDER_KNOB_SCREEN_PX: f64 = ui_styling::metrics::dag::SLIDER_KNOB_SCREEN_PX;
 const DAG_LABEL_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_DEFAULT_PX;
@@ -88,29 +88,17 @@ fn port_label_text_width(label: &str, px: f64) -> f64 {
     trimmed.len() as f64 * px * 0.62 + pad * 2.0
 }
 
-fn io_port_column_width(ports: &[IoPortSpec], px: f64) -> f64 {
+fn io_port_column_width(ports: &[IoPortSpec], _px: f64) -> f64 {
     if ports.is_empty() {
-        return 0.0;
+        0.0
+    } else {
+        DAG_IO_COLUMN_WIDTH
     }
-    let text_w = ports.iter().map(|port| port_label_text_width(port.display_code(), px)).fold(0.0, f64::max);
-    text_w.clamp(DAG_IO_COLUMN_MIN, DAG_IO_COLUMN_MAX)
 }
 
-/// 📐 Computation node width from IO label columns and the horizontal title above the body.
-pub fn computation_node_width(name: &str, inputs: &[IoPortSpec], outputs: &[IoPortSpec]) -> f64 {
-    use cavas::text::label_extent;
-    let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
-    let left_w = io_port_column_width(inputs, port_px);
-    let right_w = io_port_column_width(outputs, port_px);
-    let io_w = match (inputs.is_empty(), outputs.is_empty()) {
-        (true, true) => 0.0,
-        (true, false) => right_w,
-        (false, true) => left_w,
-        (false, false) => left_w + DAG_NODE_COLUMN_GAP + right_w,
-    };
-    let (name_w, _) = label_extent(name, DAG_LABEL_SCREEN_PX);
-    let content = io_w.max(name_w);
-    (content + DAG_NODE_EDGE_INSET * 2.0).max(24.0)
+/// 📐 Uniform computation component width shared by every flow component node.
+pub fn computation_node_width(_name: &str, _inputs: &[IoPortSpec], _outputs: &[IoPortSpec]) -> f64 {
+    DAG_COMPONENT_WIDTH
 }
 
 /// 📐 IO widget width from vertically rotated title metrics.
@@ -129,10 +117,9 @@ pub fn io_widget_height(name: &str) -> f64 {
     (label_w + DAG_IO_WIDGET_HEIGHT + DAG_NODE_EDGE_INSET * 2.0).max(40.0)
 }
 
-/// 📐 Slider track width aligned with computation nodes (both IO columns, name and value sit outside).
-pub fn slider_widget_width(name: &str, output: &IoPortSpec) -> f64 {
-    let input = IoPortSpec { id: "in".into(), label: "in".into() , ..Default::default() };
-    computation_node_width(name, std::slice::from_ref(&input), std::slice::from_ref(output))
+/// 📐 Slider track width aligned with computation components.
+pub fn slider_widget_width(_name: &str, _output: &IoPortSpec) -> f64 {
+    DAG_COMPONENT_WIDTH
 }
 
 /// 📐 Slider track height — one computation channel row.
@@ -1304,19 +1291,19 @@ const DAG_LODS: &[Lod; 6] = &[
     Lod {
         id: "normal",
         name: "Normal",
-        description: "Vertical names with sections; input rows accept wire drops.",
+        description: "Vertical names with sections; channel abbreviations on ports.",
         max_zoom: 1.25,
     },
     Lod {
         id: "detail",
         name: "Detail",
-        description: "Abbreviations, port labels, and control text.",
+        description: "Channel names on ports, port handles, and control text.",
         max_zoom: 2.5,
     },
     Lod {
         id: "micro",
         name: "Micro",
-        description: "Names and maximum node fidelity.",
+        description: "Full channel names on ports and maximum node fidelity.",
         max_zoom: f64::INFINITY,
     },
 ];
@@ -1576,7 +1563,7 @@ impl DagDrawLod {
     }
 
     pub fn shows_port_labels(self) -> bool {
-        matches!(self, Self::Detail | Self::Micro)
+        matches!(self, Self::Normal | Self::Detail | Self::Micro)
     }
 
     pub fn shows_handles(self) -> bool {
@@ -1608,6 +1595,42 @@ impl DagDrawLod {
             Self::Minimap => DAG_EDGE_STROKE_MINIMAP_SCREEN_PX,
             _ => DAG_EDGE_STROKE_SCREEN_PX,
         }
+    }
+}
+
+impl IoPortSpec {
+    /// 🏷️ Channel label for the active draw LOD (normal → abbreviation, detail → name, micro → fullName).
+    pub fn display_label(&self, lod: DagDrawLod) -> &str {
+        match lod {
+            DagDrawLod::Micro => {
+                if !self.full_name.is_empty() {
+                    return self.full_name.as_str();
+                }
+                self.id.as_str()
+            }
+            DagDrawLod::Detail => self.id.as_str(),
+            DagDrawLod::Normal => {
+                if !self.abbreviation.is_empty() {
+                    return self.abbreviation.as_str();
+                }
+                if !self.label.is_empty() {
+                    return self.label.as_str();
+                }
+                self.id.as_str()
+            }
+            _ => self.display_code(),
+        }
+    }
+
+    pub fn display_label_layout_width(&self, px: f64) -> f64 {
+        [
+            self.display_label(DagDrawLod::Normal),
+            self.display_label(DagDrawLod::Detail),
+            self.display_label(DagDrawLod::Micro),
+        ]
+        .into_iter()
+        .map(|label| port_label_text_width(label, px))
+        .fold(0.0, f64::max)
     }
 }
 
@@ -2243,7 +2266,8 @@ impl DagHost {
                 let left = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).min_x).fold(f64::INFINITY, f64::min);
                 let right = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_x).fold(f64::NEG_INFINITY, f64::max);
                 let total_width: f64 = selected.iter().map(|(_, node)| node.width).sum();
-                let gap = (right - left - total_width) / (selected.len() as f64 - 1.0);
+                let raw_gap = (right - left - total_width) / (selected.len() as f64 - 1.0);
+                let gap = if raw_gap.is_finite() { raw_gap.max(DAG_DISTRIBUTE_MIN_GAP) } else { DAG_DISTRIBUTE_MIN_GAP };
                 let mut cursor = left;
                 for (_, node) in &mut selected {
                     node.x = cursor + node.width * 0.5;
@@ -2258,7 +2282,8 @@ impl DagHost {
                 let top = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).min_y).fold(f64::INFINITY, f64::min);
                 let bottom = selected.iter().map(|(_, node)| Self::dag_node_world_bounds(node).max_y).fold(f64::NEG_INFINITY, f64::max);
                 let total_height: f64 = selected.iter().map(|(_, node)| node.height).sum();
-                let gap = (bottom - top - total_height) / (selected.len() as f64 - 1.0);
+                let raw_gap = (bottom - top - total_height) / (selected.len() as f64 - 1.0);
+                let gap = if raw_gap.is_finite() { raw_gap.max(DAG_DISTRIBUTE_MIN_GAP) } else { DAG_DISTRIBUTE_MIN_GAP };
                 let mut cursor = top;
                 for (_, node) in &mut selected {
                     node.y = cursor + node.height * 0.5;
@@ -3243,7 +3268,7 @@ impl DagHost {
             }));
         }
         if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
-            for mut row in Self::port_label_overlay_rows(node, zoom, lod_index) {
+            for mut row in Self::port_label_overlay_rows(node, lod, zoom, lod_index) {
                 if let Some(obj) = row.as_object_mut() {
                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
                 }
@@ -3253,7 +3278,7 @@ impl DagHost {
         labels
     }
 
-    fn port_label_overlay_rows(node: &DagNodeSpec, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
         use cavas::text::label_extent;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / zoom.max(0.05);
@@ -3277,7 +3302,7 @@ impl DagHost {
             (hw - handle_inset).max(8.0)
         };
         for (i, port) in inputs.iter().enumerate() {
-            let label = port.display_code().trim();
+            let label = port.display_label(lod).trim();
             if label.is_empty() {
                 continue;
             }
@@ -3289,6 +3314,7 @@ impl DagHost {
             };
             rows.push(serde_json::json!({
                 "id": node.id,
+                "kind": "port",
                 "text": label,
                 "layout": "horizontal",
                 "align": "left",
@@ -3297,10 +3323,11 @@ impl DagHost {
                 "nodeW": input_column_w,
                 "nodeH": DAG_CHANNEL_ROW_HEIGHT,
                 "fontScreenPx": port_layout_px,
+                "maxScreenH": port_layout_px * 1.3,
             }));
         }
         for (i, port) in outputs.iter().enumerate() {
-            let label = port.display_code().trim();
+            let label = port.display_label(lod).trim();
             if label.is_empty() {
                 continue;
             }
@@ -3314,6 +3341,7 @@ impl DagHost {
             };
             rows.push(serde_json::json!({
                 "id": node.id,
+                "kind": "port",
                 "text": label,
                 "layout": "horizontal",
                 "align": "right",
@@ -3322,6 +3350,7 @@ impl DagHost {
                 "nodeW": column_w,
                 "nodeH": DAG_CHANNEL_ROW_HEIGHT,
                 "fontScreenPx": port_layout_px,
+                "maxScreenH": port_layout_px * 1.3,
             }));
         }
         rows
@@ -3332,7 +3361,7 @@ impl DagHost {
             && matches!(port.value_type.as_deref(), Some("number" | "integer" | "text" | "boolean"))
     }
 
-    fn param_overlay_rows_for_node(node: &DagNodeSpec) -> Vec<serde_json::Value> {
+    fn param_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod) -> Vec<serde_json::Value> {
         let inputs = match &node.kind {
             DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } => inputs,
             _ => return Vec::new(),
@@ -3349,6 +3378,7 @@ impl DagHost {
             rows.push(serde_json::json!({
                 "nodeId": node.id,
                 "portId": port.id,
+                "label": port.display_label(lod),
                 "type": port.value_type,
                 "value": port.value,
                 "default": port.default,
@@ -3363,17 +3393,19 @@ impl DagHost {
 
     /// 🎛️ Inline default editor anchors for unconnected primitive neuron inputs.
     pub fn param_overlay_paint_state_json(&self) -> Result<String, String> {
+        let lod = self.draw_lod_for_frame();
         let cam = &self.fixture.camera;
         let mut editors = Vec::new();
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
-            editors.extend(Self::param_overlay_rows_for_node(node.as_ref()));
+            editors.extend(Self::param_overlay_rows_for_node(node.as_ref(), lod));
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
-            editors.extend(Self::param_overlay_rows_for_node(ghost));
+            editors.extend(Self::param_overlay_rows_for_node(ghost, lod));
         }
         serde_json::to_string(&serde_json::json!({
             "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
+            "lod": lod.label(),
             "width": self.width,
             "height": self.height,
             "editors": editors,
@@ -3457,9 +3489,10 @@ impl DagHost {
             } else {
                 node.x - hw + handle_inset
             };
+            let label = port.display_label(lod);
             append_label(
                 scene,
-                port.display_code(),
+                label,
                 world_to_screen(cam, viewport, Point::new(world_x, world_y)),
                 port_paint_px,
                 label_fill,
@@ -3468,15 +3501,16 @@ impl DagHost {
         }
         for (i, port) in outputs.iter().enumerate() {
             let world_y = port_center_y(node, i, outputs.len());
+            let label = port.display_label(lod);
             let world_x = if computation {
-                computation_output_label_x(node, port.display_code(), port_layout_px)
+                computation_output_label_x(node, label, port_layout_px)
             } else {
-                let (label_w, _) = label_extent(port.display_code(), layout_px);
+                let (label_w, _) = label_extent(label, layout_px);
                 node.x + hw - handle_inset - label_w / cam.zoom.max(0.05)
             };
             append_label(
                 scene,
-                port.display_code(),
+                label,
                 world_to_screen(cam, viewport, Point::new(world_x, world_y)),
                 port_paint_px,
                 label_fill,
@@ -5111,43 +5145,56 @@ mod tests {
     }
 
     #[test]
-    fn dag_host_label_overlay_paint_state_json_includes_detail_port_labels() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
-            nodes: vec![DagNodeSpec {
-                id: "box".into(),
-                name: "brep.prim3d.box".into(),
-                abbreviation: "box".into(),
-                icon: "emoji:📦".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 96.0,
-                height: 42.0,
-                kind: DagNodeKind::Computation {
-                    inputs: vec![
-                        IoPortSpec { id: "width".into(), label: "width".into() , ..Default::default() },
-                        IoPortSpec { id: "depth".into(), label: "depth".into() , ..Default::default() },
-                    ],
-                    outputs: vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }],
-                    variadic_inputs: false,
-                    variadic_outputs: false,
-                },
-            }],
-            edges: vec![],
-        });
-        host.set_viewport(1280, 800, 1.0);
-        host.set_automatic_lod(false);
-        host.set_forced_draw_lod_label("detail");
-        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
-        let labels = raw["labels"].as_array().expect("labels");
-        let port_labels: Vec<_> = labels
-            .iter()
-            .filter(|row| row["align"].as_str().is_some())
-            .collect();
-        assert_eq!(port_labels.len(), 3, "expected input and output channel labels");
-        assert!(port_labels.iter().any(|row| row["text"] == "width" && row["align"] == "left"));
-        assert!(port_labels.iter().any(|row| row["text"] == "geometry" && row["align"] == "right"));
+    fn io_port_display_label_follows_draw_lod() {
+        let port = IoPortSpec::named("S", "Sld", "solid", "ExtrudedSolid");
+        assert_eq!(port.display_label(DagDrawLod::Normal), "Sld");
+        assert_eq!(port.display_label(DagDrawLod::Detail), "solid");
+        assert_eq!(port.display_label(DagDrawLod::Micro), "ExtrudedSolid");
+    }
+
+    #[test]
+    fn dag_host_label_overlay_port_text_follows_draw_lod() {
+        let node = DagNodeSpec {
+            id: "box".into(),
+            name: "Box".into(),
+            abbreviation: "Box".into(),
+            icon: "emoji:📦".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 96.0,
+            height: 42.0,
+            kind: DagNodeKind::Computation {
+                inputs: vec![IoPortSpec::named("W", "Wid", "width", "BoxWidth")],
+                outputs: vec![IoPortSpec::named("S", "Sld", "solid", "BoxSolid")],
+                variadic_inputs: false,
+                variadic_outputs: false,
+            },
+        };
+        let port_texts = |lod: &str| -> Vec<String> {
+            let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+                schema: "dag.fixture/v1".into(),
+                camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+                nodes: vec![node.clone()],
+                edges: vec![],
+            });
+            host.set_viewport(1280, 800, 1.0);
+            host.set_automatic_lod(false);
+            host.set_forced_draw_lod_label(lod);
+            let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+            raw["labels"]
+                .as_array()
+                .expect("labels")
+                .iter()
+                .filter(|row| row["align"].as_str().is_some())
+                .filter_map(|row| row["text"].as_str().map(str::to_string))
+                .collect()
+        };
+        assert!(port_texts("normal").contains(&"Wid".into()));
+        assert!(port_texts("normal").contains(&"Sld".into()));
+        assert!(port_texts("detail").contains(&"width".into()));
+        assert!(port_texts("detail").contains(&"solid".into()));
+        assert!(port_texts("micro").contains(&"BoxWidth".into()));
+        assert!(port_texts("micro").contains(&"BoxSolid".into()));
     }
 
     #[test]
@@ -5223,7 +5270,7 @@ mod tests {
     fn dag_host_align_selection_horizontal_and_vertical_center() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
-        host.set_selection(&["scale".into(), "combine".into(), "preview".into()]);
+        host.set_selection(&["scale".into(), "combine".into(), "screen".into()]);
         host.align_selection("alignHorizontal").unwrap();
         let xs: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.x).collect();
         assert!(xs.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
@@ -5236,7 +5283,7 @@ mod tests {
     fn dag_host_align_selection_left_and_distribute_horizontal() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
-        host.set_selection(&["scale".into(), "combine".into(), "preview".into()]);
+        host.set_selection(&["scale".into(), "combine".into(), "screen".into()]);
         host.align_selection("alignLeft").unwrap();
         let left_edges: Vec<f64> = host
             .selected_fixture_nodes()
@@ -5835,7 +5882,7 @@ mod tests {
     }
 
     #[test]
-    fn computation_node_width_uses_two_io_columns_without_name_strip() {
+    fn computation_node_width_is_uniform_for_all_components() {
         let inputs = vec![
             IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
             IoPortSpec { id: "cornerB".into(), label: "cornerB".into() , ..Default::default() },
@@ -5843,11 +5890,11 @@ mod tests {
         ];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
-        assert!(width > 70.0 && width < 82.0, "two IO columns should fit port labels, got {width}");
+        assert_eq!(width, DAG_COMPONENT_WIDTH);
     }
 
     #[test]
-    fn computation_io_columns_clamp_port_label_width() {
+    fn computation_io_columns_use_uniform_channel_width() {
         let inputs_short = vec![IoPortSpec { id: "a".into(), label: "a".into() , ..Default::default() }];
         let inputs_long = vec![
             IoPortSpec { id: "cornerA".into(), label: "cornerA".into() , ..Default::default() },
@@ -5857,9 +5904,10 @@ mod tests {
         let outputs_long = vec![IoPortSpec { id: "out".into(), label: "geometry".into() , ..Default::default() }];
         let short = computation_node_width("n", &inputs_short, &outputs_short);
         let long = computation_node_width("n", &inputs_long, &outputs_long);
-        assert!(short >= 50.0, "IO columns should not collapse below minimum, got {short}");
-        assert!(long <= 78.0, "long port labels should cap column width, got {long}");
-        assert!(long >= short, "longer labels should not shrink columns");
+        assert_eq!(short, DAG_COMPONENT_WIDTH);
+        assert_eq!(long, DAG_COMPONENT_WIDTH);
+        assert_eq!(io_port_column_width(&inputs_long, DAG_LABEL_COMPACT_SCREEN_PX), DAG_IO_COLUMN_WIDTH);
+        assert_eq!(io_port_column_width(&outputs_long, DAG_LABEL_COMPACT_SCREEN_PX), DAG_IO_COLUMN_WIDTH);
     }
 
     #[test]
@@ -5910,6 +5958,7 @@ mod tests {
         let output = IoPortSpec { id: "out".into(), label: "value".into() , ..Default::default() };
         let width = slider_widget_width("Amount", &output);
         let height = slider_widget_height();
+        assert_eq!(width, DAG_COMPONENT_WIDTH);
         assert_eq!(width, computation_node_width("Amount", &[input], &[output]));
         assert_eq!(height, DAG_CHANNEL_ROW_HEIGHT);
         assert!(width > height, "slider track should be wider than tall");
@@ -6040,7 +6089,7 @@ mod tests {
         let height = computation_node_height(3, 1, false, false);
         assert!(height <= 42.0, "expected compact height, got {height}");
         assert!(height < 96.0, "expected shorter than legacy 4-row layout");
-        assert!(width > 100.0 && width < 120.0, "expected balanced IO column width, got {width}");
+        assert_eq!(width, DAG_COMPONENT_WIDTH);
     }
 
     #[test]
@@ -6121,6 +6170,7 @@ mod tests {
         assert!(DagDrawLod::Normal.allows_connection_hit_picking());
         assert!(DagDrawLod::Detail.allows_connection_hit_picking());
         assert!(DagDrawLod::Micro.allows_connection_hit_picking());
+        assert!(DagDrawLod::Normal.shows_port_labels());
         assert!(DagDrawLod::Detail.shows_port_labels());
         assert!(DagDrawLod::Micro.shows_port_labels());
         assert_eq!(DagDrawLod::Minimap.edge_stroke_screen_px(), DAG_EDGE_STROKE_MINIMAP_SCREEN_PX);

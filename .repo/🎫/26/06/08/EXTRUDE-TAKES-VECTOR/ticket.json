@@ -1,7 +1,7 @@
 {
   "title": "Extrude Takes Vector",
   "emoji": "📐",
-  "status": "closed",
+  "status": "open",
   "description": "procedural: extrude should take a vector.",
   "summary": "Added brep.solid.extrude (Extrude Curve): takes closed wire + vector, uses vector magnitude as extrusion distance (no distance port). Kernel extrude_wire_sync builds planar face from wire then extrudes. Fixed preview routing: flow/core output_ports_json exposes named channels; neural synapse_source_value resolves legacy out port to single channel payloads. Updated hexagonal-mushroom-column fixture to wire polygon→wire and constructVector→vector. cargo test -p flow_module_brep: 9/9 pass including extrude_curve_wire_uses_vector_magnitude.",
   "github": {
@@ -11,6 +11,7 @@
   "sessions": [
     "⚪9c91238c525f42c7956704a455c7f3e9",
     "⚪8749ac694583421483406ee6065ffca2",
-    "⚪d6edbc2ae8184b2e88cc924166737eea"
+    "⚪d6edbc2ae8184b2e88cc924166737eea",
+    "⚪d30e057e501d45ec9f33bbbfd8cd8e36"
   ]
 }

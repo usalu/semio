@@ -34,6 +34,7 @@ import {
   createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   orbitCameraProjectionForView,
+  worldEntitySelectable,
   type OrbitCameraViewId,
   type OrbitCameraProjection,
   type WorldReferenceProps,
@@ -137,10 +138,56 @@ export const CAD_PLAY_BUILDING_SCENE_SURFACE_ID = "cad.play.scene3d/building";
 export const CAD_PLAY_ENERGY_SCENE_SURFACE_ID = "cad.play.scene3d/energy";
 export const CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "cad.play.scene3d/structure-classic";
 
-const CAD_PLAY_DEFAULT_WORLD_REFERENCES: WorldReferenceProps[] = [
+export const CAD_PLAY_DEFAULT_WORLD_REFERENCES: WorldReferenceProps[] = [
   { id: "ref-sketch", source: { url: "/infinite-fixture/sketch.png", mediaKind: "image" }, origin: [-24, -18, 0.01], widthWorld: 22 },
   { id: "ref-site-pdf", source: { url: "/infinite-fixture/site.pdf", mediaKind: "pdf", page: 1 }, origin: [12, 8, 0.01], widthWorld: 28 },
 ];
+
+export type CadPlayReferencesByModelDefinitionId = Readonly<Record<string, readonly WorldReferenceProps[]>>;
+
+export interface CadPlaySelectedReference {
+  readonly modelDefinitionId: string;
+  readonly id: string;
+}
+
+/** @emoji 🪪 Stable hover/selection key for a CAD play reference plane. */
+export function cadPlayReferenceHoverKey(referenceId: string): string {
+  return `reference:${referenceId}`;
+}
+
+/** @emoji 🔢 Digest for hierarchy chrome when reference planes mutate. */
+export function cadPlayReferencesDigest(referencesByModelDefinitionId: CadPlayReferencesByModelDefinitionId): string {
+  return Object.keys(referencesByModelDefinitionId)
+    .sort((a, b) => a.localeCompare(b))
+    .map((modelDefinitionId) => {
+      const rows = referencesByModelDefinitionId[modelDefinitionId] ?? [];
+      return `${modelDefinitionId}:${rows.map((row) => [row.id, row.hidden === true, row.locked === true, row.source.url].join(":")).join("|")}`;
+    })
+    .join(";");
+}
+
+function cadPlayDefaultReferencesByModelDefinitionId(): Record<string, WorldReferenceProps[]> {
+  return { [defaultModelDefinitionId()]: CAD_PLAY_DEFAULT_WORLD_REFERENCES.map((row) => ({ ...row })) };
+}
+
+/** @emoji 🖼️ Patches one reference plane under a model definition. */
+export function updateCadPlayReferenceInMap(
+  referencesByModelDefinitionId: Record<string, WorldReferenceProps[]>,
+  modelDefinitionId: string,
+  referenceId: string,
+  patch: Partial<Omit<WorldReferenceProps, "id">>,
+): Record<string, WorldReferenceProps[]> {
+  const rows = referencesByModelDefinitionId[modelDefinitionId];
+  if (!rows?.length) {
+    return referencesByModelDefinitionId;
+  }
+  const index = rows.findIndex((row) => row.id === referenceId);
+  if (index < 0) {
+    return referencesByModelDefinitionId;
+  }
+  const nextRows = rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row));
+  return { ...referencesByModelDefinitionId, [modelDefinitionId]: nextRows };
+}
 
 const CAD_PLAY_VIEW_TEMPLATES: readonly WindowTemplate[] = createOrbitCameraViewTemplates({
   controllerId: CAD_PLAY_CONTROLLER_ID,
@@ -317,6 +364,58 @@ type CadPlayHierarchyPickContext = {
   readonly registerHighlight: (target: SelectionTarget, itemId: string, extraKeys?: readonly string[]) => void;
 };
 
+type CadPlayHierarchyReferenceContext = {
+  readonly modelDefinitionId: string;
+  readonly onSelect: (modelDefinitionId: string, referenceId: string) => void;
+  readonly onHover: (modelDefinitionId: string, referenceId: string | null) => void;
+  readonly onToggleHidden: (modelDefinitionId: string, referenceId: string) => void;
+  readonly onToggleLocked: (modelDefinitionId: string, referenceId: string) => void;
+  readonly registerHighlight: (referenceId: string, itemId: string) => void;
+};
+
+function cadPlayHierarchyReferenceChrome(reference: WorldReferenceProps, ctx: CadPlayHierarchyReferenceContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
+  return {
+    isHidden: reference.hidden === true,
+    actions: [
+      {
+        id: "reference.hidden",
+        icon: reference.hidden ? "eye-off" : "eye",
+        title: reference.hidden ? "Show" : "Hide",
+        onClick: () => ctx.onToggleHidden(ctx.modelDefinitionId, reference.id),
+        revealOnHover: reference.hidden !== true,
+      },
+      {
+        id: "reference.locked",
+        icon: reference.locked ? "lock-open" : "lock",
+        title: reference.locked ? "Unlock" : "Lock",
+        onClick: () => ctx.onToggleLocked(ctx.modelDefinitionId, reference.id),
+        revealOnHover: reference.locked !== true,
+      },
+    ],
+    contextMenu: [
+      {
+        id: "reference.hidden",
+        label: reference.hidden ? "Show" : "Hide",
+        icon: reference.hidden ? "eye" : "eye-off",
+        onSelect: () => ctx.onToggleHidden(ctx.modelDefinitionId, reference.id),
+      },
+      {
+        id: "reference.locked",
+        label: reference.locked ? "Unlock" : "Lock",
+        icon: reference.locked ? "lock-open" : "lock",
+        onSelect: () => ctx.onToggleLocked(ctx.modelDefinitionId, reference.id),
+      },
+    ],
+  };
+}
+
+function cadPlayHierarchyReferenceHoverHandlers(ctx: CadPlayHierarchyReferenceContext, referenceId: string): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
+  return {
+    onPointerEnter: () => ctx.onHover(ctx.modelDefinitionId, referenceId),
+    onPointerLeave: () => ctx.onHover(ctx.modelDefinitionId, null),
+  };
+}
+
 function cadPlayHierarchyEntityChrome(model: Model, target: SelectionTarget, ctx: CadPlayHierarchyPickContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
   const flags = model.getEntityFlags(target.id);
   return {
@@ -444,6 +543,12 @@ export function buildCadPlayHierarchySections(
   onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void = () => {},
   onToggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
   onToggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
+  referencesByModelDefinitionId: CadPlayReferencesByModelDefinitionId = {},
+  selectedReference: CadPlaySelectedReference | null = null,
+  onSelectReference: (modelDefinitionId: string, referenceId: string) => void = () => {},
+  onHoverReference: (modelDefinitionId: string, referenceId: string | null) => void = () => {},
+  onToggleReferenceHidden: (modelDefinitionId: string, referenceId: string) => void = () => {},
+  onToggleReferenceLocked: (modelDefinitionId: string, referenceId: string) => void = () => {},
 ): CadPlayHierarchyBuildResult {
   const selectedKeys = new Set(selection.map(cadPlaySelectionKey));
   const isSelected = (kind: SelectionTarget["kind"], id: string, expandedKeys?: ReadonlySet<string>): boolean => {
@@ -486,12 +591,50 @@ export function buildCadPlayHierarchySections(
         items: primitiveItems.length ? primitiveItems : [{ id: `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
       };
     });
+    const referenceCtx: CadPlayHierarchyReferenceContext = {
+      modelDefinitionId,
+      onSelect: onSelectReference,
+      onHover: onHoverReference,
+      onToggleHidden: onToggleReferenceHidden,
+      onToggleLocked: onToggleReferenceLocked,
+      registerHighlight: (referenceId, itemId) => {
+        const key = cadPlayReferenceHoverKey(referenceId);
+        const bucket = highlightKeyToItemIds[key];
+        if (bucket) {
+          if (!bucket.includes(itemId)) bucket.push(itemId);
+          return;
+        }
+        highlightKeyToItemIds[key] = [itemId];
+      },
+    };
+    const referenceItems: TreeDataItem[] = (referencesByModelDefinitionId[modelDefinitionId] ?? []).map((reference) => {
+      const itemId = `cad-play-hierarchy.reference.${modelDefinitionId}.${reference.id}`;
+      referenceCtx.registerHighlight(reference.id, itemId);
+      return {
+        id: itemId,
+        label: reference.id,
+        description: reference.source.url,
+        isSelected: selectedReference?.modelDefinitionId === modelDefinitionId && selectedReference.id === reference.id,
+        onClick: () => referenceCtx.onSelect(modelDefinitionId, reference.id),
+        ...cadPlayHierarchyReferenceHoverHandlers(referenceCtx, reference.id),
+        ...cadPlayHierarchyReferenceChrome(reference, referenceCtx),
+      };
+    });
+    const referencesGroup: TreeDataItem = {
+      id: `cad-play-hierarchy.references.${modelDefinitionId}`,
+      label: "References",
+      defaultOpen: true,
+      items: referenceItems.length ? referenceItems : [{ id: `cad-play-hierarchy.references.${modelDefinitionId}.empty`, label: "(none)" }],
+    };
     modelBranches.push({
       id: `cad-play-hierarchy.model.${modelDefinitionId}`,
       label: cadPlayModelDefinitionLabel(modelDefinitionId),
       description: modelDefinitionId,
       defaultOpen: modelDefinitionId === activeModelDefinitionId,
-      items: objectItems.length ? objectItems : [{ id: `cad-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
+      items: [
+        ...(objectItems.length ? objectItems : [{ id: `cad-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }]),
+        referencesGroup,
+      ],
     });
   }
   return {
@@ -1396,13 +1539,19 @@ export function cadPlayPaneGeometry(models: Readonly<Record<string, Model>>, mod
 //#region 🔖CadPlayChrome
 export interface CadPlayChromeSnapshot {
   readonly modelsByDefinitionId: Record<string, Model>;
+  readonly referencesByModelDefinitionId: CadPlayReferencesByModelDefinitionId;
   readonly activeModelDefinitionId: string;
   readonly selection: readonly SelectionTarget[];
+  readonly selectedReference: CadPlaySelectedReference | null;
   readonly hoveredKey: string | null;
   readonly selectTarget: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly hoverTarget: (modelDefinitionId: string, target: SelectionTarget | null) => void;
   readonly toggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly toggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void;
+  readonly selectReference: (modelDefinitionId: string, referenceId: string) => void;
+  readonly hoverReference: (modelDefinitionId: string, referenceId: string | null) => void;
+  readonly toggleReferenceHidden: (modelDefinitionId: string, referenceId: string) => void;
+  readonly toggleReferenceLocked: (modelDefinitionId: string, referenceId: string) => void;
 }
 
 interface CadPlayChromeContextValue {
@@ -1489,6 +1638,7 @@ interface PlaySessionProps {
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
   readonly hoveredReferenceId?: string | null;
+  readonly revealedReferenceIds?: ReadonlySet<string>;
   readonly referenceRelocateActive?: boolean;
   readonly onReferenceSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
   readonly onReferenceHover?: (id: string | null) => void;
@@ -1536,6 +1686,7 @@ function PlaySession({
   worldReferences = [],
   selectedReferenceIds,
   hoveredReferenceId = null,
+  revealedReferenceIds,
   referenceRelocateActive = true,
   onReferenceSelect,
   onReferenceHover,
@@ -1612,6 +1763,7 @@ function PlaySession({
       worldReferences={worldReferences}
       selectedReferenceIds={selectedReferenceIds}
       hoveredReferenceId={hoveredReferenceId}
+      revealedReferenceIds={revealedReferenceIds}
       referenceRelocateActive={referenceRelocateActive}
       onReferenceSelect={onReferenceSelect}
       onReferenceHover={onReferenceHover}
@@ -1673,6 +1825,14 @@ interface CadPlayModelSpaceValue {
   readonly applyOrbitViewForInstance: (view: OrbitCameraViewId, instanceId?: string | null) => void;
   readonly setOrbitProjectionForInstance: (projection: OrbitCameraProjection, instanceId?: string | null) => void;
   readonly modelsLoadEpoch: number;
+  readonly referencesByModelDefinitionId: CadPlayReferencesByModelDefinitionId;
+  readonly referencesForModelDefinition: (modelDefinitionId: string) => readonly WorldReferenceProps[];
+  readonly selectedReference: CadPlaySelectedReference | null;
+  readonly hoveredReferenceId: string | null;
+  readonly revealedReferenceIds: ReadonlySet<string>;
+  readonly handleReferenceSelect: (modelDefinitionId: string, referenceId: string) => void;
+  readonly handleReferenceHover: (modelDefinitionId: string, referenceId: string | null) => void;
+  readonly handleReferenceRelocate: (modelDefinitionId: string, payload: WorldReferenceRelocatePayload) => void;
 }
 
 const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
@@ -1735,6 +1895,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
   const [modelsLoadEpoch, setModelsLoadEpoch] = reactHostPort.useState(0);
   const [snapshotByPane, setSnapshotByPane] = reactHostPort.useState(emptySnapshotByPane);
+  const [referencesByModelDefinitionId, setReferencesByModelDefinitionId] = reactHostPort.useState<Record<string, WorldReferenceProps[]>>(cadPlayDefaultReferencesByModelDefinitionId);
+  const [selectedReference, setSelectedReference] = reactHostPort.useState<CadPlaySelectedReference | null>(null);
   const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<CadPlayPaneId, EngagementSpec | null>>>({});
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
   const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
@@ -1783,6 +1945,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     if (!id) {
       pointerFocusRef.current?.clearHover();
       setModelsByDefinitionId(emptyPlayModels());
+      setReferencesByModelDefinitionId(cadPlayDefaultReferencesByModelDefinitionId());
+      setSelectedReference(null);
       setActiveModelDefinitionId(defaultModelDefinitionId());
       setModelsLoadEpoch((epoch) => epoch + 1);
     } else {
@@ -1899,6 +2063,12 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     [currentSelection, selectionKinds],
   );
 
+  reactHostPort.useEffect(() => {
+    if (selectionInScope.length > 0) {
+      setSelectedReference(null);
+    }
+  }, [selectionInScope]);
+
   const handleDeleteSelection = reactHostPort.useCallback((): boolean => {
     if (boundInteractionSession) return false;
     const objectIds = deletableObjectIdsFromSelection(selectionInScope);
@@ -1915,6 +2085,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       if (modelDefinitionId !== activeModelDefinitionId) {
         handleActiveModelDefinitionChange(modelDefinitionId);
       }
+      setSelectedReference(null);
       setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, modelDefinitionId, [target]));
     },
     [activeModelDefinitionId, handleActiveModelDefinitionChange],
@@ -1931,6 +2102,112 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     },
     [activeModelDefinitionId, flushedModelsByDefinitionId, handleActiveModelDefinitionChange],
   );
+
+  const selectHierarchyReference = reactHostPort.useCallback(
+    (modelDefinitionId: string, referenceId: string) => {
+      if (modelDefinitionId !== activeModelDefinitionId) {
+        handleActiveModelDefinitionChange(modelDefinitionId);
+      }
+      setSelectedReference({ modelDefinitionId, id: referenceId });
+      setRendererSelectionByModel((prev) => replWithRendererSelectionTargets(prev, modelDefinitionId, []));
+    },
+    [activeModelDefinitionId, handleActiveModelDefinitionChange],
+  );
+
+  const hoverHierarchyReference = reactHostPort.useCallback(
+    (modelDefinitionId: string, referenceId: string | null) => {
+      if (referenceId && modelDefinitionId !== activeModelDefinitionId) {
+        handleActiveModelDefinitionChange(modelDefinitionId);
+      }
+      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_HIERARCHY, referenceId ? cadPlayReferenceHoverKey(referenceId) : null);
+    },
+    [activeModelDefinitionId, handleActiveModelDefinitionChange],
+  );
+
+  const toggleHierarchyReferenceFlag = reactHostPort.useCallback((modelDefinitionId: string, referenceId: string, flag: "hidden" | "locked") => {
+    setReferencesByModelDefinitionId((prev) => {
+      const reference = (prev[modelDefinitionId] ?? []).find((row) => row.id === referenceId);
+      if (!reference) {
+        return prev;
+      }
+      const nextReference = { ...reference, [flag]: !(reference[flag] === true) };
+      setSelectedReference((selected) => {
+        if (!selected || selected.modelDefinitionId !== modelDefinitionId || selected.id !== referenceId) {
+          return selected;
+        }
+        return worldEntitySelectable(nextReference) ? selected : null;
+      });
+      return updateCadPlayReferenceInMap(prev, modelDefinitionId, referenceId, { [flag]: !(reference[flag] === true) });
+    });
+    console.log("[DEBUG] cad toggleReferenceFlag", flag, referenceId);
+  }, []);
+
+  const toggleHierarchyReferenceHidden = reactHostPort.useCallback(
+    (modelDefinitionId: string, referenceId: string) => toggleHierarchyReferenceFlag(modelDefinitionId, referenceId, "hidden"),
+    [toggleHierarchyReferenceFlag],
+  );
+
+  const toggleHierarchyReferenceLocked = reactHostPort.useCallback(
+    (modelDefinitionId: string, referenceId: string) => toggleHierarchyReferenceFlag(modelDefinitionId, referenceId, "locked"),
+    [toggleHierarchyReferenceFlag],
+  );
+
+  const referencesForModelDefinition = reactHostPort.useCallback(
+    (modelDefinitionId: string) => referencesByModelDefinitionId[modelDefinitionId] ?? [],
+    [referencesByModelDefinitionId],
+  );
+
+  const handleReferenceSelect = reactHostPort.useCallback(
+    (modelDefinitionId: string, referenceId: string) => {
+      selectHierarchyReference(modelDefinitionId, referenceId);
+      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_CANVAS, cadPlayReferenceHoverKey(referenceId));
+    },
+    [selectHierarchyReference],
+  );
+
+  const handleReferenceHover = reactHostPort.useCallback(
+    (modelDefinitionId: string, referenceId: string | null) => {
+      if (referenceId) {
+        pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_CANVAS, cadPlayReferenceHoverKey(referenceId));
+        return;
+      }
+      if (pointerFocusRef.current!.getSnapshot().hover?.startsWith("reference:")) {
+        pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_CANVAS, null);
+      }
+    },
+    [],
+  );
+
+  const handleReferenceRelocate = reactHostPort.useCallback((modelDefinitionId: string, payload: WorldReferenceRelocatePayload) => {
+    setReferencesByModelDefinitionId((prev) => {
+      const rows = prev[modelDefinitionId] ?? [];
+      const index = rows.findIndex((row) => row.id === payload.referenceId);
+      if (index < 0) {
+        return prev;
+      }
+      const nextRows = rows.map((row, rowIndex) => (rowIndex === index ? applyWorldReferenceTransform(row, payload.after) : row));
+      return { ...prev, [modelDefinitionId]: nextRows };
+    });
+    console.log("[DEBUG] cad referenceRelocate", payload.referenceId);
+  }, []);
+
+  const hoveredReferenceId = reactHostPort.useMemo(() => {
+    const hoverKey = pointerFocus.hover;
+    if (!hoverKey?.startsWith("reference:")) {
+      return null;
+    }
+    return hoverKey.slice("reference:".length);
+  }, [pointerFocus.hover]);
+
+  const revealedReferenceIds = reactHostPort.useMemo(() => {
+    if (!hoveredReferenceId) {
+      return new Set<string>();
+    }
+    const hiddenReference = Object.values(referencesByModelDefinitionId)
+      .flat()
+      .find((row) => row.id === hoveredReferenceId && row.hidden === true);
+    return hiddenReference ? new Set([hoveredReferenceId]) : new Set<string>();
+  }, [hoveredReferenceId, referencesByModelDefinitionId]);
 
   const toggleHierarchyEntityFlag = reactHostPort.useCallback(
     (modelDefinitionId: string, target: SelectionTarget, flag: "hidden" | "locked") => {
@@ -1973,27 +2250,39 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   reactHostPort.useEffect(() => {
     publishCadPlayChrome({
       modelsByDefinitionId: flushedModelsByDefinitionId,
+      referencesByModelDefinitionId,
       activeModelDefinitionId,
       selection: selectionInScope,
+      selectedReference,
       hoveredKey: pointerFocus.hover,
       selectTarget: selectHierarchyTarget,
       hoverTarget: hoverHierarchyTarget,
       toggleHidden: toggleHierarchyHidden,
       toggleLocked: toggleHierarchyLocked,
+      selectReference: selectHierarchyReference,
+      hoverReference: hoverHierarchyReference,
+      toggleReferenceHidden: toggleHierarchyReferenceHidden,
+      toggleReferenceLocked: toggleHierarchyReferenceLocked,
     });
     return () => publishCadPlayChrome(null);
   }, [
     activeModelDefinitionId,
     flushedModelsByDefinitionId,
     flushedModelsDigest,
+    hoverHierarchyReference,
     hoverHierarchyTarget,
     modelDefinitionRevision,
     pointerFocus.hover,
     publishCadPlayChrome,
+    referencesByModelDefinitionId,
+    selectHierarchyReference,
     selectHierarchyTarget,
+    selectedReference,
     selectionInScope,
     toggleHierarchyHidden,
     toggleHierarchyLocked,
+    toggleHierarchyReferenceHidden,
+    toggleHierarchyReferenceLocked,
   ]);
 
   const exportBaseName = reactHostPort.useMemo(() => {
@@ -2278,6 +2567,14 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       applyOrbitViewForInstance,
       setOrbitProjectionForInstance,
       modelsLoadEpoch,
+      referencesByModelDefinitionId,
+      referencesForModelDefinition,
+      selectedReference,
+      hoveredReferenceId,
+      revealedReferenceIds,
+      handleReferenceSelect,
+      handleReferenceHover,
+      handleReferenceRelocate,
     }),
     [
       activeModelDefinitionId,
@@ -2325,6 +2622,14 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       orbitProjectionForInstance,
       setOrbitProjectionForInstance,
       modelsLoadEpoch,
+      referencesByModelDefinitionId,
+      referencesForModelDefinition,
+      selectedReference,
+      hoveredReferenceId,
+      revealedReferenceIds,
+      handleReferenceSelect,
+      handleReferenceHover,
+      handleReferenceRelocate,
     ],
   );
 
@@ -2419,6 +2724,13 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     orbitProjectionForInstance,
     setOrbitProjectionForInstance,
     modelsLoadEpoch,
+    referencesForModelDefinition,
+    selectedReference,
+    hoveredReferenceId,
+    revealedReferenceIds,
+    handleReferenceSelect,
+    handleReferenceHover,
+    handleReferenceRelocate,
   } = useCadPlayModelSpace();
   const cameraSeed = cameraViewSeedForInstance(instanceId);
   const orbitProjection = orbitProjectionForInstance(instanceId);
@@ -2466,20 +2778,23 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
   const mode = computeModeForPane(pane);
   const transformGumballConfig = transformGumballConfigForPane(pane);
   const autoFitMeshes = modelHasCommittedSolidsForDisplay(viewModel) || modelHasFactoryFaceDisplay(viewModel, modelDefinitionId);
-  const [worldReferences, setWorldReferences] = reactHostPort.useState(CAD_PLAY_DEFAULT_WORLD_REFERENCES);
-  const [selectedReferenceIds, setSelectedReferenceIds] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
-  const [hoveredReferenceId, setHoveredReferenceId] = reactHostPort.useState<string | null>(null);
-  const onReferenceRelocate = reactHostPort.useCallback((payload: WorldReferenceRelocatePayload) => {
-    setWorldReferences((prev) => prev.map((row) => (row.id === payload.referenceId ? applyWorldReferenceTransform(row, payload.after) : row)));
-    console.log("[DEBUG] cad referenceRelocate", payload.referenceId);
-  }, []);
-  const onReferenceSelect = reactHostPort.useCallback((id: string) => {
-    setSelectedReferenceIds(new Set([id]));
-  }, []);
-  const onReferenceHover = reactHostPort.useCallback((id: string | null) => {
-    setHoveredReferenceId(id);
-  }, []);
-  const shapeReferences = pane === "shape" ? worldReferences : [];
+  const paneReferences = referencesForModelDefinition(modelDefinitionId);
+  const selectedReferenceIds = reactHostPort.useMemo(
+    () => (selectedReference?.modelDefinitionId === modelDefinitionId ? new Set([selectedReference.id]) : new Set<string>()),
+    [modelDefinitionId, selectedReference],
+  );
+  const onReferenceRelocate = reactHostPort.useCallback(
+    (payload: WorldReferenceRelocatePayload) => handleReferenceRelocate(modelDefinitionId, payload),
+    [handleReferenceRelocate, modelDefinitionId],
+  );
+  const onReferenceSelect = reactHostPort.useCallback(
+    (id: string) => handleReferenceSelect(modelDefinitionId, id),
+    [handleReferenceSelect, modelDefinitionId],
+  );
+  const onReferenceHover = reactHostPort.useCallback(
+    (id: string | null) => handleReferenceHover(modelDefinitionId, id),
+    [handleReferenceHover, modelDefinitionId],
+  );
 
   return (
     <div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(modelDefinitionId)}>
@@ -2519,13 +2834,14 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         cameraViewSeedKey={cameraSeed?.seedKey}
         orbitProjection={orbitProjection}
         onOrbitProjectionChange={onOrbitProjectionChange}
-        worldReferences={shapeReferences}
-        selectedReferenceIds={pane === "shape" ? selectedReferenceIds : undefined}
-        hoveredReferenceId={pane === "shape" ? hoveredReferenceId : null}
+        worldReferences={paneReferences}
+        selectedReferenceIds={selectedReferenceIds}
+        hoveredReferenceId={hoveredReferenceId}
+        revealedReferenceIds={revealedReferenceIds}
         referenceRelocateActive={pane === "shape"}
-        onReferenceSelect={pane === "shape" ? onReferenceSelect : undefined}
-        onReferenceHover={pane === "shape" ? onReferenceHover : undefined}
-        onReferenceRelocate={pane === "shape" ? onReferenceRelocate : undefined}
+        onReferenceSelect={onReferenceSelect}
+        onReferenceHover={onReferenceHover}
+        onReferenceRelocate={onReferenceRelocate}
       />
     </div>
   );
@@ -2606,7 +2922,7 @@ function CadPlayRoot(): ReactNode {
   }
   const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
   const chromeKey = chromeSnapshot
-    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${cadPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
+    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${chromeSnapshot.selectedReference?.id ?? ""}\u0001${cadPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}\u0001${cadPlayReferencesDigest(chromeSnapshot.referencesByModelDefinitionId)}`
     : "";
   const hierarchyBuild = reactHostPort.useMemo(() => {
     if (!chromeSnapshot) {
@@ -2620,6 +2936,12 @@ function CadPlayRoot(): ReactNode {
       chromeSnapshot.hoverTarget,
       chromeSnapshot.toggleHidden,
       chromeSnapshot.toggleLocked,
+      chromeSnapshot.referencesByModelDefinitionId,
+      chromeSnapshot.selectedReference,
+      chromeSnapshot.selectReference,
+      chromeSnapshot.hoverReference,
+      chromeSnapshot.toggleReferenceHidden,
+      chromeSnapshot.toggleReferenceLocked,
     );
   }, [chromeKey, chromeSnapshot]);
   const hierarchyHighlightedIds = reactHostPort.useMemo(() => {
@@ -3094,6 +3416,24 @@ if (import.meta.vitest) {
       const edgeNode = wireNode?.items?.[0];
       expect(edgeNode?.label).toContain("edge");
       expect(edgeNode?.items?.some((row) => row.label.includes("vertex"))).toBe(true);
+    });
+
+    it("buildCadPlayHierarchySections lists references under model definitions with hide and lock chrome", () => {
+      const references = { [defaultModelDefinitionId()]: CAD_PLAY_DEFAULT_WORLD_REFERENCES };
+      const build = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: new Model() }, defaultModelDefinitionId(), [], () => {}, () => {}, () => {}, () => {}, references);
+      const modelBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`);
+      const referencesGroup = modelBranch?.items?.find((row) => row.id === `cad-play-hierarchy.references.${defaultModelDefinitionId()}`);
+      expect(referencesGroup?.items?.some((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`)).toBe(true);
+      const referenceRow = referencesGroup?.items?.find((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`);
+      expect(referenceRow?.actions?.some((row) => row.id === "reference.hidden")).toBe(true);
+      expect(referenceRow?.actions?.some((row) => row.id === "reference.locked")).toBe(true);
+      expect(build.highlightKeyToItemIds[cadPlayReferenceHoverKey("ref-sketch")]).toContain(`cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`);
+    });
+
+    it("updateCadPlayReferenceInMap toggles reference flags", () => {
+      const initial = cadPlayDefaultReferencesByModelDefinitionId();
+      const next = updateCadPlayReferenceInMap(initial, defaultModelDefinitionId(), "ref-sketch", { hidden: true, locked: true });
+      expect(next[defaultModelDefinitionId()]?.find((row) => row.id === "ref-sketch")).toEqual(expect.objectContaining({ hidden: true, locked: true }));
     });
 
     it("buildCadPlayHierarchySections lists kernel-imported STEP objects", async () => {

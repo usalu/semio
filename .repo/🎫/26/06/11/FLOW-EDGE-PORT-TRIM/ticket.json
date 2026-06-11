@@ -1,0 +1,14 @@
+{
+  "title": "Flow Edge Port Trim",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Flow edges should not render behind port handles; they should start after the port cap. Bezier start/end tangent vectors should be gentler.",
+  "summary": "Flow/DAG edges now start and end at the exterior peak of port handle caps (rim + outward × radius) instead of the node rim, so wire strokes no longer show behind semicircle ports. Bezier control tangent length reduced from 35% to 22% of chord (clamp 16–120 world units) for gentler curves. Added handle_exterior_cap_peak helper and unit test; updated wire snap preview test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1662"
+  },
+  "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
+  "sessions": [
+    "⚪1561ef78d68a4641b1449aa20f0b9866"
+  ]
+}

@@ -75,6 +75,10 @@ fn point_dictionary(point: Vec3) -> Dictionary {
         .insert("z", Value::Atom(Atom::Decimal(point[2])))
 }
 
+fn vector_channel(id: &str, operator_id: &str, default: Vec3) -> ChannelSpec {
+    ChannelSpec::requires(id, &["math.constructVector", operator_id]).with_default(Value::Dictionary(vector_dictionary(default)))
+}
+
 fn vector_dictionary(vector: Vec3) -> Dictionary {
     Dictionary::with_schema("vector")
         .insert("x", Value::Atom(Atom::Decimal(vector[0])))
@@ -659,7 +663,22 @@ impl Operation for ExtrudeCurve {
     }
 }
 
-geo_op!(Extrude, "solid", |k, i| k.extrude(&read_geometry(i, "face")?, read_xyz(i, "direction")?, read_channel_number(i, "distance")?));
+struct ExtrudeFace;
+impl Operation for ExtrudeFace {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| {
+            let face = read_geometry(input, "face")?;
+            let vector = read_xyz(input, "vector")?;
+            let distance = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
+            if distance < 1e-12 {
+                return Err(EvalError::InvalidInput("extrusion vector magnitude must be positive".into()));
+            }
+            let direction = [vector[0] / distance, vector[1] / distance, vector[2] / distance];
+            let handle = block_on(kernel.extrude(&face, direction, distance)).map_err(map_kernel_error)?;
+            Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
+        })
+    }
+}
 geo_op!(Revolve, "solid", |k, i| k.revolve(
     &read_geometry(i, "face")?,
     read_xyz(i, "axisOrigin")?,
@@ -1146,13 +1165,12 @@ pub fn register(registry: &mut Registry) {
 
     reg_geo(registry, "brep.solid.extrude", "Extrude Curve", "ExtC", "emoji:🧱", "Extrude closed wire along vector magnitude", vec![
         geometry_channel("wire", "brep.solid.extrude"),
-        ChannelSpec::requires("vector", &["math.constructVector"]),
+        vector_channel("vector", "brep.solid.extrude", [0.0, 0.0, 5.0]),
     ], out_solid("ExtrudedSolid"), &["Solids"], Box::new(ExtrudeCurve));
-    reg_geo(registry, "brep.sweep.extrude", "Extrude", "Extr", "emoji:⬆️", "Extrude face", vec![
+    reg_geo(registry, "brep.sweep.extrude", "Extrude", "Extr", "emoji:⬆️", "Extrude face along vector magnitude", vec![
         geometry_channel("face", "brep.sweep.extrude"),
-        point_channel("direction", "brep.sweep.extrude"),
-        number_channel("distance", "brep.sweep.extrude", 1.0),
-    ], out_solid("ExtrudedSolid"), &["Sweeps"], Box::new(Extrude));
+        vector_channel("vector", "brep.sweep.extrude", [0.0, 0.0, 1.0]),
+    ], out_solid("ExtrudedSolid"), &["Sweeps"], Box::new(ExtrudeFace));
     reg_geo(registry, "brep.sweep.revolve", "Revolve", "Rev", "emoji:🔄", "Revolve face", vec![
         geometry_channel("face", "brep.sweep.revolve"),
         point_channel("axisOrigin", "brep.sweep.revolve"),
@@ -1554,8 +1572,7 @@ mod tests {
                 "brep.sweep.extrude",
                 &Dictionary::new()
                     .insert("face", Value::Dictionary(face))
-                    .insert("direction", Value::Dictionary(vector(0.0, 0.0, 1.0)))
-                    .insert("distance", Value::Dictionary(number_dictionary(3.0))),
+                    .insert("vector", Value::Dictionary(vector(0.0, 0.0, 3.0))),
             )
             .unwrap(),
             "solid",

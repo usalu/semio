@@ -1,13 +1,21 @@
 {
   "title": "Accurate Flow Channel Naming",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Rename flow/procedural operator channels so naming is accurate: inputs use the most general name of what the input actually accepts, outputs use the most specific name of what the output actually produces. Neural trees stay dictionary-in/dictionary-out, but flow exposes all keys of the input dictionary as input channels and all keys of the output dictionary as output channels (no generic 'out' port).",
+  "summary": "Fixed LOD port label visibility and tier display in the running UI. Port label overlay rows now carry kind=port and screen-space maxScreenH so JS clamping no longer shrinks abbreviations to invisible sizes inside 14px world rows. Added flowClampPortLabelFontPx (min 8px, width-only shrink) and raised the text overlay canvas to z-40 so port labels paint above param editors that were covering them at Normal. Param overlay JSON now includes LOD-aware label per editor; boolean editors show the tier label. neuron_io_layout input_ports fallback resolves ChannelSpec metadata via operator info. Added rectangle_extrude_fixture_port_labels_follow_draw_lod integration test with production kind infos. Rebuilt flow_core WASM.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1661"
   },
   "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
+  "plan": {
+    "client": "cursor",
+    "id": "90bb3879",
+    "local": "accurate_flow_channel_naming_90bb3879.plan.md"
+  },
   "sessions": [
-    "⚪7443fbac8199477c98469c9bda29231f"
+    "⚪7443fbac8199477c98469c9bda29231f",
+    "⚪c5f1833164ed4735aec77b03a621a1dc",
+    "⚪1403b07bf2ef4c3fa0d98b5f57138875"
   ]
 }

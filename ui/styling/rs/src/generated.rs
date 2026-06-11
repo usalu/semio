@@ -163,8 +163,8 @@ pub mod metrics {
         pub const CHANNEL_ROW_HEIGHT: f64 = 14.0;
         pub const NODE_EDGE_INSET: f64 = 2.0;
         pub const NODE_COLUMN_GAP: f64 = 2.0;
-        pub const IO_COLUMN_MIN: f64 = 24.0;
-        pub const IO_COLUMN_MAX: f64 = 34.0;
+        pub const IO_COLUMN_WIDTH: f64 = 34.0;
+        pub const COMPONENT_WIDTH: f64 = 74.0;
         pub const IO_WIDGET_HEIGHT: f64 = 28.0;
         pub const SLIDER_KNOB_SCREEN_PX: f64 = 8.0;
         pub const PREVIEW_PAD: f64 = 4.0;

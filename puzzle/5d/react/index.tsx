@@ -44,6 +44,9 @@ import {
   puzzle2dFixturePaletteDropCommittedRef,
   type Puzzle2dFixtureDropDetail,
   type Puzzle2dFixtureNodeV1,
+  type Puzzle2dKindHover,
+  type Puzzle2dHoverPayload,
+  puzzle2dKindHoversEqual,
 } from "@puzzle/2d/react";
 import {
   ObjectStateProvider as Puzzle3dPartStateProvider,
@@ -70,6 +73,11 @@ import {
   type BrushPlacePayload,
   type Puzzle3dBrushKindWeights,
   type FixtureObjectV1 as Puzzle3dFixtureObjectV1,
+  type HoverTarget,
+  type Puzzle3dHoverPayload,
+  type Puzzle3dKindHover,
+  puzzle3dHoverTargetsEqual,
+  puzzle3dKindHoversEqual,
   buildBrushFillSequence,
   brushPlacementUsesHostOrientation,
   computeBrushPlacementPose,
@@ -196,6 +204,217 @@ export function fiveD3dSelectionFromStore(selection: SelectionSnapshot): Puzzle3
     attractionIds: [],
   };
 }
+
+//#region 🔖Hover
+export type Puzzle5dKindHoverDomain = "part" | "anchor" | "tie";
+
+/** @emoji 🖱️ Transitive catalog-kind hover shared across paired 2d and 3d surfaces. */
+export interface Puzzle5dKindHover {
+  readonly domain: Puzzle5dKindHoverDomain;
+  readonly kindId: string;
+}
+
+export type Puzzle5dHoverInstance =
+  | { readonly kind: "part"; readonly id: string }
+  | { readonly kind: "anchor"; readonly fullId: string }
+  | { readonly kind: "tie"; readonly id: string };
+
+export interface HoverFocusSnapshot {
+  readonly instance: Puzzle5dHoverInstance | null;
+  readonly kindHover: Puzzle5dKindHover | null;
+}
+
+const EMPTY_HOVER_FOCUS: HoverFocusSnapshot = { instance: null, kindHover: null };
+
+/** @emoji 🖱️ Compares two unified puzzle 5d kind hovers for equality. */
+export function puzzle5dKindHoversEqual(a: Puzzle5dKindHover | null, b: Puzzle5dKindHover | null): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  return a.domain === b.domain && a.kindId === b.kindId;
+}
+
+/** @emoji 🖱️ Compares two unified puzzle 5d hover instances for equality. */
+export function puzzle5dHoverInstancesEqual(a: Puzzle5dHoverInstance | null, b: Puzzle5dHoverInstance | null): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  if (a.kind !== b.kind) {
+    return false;
+  }
+  if (a.kind === "anchor") {
+    return b.kind === "anchor" && a.fullId === b.fullId;
+  }
+  return a.id === (b as { readonly id: string }).id;
+}
+
+/** @emoji 🖱️ Compares two unified hover-focus snapshots for equality. */
+export function puzzle5dHoverFocusEqual(a: HoverFocusSnapshot, b: HoverFocusSnapshot): boolean {
+  return puzzle5dHoverInstancesEqual(a.instance, b.instance) && puzzle5dKindHoversEqual(a.kindHover, b.kindHover);
+}
+
+function puzzle5dKindHoverFrom2d(kind: Puzzle2dKindHover): Puzzle5dKindHover | null {
+  switch (kind.domain) {
+    case "node":
+      return { domain: "part", kindId: kind.kindId };
+    case "handle":
+      return { domain: "anchor", kindId: kind.kindId };
+    case "edge":
+      return { domain: "tie", kindId: kind.kindId };
+    default:
+      return null;
+  }
+}
+
+function puzzle5dKindHoverTo2d(kind: Puzzle5dKindHover): Puzzle2dKindHover {
+  switch (kind.domain) {
+    case "part":
+      return { domain: "node", kindId: kind.kindId };
+    case "anchor":
+      return { domain: "handle", kindId: kind.kindId };
+    case "tie":
+      return { domain: "edge", kindId: kind.kindId };
+  }
+}
+
+function puzzle5dKindHoverFrom3d(kind: Puzzle3dKindHover): Puzzle5dKindHover {
+  switch (kind.domain) {
+    case "object":
+      return { domain: "part", kindId: kind.kindId };
+    case "vortex":
+      return { domain: "anchor", kindId: kind.kindId };
+    case "attraction":
+      return { domain: "tie", kindId: kind.kindId };
+  }
+}
+
+function puzzle5dKindHoverTo3d(kind: Puzzle5dKindHover): Puzzle3dKindHover {
+  switch (kind.domain) {
+    case "part":
+      return { domain: "object", kindId: kind.kindId };
+    case "anchor":
+      return { domain: "vortex", kindId: kind.kindId };
+    case "tie":
+      return { domain: "attraction", kindId: kind.kindId };
+  }
+}
+
+/** @emoji 🖱️ Resolves a flat graph element id to a unified hover instance. */
+export function puzzle5dHoverInstanceFrom2dGraphId(fixture2d: Puzzle2dFixtureV1, graphId: string): Puzzle5dHoverInstance | null {
+  if (fixture2d.nodes.some((node) => node.id === graphId)) {
+    return { kind: "part", id: graphId };
+  }
+  if (fixture2d.edges.some((edge) => edge.id === graphId)) {
+    return { kind: "tie", id: graphId };
+  }
+  for (const node of fixture2d.nodes) {
+    if (node.handles.some((handle) => handle.id === graphId)) {
+      return { kind: "anchor", fullId: graphId };
+    }
+  }
+  return null;
+}
+
+function puzzle5dHoverInstanceFrom3dTarget(target: HoverTarget): Puzzle5dHoverInstance | null {
+  switch (target.kind) {
+    case "object":
+      return { kind: "part", id: target.id };
+    case "vortex":
+      return { kind: "anchor", fullId: target.fullId };
+    case "attraction":
+      return { kind: "tie", id: target.id };
+    default:
+      return null;
+  }
+}
+
+/** @emoji 🖱️ Maps flat canvas hover to unified store hover focus. */
+export function hoverFocusFrom2dPayload(
+  fixture2d: Puzzle2dFixtureV1,
+  payload: Pick<Puzzle2dHoverPayload, "id" | "kind">,
+): HoverFocusSnapshot {
+  if (!payload.id && !payload.kind) {
+    return EMPTY_HOVER_FOCUS;
+  }
+  if (payload.id) {
+    return { instance: puzzle5dHoverInstanceFrom2dGraphId(fixture2d, payload.id), kindHover: null };
+  }
+  const kindHover = payload.kind ? puzzle5dKindHoverFrom2d(payload.kind) : null;
+  return { instance: null, kindHover };
+}
+
+/** @emoji 🖱️ Maps volume canvas hover to unified store hover focus. */
+export function hoverFocusFrom3dPayload(payload: Puzzle3dHoverPayload): HoverFocusSnapshot {
+  if (!payload.hoverTarget && !payload.kindHover) {
+    return EMPTY_HOVER_FOCUS;
+  }
+  if (payload.hoverTarget) {
+    return { instance: puzzle5dHoverInstanceFrom3dTarget(payload.hoverTarget), kindHover: null };
+  }
+  return { instance: null, kindHover: payload.kindHover ? puzzle5dKindHoverFrom3d(payload.kindHover) : null };
+}
+
+/** @emoji 🖱️ Projects unified hover focus onto flat controlled canvas props. */
+export function fiveD2dHoverFromStore(focus: HoverFocusSnapshot): { hoveredId: string | null; kindHover: Puzzle2dKindHover | null } {
+  if (focus.instance) {
+    switch (focus.instance.kind) {
+      case "part":
+        return { hoveredId: focus.instance.id, kindHover: null };
+      case "anchor":
+        return { hoveredId: focus.instance.fullId, kindHover: null };
+      case "tie":
+        return { hoveredId: focus.instance.id, kindHover: null };
+    }
+  }
+  return {
+    hoveredId: null,
+    kindHover: focus.kindHover ? puzzle5dKindHoverTo2d(focus.kindHover) : null,
+  };
+}
+
+/** @emoji 🖱️ Projects unified hover focus onto volume controlled canvas props. */
+export function fiveD3dHoverFromStore(focus: HoverFocusSnapshot): { hoverTarget: HoverTarget | null; kindHover: Puzzle3dKindHover | null } {
+  if (focus.instance) {
+    switch (focus.instance.kind) {
+      case "part":
+        return { hoverTarget: { kind: "object", id: focus.instance.id }, kindHover: null };
+      case "anchor":
+        return { hoverTarget: { kind: "vortex", fullId: focus.instance.fullId }, kindHover: null };
+      case "tie":
+        return { hoverTarget: { kind: "attraction", id: focus.instance.id }, kindHover: null };
+    }
+  }
+  return {
+    hoverTarget: null,
+    kindHover: focus.kindHover ? puzzle5dKindHoverTo3d(focus.kindHover) : null,
+  };
+}
+
+function pruneHoverFocusAfterModelEdit(focus: HoverFocusSnapshot, model: V1): HoverFocusSnapshot {
+  if (!focus.instance && !focus.kindHover) {
+    return focus;
+  }
+  const fixture2d = project2d(model);
+  let instance = focus.instance;
+  if (instance) {
+    const resolved = instance.kind === "part"
+      ? model.parts.some((part) => part.id === instance!.id)
+      : instance.kind === "anchor"
+        ? model.parts.some((part) => part.anchors.some((anchor) => anchorFullId(part.id, anchor.id) === instance!.fullId))
+        : model.ties.some((tie) => tie.id === instance!.id);
+    if (!resolved) {
+      instance = null;
+    }
+  }
+  return instance || focus.kindHover ? { instance, kindHover: focus.kindHover } : EMPTY_HOVER_FOCUS;
+}
+//#endregion 🔖Hover
 
 export interface V1 {
   readonly schema: "puzzle.5d/v1";
@@ -1126,6 +1345,7 @@ function pruneSelectionAfterModelEdit(selection: SelectionSnapshot, _prevModel: 
 export interface StoreSnapshot {
   readonly model: V1;
   readonly selection: SelectionSnapshot;
+  readonly hoverFocus: HoverFocusSnapshot;
   readonly connectSession: ConnectSession | null;
   readonly cameras: Readonly<Record<string, { readonly "2d": Puzzle2dCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
   readonly fillCount: number;
@@ -1141,6 +1361,7 @@ export class Store {
     this.snapshot = {
       model,
       selection: { partIds: [], anchorIds: [] },
+      hoverFocus: EMPTY_HOVER_FOCUS,
       connectSession: null,
       cameras: {},
       fillCount: 0,
@@ -1227,6 +1448,24 @@ export class Store {
       return;
     }
     this.setSnapshot({ ...this.snapshot, selection });
+  }
+
+  /** @emoji 🖱️ Updates shared hover focus synchronized across paired 2d and 3d surfaces. */
+  setHoverFocus(focus: HoverFocusSnapshot): void {
+    if (puzzle5dHoverFocusEqual(this.snapshot.hoverFocus, focus)) {
+      return;
+    }
+    this.setSnapshot({ ...this.snapshot, hoverFocus: focus });
+  }
+
+  /** @emoji 🖱️ Commits flat canvas hover into the unified store. */
+  setHoverFocusFrom2d(fixture2d: Puzzle2dFixtureV1, payload: Pick<Puzzle2dHoverPayload, "id" | "kind">): void {
+    this.setHoverFocus(hoverFocusFrom2dPayload(fixture2d, payload));
+  }
+
+  /** @emoji 🖱️ Commits volume canvas hover into the unified store. */
+  setHoverFocusFrom3d(payload: Puzzle3dHoverPayload): void {
+    this.setHoverFocus(hoverFocusFrom3dPayload(payload));
   }
 
   /** @emoji 🔗 Sets cross-surface indirect preview state; callers must not use this for proximity snaps. */
@@ -1641,6 +1880,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     () => ({ ids: [...snap.selection.partIds, ...snap.selection.anchorIds] }),
     [snap.selection.partIds, snap.selection.anchorIds],
   );
+  const flatHover = reactHostPort.useMemo(() => fiveD2dHoverFromStore(snap.hoverFocus), [snap.hoverFocus]);
   const camera = store.get2dCamera(props.instanceId);
   const extra2d = props.puzzle2d ?? {};
   const {
@@ -1725,6 +1965,9 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     storeRef.current.applyStructuralDelete2d(payload);
     onDeleteHostRef.current?.(payload);
   }, []);
+  const onCanvasHover = reactHostPort.useCallback((payload: Puzzle2dHoverPayload) => {
+    storeRef.current.setHoverFocusFrom2d(project2d(storeRef.current.read()), payload);
+  }, []);
   const onLinkCompatibleNodes = reactHostPort.useCallback((p: { source: string | null; nodeIds: readonly string[] }) => {
     if (!p.source) {
       storeRef.current.setConnectSession(null);
@@ -1808,6 +2051,9 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         {...(onBrushPlaceHost ? { onBrushPlace } : {})}
         {...(onBrushCandidatesHost ? { onBrushCandidates } : {})}
         {...rest2d}
+        hoveredId={flatHover.hoveredId}
+        kindHover={flatHover.kindHover}
+        onHover={onCanvasHover}
       />
     </div>
   );
@@ -1839,6 +2085,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const brushPlacementOverlapBudget = brushOverlapHost ?? props.brushOverlapBudget;
   const camera = store.get3dCamera(props.instanceId);
   const canvasSelection = reactHostPort.useMemo(() => fiveD3dSelectionFromStore(snap.selection), [snap.selection.partIds, snap.selection.anchorIds]);
+  const volumeHover = reactHostPort.useMemo(() => fiveD3dHoverFromStore(snap.hoverFocus), [snap.hoverFocus]);
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
   const onRelocate = usePuzzle3dPartRelocate();
   const onConnect = usePuzzle3dPartConnect();
@@ -1847,6 +2094,9 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const onCamera = reactHostPort.useCallback((c: Puzzle3dFixtureV1["camera"]) => {
     storeRef.current.set3dCamera(props.instanceId, c);
   }, [props.instanceId]);
+  const onCanvasHover = reactHostPort.useCallback((payload: Puzzle3dHoverPayload) => {
+    storeRef.current.setHoverFocusFrom3d(payload);
+  }, []);
   return (
     <Puzzle3dCanvas
       camera={rest3d.camera ?? camera}
@@ -1925,6 +2175,9 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
       {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
       {...rest3d}
+      hoverTarget={volumeHover.hoverTarget}
+      kindHover={volumeHover.kindHover}
+      onHover={onCanvasHover}
       sceneFixture={fixture3d}
       selection={canvasSelection}
     >

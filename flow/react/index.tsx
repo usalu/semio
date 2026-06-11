@@ -88,7 +88,10 @@ export interface FlowValueTypeV1 {
 }
 
 export interface FlowChannelSpecV1 {
-  readonly id: string;
+  readonly name: string;
+  readonly code: string;
+  readonly abbreviation: string;
+  readonly fullName: string;
   readonly operators: readonly string[];
   readonly default?: unknown;
   readonly label?: string;
@@ -474,8 +477,8 @@ export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
     { kind: "outputPreview", id: "preview" },
   ],
   synapses: [
-    { id: "s1", from: "slider", to: "add", fromPort: "out", toPort: "a" },
-    { id: "s2", from: "add", to: "preview", fromPort: "out", toPort: "in" },
+    { id: "s1", from: "slider", to: "add", fromPort: "number", toPort: "a" },
+    { id: "s2", from: "add", to: "preview", fromPort: "sum", toPort: "" },
   ],
 };
 
@@ -550,7 +553,7 @@ function parseFlowFixtureForDirtyDiff(json: string): { readonly widgets: readonl
 function incomingSynapseKeys(widgetId: string, synapses: FlowFixtureV1["synapses"]): string[] {
   return synapses
     .filter((synapse) => synapse.to === widgetId)
-    .map((synapse) => `${synapse.from}|${synapse.fromPort ?? "out"}|${synapse.toPort ?? "in"}`)
+    .map((synapse) => `${synapse.from}|${synapse.fromPort ?? ""}|${synapse.toPort ?? ""}`)
     .sort();
 }
 
@@ -1841,6 +1844,7 @@ const FLOW_LABEL_FONT_FAMILY = "ui-sans-serif, system-ui, sans-serif";
 
 interface FlowLabelOverlayRow {
   readonly id: string;
+  readonly kind?: "port" | "node";
   readonly text: string;
   readonly layout: "horizontal" | "vertical";
   readonly align?: "left" | "center" | "right";
@@ -1849,6 +1853,7 @@ interface FlowLabelOverlayRow {
   readonly nodeW: number;
   readonly nodeH: number;
   readonly fontScreenPx?: number;
+  readonly maxScreenH?: number;
   readonly ghost?: boolean;
 }
 
@@ -1862,6 +1867,7 @@ interface FlowLabelOverlayPaintState {
 interface FlowParamOverlayEditor {
   readonly nodeId: string;
   readonly portId: string;
+  readonly label?: string;
   readonly type?: string;
   readonly value?: unknown;
   readonly default?: unknown;
@@ -1905,6 +1911,28 @@ function flowClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targe
     const w = ctx.measureText(text).width;
     const h = mid * 1.2;
     if (w <= maxW && h <= maxH) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+  return best;
+}
+
+function flowClampPortLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
+  let px = Math.max(8, Math.round(targetPx));
+  ctx.font = `${px}px ${FLOW_LABEL_FONT_FAMILY}`;
+  if (ctx.measureText(text).width <= maxW && px * 1.25 <= maxH) {
+    return px;
+  }
+  let low = 8;
+  let high = px;
+  let best = 8;
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    ctx.font = `${mid}px ${FLOW_LABEL_FONT_FAMILY}`;
+    if (ctx.measureText(text).width <= maxW) {
       best = mid;
       low = mid + 1;
     } else {
@@ -1999,7 +2027,7 @@ function FlowParamOverlay({
                 checked={checked}
                 onChange={(event) => onParamChange(editor.nodeId, editor.portId, event.target.checked)}
               />
-              <span>{editor.portId}</span>
+              <span>{editor.label?.trim() || editor.portId}</span>
             </label>
           );
         }
@@ -2063,11 +2091,19 @@ function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement,
     const text = typeof row.text === "string" ? row.text.trim() : "";
     if (!text) continue;
     const anchor = flowWorldToScreen({ x: Number(row.x), y: Number(row.y) }, camera, viewportW, viewportH);
+    const isPort = row.kind === "port" || row.align === "left" || row.align === "right";
     const maxW = Math.max(4, Number(row.nodeW) * zoom * inset);
-    const maxH = Math.max(4, Number(row.nodeH) * zoom * inset);
+    const maxH = Math.max(
+      4,
+      isPort && Number.isFinite(Number(row.maxScreenH)) && Number(row.maxScreenH) > 0
+        ? Number(row.maxScreenH)
+        : Number(row.nodeH) * zoom * inset,
+    );
     const fontScreenPx = Number(row.fontScreenPx);
     const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : FLOW_LABEL_SCREEN_PX;
-    const fontPx = flowClampLabelFontPx(ctx, text, targetPx, maxW, maxH);
+    const fontPx = isPort
+      ? flowClampPortLabelFontPx(ctx, text, targetPx, maxW, maxH)
+      : flowClampLabelFontPx(ctx, text, targetPx, maxW, maxH);
     ctx.font = `${fontPx}px ${FLOW_LABEL_FONT_FAMILY}`;
     ctx.fillStyle = flowOverlayLabelFill(row.id, row.ghost === true, hoveredId, chrome, previewOffIds);
     ctx.globalAlpha = row.ghost ? 0.85 : previewOffIds.includes(row.id) ? 0.5 : 1;
@@ -3858,7 +3894,7 @@ export function FlowCanvas({
       <canvas
         ref={textOverlayRef}
         aria-hidden
-        className="pointer-events-none absolute inset-0 block h-full w-full"
+        className="pointer-events-none absolute inset-0 z-40 block h-full w-full"
         data-testid="flow-text-overlay"
       />
       <FlowParamOverlay
@@ -3967,9 +4003,9 @@ if (import.meta.vitest) {
         { kind: "outputPreview", id: "preview" },
       ],
       synapses: [
-        { id: "s1", from: "slider", to: "add", fromPort: "out", toPort: "a" },
-        { id: "s2", from: "add", to: "pass", fromPort: "out", toPort: "number" },
-        { id: "s3", from: "pass", to: "preview", fromPort: "out", toPort: "in" },
+        { id: "s1", from: "slider", to: "add", fromPort: "number", toPort: "a" },
+        { id: "s2", from: "add", to: "pass", fromPort: "sum", toPort: "number" },
+        { id: "s3", from: "pass", to: "preview", fromPort: "number", toPort: "" },
       ],
     };
 
@@ -4038,9 +4074,9 @@ if (import.meta.vitest) {
       const reconnected: FlowFixtureV1 = {
         ...chainFixture,
         synapses: [
-          { id: "s1", from: "slider", to: "add", fromPort: "out", toPort: "b" },
-          { id: "s2", from: "add", to: "pass", fromPort: "out", toPort: "number" },
-          { id: "s3", from: "pass", to: "preview", fromPort: "out", toPort: "in" },
+          { id: "s1", from: "slider", to: "add", fromPort: "number", toPort: "b" },
+          { id: "s2", from: "add", to: "pass", fromPort: "sum", toPort: "number" },
+          { id: "s3", from: "pass", to: "preview", fromPort: "number", toPort: "" },
         ],
       };
       expect(flowTreeDirtyNeuronIds(base, flowFixtureToJson(reconnected))).toEqual({
@@ -4056,7 +4092,7 @@ if (import.meta.vitest) {
         ...chainFixture,
         widgets: [...chainFixture.widgets, { kind: "neuron", id: "extra", neuronKind: "math.passThrough" }],
         synapses: [
-          { id: "s0", from: "extra", to: "add", fromPort: "out", toPort: "b" },
+          { id: "s0", from: "extra", to: "add", fromPort: "number", toPort: "b" },
           ...chainFixture.synapses,
         ],
       };
@@ -4086,8 +4122,8 @@ if (import.meta.vitest) {
           { kind: "outputPreview", id: "preview" },
         ],
         synapses: [
-          { id: "s1", from: "slider", to: "volume", fromPort: "out", toPort: "geometry" },
-          { id: "s2", from: "volume", to: "preview", fromPort: "out", toPort: "in" },
+          { id: "s1", from: "slider", to: "volume", fromPort: "number", toPort: "geometry" },
+          { id: "s2", from: "volume", to: "preview", fromPort: "volume", toPort: "" },
         ],
       };
       const path = flowFixtureComputePath(fixture);
@@ -4112,7 +4148,7 @@ if (import.meta.vitest) {
       expect(flowDirtyComputePathReady(json, ["volume"])).toBe(false);
       const connected: FlowFixtureV1 = {
         ...fixture,
-        synapses: [{ id: "s1", from: "box", to: "volume", fromPort: "out", toPort: "geometry" }],
+        synapses: [{ id: "s1", from: "box", to: "volume", fromPort: "solid", toPort: "geometry" }],
       };
       expect(flowDirtyComputePathReady(flowFixtureToJson(connected), ["volume"])).toBe(true);
     });
@@ -4120,12 +4156,12 @@ if (import.meta.vitest) {
 
   describe("flow channel compatibility", () => {
     it("flowChannelCompatible requires input operators subset of output operators", () => {
-      const output = { id: "out", operators: ["brep.bool.fuse", "brep.xform.translate"] };
-      const compatible = { id: "geometry", operators: ["brep.bool.fuse"] };
-      const incompatible = { id: "geometry", operators: ["brep.solid.extrude"] };
+      const output = { name: "geometry", code: "G", abbreviation: "Geo", fullName: "Geometry", operators: ["brep.bool.fuse", "brep.xform.translate"] };
+      const compatible = { name: "geometry", code: "G", abbreviation: "Geo", fullName: "Geometry", operators: ["brep.bool.fuse"] };
+      const incompatible = { name: "geometry", code: "G", abbreviation: "Geo", fullName: "Geometry", operators: ["brep.solid.extrude"] };
       expect(flowChannelCompatible(output, compatible)).toBe(true);
       expect(flowChannelCompatible(output, incompatible)).toBe(false);
-      expect(flowChannelCompatible(output, { id: "any", operators: [] })).toBe(true);
+      expect(flowChannelCompatible(output, { name: "any", code: "A", abbreviation: "Any", fullName: "Any", operators: [] })).toBe(true);
     });
   });
 
@@ -4183,10 +4219,10 @@ if (import.meta.vitest) {
                 icon: "emoji:➕",
                 summary: "Sum",
                 inputs: [
-                  { id: "a", operators: ["math.add"] },
-                  { id: "b", operators: ["math.add"], default: { $schema: "number", value: 0 } },
+                  { name: "a", code: "A", abbreviation: "a", fullName: "A", operators: ["math.add"] },
+                  { name: "b", code: "B", abbreviation: "b", fullName: "B", operators: ["math.add"], default: { $schema: "number", value: 0 } },
                 ],
-                outputs: [{ id: "out", operators: ["math.add"] }],
+                outputs: [{ name: "sum", code: "S", abbreviation: "Sum", fullName: "Sum", operators: ["math.add"] }],
               },
             ],
             widgets: [],
@@ -4691,7 +4727,7 @@ if (import.meta.vitest) {
       runFlowGraphEdit(session, [
         { op: "makeSpace", anchor: "a", dx: 120, dy: 0 },
         { op: "addWidget", descriptor: "{}", x: 0, y: 0 },
-        { op: "insertBetween", anchor: "a", anchorOutPort: "out", mid: "b", midInPort: "geometry", midOutPort: "out" },
+        { op: "insertBetween", anchor: "a", anchorOutPort: "solid", mid: "b", midInPort: "geometry", midOutPort: "geometry" },
         { op: "setNeuronParams", id: "b", paramsJson: "{}" },
       ]);
       expect(calls).toEqual(["makeSpace", "addWidget", "insertBetween", "setNeuronParams"]);

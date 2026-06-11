@@ -205,6 +205,16 @@ pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, t
     f64::atan2(-u.x, -u.y)
 }
 
+/// 🎯 World point at the outer peak of a port handle cap (rim + outward × radius).
+pub fn handle_exterior_cap_peak(center: Point, outward: Vec2, radius: f64) -> Point {
+    let out = normalize_or_zero(outward);
+    let r = radius.max(0.0);
+    if out.hypot() < 1e-9 || r <= 0.0 {
+        return center;
+    }
+    center + out * r
+}
+
 pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
     let chord = normalize_or_zero(target_point - source_point);
     let mut source_radial = normalize_or_zero(source_outward);
@@ -216,7 +226,7 @@ pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, sou
         target_radial = -chord;
     }
     let handle_distance = distance_between(source_point, target_point);
-    let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
+    let control_length = clamp_f64(handle_distance * 0.22, 16.0, 120.0);
     let p1 = source_point + source_radial * control_length;
     let p2 = target_point + target_radial * control_length;
     CubicBez::new(source_point, p1, p2, target_point)
@@ -302,6 +312,22 @@ mod tests {
         let tangent = curve.eval(1.0) - curve.eval(0.995);
         let tangent_dir = normalize_or_zero(Vec2::new(tangent.x, tangent.y));
         assert!(tangent_dir.dot(approach) > 0.99, "free target tangent should match incoming chord");
+    }
+
+    #[test]
+    fn edge_bezier_starts_outside_handle_cap_peak() {
+        let node_center = Point::new(100.0, 50.0);
+        let width = 160.0;
+        let height = 72.0;
+        let rim = Point::new(node_center.x + width * 0.5, node_center.y);
+        let outward = handle_outward_at_node_rim(rim, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
+        let radius = 5.0;
+        let peak = handle_exterior_cap_peak(rim, outward, radius);
+        let target = Point::new(300.0, 50.0);
+        let curve = compute_edge_bezier_outward(peak, target, outward, -normalize_or_zero(target - peak));
+        let start = curve.eval(0.0);
+        assert!((start.x - peak.x).abs() < 1e-9 && (start.y - peak.y).abs() < 1e-9);
+        assert!(start.x > rim.x + 0.5, "edge must begin outside the port rim under the cap");
     }
 
     #[test]
@@ -432,7 +458,7 @@ pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Valu
 pub use geometry::{
     circle_handle_angle_toward, clamp_f64, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier,
     encode_board_stroke_scene,
-    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim,
+    handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim,
     handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero,
     ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
 };
@@ -1629,8 +1655,16 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBez> {
         let edge = self.edges.get(&edge_id)?;
-        let (source_position, target_position, source_node, target_node) = self.endpoint_wire_nodes(edge)?;
-        Some(self.wire_bezier_between(source_position, target_position, source_node, target_node))
+        let (source_position, target_position, source_node, target_node, source_cap_radius, target_cap_radius) =
+            self.endpoint_wire_nodes(edge)?;
+        Some(self.wire_bezier_between(
+            source_position,
+            target_position,
+            source_node,
+            target_node,
+            source_cap_radius,
+            target_cap_radius,
+        ))
     }
 
     fn wire_bezier_between(
@@ -1639,6 +1673,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         target_point: Point,
         source_node: Option<&Node>,
         target_node: Option<&Node>,
+        source_cap_radius: f64,
+        target_cap_radius: f64,
     ) -> CubicBez {
         let chord = normalize_or_zero(target_point - source_point);
         let source_out = source_node
@@ -1653,7 +1689,17 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             })
             .filter(|outward| outward.hypot() > f64::EPSILON)
             .unwrap_or(-chord);
-        compute_edge_bezier_outward(source_point, target_point, source_out, target_out)
+        let source_wire = if source_node.is_some() {
+            handle_exterior_cap_peak(source_point, source_out, source_cap_radius)
+        } else {
+            source_point
+        };
+        let target_wire = if target_node.is_some() {
+            handle_exterior_cap_peak(target_point, target_out, target_cap_radius)
+        } else {
+            target_point
+        };
+        compute_edge_bezier_outward(source_wire, target_wire, source_out, target_out)
     }
 
     fn draw_edge_preview_curve(
@@ -1672,9 +1718,16 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let snap_h = self.handles.get(&snap)?;
                 let snap_node = self.nodes.get(&snap_h.node_id)?;
                 let source_point = handle_position(snap_node, snap_h);
-                return Some(self.wire_bezier_between(source_point, target_point, Some(snap_node), Some(tgt_node)));
+                return Some(self.wire_bezier_between(
+                    source_point,
+                    target_point,
+                    Some(snap_node),
+                    Some(tgt_node),
+                    snap_h.radius,
+                    tgt_h.radius,
+                ));
             }
-            return Some(self.wire_bezier_between(cursor, target_point, None, Some(tgt_node)));
+            return Some(self.wire_bezier_between(cursor, target_point, None, Some(tgt_node), 0.0, tgt_h.radius));
         }
         let anchor = self.handles.get(&anchor_handle)?;
         let anchor_node = self.nodes.get(&anchor.node_id)?;
@@ -1684,16 +1737,30 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let snap_h = self.handles.get(&snap)?;
                 let snap_node = self.nodes.get(&snap_h.node_id)?;
                 let snap_point = handle_position(snap_node, snap_h);
-                return Some(self.wire_bezier_between(anchor_point, snap_point, Some(anchor_node), Some(snap_node)));
+                return Some(self.wire_bezier_between(
+                    anchor_point,
+                    snap_point,
+                    Some(anchor_node),
+                    Some(snap_node),
+                    anchor.radius,
+                    snap_h.radius,
+                ));
             }
-            Some(self.wire_bezier_between(anchor_point, cursor, Some(anchor_node), None))
+            Some(self.wire_bezier_between(anchor_point, cursor, Some(anchor_node), None, anchor.radius, 0.0))
         } else if let Some(snap) = snap_target {
             let snap_h = self.handles.get(&snap)?;
             let snap_node = self.nodes.get(&snap_h.node_id)?;
             let snap_point = handle_position(snap_node, snap_h);
-            Some(self.wire_bezier_between(snap_point, anchor_point, Some(snap_node), Some(anchor_node)))
+            Some(self.wire_bezier_between(
+                snap_point,
+                anchor_point,
+                Some(snap_node),
+                Some(anchor_node),
+                snap_h.radius,
+                anchor.radius,
+            ))
         } else {
-            Some(self.wire_bezier_between(cursor, anchor_point, None, Some(anchor_node)))
+            Some(self.wire_bezier_between(cursor, anchor_point, None, Some(anchor_node), 0.0, anchor.radius))
         }
     }
 
@@ -1771,7 +1838,10 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         best.map(|(_, id)| id)
     }
 
-    fn endpoint_wire_nodes(&self, edge: &GraphEdge<P::Endpoint>) -> Option<(Point, Point, Option<&Node>, Option<&Node>)> {
+    fn endpoint_wire_nodes(
+        &self,
+        edge: &GraphEdge<P::Endpoint>,
+    ) -> Option<(Point, Point, Option<&Node>, Option<&Node>, f64, f64)> {
         if P::HAS_PORTS {
             let source_handle = self.handles.get(&P::endpoint_as_handle(edge.source)?)?;
             let target_handle = self.handles.get(&P::endpoint_as_handle(edge.target)?)?;
@@ -1779,11 +1849,18 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             let target_node = self.nodes.get(&target_handle.node_id)?;
             let source_position = handle_position(source_node, source_handle);
             let target_position = handle_position(target_node, target_handle);
-            return Some((source_position, target_position, Some(source_node), Some(target_node)));
+            return Some((
+                source_position,
+                target_position,
+                Some(source_node),
+                Some(target_node),
+                source_handle.radius,
+                target_handle.radius,
+            ));
         }
         let source_node = self.nodes.get(&P::endpoint_as_u64(edge.source))?;
         let target_node = self.nodes.get(&P::endpoint_as_u64(edge.target))?;
-        Some((source_node.center, target_node.center, Some(source_node), Some(target_node)))
+        Some((source_node.center, target_node.center, Some(source_node), Some(target_node), 0.0, 0.0))
     }
 
     fn remove_handle(&mut self, id: HandleId) {
@@ -2179,6 +2256,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             target_position,
             Some(source_node),
             Some(target_node),
+            source_handle.radius,
+            target_handle.radius,
         ))
     }
 
@@ -2440,8 +2519,13 @@ mod tests {
         };
         assert_eq!(snap_target, Some(11));
         let preview = engine.render_snapshot().pending_edge.expect("preview");
-        assert!((preview.p3.x - inp.x).abs() < 0.01);
-        assert!((preview.p3.y - inp.y).abs() < 0.01);
+        let target_node = engine.nodes.get(&2).expect("target node");
+        let target_handle = engine.handles.get(&11).expect("target handle");
+        let outward = handle_outward_at_node_rim(inp, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height)
+            .expect("target outward");
+        let peak = handle_exterior_cap_peak(inp, outward, target_handle.radius);
+        assert!((preview.p3.x - peak.x).abs() < 0.01);
+        assert!((preview.p3.y - peak.y).abs() < 0.01);
         engine.pointer_up(near.x, near.y);
         assert_eq!(engine.edges.len(), 1);
         let edge = engine.edges.values().next().expect("edge");

@@ -769,9 +769,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 						? synapse.from_port
 						: typeof synapse.fromPort === "string"
 							? synapse.fromPort
-							: "out";
+							: "";
 				const toPort =
-					typeof synapse.to_port === "string" ? synapse.to_port : typeof synapse.toPort === "string" ? synapse.toPort : "in";
+					typeof synapse.to_port === "string" ? synapse.to_port : typeof synapse.toPort === "string" ? synapse.toPort : "";
 				return [{ source: `${synapse.from}:${fromPort}`, target: `${synapse.to}:${toPort}` }];
 			});
 		} catch {
@@ -1100,10 +1100,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 				{ op: "addWidget", descriptor: sliderDescriptor(sliderZId, z), x: valueColumnX, y: sourceLayout.y + valueRowGap },
 				{ op: "addWidget", descriptor: neuronDescriptor(vectorId, "brep.vector"), x: vectorColumnX, y: sourceLayout.y },
 				{ op: "addWidget", descriptor: neuronDescriptor(transformId, BREP_XFORM_NEURON_KIND.translate), x: transformColumnX, y: sourceLayout.y },
-				{ op: "connectPorts", from: sliderXId, fromPort: "out", to: vectorId, toPort: "x" },
-				{ op: "connectPorts", from: sliderYId, fromPort: "out", to: vectorId, toPort: "y" },
-				{ op: "connectPorts", from: sliderZId, fromPort: "out", to: vectorId, toPort: "z" },
-				{ op: "connectPorts", from: vectorId, fromPort: "out", to: transformId, toPort: "offset" },
+				{ op: "connectPorts", from: sliderXId, fromPort: "number", to: vectorId, toPort: "x" },
+				{ op: "connectPorts", from: sliderYId, fromPort: "number", to: vectorId, toPort: "y" },
+				{ op: "connectPorts", from: sliderZId, fromPort: "number", to: vectorId, toPort: "z" },
+				{ op: "connectPorts", from: vectorId, fromPort: "vector", to: transformId, toPort: "offset" },
 			);
 		} else {
 			binding.valueWidgetIds = [scalarSliderId];
@@ -1117,7 +1117,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 				{
 					op: "connectPorts",
 					from: scalarSliderId,
-					fromPort: "out",
+					fromPort: "number",
 					to: transformId,
 					toPort: op === "rotate" ? "angle" : "factor",
 				},
@@ -1126,10 +1126,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		ops.push({
 			op: "insertBetween",
 			anchor: sourceWidgetId,
-			anchorOutPort: "out",
+			anchorOutPort: "solid",
 			mid: transformId,
 			midInPort: "geometry",
-			midOutPort: "out",
+			midOutPort: "geometry",
 		});
 		ops.push({ op: "setPreviewOff", ids: [sourceWidgetId] });
 		return { ops, binding };
@@ -1948,7 +1948,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
-				outputsJson: JSON.stringify({ box: { in: {}, out: { out: { geometry: "solid-1" } } } }),
+				outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } }),
 			});
 			const base = ctrl.getFixtureJson();
 			const interacted = JSON.stringify({
@@ -1962,7 +1962,7 @@ if (import.meta.vitest) {
 			});
 			ctrl.run("setFixtureJson", { json: interacted });
 			expect(ctrl.getPreviewItems()).toEqual([
-				{ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: "solid-1" },
+				{ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" },
 			]);
 		});
 
@@ -1970,7 +1970,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
-				outputsJson: JSON.stringify({ box: { in: {}, out: { out: { geometry: "solid-1" } } } }),
+				outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } }),
 			});
 			ctrl.run("setFixtureJson", {
 				json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}',
@@ -1983,10 +1983,10 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
-				outputsJson: JSON.stringify({ box: { in: {}, out: { out: { geometry: "solid-1" } } } }),
+				outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } }),
 			});
 			expect(ctrl.getPreviewItems()).toEqual([
-				{ widgetId: "box", port: "out", direction: "out", kind: "geometry", handle: "solid-1" },
+				{ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" },
 			]);
 		});
 
@@ -1995,13 +1995,13 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					pt: { in: {}, out: { out: { point: { x: 1, y: 0, z: 0 } } } },
-					vec: { in: {}, out: { out: { vector: { x: 0, y: 1, z: 0 } } } },
+					pt: { in: {}, out: { point: { point: { x: 1, y: 0, z: 0 } } } },
+					vec: { in: {}, out: { vector: { vector: { x: 0, y: 1, z: 0 } } } },
 				}),
 			});
 			expect(ctrl.getPreviewItems()).toEqual([
-				{ widgetId: "pt", port: "out", direction: "out", kind: "point", position: [1, 0, 0] },
-				{ widgetId: "vec", port: "out", direction: "out", kind: "vector", directionVec: [0, 1, 0] },
+				{ widgetId: "pt", port: "point", direction: "out", kind: "point", position: [1, 0, 0] },
+				{ widgetId: "vec", port: "vector", direction: "out", kind: "vector", directionVec: [0, 1, 0] },
 			]);
 		});
 
@@ -2010,8 +2010,8 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					pt: { in: {}, out: { out: { point: { x: 0, y: 0, z: 0 } } } },
-					vec: { in: {}, out: { out: { vector: { x: 1, y: 0, z: 0 } } } },
+					pt: { in: {}, out: { point: { point: { x: 0, y: 0, z: 0 } } } },
+					vec: { in: {}, out: { vector: { vector: { x: 1, y: 0, z: 0 } } } },
 				}),
 			});
 			ctrl.run("selectAll");
@@ -2023,8 +2023,8 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					circle: { in: {}, out: { out: { geometry: "drawing-1" } } },
-					offset: { in: { geometry: "drawing-1" }, out: { out: { geometry: "wire-2" } } },
+					circle: { in: {}, out: { wire: { geometry: "drawing-1" } } },
+					offset: { in: { geometry: "drawing-1" }, out: { geometry: { geometry: "wire-2" } } },
 				}),
 			});
 			ctrl.run("setFixtureJson", {
@@ -2035,14 +2035,14 @@ if (import.meta.vitest) {
 						{ kind: "neuron", id: "circle", neuronKind: "brep.sketch2d.circle" },
 						{ kind: "neuron", id: "offset", neuronKind: "brep.xform.offset" },
 					],
-					synapses: [{ id: "s1", from: "circle", to: "offset", from_port: "out", to_port: "geometry" }],
+					synapses: [{ id: "s1", from: "circle", to: "offset", from_port: "wire", to_port: "geometry" }],
 				}),
 			});
 			ctrl.run("setHoverChannel", {
 				channel: { widgetId: "offset", port: "geometry", direction: "in" },
 			});
 			expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "offset", port: "geometry", direction: "in" });
-			expect(ctrl.getHoveredGeometryTargets()).toEqual([{ widgetId: "circle", port: "out", direction: "out" }]);
+			expect(ctrl.getHoveredGeometryTargets()).toEqual([{ widgetId: "circle", port: "wire", direction: "out" }]);
 		});
 
 		it("parseFixtureEdges reads camelCase flow synapse ports", () => {
@@ -2054,8 +2054,8 @@ if (import.meta.vitest) {
 					camera: { x: 0, y: 0, zoom: 1 },
 					widgets: [],
 					synapses: [
-						{ id: "e101", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "out", toPort: "a" },
-						{ id: "e102", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "out", toPort: "b" },
+						{ id: "e101", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "solid", toPort: "a" },
+						{ id: "e102", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "solid", toPort: "b" },
 					],
 				}),
 			});
@@ -2065,12 +2065,12 @@ if (import.meta.vitest) {
 			});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					brep_prim3d_sphere_2: { in: {}, out: { out: { geometry: "solid-sphere" } } },
-					brep_bool_cut_5: { in: { a: { geometry: "solid-sphere" } }, out: { out: { geometry: "solid-cut" } } },
+					brep_prim3d_sphere_2: { in: {}, out: { solid: { geometry: "solid-sphere" } } },
+					brep_bool_cut_5: { in: { a: { geometry: "solid-sphere" } }, out: { solid: { geometry: "solid-cut" } } },
 				}),
 			});
 			expect(ctrl.getSelectedGeometryTargets()).toEqual([
-				{ widgetId: "brep_prim3d_sphere_2", port: "out", direction: "out" },
+				{ widgetId: "brep_prim3d_sphere_2", port: "solid", direction: "out" },
 			]);
 		});
 
@@ -2078,11 +2078,11 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			const outputsJson = JSON.stringify({
-				brep_prim3d_sphere_2: { in: {}, out: { out: { geometry: "solid-sphere" } } },
-				brep_prim3d_torus_4: { in: {}, out: { out: { geometry: "solid-torus" } } },
+				brep_prim3d_sphere_2: { in: {}, out: { solid: { geometry: "solid-sphere" } } },
+				brep_prim3d_torus_4: { in: {}, out: { solid: { geometry: "solid-torus" } } },
 				brep_bool_cut_5: {
 					in: { a: { geometry: "solid-sphere" }, b: { geometry: "solid-torus" } },
-					out: { out: { geometry: "solid-cut" } },
+					out: { solid: { geometry: "solid-cut" } },
 				},
 			});
 			ctrl.run("setEvalOutputs", { outputsJson });
@@ -2096,8 +2096,8 @@ if (import.meta.vitest) {
 						{ kind: "neuron", id: "brep_bool_cut_5", neuronKind: "brep.bool.cut", preview: true },
 					],
 					synapses: [
-						{ id: "e1", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "out", toPort: "a" },
-						{ id: "e2", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "out", toPort: "b" },
+						{ id: "e1", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "solid", toPort: "a" },
+						{ id: "e2", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "solid", toPort: "b" },
 					],
 				}),
 			});
@@ -2120,7 +2120,7 @@ if (import.meta.vitest) {
 			expect(visible).toEqual([
 				{
 					widgetId: "brep_prim3d_sphere_2",
-					port: "out",
+					port: "solid",
 					direction: "out",
 					kind: "geometry",
 					handle: "solid-sphere",
@@ -2132,9 +2132,9 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setSelectChannels", {
-				channels: [{ widgetId: "box", port: "out", direction: "out" }],
+				channels: [{ widgetId: "box", port: "solid", direction: "out" }],
 			});
-			expect(ctrl.getSelectedChannels()).toEqual([{ widgetId: "box", port: "out", direction: "out" }]);
+			expect(ctrl.getSelectedChannels()).toEqual([{ widgetId: "box", port: "solid", direction: "out" }]);
 			expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
 		});
 
