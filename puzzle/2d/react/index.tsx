@@ -1149,8 +1149,8 @@ export const DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX = 40;
 /** @emoji ⭕ Fixed puzzle 2d node radius in layout px (not overridable per node or kind). */
 export const PUZZLE_2D_NODE_RADIUS_PX = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2;
 
-/** @emoji 📐 Default brush flush offset (`2 ×` node diameter). */
-export const DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX * 2;
+/** @emoji 📐 Default suggestion slot offset along handle outward normal (`2 ×` node diameter). */
+export const DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX * 2;
 
 /** @emoji ⭕ Returns the canonical puzzle 2d node radius in layout px. */
 export function puzzle2dUniformNodeRadiusPx(): number {
@@ -1428,7 +1428,7 @@ export function puzzle2dSortBrushCandidatesByHandleProximity(
 export function puzzle2dBrushSlotCenterWorld(
   sourceNode: { readonly radius: number; readonly x: number; readonly y: number },
   sourceHandleAngle: number,
-  flushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  offset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 ): Point {
   const handleWorld = computeHandlePosition(sourceNode, sourceHandleAngle);
   const dx = handleWorld.x - sourceNode.x;
@@ -1436,7 +1436,7 @@ export function puzzle2dBrushSlotCenterWorld(
   const len = Math.hypot(dx, dy);
   const nx = len > 1e-9 ? dx / len : 1;
   const ny = len > 1e-9 ? dy / len : 0;
-  return { x: handleWorld.x + nx * flushDistance, y: handleWorld.y + ny * flushDistance };
+  return { x: handleWorld.x + nx * offset, y: handleWorld.y + ny * offset };
 }
 
 /** @emoji 🖌️ Builds a brush slot preview for the suggestions menu without waiting on WASM drain. */
@@ -1446,7 +1446,7 @@ export function puzzle2dBuildBrushSuggestionsPreview(
   candidate: Puzzle2dBrushCompatibleCandidate,
   kindCatalogs: KindCatalogBundle | undefined,
   brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
-  flushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  offset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 ): Puzzle2dEventMap["brushPreview"] | null {
   if (!driving) {
     return null;
@@ -1456,7 +1456,7 @@ export function puzzle2dBuildBrushSuggestionsPreview(
     return null;
   }
   const node = sourceObj.node;
-  const center = puzzle2dBrushSlotCenterWorld({ radius: node.radius, x: node.x, y: node.y }, sourceObj.angle, flushDistance);
+  const center = puzzle2dBrushSlotCenterWorld({ radius: node.radius, x: node.x, y: node.y }, sourceObj.angle, offset);
   const kind = kindCatalogs?.nodes?.find((row) => row.id === candidate.nodeKind);
   const templates = kind?.handles;
   if (!templates?.length || candidate.targetHandleIndex < 0 || candidate.targetHandleIndex >= templates.length) {
@@ -1488,7 +1488,7 @@ export function puzzle2dApplyBrushSuggestionsCandidateIndex(
   index: number,
   options?: {
     readonly brushNodeSize?: number;
-    readonly flushDistance?: number;
+    readonly offset?: number;
     readonly kindCatalogs?: KindCatalogBundle;
   },
 ): void {
@@ -1500,7 +1500,7 @@ export function puzzle2dApplyBrushSuggestionsCandidateIndex(
   const candidate = session.candidates[index]!;
   const kindCatalogs = options?.kindCatalogs ?? puzzle2dBrushKindCatalogsRef.current;
   const brushNodeSize = options?.brushNodeSize ?? puzzle2dFixturePaletteDragPreviewOptionsRef.brushNodeSize;
-  const flushDistance = options?.flushDistance ?? DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  const offset = options?.offset ?? driving?.getSuggestionOffset() ?? DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX;
   if (driving) {
     driving.setBrushCandidateIndex(index);
   }
@@ -1508,7 +1508,7 @@ export function puzzle2dApplyBrushSuggestionsCandidateIndex(
   let preview =
     drained?.candidateIndex === index && drained.preview && !puzzle2dBrushPreviewIsEmpty(drained.preview) ? drained.preview : null;
   if (!preview) {
-    preview = puzzle2dBuildBrushSuggestionsPreview(driving, session.sourceHandleId, candidate, kindCatalogs, brushNodeSize, flushDistance);
+    preview = puzzle2dBuildBrushSuggestionsPreview(driving, session.sourceHandleId, candidate, kindCatalogs, brushNodeSize, offset);
   }
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: index,
@@ -4693,13 +4693,13 @@ export class Puzzle2dRenderer {
   private gridSnapEnabled = false;
   private gridFactor = DEFAULT_PUZZLE_2D_GRID_FACTOR;
   private activeTool: Puzzle2dActiveTool = "select";
-  private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  private suggestionOffset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX;
   private brushNodeKindWeights: Record<string, number> = {};
   private brushHandleKindWeights: Record<string, number> = {};
   private lastBrushKindWeightsJsonForWasm: string | null = null;
   private brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
   private lastActiveToolForWasm: Puzzle2dActiveTool | null = null;
-  private lastBrushFlushDistanceForWasm: number | null = null;
+  private lastSuggestionOffsetForWasm: number | null = null;
   private lastBrushNodeSizeForWasm: number | null = null;
   private lastAutomaticLodForWasm: boolean | null = null;
   private lastForcedDrawLodLabelForWasm: string | null = null;
@@ -5251,7 +5251,7 @@ export class Puzzle2dRenderer {
     }
     try {
       this.session.syncDescriptorJson(puzzle2dWasmDescriptorJsonFromFixture(fixture));
-      this.session.setBrushFlushDistance(this.brushFlushDistance);
+      this.session.setSuggestionOffset(this.suggestionOffset);
       this.session.setBrushNodeSize(this.brushNodeSize);
       this.session.setBrushKindWeights(
         JSON.stringify({ nodeWeights: this.brushNodeKindWeights, handleWeights: this.brushHandleKindWeights }),
@@ -5271,14 +5271,19 @@ export class Puzzle2dRenderer {
     }
   }
 
-  /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
-  setBrushFlushDistance(distance: number): void {
-    const next = Number.isFinite(distance) && distance >= 0 ? distance : DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
-    if (nearlyEqual(this.brushFlushDistance, next)) {
+  /** @emoji 📐 Suggestion slot offset along handle outward normal (world units). */
+  getSuggestionOffset(): number {
+    return this.suggestionOffset;
+  }
+
+  /** @emoji 📐 Suggestion slot offset along handle outward normal (world units). */
+  setSuggestionOffset(distance: number): void {
+    const next = Number.isFinite(distance) && distance >= 0 ? distance : DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX;
+    if (nearlyEqual(this.suggestionOffset, next)) {
       return;
     }
-    this.brushFlushDistance = next;
-    this.lastBrushFlushDistanceForWasm = null;
+    this.suggestionOffset = next;
+    this.lastSuggestionOffsetForWasm = null;
     this.markDirty();
   }
 
@@ -6250,9 +6255,9 @@ export class Puzzle2dRenderer {
       this.session.setActiveTool(this.activeTool);
       this.lastActiveToolForWasm = this.activeTool;
     }
-    if (this.lastBrushFlushDistanceForWasm === null || !nearlyEqual(this.lastBrushFlushDistanceForWasm, this.brushFlushDistance)) {
-      this.session.setBrushFlushDistance(this.brushFlushDistance);
-      this.lastBrushFlushDistanceForWasm = this.brushFlushDistance;
+    if (this.lastSuggestionOffsetForWasm === null || !nearlyEqual(this.lastSuggestionOffsetForWasm, this.suggestionOffset)) {
+      this.session.setSuggestionOffset(this.suggestionOffset);
+      this.lastSuggestionOffsetForWasm = this.suggestionOffset;
     }
     const brushKindWeightsJson = JSON.stringify({
       nodeWeights: this.brushNodeKindWeights,
@@ -7984,7 +7989,7 @@ if (puzzle2dVitest) {
         nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
       });
       driving.setKindCompatibility([{ source: "port", target: "port" }]);
-      driving.setBrushFlushDistance(80);
+      driving.setSuggestionOffset(80);
       driving.setBrushNodeSize(40);
       driving.brushOpenSlot("a:h0");
       puzzle2dBrushSuggestionsDrivingRendererRef.current = driving;
@@ -10360,7 +10365,7 @@ if (puzzle2dVitest) {
         new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
         renderer.scene.add(node);
         renderer.setActiveTool("brush");
-        renderer.setBrushFlushDistance(80);
+        renderer.setSuggestionOffset(80);
         renderer.setBrushNodeSize(40);
         renderer.setKindCatalogs(brushCatalogs);
         renderer.setKindCompatibility(brushCompat);
@@ -10421,7 +10426,7 @@ if (puzzle2dVitest) {
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
       renderer.setCamera(0, 0, 1);
       renderer.setActiveTool("brush");
-      renderer.setBrushFlushDistance(80);
+      renderer.setSuggestionOffset(80);
       renderer.setBrushNodeSize(40);
       renderer.setKindCatalogs({
         handles: [{ id: "port", name: "Port", color: "#888888" }],
@@ -10484,7 +10489,7 @@ if (puzzle2dVitest) {
       renderer.setCamera(0, 0, 1);
       renderer.setKindCatalogs(catalogs);
       renderer.setActiveTool("brush");
-      renderer.setBrushFlushDistance(80);
+      renderer.setSuggestionOffset(80);
       renderer.setBrushNodeSize(40);
       const node = new Puzzle2dSceneNode({
         id: "tambour",
@@ -11679,8 +11684,8 @@ export interface Puzzle2dCanvasProps {
   linkSession?: Puzzle2dLinkSessionSnapshot | null;
   /** @emoji 🖌️ Active viewport tool forwarded to the WASM host. */
   activeTool?: Puzzle2dActiveTool;
-  /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
-  brushFlushDistance?: number;
+  /** @emoji 📐 Suggestion slot offset along handle outward normal (world units). */
+  suggestionOffset?: number;
   /** @emoji 📐 Brush preview node span in world units. */
   brushNodeSize?: number;
   /** @emoji 🖌️ Paint-style brush commit when the cursor leaves a slot with Alt held ({@link Puzzle2dEventMap.brushPlace}). */
@@ -12385,7 +12390,7 @@ function puzzle2dApplySuggestionsBrushSession(
   if (candidates.length === 0) {
     return;
   }
-  const preview = puzzle2dBuildBrushSuggestionsPreview(driving, sourceHandleId, candidates[0]!, kindCatalogs, brushNodeSize);
+  const preview = puzzle2dBuildBrushSuggestionsPreview(driving, sourceHandleId, candidates[0]!, kindCatalogs, brushNodeSize, driving.getSuggestionOffset());
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: 0,
     candidates,
@@ -13377,7 +13382,7 @@ export function Puzzle2dCanvas({
   onParentNodeChange,
   onProximityConnect,
   activeTool,
-  brushFlushDistance,
+  suggestionOffset,
   brushNodeSize,
   onBrushPlace,
   onBrushCandidates,
@@ -14216,8 +14221,8 @@ export function Puzzle2dCanvas({
     if (!renderer) {
       return;
     }
-    renderer.setBrushFlushDistance(brushFlushDistance ?? DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX);
-  }, [brushFlushDistance]);
+    renderer.setSuggestionOffset(suggestionOffset ?? DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX);
+  }, [suggestionOffset]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;

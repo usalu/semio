@@ -15747,8 +15747,16 @@ function gumballWorldPointToLocalOffset(point: GumballVec3, pivot: GumballVec3, 
   return [v.x, v.y, v.z];
 }
 
-/** @emoji 📐 Component-wise scale factors for a 2D plane scale drag. */
-export function gumballPlaneScaleFactors(startLocal: readonly [number, number], currentLocal: readonly [number, number]): readonly [number, number] {
+/** @emoji 📐 Scale factors for a 2D plane scale drag; uniform uses radial distance in the plane. */
+export function gumballPlaneScaleFactors(
+  startLocal: readonly [number, number],
+  currentLocal: readonly [number, number],
+  uniform = false,
+): readonly [number, number] {
+  if (uniform) {
+    const factor = gumballAxisScaleFactor(Math.hypot(startLocal[0], startLocal[1]), Math.hypot(currentLocal[0], currentLocal[1]));
+    return [factor, factor];
+  }
   return [gumballAxisScaleFactor(startLocal[0], currentLocal[0]), gumballAxisScaleFactor(startLocal[1], currentLocal[1])];
 }
 
@@ -16512,7 +16520,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         if (!hit || !state.scalePlaneAxes) return;
         const local = gumballWorldPointToLocalOffset(hit, pivot, quat);
         const [ia, ib] = state.scalePlaneAxes;
-        const factors = gumballPlaneScaleFactors(state.startPlaneScaleLocal, [local[ia]!, local[ib]!]);
+        const factors = gumballPlaneScaleFactors(state.startPlaneScaleLocal, [local[ia]!, local[ib]!], shiftKey);
         let fa = factors[0];
         let fb = factors[1];
         if (scaleSnap && scaleSnap > 0) {
@@ -20226,6 +20234,8 @@ if (import.meta.vitest) {
       expect(gumballScalePlaneAxisIndices("scaleXZ")).toEqual([0, 2]);
       expect(gumballPlaneScaleCorner("xy")[0]).toBeGreaterThan(GUMBALL_PLANE_OFFSET + GUMBALL_PLANE_SIZE * 0.5);
       expect(gumballPlaneScaleFactors([1, 2], [2, 4])).toEqual([2, 2]);
+      expect(gumballPlaneScaleFactors([3, 4], [6, 8], true)).toEqual([2, 2]);
+      expect(gumballPlaneScaleFactors([1, 0], [2, 0], true)).toEqual([2, 2]);
       const gumballMesh = new THREE.Mesh();
       gumballMesh.userData = { gumballHandleKind: "moveX" };
       const gumballChild = new THREE.Mesh();

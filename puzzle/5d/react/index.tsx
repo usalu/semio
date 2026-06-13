@@ -35,7 +35,7 @@ import {
   type Puzzle2dActiveTool,
   type Puzzle2dBrushPlacePayload,
   type Puzzle2dStructureDeletePayload,
-  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dFixtureHandlesFromNodeKind,
   buildPaletteNodeDragFixture,
@@ -46,6 +46,12 @@ import {
   type Puzzle2dFixtureNodeV1,
   type Puzzle2dKindHover,
   type Puzzle2dHoverPayload,
+  puzzle2dSubscribeBrushSession,
+  puzzle2dGetBrushSessionSnapshot,
+  puzzle2dApplyBrushSuggestionsCandidateIndex,
+  usePuzzle2dRenderer,
+  type Puzzle2dBrushSessionSnapshot,
+  type Puzzle2dRenderer,
 } from "@puzzle/2d/react";
 import {
   ObjectStateProvider as Puzzle3dPartStateProvider,
@@ -82,6 +88,12 @@ import {
   resolveObjectKindMeshUrl,
   vortexWorldCadFromObject,
   PUZZLE_3D_FILL_COUNT_MAX,
+  puzzle3dBrushPairedSyncRef,
+  puzzle3dBrushUiStore,
+  subscribePuzzle3dBrushEngagementSource,
+  getPuzzle3dBrushEngagementEpoch,
+  type BrushPreviewState,
+  type VortexBindingMeta,
 } from "../../3d/react/index.tsx";
 import type { Object3D } from "three";
 // #endregion 🔌Adapters
@@ -938,7 +950,7 @@ function synthesizeFlatAspectFromVolume(model: Model, payload: BrushPlacePayload
   if (!sourcePart?.["2d"]) return null;
   const sourceGrip = sourcePart.grips.find((grip) => grip.id === parsed.gripId);
   const angle = sourceGrip?.["2d"]?.angle ?? flatHandleConnectorAngle(0, 1);
-  const gap = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX / 2;
+  const gap = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX / 2;
   const x = sourcePart["2d"].x + gap * Math.cos(angle);
   const y = sourcePart["2d"].y + gap * Math.sin(angle);
   const peer = peerPartForKind(model, partKind);
@@ -1102,6 +1114,133 @@ export function buildPuzzle5dFillSequence(args: {
   return payloads.map((payload) => puzzle5dBrushPlacementFromVolume(payload));
 }
 //#endregion 🔖Brush
+
+//#region 🔖BrushPairedSync
+export const puzzle5dFlatRendererRef: { current: Puzzle2dRenderer | null } = { current: null };
+
+let puzzle5dBrushPairedSyncGuard: "flat" | "volume" | null = null;
+
+function puzzle5dGripBindingMeta(model: Model, gripFullId: string): VortexBindingMeta | null {
+  const parsed = parseGripFullId(gripFullId);
+  if (!parsed) {
+    return null;
+  }
+  const part = model.parts.find((row) => row.id === parsed.partId);
+  const grip = part?.grips.find((row) => row.id === parsed.gripId);
+  if (!part || !grip) {
+    return null;
+  }
+  return {
+    fullId: gripFullId,
+    objectId: parsed.partId,
+    objectKind: part.partKind,
+    vortexKind: grip.gripKind,
+    radiusWorld: grip["3d"]?.radius ?? 0.36,
+  };
+}
+
+/** @emoji 🔗 Mirrors flat brush suggestion preview onto the paired volume surface. */
+export function puzzle5dSyncBrushPreviewFromFlat(
+  session: Puzzle2dBrushSessionSnapshot | null,
+  model: Model,
+): void {
+  if (puzzle5dBrushPairedSyncGuard === "volume") {
+    return;
+  }
+  puzzle5dBrushPairedSyncGuard = "flat";
+  try {
+    if (!session?.sourceHandleId) {
+      puzzle3dBrushPairedSyncRef.current.clear();
+      return;
+    }
+    const meta = puzzle5dGripBindingMeta(model, session.sourceHandleId);
+    const candidate = session.candidates[session.candidateIndex];
+    if (!meta || !candidate) {
+      return;
+    }
+    puzzle3dBrushPairedSyncRef.current.syncFromFlat({
+      targetGripFullId: session.sourceHandleId,
+      meta,
+      candidate: { objectKindId: candidate.nodeKind, sourceVortexIndex: candidate.targetHandleIndex },
+    });
+  } finally {
+    puzzle5dBrushPairedSyncGuard = null;
+  }
+}
+
+/** @emoji 🔗 Mirrors volume brush suggestion preview onto the paired flat surface. */
+export function puzzle5dSyncBrushPreviewFromVolume(
+  preview: BrushPreviewState | null,
+  flatCatalogs: Puzzle2dKindCatalogBundle | undefined,
+): void {
+  if (puzzle5dBrushPairedSyncGuard === "flat") {
+    return;
+  }
+  const flatRenderer = puzzle5dFlatRendererRef.current;
+  if (!flatRenderer) {
+    return;
+  }
+  puzzle5dBrushPairedSyncGuard = "volume";
+  try {
+    if (!preview) {
+      const flatSession = puzzle2dGetBrushSessionSnapshot();
+      if (!flatSession?.sourceHandleId) {
+        flatRenderer.brushCancelSlot();
+      }
+      return;
+    }
+    const flatSession = puzzle2dGetBrushSessionSnapshot();
+    if (flatSession?.sourceHandleId !== preview.targetVortexFullId) {
+      flatRenderer.brushOpenSlot(preview.targetVortexFullId);
+    }
+    const nextSession = puzzle2dGetBrushSessionSnapshot();
+    const index =
+      nextSession?.candidates.findIndex(
+        (row) => row.nodeKind === preview.objectKindId && row.targetHandleIndex === preview.sourceVortexIndex,
+      ) ?? -1;
+    if (index >= 0) {
+      puzzle2dApplyBrushSuggestionsCandidateIndex(index, { kindCatalogs: flatCatalogs });
+    }
+  } finally {
+    puzzle5dBrushPairedSyncGuard = null;
+  }
+}
+
+function Puzzle5dFlatRendererRegistrar(): null {
+  const renderer = usePuzzle2dRenderer();
+  reactHostPort.useEffect(() => {
+    puzzle5dFlatRendererRef.current = renderer;
+    return () => {
+      if (puzzle5dFlatRendererRef.current === renderer) {
+        puzzle5dFlatRendererRef.current = null;
+      }
+    };
+  }, [renderer]);
+  return null;
+}
+
+/** @emoji 🔗 Keeps brush suggestion highlight preview aligned across paired flat and volume surfaces. */
+export function Puzzle5dBrushPairedSync(): null {
+  const store = useStore();
+  const snap = useSnapshot();
+  const flatSession = reactHostPort.useSyncExternalStore(puzzle2dSubscribeBrushSession, puzzle2dGetBrushSessionSnapshot, puzzle2dGetBrushSessionSnapshot);
+  const volumeBrushEpoch = reactHostPort.useSyncExternalStore(
+    subscribePuzzle3dBrushEngagementSource,
+    getPuzzle3dBrushEngagementEpoch,
+    getPuzzle3dBrushEngagementEpoch,
+  );
+  const flatCatalogs = reactHostPort.useMemo(() => project2dKindCatalogs(snap.model.kindCatalogs), [snap.model.kindCatalogs]);
+  const model = snap.model;
+  reactHostPort.useEffect(() => {
+    puzzle5dSyncBrushPreviewFromFlat(flatSession, model);
+  }, [flatSession, model]);
+  reactHostPort.useEffect(() => {
+    puzzle5dSyncBrushPreviewFromVolume(puzzle3dBrushUiStore.getSnapshot().preview, flatCatalogs);
+  }, [volumeBrushEpoch, flatCatalogs]);
+  void store;
+  return null;
+}
+//#endregion 🔖BrushPairedSync
 
 //#region 🔖PaletteDrop
 function nodeAspectFromPaletteNode(node: Puzzle2dFixtureNodeV1): Part2dAspect {
@@ -1719,7 +1858,7 @@ export interface FiveDProps {
   readonly graphPortMode?: Puzzle2dCanvasProps["graphPortMode"];
   /** @emoji 🖌️ Shared authoring tool for both surfaces (`select` | `brush` | `fill`). */
   readonly activeTool?: Puzzle5dActiveTool;
-  readonly brushFlushDistance?: number;
+  readonly suggestionOffset?: number;
   readonly brushOverlapBudget?: number;
   /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
   readonly puzzle2d?: Omit<Puzzle2dCanvasProps, "children">;
@@ -1881,7 +2020,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     hoveredId: hoveredIdHost,
     kindHover: kindHoverHost,
     activeTool: activeToolHost,
-    brushFlushDistance: brushFlushDistanceHost,
+    suggestionOffset: suggestionOffsetHost,
     graphPortMode: puzzle2dGraphPortMode,
     ...rest2d
   } = extra2d;
@@ -1892,7 +2031,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     ? { hoveredId: hoveredIdHost ?? null, kindHover: kindHoverHost ?? null }
     : flatHover;
   const activeTool = props.activeTool ?? activeToolHost ?? "select";
-  const brushFlushDistance = props.brushFlushDistance ?? brushFlushDistanceHost;
+  const suggestionOffset = props.suggestionOffset ?? suggestionOffsetHost;
   const graphPortMode = props.graphPortMode ?? puzzle2dGraphPortMode;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   const liveForceGraph = props.liveForceGraph === true;
@@ -2058,7 +2197,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         onSelect={onSelect}
         onDelete={onDelete}
         activeTool={activeTool}
-        {...(brushFlushDistance !== undefined ? { brushFlushDistance } : {})}
+        {...(suggestionOffset !== undefined ? { suggestionOffset } : {})}
         {...(onBrushPlaceHost ? { onBrushPlace } : {})}
         {...(onBrushCandidatesHost ? { onBrushCandidates } : {})}
         {...rest2d}
@@ -2066,7 +2205,9 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         kindHover={resolvedHover.kindHover}
         onHover={onHover}
         onPreselect={onPreselectHost ? onPreselect : undefined}
-      />
+      >
+        <Puzzle5dFlatRendererRegistrar />
+      </Puzzle2dCanvas>
     </div>
   );
 });
@@ -3225,6 +3366,66 @@ if (import.meta.vitest) {
       expect(store.getSnapshot().hoverFocus).toEqual({ instance: { kind: "part", id: "p1" }, kindHover: null });
       store.setHoverFocusFrom3d({ hoverTarget: null, kindHover: null });
       expect(store.getSnapshot().hoverFocus).toEqual({ instance: null, kindHover: null });
+    });
+  });
+  describe("brush paired sync", () => {
+    const brushSyncModel: Model = {
+      schema: "puzzle.5d",
+      domain: "architecture",
+      camera2d: { x: 0, y: 0, zoom: 1 },
+      camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+      parts: [
+        {
+          id: "p1",
+          partKind: "tower",
+          grips: [{ id: "g0", gripKind: "port", "2d": { angle: 0 }, "3d": { radius: 0.4 } }],
+        },
+      ],
+      fasteners: [],
+    };
+
+    it("puzzle5dSyncBrushPreviewFromFlat forwards semantic candidate to volume brush", () => {
+      const synced: Array<{ targetGripFullId: string; candidate: { objectKindId: string; sourceVortexIndex: number } }> = [];
+      const prev = puzzle3dBrushPairedSyncRef.current;
+      puzzle3dBrushPairedSyncRef.current = {
+        syncFromFlat: (args) => {
+          synced.push({ targetGripFullId: args.targetGripFullId, candidate: args.candidate });
+        },
+        clear: () => {},
+      };
+      try {
+        puzzle5dSyncBrushPreviewFromFlat(
+          {
+            sourceHandleId: "p1:g0",
+            candidateIndex: 1,
+            candidates: [
+              { nodeKind: "kind-a", targetHandleIndex: 0 },
+              { nodeKind: "kind-b", targetHandleIndex: 2 },
+            ],
+          } as Puzzle2dBrushSessionSnapshot,
+          brushSyncModel,
+        );
+        expect(synced).toEqual([{ targetGripFullId: "p1:g0", candidate: { objectKindId: "kind-b", sourceVortexIndex: 2 } }]);
+      } finally {
+        puzzle3dBrushPairedSyncRef.current = prev;
+      }
+    });
+
+    it("puzzle5dSyncBrushPreviewFromFlat clears volume brush when flat session ends", () => {
+      let cleared = false;
+      const prev = puzzle3dBrushPairedSyncRef.current;
+      puzzle3dBrushPairedSyncRef.current = {
+        syncFromFlat: () => {},
+        clear: () => {
+          cleared = true;
+        },
+      };
+      try {
+        puzzle5dSyncBrushPreviewFromFlat(null, brushSyncModel);
+        expect(cleared).toBe(true);
+      } finally {
+        puzzle3dBrushPairedSyncRef.current = prev;
+      }
     });
   });
   describe("nodeCenterFromTopLeft", () => {

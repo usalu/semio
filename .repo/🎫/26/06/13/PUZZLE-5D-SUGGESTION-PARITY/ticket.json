@@ -3,7 +3,12 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Puzzle 5d must show brush suggestions on grips like puzzle 2d and 3d. Unified kind catalogs must carry per-part-kind grip templates and meshUrl, merge 2d and 3d source metas, and project back to embedded canvases.",
-  "summary": "Enriched puzzle 5d PartKind with unified grip templates (2d angle + 3d pose), meshUrl, and scale. kindCatalogsFromMetas now merges both 2d and 3d metas by part-kind id; project2dKindCatalogs and project3dKindCatalogs emit handle/vortex templates back to embedded canvases. Regenerated concrete-forest and nakagin 5d fixtures with full kindCatalogs.parts[].grips. Verified concrete forest yields 14 brush-compatible candidates via projected 3d catalog.",
+  "summary": "Implemented puzzle 5d brush suggestion parity (merged 2d+3d kind catalogs with grip templates and meshUrl) and paired brush preview sync across flat and volume surfaces.\n\nBrush preview sync:\n- Added Puzzle5dBrushPairedSync + puzzle5dFlatRendererRef in puzzle/5d/react\n- Added puzzle3dBrushPairedSyncRef bridge in puzzle/3d/react BrushSession\n- Host bridge maps engagement candidate picks by semantic {nodeKind, targetHandleIndex} not raw index\n- Mounted sync component in puzzle 5d play chrome\n\nTests: kind catalog suggestion parity + brush paired sync unit tests pass. Pre-existing applyBrushPlacementToModel fastener test still fails.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1679"
+  },
   "goal": "🎯puzzle🎯5d",
-  "sessions": []
+  "sessions": [
+    "⚪837eb618181749818c00e2459b39ce1e"
+  ]
 }

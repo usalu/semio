@@ -143,9 +143,33 @@ export const CAD_PLAY_BUILDING_SCENE_SURFACE_ID = "cad.play.scene3d/building";
 export const CAD_PLAY_ENERGY_SCENE_SURFACE_ID = "cad.play.scene3d/energy";
 export const CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "cad.play.scene3d/structure-classic";
 
-export const CAD_PLAY_DEFAULT_WORLD_REFERENCES: WorldReferenceProps[] = [
+export const CAD_PLAY_CONCRETE_FOREST_FIXTURE_IDS = ["concrete-forest-left", "concrete-forest-right"] as const;
+
+export const CAD_PLAY_CONCRETE_FOREST_WORLD_REFERENCES: WorldReferenceProps[] = [
   { id: "ref-concrete-forest", source: { url: "/cad-fixture/concrete-forest-reference.png", mediaKind: "image" }, origin: [-24, -18, 0.01], widthWorld: 22 },
 ];
+
+/** @emoji 🧪 Whether a shape fixture id loads the concrete forest reference planes. */
+export function cadPlayIsConcreteForestFixture(fixtureId: string): boolean {
+  return (CAD_PLAY_CONCRETE_FOREST_FIXTURE_IDS as readonly string[]).includes(fixtureId);
+}
+
+/** @emoji 🖼️ Reference planes for the active shape fixture, replicated per quad model definition. */
+export function cadPlayReferencesForFixture(fixtureId: string): Record<string, WorldReferenceProps[]> {
+  if (!cadPlayIsConcreteForestFixture(fixtureId)) {
+    return {};
+  }
+  return Object.fromEntries(
+    CAD_PLAY_PANE_SPECS.map((row) => [
+      row.modelDefinitionId,
+      CAD_PLAY_CONCRETE_FOREST_WORLD_REFERENCES.map((reference) => ({ ...reference })),
+    ]),
+  );
+}
+
+function cadPlayEmptyReferencesByModelDefinitionId(): Record<string, WorldReferenceProps[]> {
+  return {};
+}
 
 export type CadPlayReferencesByModelDefinitionId = Readonly<Record<string, readonly WorldReferenceProps[]>>;
 
@@ -171,7 +195,7 @@ export function cadPlayReferencesDigest(referencesByModelDefinitionId: CadPlayRe
 }
 
 function cadPlayDefaultReferencesByModelDefinitionId(): Record<string, WorldReferenceProps[]> {
-  return { [defaultModelDefinitionId()]: CAD_PLAY_DEFAULT_WORLD_REFERENCES.map((row) => ({ ...row })) };
+  return cadPlayEmptyReferencesByModelDefinitionId();
 }
 
 /** @emoji 🖼️ Patches one reference plane under a model definition. */
@@ -1953,7 +1977,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     if (!id) {
       pointerFocusRef.current?.clearHover();
       setModelsByDefinitionId(emptyPlayModels());
-      setReferencesByModelDefinitionId(cadPlayDefaultReferencesByModelDefinitionId());
+      setReferencesByModelDefinitionId(cadPlayEmptyReferencesByModelDefinitionId());
       setSelectedReference(null);
       setActiveModelDefinitionId(defaultModelDefinitionId());
       setModelsLoadEpoch((epoch) => epoch + 1);
@@ -1961,6 +1985,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
       if (!asset) return;
       setModelsByDefinitionId(modelsFromCadJson(asset.json));
+      setReferencesByModelDefinitionId(cadPlayReferencesForFixture(id));
+      setSelectedReference(null);
       setActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(asset.json));
       setModelsLoadEpoch((epoch) => epoch + 1);
     }
@@ -2560,6 +2586,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
         setShapeAssetId("");
         setLoadedRawName(file.name);
         setModelsByDefinitionId(ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace)));
+        setReferencesByModelDefinitionId(cadPlayEmptyReferencesByModelDefinitionId());
+        setSelectedReference(null);
         setActiveModelDefinitionId(nextActiveModelDefinitionId);
         setModelsLoadEpoch((epoch) => epoch + 1);
         setModelDefinitionRevision((r) => r + 1);
@@ -2571,6 +2599,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       setShapeAssetId("");
       setLoadedRawName(file.name);
       setModelsByDefinitionId(modelsFromCadJson(model.toJSON()));
+      setReferencesByModelDefinitionId(cadPlayEmptyReferencesByModelDefinitionId());
+      setSelectedReference(null);
       setActiveModelDefinitionId(defaultModelDefinitionId());
       setModelsLoadEpoch((epoch) => epoch + 1);
       setModelDefinitionRevision((r) => r + 1);
@@ -3662,16 +3692,28 @@ if (import.meta.vitest) {
       expect(edgeNode?.items?.some((row) => row.label.includes("vertex"))).toBe(true);
     });
 
+    it("cadPlayReferencesForFixture loads concrete forest reference in every model definition", () => {
+      expect(cadPlayIsConcreteForestFixture("concrete-forest-left")).toBe(true);
+      expect(cadPlayIsConcreteForestFixture("concrete-forest-right")).toBe(true);
+      expect(cadPlayIsConcreteForestFixture("nakagin-slice")).toBe(false);
+      expect(cadPlayReferencesForFixture("nakagin-slice")).toEqual({});
+      const references = cadPlayReferencesForFixture("concrete-forest-left");
+      for (const row of CAD_PLAY_PANE_SPECS) {
+        expect(references[row.modelDefinitionId]?.map((reference) => reference.id)).toEqual(["ref-concrete-forest"]);
+      }
+      expect(cadPlayDefaultReferencesByModelDefinitionId()).toEqual({});
+    });
+
     it("buildCadPlayHierarchySections lists references under model definitions with hide and lock chrome", () => {
-      const references = { [defaultModelDefinitionId()]: CAD_PLAY_DEFAULT_WORLD_REFERENCES };
+      const references = cadPlayReferencesForFixture("concrete-forest-left");
       const build = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: new Model() }, defaultModelDefinitionId(), [], () => {}, () => {}, () => {}, () => {}, references);
       const modelBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`);
       const referencesGroup = modelBranch?.items?.find((row) => row.id === `cad-play-hierarchy.references.${defaultModelDefinitionId()}`);
-      expect(referencesGroup?.items?.some((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`)).toBe(true);
-      const referenceRow = referencesGroup?.items?.find((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`);
+      expect(referencesGroup?.items?.some((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-concrete-forest`)).toBe(true);
+      const referenceRow = referencesGroup?.items?.find((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-concrete-forest`);
       expect(referenceRow?.actions?.some((row) => row.id === "reference.hidden")).toBe(true);
       expect(referenceRow?.actions?.some((row) => row.id === "reference.locked")).toBe(true);
-      expect(build.highlightKeyToItemIds[cadPlayReferenceHoverKey("ref-sketch")]).toContain(`cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`);
+      expect(build.highlightKeyToItemIds[cadPlayReferenceHoverKey("ref-concrete-forest")]).toContain(`cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-concrete-forest`);
     });
 
     it("buildCadPlayReferenceInspectorChildren exposes editable reference transform fields", () => {
@@ -3735,14 +3777,14 @@ if (import.meta.vitest) {
     });
 
     it("updateCadPlayReferenceInMap toggles reference flags", () => {
-      const initial = cadPlayDefaultReferencesByModelDefinitionId();
-      const next = updateCadPlayReferenceInMap(initial, defaultModelDefinitionId(), "ref-sketch", { hidden: true, locked: true });
-      expect(next[defaultModelDefinitionId()]?.find((row) => row.id === "ref-sketch")).toEqual(expect.objectContaining({ hidden: true, locked: true }));
+      const initial = cadPlayReferencesForFixture("concrete-forest-left");
+      const next = updateCadPlayReferenceInMap(initial, defaultModelDefinitionId(), "ref-concrete-forest", { hidden: true, locked: true });
+      expect(next[defaultModelDefinitionId()]?.find((row) => row.id === "ref-concrete-forest")).toEqual(expect.objectContaining({ hidden: true, locked: true }));
     });
 
     it("buildCadPlayHierarchySections does not mark locked references selected", () => {
       const references = {
-        [defaultModelDefinitionId()]: [{ ...CAD_PLAY_DEFAULT_WORLD_REFERENCES[0]!, locked: true }],
+        [defaultModelDefinitionId()]: [{ ...CAD_PLAY_CONCRETE_FOREST_WORLD_REFERENCES[0]!, locked: true }],
       };
       const build = buildCadPlayHierarchySections(
         { [defaultModelDefinitionId()]: new Model() },
@@ -3753,10 +3795,10 @@ if (import.meta.vitest) {
         () => {},
         () => {},
         references,
-        { modelDefinitionId: defaultModelDefinitionId(), id: "ref-sketch" },
+        { modelDefinitionId: defaultModelDefinitionId(), id: "ref-concrete-forest" },
       );
       const referencesGroup = build.sections[0]?.items?.find((row) => row.id === `cad-play-hierarchy.references.${defaultModelDefinitionId()}`);
-      const referenceRow = referencesGroup?.items?.find((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`);
+      const referenceRow = referencesGroup?.items?.find((row) => row.id === `cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-concrete-forest`);
       expect(referenceRow?.isSelected).not.toBe(true);
     });
 

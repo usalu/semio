@@ -2342,6 +2342,8 @@ import {
   project3dKindCatalogs,
   puzzle5dBrushPlacementFromFlat,
   puzzle5dBrushPlacementFromVolume,
+  Puzzle5dBrushPairedSync,
+  puzzle5dFlatRendererRef,
   type Store as Puzzle5dStore,
 } from "@puzzle/5d/react";
 import type { Playground } from "@framework/playground/core";
@@ -2370,6 +2372,8 @@ import {
 } from "@puzzle/5d/play";
 import {
   puzzle2dActiveRenderer,
+  puzzle2dBrushCandidateDisplayLabels,
+  puzzle2dGetBrushSessionSnapshot,
   puzzle2dNodeKindOverlayLabel,
   type Puzzle2dBrushCandidatesPayload,
   type Puzzle2dDrawLodKind,
@@ -2414,7 +2418,7 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
     const bridge: Puzzle5dPlayHostBridge = {
       getToolbarState: () => ({
         puzzle2dActiveTool: controller.getActiveTool(),
-        puzzle2dBrushFlushDistance: controller.getBrushFlushDistance(),
+        puzzle2dSuggestionOffset: controller.getSuggestionOffset(),
         puzzle2dSelectionMethod: selectionMethodRef.current,
         puzzle2dSelectionMode: selectionModeRef.current,
         puzzle2dSelectionTargets: selectionTargetsRef.current,
@@ -2434,10 +2438,10 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
             }
             break;
           }
-          case "setBrushFlushDistance": {
+          case "setSuggestionOffset": {
             const distance = Number((args as { distance?: number }).distance);
             if (Number.isFinite(distance)) {
-              puzzle2dActiveRenderer()?.setBrushFlushDistance(distance);
+              puzzle2dActiveRenderer()?.setSuggestionOffset(distance);
             }
             break;
           }
@@ -2447,19 +2451,19 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
           case "pickBrushCandidate": {
             const index = Number((args as { index?: number }).index);
             if (Number.isFinite(index)) {
-              puzzle2dActiveRenderer()?.setBrushCandidateIndex(index);
+              puzzle5dPickBrushCandidateAtIndex(index);
             }
             break;
           }
           case "engagementPossibleSelect": {
             const possibleId = (args as { possibleId?: string }).possibleId ?? "";
-            const brushMatch = possibleId.match(/^puzzle(?:2d|3d|5d)\.brush\.(.+)\.(\d+)$/);
+            const brushMatch = possibleId.match(/^puzzle(?:2d|3d|5d)\.brush\.(\d+)$/);
             if (brushMatch) {
-              const index = Number(brushMatch[2]);
+              const index = Number(brushMatch[1]);
               if (Number.isFinite(index)) {
-                puzzle2dActiveRenderer()?.setBrushCandidateIndex(index);
-                puzzle3dBrushEngagementSourceRef.current.pickCandidate(index);
+                puzzle5dPickBrushCandidateAtIndex(index);
               }
+              break;
             }
             break;
           }
@@ -2512,11 +2516,30 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
   return null;
 }
 
+function puzzle5dPickBrushCandidateAtIndex(index: number): void {
+  const flatSession = puzzle2dGetBrushSessionSnapshot();
+  const flatCandidate = flatSession?.candidates[index];
+  puzzle5dFlatRendererRef.current?.setBrushCandidateIndex(index);
+  if (!flatCandidate) {
+    puzzle3dBrushEngagementSourceRef.current.pickCandidate(index);
+    return;
+  }
+  const volumeIndex = puzzle3dBrushEngagementSourceRef.current.candidates.findIndex(
+    (row) => row.objectKindId === flatCandidate.nodeKind && row.sourceVortexIndex === flatCandidate.targetHandleIndex,
+  );
+  if (volumeIndex >= 0) {
+    puzzle3dBrushEngagementSourceRef.current.pickCandidate(volumeIndex);
+  }
+}
+
 function puzzle5dBrushCandidateRows(payload: Puzzle2dBrushCandidatesPayload, kindCatalogs: ReturnType<typeof project2dKindCatalogs>): { readonly id: string; readonly label: string }[] {
-  return payload.candidates.map((kindId, index) => ({
-    id: `puzzle5d.brush.${kindId}.${index}`,
-    label: puzzle2dNodeKindOverlayLabel(kindId, kindCatalogs ?? undefined),
-  }));
+  return payload.candidates.map((candidate, index) => {
+    const labels = puzzle2dBrushCandidateDisplayLabels(candidate, kindCatalogs ?? undefined);
+    return {
+      id: `puzzle5d.brush.${index}`,
+      label: `${labels.object} · ${labels.handle}`,
+    };
+  });
 }
 
 function usePuzzle5dPlayStore(): Puzzle5dStore {
@@ -2685,7 +2708,7 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
       mode="2d"
       instanceId="play-2d"
       activeTool={snapshot.activeTool}
-      brushFlushDistance={snapshot.brushFlushDistance}
+      suggestionOffset={snapshot.suggestionOffset}
       puzzle2d={{
         onLodChange,
         onSelect,
@@ -2886,6 +2909,7 @@ function Puzzle5dPlayChrome({
   const storeForProvider = puzzle5dBridge?.inner ?? controller.puzzle5dStore;
   return (
     <StoreProvider store={storeForProvider}>
+      <Puzzle5dBrushPairedSync />
       <Puzzle5dPlayHostBridgeInstaller controller={controller} store={storeForProvider} />
       {shell}
     </StoreProvider>
@@ -3013,7 +3037,7 @@ import {
   puzzle2dSetBrushPlaceCommitHandler,
   puzzle2dActiveRenderer,
   applyBrushFillPlacementsToFixture,
-  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dSyncSelectionToAllAuthoringPeers,
   buildPuzzle2dSceneDescriptorFromFixture,
@@ -3219,8 +3243,8 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dGridSnapEnabled: (value: boolean) => void;
   puzzle2dActiveTool: Puzzle2dActiveTool;
   setPuzzle2dActiveTool: (tool: Puzzle2dActiveTool) => void;
-  puzzle2dBrushFlushDistance: number;
-  setPuzzle2dBrushFlushDistance: (distance: number) => void;
+  puzzle2dSuggestionOffset: number;
+  setPuzzle2dSuggestionOffset: (distance: number) => void;
   /** @emoji 🖌️ Pushes brush candidate rows into play window engagement possibles. */
   notifyBrushCandidates: (payload: Puzzle2dBrushCandidatesPayload) => void;
   /** @emoji 🖌️ Commits brush placement with structural-delete guards and peer sync. */
@@ -3896,7 +3920,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     patchFixture,
     queueStructuralDelete,
     puzzle2dActiveTool,
-    puzzle2dBrushFlushDistance,
+    puzzle2dSuggestionOffset,
     puzzle2dGridSnapEnabled,
     sceneAuthoringEpoch,
     puzzle2dRedrawPlaying,
@@ -4004,7 +4028,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop={!isWiresPlay}
         activeTool={puzzle2dActiveTool}
-        brushFlushDistance={puzzle2dBrushFlushDistance}
+        suggestionOffset={puzzle2dSuggestionOffset}
         brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
@@ -4519,7 +4543,7 @@ function Puzzle2dPlayInner({
   const [puzzle2dSelectionTargets, setPuzzle2dSelectionTargets] = reactHostPort.useState<Puzzle2dSelectionTargets>(() => ({ ...PUZZLE_2D_SELECTION_TARGETS_DEFAULT }));
   const [puzzle2dGridSnapEnabled, setPuzzle2dGridSnapEnabled] = reactHostPort.useState(false);
   const [puzzle2dActiveTool, setPuzzle2dActiveTool] = reactHostPort.useState<Puzzle2dActiveTool>("select");
-  const [puzzle2dBrushFlushDistance, setPuzzle2dBrushFlushDistance] = reactHostPort.useState(DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX);
+  const [puzzle2dSuggestionOffset, setPuzzle2dSuggestionOffset] = reactHostPort.useState(DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX);
   const puzzle2dFillBaseFixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1 | null>(null);
   const puzzle2dFillSequenceRef = reactHostPort.useRef<Puzzle2dBrushPlacePayload[]>([]);
   const puzzle2dFillSeedRef = reactHostPort.useRef(0);
@@ -5342,8 +5366,8 @@ function Puzzle2dPlayInner({
       puzzle2dGridSnapEnabled,
       puzzle2dActiveTool,
       setPuzzle2dActiveTool,
-      puzzle2dBrushFlushDistance,
-      setPuzzle2dBrushFlushDistance,
+      puzzle2dSuggestionOffset,
+      setPuzzle2dSuggestionOffset,
       notifyBrushCandidates,
       fixture,
       forceLayoutFullIterations,
@@ -5410,7 +5434,7 @@ function Puzzle2dPlayInner({
       puzzle2dSelectionTargets,
       puzzle2dGridSnapEnabled,
       puzzle2dActiveTool,
-      puzzle2dBrushFlushDistance,
+      puzzle2dSuggestionOffset,
       notifyBrushCandidates,
       puzzle2dLodModeByPane,
       lodModeForScope,
@@ -5530,7 +5554,7 @@ function Puzzle2dPlayInner({
     const bridge: Puzzle2dPlayHostBridge = {
       getToolbarState: () => ({
         puzzle2dActiveTool,
-        puzzle2dBrushFlushDistance,
+        puzzle2dSuggestionOffset,
         puzzle2dGridSnapEnabled,
         puzzle2dRedrawPlaying,
         puzzle2dSelectionMethod,
@@ -5612,8 +5636,8 @@ function Puzzle2dPlayInner({
             console.log("[DEBUG] puzzle2d fill count", n, "applied", prefix.length);
             break;
           }
-          case "setBrushFlushDistance":
-            setPuzzle2dBrushFlushDistance((args as { distance: number }).distance);
+          case "setSuggestionOffset":
+            setPuzzle2dSuggestionOffset((args as { distance: number }).distance);
             break;
           case "setBrushKindWeights": {
             const payload = args as { nodeWeights?: Record<string, number>; handleWeights?: Record<string, number> };
@@ -5833,7 +5857,7 @@ function Puzzle2dPlayInner({
   }, [
     applyPuzzle2dRedrawHandlesOnce,
     puzzle2dActiveTool,
-    puzzle2dBrushFlushDistance,
+    puzzle2dSuggestionOffset,
     puzzle2dGridSnapEnabled,
     puzzle2dRedrawPlaying,
     puzzle2dSelectionMethod,
@@ -5845,7 +5869,7 @@ function Puzzle2dPlayInner({
     patchFixture,
     selectionIds,
     setPuzzle2dActiveTool,
-    setPuzzle2dBrushFlushDistance,
+    setPuzzle2dSuggestionOffset,
     setSelectionIds,
   ]);
   // #endregion 🔖ToolbarHostBridge

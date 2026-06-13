@@ -879,6 +879,27 @@ mod tests {
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         assert_eq!(channel_payload(&out, "wall").schema(), Some("wall"));
     }
+
+    #[test]
+    fn schema_component_round_trips_wall() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let built = reg
+            .dispatch(
+                "bim.wall",
+                &Dictionary::new()
+                    .insert("length", Value::Dictionary(number_dictionary(5.0)))
+                    .insert("height", Value::Dictionary(number_dictionary(3.0)))
+                    .insert("thickness", Value::Dictionary(number_dictionary(0.2))),
+            )
+            .unwrap();
+        let wall = channel_payload(&built, "wall");
+        let deconstructed = reg.dispatch("bim.wall", &Dictionary::new().insert("wall", Value::Dictionary(wall))).unwrap();
+        assert_eq!(
+            deconstructed.get("length").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
+            Some(5.0)
+        );
+    }
 }
 // #endregion 🔖Tests
 

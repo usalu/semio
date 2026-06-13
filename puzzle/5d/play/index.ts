@@ -52,7 +52,7 @@ import {
   puzzle2dLodCanvasProps,
   isPuzzle2dDrawLodKind,
   parsePuzzle2dFixtureV1,
-  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
   type Puzzle2dDrawLodKind,
   type Puzzle2dFixtureV1,
   type Puzzle2dLodModeKind,
@@ -149,9 +149,9 @@ function puzzle5dPlayCmd(command: string, args?: Record<string, unknown>): Comma
   return { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command, args: args as never };
 }
 
-const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN = 0;
-const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX = 160;
-const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_STEP = 4;
+const PUZZLE_5D_SUGGESTION_OFFSET_MIN = 0;
+const PUZZLE_5D_SUGGESTION_OFFSET_MAX = 160;
+const PUZZLE_5D_SUGGESTION_OFFSET_STEP = 4;
 
 /** @emoji 🔗 React host bridge: toolbar snapshot + commands that need canvas/fixture context. */
 export interface Puzzle5dPlayHostBridge {
@@ -497,7 +497,7 @@ export interface Puzzle5dPlaySnapshot {
   readonly proximity2d: number;
   readonly proximity3d: number;
   readonly activeTool: Puzzle5dActiveTool;
-  readonly brushFlushDistance: number;
+  readonly suggestionOffset: number;
   readonly brushOverlapBudget: number;
   readonly fillCount: number;
   readonly fillBuildDone: boolean;
@@ -590,7 +590,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   };
   private hostBridge: Puzzle5dPlayHostBridge | null = null;
   private activeTool: Puzzle5dActiveTool = "select";
-  private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  private suggestionOffset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX;
   private brushOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
   private brushEngagementPossibles: { readonly id: string; readonly label: string }[] = [];
   private puzzle2dSelectionMethod: Puzzle2dSelectionMethod = "rectangle";
@@ -640,8 +640,8 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return this.activeTool;
   }
 
-  getBrushFlushDistance(): number {
-    return this.brushFlushDistance;
+  getSuggestionOffset(): number {
+    return this.suggestionOffset;
   }
 
   setBrushEngagementPossibles(rows: readonly { readonly id: string; readonly label: string }[]): void {
@@ -658,7 +658,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return (
       this.hostBridge?.getToolbarState() ?? {
         puzzle2dActiveTool: this.activeTool,
-        puzzle2dBrushFlushDistance: this.brushFlushDistance,
+        puzzle2dSuggestionOffset: this.suggestionOffset,
         puzzle2dSelectionMethod: this.puzzle2dSelectionMethod,
         puzzle2dSelectionMode: this.puzzle2dSelectionMode,
         puzzle2dSelectionTargets: this.puzzle2dSelectionTargets,
@@ -702,23 +702,32 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     this.mainMode.windowKinds = this.getWindowKinds();
   }
 
+  private suggestionMeasuresGroup(windowId: string): WindowMeasure {
+    return {
+      kind: "group",
+      id: `${windowId}-suggestion`,
+      label: "Suggestion",
+      children: [
+        {
+          kind: "slider",
+          id: `${windowId}-suggestion-offset`,
+          label: "Offset",
+          value: this.suggestionOffset,
+          min: PUZZLE_5D_SUGGESTION_OFFSET_MIN,
+          max: PUZZLE_5D_SUGGESTION_OFFSET_MAX,
+          step: PUZZLE_5D_SUGGESTION_OFFSET_STEP,
+          onChange: puzzle5dPlayCmd("setSuggestionOffset"),
+        },
+      ],
+    };
+  }
+
   private brushMeasuresGroup(windowId: string): WindowMeasure {
     return {
       kind: "group",
       id: `${windowId}-brush`,
       label: "Brush",
       children: [
-        {
-          kind: "slider",
-          id: `${windowId}-brush-flush-distance`,
-          label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
-          value: this.brushFlushDistance,
-          min: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN,
-          max: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX,
-          step: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_STEP,
-          onChange: puzzle5dPlayCmd("setBrushFlushDistance"),
-        },
-        {
           kind: "slider",
           id: `${windowId}-brush-overlap-budget`,
           label: `Overlap ${this.brushOverlapBudget.toFixed(2)} m³`,
@@ -838,6 +847,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         undefined,
         [
           this.lod2dMeasure(),
+          this.suggestionMeasuresGroup(PUZZLE_5D_PLAY_2D_WINDOW_ID),
           this.brushMeasuresGroup(PUZZLE_5D_PLAY_2D_WINDOW_ID),
         ],
         this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID),
@@ -849,6 +859,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         undefined,
         [
           { kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() },
+          this.suggestionMeasuresGroup(PUZZLE_5D_PLAY_3D_WINDOW_ID),
           this.brushMeasuresGroup(PUZZLE_5D_PLAY_3D_WINDOW_ID),
         ],
         this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID),
@@ -1030,11 +1041,11 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         changed = false;
         break;
       }
-      case "setBrushFlushDistance": {
+      case "setSuggestionOffset": {
         const distance = Number((args as { value?: number }).value);
         if (Number.isFinite(distance)) {
-          this.brushFlushDistance = Math.max(PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN, Math.min(PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX, distance));
-          this.hostBridge?.runHostCommand("setBrushFlushDistance", { distance: this.brushFlushDistance });
+          this.suggestionOffset = Math.max(PUZZLE_5D_SUGGESTION_OFFSET_MIN, Math.min(PUZZLE_5D_SUGGESTION_OFFSET_MAX, distance));
+          this.hostBridge?.runHostCommand("setSuggestionOffset", { distance: this.suggestionOffset });
         } else {
           changed = false;
         }
@@ -1202,7 +1213,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       proximity2d: this.proximity2d,
       proximity3d: this.proximity3d,
       activeTool: this.activeTool,
-      brushFlushDistance: this.brushFlushDistance,
+      suggestionOffset: this.suggestionOffset,
       brushOverlapBudget: this.brushOverlapBudget,
       fillCount: storeSnap.fillCount,
       fillBuildDone: storeSnap.fillBuildDone,

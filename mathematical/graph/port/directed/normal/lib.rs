@@ -53,7 +53,7 @@ const INDIRECT_HANDLE_RING_GAP_NODE_SCALE: f64 = ui_styling::metrics::board::IND
 const LINK_DRAG_MIN_DISTANCE_PX: f64 = ui_styling::metrics::board::LINK_DRAG_MIN_DISTANCE_PX;
 const LINK_HANDLE_SNAP_EXTRA_PX: f64 = ui_styling::metrics::board::LINK_HANDLE_SNAP_EXTRA_PX;
 const LINK_COMMIT_SNAP_TIGHT_PX: f64 = ui_styling::metrics::board::LINK_COMMIT_SNAP_TIGHT_PX;
-const DEFAULT_BRUSH_FLUSH_DISTANCE: f64 = ui_styling::metrics::board::BRUSH_FLUSH_DISTANCE;
+const DEFAULT_SUGGESTION_OFFSET: f64 = ui_styling::metrics::board::SUGGESTION_OFFSET;
 const DEFAULT_BRUSH_NODE_SIZE: f64 = ui_styling::metrics::board::BRUSH_NODE_SIZE;
 const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
 const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_CLICK_MAX_DISTANCE_PX;
@@ -307,7 +307,7 @@ pub struct BoardHost {
     wheel_zoom_render_lod: Option<BoardDrawLod>,
     /// @emoji 🖌️ Active viewport tool (`select` suppresses brush slot logic).
     active_tool: ActiveTool,
-    brush_flush_distance: f64,
+    suggestion_offset: f64,
     brush_node_size: f64,
     brush_slot_source_id: Option<String>,
     brush_candidates: Vec<BrushCandidate>,
@@ -319,9 +319,9 @@ pub struct BoardHost {
     brush_placement_serial: u64,
     brush_node_kind_weights: HashMap<String, f64>,
     brush_handle_kind_weights: HashMap<String, f64>,
-    /// @emoji ⌥ Alt held while brushing — enables flush offset and commit-on-leave.
+    /// @emoji ⌥ Alt held while brushing — enables suggestion offset and commit-on-leave.
     brush_alt_pressed: bool,
-    /// @emoji ✨ Suggestions menu opened a slot outside brush tool — use flush offset and highlight source handle.
+    /// @emoji ✨ Suggestions menu opened a slot outside brush tool — use suggestion offset and highlight source handle.
     brush_slot_suggestions_active: bool,
     pub port_mode: GraphPortMode,
 }
@@ -372,7 +372,7 @@ impl Default for BoardHost {
             wheel_zoom_active: false,
             wheel_zoom_render_lod: None,
             active_tool: ActiveTool::Select,
-            brush_flush_distance: DEFAULT_BRUSH_FLUSH_DISTANCE,
+            suggestion_offset: DEFAULT_SUGGESTION_OFFSET,
             brush_node_size: DEFAULT_BRUSH_NODE_SIZE,
             brush_slot_source_id: None,
             brush_candidates: Vec::new(),
@@ -1583,24 +1583,24 @@ impl BoardHost {
         }
     }
 
-    fn brush_effective_flush_distance(&self) -> f64 {
+    fn brush_effective_suggestion_offset(&self) -> f64 {
         if self.brush_alt_pressed || self.brush_slot_suggestions_active {
-            self.brush_flush_distance
+            self.suggestion_offset
         } else {
             0.0
         }
     }
 
-    fn handle_slot_center_world(&self, node_id: &str, hw: Point, flush_distance: f64) -> Option<Point> {
+    fn handle_slot_center_world(&self, node_id: &str, hw: Point, offset: f64) -> Option<Point> {
         let n = self.nodes.get(node_id)?;
         let nc = Point::new(n.x, n.y);
         let normal = normalize_or_zero(hw - nc);
-        Some(hw + normal * flush_distance)
+        Some(hw + normal * offset)
     }
 
     fn brush_slot_center_world(&self, h: &HandleData) -> Option<Point> {
         let hw = self.brush_handle_anchor_world(h)?;
-        self.handle_slot_center_world(h.node_id.as_str(), hw, self.brush_effective_flush_distance())
+        self.handle_slot_center_world(h.node_id.as_str(), hw, self.brush_effective_suggestion_offset())
     }
 
     /// @emoji 🖌️ World distance from pointer to brush slot when the pointer is on the slot, anchor, or sole-free node body.
@@ -2017,14 +2017,14 @@ impl BoardHost {
     fn fill_slot_center_world(&self, accum: &FillAccum, handle_id: &str) -> Option<Point> {
         if let Some(h) = self.handles.get(handle_id) {
             let hw = self.brush_handle_anchor_world(h)?;
-            return self.handle_slot_center_world(h.node_id.as_str(), hw, self.brush_flush_distance);
+            return self.handle_slot_center_world(h.node_id.as_str(), hw, self.suggestion_offset);
         }
         let vh = accum.virtual_handles.get(handle_id)?;
         let node = accum.virtual_nodes.get(&vh.node_id)?;
         let hw = Self::fill_virtual_handle_anchor_world(node, &vh.template);
         let nc = Point::new(node.x, node.y);
         let normal = normalize_or_zero(hw - nc);
-        Some(hw + normal * self.brush_flush_distance)
+        Some(hw + normal * self.suggestion_offset)
     }
 
     fn fill_weight_for_handle(&self, accum: &FillAccum, handle_id: &str, uniform: f64) -> f64 {
@@ -2391,12 +2391,12 @@ impl BoardHost {
         self.bump_content_scene_generation();
     }
 
-    pub fn set_brush_flush_distance(&mut self, distance: f64) {
-        let d = if distance.is_finite() && distance >= 0.0 { distance } else { DEFAULT_BRUSH_FLUSH_DISTANCE };
-        if (self.brush_flush_distance - d).abs() < 1e-9 {
+    pub fn set_suggestion_offset(&mut self, distance: f64) {
+        let d = if distance.is_finite() && distance >= 0.0 { distance } else { DEFAULT_SUGGESTION_OFFSET };
+        if (self.suggestion_offset - d).abs() < 1e-9 {
             return;
         }
-        self.brush_flush_distance = d;
+        self.suggestion_offset = d;
         if self.active_tool == ActiveTool::Brush {
             self.brush_preview_emit_key = None;
             self.brush_rebuild_preview();

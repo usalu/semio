@@ -7752,6 +7752,24 @@ export const puzzle3dBrushEngagementSourceRef: { current: Puzzle3dBrushEngagemen
   current: { candidates: [], targetActive: false, placementProbePending: false, cycleCandidate: () => {}, pickCandidate: () => {} },
 };
 
+/** @emoji 🔗 Paired-surface brush preview sync (puzzle 5d flat → volume). */
+export interface Puzzle3dBrushPairedSync {
+  readonly syncFromFlat: (args: {
+    readonly targetGripFullId: string;
+    readonly meta: VortexBindingMeta;
+    readonly candidate: BrushCompatibleCandidate;
+  }) => void;
+  readonly clear: () => void;
+}
+
+export const puzzle3dBrushPairedSyncRef: { current: Puzzle3dBrushPairedSync } = {
+  current: { syncFromFlat: () => {}, clear: () => {} },
+};
+
+function brushCandidateIndexInList(list: readonly BrushCompatibleCandidate[], candidate: BrushCompatibleCandidate): number {
+  return list.findIndex((row) => row.objectKindId === candidate.objectKindId && row.sourceVortexIndex === candidate.sourceVortexIndex);
+}
+
 let puzzle3dBrushEngagementEpoch = 0;
 const puzzle3dBrushEngagementListeners = new Set<() => void>();
 
@@ -8900,6 +8918,7 @@ function BrushSession(props: {
   const preloadReconcileTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
   const placementProbePendingRef = reactHostPort.useRef(false);
   const menuOpenRef = reactHostPort.useRef(false);
+  const pairedSyncPendingRef = reactHostPort.useRef<BrushCompatibleCandidate | null>(null);
   const [catalogPreloadUrls, setCatalogPreloadUrls] = reactHostPort.useState<readonly string[]>([]);
   const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
   menuOpenRef.current = ui.menuOpen;
@@ -8915,6 +8934,7 @@ function BrushSession(props: {
       clearTimeout(preloadReconcileTimerRef.current);
       preloadReconcileTimerRef.current = null;
     }
+    pairedSyncPendingRef.current = null;
     targetRef.current = null;
     targetCtxRef.current = null;
     targetObjectIdRef.current = null;
@@ -9065,6 +9085,28 @@ function BrushSession(props: {
     [invalidate, props.kindCatalogs, props.sceneFixture],
   );
 
+  const applyPairedSyncCandidateIfPending = reactHostPort.useCallback(() => {
+    const pending = pairedSyncPendingRef.current;
+    const targetFullId = targetRef.current;
+    if (!pending || !targetFullId) {
+      return;
+    }
+    pairedSyncPendingRef.current = null;
+    const placementIndex = brushCandidateIndexInList(placementCandidatesRef.current, pending);
+    if (placementIndex >= 0) {
+      indexRef.current = placementIndex;
+      applyCandidateIndex(targetFullId, placementIndex);
+      return;
+    }
+    const probeIndex = brushCandidateIndexInList(probeOrderRef.current, pending);
+    if (probeIndex >= 0) {
+      indexRef.current = probeIndex;
+      applyBootstrapPreview(targetFullId);
+      publishBrushEngagement();
+      invalidate();
+    }
+  }, [applyBootstrapPreview, applyCandidateIndex, invalidate, publishBrushEngagement]);
+
   const applyPlacementProbeResult = reactHostPort.useCallback(
     (result: BrushCollisionFreeResult) => {
       placementCandidatesRef.current = result.free;
@@ -9105,9 +9147,10 @@ function BrushSession(props: {
         applyCandidateIndex(targetFullId, 0);
       }
       publishBrushEngagement();
+      applyPairedSyncCandidateIfPending();
       invalidate();
     },
-    [applyBootstrapPreview, applyCandidateIndex, invalidate, publishBrushEngagement],
+    [applyBootstrapPreview, applyCandidateIndex, applyPairedSyncCandidateIfPending, invalidate, publishBrushEngagement],
   );
 
   const markPlacementProbePending = reactHostPort.useCallback(() => {
@@ -9283,10 +9326,43 @@ function BrushSession(props: {
       },
       close: dismissMenu,
     };
+    puzzle3dBrushPairedSyncRef.current = {
+      syncFromFlat: ({ targetGripFullId, meta, candidate }) => {
+        if (targetRef.current && targetRef.current !== targetGripFullId) {
+          pairedSyncPendingRef.current = candidate;
+          enterTarget(targetGripFullId, meta);
+          invalidate();
+          return;
+        }
+        if (!targetRef.current) {
+          pairedSyncPendingRef.current = candidate;
+          enterTarget(targetGripFullId, meta);
+          invalidate();
+          return;
+        }
+        const list = placementCandidatesRef.current.length > 0 ? placementCandidatesRef.current : probeOrderRef.current;
+        const index = brushCandidateIndexInList(list, candidate);
+        if (index < 0) {
+          pairedSyncPendingRef.current = candidate;
+          invalidate();
+          return;
+        }
+        indexRef.current = index;
+        applyCandidateIndex(targetGripFullId, index);
+        invalidate();
+      },
+      clear: () => {
+        pairedSyncPendingRef.current = null;
+        if (targetRef.current) {
+          clearBrush();
+        }
+      },
+    };
     return () => {
       puzzle3dOpenVortexSuggestionsRef.current = { openFor: () => {}, close: () => {} };
+      puzzle3dBrushPairedSyncRef.current = { syncFromFlat: () => {}, clear: () => {} };
     };
-  }, [clearBrush, commitCurrentPreview, dismissMenu, enterTarget, invalidate, openMenu]);
+  }, [applyCandidateIndex, clearBrush, commitCurrentPreview, dismissMenu, enterTarget, invalidate, openMenu]);
 
   reactHostPort.useEffect(() => {
     if (!props.brushActive) {

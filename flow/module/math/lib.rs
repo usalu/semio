@@ -40,32 +40,6 @@ impl Operation for Subtract {
 }
 // #endregion 🔖Subtract
 
-// #region 🔖ConstructXyz
-/// 🧭 Constructs a vector dictionary from x, y, z numbers.
-pub struct ConstructVector;
-
-impl Operation for ConstructVector {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output(
-            "vector",
-            xyz_dictionary("vector", Vec3::new(read_channel_number(input, "x")?, read_channel_number(input, "y")?, read_channel_number(input, "z")?)),
-        ))
-    }
-}
-
-/// 📍 Constructs a point dictionary from x, y, z numbers.
-pub struct ConstructPoint;
-
-impl Operation for ConstructPoint {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output(
-            "point",
-            xyz_dictionary("point", Vec3::new(read_channel_number(input, "x")?, read_channel_number(input, "y")?, read_channel_number(input, "z")?)),
-        ))
-    }
-}
-// #endregion 🔖ConstructXyz
-
 // #region 🔖Move
 /// 🚚 Moves a point or vector by a vector.
 pub struct Move;
@@ -75,7 +49,16 @@ impl Operation for Move {
         let subject = read_dict(input, "subject")?;
         let vector = read_dict(input, "vector")?;
         let schema = subject.schema().unwrap_or("vector");
-        Ok(channel_output(schema, xyz_dictionary(schema, read_xyz(subject)? + read_xyz(vector)?)))
+        let result = xyz_dictionary(schema, read_xyz(subject)? + read_xyz(vector)?);
+        if schema == "point" {
+            Ok(Dictionary::new()
+                .insert("point", Value::Dictionary(result))
+                .insert("vector", Value::null()))
+        } else {
+            Ok(Dictionary::new()
+                .insert("vector", Value::Dictionary(result))
+                .insert("point", Value::null()))
+        }
     }
 }
 // #endregion 🔖Move
@@ -663,23 +646,6 @@ pub fn register(registry: &mut Registry) {
         vec!["list"],
         &["number"],
     );
-
-    let xyz_inputs = vec![number_channel("x", "math.constructVector"), number_channel("y", "math.constructVector"), number_channel("z", "math.constructVector")];
-    register_simple(
-        registry,
-        operator_info("math.constructVector", "Construct Vector", "Vec", "Builds a vector from x, y, z", xyz_inputs.clone(), vec![vector_out()]),
-        Box::new(ConstructVector),
-        vec!["number", "number", "number"],
-        &["vector"],
-    );
-    let point_inputs = vec![number_channel("x", "math.constructPoint"), number_channel("y", "math.constructPoint"), number_channel("z", "math.constructPoint")];
-    register_simple(
-        registry,
-        operator_info("math.constructPoint", "Construct Point", "Point", "Builds a point from x, y, z", point_inputs, vec![point_out()]),
-        Box::new(ConstructPoint),
-        vec!["number", "number", "number"],
-        &["point"],
-    );
     registry.register_operator(
         operator_info(
             "math.move",
@@ -723,10 +689,30 @@ mod tests {
             .insert("x", Value::Dictionary(number_dictionary(1.0)))
             .insert("y", Value::Dictionary(number_dictionary(2.0)))
             .insert("z", Value::Dictionary(number_dictionary(3.0)));
-        let out = reg.dispatch("math.constructVector", &input).unwrap();
+        let out = reg.dispatch("math.vector", &input).unwrap();
         let vector = out.get("vector").and_then(|v| v.as_dictionary()).expect("vector channel");
         assert_eq!(vector.schema(), Some("vector"));
         assert_eq!(vector.get("z").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+    }
+
+    #[test]
+    fn schema_component_round_trips_vector() {
+        let reg = module_registry();
+        let built = reg
+            .dispatch(
+                "math.vector",
+                &Dictionary::new()
+                    .insert("x", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("y", Value::Dictionary(number_dictionary(2.0)))
+                    .insert("z", Value::Dictionary(number_dictionary(3.0))),
+            )
+            .unwrap();
+        let vector = built.get("vector").and_then(|value| value.as_dictionary()).expect("vector");
+        let deconstructed = reg.dispatch("math.vector", &Dictionary::new().insert("vector", Value::Dictionary(vector.clone()))).unwrap();
+        assert_eq!(
+            deconstructed.get("y").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
+            Some(2.0)
+        );
     }
 
     #[test]
@@ -760,7 +746,7 @@ mod tests {
             }],
         );
         assert!(json.contains("flow.module/v1"));
-        assert!(json.contains("math.constructVector"));
+        assert!(json.contains("math.vector"));
         assert!(json.contains("vector"));
     }
 

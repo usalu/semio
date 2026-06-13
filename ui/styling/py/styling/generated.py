@@ -195,7 +195,7 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
         "linkDragMinDistancePx": 5,
         "linkHandleSnapExtraPx": 22,
         "linkCommitSnapTightPx": 2,
-        "brushFlushDistance": 80,
+        "suggestionOffset": 80,
         "brushNodeSize": 40,
         "selectionLassoMinPointDistancePx": 3,
         "selectionClickMaxDistancePx": 4,

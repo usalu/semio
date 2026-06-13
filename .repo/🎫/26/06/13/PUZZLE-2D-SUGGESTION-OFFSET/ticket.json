@@ -1,0 +1,8 @@
+{
+  "title": "Puzzle 2d Suggestion Offset",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Generalize brush flush distance to Suggestion → Offset in puzzle 2d play measures; static label without value; shared by brush, fill, and suggestions.",
+  "goal": "🎯puzzle🎯2d",
+  "sessions": []
+}

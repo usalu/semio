@@ -406,9 +406,9 @@ impl BoardSession {
         self.state.borrow_mut().host.set_active_tool(label);
     }
 
-    #[wasm_bindgen(js_name = setBrushFlushDistance)]
-    pub fn set_brush_flush_distance_wasm(&mut self, distance: f64) {
-        self.state.borrow_mut().host.set_brush_flush_distance(distance);
+    #[wasm_bindgen(js_name = setSuggestionOffset)]
+    pub fn set_suggestion_offset_wasm(&mut self, distance: f64) {
+        self.state.borrow_mut().host.set_suggestion_offset(distance);
     }
 
     #[wasm_bindgen(js_name = setBrushKindWeights)]
@@ -2777,7 +2777,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let catalogs = json!({
             "handleKinds": [{ "id": "port", "name": "Port", "color": "#888" }],
@@ -2850,7 +2850,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 2.0);
         h.set_active_tool("select");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let catalogs = json!({
             "handleKinds": [{ "id": "port", "name": "Port", "color": "#888" }],
@@ -2925,7 +2925,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
@@ -2959,7 +2959,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
@@ -2990,7 +2990,7 @@ mod host_tests {
     fn board_host_brush_fill_frontier_deterministic_and_collision_limited() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
@@ -3117,7 +3117,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.set_board_kind_catalogs_from_json(
@@ -3171,7 +3171,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.set_board_kind_catalogs_from_json(
@@ -3224,7 +3224,7 @@ mod host_tests {
         const CYLINDRIC_TAMBOUR_KIND: &str = "Cylindric Tambour";
         const FIRST_STOREY_KIND: &str = "First Storey Tambour";
         let mut h = BoardHost::new();
-        h.set_brush_flush_distance(80.0);
+        h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
         let compat_str = fixture
@@ -3319,7 +3319,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
         let compat_str = fixture
@@ -3413,7 +3413,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
@@ -3445,7 +3445,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
         h.set_active_tool("brush");
-        h.set_brush_flush_distance(40.0);
+        h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.set_board_kind_catalogs_from_json(

@@ -16,7 +16,7 @@
     {
       "kind": "neuron",
       "id": "vector",
-      "neuronKind": "math.constructVector",
+      "neuronKind": "math.vector",
       "params": {},
       "input_ports": ["x", "y", "z"],
       "preview": false

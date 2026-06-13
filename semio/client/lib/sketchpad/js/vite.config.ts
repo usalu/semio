@@ -73,7 +73,7 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   };
 }
 
-const SKETCHPAD_EMBEDDED_NODE_TEST_REGIONS = [
+const EMBEDDED_NODE_TEST_REGIONS = [
   /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
   /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
 ];
@@ -82,27 +82,35 @@ function isSketchpadIndexModule(id: string): boolean {
   return id.replace(/\\/g, "/").endsWith("/semio/client/lib/sketchpad/js/index.ts");
 }
 
+function isSemioJsIndexModule(id: string): boolean {
+  return id.replace(/\\/g, "/").endsWith("/semio/client/lib/js/index.ts");
+}
+
+function isEmbeddedNodeTestIndexModule(id: string): boolean {
+  return isSketchpadIndexModule(id) || isSemioJsIndexModule(id);
+}
+
 /** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle (Node runners use source + pw-loader). */
-function stripSketchpadEmbeddedNodeTests(source: string): string {
+function stripEmbeddedNodeTests(source: string): string {
   let next = source;
-  for (const region of SKETCHPAD_EMBEDDED_NODE_TEST_REGIONS) {
+  for (const region of EMBEDDED_NODE_TEST_REGIONS) {
     next = next.replace(region, "");
   }
   return next;
 }
 
 /** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle (Node runners use source + pw-loader). */
-function stripSketchpadEmbeddedNodeTestsPlugin(): Plugin {
+function stripEmbeddedNodeTestsPlugin(): Plugin {
   return {
     name: "semio-sketchpad-strip-embedded-node-tests",
     enforce: "pre",
     load(id) {
-      if (!isSketchpadIndexModule(id)) return;
-      return stripSketchpadEmbeddedNodeTests(readFileSync(id, "utf8"));
+      if (!isEmbeddedNodeTestIndexModule(id)) return;
+      return stripEmbeddedNodeTests(readFileSync(id, "utf8"));
     },
     transform(code, id) {
-      if (!isSketchpadIndexModule(id)) return;
-      const next = stripSketchpadEmbeddedNodeTests(code);
+      if (!isEmbeddedNodeTestIndexModule(id)) return;
+      const next = stripEmbeddedNodeTests(code);
       if (next === code) return;
       return { code: next, map: null };
     },
@@ -130,6 +138,8 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
 }
 
 const PLAYWRIGHT_DEV_STUB_ID = "\0semio-sketchpad-playwright-dev-stub";
+const VITEST_DEV_STUB_ID = "\0semio-sketchpad-vitest-dev-stub";
+const TESTING_LIBRARY_DEV_STUB_ID = "\0semio-sketchpad-testing-library-dev-stub";
 
 /** @emoji 🧱 Keeps Playwright out of the browser dev graph when embedded E2E regions are scanned. */
 function monorepoPlaywrightDevStubPlugin(): Plugin {
@@ -143,6 +153,27 @@ function monorepoPlaywrightDevStubPlugin(): Plugin {
     load(id) {
       if (id !== PLAYWRIGHT_DEV_STUB_ID) return;
       return "export default {}; export const test = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} });";
+    },
+  };
+}
+
+/** @emoji 🧱 Keeps vitest and testing-library out of the browser dev graph when embedded test regions are scanned. */
+function monorepoVitestDevStubPlugin(): Plugin {
+  return {
+    name: "semio-sketchpad-vitest-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "vitest" || id.startsWith("vitest/") || id.startsWith("@vitest/")) return VITEST_DEV_STUB_ID;
+      if (id === "@testing-library/react" || id.startsWith("@testing-library/")) return TESTING_LIBRARY_DEV_STUB_ID;
+      return undefined;
+    },
+    load(id) {
+      if (id === VITEST_DEV_STUB_ID) {
+        return "export default {}; export const describe = () => {}; export const it = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} }); export const vi = { fn: () => {}, mock: () => {}, spyOn: () => {} };";
+      }
+      if (id === TESTING_LIBRARY_DEV_STUB_ID) {
+        return "export default {}; export const render = () => ({}); export const screen = {}; export const fireEvent = {}; export const waitFor = async (fn) => fn();";
+      }
     },
   };
 }
@@ -295,8 +326,9 @@ export default defineConfig(async ({ mode }) => {
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/asset")),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),
       monorepoPlaywrightDevStubPlugin(),
+      monorepoVitestDevStubPlugin(),
       monorepoWorkspaceResolvePlugin(workspaceAliases),
-      stripSketchpadEmbeddedNodeTestsPlugin(),
+      stripEmbeddedNodeTestsPlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),
@@ -324,7 +356,7 @@ export default defineConfig(async ({ mode }) => {
     ],
     optimizeDeps: {
       include: ["golden-layout", "scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector", "@react-three/fiber", "@react-three/drei"],
-      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core", "chromium-bidi", "fsevents"],
+      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core", "chromium-bidi", "fsevents", "vitest", "@vitest/expect", "@testing-library/react"],
       esbuildOptions: {
         target: "es2020",
         plugins: [
@@ -332,9 +364,9 @@ export default defineConfig(async ({ mode }) => {
             name: "semio-sketchpad-strip-embedded-node-tests-depcrawl",
             setup(build) {
               build.onLoad({ filter: /index\.ts$/ }, (args) => {
-                if (!isSketchpadIndexModule(args.path)) return;
+                if (!isEmbeddedNodeTestIndexModule(args.path)) return;
                 return {
-                  contents: stripSketchpadEmbeddedNodeTests(readFileSync(args.path, "utf8")),
+                  contents: stripEmbeddedNodeTests(readFileSync(args.path, "utf8")),
                   loader: "ts",
                 };
               });

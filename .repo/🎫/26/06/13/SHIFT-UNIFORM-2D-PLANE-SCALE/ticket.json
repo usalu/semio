@@ -1,0 +1,14 @@
+{
+  "title": "Shift Uniform 2d Plane Scale",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "When holding shift on two dimensional scales in infinite world gumball, scale same factor in both directions.",
+  "summary": "Holding Shift during 2D plane gumball scale (scaleXY/scaleYZ/scaleXZ) now applies the same factor to both in-plane axes, using radial distance in the plane. Shift can be toggled mid-drag via existing key listeners. Added unit tests for uniform plane scale factors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1680"
+  },
+  "goal": "🎯infinite🎯world",
+  "sessions": [
+    "⚪45dc9ffe80b84baaa16a3d46ccb9f0ed"
+  ]
+}

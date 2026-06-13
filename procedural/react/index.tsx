@@ -148,7 +148,7 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 	widgets: [
 		{ kind: "neuron", id: "box", neuronKind: "brep.prim3d.box" },
 		{ kind: "neuron", id: "fillet", neuronKind: "brep.solid.fillet" },
-		{ kind: "neuron", id: "offset", neuronKind: "math.constructVector" },
+		{ kind: "neuron", id: "offset", neuronKind: "math.vector" },
 		{ kind: "neuron", id: "move", neuronKind: "brep.xform.translate" },
 		{ kind: "outputPreview", id: "preview" },
 	],

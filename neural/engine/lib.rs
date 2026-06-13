@@ -70,6 +70,14 @@ pub enum Value {
 }
 
 impl Value {
+    pub fn null() -> Self {
+        Self::Atom(Atom::Null)
+    }
+
+    pub fn is_null(&self) -> bool {
+        matches!(self, Self::Atom(Atom::Null))
+    }
+
     pub fn as_atom(&self) -> Option<&Atom> {
         match self {
             Value::Atom(a) => Some(a),
@@ -89,6 +97,7 @@ impl Value {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Atom {
+    Null,
     Boolean(bool),
     Integer(i64),
     Decimal(f64),
@@ -96,6 +105,10 @@ pub enum Atom {
 }
 
 impl Atom {
+    pub fn is_null(&self) -> bool {
+        matches!(self, Self::Null)
+    }
+
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             Atom::Boolean(b) => Some(*b),
@@ -158,6 +171,9 @@ impl ValueType {
     }
 
     pub fn matches(&self, value: &Value) -> bool {
+        if value.is_null() {
+            return false;
+        }
         match self {
             ValueType::Any => true,
             ValueType::Boolean => value.as_atom().is_some_and(|a| matches!(a, Atom::Boolean(_))),
@@ -240,6 +256,256 @@ impl Schema {
     }
 }
 // #endregion 🔖Schema
+
+// #region 🔖SchemaComponent
+fn schema_component_operator_id(schema: &Schema) -> String {
+    format!("{}.{}", schema.module, schema.id)
+}
+
+fn should_auto_register_schema_component(schema: &Schema) -> bool {
+    schema.module != "core" && !schema.fields.is_empty() && schema.id != "list" && schema.id != "dictionary"
+}
+
+fn schema_field_input_cardinality(value: &ValueType) -> Cardinality {
+    match value {
+        ValueType::List(_) => Cardinality::ZeroOrMore,
+        _ => Cardinality::ZeroOrOne,
+    }
+}
+
+fn schema_field_output_cardinality(value: &ValueType) -> Cardinality {
+    match value {
+        ValueType::List(_) => Cardinality::ZeroOrMore,
+        _ => Cardinality::ExactlyOne,
+    }
+}
+
+/// 🧩 Builds construct/deconstruct/modify operator metadata for a schema.
+pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
+    let operator_id = schema_component_operator_id(schema);
+    let mut inputs = vec![ChannelSpec::requires(&schema.id, &[schema.id.as_str()]).with_cardinality(Cardinality::ZeroOrOne)];
+    for field in &schema.fields {
+        inputs.push(
+            ChannelSpec::requires(&field.key, &[field.value.id().as_str()])
+                .with_cardinality(schema_field_input_cardinality(&field.value)),
+        );
+    }
+    let mut outputs = vec![ChannelSpec::provides(&schema.id, vec![schema.id.clone()])];
+    for field in &schema.fields {
+        let (code, abbreviation, full_name) = derive_channel_names(&field.key);
+        outputs.push(
+            ChannelSpec::named(code, abbreviation, &field.key, full_name)
+                .with_operators(vec![field.value.id()])
+                .with_cardinality(schema_field_output_cardinality(&field.value)),
+        );
+    }
+    outputs.push(ChannelSpec::list_output("errors", vec![]));
+    OperatorInfo {
+        id: operator_id,
+        module: schema.module.clone(),
+        name: schema.name.clone(),
+        abbreviation: schema.name.clone(),
+        icon: schema.icon.clone(),
+        summary: format!("Constructs, deconstructs, or modifies {}", schema.name),
+        inputs,
+        outputs,
+        ..Default::default()
+    }
+}
+
+fn schema_errors_list(messages: &[String]) -> Dictionary {
+    let mut list = Dictionary::with_schema("list");
+    for (index, message) in messages.iter().enumerate() {
+        list = list.insert(
+            index.to_string(),
+            Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(message.clone())))),
+        );
+    }
+    list
+}
+
+fn schema_input_present(input: &Dictionary, key: &str) -> bool {
+    input.get(key).is_some_and(|value| !value.is_null())
+}
+
+fn field_to_channel(value: &Value, value_type: &ValueType) -> Result<Value, String> {
+    match value_type {
+        ValueType::Decimal => {
+            let number = value.as_atom().and_then(|atom| atom.as_f64()).ok_or_else(|| "decimal field is not numeric".to_string())?;
+            Ok(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(number)))))
+        }
+        ValueType::Integer => {
+            let number = value
+                .as_atom()
+                .and_then(|atom| match atom {
+                    Atom::Integer(value) => Some(*value),
+                    Atom::Decimal(value) => Some(value.round() as i64),
+                    _ => None,
+                })
+                .ok_or_else(|| "integer field is not integral".to_string())?;
+            Ok(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Integer(number)))))
+        }
+        ValueType::Boolean => {
+            let boolean = value.as_atom().and_then(|atom| atom.as_bool()).ok_or_else(|| "boolean field is not boolean".to_string())?;
+            Ok(Value::Dictionary(
+                Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(boolean))),
+            ))
+        }
+        ValueType::Text => {
+            let text = value.as_atom().and_then(|atom| atom.as_str()).ok_or_else(|| "text field is not text".to_string())?;
+            Ok(Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(text.to_string())))))
+        }
+        ValueType::List(_) | ValueType::Schema(_) | ValueType::Any => value
+            .as_dictionary()
+            .cloned()
+            .map(Value::Dictionary)
+            .ok_or_else(|| "field is not a dictionary".to_string()),
+    }
+}
+
+fn channel_to_field(value: &Value, value_type: &ValueType) -> Result<Value, String> {
+    if value.is_null() {
+        return Err("channel value is null".into());
+    }
+    match value_type {
+        ValueType::Decimal => {
+            let dictionary = value.as_dictionary().ok_or_else(|| "decimal channel is not a dictionary".to_string())?;
+            let number = dictionary
+                .get("value")
+                .and_then(|entry| entry.as_atom())
+                .and_then(|atom| atom.as_f64())
+                .ok_or_else(|| "decimal channel is missing value".to_string())?;
+            Ok(Value::Atom(Atom::Decimal(number)))
+        }
+        ValueType::Integer => {
+            let dictionary = value.as_dictionary().ok_or_else(|| "integer channel is not a dictionary".to_string())?;
+            let number = dictionary
+                .get("value")
+                .and_then(|entry| entry.as_atom())
+                .and_then(|atom| match atom {
+                    Atom::Integer(value) => Some(*value),
+                    Atom::Decimal(value) => Some(value.round() as i64),
+                    _ => None,
+                })
+                .ok_or_else(|| "integer channel is missing value".to_string())?;
+            Ok(Value::Atom(Atom::Integer(number)))
+        }
+        ValueType::Boolean => {
+            let dictionary = value.as_dictionary().ok_or_else(|| "boolean channel is not a dictionary".to_string())?;
+            let boolean = dictionary
+                .get("value")
+                .and_then(|entry| entry.as_atom())
+                .and_then(|atom| atom.as_bool())
+                .ok_or_else(|| "boolean channel is missing value".to_string())?;
+            Ok(Value::Atom(Atom::Boolean(boolean)))
+        }
+        ValueType::Text => {
+            let dictionary = value.as_dictionary().ok_or_else(|| "text channel is not a dictionary".to_string())?;
+            let text = dictionary
+                .get("value")
+                .and_then(|entry| entry.as_atom())
+                .and_then(|atom| atom.as_str())
+                .ok_or_else(|| "text channel is missing value".to_string())?;
+            Ok(Value::Atom(Atom::String(text.to_string())))
+        }
+        ValueType::List(_) | ValueType::Schema(_) | ValueType::Any => value
+            .as_dictionary()
+            .cloned()
+            .map(Value::Dictionary)
+            .ok_or_else(|| "channel is not a dictionary".to_string()),
+    }
+}
+
+fn read_schema_instance<'a>(input: &'a Dictionary, schema: &Schema) -> Result<&'a Dictionary, String> {
+    let instance = input
+        .get(&schema.id)
+        .and_then(|value| value.as_dictionary())
+        .ok_or_else(|| format!("missing {}", schema.id))?;
+    if instance.schema() != Some(schema.id.as_str()) {
+        return Err(format!("invalid {}", schema.id));
+    }
+    Ok(instance)
+}
+
+fn read_schema_field_input(input: &Dictionary, field: &FieldSpec) -> Result<Value, String> {
+    let value = input.get(&field.key).ok_or_else(|| format!("missing {}", field.key))?;
+    channel_to_field(value, &field.value)
+}
+
+/// 🧩 Construct, deconstruct, or modify dictionaries for one schema.
+pub struct SchemaComponent {
+    pub schema: Schema,
+}
+
+impl SchemaComponent {
+    fn construct(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, String> {
+        let mut dictionary = self.schema.default_dictionary();
+        for field in provided {
+            dictionary = dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
+        }
+        for field in &self.schema.fields {
+            if dictionary.get(&field.key).is_none() {
+                return Err(format!("missing field {}", field.key));
+            }
+        }
+        self.schema.validate(&dictionary).map_err(|error| error.to_string())?;
+        Ok(dictionary)
+    }
+
+    fn deconstruct(&self, input: &Dictionary) -> Result<Dictionary, String> {
+        let instance = read_schema_instance(input, &self.schema)?;
+        self.schema.validate(instance).map_err(|error| error.to_string())?;
+        Ok(instance.clone())
+    }
+
+    fn modify(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, String> {
+        let mut dictionary = read_schema_instance(input, &self.schema)?.clone();
+        for field in provided {
+            dictionary = dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
+        }
+        self.schema.validate(&dictionary).map_err(|error| error.to_string())?;
+        Ok(dictionary)
+    }
+
+    fn success_output(&self, instance: Dictionary) -> Dictionary {
+        let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::Dictionary(instance.clone()));
+        for field in &self.schema.fields {
+            let value = instance.get(&field.key).expect("validated field");
+            let channel = field_to_channel(value, &field.value).expect("validated field channel");
+            output = output.insert(field.key.clone(), channel);
+        }
+        output.insert("errors", Value::Dictionary(schema_errors_list(&[])))
+    }
+
+    fn error_output(&self, messages: Vec<String>) -> Dictionary {
+        let mut output = Dictionary::new()
+            .insert(self.schema.id.clone(), Value::null())
+            .insert("errors", Value::Dictionary(schema_errors_list(&messages)));
+        for field in &self.schema.fields {
+            output = output.insert(field.key.clone(), Value::null());
+        }
+        output
+    }
+}
+
+impl Operation for SchemaComponent {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let has_instance = schema_input_present(input, &self.schema.id);
+        let provided: Vec<&FieldSpec> = self.schema.fields.iter().filter(|field| schema_input_present(input, &field.key)).collect();
+        let has_fields = !provided.is_empty();
+        let result = match (has_instance, has_fields) {
+            (false, false) => Err("no instance or field inputs provided".into()),
+            (false, true) => self.construct(input, &provided),
+            (true, false) => self.deconstruct(input),
+            (true, true) => self.modify(input, &provided),
+        };
+        Ok(match result {
+            Ok(instance) => self.success_output(instance),
+            Err(message) => self.error_output(vec![message]),
+        })
+    }
+}
+// #endregion 🔖SchemaComponent
 
 // #region 🔖Tree
 /// 🌳 Directed acyclic graph of neurons and synapses.
@@ -722,6 +988,34 @@ impl Registry {
         if self.finalized {
             return;
         }
+        let schema_ids: Vec<String> = self.schemas.keys().cloned().collect();
+        for schema_id in schema_ids {
+            let Some(schema) = self.schemas.get(&schema_id).cloned() else { continue };
+            if !should_auto_register_schema_component(&schema) {
+                continue;
+            }
+            let operator_id = schema_component_operator_id(&schema);
+            if self.operators.contains_key(&operator_id) {
+                continue;
+            }
+            let info = schema_component_info(&schema);
+            let produces = vec![schema.id.clone()];
+            for produced in &produces {
+                self.schema_providers.entry(produced.clone()).or_default();
+            }
+            self.schema_providers.entry(schema.id.clone()).or_default().insert(operator_id.clone());
+            self.operator_produces.insert(operator_id.clone(), produces);
+            self.operators.insert(
+                operator_id,
+                Operator {
+                    info,
+                    implementations: vec![OperatorImpl {
+                        schemas: vec![],
+                        operation: Box::new(SchemaComponent { schema }),
+                    }],
+                },
+            );
+        }
         let operator_produces = self.operator_produces.clone();
         let schema_providers = self.schema_providers.clone();
         for (operator_id, operator) in &mut self.operators {
@@ -837,6 +1131,7 @@ fn hash_str<H: Hasher>(hasher: &mut H, value: &str) {
 
 fn hash_atom<H: Hasher>(hasher: &mut H, atom: &Atom) {
     match atom {
+        Atom::Null => 0u8.hash(hasher),
         Atom::Boolean(value) => value.hash(hasher),
         Atom::Integer(value) => value.hash(hasher),
         Atom::Decimal(value) => value.to_bits().hash(hasher),
@@ -1277,6 +1572,9 @@ fn validate_homogeneous_list(list: &Dictionary) -> Result<(), EvalError> {
     let mut expected: Option<String> = None;
     for key in list.keys().filter_map(|key| key.parse::<usize>().ok().map(|index| index.to_string())) {
         let Some(value) = list.get(&key) else { continue };
+        if value.is_null() {
+            continue;
+        }
         let Some(item) = value.as_dictionary() else {
             return Err(EvalError::HeterogeneousList(format!("list item {key} is not a dictionary")));
         };
@@ -1295,6 +1593,11 @@ fn validate_homogeneous_list(list: &Dictionary) -> Result<(), EvalError> {
 fn validate_channel_value(channel: &ChannelSpec, value: Option<&Value>) -> Result<(), EvalError> {
     if channel.name == "*" {
         return Ok(());
+    }
+    if let Some(value) = value {
+        if value.is_null() {
+            return Ok(());
+        }
     }
     if channel.cardinality.is_collection() {
         let count = match value {
@@ -2053,6 +2356,84 @@ mod tests {
         );
         let err = collect_neuron_input(&tree, &outputs, "size", Some(&operator)).unwrap_err();
         assert!(matches!(err, EvalError::HeterogeneousList(_)));
+    }
+
+    fn point_schema() -> Schema {
+        Schema {
+            id: "point".into(),
+            module: "math".into(),
+            name: "Point".into(),
+            icon: "emoji:📍".into(),
+            summary: "Point with x, y, z".into(),
+            fields: vec![
+                FieldSpec::decimal_default("x", 0.0),
+                FieldSpec::decimal_default("y", 0.0),
+                FieldSpec::decimal_default("z", 0.0),
+            ],
+        }
+    }
+
+    #[test]
+    fn null_atom_round_trips_through_json() {
+        let value = Value::null();
+        let json = serde_json::to_string(&value).unwrap();
+        assert_eq!(json, "null");
+        let back: Value = serde_json::from_str(&json).unwrap();
+        assert!(back.is_null());
+    }
+
+    #[test]
+    fn schema_component_info_declares_tri_modal_ports() {
+        let info = schema_component_info(&point_schema());
+        assert_eq!(info.id, "math.point");
+        assert_eq!(info.inputs.len(), 4);
+        assert_eq!(info.outputs.len(), 5);
+        assert_eq!(info.inputs[0].cardinality, Cardinality::ZeroOrOne);
+        assert_eq!(info.outputs.last().expect("errors").name, "errors");
+    }
+
+    #[test]
+    fn schema_component_construct_deconstruct_and_modify() {
+        let mut registry = Registry::new();
+        registry.register_schema(point_schema());
+        registry.finalize();
+        let construct = Dictionary::new()
+            .insert("x", Value::Dictionary(number_dictionary(1.0)))
+            .insert("y", Value::Dictionary(number_dictionary(2.0)))
+            .insert("z", Value::Dictionary(number_dictionary(3.0)));
+        let built = registry.dispatch("math.point", &construct).unwrap();
+        let point = built.get("point").and_then(|value| value.as_dictionary()).expect("point");
+        assert_eq!(point.get("z").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(3.0));
+        let deconstructed = registry.dispatch("math.point", &Dictionary::new().insert("point", Value::Dictionary(point.clone()))).unwrap();
+        assert_eq!(
+            deconstructed.get("x").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
+            Some(1.0)
+        );
+        let modified = registry
+            .dispatch(
+                "math.point",
+                &Dictionary::new()
+                    .insert("point", Value::Dictionary(point.clone()))
+                    .insert("x", Value::Dictionary(number_dictionary(9.0))),
+            )
+            .unwrap();
+        assert_eq!(
+            modified.get("point").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("x")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
+            Some(9.0)
+        );
+    }
+
+    #[test]
+    fn schema_component_error_emits_null_outputs_and_errors() {
+        let mut registry = Registry::new();
+        registry.register_schema(point_schema());
+        registry.finalize();
+        let output = registry.dispatch("math.point", &Dictionary::new()).unwrap();
+        assert!(output.get("point").expect("point").is_null());
+        assert!(output.get("x").expect("x").is_null());
+        let errors = output.get("errors").and_then(|value| value.as_dictionary()).expect("errors");
+        assert_eq!(errors.schema(), Some("list"));
+        assert!(errors.get("0").is_some());
     }
 }
 // #endregion 🔖Tests

@@ -58,7 +58,7 @@ import {
 	parsePuzzle2dFixtureV1,
 	PUZZLE_2D_CAMERA_ZOOM_MAX,
 	PUZZLE_2D_CAMERA_ZOOM_MIN,
-	DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+	DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 	DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
 	type EdgeKind,
 	type HandleKind,
@@ -113,9 +113,9 @@ export const PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle2d.tool.select";
 /** @emoji 🪣 Window engagement possible id for the fill tool. */
 export const PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID = "puzzle2d.tool.fill";
 
-const BRUSH_FLUSH_DISTANCE_SLIDER_MIN = 0;
-const BRUSH_FLUSH_DISTANCE_SLIDER_MAX = 160;
-const BRUSH_FLUSH_DISTANCE_SLIDER_STEP = 4;
+const PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MIN = 0;
+const PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MAX = 160;
+const PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_STEP = 4;
 
 const PUZZLE_2D_FILL_COUNT_SLIDER_MIN = 0;
 const PUZZLE_2D_FILL_COUNT_SLIDER_MAX = 1000;
@@ -1148,7 +1148,7 @@ function puzzle2dPlayTargetLabel(kind: Puzzle2dPlayTargetKind): string {
 /** @emoji 🧰 Snapshot read by {@link buildPuzzle2dPlayToolbarTools} (host-owned play state). */
 export interface Puzzle2dPlayToolbarState {
 	readonly puzzle2dActiveTool: Puzzle2dActiveTool;
-	readonly puzzle2dBrushFlushDistance: number;
+	readonly puzzle2dSuggestionOffset: number;
 	readonly puzzle2dSelectionMethod: Puzzle2dSelectionMethod;
 	readonly puzzle2dSelectionMode: Puzzle2dSelectionMode;
 	readonly puzzle2dSelectionTargets: Puzzle2dSelectionTargets;
@@ -1290,7 +1290,7 @@ export class Puzzle2dPlayShellController extends Controller {
 	private readonly hostChromeNotify: () => void;
 	private activeTool: Puzzle2dActiveTool = "select";
 	private fillCount = 0;
-	private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+	private suggestionOffset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX;
 	private brushEngagementPossibles: { readonly id: string; readonly label: string }[] = [];
 	private nodeKindIds: string[] = [];
 	private handleKindIds: string[] = [];
@@ -1414,38 +1414,38 @@ export class Puzzle2dPlayShellController extends Controller {
 		});
 	}
 
-	private brushMeasuresGroup(): WindowMeasure {
+	private suggestionMeasuresGroup(): WindowMeasure {
 		return {
 			kind: "group",
-			id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush`,
-			label: "Brush",
+			id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-suggestion`,
+			label: "Suggestion",
 			children: [
 				{
 					kind: "slider",
-					id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-flush-distance`,
-					label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
-					value: this.brushFlushDistance,
-					min: BRUSH_FLUSH_DISTANCE_SLIDER_MIN,
-					max: BRUSH_FLUSH_DISTANCE_SLIDER_MAX,
-					step: BRUSH_FLUSH_DISTANCE_SLIDER_STEP,
-					onChange: puzzle2dPlayCmd("setBrushFlushDistance"),
+					id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-suggestion-offset`,
+					label: "Offset",
+					value: this.suggestionOffset,
+					min: PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MIN,
+					max: PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MAX,
+					step: PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_STEP,
+					onChange: puzzle2dPlayCmd("setSuggestionOffset"),
 				},
 				{
 					kind: "group",
-					id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution`,
+					id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-suggestion-distribution`,
 					label: "Distribution",
 					defaultOpen: false,
 					children: [
 						{
 							kind: "group",
-							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution-nodes`,
+							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes`,
 							label: "Nodes",
 							defaultOpen: false,
 							children: this.kindWeightMeasures("node-kind", this.nodeKindIds, this.nodeKindWeights, "setNodeKindWeight", "nodes"),
 						},
 						{
 							kind: "group",
-							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution-handles`,
+							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-suggestion-distribution-handles`,
 							label: "Handles",
 							defaultOpen: false,
 							children: this.kindWeightMeasures("handle-kind", this.handleKindIds, this.handleKindWeights, "setHandleKindWeight", "handles"),
@@ -1617,7 +1617,7 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	private windowMeasuresForPane(paneId: Puzzle2dPlayPaneId): readonly WindowMeasure[] {
-		return [this.lodMeasureForPane(paneId), this.brushMeasuresGroup()];
+		return [this.lodMeasureForPane(paneId), this.suggestionMeasuresGroup()];
 	}
 
 	private lodMeasureForPane(paneId: Puzzle2dPlayPaneId): WindowMeasure {
@@ -1715,11 +1715,11 @@ export class Puzzle2dPlayShellController extends Controller {
 				}
 				break;
 			}
-			case "setBrushFlushDistance": {
+			case "setSuggestionOffset": {
 				const distance = Number((args as { value?: number }).value);
 				if (Number.isFinite(distance)) {
-					this.brushFlushDistance = Math.max(BRUSH_FLUSH_DISTANCE_SLIDER_MIN, Math.min(BRUSH_FLUSH_DISTANCE_SLIDER_MAX, distance));
-					this.hostBridge?.runHostCommand("setBrushFlushDistance", { distance: this.brushFlushDistance });
+					this.suggestionOffset = Math.max(PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MIN, Math.min(PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MAX, distance));
+					this.hostBridge?.runHostCommand("setSuggestionOffset", { distance: this.suggestionOffset });
 				}
 				break;
 			}
@@ -2150,7 +2150,7 @@ if (import.meta.vitest) {
 			ctrl.setHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
-					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 					puzzle2dGridSnapEnabled: false,
 					puzzle2dRedrawPlaying: false,
 					puzzle2dSelectionMethod: "rectangle",
@@ -2455,7 +2455,7 @@ if (import.meta.vitest) {
 			ctrl.setHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
-					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 					puzzle2dGridSnapEnabled: false,
 					puzzle2dRedrawPlaying: false,
 					puzzle2dSelectionMethod: "rectangle",
@@ -2485,7 +2485,7 @@ if (import.meta.vitest) {
 			ctrl.setHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
-					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 					puzzle2dGridSnapEnabled: false,
 					puzzle2dRedrawPlaying: false,
 					puzzle2dSelectionMethod: "rectangle",
@@ -2513,7 +2513,7 @@ if (import.meta.vitest) {
 			ctrl.setHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
-					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 					puzzle2dGridSnapEnabled: false,
 					puzzle2dRedrawPlaying: false,
 					puzzle2dSelectionMethod: "rectangle",
@@ -2534,11 +2534,13 @@ if (import.meta.vitest) {
 			expect(engagement?.sessionActive).toBe(true);
 		});
 
-		it("brush flush-distance measure is registered on play windows", () => {
+		it("suggestion offset measure is registered on play windows", () => {
 			const runtime = buildPuzzle2dPlayRuntime();
 			const controller = runtime.getActiveApp()?.controller as Puzzle2dPlayShellController;
 			const overview = controller.mainMode.windowKinds.find((wk) => wk.id === "2d-overview");
-			expect(overview?.measures?.some((m) => m.kind === "slider" && m.id.includes("brush-flush-distance"))).toBe(true);
+			const suggestion = overview?.measures?.find((m) => m.kind === "group" && m.label === "Suggestion");
+			expect(suggestion?.kind).toBe("group");
+			expect(suggestion?.children?.some((m) => m.kind === "slider" && m.id.includes("suggestion-offset") && m.label === "Offset")).toBe(true);
 		});
 
 		it("setKindCatalogs seeds nakagin default suggestion ratios for nodes and handles", () => {
@@ -2548,7 +2550,7 @@ if (import.meta.vitest) {
 			ctrl.setHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
-					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
 					puzzle2dGridSnapEnabled: false,
 					puzzle2dRedrawPlaying: false,
 					puzzle2dSelectionMethod: "rectangle",

@@ -146,7 +146,7 @@ pub mod metrics {
         pub const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
         pub const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
         pub const LINK_COMMIT_SNAP_TIGHT_PX: f64 = 2.0;
-        pub const BRUSH_FLUSH_DISTANCE: f64 = 80.0;
+        pub const SUGGESTION_OFFSET: f64 = 80.0;
         pub const BRUSH_NODE_SIZE: f64 = 40.0;
         pub const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
         pub const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;

@@ -76,7 +76,7 @@ fn point_dictionary(point: Vec3) -> Dictionary {
 }
 
 fn vector_channel(id: &str, operator_id: &str, default: Vec3) -> ChannelSpec {
-    ChannelSpec::requires(id, &["math.constructVector", operator_id]).with_default(Value::Dictionary(vector_dictionary(default)))
+    ChannelSpec::requires(id, &["math.vector", operator_id]).with_default(Value::Dictionary(vector_dictionary(default)))
 }
 
 fn vector_dictionary(vector: Vec3) -> Dictionary {
@@ -1755,6 +1755,24 @@ mod tests {
         let second = tessellate_geometry_json(handle, 0.1);
         assert_eq!(first, second);
         assert!(first.contains("position"));
+    }
+
+    #[test]
+    fn schema_component_deconstructs_geometry() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let geometry = Dictionary::with_schema("geometry")
+            .insert("handle", Value::Atom(Atom::String("solid-1".into())))
+            .insert("kind", Value::Atom(Atom::String("solid".into())));
+        let out = reg.dispatch("brep.geometry", &Dictionary::new().insert("geometry", Value::Dictionary(geometry.clone()))).unwrap();
+        assert_eq!(
+            out.get("handle").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()),
+            Some("solid-1")
+        );
+        assert_eq!(
+            out.get("kind").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()),
+            Some("solid")
+        );
     }
 }
 // #endregion 🔖Tests

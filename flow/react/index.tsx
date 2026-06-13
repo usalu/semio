@@ -125,6 +125,45 @@ export function flowChannelCompatible(output: FlowChannelSpecV1, input: FlowChan
   return input.operators.every((required) => provided.has(required));
 }
 
+/** @emoji 🧾 Formats a flow eval channel value for display, including null and error lists. */
+export function formatFlowEvalValue(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (!Array.isArray(value) && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (record.$schema === "list") {
+      const messages = Object.keys(record)
+        .filter((key) => /^\d+$/.test(key))
+        .sort((left, right) => Number(left) - Number(right))
+        .map((key) => formatFlowEvalValue(record[key]))
+        .filter((entry) => entry.length > 0 && entry !== "null");
+      return messages.length ? messages.join("; ") : "—";
+    }
+    if (record.$schema === "text" && typeof record.value === "string") return record.value;
+    if (record.value !== undefined && Object.keys(record).length <= 2) return formatFlowEvalValue(record.value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "—";
+  }
+}
+
+/** @emoji ⚠️ Extracts schema-component error messages from an eval output port map. */
+export function readFlowEvalErrors(outPorts: Readonly<Record<string, unknown>> | null | undefined): readonly string[] {
+  if (!outPorts) return [];
+  const errors = outPorts.errors;
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return [];
+  const record = errors as Record<string, unknown>;
+  if (record.$schema !== "list") return [];
+  return Object.keys(record)
+    .filter((key) => /^\d+$/.test(key))
+    .sort((left, right) => Number(left) - Number(right))
+    .map((key) => formatFlowEvalValue(record[key]))
+    .filter((entry) => entry.length > 0 && entry !== "null");
+}
+
 export interface FlowModuleSchemaFieldV1 {
   readonly key: string;
   readonly value: FlowValueTypeV1;
@@ -1325,13 +1364,34 @@ function flowSpotlightLodChrome(lod: DagDrawLodKind): {
   switch (lod) {
     case "minimap":
     case "overview":
-      return { textClass: "text-xs", itemPy: "py-0.5", maxListH: "max-h-28", panelClass: "min-w-[8rem] max-w-[11rem]" };
+      return {
+        textClass: "text-xs",
+        itemPy: "py-0.5",
+        maxListH: "max-h-[min(12rem,50vh)]",
+        panelClass: "min-w-[8rem] max-w-[11rem]",
+      };
     case "compact":
     case "detail":
-      return { textClass: "text-xs", itemPy: "py-0.5", maxListH: "max-h-36", panelClass: "min-w-[9rem] max-w-[13rem]" };
+      return {
+        textClass: "text-xs",
+        itemPy: "py-0.5",
+        maxListH: "max-h-[min(16rem,60vh)]",
+        panelClass: "min-w-[9rem] max-w-[13rem]",
+      };
     default:
-      return { textClass: "text-sm", itemPy: "py-1", maxListH: "max-h-44", panelClass: "min-w-[11rem] max-w-[16rem]" };
+      return {
+        textClass: "text-sm",
+        itemPy: "py-1",
+        maxListH: "max-h-[min(24rem,70vh)]",
+        panelClass: "min-w-[11rem] max-w-[16rem]",
+      };
   }
+}
+
+/** @emoji 🔍 Scroll container classes for expanded flow spotlight suggestions. */
+export function flowSpotlightSuggestionListScrollClass(expanded: boolean, lod: DagDrawLodKind): string {
+  const chrome = flowSpotlightLodChrome(lod);
+  return cn("min-h-0 overscroll-contain", expanded ? cn("overflow-y-auto", chrome.maxListH) : "overflow-hidden");
 }
 
 /** @emoji 🔍 Ranks catalogue items for flow canvas spotlight search. */
@@ -1662,6 +1722,8 @@ interface FlowSpotlightProps {
 function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFrame }: FlowSpotlightProps): React.JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const activeItemRef = useRef<HTMLButtonElement | null>(null);
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -1744,6 +1806,11 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   }, [activeIndex, noteSpec, sliderSpec, suggestions, syncGhost]);
 
   useEffect(() => {
+    if (!expanded) return;
+    activeItemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, expanded]);
+
+  useEffect(() => {
     return () => {
       session.clearGhostWidget();
     };
@@ -1799,12 +1866,13 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   return (
     <div
       ref={rootRef}
-      className={cn("absolute z-20", lodChrome.panelClass, floatingMenuSurfaceClass)}
+      className={cn("absolute z-20 flex min-h-0 flex-col", lodChrome.panelClass, floatingMenuSurfaceClass)}
       style={{ left: anchor.screen.x, top: anchor.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
     >
-      <div className={cn("flex items-center gap-1 px-2 py-1", borderNormalBottomClass)}>
+      <div className={cn("flex shrink-0 items-center gap-1 px-2 py-1", borderNormalBottomClass)}>
         <input
           ref={inputRef}
           type="text"
@@ -1825,37 +1893,44 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
           </button>
         ) : null}
       </div>
-      <ul className={cn("overflow-y-auto py-0.5", lodChrome.maxListH)}>
-        {visible.length === 0 ? (
-          <li className={cn("px-2 py-1 text-muted", lodChrome.textClass)}>No matches</li>
-        ) : (
-          visible.map((item, index) => {
-            const globalIndex = expanded ? index : 0;
-            const active = globalIndex === activeIndex;
-            const display = flowCatalogueItemLodDisplay(item, drawLod);
-            return (
-              <li key={`${item.kind}-${item.neuronKind ?? item.action ?? item.name}`}>
-                <button
-                  type="button"
-                  className={cn(
-                    floatingMenuItemClass,
-                    "flex w-full min-w-0 items-center gap-1.5 px-2",
-                    lodChrome.itemPy,
-                    lodChrome.textClass,
-                    active && "bg-active-base text-emphasized",
-                  )}
-                  onMouseEnter={() => setActiveIndex(globalIndex)}
-                  onClick={() => commitItem(item)}
-                >
-                  {display.showIcon ? <Icon icon={item.icon} size="tiny" className="shrink-0" /> : null}
-                  <span className="min-w-0 truncate font-medium">{display.primary}</span>
-                  {display.detail ? <span className="min-w-0 truncate text-muted">· {display.detail}</span> : null}
-                </button>
-              </li>
-            );
-          })
-        )}
-      </ul>
+      <div
+        ref={listRef}
+        className={flowSpotlightSuggestionListScrollClass(expanded && hasMore, drawLod)}
+        onWheel={(event) => event.stopPropagation()}
+      >
+        <ul className="py-0.5" role="listbox">
+          {visible.length === 0 ? (
+            <li className={cn("px-2 py-1 text-muted", lodChrome.textClass)}>No matches</li>
+          ) : (
+            visible.map((item, index) => {
+              const globalIndex = expanded ? index : 0;
+              const active = globalIndex === activeIndex;
+              const display = flowCatalogueItemLodDisplay(item, drawLod);
+              return (
+                <li key={`${item.kind}-${item.neuronKind ?? item.action ?? item.name}`} role="option" aria-selected={active}>
+                  <button
+                    ref={active ? activeItemRef : undefined}
+                    type="button"
+                    className={cn(
+                      floatingMenuItemClass,
+                      "flex w-full min-w-0 items-center gap-1.5 px-2",
+                      lodChrome.itemPy,
+                      lodChrome.textClass,
+                      active && "bg-active-base text-emphasized",
+                    )}
+                    onMouseEnter={() => setActiveIndex(globalIndex)}
+                    onClick={() => commitItem(item)}
+                  >
+                    {display.showIcon ? <Icon icon={item.icon} size="tiny" className="shrink-0" /> : null}
+                    <span className="min-w-0 truncate font-medium">{display.primary}</span>
+                    {display.detail ? <span className="min-w-0 truncate text-muted">· {display.detail}</span> : null}
+                  </button>
+                </li>
+              );
+            })
+          )}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -4200,6 +4275,21 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("formatFlowEvalValue", () => {
+    it("renders null channel values", () => {
+      expect(formatFlowEvalValue(null)).toBe("null");
+    });
+
+    it("renders schema-component error lists", () => {
+      const errors = {
+        $schema: "list",
+        "0": { $schema: "text", value: "missing field x" },
+      };
+      expect(formatFlowEvalValue(errors)).toBe("missing field x");
+      expect(readFlowEvalErrors({ errors })).toEqual(["missing field x"]);
+    });
+  });
+
   describe("flow proximity connect", () => {
     it("exports default proximity distance for window options", () => {
       expect(FLOW_DEFAULT_PROXIMITY_DISTANCE).toBe(48);
@@ -4462,6 +4552,19 @@ if (import.meta.vitest) {
       expect(flowCatalogueItemLodDisplay(item, "overview").showIcon).toBe(true);
       expect(flowCatalogueItemLodDisplay(item, "micro").detail).toBe("Product");
       expect(flowCatalogueItemLodDisplay(item, "normal").detail).toBeNull();
+    });
+  });
+
+  describe("flow spotlight suggestion scroll", () => {
+    it("enables overflow scrolling only when expanded", () => {
+      expect(flowSpotlightSuggestionListScrollClass(false, "normal")).toContain("overflow-hidden");
+      expect(flowSpotlightSuggestionListScrollClass(false, "normal")).not.toContain("overflow-y-auto");
+      expect(flowSpotlightSuggestionListScrollClass(true, "normal")).toContain("overflow-y-auto");
+      expect(flowSpotlightSuggestionListScrollClass(true, "normal")).toContain("max-h-[min(24rem,70vh)]");
+    });
+
+    it("uses tighter caps at overview lod", () => {
+      expect(flowSpotlightSuggestionListScrollClass(true, "overview")).toContain("max-h-[min(12rem,50vh)]");
     });
   });
 
