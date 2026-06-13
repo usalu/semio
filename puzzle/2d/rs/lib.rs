@@ -3112,7 +3112,7 @@ mod host_tests {
     }
 
     #[test]
-    fn board_host_brush_candidates_ordered_by_node_kind_weights() {
+    fn board_host_brush_candidates_sorted_by_handle_proximity() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -3130,7 +3130,10 @@ mod host_tests {
                     {
                         "id": "light",
                         "name": "Light",
-                        "handles": [{"handleKind": "child", "angle": 3.141592653589793}]
+                        "handles": [
+                            {"handleKind": "child", "angle": 0.0},
+                            {"handleKind": "child", "angle": 3.141592653589793}
+                        ]
                     },
                     {
                         "id": "heavy",
@@ -3142,7 +3145,6 @@ mod host_tests {
             .to_string(),
         )
         .unwrap();
-        h.set_brush_kind_weights(r#"{"nodeWeights":{"heavy":0.99,"light":0.01},"handleWeights":{}}"#);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let _ = h.drain_events_json();
         let inside = h.world_to_screen(Point::new(0.0, 0.0));
@@ -3150,16 +3152,17 @@ mod host_tests {
         let ev = h.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
         let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
-        let first = v.as_array().and_then(|rows| {
+        let candidates = v.as_array().and_then(|rows| {
             rows.iter()
                 .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
                 .and_then(|row| row.get("payload"))
                 .and_then(|p| p.get("candidates"))
                 .and_then(|c| c.as_array())
-                .and_then(|c| c.first())
-                .and_then(|x| x.get("nodeKind").and_then(|n| n.as_str()).or_else(|| x.as_str()))
+                .cloned()
         });
-        assert_eq!(first, Some("heavy"));
+        assert_eq!(candidates.as_ref().map(|rows| rows.len()), Some(3));
+        let first_kind = candidates.as_ref().and_then(|rows| rows.first()).and_then(|row| row.get("nodeKind")).and_then(|x| x.as_str());
+        assert_eq!(first_kind, Some("heavy"));
     }
 
     #[test]

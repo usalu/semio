@@ -104,6 +104,7 @@ import {
   WORLD_LOCKED_OPACITY_SCALE,
   worldEntityRenderMode,
   worldEntityRendered,
+  worldEntityInspectable,
   worldEntitySelectable,
   type LodContextValue,
   type LodGridLayer,
@@ -3239,10 +3240,10 @@ export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(pro
   const registryHoverReferenceId = hoverTarget?.kind === "reference" ? hoverTarget.id : null;
   const hoveredReference = registryHoverReferenceId ? referenceById.get(registryHoverReferenceId) : undefined;
   const selectedIds = reactHostPort.useMemo(
-    () => new Set(selection.referenceIds.filter((id) => worldEntitySelectable(referenceById.get(id)))),
+    () => new Set(selection.referenceIds.filter((id) => worldEntityInspectable(referenceById.get(id)))),
     [referenceById, selection.referenceIds],
   );
-  const hoveredId = hoveredReference && worldEntitySelectable(hoveredReference) ? registryHoverReferenceId : null;
+  const hoveredId = hoveredReference && worldEntityInspectable(hoveredReference) ? registryHoverReferenceId : null;
   const revealedIds = reactHostPort.useMemo(() => {
     if (!registryHoverReferenceId || hoveredReference?.hidden !== true) {
       return undefined;
@@ -3260,20 +3261,20 @@ export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(pro
       gumballConfig={config === false ? undefined : config}
       relocateActive={config !== false}
       translationSnap={translationSnap}
-      onSelect={(id) => {
+      onSelect={(id, modifiers) => {
         if (puzzle3dTargetVolumeToolActiveRef.current) {
           return;
         }
         const reference = referenceById.get(id);
-        if (!reference || !worldEntitySelectable(reference)) {
+        if (!reference || !worldEntityInspectable(reference)) {
           return;
         }
-        commitSelection({ kind: "reference", id });
+        commitSelection({ kind: "reference", id }, modifiers);
       }}
       onHover={(id) => {
         if (id) {
           const reference = referenceById.get(id);
-          if (!reference || !worldEntitySelectable(reference)) {
+          if (!reference || !worldEntityInspectable(reference)) {
             return;
           }
           setHover({ kind: "reference", id });
@@ -5639,7 +5640,10 @@ export interface RegistryDragState {
 /** @emoji 🎯 Selection + relocate actions with stable identity (object meshes do not re-subscribe). */
 export interface RegistryInteractionValue {
   readonly selectionMode: SelectionMode;
-  commitSelection(pick: SelectionPick): void;
+  commitSelection(
+    pick: SelectionPick,
+    modifiers?: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean },
+  ): void;
   captureMarqueeCandidates(): void;
   previewMarqueeSelection(args: MarqueeGestureArgs): void;
   cancelMarqueePreview(): void;
@@ -5882,7 +5886,7 @@ function raycastHitTargetsPick(hitObject: Object3D): boolean {
   let node: Object3D | null = hitObject;
   while (node) {
     const data = node.userData as Record<string, unknown> | undefined;
-    if (typeof data?.puzzle3dObjectId === "string" || typeof data?.puzzle3dVortexFullId === "string" || data?.puzzle3dAttractionPick === true) {
+    if (typeof data?.puzzle3dObjectId === "string" || typeof data?.puzzle3dVortexFullId === "string" || data?.puzzle3dAttractionPick === true || typeof data?.worldReferenceId === "string" || typeof data?.worldVolumeId === "string") {
       return true;
     }
     node = node.parent;
@@ -8845,6 +8849,10 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly dimension
       const cad = pickCad(event.clientX, event.clientY);
       const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
       puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, cursorCad: cad });
+      if (event.altKey) {
+        setAltPainting(true);
+        commitAt(cad);
+      }
     };
     const onDown = (event: PointerEvent): void => {
       if (event.button !== 0 || !event.altKey) {
@@ -10112,9 +10120,13 @@ function RegistryProvider({
   );
 
   const commitSelection = reactHostPort.useCallback(
-    (pick: SelectionPick) => {
+    (
+      pick: SelectionPick,
+      modifiers?: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean },
+    ) => {
       const current = selectionStore.getSnapshot();
-      const snap = mergeSelection(selectionModeRef.current, current, pick);
+      const mode = modifiers ? marqueeModeFromModifiers(modifiers) : selectionModeRef.current;
+      const snap = mergeSelectionSnapshot(mode, current, puzzle3dSelectionFromPick(pick));
       publishSelection(snap);
     },
     [publishSelection, selectionStore],
@@ -10322,7 +10334,13 @@ function RegistryProvider({
     selectionStore.setSnapshot(empty);
     const controlled = selectionStore.getControlledHostSnapshot();
     if (controlled !== undefined) {
-      if (controlled.objectIds.length === 0 && controlled.vortexIds.length === 0 && controlled.attractionIds.length === 0) {
+      if (
+        controlled.objectIds.length === 0 &&
+        controlled.vortexIds.length === 0 &&
+        controlled.attractionIds.length === 0 &&
+        controlled.referenceIds.length === 0 &&
+        controlled.targetVolumeIds.length === 0
+      ) {
         return;
       }
       hostCallbacksRef.current.onSelect?.(empty);

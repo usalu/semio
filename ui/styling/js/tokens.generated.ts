@@ -214,7 +214,7 @@ export const STYLING_METRICS = {
     "channelRowHeight": 14,
     "nodeEdgeInset": 2,
     "nodeColumnGap": 2,
-    "ioColumnWidth": 28,
+    "ioColumnWidth": 20,
     "ioWidgetHeight": 28,
     "sliderKnobScreenPx": 8,
     "previewPad": 4,
@@ -233,7 +233,7 @@ export const STYLING_METRICS = {
       1.25,
       2.5
     ],
-    "componentWidth": 56
+    "componentWidth": 40
   },
   "map": {
     "labelPxBands": [

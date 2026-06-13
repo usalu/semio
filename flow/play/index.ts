@@ -546,7 +546,7 @@ if (import.meta.vitest) {
     it("kinds tree lists every neuron module section", () => {
       const sections: CatalogueSection[] = [
         { id: "dictionary", title: "Dictionary", items: [{ kind: "neuron", neuronKind: "dictionary.get", name: "Get", summary: "Read key" }] },
-        { id: "list", title: "List", items: [{ kind: "neuron", neuronKind: "list.get", name: "Get", summary: "Read index" }] },
+        { id: "list", title: "List", items: [{ kind: "neuron", neuronKind: "list.get", name: "Get", summary: "Read consecutive indices" }] },
         { id: "logic", title: "Logic", items: [{ kind: "neuron", neuronKind: "logic.not", name: "Not", summary: "Invert" }] },
         { id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] },
         { id: "text", title: "Text", items: [{ kind: "neuron", neuronKind: "text.upper", name: "Upper", summary: "Uppercase" }] },

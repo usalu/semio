@@ -3,7 +3,7 @@
   "emoji": "🖱️",
   "status": "closed",
   "description": "Replicate puzzle3d viewport selection context menu and hierarchy tree context menu in puzzle2d, with full hidden/locked flag parity and suggest-nodes brush menu.",
-  "summary": "Fixed delayed node appearance after suggest-nodes commit: WASM brush drain bumped merge-resync epoch and HostSubtree re-synced stale JSX props, wiping the just-placed node until zoom. Added preferSyncedHostSceneDescriptor to keep imperative scene ahead of lagging props; moved brush session clear after fixture sync in puzzle2dCommitBrushPlacementToPlay; removed redundant brushCancelSlot from puzzle2dCommitSuggestionsCandidate.",
+  "summary": "Fixed suggest-nodes menu hover preview and click placement. Root cause: opening the menu published candidates with `preview: null`, and hover relied on synchronous WASM `brushSetCandidateIndex` drains that often never updated the shared session (reentry blocks / missing preview payload). Added TS-side `puzzle2dBuildBrushSuggestionsPreview` + `puzzle2dApplyBrushSuggestionsCandidateIndex` to compute slot previews from scene geometry + catalog templates, publish full session snapshots (with preview) to driving + mirror panes, and use the driving renderer ref for hover/select. Menu open now seeds index-0 preview; commit builds preview before fixture place. Rust mirror: rebuild/sync preview events when session JSON omits preview but lists candidates.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1674"
   },
@@ -15,6 +15,8 @@
     "⚪db6f10d38dce44d39adf85632ad84d6b",
     "⚪530c59abd2b6451b91fea02f44cc1091",
     "⚪4d3da9c0ed8344c7b1e1fd1f7d2113ec",
-    "⚪fa2a2134fe834357ae7edf171f4c9b6e"
+    "⚪fa2a2134fe834357ae7edf171f4c9b6e",
+    "⚪5bb66529daa6418faebf05cf974576b3",
+    "⚪f36629ef64e9481981e643ae4470db67"
   ]
 }

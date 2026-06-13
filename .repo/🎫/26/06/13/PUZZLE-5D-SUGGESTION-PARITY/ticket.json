@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 5d Suggestion Parity",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Puzzle 5d must show brush suggestions on grips like puzzle 2d and 3d. Unified kind catalogs must carry per-part-kind grip templates and meshUrl, merge 2d and 3d source metas, and project back to embedded canvases.",
+  "summary": "Enriched puzzle 5d PartKind with unified grip templates (2d angle + 3d pose), meshUrl, and scale. kindCatalogsFromMetas now merges both 2d and 3d metas by part-kind id; project2dKindCatalogs and project3dKindCatalogs emit handle/vortex templates back to embedded canvases. Regenerated concrete-forest and nakagin 5d fixtures with full kindCatalogs.parts[].grips. Verified concrete forest yields 14 brush-compatible candidates via projected 3d catalog.",
+  "goal": "🎯puzzle🎯5d",
+  "sessions": []
+}

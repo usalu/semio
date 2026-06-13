@@ -212,7 +212,7 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
         "channelRowHeight": 14,
         "nodeEdgeInset": 2,
         "nodeColumnGap": 2,
-        "ioColumnWidth": 28,
+        "ioColumnWidth": 20,
         "ioWidgetHeight": 28,
         "sliderKnobScreenPx": 8,
         "previewPad": 4,
@@ -231,7 +231,7 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
             1.25,
             2.5
         ],
-        "componentWidth": 56
+        "componentWidth": 40
     },
     "map": {
         "labelPxBands": [

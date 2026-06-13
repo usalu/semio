@@ -95,9 +95,31 @@ export interface FlowChannelSpecV1 {
   readonly operators: readonly string[];
   readonly default?: unknown;
   readonly label?: string;
+  readonly cardinality?: string;
+}
+
+function flowCardinalityRange(cardinality: string | undefined): readonly [number, number | null] {
+  const symbol = cardinality?.trim() || "!";
+  if (symbol === "!") return [1, 1];
+  if (symbol === "?") return [0, 1];
+  if (symbol === "*") return [0, null];
+  if (symbol === "+") return [1, null];
+  const exact = Number(symbol);
+  if (Number.isInteger(exact) && exact >= 0) return [exact, exact];
+  return [1, 1];
+}
+
+function flowCardinalityRangeContains(input: string | undefined, output: string | undefined): boolean {
+  const [inMin, inMax] = flowCardinalityRange(input);
+  const [outMin, outMax] = flowCardinalityRange(output);
+  if (outMin < inMin) return false;
+  if (inMax === null) return true;
+  if (outMax === null) return false;
+  return outMax <= inMax;
 }
 
 export function flowChannelCompatible(output: FlowChannelSpecV1, input: FlowChannelSpecV1): boolean {
+  if (!flowCardinalityRangeContains(input.cardinality, output.cardinality)) return false;
   if (!input.operators.length) return true;
   const provided = new Set(output.operators);
   return input.operators.every((required) => provided.has(required));
@@ -460,7 +482,7 @@ export interface FlowTreeV1 {
 }
 
 export type FlowWidgetV1 =
-  | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[] }
+  | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[]; readonly outputPorts?: readonly string[] }
   | { readonly kind: "inputSlider"; readonly id: string; readonly value: number; readonly min?: number; readonly max?: number; readonly step?: number }
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
   | { readonly kind: "inputImage"; readonly id: string; readonly src?: string }
@@ -525,6 +547,7 @@ function flowWidgetTreeSignature(widget: FlowWidgetV1): string {
           neuronKind: widget.neuronKind,
           params: (widget as { readonly params?: unknown }).params ?? {},
           inputPorts: widget.inputPorts ?? [],
+          outputPorts: widget.outputPorts ?? [],
         }),
       );
     case "inputSlider":
@@ -4162,6 +4185,18 @@ if (import.meta.vitest) {
       expect(flowChannelCompatible(output, compatible)).toBe(true);
       expect(flowChannelCompatible(output, incompatible)).toBe(false);
       expect(flowChannelCompatible(output, { name: "any", code: "A", abbreviation: "Any", fullName: "Any", operators: [] })).toBe(true);
+    });
+
+    it("flowChannelCompatible requires output cardinality within input range", () => {
+      const scalar = { name: "value", code: "V", abbreviation: "Val", fullName: "Value", operators: [], cardinality: "!" };
+      const optional = { name: "value", code: "V", abbreviation: "Val", fullName: "Value", operators: [], cardinality: "?" };
+      const many = { name: "list", code: "L", abbreviation: "Lst", fullName: "List", operators: [], cardinality: "*" };
+      const oneOrMore = { name: "list", code: "L", abbreviation: "Lst", fullName: "List", operators: [], cardinality: "+" };
+      expect(flowChannelCompatible(scalar, oneOrMore)).toBe(true);
+      expect(flowChannelCompatible(optional, scalar)).toBe(false);
+      expect(flowChannelCompatible(many, scalar)).toBe(false);
+      expect(flowChannelCompatible(many, oneOrMore)).toBe(false);
+      expect(flowChannelCompatible(oneOrMore, many)).toBe(true);
     });
   });
 

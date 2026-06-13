@@ -652,9 +652,9 @@ impl BoardHost {
             "general" => Ok(CompatSpecificity::General),
             "node" => Ok(CompatSpecificity::Node),
             "edge" => Ok(CompatSpecificity::Edge),
-            "handle" => Ok(CompatSpecificity::Handle),
+            "handle" | "vortex" => Ok(CompatSpecificity::Handle),
             "wire" => Ok(CompatSpecificity::Wire),
-            _ => Err(format!("compat specificity must be general|node|edge|handle|wire, got {raw:?}")),
+            _ => Err(format!("compat specificity must be general|node|edge|handle|wire|vortex, got {raw:?}")),
         }
     }
 
@@ -1459,6 +1459,25 @@ impl BoardHost {
         }
     }
 
+    fn single_letter_port_family(handle_kind: &str) -> Option<char> {
+        let head = handle_kind.split('-').next()?;
+        if head.len() == 1 {
+            head.chars().next().filter(|c| c.is_ascii_lowercase())
+        } else {
+            None
+        }
+    }
+
+    fn single_letter_port_families_compatible(source_handle_kind: &str, target_handle_kind: &str) -> bool {
+        match (
+            Self::single_letter_port_family(source_handle_kind),
+            Self::single_letter_port_family(target_handle_kind),
+        ) {
+            (Some(a), Some(b)) => a == b,
+            _ => true,
+        }
+    }
+
     fn resolve_default_wire_kind_for_handle(&self, h: &HandleData) -> String {
         self.handle_kinds.get(&h.handle_kind).and_then(|d| d.default_wire_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string())
     }
@@ -1522,6 +1541,9 @@ impl BoardHost {
 
     fn link_kinds_compatible_for_brush(&self, sn: &str, sh: &str, tn: &str, th: &str) -> bool {
         if !Self::handle_port_shapes_compatible(sh, th) {
+            return false;
+        }
+        if !Self::single_letter_port_families_compatible(sh, th) {
             return false;
         }
         if self.link_compat_rules.is_empty() {
@@ -1689,45 +1711,41 @@ impl BoardHost {
                 }
             }
         }
-        out.sort_by(|left, right| {
-            left.node_kind_id
-                .cmp(&right.node_kind_id)
-                .then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
-        });
         out
     }
 
-    fn brush_weighted_order_candidates(
-        candidates: &mut Vec<BrushCandidate>,
-        seed: u64,
-        node_weights: &HashMap<String, f64>,
-        handle_weights: &HashMap<String, f64>,
-        node_kinds: &BTreeMap<String, NodeKindDef>,
-    ) {
-        if candidates.len() < 2 {
-            return;
+    fn brush_handle_alignment_delta(source_handle_angle: f64, target_template_angle: f64) -> f64 {
+        let desired = source_handle_angle + std::f64::consts::PI;
+        let mut d = (target_template_angle - desired).abs();
+        if d > std::f64::consts::PI {
+            d = std::f64::consts::TAU - d;
         }
-        let uniform = 1.0 / candidates.len() as f64;
-        let mut remaining = std::mem::take(candidates);
-        let mut state = seed;
-        while !remaining.is_empty() {
-            let weights: Vec<f64> = remaining
-                .iter()
-                .map(|candidate| {
-                    let node_w = Self::brush_kind_weight(node_weights, candidate.node_kind_id.as_str(), uniform);
-                    let handle_kind = node_kinds
-                        .get(candidate.node_kind_id.as_str())
-                        .and_then(|kind| kind.handles.get(candidate.target_handle_index))
-                        .map(|tmpl| tmpl.handle_kind.as_str())
-                        .unwrap_or("");
-                    let handle_w = Self::brush_kind_weight(handle_weights, handle_kind, 1.0);
-                    node_w * handle_w
-                })
-                .collect();
-            state = Self::brush_next_seed(state);
-            let pick = Self::brush_weighted_sample_index(&weights, state);
-            candidates.push(remaining.remove(pick));
-        }
+        d
+    }
+
+    fn brush_sort_candidates_by_handle_proximity(&self, source: &HandleData, candidates: &mut [BrushCandidate]) {
+        let source_angle = source.angle;
+        candidates.sort_by(|left, right| {
+            let angle_left = self
+                .node_kinds
+                .get(left.node_kind_id.as_str())
+                .and_then(|kind| kind.handles.get(left.target_handle_index))
+                .map(|tmpl| tmpl.angle)
+                .unwrap_or(0.0);
+            let angle_right = self
+                .node_kinds
+                .get(right.node_kind_id.as_str())
+                .and_then(|kind| kind.handles.get(right.target_handle_index))
+                .map(|tmpl| tmpl.angle)
+                .unwrap_or(0.0);
+            let delta_left = Self::brush_handle_alignment_delta(source_angle, angle_left);
+            let delta_right = Self::brush_handle_alignment_delta(source_angle, angle_right);
+            delta_left
+                .partial_cmp(&delta_right)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| left.node_kind_id.cmp(&right.node_kind_id))
+                .then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
+        });
     }
 
     fn brush_template_world_pos(&self, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, angle: f64) -> Point {
@@ -2304,6 +2322,11 @@ impl BoardHost {
         self.brush_preview_emit_key = None;
         self.brush_candidates_emit_key = None;
         self.brush_slot_suggestions_active = v.get("suggestionsActive").and_then(|x| x.as_bool()).unwrap_or(false);
+        if self.brush_preview.is_none() && !self.brush_candidates.is_empty() {
+            self.brush_rebuild_preview();
+        } else {
+            self.brush_sync_preview_events();
+        }
         self.bump_content_scene_generation();
         Ok(())
     }
@@ -2316,18 +2339,14 @@ impl BoardHost {
             self.brush_finish_slot();
         }
         self.brush_slot_source_id = Some(source_handle_id.clone());
-        let mut candidates = self
-            .handles
-            .get(source_handle_id.as_str())
-            .map(|h| self.brush_compatible_candidates(h))
-            .unwrap_or_default();
-        Self::brush_weighted_order_candidates(
-            &mut candidates,
-            Self::brush_candidate_seed(&source_handle_id),
-            &self.brush_node_kind_weights,
-            &self.brush_handle_kind_weights,
-            &self.node_kinds,
-        );
+        let Some(source) = self.handles.get(source_handle_id.as_str()).cloned() else {
+            self.brush_candidates.clear();
+            self.brush_candidate_index = 0;
+            self.brush_rebuild_preview();
+            return;
+        };
+        let mut candidates = self.brush_compatible_candidates(&source);
+        self.brush_sort_candidates_by_handle_proximity(&source, &mut candidates);
         self.brush_candidates = candidates;
         self.brush_candidate_index = 0;
         self.brush_rebuild_preview();

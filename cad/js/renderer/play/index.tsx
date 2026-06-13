@@ -27,6 +27,7 @@ import {
   type WindowTemplate,
   enforcePlaygroundWindowEngagementInput,
   windowEngagementsEqual,
+  type CommandDescriptor,
 } from "@framework/playground/core";
 import {
   ORBIT_CAMERA_VIEW_COMMAND,
@@ -34,7 +35,11 @@ import {
   createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   orbitCameraProjectionForView,
+  patchWorldReferenceProps,
   worldEntitySelectable,
+  worldQuatToEulerDegrees,
+  worldReferenceOrientation,
+  worldReferenceScaleVec,
   type OrbitCameraViewId,
   type OrbitCameraProjection,
   type WorldReferenceProps,
@@ -1028,6 +1033,7 @@ export class CadPlayShellController extends Controller {
       case "saveCurrent":
       case "loadRawRequest":
       case "deleteSelection":
+      case "patchCadPlayReference":
       case "engagementOption":
       case "engagementInput":
       case "engagementSubmit":
@@ -1104,6 +1110,7 @@ import {
   NavbarFixtureSelect,
   NAVBAR_NO_FIXTURE_ID,
   reactHostPort,
+  formatNumber,
   type EngagementSpec,
   type TreeDataItem,
   type TreeDataSection,
@@ -1148,9 +1155,6 @@ import {
   InteractionRepl,
   modelHasCommittedSolidsForDisplay,
   modelHasFactoryFaceDisplay,
-  SelectionAttributesPanel,
-  ModelStatsPanel,
-  SelectionPropertiesPanel,
   replDisplayedSelectionTargets,
   replWithRendererSelectionTargets,
   pruneSelectionTargetsForEntityFlags,
@@ -2439,6 +2443,32 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
           case "deleteSelection":
             handleDeleteSelection();
             break;
+          case "patchCadPlayReference": {
+            const { modelDefinitionId, referenceId, field, value } = args as {
+              modelDefinitionId?: string;
+              referenceId?: string;
+              field?: CadPlayReferencePatchField;
+              value?: unknown;
+            };
+            if (!modelDefinitionId || !referenceId || !field) {
+              break;
+            }
+            setReferencesByModelDefinitionId((prev) => {
+              const rows = prev[modelDefinitionId] ?? [];
+              const index = rows.findIndex((row) => row.id === referenceId);
+              if (index < 0) {
+                return prev;
+              }
+              const reference = rows[index]!;
+              const patched = patchWorldReferenceProps(reference, field, value);
+              if (!patched) {
+                return prev;
+              }
+              const nextRows = rows.map((row, rowIndex) => (rowIndex === index ? patched : row));
+              return { ...prev, [modelDefinitionId]: nextRows };
+            });
+            break;
+          }
           case "engagementOption": {
             const pane = (args as { pane?: CadPlayPaneId })?.pane;
             const optionId = (args as { optionId?: string })?.optionId;
@@ -2508,7 +2538,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     };
     shellController.setHostBridge(bridge);
     return () => shellController.setHostBridge(null);
-  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController]);
+  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, setReferencesByModelDefinitionId]);
 
   const handleLoadRaw = reactHostPort.useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -2679,24 +2709,6 @@ function CadPlayLoadInput(): ReactNode {
   return <input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />;
 }
 
-/** @emoji 🎯 Details panel: attribute and property editors for the current selection only. */
-function CadPlayDetailsAside(): ReactNode {
-  const { activeModelDefinitionId, liveModel, selectionInScope, handleModelAttributesChange, brepjsKernel } = useCadPlayModelSpace();
-  return (
-    <>
-      <ModelStatsPanel model={liveModel} kernel={brepjsKernel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} />
-      {selectionInScope.length === 0 ? (
-        <p className="text-muted-foreground leading-snug">Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.</p>
-      ) : (
-        <>
-          <SelectionAttributesPanel model={liveModel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} onModelChange={handleModelAttributesChange} />
-          <SelectionPropertiesPanel model={liveModel} kernel={brepjsKernel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} />
-        </>
-      )}
-    </>
-  );
-}
-
 /** @emoji 🧪 Navbar fixture dropdown for CAD play shape sources (replaces workbench catalog picker). */
 function CadPlayFixtureNavbarSelect(): ReactNode {
   const { shapeAssetId, handleShapeAssetChange } = useCadPlayModelSpace();
@@ -2710,22 +2722,6 @@ function CadPlayFixtureNavbarSelect(): ReactNode {
       }))}
       onValueChange={(fixtureId) => handleShapeAssetChange(fixtureId === NAVBAR_NO_FIXTURE_ID ? "" : fixtureId)}
     />
-  );
-}
-
-/** @emoji 📦 Workbench catalog: file I/O status (fixture picker lives in the navbar; toolbar handles save/load). */
-function CadPlayCatalogAside(): ReactNode {
-  const { activeModelDefinitionId, fileStatus } = useCadPlayModelSpace();
-  const statusTone = fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "text-destructive" : "text-muted-foreground";
-  return (
-    <>
-      {!isShapeModelDefinition(activeModelDefinitionId) ? (
-        <p className="text-muted-foreground leading-snug">
-          Shape fixtures apply to <code className="text-foreground">{defaultModelDefinitionId()}</code>. Use the navbar fixture menu or focus the Shape pane.
-        </p>
-      ) : null}
-      {fileStatus ? <p className={statusTone}>{fileStatus}</p> : null}
-    </>
   );
 }
 
@@ -2915,6 +2911,140 @@ function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): 
   );
 }
 
+//#region 🔖CadPlayDetails
+function cadPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+  return { controllerId: CAD_PLAY_CONTROLLER_ID, command, args: args as never };
+}
+
+type CadPlayReferencePatchField = "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity";
+
+/** @emoji 🖼️ Builds editable reference inspector rows matching puzzle 3d play. */
+export function buildCadPlayReferenceInspectorChildren(
+  reference: WorldReferenceProps,
+  modelDefinitionId: string,
+): readonly UiNode[] {
+  const referenceId = reference.id;
+  const orientation = worldReferenceOrientation(reference);
+  const tilt = worldQuatToEulerDegrees(orientation);
+  const scaleVec = worldReferenceScaleVec(reference.scale);
+  const patch = (field: CadPlayReferencePatchField) => cadPlayCmd("patchCadPlayReference", { modelDefinitionId, referenceId, field });
+  return [
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.id`,
+      label: "Id",
+      child: { type: "text", value: referenceId },
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.source`,
+      label: "Source",
+      child: { type: "text", value: reference.source.url },
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.mediaKind`,
+      label: "Media kind",
+      child: { type: "text", value: reference.source.mediaKind },
+    },
+    ...(typeof reference.source.page === "number"
+      ? [
+          {
+            type: "field" as const,
+            id: `cad-play-details.reference.${referenceId}.page`,
+            label: "Page",
+            child: { type: "text" as const, value: String(reference.source.page) },
+          },
+        ]
+      : []),
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.origin`,
+      label: "Position",
+      child: {
+        type: "vec3",
+        id: `cad-play-details.reference.${referenceId}.origin.vec3`,
+        value: reference.origin as [number, number, number],
+        onChange: patch("origin"),
+      },
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.tilt`,
+      label: "Tilt (°)",
+      child: {
+        type: "vec3",
+        id: `cad-play-details.reference.${referenceId}.tilt.vec3`,
+        value: tilt as [number, number, number],
+        onChange: patch("rotation"),
+      },
+    },
+    {
+      type: "keyValue",
+      entries: [
+        { label: "Quaternion X", value: formatNumber(orientation[0]) },
+        { label: "Quaternion Y", value: formatNumber(orientation[1]) },
+        { label: "Quaternion Z", value: formatNumber(orientation[2]) },
+        { label: "Quaternion W", value: formatNumber(orientation[3]) },
+      ],
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.scale`,
+      label: "Scale (X, Y, Z)",
+      child: {
+        type: "vec3",
+        id: `cad-play-details.reference.${referenceId}.scale.vec3`,
+        value: scaleVec,
+        onChange: patch("scale"),
+      },
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.scaleUniform`,
+      label: "Scale factor",
+      child: {
+        type: "input",
+        id: `cad-play-details.reference.${referenceId}.scaleUniform.input`,
+        inputKind: "number",
+        value: String(typeof reference.scale === "number" ? reference.scale : scaleVec[0]),
+        onChange: patch("scaleUniform"),
+      },
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.widthWorld`,
+      label: "Width (world)",
+      child: {
+        type: "input",
+        id: `cad-play-details.reference.${referenceId}.widthWorld.input`,
+        inputKind: "number",
+        value: String(reference.widthWorld ?? 10),
+        onChange: patch("widthWorld"),
+      },
+    },
+    {
+      type: "field",
+      id: `cad-play-details.reference.${referenceId}.opacity`,
+      label: "Opacity",
+      child: {
+        type: "input",
+        id: `cad-play-details.reference.${referenceId}.opacity.input`,
+        inputKind: "number",
+        value: String(reference.opacity ?? 1),
+        onChange: patch("opacity"),
+      },
+    },
+    {
+      type: "keyValue",
+      entries: [
+        { label: "Hidden", value: String(reference.hidden === true) },
+        { label: "Locked", value: String(reference.locked === true) },
+      ],
+    },
+  ];
+}
+
 function buildCadPlayCatalogTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
   if (!snapshot) {
     return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.loading", label: "Catalog", children: [{ type: "text", value: "…" }] }]);
@@ -2935,22 +3065,25 @@ function buildCadPlayCatalogTree(snapshot: CadPlayChromeSnapshot | null): UiTree
   return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.section", label: "Catalog", children }]);
 }
 
-function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
+export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
   if (!snapshot) {
     return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-details.loading", label: "Selection", children: [{ type: "text", value: "…" }] }]);
   }
-  if (snapshot.selection.length === 0) {
-    return uiDeclarativeSectionsToTree([
-      {
+  const sections: UiNode[] = [];
+  const selectedReference = snapshot.selectedReference;
+  if (selectedReference) {
+    const reference = (snapshot.referencesByModelDefinitionId[selectedReference.modelDefinitionId] ?? []).find((row) => row.id === selectedReference.id);
+    if (reference && worldEntitySelectable(reference)) {
+      sections.push({
         type: "section",
-        id: "cad-play-details.empty",
-        label: "Selection",
-        children: [{ type: "text", value: "Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties." }],
-      },
-    ]);
+        id: "cad-play-details.reference",
+        label: reference.id,
+        children: [...buildCadPlayReferenceInspectorChildren(reference, selectedReference.modelDefinitionId)],
+      });
+    }
   }
-  return uiDeclarativeSectionsToTree([
-    {
+  if (snapshot.selection.length > 0) {
+    sections.push({
       type: "section",
       id: "cad-play-details.selection",
       label: "Selection",
@@ -2960,12 +3093,22 @@ function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null): UiTree
           entries: [
             { label: "Model definition", value: snapshot.activeModelDefinitionId },
             { label: "Selected targets", value: String(snapshot.selection.length) },
-            { label: "Reference", value: snapshot.selectedReference?.id ?? "—" },
           ],
         },
       ],
-    },
-  ]);
+    });
+  }
+  if (sections.length === 0) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "cad-play-details.empty",
+        label: "Selection",
+        children: [{ type: "text", value: "Select a primitive, object, or reference in the canvas or workbench hierarchy to edit details." }],
+      },
+    ]);
+  }
+  return uiDeclarativeSectionsToTree(sections);
 }
 
 class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
@@ -2985,7 +3128,10 @@ class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly readSnapshot: () => CadPlayChromeSnapshot | null) {
+  constructor(
+    private readonly readSnapshot: () => CadPlayChromeSnapshot | null,
+    private readonly commandBus: CommandBus,
+  ) {
     super();
   }
 
@@ -2995,10 +3141,11 @@ class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
       icon: ListTree,
       name: "Selection",
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(this.readSnapshot()), new CommandBus())),
+      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(this.readSnapshot()), this.commandBus)),
     };
   }
 }
+//#endregion 🔖CadPlayDetails
 
 function CadPlayRoot(): ReactNode {
   const runtimeRef = reactHostPort.useRef<Platform | null>(null);
@@ -3063,7 +3210,10 @@ function CadPlayRoot(): ReactNode {
     ],
     [chromeSnapshot, hierarchyBuild.sections, hierarchyHighlightedIds],
   );
-  const detailsTabs = reactHostPort.useMemo(() => [new CadPlayDetailsPanelDefinition(() => chromeSnapshot).resolveTab()], [chromeSnapshot]);
+  const detailsTabs = reactHostPort.useMemo(
+    () => [new CadPlayDetailsPanelDefinition(() => chromeSnapshot, runtimeRef.current!.commandBus).resolveTab()],
+    [chromeSnapshot],
+  );
   const slotNavbarCenter = reactHostPort.useMemo(() => <CadPlayFixtureNavbarSelect />, []);
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
@@ -3522,6 +3672,66 @@ if (import.meta.vitest) {
       expect(referenceRow?.actions?.some((row) => row.id === "reference.hidden")).toBe(true);
       expect(referenceRow?.actions?.some((row) => row.id === "reference.locked")).toBe(true);
       expect(build.highlightKeyToItemIds[cadPlayReferenceHoverKey("ref-sketch")]).toContain(`cad-play-hierarchy.reference.${defaultModelDefinitionId()}.ref-sketch`);
+    });
+
+    it("buildCadPlayReferenceInspectorChildren exposes editable reference transform fields", () => {
+      const reference: WorldReferenceProps = {
+        id: "ref-a",
+        source: { url: "/plan.png", mediaKind: "image" },
+        origin: [1, 2, 3],
+        orientation: [0, 0, 0, 1],
+        scale: [2, 3, 4],
+        widthWorld: 42,
+        opacity: 0.8,
+      };
+      const children = buildCadPlayReferenceInspectorChildren(reference, defaultModelDefinitionId());
+      const positionField = children.find((row) => row.type === "field" && row.id === "cad-play-details.reference.ref-a.origin");
+      const tiltField = children.find((row) => row.type === "field" && row.id === "cad-play-details.reference.ref-a.tilt");
+      const scaleField = children.find((row) => row.type === "field" && row.id === "cad-play-details.reference.ref-a.scale");
+      const widthField = children.find((row) => row.type === "field" && row.id === "cad-play-details.reference.ref-a.widthWorld");
+      expect(positionField?.type).toBe("field");
+      expect(positionField?.child.type).toBe("vec3");
+      expect(positionField?.child.value).toEqual([1, 2, 3]);
+      expect(tiltField?.child.type).toBe("vec3");
+      expect(scaleField?.child.type).toBe("vec3");
+      expect(scaleField?.child.value).toEqual([2, 3, 4]);
+      expect(widthField?.child.type).toBe("input");
+      expect(widthField?.child.value).toBe("42");
+      expect(positionField?.child.onChange?.command).toBe("patchCadPlayReference");
+    });
+
+    it("buildCadPlayDetailsTree renders reference section for selected reference", () => {
+      const modelDefinitionId = defaultModelDefinitionId();
+      const reference: WorldReferenceProps = {
+        id: "ref-a",
+        source: { url: "/plan.png", mediaKind: "image" },
+        origin: [1, 2, 3],
+        scale: 2,
+        widthWorld: 42,
+      };
+      const snapshot: CadPlayChromeSnapshot = {
+        modelsByDefinitionId: { [modelDefinitionId]: new Model() },
+        referencesByModelDefinitionId: { [modelDefinitionId]: [reference] },
+        activeModelDefinitionId: modelDefinitionId,
+        selection: [],
+        selectedReference: { modelDefinitionId, id: "ref-a" },
+        hoveredKey: null,
+        fileStatus: "",
+        selectTarget: () => {},
+        hoverTarget: () => {},
+        toggleHidden: () => {},
+        toggleLocked: () => {},
+        selectReference: () => {},
+        hoverReference: () => {},
+        toggleReferenceHidden: () => {},
+        toggleReferenceLocked: () => {},
+      };
+      const tree = buildCadPlayDetailsTree(snapshot);
+      const referenceSection = tree.sections.find((section) => section.label === "ref-a");
+      expect(referenceSection).toBeDefined();
+      const positionField = referenceSection!.items.find((item) => item.id === "cad-play-details.reference.ref-a.origin");
+      expect(positionField?.control?.type).toBe("vec3");
+      expect((positionField?.control as { value?: readonly number[] } | undefined)?.value).toEqual([1, 2, 3]);
     });
 
     it("updateCadPlayReferenceInMap toggles reference flags", () => {

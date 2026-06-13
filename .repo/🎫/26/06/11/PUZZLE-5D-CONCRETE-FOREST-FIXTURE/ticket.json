@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a new fixture for Concrete Forest to puzzle 5d: 2d fixture, 5d composed fixture, catalogue wiring in play.",
-  "summary": "Fixed viewport zoom being far too high for Concrete Forest: parsed 2d fixtures normalize rectangles to 20px circles, so auto-fit used tiny bounds (zoom ~4.5). Viewport framing now reads authored node width/height from raw catalog JSON via puzzle2dPlayViewportCameraForFixtureId and optional rawFixture on puzzle2dPlayViewportCameraFromFixture. Framework triptych keeps catalog raw ref until user edits; 5d load uses catalog raw for nakagin/concrete-forest. Concrete Forest zoom is now ~0.42 with room to grow.",
+  "summary": "Increased zoom on all puzzle 2d play windows via PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST (1.6×) applied to the shared bbox-fit base zoom, raising overview/detail/selection panes and 5d catalog camera load proportionally.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1665"
   },
@@ -12,6 +12,7 @@
     "⚪c1c275232c2a4668a62721461df06131",
     "⚪62f34280fc4d48e5a07e4fe7276b8450",
     "⚪a8fcbb4380264802b0017dad20935177",
-    "⚪337c955e8f6b455191d537b236756575"
+    "⚪337c955e8f6b455191d537b236756575",
+    "⚪9d97338649cc48ec9bfd3ab54ead2d77"
   ]
 }

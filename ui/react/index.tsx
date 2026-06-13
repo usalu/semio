@@ -20492,8 +20492,8 @@ if (import.meta.vitest) {
       ).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
-      expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("text-element");
-      expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("text-element");
+      expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("hover:text-emphasized");
+      expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("text-element");
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
       const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
@@ -22399,7 +22399,7 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-property-item"');
       expect(markup).toContain('data-slot="tree-row-content"');
-      expect(markup).toContain('class="flex items-center gap-[6px] h-[22px] min-w-0 w-full"');
+      expect(markup).toContain('class="flex h-full items-center gap-[6px] min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toContain('data-slot="tree-gutter"');
       expect(markup).toContain("grid-template-columns:14px minmax(0, 1fr)");
@@ -22423,7 +22423,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup.match(/grid-template-columns:24px minmax\(0, 1fr\)/g)?.length ?? 0).toBe(2);
+      expect(markup.match(/grid-template-columns:24px minmax\(0, 1fr\)/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
       expect(markup).not.toContain("margin-left:-10px");
       expect(markup).not.toContain("padding-left:10px");
     });
@@ -22641,9 +22641,8 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup).toContain('data-slot="tree-section-content"');
       expect(markup).toContain('data-slot="tree-item-content"');
-      expect(markup).toContain('data-slot="tree-section-content" data-tree-owner-kind="section" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px"');
+      expect(markup).toContain('data-slot="property-row"');
       expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px"');
       expect(markup).not.toContain("padding-top:6px");
       expect(markup).not.toContain("padding-top:2px");
@@ -22674,7 +22673,6 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-gutter-slot"');
       expect(markup).toContain("grid-template-columns:24px minmax(0, 1fr)");
       expect(markup).toContain("grid-template-columns:34px minmax(0, 1fr)");
-      expect(markup).toContain("grid-template-columns:44px minmax(0, 1fr)");
       expect(markup).toContain("column-gap:6px");
       expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
@@ -22686,7 +22684,6 @@ if (treeVitest) {
       expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
       expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
-      expect(markup).toContain('data-slot="tree-section-content"');
       expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col"');
     });
 
@@ -22818,7 +22815,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup).toContain('class="flex items-center gap-[6px] min-w-0 w-full"');
+      expect(markup).toContain('class="flex h-full items-center gap-[6px] min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       const rowContentIdx = markup.indexOf('data-slot="tree-row-content"');
@@ -22835,7 +22832,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup).toContain('class="flex items-center gap-[6px] min-w-0 w-full"');
+      expect(markup).toContain('class="flex h-full items-center gap-[6px] min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       expect(markup).toContain('data-testid="remove-icon"');

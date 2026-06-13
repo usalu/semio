@@ -85,7 +85,7 @@ export const PUZZLE_2D_SELECTION_TARGETS_DEFAULT: Puzzle2dSelectionTargets = {
   nodes: true,
 };
 /** @emoji 🎯 Specificity axis for a {@link KindCompatEntry} (weakest → strongest: general < node < edge < handle < wire). */
-export type SemanticSpecificity = "edge" | "general" | "handle" | "node" | "wire";
+export type SemanticSpecificity = "edge" | "general" | "handle" | "node" | "vortex" | "wire";
 
 /** @emoji 🔗 One allowed directed pair between semantic kind ids; `important` bypasses specificity ordering among matches. */
 export interface KindCompatEntry {
@@ -1236,6 +1236,295 @@ export function puzzle2dBrushCandidateDisplayLabels(
   const template = nodeKindRow?.handles?.[candidate.targetHandleIndex];
   const handle = puzzle2dHandleKindOverlayLabel(template?.handleKind ?? BUILTIN_PORT_HANDLE_KIND, bundle);
   return { object, handle };
+}
+
+function puzzle2dResolveDefaultWireKindForHandleKind(handleKind: string, catalogs: KindCatalogBundle): string {
+  const row = catalogs.handles?.find((entry) => entry.id === handleKind);
+  const wire = row?.defaultWireKind?.trim();
+  return wire && wire.length > 0 ? wire : BUILTIN_LINK_WIRE_KIND;
+}
+
+function puzzle2dResolveDefaultEdgeKindForWireKind(wireKind: string, catalogs: KindCatalogBundle): string {
+  const row = catalogs.wires?.find((entry) => entry.id === wireKind);
+  const edge = row?.defaultEdgeKind?.trim();
+  return edge && edge.length > 0 ? edge : BUILTIN_LINK_EDGE_KIND;
+}
+
+function puzzle2dCompatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean {
+  if (rule.source === a && rule.target === b) {
+    return true;
+  }
+  return rule.bidirectional === true && rule.source === b && rule.target === a;
+}
+
+/** @emoji ⭕ Shaped port cross-section from a handle kind id (`core circular top`, …). */
+export function puzzle2dHandlePortShape(handleKind: string): "circular" | "rectangular" | null {
+  if (handleKind.includes(" circular ")) {
+    return "circular";
+  }
+  if (handleKind.includes(" rectangular ")) {
+    return "rectangular";
+  }
+  return null;
+}
+
+/** @emoji ⭕ Shaped ports require the same cross-section; unshaped ports stay unconstrained. */
+export function puzzle2dHandlePortShapesCompatible(sourceHandleKind: string, targetHandleKind: string): boolean {
+  const sourceShape = puzzle2dHandlePortShape(sourceHandleKind);
+  const targetShape = puzzle2dHandlePortShape(targetHandleKind);
+  if (sourceShape === null || targetShape === null) {
+    return true;
+  }
+  return sourceShape === targetShape;
+}
+
+/** @emoji 🔤 Single-letter hyphen port families (`b-l`, `c-b`) used by concrete forest beam/column ports. */
+export function puzzle2dSingleLetterPortFamily(handleKind: string): string | null {
+  if (!handleKind.includes("-")) {
+    return null;
+  }
+  const head = handleKind.split("-")[0] ?? "";
+  return /^[a-z]$/.test(head) ? head : null;
+}
+
+/** @emoji 🔤 Beam (`b-*`) and column (`c-*`) families never mate across family. */
+export function puzzle2dSingleLetterPortFamiliesCompatible(sourceHandleKind: string, targetHandleKind: string): boolean {
+  const sourceFamily = puzzle2dSingleLetterPortFamily(sourceHandleKind);
+  const targetFamily = puzzle2dSingleLetterPortFamily(targetHandleKind);
+  if (sourceFamily === null || targetFamily === null) {
+    return true;
+  }
+  return sourceFamily === targetFamily;
+}
+
+function puzzle2dLinkGestureRuleAppliesForBrush(
+  rule: KindCompatEntry,
+  sn: string,
+  sh: string,
+  wSrc: string,
+  eSrc: string,
+  tn: string,
+  th: string,
+  wTgt: string,
+  eTgt: string,
+): boolean {
+  const spec = rule.specificity ?? "handle";
+  switch (spec) {
+    case "general":
+      return puzzle2dCompatPairMatches(rule, sh, th);
+    case "node":
+      return puzzle2dCompatPairMatches(rule, sn, tn);
+    case "edge":
+      return puzzle2dCompatPairMatches(rule, eSrc, eTgt);
+    case "handle":
+    case "vortex":
+      return puzzle2dCompatPairMatches(rule, sh, th);
+    case "wire":
+      return puzzle2dCompatPairMatches(rule, wSrc, th);
+    default:
+      return puzzle2dCompatPairMatches(rule, sh, th);
+  }
+}
+
+/** @emoji 🤝 WASM-style brush compatibility (important + specificity tiers); empty rules allow all. */
+export function puzzle2dLinkKindsCompatibleForBrush(
+  sourceNodeKind: string,
+  sourceHandleKind: string,
+  targetNodeKind: string,
+  targetHandleKind: string,
+  rules: readonly KindCompatEntry[] | undefined,
+  catalogs?: KindCatalogBundle,
+): boolean {
+  if (!puzzle2dHandlePortShapesCompatible(sourceHandleKind, targetHandleKind)) {
+    return false;
+  }
+  if (!puzzle2dSingleLetterPortFamiliesCompatible(sourceHandleKind, targetHandleKind)) {
+    return false;
+  }
+  if (!rules?.length) {
+    return true;
+  }
+  const bundle = catalogs ?? DEFAULT_KIND_CATALOG_BUNDLE;
+  const wSrc = puzzle2dResolveDefaultWireKindForHandleKind(sourceHandleKind, bundle);
+  const wTgt = puzzle2dResolveDefaultWireKindForHandleKind(targetHandleKind, bundle);
+  const eSrc = puzzle2dResolveDefaultEdgeKindForWireKind(wSrc, bundle);
+  const eTgt = puzzle2dResolveDefaultEdgeKindForWireKind(wTgt, bundle);
+  let matched = rules.filter((rule) =>
+    puzzle2dLinkGestureRuleAppliesForBrush(rule, sourceNodeKind, sourceHandleKind, wSrc, eSrc, targetNodeKind, targetHandleKind, wTgt, eTgt),
+  );
+  if (matched.length === 0) {
+    return false;
+  }
+  if (matched.some((rule) => rule.important === true)) {
+    matched = matched.filter((rule) => rule.important === true);
+  } else {
+    const rank: Record<SemanticSpecificity, number> = { general: 0, node: 1, edge: 2, handle: 3, vortex: 3, wire: 4 };
+    const maxRank = Math.max(...matched.map((rule) => rank[rule.specificity ?? "handle"]));
+    matched = matched.filter((rule) => rank[rule.specificity ?? "handle"] === maxRank);
+  }
+  return matched.length > 0;
+}
+
+/** @emoji 🖌️ Lists every catalog node kind + handle template compatible with a free source handle (puzzle3d {@link brushCompatibleCandidates} parity). */
+export function puzzle2dBrushCompatibleCandidates(
+  target: { readonly handleKind: string; readonly nodeKind: string },
+  kindCatalogs: KindCatalogBundle | undefined,
+  kindCompatibility: readonly KindCompatEntry[] | undefined,
+): readonly Puzzle2dBrushCompatibleCandidate[] {
+  const nodes = kindCatalogs?.nodes;
+  if (!nodes?.length) {
+    return [];
+  }
+  const bundle = kindCatalogs ?? DEFAULT_KIND_CATALOG_BUNDLE;
+  const rules = kindCompatibility ?? [];
+  const out: Puzzle2dBrushCompatibleCandidate[] = [];
+  for (const nodeKind of nodes) {
+    const tn = nodeKind.id?.trim() ?? "";
+    const templates = nodeKind.handles;
+    if (tn === "" || !templates?.length) {
+      continue;
+    }
+    for (let targetHandleIndex = 0; targetHandleIndex < templates.length; targetHandleIndex += 1) {
+      const th = templates[targetHandleIndex]!.handleKind;
+      if (!puzzle2dLinkKindsCompatibleForBrush(target.nodeKind, target.handleKind, tn, th, rules, bundle)) {
+        continue;
+      }
+      out.push({ nodeKind: tn, targetHandleIndex });
+    }
+  }
+  return out;
+}
+
+function puzzle2dBrushHandleAlignmentDelta(sourceHandleAngle: number, targetTemplateAngle: number): number {
+  const desired = sourceHandleAngle + Math.PI;
+  let delta = Math.abs(targetTemplateAngle - desired);
+  if (delta > Math.PI) {
+    delta = Math.PI * 2 - delta;
+  }
+  return delta;
+}
+
+/** @emoji 📐 Orders brush rows by opposing-handle alignment (closest mating handle first). */
+export function puzzle2dSortBrushCandidatesByHandleProximity(
+  sourceHandleAngle: number,
+  candidates: readonly Puzzle2dBrushCompatibleCandidate[],
+  kindCatalogs?: KindCatalogBundle,
+): readonly Puzzle2dBrushCompatibleCandidate[] {
+  const bundle = kindCatalogs ?? DEFAULT_KIND_CATALOG_BUNDLE;
+  return [...candidates].sort((left, right) => {
+    const angleLeft = bundle.nodes?.find((row) => row.id === left.nodeKind)?.handles?.[left.targetHandleIndex]?.angle ?? 0;
+    const angleRight = bundle.nodes?.find((row) => row.id === right.nodeKind)?.handles?.[right.targetHandleIndex]?.angle ?? 0;
+    const deltaLeft = puzzle2dBrushHandleAlignmentDelta(sourceHandleAngle, angleLeft);
+    const deltaRight = puzzle2dBrushHandleAlignmentDelta(sourceHandleAngle, angleRight);
+    return (
+      deltaLeft - deltaRight ||
+      left.nodeKind.localeCompare(right.nodeKind) ||
+      left.targetHandleIndex - right.targetHandleIndex
+    );
+  });
+}
+
+/** @emoji 📐 World center for a brushed node opposite a free source handle. */
+export function puzzle2dBrushSlotCenterWorld(
+  sourceNode: { readonly radius: number; readonly x: number; readonly y: number },
+  sourceHandleAngle: number,
+  flushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+): Point {
+  const handleWorld = computeHandlePosition(sourceNode, sourceHandleAngle);
+  const dx = handleWorld.x - sourceNode.x;
+  const dy = handleWorld.y - sourceNode.y;
+  const len = Math.hypot(dx, dy);
+  const nx = len > 1e-9 ? dx / len : 1;
+  const ny = len > 1e-9 ? dy / len : 0;
+  return { x: handleWorld.x + nx * flushDistance, y: handleWorld.y + ny * flushDistance };
+}
+
+/** @emoji 🖌️ Builds a brush slot preview for the suggestions menu without waiting on WASM drain. */
+export function puzzle2dBuildBrushSuggestionsPreview(
+  driving: Puzzle2dRenderer | null | undefined,
+  sourceHandleId: string,
+  candidate: Puzzle2dBrushCompatibleCandidate,
+  kindCatalogs: KindCatalogBundle | undefined,
+  brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+  flushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+): Puzzle2dEventMap["brushPreview"] | null {
+  if (!driving) {
+    return null;
+  }
+  const sourceObj = driving.scene.getObjectById(sourceHandleId);
+  if (!isPuzzle2dSceneHandleObject(sourceObj)) {
+    return null;
+  }
+  const node = sourceObj.node;
+  const center = puzzle2dBrushSlotCenterWorld({ radius: node.radius, x: node.x, y: node.y }, sourceObj.angle, flushDistance);
+  const kind = kindCatalogs?.nodes?.find((row) => row.id === candidate.nodeKind);
+  const templates = kind?.handles;
+  if (!templates?.length || candidate.targetHandleIndex < 0 || candidate.targetHandleIndex >= templates.length) {
+    return null;
+  }
+  const radius = brushNodeSize * 0.5;
+  const handles = templates.map((template) => ({
+    angle: template.angle,
+    handleKind: template.handleKind,
+    ...(template.radius !== undefined ? { radius: template.radius } : {}),
+  }));
+  const iconKind = puzzle2dNodeKindCatalogIcon(kind);
+  return {
+    edge: { sourceHandleId, targetHandleIndex: candidate.targetHandleIndex },
+    node: {
+      handles,
+      nodeKind: candidate.nodeKind,
+      radius,
+      shape: "circle",
+      x: center.x,
+      y: center.y,
+      ...(iconKind ? { iconKind } : {}),
+    },
+  };
+}
+
+/** @emoji 🖌️ Publishes one suggestions candidate (preview + index) on the driving pane and mirror peers. */
+export function puzzle2dApplyBrushSuggestionsCandidateIndex(
+  index: number,
+  options?: {
+    readonly brushNodeSize?: number;
+    readonly flushDistance?: number;
+    readonly kindCatalogs?: KindCatalogBundle;
+  },
+): void {
+  const session = puzzle2dGetBrushSessionSnapshot();
+  if (!session?.sourceHandleId || index < 0 || index >= session.candidates.length) {
+    return;
+  }
+  const driving = puzzle2dBrushSuggestionsDrivingRendererRef.current;
+  const candidate = session.candidates[index]!;
+  const kindCatalogs = options?.kindCatalogs ?? puzzle2dBrushKindCatalogsRef.current;
+  const brushNodeSize = options?.brushNodeSize ?? puzzle2dFixturePaletteDragPreviewOptionsRef.brushNodeSize;
+  const flushDistance = options?.flushDistance ?? DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  if (driving) {
+    driving.setBrushCandidateIndex(index);
+  }
+  const drained = puzzle2dGetBrushSessionSnapshot();
+  let preview =
+    drained?.candidateIndex === index && drained.preview && !puzzle2dBrushPreviewIsEmpty(drained.preview) ? drained.preview : null;
+  if (!preview) {
+    preview = puzzle2dBuildBrushSuggestionsPreview(driving, session.sourceHandleId, candidate, kindCatalogs, brushNodeSize, flushDistance);
+  }
+  const next: Puzzle2dBrushSessionSnapshot = {
+    candidateIndex: index,
+    candidates: session.candidates,
+    preview: preview && !puzzle2dBrushPreviewIsEmpty(preview) ? preview : null,
+    sourceHandleId: session.sourceHandleId,
+    suggestionsActive: true,
+  };
+  puzzle2dSharedBrushSession = next;
+  puzzle2dNotifyBrushSessionListeners();
+  if (driving) {
+    driving.setBrushSession(next);
+    puzzle2dSyncBrushSessionToAllAuthoringPeers(next, driving);
+  } else {
+    puzzle2dSyncBrushSessionToAllAuthoringPeers(next);
+  }
 }
 
 /** @emoji 🖌️ Brush compatible node+handle rows while hovering a slot. */
@@ -9920,6 +10209,76 @@ if (puzzle2dVitest) {
       expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
+    it("puzzle2dBrushCompatibleCandidates lists every concrete forest beam mate handle", async () => {
+      const fixture = (await import("../fixture/concrete-forest.2d.json")).default as {
+        meta?: { kindCatalogs?: unknown; kindCompatibility?: readonly KindCompatEntry[] };
+      };
+      const catalogs = fixtureMetaKindCatalogBundle(fixture.meta);
+      const compat = puzzle2dFixtureMetaKindCompatibility(fixture.meta);
+      const list = puzzle2dBrushCompatibleCandidates(
+        { handleKind: "b-l", nodeKind: "Hexagonal Cut Concrete Forest Left" },
+        catalogs,
+        compat,
+      );
+      expect(list.length).toBeGreaterThanOrEqual(10);
+      expect(list.some((row) => row.nodeKind.includes("Right"))).toBe(true);
+      expect(list.every((row) => !["c-b", "c-t"].includes(
+        catalogs?.nodes?.find((n) => n.id === row.nodeKind)?.handles?.[row.targetHandleIndex]?.handleKind ?? "",
+      ))).toBe(true);
+    });
+
+    it("puzzle2dBuildBrushSuggestionsPreview places node opposite source handle", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer.setCamera(0, 0, 1);
+      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, nodeKind: "Left", x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "b-l", angle: 0, id: "a:h0", node });
+      renderer.scene.add(node);
+      const catalogs = {
+        nodes: [{ id: "Right", name: "Right", handles: [{ handleKind: "b-l", angle: Math.PI }] }],
+      };
+      const preview = puzzle2dBuildBrushSuggestionsPreview(renderer, "a:h0", { nodeKind: "Right", targetHandleIndex: 0 }, catalogs);
+      expect(preview?.edge).toEqual({ sourceHandleId: "a:h0", targetHandleIndex: 0 });
+      expect(preview?.node?.nodeKind).toBe("Right");
+      expect(Number(preview?.node?.x)).toBeGreaterThan(0);
+      renderer.dispose();
+    });
+
+    it("puzzle2dApplyBrushSuggestionsCandidateIndex updates shared session preview", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const { canvas } = createMockCanvas();
+      const driving = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      driving.setCamera(0, 0, 1);
+      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, nodeKind: "Left", x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "b-l", angle: 0, id: "a:h0", node });
+      driving.scene.add(node);
+      puzzle2dBrushSuggestionsDrivingRendererRef.current = driving;
+      puzzle2dBrushKindCatalogsRef.current = {
+        nodes: [
+          { id: "Right", name: "Right", handles: [{ handleKind: "b-l", angle: Math.PI }] },
+          { id: "Left", name: "Left", handles: [{ handleKind: "b-s", angle: Math.PI / 2 }] },
+        ],
+      };
+      puzzle2dSyncBrushSessionToAllAuthoringPeers({
+        candidateIndex: 0,
+        candidates: [
+          { nodeKind: "Right", targetHandleIndex: 0 },
+          { nodeKind: "Left", targetHandleIndex: 0 },
+        ],
+        preview: puzzle2dBuildBrushSuggestionsPreview(driving, "a:h0", { nodeKind: "Right", targetHandleIndex: 0 }, puzzle2dBrushKindCatalogsRef.current),
+        sourceHandleId: "a:h0",
+        suggestionsActive: true,
+      }, driving);
+      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node?.nodeKind).toBe("Right");
+      puzzle2dApplyBrushSuggestionsCandidateIndex(1, { kindCatalogs: puzzle2dBrushKindCatalogsRef.current });
+      expect(puzzle2dGetBrushSessionSnapshot()?.candidateIndex).toBe(1);
+      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node?.nodeKind).toBe("Left");
+      puzzle2dBrushSuggestionsDrivingRendererRef.current = null;
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      driving.dispose();
+    });
+
     it("puzzle2dParseBrushCompatibleCandidates expands node kinds to handle rows", () => {
       expect(
         puzzle2dParseBrushCompatibleCandidates([
@@ -11928,7 +12287,9 @@ export function puzzle2dCommitSuggestionsCandidate(renderer: Puzzle2dRenderer, i
   if (!session?.sourceHandleId || index < 0 || index >= session.candidates.length) {
     return false;
   }
-  if (session.candidateIndex !== index) {
+  if (session.candidateIndex !== index || !session.preview || puzzle2dBrushPreviewIsEmpty(session.preview)) {
+    puzzle2dApplyBrushSuggestionsCandidateIndex(index);
+  } else if (session.candidateIndex !== index) {
     renderer.setBrushCandidateIndex(index);
   }
   const snap = puzzle2dGetBrushSessionSnapshot();
@@ -12011,6 +12372,31 @@ export function puzzle2dClearFixtureDropPreviewAllAuthoringPeers(): void {
 /** @emoji 🖌️ True while the suggest-nodes candidate menu is open. */
 export function puzzle2dBrushSuggestionsMenuOpen(): boolean {
   return puzzle2dBrushMenuStore.getSnapshot().menuOpen;
+}
+
+/** @emoji 🖌️ Publishes the full suggestions candidate list on the driving pane and mirror peers. */
+function puzzle2dApplySuggestionsBrushSession(
+  driving: Puzzle2dRenderer,
+  sourceHandleId: string,
+  candidates: readonly Puzzle2dBrushCompatibleCandidate[],
+  kindCatalogs?: KindCatalogBundle,
+  brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+): void {
+  if (candidates.length === 0) {
+    return;
+  }
+  const preview = puzzle2dBuildBrushSuggestionsPreview(driving, sourceHandleId, candidates[0]!, kindCatalogs, brushNodeSize);
+  const next: Puzzle2dBrushSessionSnapshot = {
+    candidateIndex: 0,
+    candidates,
+    preview: preview && !puzzle2dBrushPreviewIsEmpty(preview) ? preview : null,
+    sourceHandleId,
+    suggestionsActive: true,
+  };
+  puzzle2dSharedBrushSession = next;
+  puzzle2dNotifyBrushSessionListeners();
+  driving.setBrushSession(next);
+  puzzle2dSyncBrushSessionToAllAuthoringPeers(next, driving);
 }
 
 /** @emoji 🖌️ Mirrors brush slot preview onto every authoring pane except the driving renderer. */
@@ -13046,6 +13432,8 @@ export function Puzzle2dCanvas({
   const resolvedBrushNodeSize = brushNodeSize ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
   const kindCatalogsRef = reactHostPort.useRef(kindCatalogs);
   kindCatalogsRef.current = kindCatalogs;
+  const kindCompatibilityRef = reactHostPort.useRef(kindCompatibility);
+  kindCompatibilityRef.current = kindCompatibility;
 
   reactHostPort.useLayoutEffect(() => {
     puzzle2dFixturePaletteDragPreviewOptionsRef.catalogs = kindCatalogsRef.current;
@@ -13561,10 +13949,18 @@ export function Puzzle2dCanvas({
         return;
       }
       patchPuzzle2dBrushMenu({ menuHoverIndex: index });
-      renderer.setBrushCandidateIndex(index);
+      puzzle2dApplyBrushSuggestionsCandidateIndex(index, {
+        brushNodeSize: resolvedBrushNodeSize,
+        kindCatalogs: kindCatalogsRef.current,
+      });
     };
     const selectMenuCandidate = (index: number) => {
-      puzzle2dCommitSuggestionsCandidate(renderer, index);
+      const driving = puzzle2dBrushSuggestionsDrivingRendererRef.current ?? renderer;
+      puzzle2dApplyBrushSuggestionsCandidateIndex(index, {
+        brushNodeSize: resolvedBrushNodeSize,
+        kindCatalogs: kindCatalogsRef.current,
+      });
+      puzzle2dCommitSuggestionsCandidate(driving, index);
     };
     puzzle2dBrushMenuSourceRef.current = {
       hoverCandidate: hoverMenuCandidate,
@@ -13577,6 +13973,19 @@ export function Puzzle2dCanvas({
         dismissMenu();
         puzzle2dBrushSuggestionsDrivingRendererRef.current = renderer;
         renderer.brushOpenSlot(handleId);
+        const sourceObj = renderer.scene.getObjectById(handleId);
+        if (isPuzzle2dSceneHandleObject(sourceObj)) {
+          const candidates = puzzle2dSortBrushCandidatesByHandleProximity(
+            sourceObj.angle,
+            puzzle2dBrushCompatibleCandidates(
+              { handleKind: sourceObj.handleKind, nodeKind: sourceObj.node.nodeKind ?? "" },
+              kindCatalogsRef.current,
+              kindCompatibilityRef.current,
+            ),
+            kindCatalogsRef.current,
+          );
+          puzzle2dApplySuggestionsBrushSession(renderer, handleId, candidates, kindCatalogsRef.current, resolvedBrushNodeSize);
+        }
         const session = puzzle2dGetBrushSessionSnapshot();
         const hoverIndex = session && session.candidates.length > 0 ? session.candidateIndex : null;
         patchPuzzle2dBrushMenu({ menuOpen: true, menuAnchor: anchor, menuHoverIndex: hoverIndex });
@@ -13589,7 +13998,7 @@ export function Puzzle2dCanvas({
       puzzle2dOpenSlotSuggestionsRef.current = { openFor: () => {}, close: () => {} };
       dismissMenu();
     };
-  }, [contextRenderer]);
+  }, [contextRenderer, resolvedBrushNodeSize]);
 
   reactHostPort.useLayoutEffect(() => {
     if (!canvasRef.current) {

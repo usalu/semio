@@ -76,6 +76,7 @@ import {
   type Puzzle3dHoverPayload,
   type Puzzle3dKindHover,
   buildBrushFillSequence,
+  brushCompatibleCandidates,
   brushPlacementUsesHostOrientation,
   computeBrushPlacementPose,
   resolveObjectKindMeshUrl,
@@ -2226,15 +2227,25 @@ export const FiveD = reactHostPort.memo(function FiveD(props: FiveDProps) {
 //#endregion 🔖FiveD
 
 //#region 🔖KindMeta
+/** @emoji 🎯 Local grip template on a {@link PartKind} (flat angle + volume pose in part-local space). */
+export interface PartKindGrip {
+  readonly gripKind: string;
+  readonly "2d"?: Grip2dAspect;
+  readonly "3d"?: Grip3dAspect;
+}
+
 /** @emoji 🟠 Part-kind catalog row for unified puzzle 5d fixtures. */
 export interface PartKind {
   color?: string;
   defaultGripKind?: string;
   defaultShapeProps?: Record<string, unknown>;
+  grips?: readonly PartKindGrip[];
   icon?: string;
   id: string;
   label?: string;
+  meshUrl?: string;
   name: string;
+  scale?: number | readonly [number, number, number];
   shape?: "circle" | "rectangle";
   stroke?: string;
 }
@@ -2300,7 +2311,127 @@ function kindCatalogFrom3dMeta(meta: Record<string, unknown> | undefined): Puzzl
   return kc as Puzzle3dKindCatalogBundle;
 }
 
+function partKindGripsFrom2dHandles(handles: readonly { readonly handleKind: string; readonly angle: number; readonly radius?: number }[]): PartKindGrip[] {
+  return handles.map((handle) => ({
+    gripKind: handle.handleKind,
+    "2d": {
+      angle: handle.angle,
+      gripKind: handle.handleKind,
+      ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
+    },
+  }));
+}
+
+function partKindGripsFrom3dVortices(
+  vortices: readonly {
+    readonly vortexKind?: string;
+    readonly position: readonly [number, number, number];
+    readonly direction?: readonly [number, number, number];
+    readonly radius?: number;
+    readonly label?: string;
+  }[],
+): PartKindGrip[] {
+  return vortices.map((vortex) => ({
+    gripKind: vortex.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
+    "3d": {
+      position: vortex.position,
+      ...(vortex.direction !== undefined ? { direction: vortex.direction } : {}),
+      ...(vortex.radius !== undefined ? { radius: vortex.radius } : {}),
+      ...(vortex.label !== undefined ? { label: vortex.label } : {}),
+    },
+  }));
+}
+
+function mergePartKindGrips(flat: readonly PartKindGrip[] | undefined, volume: readonly PartKindGrip[] | undefined): PartKindGrip[] | undefined {
+  if (!flat?.length && !volume?.length) {
+    return undefined;
+  }
+  const count = Math.max(flat?.length ?? 0, volume?.length ?? 0);
+  const out: PartKindGrip[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const flatGrip = flat?.[index];
+    const volumeGrip = volume?.[index];
+    const gripKind = volumeGrip?.gripKind ?? flatGrip?.gripKind ?? BUILTIN_PORT_HANDLE_KIND;
+    out.push({
+      gripKind,
+      ...(flatGrip?.["2d"] ? { "2d": flatGrip["2d"] } : {}),
+      ...(volumeGrip?.["3d"] ? { "3d": volumeGrip["3d"] } : {}),
+    });
+  }
+  return out.length ? out : undefined;
+}
+
+function mergePartKinds(flat: PartKind | undefined, volume: PartKind | undefined): PartKind | undefined {
+  if (!flat && !volume) {
+    return undefined;
+  }
+  const id = flat?.id ?? volume!.id;
+  const grips = mergePartKindGrips(flat?.grips, volume?.grips);
+  return {
+    id,
+    name: flat?.name ?? volume!.name ?? id,
+    ...(flat?.label ?? volume?.label ? { label: flat?.label ?? volume?.label } : {}),
+    ...(flat?.color ?? volume?.color ? { color: flat?.color ?? volume?.color } : {}),
+    ...(flat?.defaultGripKind ?? volume?.defaultGripKind ? { defaultGripKind: flat?.defaultGripKind ?? volume?.defaultGripKind } : {}),
+    ...(flat?.defaultShapeProps ?? volume?.defaultShapeProps ? { defaultShapeProps: flat?.defaultShapeProps ?? volume?.defaultShapeProps } : {}),
+    ...(flat?.icon ?? volume?.icon ? { icon: flat?.icon ?? volume?.icon } : {}),
+    ...(flat?.shape ?? volume?.shape ? { shape: flat?.shape ?? volume?.shape } : {}),
+    ...(flat?.stroke ?? volume?.stroke ? { stroke: flat?.stroke ?? volume?.stroke } : {}),
+    ...(flat?.meshUrl ?? volume?.meshUrl ? { meshUrl: flat?.meshUrl ?? volume?.meshUrl } : {}),
+    ...(flat?.scale ?? volume?.scale ? { scale: flat?.scale ?? volume?.scale } : {}),
+    ...(grips ? { grips } : {}),
+  };
+}
+
+function dedupeCatalogRowsById<T extends { id: string }>(rows: readonly T[]): T[] {
+  const map = new Map<string, T>();
+  for (const row of rows) {
+    if (row.id) {
+      map.set(row.id, row);
+    }
+  }
+  return [...map.values()];
+}
+
+function mergeKindCatalogBundles(flat: Puzzle2dKindCatalogBundle | undefined, volume: Puzzle3dKindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  const flatParts = flat?.nodes?.map((row) => partKindFrom2dNode(row)) ?? [];
+  const volumeParts = volume?.objects?.map((row) => partKindFrom3dObject(row)) ?? [];
+  const partIds = new Set([...flatParts.map((row) => row.id), ...volumeParts.map((row) => row.id)]);
+  const flatById = new Map(flatParts.map((row) => [row.id, row]));
+  const volumeById = new Map(volumeParts.map((row) => [row.id, row]));
+  const parts: PartKind[] = [];
+  for (const id of partIds) {
+    const merged = mergePartKinds(flatById.get(id), volumeById.get(id));
+    if (merged) {
+      parts.push(merged);
+    }
+  }
+  parts.sort((left, right) => left.id.localeCompare(right.id));
+  const grips = dedupeCatalogRowsById([
+    ...(flat?.handles?.map((row) => gripKindFrom2dHandle(row)) ?? []),
+    ...(volume?.vortices?.map((row) => gripKindFrom3dVortex(row)) ?? []),
+  ]);
+  const fasteners = dedupeCatalogRowsById([
+    ...(flat?.edges?.map((row) => fastenerKindFrom2dEdge(row)) ?? []),
+    ...(volume?.attractions?.map((row) => fastenerKindFrom3dAttraction(row)) ?? []),
+  ]);
+  const ropes = dedupeCatalogRowsById([
+    ...(flat?.wires?.map((row) => ropeKindFrom2dWire(row)) ?? []),
+    ...(volume?.cables?.map((row) => ropeKindFrom3dCable(row)) ?? []),
+  ]);
+  if (!parts.length && !grips.length && !fasteners.length && !ropes.length) {
+    return undefined;
+  }
+  return {
+    ...(parts.length ? { parts } : {}),
+    ...(grips.length ? { grips } : {}),
+    ...(fasteners.length ? { fasteners } : {}),
+    ...(ropes.length ? { ropes } : {}),
+  };
+}
+
 function partKindFrom2dNode(row: Puzzle2dNodeKind): PartKind {
+  const rowEx = row as Puzzle2dNodeKind & { readonly meshUrl?: string };
   return {
     id: row.id,
     name: row.name,
@@ -2310,6 +2441,8 @@ function partKindFrom2dNode(row: Puzzle2dNodeKind): PartKind {
     ...(row.icon !== undefined ? { icon: row.icon } : {}),
     ...(row.shape !== undefined ? { shape: row.shape } : {}),
     ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
+    ...(rowEx.meshUrl !== undefined ? { meshUrl: rowEx.meshUrl } : {}),
+    ...(row.handles?.length ? { grips: partKindGripsFrom2dHandles(row.handles) } : {}),
   };
 }
 
@@ -2349,6 +2482,9 @@ function partKindFrom3dObject(row: Puzzle3dPartKind): PartKind {
     ...(row.label !== undefined ? { label: row.label } : {}),
     ...(row.color !== undefined ? { color: row.color } : {}),
     ...(row.shape !== undefined ? { shape: row.shape as PartKind["shape"] } : {}),
+    ...(row.meshUrl !== undefined ? { meshUrl: row.meshUrl } : {}),
+    ...(row.scale !== undefined ? { scale: row.scale } : {}),
+    ...(row.vortices?.length ? { grips: partKindGripsFrom3dVortices(row.vortices) } : {}),
   };
 }
 
@@ -2386,17 +2522,36 @@ export function normalizeKindCatalogBundle(raw: unknown): KindCatalogBundle | un
   if (box.parts || box.grips || box.fasteners || box.ropes) {
     return box as KindCatalogBundle;
   }
-  const out: KindCatalogBundle = {};
-  if (Array.isArray(box.nodes)) out.parts = (box.nodes as Puzzle2dNodeKind[]).map(partKindFrom2dNode);
-  if (Array.isArray(box.handles)) out.grips = (box.handles as Puzzle2dHandleKind[]).map(gripKindFrom2dHandle);
-  if (Array.isArray(box.edges)) out.fasteners = (box.edges as Puzzle2dEdgeKind[]).map(fastenerKindFrom2dEdge);
-  if (Array.isArray(box.wires)) out.ropes = (box.wires as Puzzle2dWireKind[]).map(ropeKindFrom2dWire);
-  if (Array.isArray(box.objects)) out.parts = (box.objects as Puzzle3dPartKind[]).map(partKindFrom3dObject);
-  if (Array.isArray(box.vortices)) out.grips = (box.vortices as Puzzle3dGripKind[]).map(gripKindFrom3dVortex);
-  if (Array.isArray(box.attractions)) out.fasteners = (box.attractions as Puzzle3dFastenerKind[]).map(fastenerKindFrom3dAttraction);
-  if (Array.isArray(box.cables)) out.ropes = (box.cables as Puzzle3dRopeKind[]).map(ropeKindFrom3dCable);
-  if (!out.parts && !out.grips && !out.fasteners && !out.ropes) return undefined;
-  return out;
+  const flat: Puzzle2dKindCatalogBundle = {};
+  const volume: Puzzle3dKindCatalogBundle = {};
+  if (Array.isArray(box.nodes)) flat.nodes = box.nodes as Puzzle2dNodeKind[];
+  if (Array.isArray(box.handles)) flat.handles = box.handles as Puzzle2dHandleKind[];
+  if (Array.isArray(box.edges)) flat.edges = box.edges as Puzzle2dEdgeKind[];
+  if (Array.isArray(box.wires)) flat.wires = box.wires as Puzzle2dWireKind[];
+  if (Array.isArray(box.objects)) volume.objects = box.objects as Puzzle3dPartKind[];
+  if (Array.isArray(box.vortices)) volume.vortices = box.vortices as Puzzle3dGripKind[];
+  if (Array.isArray(box.attractions)) volume.attractions = box.attractions as Puzzle3dFastenerKind[];
+  if (Array.isArray(box.cables)) volume.cables = box.cables as Puzzle3dRopeKind[];
+  if (flat.nodes || flat.handles || flat.edges || flat.wires) {
+    if (volume.objects || volume.vortices || volume.attractions || volume.cables) {
+      return mergeKindCatalogBundles(flat, volume);
+    }
+    const out: KindCatalogBundle = {};
+    if (flat.nodes) out.parts = flat.nodes.map((row) => partKindFrom2dNode(row));
+    if (flat.handles) out.grips = flat.handles.map((row) => gripKindFrom2dHandle(row));
+    if (flat.edges) out.fasteners = flat.edges.map((row) => fastenerKindFrom2dEdge(row));
+    if (flat.wires) out.ropes = flat.wires.map((row) => ropeKindFrom2dWire(row));
+    return out;
+  }
+  if (volume.objects || volume.vortices || volume.attractions || volume.cables) {
+    const out: KindCatalogBundle = {};
+    if (volume.objects) out.parts = volume.objects.map((row) => partKindFrom3dObject(row));
+    if (volume.vortices) out.grips = volume.vortices.map((row) => gripKindFrom3dVortex(row));
+    if (volume.attractions) out.fasteners = volume.attractions.map((row) => fastenerKindFrom3dAttraction(row));
+    if (volume.cables) out.ropes = volume.cables.map((row) => ropeKindFrom3dCable(row));
+    return out;
+  }
+  return undefined;
 }
 
 /** @emoji 📐 Projects puzzle 5d kind catalogs onto puzzle 2d bundle keys. */
@@ -2413,6 +2568,18 @@ export function project2dKindCatalogs(bundle: KindCatalogBundle | undefined): Pu
       ...(part.icon !== undefined ? { icon: part.icon } : {}),
       ...(part.shape !== undefined ? { shape: part.shape } : {}),
       ...(part.stroke !== undefined ? { stroke: part.stroke } : {}),
+      ...(part.meshUrl !== undefined ? { meshUrl: part.meshUrl } : {}),
+      ...(part.grips?.length
+        ? {
+            handles: part.grips
+              .filter((grip) => grip["2d"])
+              .map((grip) => ({
+                handleKind: grip["2d"]!.gripKind,
+                angle: grip["2d"]!.angle,
+                ...(grip["2d"]!.radius !== undefined ? { radius: grip["2d"]!.radius } : {}),
+              })),
+          }
+        : {}),
     }));
   }
   if (bundle.grips?.length) {
@@ -2455,6 +2622,21 @@ export function project3dKindCatalogs(bundle: KindCatalogBundle | undefined): Pu
       ...(part.label !== undefined ? { label: part.label } : {}),
       ...(part.color !== undefined ? { color: part.color } : {}),
       ...(part.shape !== undefined ? { shape: part.shape } : {}),
+      ...(part.meshUrl !== undefined ? { meshUrl: part.meshUrl } : {}),
+      ...(part.scale !== undefined ? { scale: part.scale } : {}),
+      ...(part.grips?.length
+        ? {
+            vortices: part.grips
+              .filter((grip) => grip["3d"])
+              .map((grip) => ({
+                vortexKind: grip.gripKind,
+                position: grip["3d"]!.position,
+                ...(grip["3d"]!.direction !== undefined ? { direction: grip["3d"]!.direction } : {}),
+                ...(grip["3d"]!.radius !== undefined ? { radius: grip["3d"]!.radius } : {}),
+                ...(grip["3d"]!.label !== undefined ? { label: grip["3d"]!.label } : {}),
+              })),
+          }
+        : {}),
     }));
   }
   if (bundle.grips?.length) {
@@ -2512,9 +2694,16 @@ export function kindCompatibilityRowsFromMeta(meta: Record<string, unknown> | un
 
 export function kindCatalogsFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): KindCatalogBundle | undefined {
   const fromFlat = kindCatalogFrom2dMeta(inp.meta2d);
-  if (fromFlat) return normalizeKindCatalogBundle(fromFlat);
   const fromVolume = kindCatalogFrom3dMeta(inp.meta3d);
-  if (fromVolume) return normalizeKindCatalogBundle(fromVolume);
+  if (fromFlat && fromVolume) {
+    return mergeKindCatalogBundles(fromFlat, fromVolume);
+  }
+  if (fromFlat) {
+    return normalizeKindCatalogBundle(fromFlat);
+  }
+  if (fromVolume) {
+    return normalizeKindCatalogBundle(fromVolume);
+  }
   return undefined;
 }
 
@@ -2903,6 +3092,73 @@ if (import.meta.vitest) {
       expect(s.gridSnapEnabled).toBe(true);
     });
   });
+
+  describe("kindCatalog suggestion parity", () => {
+    const flatMeta = {
+      kindCatalogs: {
+        nodes: [
+          {
+            id: "Hexagonal Cut Concrete Forest Left",
+            name: "Hexagonal Cut Concrete Forest Left",
+            meshUrl: "/mesh/hexagonal-cut-concrete-forest-left.glb",
+            handles: [{ handleKind: "b-l", angle: -1.5707963267948966, radius: 0.36 }],
+          },
+        ],
+        handles: [{ id: "b-l", name: "b-l", color: "hsl(206 52% 48%)" }],
+      },
+    };
+    const volumeMeta = {
+      kindCatalogs: {
+        objects: [
+          {
+            id: "Hexagonal Cut Concrete Forest Left",
+            name: "Hexagonal Cut Concrete Forest Left",
+            meshUrl: "/mesh/hexagonal-cut-concrete-forest-left.glb",
+            vortices: [{ vortexKind: "b-l", position: [4.05, 4.67, 3] as const, direction: [0, 1, 0] as const, radius: 0.36 }],
+          },
+        ],
+        vortices: [{ id: "b-l", name: "b-l", color: "hsl(206 52% 48%)" }],
+      },
+    };
+
+    it("kindCatalogsFromMetas merges flat and volume grip templates on one part kind", () => {
+      const bundle = kindCatalogsFromMetas({ meta2d: flatMeta, meta3d: volumeMeta });
+      const part = bundle?.parts?.find((row) => row.id === "Hexagonal Cut Concrete Forest Left");
+      expect(part?.meshUrl).toBe("/mesh/hexagonal-cut-concrete-forest-left.glb");
+      expect(part?.grips?.[0]?.["2d"]?.angle).toBeCloseTo(-1.5707963267948966);
+      expect(part?.grips?.[0]?.["3d"]?.position).toEqual([4.05, 4.67, 3]);
+    });
+
+    it("project3dKindCatalogs emits meshUrl and vortex templates", () => {
+      const bundle = kindCatalogsFromMetas({ meta2d: flatMeta, meta3d: volumeMeta });
+      const cat3d = project3dKindCatalogs(bundle);
+      const object = cat3d?.objects?.find((row) => row.id === "Hexagonal Cut Concrete Forest Left");
+      expect(object?.meshUrl).toBe("/mesh/hexagonal-cut-concrete-forest-left.glb");
+      expect(object?.vortices?.[0]?.vortexKind).toBe("b-l");
+      expect(object?.vortices?.[0]?.position).toEqual([4.05, 4.67, 3]);
+    });
+
+    it("project2dKindCatalogs emits handle templates", () => {
+      const bundle = kindCatalogsFromMetas({ meta2d: flatMeta, meta3d: volumeMeta });
+      const cat2d = project2dKindCatalogs(bundle);
+      const node = cat2d?.nodes?.find((row) => row.id === "Hexagonal Cut Concrete Forest Left");
+      expect(node?.handles?.[0]?.handleKind).toBe("b-l");
+      expect(node?.handles?.[0]?.angle).toBeCloseTo(-1.5707963267948966);
+    });
+
+    it("projected 3d catalog yields brush-compatible candidates", () => {
+      const bundle = kindCatalogsFromMetas({ meta2d: flatMeta, meta3d: volumeMeta });
+      const cat3d = project3dKindCatalogs(bundle);
+      const candidates = brushCompatibleCandidates(
+        { objectId: "seed-left-001", objectKind: "Hexagonal Cut Concrete Forest Left", vortexKind: "b-l" },
+        cat3d,
+        [{ source: "b-l", target: "b-l", bidirectional: true }],
+      );
+      expect(candidates.length).toBeGreaterThan(0);
+      expect(candidates[0]?.objectKindId).toBe("Hexagonal Cut Concrete Forest Left");
+    });
+  });
+
   describe("flatHandleCompoundId", () => {
     it("round-trips handle ids", () => {
       const id = flatHandleCompoundId("piece-a", "conn-b");

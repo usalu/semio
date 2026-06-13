@@ -226,7 +226,7 @@ pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, sou
         target_radial = -chord;
     }
     let handle_distance = distance_between(source_point, target_point);
-    let control_length = clamp_f64(handle_distance * 0.22, 16.0, 120.0);
+    let control_length = clamp_f64(handle_distance * 0.12, 8.0, 72.0);
     let p1 = source_point + source_radial * control_length;
     let p2 = target_point + target_radial * control_length;
     CubicBez::new(source_point, p1, p2, target_point)

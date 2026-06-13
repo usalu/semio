@@ -1,0 +1,19 @@
+{
+  "title": "Variable Output Get From List",
+  "emoji": "📋",
+  "status": "closed",
+  "description": "Turn list.get into a variadic-output component: first output is i, + adds i+1, i+2, etc reading consecutive list elements from base index with wrap support.",
+  "summary": "Turned list.get into a variadic-output component. Operator now registers variadic_output (min 1) and evaluates consecutive list elements as output keys 0..count-1 from base index with wrap support. Flow host stores output_ports on Neuron widgets, builds dynamic output labels i, i+1, ..., injects count into tree params, and exposes add_output_port/remove_output_port with wasm bindings. DAG gained side-aware DagPortSide pending insert, output-side + hit-test/painting at zoom\u003e=1.5. React serializes outputPorts; play catalogue summary updated. Tests: list module 8/8, dag variadic 2/2, flow core add_output_port + 60/62 (2 pre-existing rectangle-extrude fixture failures), flow react 128/128.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1678"
+  },
+  "goal": "🎯flow🎯gui",
+  "plan": {
+    "client": "cursor",
+    "id": "ba7e414a",
+    "local": "variadic_get_from_list_ba7e414a.plan.md"
+  },
+  "sessions": [
+    "⚪4ae0cf5ce2844ba9815c7ce9f2e9f6d6"
+  ]
+}

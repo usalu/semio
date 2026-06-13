@@ -2,9 +2,9 @@
   "schema": "puzzle.5d",
   "domain": "architecture",
   "camera2d": {
-    "x": 230.72767272727276,
-    "y": 93.53074909090907,
-    "zoom": 0.42139917695473256
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "camera3d": {
     "position": [
@@ -26,9 +26,8 @@
       "2d": {
         "x": 230.72767272727273,
         "y": 93.53074909090908,
-        "shape": "rectangle",
-        "width": 432,
-        "height": 248,
+        "shape": "circle",
+        "radius": 20,
         "text": "Hexagonal Cut Concrete Forest Left"
       },
       "grips": [
@@ -36,7 +35,7 @@
           "id": "v0",
           "gripKind": "b-l",
           "2d": {
-            "angle": -1.5707963267948966,
+            "angle": -6.123233995736766e-17,
             "gripKind": "b-l",
             "radius": 3
           },
@@ -59,7 +58,7 @@
           "id": "v1",
           "gripKind": "b-l-m",
           "2d": {
-            "angle": -0.9995976625058433,
+            "angle": -0.5711986642890534,
             "gripKind": "b-l-m",
             "radius": 3
           },
@@ -82,7 +81,7 @@
           "id": "v2",
           "gripKind": "b-l",
           "2d": {
-            "angle": -0.42839899821678995,
+            "angle": -1.1423973285781068,
             "gripKind": "b-l",
             "radius": 3
           },
@@ -105,7 +104,7 @@
           "id": "v3",
           "gripKind": "b-s-m",
           "2d": {
-            "angle": 0.14279966607226324,
+            "angle": -1.71359599286716,
             "gripKind": "b-s-m",
             "radius": 3
           },
@@ -128,7 +127,7 @@
           "id": "v4",
           "gripKind": "b-s",
           "2d": {
-            "angle": 0.7139983303613167,
+            "angle": -2.284794657156213,
             "gripKind": "b-s",
             "radius": 3
           },
@@ -151,7 +150,7 @@
           "id": "v5",
           "gripKind": "b-s-m",
           "2d": {
-            "angle": 1.28519699465037,
+            "angle": -2.8559933214452666,
             "gripKind": "b-s-m",
             "radius": 3
           },
@@ -174,7 +173,7 @@
           "id": "v6",
           "gripKind": "b-s",
           "2d": {
-            "angle": 1.856395658939423,
+            "angle": 2.8559933214452666,
             "gripKind": "b-s",
             "radius": 3
           },
@@ -197,7 +196,7 @@
           "id": "v7",
           "gripKind": "c-b",
           "2d": {
-            "angle": 2.4275943232284765,
+            "angle": 2.2847946571562137,
             "gripKind": "c-b",
             "radius": 3
           },
@@ -220,7 +219,7 @@
           "id": "v8",
           "gripKind": "c-t",
           "2d": {
-            "angle": 2.99879298751753,
+            "angle": 1.71359599286716,
             "gripKind": "c-t",
             "radius": 3
           },
@@ -243,7 +242,7 @@
           "id": "v9",
           "gripKind": "c-b",
           "2d": {
-            "angle": 3.569991651806583,
+            "angle": 1.142397328578107,
             "gripKind": "c-b",
             "radius": 3
           },
@@ -266,7 +265,7 @@
           "id": "v10",
           "gripKind": "c-t",
           "2d": {
-            "angle": 4.141190316095637,
+            "angle": 0.5711986642890531,
             "gripKind": "c-t",
             "radius": 3
           },
@@ -311,11 +310,481 @@
     "parts": [
       {
         "id": "Hexagonal Cut Concrete Forest Left",
-        "name": "Hexagonal Cut Concrete Forest Left"
+        "name": "Hexagonal Cut Concrete Forest Left",
+        "label": "Hexagonal Cut Concrete Forest Left",
+        "meshUrl": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+        "grips": [
+          {
+            "gripKind": "b-l",
+            "2d": {
+              "angle": -1.5707963267948966,
+              "gripKind": "b-l",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                4.05001,
+                4.676537,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-l-m",
+            "2d": {
+              "angle": -0.9995976625058433,
+              "gripKind": "b-l-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                6.75001,
+                4.676537,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-l",
+            "2d": {
+              "angle": -0.42839899821678995,
+              "gripKind": "b-l",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                9.45001,
+                4.676537,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s-m",
+            "2d": {
+              "angle": 0.14279966607226324,
+              "gripKind": "b-s-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                6.75001,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s",
+            "2d": {
+              "angle": 0.7139983303613167,
+              "gripKind": "b-s",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                4.05001,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s-m",
+            "2d": {
+              "angle": 1.28519699465037,
+              "gripKind": "b-s-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                1.35001,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s",
+            "2d": {
+              "angle": 1.856395658939423,
+              "gripKind": "b-s",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                9.45001,
+                2.338269,
+                3
+              ],
+              "direction": [
+                0.866025,
+                -0.5,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-b",
+            "2d": {
+              "angle": 2.4275943232284765,
+              "gripKind": "c-b",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                2.70001,
+                2.338269,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-t",
+            "2d": {
+              "angle": 2.99879298751753,
+              "gripKind": "c-t",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                2.70001,
+                2.338269,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-b",
+            "2d": {
+              "angle": 3.569991651806583,
+              "gripKind": "c-b",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                8.10001,
+                2.338269,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-t",
+            "2d": {
+              "angle": 4.141190316095637,
+              "gripKind": "c-t",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                8.10001,
+                2.338269,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            }
+          }
+        ]
       },
       {
         "id": "Hexagonal Cut Concrete Forest Right",
-        "name": "Hexagonal Cut Concrete Forest Right"
+        "name": "Hexagonal Cut Concrete Forest Right",
+        "label": "Hexagonal Cut Concrete Forest Right",
+        "meshUrl": "/mesh/hexagonal-cut-concrete-forest-right.glb",
+        "grips": [
+          {
+            "gripKind": "b-l",
+            "2d": {
+              "angle": -1.5707963267948966,
+              "gripKind": "b-l",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                4.05001,
+                4.676537,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-l-m",
+            "2d": {
+              "angle": -0.9995976625058433,
+              "gripKind": "b-l-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                6.75001,
+                4.676537,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-l",
+            "2d": {
+              "angle": -0.42839899821678995,
+              "gripKind": "b-l",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                9.45001,
+                4.676537,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s-m",
+            "2d": {
+              "angle": 0.14279966607226324,
+              "gripKind": "b-s-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                6.75001,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s-m",
+            "2d": {
+              "angle": 0.7139983303613167,
+              "gripKind": "b-s-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                4.05001,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s",
+            "2d": {
+              "angle": 1.28519699465037,
+              "gripKind": "b-s",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                1.35001,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "b-s-m",
+            "2d": {
+              "angle": 1.856395658939423,
+              "gripKind": "b-s-m",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                9.45001,
+                2.338269,
+                3
+              ],
+              "direction": [
+                0.866025,
+                -0.5,
+                0
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-b",
+            "2d": {
+              "angle": 2.4275943232284765,
+              "gripKind": "c-b",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                2.70001,
+                2.338269,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-t",
+            "2d": {
+              "angle": 2.99879298751753,
+              "gripKind": "c-t",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                2.70001,
+                2.338269,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-b",
+            "2d": {
+              "angle": 3.569991651806583,
+              "gripKind": "c-b",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                8.10001,
+                2.338269,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            }
+          },
+          {
+            "gripKind": "c-t",
+            "2d": {
+              "angle": 4.141190316095637,
+              "gripKind": "c-t",
+              "radius": 0.36
+            },
+            "3d": {
+              "position": [
+                8.10001,
+                2.338269,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            }
+          }
+        ]
       }
     ],
     "grips": [
@@ -323,43 +792,58 @@
         "id": "b-l",
         "name": "b-l",
         "color": "hsl(206 52% 48%)",
+        "label": "b-l",
         "defaultRopeKind": "cable.link"
       },
       {
         "id": "b-l-m",
         "name": "b-l-m",
         "color": "hsl(290 52% 48%)",
+        "label": "b-l-m",
         "defaultRopeKind": "cable.link"
       },
       {
         "id": "b-s",
         "name": "b-s",
         "color": "hsl(55 52% 48%)",
+        "label": "b-s",
         "defaultRopeKind": "cable.link"
       },
       {
         "id": "b-s-m",
         "name": "b-s-m",
         "color": "hsl(124 52% 48%)",
+        "label": "b-s-m",
         "defaultRopeKind": "cable.link"
       },
       {
         "id": "c-b",
         "name": "c-b",
         "color": "hsl(37 52% 48%)",
+        "label": "c-b",
         "defaultRopeKind": "cable.link"
       },
       {
         "id": "c-t",
         "name": "c-t",
         "color": "hsl(169 52% 48%)",
+        "label": "c-t",
         "defaultRopeKind": "cable.link"
       }
     ],
     "fasteners": [
       {
         "id": "puzzle3d.attraction.link",
-        "name": "Link"
+        "name": "Link",
+        "label": "Link"
+      }
+    ],
+    "ropes": [
+      {
+        "id": "cable.link",
+        "name": "Link",
+        "label": "Link",
+        "defaultFastenerKind": "puzzle3d.attraction.link"
       }
     ]
   },

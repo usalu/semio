@@ -3,12 +3,13 @@
   "emoji": "🖼️",
   "status": "closed",
   "description": "Show all reference transform information (position, rotation, tilt, scale in all directions, etc.) in the puzzle 3d details/inspector panel when a reference is selected.",
-  "summary": "Added reference inspector section to buildPuzzle3dPlayInspectorBody showing position, tilt (euler degrees), quaternion, per-axis scale, uniform scale factor, width, opacity, source metadata, and hidden/locked state. Added patchPuzzle3dReference command for editing transform fields from the details panel. Updated inspector header and selection label for references. Play tests 73/73 pass.",
+  "summary": "Fixed reference selection: introduced worldEntityInspectable (hidden blocks pick, locked still selectable for details). PuzzleReferences and WorldReferencePlaneItem use inspectable for pick/hover/selection outline; gumball still requires unlock. filterSelectionByPlaygroundKinds keeps locked references, drops hidden only. raycastHitTargetsPick recognizes worldReferenceId so clicks do not clear selection. commitSelection accepts click modifiers. Play tests 76/76 pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1654"
   },
   "goal": "🎯puzzle3d🎯puzzle3dplay",
   "sessions": [
-    "⚪ed0389be1299464991aacbb5d2334407"
+    "⚪ed0389be1299464991aacbb5d2334407",
+    "⚪5d8e7fd103764fa8a7161fa2efde7af2"
   ]
 }

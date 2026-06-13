@@ -99,6 +99,11 @@ export function worldEntitySelectable(flags: WorldEntityFlags | undefined): bool
   return flags?.hidden !== true && flags?.locked !== true;
 }
 
+/** @emoji 🔎 Whether an entity can be selected for inspection (details panel) while locked. */
+export function worldEntityInspectable(flags: WorldEntityFlags | undefined): boolean {
+  return flags?.hidden !== true;
+}
+
 /** @emoji 👁️ Whether an entity should be drawn in the 3d scene. */
 export function worldEntityRendered(flags: WorldEntityFlags | undefined, revealed = false): boolean {
   return flags?.hidden !== true || revealed;
@@ -2260,16 +2265,6 @@ export function worldReferenceAppearance(
   };
 }
 
-function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
-  if (typeof scale === "number") {
-    return [scale, scale, scale];
-  }
-  if (scale) {
-    return [scale[0], scale[1], scale[2]];
-  }
-  return [1, 1, 1];
-}
-
 /** @emoji 🖼️ Applies CAD pose fields onto a reference group node. */
 export function applyWorldReferencePose(group: Group, reference: Pick<WorldReferenceProps, "origin" | "orientation" | "scale">): void {
   const position = cadVec3ToThree(reference.origin);
@@ -2288,6 +2283,96 @@ export function applyWorldReferenceTransform(reference: WorldReferenceProps, aft
     orientation: [after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]],
     scale: [after.scale[0], after.scale[1], after.scale[2]],
   };
+}
+
+const WORLD_REFERENCE_DEFAULT_QUAT: Quat = [0, 0, 0, 1];
+
+/** @emoji 🖼️ Resolves reference orientation with CAD default identity quaternion. */
+export function worldReferenceOrientation(reference: Pick<WorldReferenceProps, "orientation">): Quat {
+  return reference.orientation ?? WORLD_REFERENCE_DEFAULT_QUAT;
+}
+
+/** @emoji 🖼️ Expands reference scale to a uniform XYZ tuple. */
+export function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
+  if (typeof scale === "number") {
+    return [scale, scale, scale];
+  }
+  if (scale) {
+    return [scale[0], scale[1], scale[2]];
+  }
+  return [1, 1, 1];
+}
+
+/** @emoji 🧭 Converts a CAD quaternion to tilt Euler degrees (roll, pitch, yaw). */
+export function worldQuatToEulerDegrees(quat: Quat): Vec3 {
+  const [x, y, z, w] = quat;
+  const sinRoll = 2 * (w * x + y * z);
+  const cosRoll = 1 - 2 * (x * x + y * y);
+  const roll = Math.atan2(sinRoll, cosRoll);
+  const sinPitch = 2 * (w * y - z * x);
+  const pitch = Math.abs(sinPitch) >= 1 ? Math.sign(sinPitch) * (Math.PI / 2) : Math.asin(sinPitch);
+  const sinYaw = 2 * (w * z + x * y);
+  const cosYaw = 1 - 2 * (y * y + z * z);
+  const yaw = Math.atan2(sinYaw, cosYaw);
+  const radToDeg = 180 / Math.PI;
+  return [roll * radToDeg, pitch * radToDeg, yaw * radToDeg];
+}
+
+/** @emoji 🧭 Converts tilt Euler degrees (roll, pitch, yaw) to a CAD quaternion. */
+export function worldEulerDegreesToQuat(euler: readonly [number, number, number]): Quat {
+  const degToRad = Math.PI / 180;
+  const roll = euler[0] * degToRad;
+  const pitch = euler[1] * degToRad;
+  const yaw = euler[2] * degToRad;
+  const cy = Math.cos(yaw * 0.5);
+  const sy = Math.sin(yaw * 0.5);
+  const cp = Math.cos(pitch * 0.5);
+  const sp = Math.sin(pitch * 0.5);
+  const cr = Math.cos(roll * 0.5);
+  const sr = Math.sin(roll * 0.5);
+  return [
+    sr * cp * cy - cr * sp * sy,
+    cr * sp * cy + sr * cp * sy,
+    cr * cp * sy - sr * sp * cy,
+    cr * cp * cy + sr * sp * sy,
+  ];
+}
+
+/** @emoji 🖼️ Applies a declarative inspector patch to one reference plane. */
+export function patchWorldReferenceProps(
+  reference: WorldReferenceProps,
+  field: "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity",
+  value: unknown,
+): WorldReferenceProps | null {
+  const patch: Partial<Omit<WorldReferenceProps, "id">> = {};
+  if (field === "origin" && Array.isArray(value) && value.length === 3) {
+    patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])];
+  } else if (field === "rotation" && Array.isArray(value) && value.length === 3) {
+    patch.orientation = worldEulerDegreesToQuat([Number(value[0]), Number(value[1]), Number(value[2])]);
+  } else if (field === "scale" && Array.isArray(value) && value.length === 3) {
+    const sx = Number(value[0]);
+    const sy = Number(value[1]);
+    const sz = Number(value[2]);
+    patch.scale = sx === sy && sy === sz ? sx : ([sx, sy, sz] as Vec3);
+  } else if (field === "scaleUniform") {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(parsed)) {
+      patch.scale = parsed;
+    }
+  } else if (field === "widthWorld") {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(parsed)) {
+      patch.widthWorld = parsed;
+    }
+  } else if (field === "opacity") {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(parsed)) {
+      patch.opacity = parsed;
+    }
+  } else {
+    return null;
+  }
+  return { ...reference, ...patch };
 }
 
 function worldReferencePlaneSize(reference: WorldReferenceProps, aspect: number): readonly [number, number] {
@@ -2338,12 +2423,16 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const [pointerHovered, setPointerHovered] = reactHostPort.useState(false);
   const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
   const selectable = worldEntitySelectable(props.reference);
-  const interactionHovered = selectable && (props.hovered || pointerHovered);
-  const renderMode = worldEntityRenderMode(props.reference, {
-    hovered: interactionHovered,
-    selected: props.selected,
-    revealed: props.revealed || (selectable && pointerHovered),
-  });
+  const pickable = worldEntityInspectable(props.reference);
+  const interactionHovered = pickable && (props.hovered || pointerHovered);
+  const renderMode = {
+    ...worldEntityRenderMode(props.reference, {
+      hovered: interactionHovered,
+      selected: props.selected,
+      revealed: props.revealed || (pickable && pointerHovered),
+    }),
+    showSelectedOutline: props.selected && pickable,
+  };
   reactHostPort.useEffect(() => {
     let cancelled = false;
     referenceMediaPort
@@ -2394,29 +2483,6 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         ref={groupRef}
         visible={renderMode.visible}
         userData={{ worldReferenceId: props.reference.id }}
-        onPointerDown={(event) => {
-          if (!selectable) {
-            return;
-          }
-          event.stopPropagation();
-          props.onSelect?.(props.reference.id, { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
-        }}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          if (!selectable) {
-            return;
-          }
-          setPointerHovered(true);
-          props.onHover?.(props.reference.id);
-        }}
-        onPointerOut={(event) => {
-          event.stopPropagation();
-          if (!selectable) {
-            return;
-          }
-          setPointerHovered(false);
-          props.onHover?.(null);
-        }}
       >
         {appearance.backgroundColor ? (
           <mesh raycast={worldRaycastNone} renderOrder={-11}>
@@ -2424,7 +2490,33 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
             <meshBasicMaterial attach="material" color={appearance.backgroundColor} transparent opacity={1} depthWrite={false} side={DoubleSide} toneMapped={false} />
           </mesh>
         ) : null}
-        <mesh renderOrder={-10} raycast={selectable ? undefined : worldRaycastNone}>
+        <mesh
+          renderOrder={-10}
+          raycast={pickable ? undefined : worldRaycastNone}
+          onPointerDown={(event) => {
+            if (!pickable || event.button !== 0) {
+              return;
+            }
+            event.stopPropagation();
+            props.onSelect?.(props.reference.id, { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+          }}
+          onPointerOver={(event) => {
+            event.stopPropagation();
+            if (!pickable) {
+              return;
+            }
+            setPointerHovered(true);
+            props.onHover?.(props.reference.id);
+          }}
+          onPointerOut={(event) => {
+            event.stopPropagation();
+            if (!pickable) {
+              return;
+            }
+            setPointerHovered(false);
+            props.onHover?.(null);
+          }}
+        >
           <planeGeometry args={[planeWidth, planeHeight]} />
           <meshBasicMaterial attach="material" map={media.texture} transparent opacity={appearance.contentOpacity} depthWrite={false} side={DoubleSide} toneMapped={false} />
         </mesh>
@@ -2993,11 +3085,32 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("worldReferencePose", () => {
+    it("patchWorldReferenceProps updates origin rotation and scale", () => {
+      const base: WorldReferenceProps = {
+        id: "ref-a",
+        source: { url: "/plan.png", mediaKind: "image" },
+        origin: [0, 0, 0],
+      };
+      expect(patchWorldReferenceProps(base, "origin", [1, 2, 3])?.origin).toEqual([1, 2, 3]);
+      const rotated = patchWorldReferenceProps(base, "rotation", [0, 90, 0]);
+      expect(rotated?.orientation?.length).toBe(4);
+      expect(patchWorldReferenceProps(base, "scaleUniform", 2)?.scale).toBe(2);
+      expect(patchWorldReferenceProps(base, "widthWorld", 42)?.widthWorld).toBe(42);
+    });
+  });
+
   describe("worldEntityFlags", () => {
     it("treats hidden and locked entities as non-selectable", () => {
       expect(worldEntitySelectable(undefined)).toBe(true);
       expect(worldEntitySelectable({ hidden: true })).toBe(false);
       expect(worldEntitySelectable({ locked: true })).toBe(false);
+    });
+
+    it("treats hidden entities as non-inspectable and locked entities as inspectable", () => {
+      expect(worldEntityInspectable(undefined)).toBe(true);
+      expect(worldEntityInspectable({ hidden: true })).toBe(false);
+      expect(worldEntityInspectable({ locked: true })).toBe(true);
     });
 
     it("reveals hidden entities on demand", () => {

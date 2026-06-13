@@ -204,6 +204,7 @@ export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = puzzle2dPlayFix
 const PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX = 640;
 const PUZZLE_2D_PLAY_VIEWPORT_MARGIN = 0.18;
 const PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE = 2.25;
+const PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST = 1.6;
 const PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE: Record<Puzzle2dPlayPaneId, number> = {
 	"2d-overview": 0.68,
 	"2d-detail": 2.15,
@@ -278,7 +279,7 @@ function puzzle2dPlayViewportCameraFromBounds(
 ): CameraState {
 	const usable = PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX * (1 - 2 * PUZZLE_2D_PLAY_VIEWPORT_MARGIN);
 	const worldSpan = Math.max(2 * bounds.halfSpan * PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE, 1);
-	const zoom = clampPuzzle2dPlayViewportZoom(usable / worldSpan);
+	const zoom = clampPuzzle2dPlayViewportZoom((usable / worldSpan) * PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST);
 	return {
 		x: bounds.cx + fixture.camera.x,
 		y: bounds.cy + fixture.camera.y,

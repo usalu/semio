@@ -357,6 +357,8 @@ pub enum EvalError {
     UnknownKind(String),
     MissingInput(String),
     InvalidInput(String),
+    CardinalityViolation(String),
+    HeterogeneousList(String),
     CycleDetected,
 }
 
@@ -366,6 +368,8 @@ impl std::fmt::Display for EvalError {
             EvalError::UnknownKind(k) => write!(f, "unknown kind: {k}"),
             EvalError::MissingInput(k) => write!(f, "missing input: {k}"),
             EvalError::InvalidInput(m) => write!(f, "invalid input: {m}"),
+            EvalError::CardinalityViolation(m) => write!(f, "cardinality violation: {m}"),
+            EvalError::HeterogeneousList(m) => write!(f, "heterogeneous list: {m}"),
             EvalError::CycleDetected => write!(f, "cycle detected"),
         }
     }
@@ -377,6 +381,106 @@ impl std::error::Error for EvalError {}
 pub trait Operation: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
 }
+
+// #region 🔖Cardinality
+/// 🔢 Channel multiplicity: exactly one, optional, or homogeneous list collections.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub enum Cardinality {
+    #[default]
+    ExactlyOne,
+    ZeroOrOne,
+    ZeroOrMore,
+    OneOrMore,
+    Exactly(usize),
+}
+
+impl Cardinality {
+    pub fn symbol(&self) -> String {
+        match self {
+            Self::ExactlyOne => "!".into(),
+            Self::ZeroOrOne => "?".into(),
+            Self::ZeroOrMore => "*".into(),
+            Self::OneOrMore => "+".into(),
+            Self::Exactly(count) => count.to_string(),
+        }
+    }
+
+    pub fn from_symbol(raw: &str) -> Result<Self, String> {
+        match raw.trim() {
+            "!" => Ok(Self::ExactlyOne),
+            "?" => Ok(Self::ZeroOrOne),
+            "*" => Ok(Self::ZeroOrMore),
+            "+" => Ok(Self::OneOrMore),
+            digits if digits.chars().all(|ch| ch.is_ascii_digit()) && !digits.is_empty() => digits
+                .parse::<usize>()
+                .map(Self::Exactly)
+                .map_err(|_| format!("invalid cardinality: {raw}")),
+            other => Err(format!("invalid cardinality: {other}")),
+        }
+    }
+
+    pub fn is_collection(&self) -> bool {
+        match self {
+            Self::ZeroOrMore | Self::OneOrMore => true,
+            Self::Exactly(count) => *count != 1,
+            _ => false,
+        }
+    }
+
+    pub fn accepts(&self, count: usize) -> bool {
+        match self {
+            Self::ExactlyOne => count == 1,
+            Self::ZeroOrOne => count <= 1,
+            Self::ZeroOrMore => true,
+            Self::OneOrMore => count >= 1,
+            Self::Exactly(expected) => count == *expected,
+        }
+    }
+
+    pub fn count_range(&self) -> (usize, Option<usize>) {
+        match self {
+            Self::ExactlyOne => (1, Some(1)),
+            Self::ZeroOrOne => (0, Some(1)),
+            Self::ZeroOrMore => (0, None),
+            Self::OneOrMore => (1, None),
+            Self::Exactly(count) => (*count, Some(*count)),
+        }
+    }
+
+    pub fn range_contains(&self, other: &Self) -> bool {
+        let (min, max) = self.count_range();
+        let (other_min, other_max) = other.count_range();
+        if other_min < min {
+            return false;
+        }
+        match (max, other_max) {
+            (Some(limit), Some(other_limit)) => other_limit <= limit,
+            (Some(_limit), None) => false,
+            (None, Some(_other_limit)) => other_min >= min,
+            (None, None) => true,
+        }
+    }
+}
+
+impl Serialize for Cardinality {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.symbol())
+    }
+}
+
+impl<'de> Deserialize<'de> for Cardinality {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let raw = String::deserialize(deserializer)?;
+        Self::from_symbol(&raw).map_err(serde::de::Error::custom)
+    }
+}
+// #endregion 🔖Cardinality
 
 /// ➕ Variadic input or output slot specification.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -402,6 +506,8 @@ pub struct ChannelSpec {
     pub default: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
+    #[serde(default)]
+    pub cardinality: Cardinality,
 }
 
 fn derive_channel_names(name: &str) -> (String, String, String) {
@@ -445,6 +551,7 @@ impl ChannelSpec {
             operators: Vec::new(),
             default: None,
             label: None,
+            cardinality: Cardinality::ExactlyOne,
         }
     }
 
@@ -459,6 +566,7 @@ impl ChannelSpec {
             operators: operators.iter().map(|entry| entry.as_ref().to_string()).collect(),
             default: None,
             label: None,
+            cardinality: Cardinality::ExactlyOne,
         }
     }
 
@@ -473,6 +581,7 @@ impl ChannelSpec {
             operators,
             default: None,
             label: None,
+            cardinality: Cardinality::ExactlyOne,
         }
     }
 
@@ -488,6 +597,11 @@ impl ChannelSpec {
 
     pub fn with_label(mut self, label: impl Into<String>) -> Self {
         self.label = Some(label.into());
+        self
+    }
+
+    pub fn with_cardinality(mut self, cardinality: Cardinality) -> Self {
+        self.cardinality = cardinality;
         self
     }
 
@@ -514,7 +628,11 @@ impl ChannelSpec {
     }
 
     pub fn list(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators)
+        Self::requires(name, operators).with_cardinality(Cardinality::ZeroOrMore)
+    }
+
+    pub fn list_output(name: impl Into<String>, operators: Vec<String>) -> Self {
+        Self::provides(name, operators).with_cardinality(Cardinality::ZeroOrMore)
     }
 
     pub fn dictionary(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
@@ -697,6 +815,7 @@ impl Registry {
 
     pub fn dispatch(&self, operator_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let operator = self.operator(operator_id).ok_or_else(|| EvalError::UnknownKind(operator_id.into()))?;
+        validate_neuron_inputs(input, Some(&operator.info))?;
         let signature = operator_signature(&operator.info, input);
         let implementation = operator
             .implementations
@@ -704,7 +823,9 @@ impl Registry {
             .find(|implementation| implementation.schemas == signature)
             .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
             .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
-        implementation.operation.evaluate(input)
+        let output = implementation.operation.evaluate(input)?;
+        validate_operator_outputs(&operator.info, &output)?;
+        Ok(output)
     }
 }
 // #endregion 🔖Operator
@@ -883,7 +1004,7 @@ impl<'a> Evaluator<'a> {
         for neuron_id in order {
             let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
             let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
-            let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info);
+            let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info)?;
             inputs.insert(neuron_id.clone(), input.clone());
             if let Some(seed) = seeds.get(&neuron_id) {
                 outputs.insert(neuron_id.clone(), seed.clone());
@@ -943,7 +1064,7 @@ impl<'a> Evaluator<'a> {
                     .find(|n| n.id == *neuron_id)
                     .ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
                 let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
-                let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info);
+                let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info)?;
                 level_inputs.insert(neuron_id.clone(), input.clone());
                 if let Some(seed) = seeds.get(neuron_id) {
                     level_outputs.insert(neuron_id.clone(), seed.clone());
@@ -1148,7 +1269,96 @@ fn inject_channel_defaults_for_operator(acc: Dictionary, operator_info: Option<&
     }
 }
 
-fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Dictionary {
+fn list_item_count(list: &Dictionary) -> usize {
+    list.keys().filter_map(|key| key.parse::<usize>().ok()).count()
+}
+
+fn validate_homogeneous_list(list: &Dictionary) -> Result<(), EvalError> {
+    let mut expected: Option<String> = None;
+    for key in list.keys().filter_map(|key| key.parse::<usize>().ok().map(|index| index.to_string())) {
+        let Some(value) = list.get(&key) else { continue };
+        let Some(item) = value.as_dictionary() else {
+            return Err(EvalError::HeterogeneousList(format!("list item {key} is not a dictionary")));
+        };
+        let schema = item.schema().unwrap_or("").to_string();
+        match &expected {
+            None => expected = Some(schema),
+            Some(current) if current == &schema => {}
+            Some(current) => {
+                return Err(EvalError::HeterogeneousList(format!("list mixes schema {current} and {schema}")));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_channel_value(channel: &ChannelSpec, value: Option<&Value>) -> Result<(), EvalError> {
+    if channel.name == "*" {
+        return Ok(());
+    }
+    if channel.cardinality.is_collection() {
+        let count = match value {
+            None => 0,
+            Some(Value::Dictionary(list)) if list.schema() == Some("list") => list_item_count(list),
+            Some(_) => {
+                return Err(EvalError::CardinalityViolation(format!(
+                    "channel {} expects a list dictionary",
+                    channel.name
+                )));
+            }
+        };
+        if !channel.cardinality.accepts(count) {
+            return Err(EvalError::CardinalityViolation(format!(
+                "channel {} cardinality {} rejects count {count}",
+                channel.name,
+                channel.cardinality.symbol()
+            )));
+        }
+        if let Some(Value::Dictionary(list)) = value {
+            validate_homogeneous_list(list)?;
+        }
+        return Ok(());
+    }
+    let count = usize::from(value.is_some());
+    if !channel.cardinality.accepts(count) {
+        return Err(EvalError::CardinalityViolation(format!(
+            "channel {} cardinality {} rejects count {count}",
+            channel.name,
+            channel.cardinality.symbol()
+        )));
+    }
+    Ok(())
+}
+
+fn validate_neuron_inputs(acc: &Dictionary, operator_info: Option<&OperatorInfo>) -> Result<(), EvalError> {
+    let Some(info) = operator_info else { return Ok(()); };
+    if info.variadic_input.is_some() {
+        return Ok(());
+    }
+    for channel in &info.inputs {
+        if channel.name == "*" {
+            continue;
+        }
+        let value = acc.get(&channel.name);
+        if value.is_none() && channel.default.is_none() {
+            continue;
+        }
+        validate_channel_value(channel, value)?;
+    }
+    Ok(())
+}
+
+fn validate_operator_outputs(info: &OperatorInfo, output: &Dictionary) -> Result<(), EvalError> {
+    if info.variadic_output.is_some() {
+        return Ok(());
+    }
+    for channel in &info.outputs {
+        validate_channel_value(channel, output.get(&channel.name))?;
+    }
+    Ok(())
+}
+
+fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Result<Dictionary, EvalError> {
     let mut acc = Dictionary::new();
     let variadic = operator_info.and_then(|info| info.variadic_input.as_ref());
     for syn in &tree.synapses {
@@ -1170,7 +1380,9 @@ fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neur
         }
         acc = insert_fixed_port(acc, &syn.to_port, value);
     }
-    inject_channel_defaults_for_operator(acc, operator_info)
+    let acc = inject_channel_defaults_for_operator(acc, operator_info);
+    validate_neuron_inputs(&acc, operator_info)?;
+    Ok(acc)
 }
 
 fn channel_schema(input: &Dictionary, channel: &ChannelSpec) -> String {
@@ -1471,7 +1683,7 @@ mod tests {
         let mut outputs = HashMap::new();
         outputs.insert("slider".into(), channel_output("number", number_dictionary(2.0)));
         outputs.insert("note".into(), channel_output("number", number_dictionary(3.0)));
-        let input = collect_neuron_input(&tree, &outputs, "add", None);
+        let input = collect_neuron_input(&tree, &outputs, "add", None).unwrap();
         assert_eq!(input.get("a").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
         assert_eq!(input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
     }
@@ -1500,7 +1712,7 @@ mod tests {
         let mut outputs = HashMap::new();
         outputs.insert("a".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
         outputs.insert("b".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
-        let input = collect_neuron_input(&tree, &outputs, "merge", Some(&operator));
+        let input = collect_neuron_input(&tree, &outputs, "merge", Some(&operator)).unwrap();
         let items = input.get("items").and_then(|v| v.as_dictionary()).expect("items");
         assert!(items.get("0").is_some());
         assert!(items.get("1").is_some());
@@ -1672,7 +1884,7 @@ mod tests {
             neurons: vec![Neuron::with_kind("get", "list.get", Dictionary::new())],
             synapses: vec![],
         };
-        let input = collect_neuron_input(&tree, &HashMap::new(), "get", Some(&operator));
+        let input = collect_neuron_input(&tree, &HashMap::new(), "get", Some(&operator)).unwrap();
         assert_eq!(
             input.get("index").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()),
             Some(0.0)
@@ -1786,6 +1998,61 @@ mod tests {
         cache.begin_epoch();
         evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 5);
+    }
+
+    #[test]
+    fn cardinality_symbol_round_trips_json() {
+        let channel = ChannelSpec::list("items", &["list.pack"]).with_cardinality(Cardinality::OneOrMore);
+        let json = serde_json::to_string(&channel).unwrap();
+        assert!(json.contains("\"cardinality\":\"+\""));
+        let parsed: ChannelSpec = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.cardinality, Cardinality::OneOrMore);
+    }
+
+    #[test]
+    fn cardinality_accepts_expected_counts() {
+        assert!(Cardinality::ExactlyOne.accepts(1));
+        assert!(!Cardinality::ExactlyOne.accepts(0));
+        assert!(Cardinality::ZeroOrMore.accepts(0));
+        assert!(Cardinality::Exactly(2).accepts(2));
+        assert!(!Cardinality::Exactly(2).accepts(1));
+    }
+
+    #[test]
+    fn heterogeneous_list_input_is_rejected() {
+        let operator = OperatorInfo {
+            id: "list.size".into(),
+            module: "list".into(),
+            name: "Size".into(),
+            abbreviation: "Size".into(),
+            icon: "emoji:📋".into(),
+            summary: "Size".into(),
+            inputs: vec![ChannelSpec::list("list", &["list.size"])],
+            outputs: vec![ChannelSpec::named("C", "Cnt", "count", "ListCount")],
+            ..Default::default()
+        };
+        let tree = Tree {
+            neurons: vec![Neuron::with_kind("size", "list.size", Dictionary::new())],
+            synapses: vec![Synapse {
+                id: "s1".into(),
+                from: "src".into(),
+                to: "size".into(),
+                from_port: "list".into(),
+                to_port: "list".into(),
+            }],
+        };
+        let mut outputs = HashMap::new();
+        outputs.insert(
+            "src".into(),
+            channel_output(
+                "list",
+                Dictionary::with_schema("list")
+                    .insert("0", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("1", Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String("x".into()))))),
+            ),
+        );
+        let err = collect_neuron_input(&tree, &outputs, "size", Some(&operator)).unwrap_err();
+        assert!(matches!(err, EvalError::HeterogeneousList(_)));
     }
 }
 // #endregion 🔖Tests

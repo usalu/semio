@@ -22,13 +22,13 @@ todos:
     status: completed
   - id: cad
     content: Migrate CAD play catalog/details asides to declarative tree sections
-    status: in_progress
+    status: completed
   - id: audit-tests
     content: Spacing audit, extend existing tests, runtime-verify all playground/platform panels
-    status: pending
+    status: completed
   - id: close
     content: Close the ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

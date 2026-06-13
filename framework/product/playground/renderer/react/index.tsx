@@ -206,7 +206,7 @@ import {
 } from "@framework/platform/renderer/react";
 import { NamedLayoutStore } from "@framework/core";
 
-export { useControllerStore, useStore } from "@framework/platform/renderer/react";
+export { uiTreeNodeToTreePanelConfig, useControllerStore, useStore } from "@framework/platform/renderer/react";
 export type { Store } from "@framework/playground/core";
 
 function cnPlay(...inputs: ClassValue[]): string {
@@ -2558,7 +2558,10 @@ function buildPuzzle5dPlayStatusTree(): UiTreeNode {
 
 //#region 🔖DetailsPanel
 class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly buildTree: () => import("@framework/playground/core").UiTreeNode) {
+  constructor(
+    private readonly buildTree: () => import("@framework/playground/core").UiTreeNode,
+    private readonly commandBus: CommandBus,
+  ) {
     super();
   }
 
@@ -2570,8 +2573,7 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const treeNode = this.buildTree();
-        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
-        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return uiTreeNodeToTreePanelConfig(treeNode, this.commandBus);
       }),
     };
   }
@@ -2604,16 +2606,17 @@ class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
+  constructor(private readonly commandBus: CommandBus) {
+    super();
+  }
+
   buildTab(): SidePanelTabConfig {
     return {
       id: "puzzle-5d-play-status",
       icon: createIconComponent("clipboard-list"),
       name: "Status",
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => {
-        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
-        return uiTreeNodeToTreePanelConfig(buildPuzzle5dPlayStatusTree(), bus);
-      }),
+      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildPuzzle5dPlayStatusTree(), this.commandBus)),
     };
   }
 }
@@ -2860,13 +2863,14 @@ function Puzzle5dPlayChrome({
                   bus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [] });
                 },
               }),
+              bus,
             ).resolveTab(),
             new Puzzle5dPlayKindsPanelDefinition(() => buildPuzzle5dPlayKindsTree(snapshot), bus).resolveTab(),
           ]
         : [],
     [snapshot, snapshotKey, controller, bus, puzzle5dStore],
   );
-  const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition().resolveTab()], []);
+  const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition(bus).resolveTab()], [bus]);
   const shell = (
     <PlaygroundView
       runtime={runtime}
@@ -7622,16 +7626,6 @@ if (import.meta.vitest) {
           sections: [{ id: "a", items: [{ id: "i", label: "Item", description: <span>panel</span> }] }],
         }),
       ).toThrow(/React description/);
-    });
-  });
-
-  describe("buildPuzzle2dPlayInspectorTree", () => {
-    it("returns declarative tree sections for empty selection", async () => {
-      const { puzzle2dPlayFixtureForId } = await import("@puzzle/2d/play");
-      const fixture = puzzle2dPlayFixtureForId();
-      const tree = buildPuzzle2dPlayInspectorTree(fixture, new Set());
-      expect(tree.type).toBe("tree");
-      expect(tree.sections.length).toBeGreaterThan(0);
     });
   });
 

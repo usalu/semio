@@ -16,6 +16,15 @@ use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 /// 🌳 DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;
 
+// #region 🔖PortSide
+/// ↔️ Which side of a computation node a variadic insert targets.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DagPortSide {
+    Input,
+    Output,
+}
+// #endregion 🔖PortSide
+
 // #region 🔖IoNode
 const EMPTY_PORTS: &[IoPortSpec] = &[];
 
@@ -202,7 +211,7 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 }
 
 /// 🪝 Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
@@ -221,6 +230,29 @@ pub struct IoPortSpec {
     pub value: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
+    #[serde(default = "default_port_cardinality")]
+    pub cardinality: String,
+}
+
+fn default_port_cardinality() -> String {
+    "!".into()
+}
+
+impl Default for IoPortSpec {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            label: String::new(),
+            code: String::new(),
+            abbreviation: String::new(),
+            full_name: String::new(),
+            value_type: None,
+            default: None,
+            value: None,
+            connected: None,
+            cardinality: default_port_cardinality(),
+        }
+    }
 }
 
 impl IoPortSpec {
@@ -233,6 +265,7 @@ impl IoPortSpec {
             label: abbreviation,
             id,
             full_name: full_name.into(),
+            cardinality: default_port_cardinality(),
             ..Default::default()
         }
     }
@@ -265,6 +298,14 @@ impl IoPortSpec {
             return self.code.as_str();
         }
         self.label.as_str()
+    }
+
+    pub fn label_with_cardinality(&self, lod: DagDrawLod) -> String {
+        let label = self.display_label(lod).trim();
+        if label.is_empty() {
+            return self.cardinality.clone();
+        }
+        format!("{} {}", self.cardinality, label)
     }
 }
 
@@ -688,6 +729,14 @@ impl DagNodeSpec {
         }
     }
 
+    /// ➕ Whether the node exposes variadic output insert controls.
+    pub fn variadic_outputs(&self) -> bool {
+        match &self.kind {
+            DagNodeKind::Computation { variadic_outputs, .. } => *variadic_outputs,
+            _ => false,
+        }
+    }
+
     /// ⬅ Effective input ports for the node kind.
     pub fn inputs(&self) -> &[IoPortSpec] {
         match &self.kind {
@@ -993,6 +1042,17 @@ fn variadic_input_insert_positions(node: &DagNodeSpec) -> Vec<(usize, f64, f64)>
     let port_y = computation_port_center_y(node, row);
     let port_x = computation_input_label_x(node);
     vec![(inputs.len(), port_x, port_y)]
+}
+
+fn variadic_output_insert_positions(node: &DagNodeSpec) -> Vec<(usize, f64, f64)> {
+    if !node.variadic_outputs() {
+        return vec![];
+    }
+    let outputs = node.outputs();
+    let row = outputs.len();
+    let port_y = computation_port_center_y(node, row);
+    let port_x = computation_output_label_x(node, "+", DAG_LABEL_COMPACT_SCREEN_PX);
+    vec![(outputs.len(), port_x, port_y)]
 }
 
 fn port_angle_on_side(index: usize, count: usize, left: bool) -> f64 {
@@ -1623,12 +1683,12 @@ impl IoPortSpec {
 
     pub fn display_label_layout_width(&self, px: f64) -> f64 {
         [
-            self.display_label(DagDrawLod::Normal),
-            self.display_label(DagDrawLod::Detail),
-            self.display_label(DagDrawLod::Micro),
+            self.label_with_cardinality(DagDrawLod::Normal),
+            self.label_with_cardinality(DagDrawLod::Detail),
+            self.label_with_cardinality(DagDrawLod::Micro),
         ]
         .into_iter()
-        .map(|label| port_label_text_width(label, px))
+        .map(|label| port_label_text_width(&label, px))
         .fold(0.0, f64::max)
     }
 }
@@ -1712,7 +1772,7 @@ pub struct DagHost {
     handle_key_map: HashMap<HandleId, String>,
     edge_id_map: HashMap<EdgeId, String>,
     widget_drag: Option<usize>,
-    pending_port_insert: Option<(String, usize)>,
+    pending_port_insert: Option<(DagPortSide, String, usize)>,
     last_logged_lod: Cell<i8>,
     dimmed: HashSet<NodeId>,
     wheel_zoom_active: bool,
@@ -2430,29 +2490,39 @@ impl DagHost {
         self.dimmed.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect()
     }
 
-    /// ➕ Returns and clears a pending variadic input insert request from the last pointer down.
-    pub fn take_pending_port_insert(&mut self) -> Option<(String, usize)> {
+    /// ➕ Returns and clears a pending variadic insert request from the last pointer down.
+    pub fn take_pending_port_insert(&mut self) -> Option<(DagPortSide, String, usize)> {
         self.pending_port_insert.take()
     }
 
-    /// 🎯 Hit-tests variadic `+` controls; returns node id and insert index.
-    pub fn port_insert_hit(&self, world_x: f64, world_y: f64, zoom: f64) -> Option<(String, usize)> {
+    /// 🎯 Hit-tests variadic `+` controls; returns side, node id, and insert index.
+    pub fn port_insert_hit(&self, world_x: f64, world_y: f64, zoom: f64) -> Option<(DagPortSide, String, usize)> {
         if zoom < DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
             return None;
         }
         for node in self.fixture.nodes.iter().rev() {
-            if !node.variadic_inputs() {
-                continue;
+            if node.variadic_inputs() {
+                let inputs = node.inputs();
+                let hw = node.width * 0.5;
+                let row = inputs.len() + DAG_COMPUTATION_HEADER_ROWS;
+                let (x0, y0, hit_x1, y1) = {
+                    let (x0, y0, _x1, y1) = channel_row_bounds(node, row);
+                    (x0, y0, node.x - hw * 0.5, y1)
+                };
+                if point_in_rect(world_x, world_y, x0, y0, hit_x1, y1) {
+                    return Some((DagPortSide::Input, node.id.clone(), inputs.len()));
+                }
             }
-            let inputs = node.inputs();
-            let hw = node.width * 0.5;
-            let row = inputs.len() + DAG_COMPUTATION_HEADER_ROWS;
-            let (x0, y0, hit_x1, y1) = {
-                let (x0, y0, _x1, y1) = channel_row_bounds(node, row);
-                (x0, y0, node.x - hw * 0.5, y1)
-            };
-            if point_in_rect(world_x, world_y, x0, y0, hit_x1, y1) {
-                return Some((node.id.clone(), inputs.len()));
+            if node.variadic_outputs() {
+                let outputs = node.outputs();
+                let row = outputs.len() + DAG_COMPUTATION_HEADER_ROWS;
+                let (x0, y0, x1, y1) = channel_row_bounds(node, row);
+                let hit_x0 = computation_output_column_x_bounds(node)
+                    .map(|(left, _)| left)
+                    .unwrap_or(x0);
+                if point_in_rect(world_x, world_y, hit_x0, y0, x1, y1) {
+                    return Some((DagPortSide::Output, node.id.clone(), outputs.len()));
+                }
             }
         }
         None
@@ -2811,6 +2881,31 @@ impl DagHost {
         None
     }
 
+    fn rim_handle_anchor_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
+        let Some(hid) = self.handle_anchor_hit(world_x, world_y) else {
+            return None;
+        };
+        let lod = self.draw_lod_for_frame();
+        if lod.uses_input_row_connection_hitbox() || lod.uses_channel_row_pick() {
+            if self.port_row_handle_hit(world_x, world_y, true, true).is_some() {
+                let Some(handle) = self.engine.handles.get(&hid) else {
+                    return None;
+                };
+                let Some(node) = self.engine.nodes.get(&handle.node_id) else {
+                    return None;
+                };
+                let pos = handle_position(node, handle);
+                let dx = world_x - pos.x;
+                let dy = world_y - pos.y;
+                let rim_tol = (handle.radius + 1.5).max(3.0);
+                if dx * dx + dy * dy > rim_tol * rim_tol {
+                    return None;
+                }
+            }
+        }
+        Some(hid)
+    }
+
     fn fixture_draggable_node_hit(&self, world_x: f64, world_y: f64) -> Option<NodeId> {
         for idx in (0..self.fixture.nodes.len()).rev() {
             let node = &self.fixture.nodes[idx];
@@ -2834,7 +2929,7 @@ impl DagHost {
     }
 
     fn connection_hit_world(&self, world_x: f64, world_y: f64) -> (f64, f64) {
-        let Some(hid) = self.handle_anchor_hit(world_x, world_y) else {
+        let Some(hid) = self.rim_handle_anchor_hit(world_x, world_y) else {
             return (world_x, world_y);
         };
         let Some(handle) = self.engine.handles.get(&hid) else {
@@ -2848,7 +2943,7 @@ impl DagHost {
     }
 
     fn world_hits_handle(&self, world_x: f64, world_y: f64) -> bool {
-        self.handle_anchor_hit(world_x, world_y).is_some()
+        self.rim_handle_anchor_hit(world_x, world_y).is_some()
     }
 
     fn sync_channel_row_pointer_hover(&mut self, world_x: f64, world_y: f64) {
@@ -3301,8 +3396,8 @@ impl DagHost {
             (hw - handle_inset).max(8.0)
         };
         for (i, port) in inputs.iter().enumerate() {
-            let label = port.display_label(lod).trim();
-            if label.is_empty() {
+            let label = port.label_with_cardinality(lod);
+            if label.trim().is_empty() {
                 continue;
             }
             let world_y = port_center_y(node, i, inputs.len());
@@ -3326,16 +3421,16 @@ impl DagHost {
             }));
         }
         for (i, port) in outputs.iter().enumerate() {
-            let label = port.display_label(lod).trim();
-            if label.is_empty() {
+            let label = port.label_with_cardinality(lod);
+            if label.trim().is_empty() {
                 continue;
             }
             let world_y = port_center_y(node, i, outputs.len());
             let (world_x, column_w) = if computation {
-                let left = computation_output_label_x(node, label, port_layout_px);
-                (left + port_label_text_width(label, port_layout_px), output_column_w)
+                let left = computation_output_label_x(node, &label, port_layout_px);
+                (left + port_label_text_width(&label, port_layout_px), output_column_w)
             } else {
-                let (label_w, _) = label_extent(label, port_layout_px);
+                let (label_w, _) = label_extent(&label, port_layout_px);
                 (node.x + hw - handle_inset, label_w / zoom.max(0.05))
             };
             rows.push(serde_json::json!({
@@ -3450,6 +3545,10 @@ impl DagHost {
             let screen = world_to_screen(cam, viewport, cavas::vello::kurbo::Point::new(px_world, py_world));
             append_label(scene, "+", screen, px * 0.95, fill, halo);
         }
+        for (_, px_world, py_world) in variadic_output_insert_positions(node) {
+            let screen = world_to_screen(cam, viewport, cavas::vello::kurbo::Point::new(px_world, py_world));
+            append_label(scene, "+", screen, px * 0.95, fill, halo);
+        }
     }
 
     fn paint_port_labels(
@@ -3488,10 +3587,10 @@ impl DagHost {
             } else {
                 node.x - hw + handle_inset
             };
-            let label = port.display_label(lod);
+            let label = port.label_with_cardinality(lod);
             append_label(
                 scene,
-                label,
+                &label,
                 world_to_screen(cam, viewport, Point::new(world_x, world_y)),
                 port_paint_px,
                 label_fill,
@@ -3500,16 +3599,16 @@ impl DagHost {
         }
         for (i, port) in outputs.iter().enumerate() {
             let world_y = port_center_y(node, i, outputs.len());
-            let label = port.display_label(lod);
+            let label = port.label_with_cardinality(lod);
             let world_x = if computation {
-                computation_output_label_x(node, label, port_layout_px)
+                computation_output_label_x(node, &label, port_layout_px)
             } else {
-                let (label_w, _) = label_extent(label, layout_px);
+                let (label_w, _) = label_extent(&label, layout_px);
                 node.x + hw - handle_inset - label_w / cam.zoom.max(0.05)
             };
             append_label(
                 scene,
-                label,
+                &label,
                 world_to_screen(cam, viewport, Point::new(world_x, world_y)),
                 port_paint_px,
                 label_fill,
@@ -4112,8 +4211,8 @@ impl DagHost {
                         if matches!(node.kind, DagNodeKind::Cluster { .. }) {
                             Self::paint_cluster_affordances(scene, cam, viewport, node, paint_px, label_fill, label_halo);
                         }
-                        if let DagNodeKind::Computation { variadic_inputs: true, .. } = &node.kind {
-                            if cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
+                        if let DagNodeKind::Computation { variadic_inputs, variadic_outputs, .. } = &node.kind {
+                            if cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD && (*variadic_inputs || *variadic_outputs) {
                                 Self::paint_variadic_plus_controls(scene, cam, viewport, node, paint_px, label_fill, label_halo);
                             }
                         }
@@ -5138,9 +5237,16 @@ mod tests {
             .map(|row| (row["text"].as_str().unwrap_or(""), row["align"].as_str().unwrap_or("")))
             .collect();
         assert_eq!(port_rows.len(), 3);
-        assert_eq!(port_rows.iter().filter(|(text, _)| *text == "a").count(), 1);
-        assert_eq!(port_rows.iter().filter(|(text, _)| *text == "b").count(), 1);
-        assert_eq!(port_rows.iter().filter(|(text, _)| *text == "merged").count(), 1);
+        assert_eq!(port_rows.iter().filter(|(text, _)| *text == "! a").count(), 1);
+        assert_eq!(port_rows.iter().filter(|(text, _)| *text == "! b").count(), 1);
+        assert_eq!(port_rows.iter().filter(|(text, _)| *text == "! merged").count(), 1);
+    }
+
+    #[test]
+    fn io_port_label_with_cardinality_prefixes_symbol() {
+        let mut port = IoPortSpec::named("S", "Sld", "solid", "ExtrudedSolid");
+        port.cardinality = "*".into();
+        assert_eq!(port.label_with_cardinality(DagDrawLod::Normal), "* Sld");
     }
 
     #[test]
@@ -5188,12 +5294,12 @@ mod tests {
                 .filter_map(|row| row["text"].as_str().map(str::to_string))
                 .collect()
         };
-        assert!(port_texts("normal").contains(&"Wid".into()));
-        assert!(port_texts("normal").contains(&"Sld".into()));
-        assert!(port_texts("detail").contains(&"width".into()));
-        assert!(port_texts("detail").contains(&"solid".into()));
-        assert!(port_texts("micro").contains(&"BoxWidth".into()));
-        assert!(port_texts("micro").contains(&"BoxSolid".into()));
+        assert!(port_texts("normal").contains(&"! Wid".into()));
+        assert!(port_texts("normal").contains(&"! Sld".into()));
+        assert!(port_texts("detail").contains(&"! width".into()));
+        assert!(port_texts("detail").contains(&"! solid".into()));
+        assert!(port_texts("micro").contains(&"! BoxWidth".into()));
+        assert!(port_texts("micro").contains(&"! BoxSolid".into()));
     }
 
     #[test]
@@ -5875,9 +5981,49 @@ mod tests {
         assert_eq!(positions.len(), 1);
         let (_, px, py) = positions[0];
         let hit = host.port_insert_hit(px, py, 2.0).expect("hit");
-        assert_eq!(hit.0, "merge");
-        assert_eq!(hit.1, 2);
+        assert_eq!(hit.0, DagPortSide::Input);
+        assert_eq!(hit.1, "merge");
+        assert_eq!(hit.2, 2);
         assert!(host.port_insert_hit(px, py, 1.0).is_none());
+    }
+
+    #[test]
+    fn variadic_output_plus_hit_maps_insert_index() {
+        let outputs = vec![
+            IoPortSpec { id: "0".into(), label: "i".into(), ..Default::default() },
+        ];
+        let inputs = vec![
+            IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() },
+            IoPortSpec { id: "index".into(), label: "index".into(), ..Default::default() },
+        ];
+        let width = computation_node_width("list.get", &inputs, &outputs);
+        let height = computation_node_height(2, 1, false, true);
+        let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+            nodes: vec![DagNodeSpec::computation(
+                "get".into(),
+                "Get".into(),
+                "Get".into(),
+                "emoji:📋".into(),
+                inputs,
+                outputs,
+                false,
+                true,
+                0.0,
+                0.0,
+                width,
+                height,
+            )],
+            edges: vec![],
+        });
+        let positions = variadic_output_insert_positions(&host.fixture.nodes[0]);
+        assert_eq!(positions.len(), 1);
+        let (_, px, py) = positions[0];
+        let hit = host.port_insert_hit(px, py, 2.0).expect("hit");
+        assert_eq!(hit.0, DagPortSide::Output);
+        assert_eq!(hit.1, "get");
+        assert_eq!(hit.2, 1);
     }
 
     #[test]
