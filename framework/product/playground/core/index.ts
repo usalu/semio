@@ -843,7 +843,7 @@ export function buildPlaygroundWorkbenchPanelBody(ids: PlaygroundIds, ctx: SideP
       {
         id: "playground.workbench.table",
         label: "Workbench",
-        defaultOpen: true,
+        defaultOpen: false,
         items: [
           {
             id: "playground.workbench.table.host",
@@ -872,7 +872,7 @@ export function buildPlaygroundDetailsPanelBody(ids: PlaygroundIds, ctx: SidePan
       {
         id: "playground.details.table",
         label: "Details",
-        defaultOpen: true,
+        defaultOpen: false,
         items: [
           {
             id: "playground.details.table.host",

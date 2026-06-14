@@ -9615,7 +9615,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   id,
   icon,
   children,
-  defaultOpen = true,
+  defaultOpen = false,
   open: controlledOpen,
   onOpenChange,
   expandable,
@@ -9792,7 +9792,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   isSelected = false,
   isHighlighted = false,
   isDragHandle = false,
-  defaultOpen = true,
+  defaultOpen = false,
   isLastItem = false,
   actions = [],
   onDoubleClick,
@@ -10089,7 +10089,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   sortable = false,
   sortableId,
   isDragHandle = false,
-  defaultOpen = true,
+  defaultOpen = false,
   isLastItem = false,
   actions = [],
   onDoubleClick,
@@ -10845,7 +10845,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
   const hasControl = Boolean(item.control);
   const propertyLayout = hasControl;
   const hasNestedTreeItems = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
-  const defaultOpen = hasControl ? true : getTreeItemDefaultOpen(item);
+  const defaultOpen = hasControl ? false : getTreeItemDefaultOpen(item);
   const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
 
@@ -10914,7 +10914,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
 const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
   const { section, isLastSection } = props;
   const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection } = useTreeDataRendering();
-  const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
+  const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? false);
   const items = getTreeSectionItems(section, sectionItemsById);
   const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
   const hasDynamicChildren = Boolean(section.getItems);
@@ -11924,7 +11924,7 @@ export interface WindowMeasureTreeGroupProps {
 }
 
 /** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
-export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = true, children }) => {
+export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, children }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const itemId = `window-measure-group-${id}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
@@ -14111,7 +14111,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(false);
+  const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);

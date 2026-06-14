@@ -1018,7 +1018,7 @@ function catalogueGroupsToKindsTreeItems(
   return (groups ?? []).map((group) => ({
     id: `${idPrefix}.${sectionId}.group.${group.id}`,
     label: group.title,
-    defaultOpen: true,
+    defaultOpen: false,
     items: [
       ...catalogueItemsToKindsTreeItems(group.items, idPrefix, sectionId, dragDataFn, itemIndex),
       ...catalogueGroupsToKindsTreeItems(group.groups, idPrefix, sectionId, dragDataFn, itemIndex),
@@ -1038,7 +1038,7 @@ export function buildCatalogueKindsTreeSections(
     return {
       id: `${idPrefix}.${normalized.id}`,
       label: normalized.title,
-      defaultOpen: true,
+      defaultOpen: false,
       items: [
         ...catalogueGroupsToKindsTreeItems(normalized.groups, idPrefix, normalized.id, dragDataFn, itemIndex),
         ...catalogueItemsToKindsTreeItems(normalized.items, idPrefix, normalized.id, dragDataFn, itemIndex),
@@ -1328,6 +1328,7 @@ function flowCatalogueItemRankScore(item: CatalogueItem, query: string): number 
   const name = item.name.toLowerCase();
   const kind = (item.neuronKind ?? item.kind).toLowerCase();
   if (name === q || kind === q) return 0;
+  if (kind === `${q}.${q}`) return 0;
   if (name.startsWith(q) || kind.startsWith(q)) return 1;
   if (name.includes(q) || kind.includes(q)) return 2;
   if (flowCatalogueItemSearchText(item).includes(q)) return 3;
@@ -4598,6 +4599,39 @@ if (import.meta.vitest) {
     it("returns default ordering for empty query", () => {
       const ranked = flowRankCatalogueSuggestions(sections, "");
       expect(ranked.length).toBe(3);
+    });
+
+    it("ranks brep schema component for brep query", () => {
+      const brepSections: CatalogueSection[] = [
+        {
+          id: "brep",
+          title: "Brep",
+          items: [],
+          groups: [
+            {
+              id: "brep.schemas",
+              title: "Schemas",
+              items: [
+                {
+                  kind: "neuron",
+                  neuronKind: "brep.brep",
+                  name: "Brep",
+                  abbreviation: "Brep",
+                  icon: "emoji:🧊",
+                  summary: "Construct, deconstruct, or modify a brep",
+                },
+              ],
+            },
+            {
+              id: "brep.primitives",
+              title: "Primitives 3D",
+              items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box solid" }],
+            },
+          ],
+        },
+      ];
+      const ranked = flowRankCatalogueSuggestions(brepSections, "brep");
+      expect(ranked[0]?.neuronKind).toBe("brep.brep");
     });
   });
 

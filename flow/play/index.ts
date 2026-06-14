@@ -97,7 +97,7 @@ export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry
         {
           id: "flow-play-extensions.empty",
           label: "Extensions",
-          defaultOpen: true,
+          defaultOpen: false,
           items: [{ id: "flow-play-extensions.empty.msg", label: "Loading extensions…" }],
         },
       ],
@@ -113,7 +113,7 @@ export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry
     {
       id: "flow-play-extensions.installed",
       label: "Installed",
-      defaultOpen: true,
+      defaultOpen: false,
       items: entries.map((entry) => ({
         id: `flow-play-extensions.${entry.id}`,
         label: entry.manifest.name,
@@ -126,7 +126,7 @@ export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry
     sections.push({
       id: "flow-play-extensions.commands",
       label: "Commands",
-      defaultOpen: true,
+      defaultOpen: false,
       items: commandItems,
     });
   }
@@ -155,7 +155,7 @@ export function buildFlowPlayKindsTree(sections: readonly CatalogueSection[]): U
         {
           id: "flow-play-kinds.empty",
           label: "Catalogue",
-          defaultOpen: true,
+          defaultOpen: false,
           items: [{ id: "flow-play-kinds.empty.msg", label: "Loading catalogue…" }],
         },
       ],

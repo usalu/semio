@@ -1466,7 +1466,7 @@ export function buildPuzzle3dPlayHierarchySections(
       id: `puzzle-3d-play-hierarchy.object.${object.id}`,
       ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
       icon: puzzle3dPlayEntityTreeIcon("object"),
-      defaultOpen: true,
+      defaultOpen: false,
       command: puzzle3dPlaySelectObjectCommand(object.id),
       ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
       ...puzzle3dPlayHierarchyEntityChrome(object, { kind: "object", id: object.id }, options),
@@ -1503,25 +1503,25 @@ export function buildPuzzle3dPlayHierarchySections(
     {
       id: "puzzle-3d-play-hierarchy.objects",
       label: "Objects",
-      defaultOpen: true,
+      defaultOpen: false,
       items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-hierarchy.objects.empty", label: "(none)" }],
     },
     {
       id: "puzzle-3d-play-hierarchy.references",
       label: "References",
-      defaultOpen: true,
+      defaultOpen: false,
       items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
     },
     {
       id: "puzzle-3d-play-hierarchy.target-volumes",
       label: "Target Volumes",
-      defaultOpen: true,
+      defaultOpen: false,
       items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
     },
     {
       id: "puzzle-3d-play-hierarchy.attractions",
       label: "Attractions",
-      defaultOpen: true,
+      defaultOpen: false,
       items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
     },
   ];
@@ -1582,7 +1582,7 @@ function puzzle3dPlayKindCatalogSection(
   label: string,
   entries: readonly Puzzle3dCatalogKind[] | undefined,
   vortexKinds?: readonly VortexKind[],
-  sectionDefaultOpen = true,
+  sectionDefaultOpen = false,
   kindCatalogs?: KindCatalogBundle,
   sceneFixture?: FixtureV1,
   onHover?: (payload: Puzzle3dHoverPayload) => void,
@@ -1628,10 +1628,10 @@ export function buildPuzzle3dPlayKindsTree(
 ): UiNode {
   const onHover = options?.onHover;
   const sections = [
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects, catalogs?.vortices, true, catalogs, sceneFixture, onHover),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects, catalogs?.vortices, false, catalogs, sceneFixture, onHover),
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices, undefined, false, undefined, undefined, onHover),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables, undefined, true, undefined, undefined, onHover),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions, undefined, true, undefined, undefined, onHover),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables, undefined, false, undefined, undefined, onHover),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions, undefined, false, undefined, undefined, onHover),
   ].filter((section): section is UiTreeSectionNode => section !== null);
   if (!sections.length) {
     return {
@@ -1640,7 +1640,7 @@ export function buildPuzzle3dPlayKindsTree(
         {
           id: "puzzle-3d-play-kinds.empty",
           label: "Kinds",
-          defaultOpen: true,
+          defaultOpen: false,
           items: [{ id: "puzzle-3d-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
         },
       ],

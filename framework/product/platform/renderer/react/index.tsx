@@ -822,7 +822,7 @@ function mapWindowTemplatesToTreeItems(windowKindId: string, templates: readonly
 		dragData: {
 			[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: template.id } satisfies WindowTemplateDropPayload),
 		},
-		...(template.children?.length ? { defaultOpen: true, items: mapWindowTemplatesToTreeItems(windowKindId, template.children) } : {}),
+		...(template.children?.length ? { defaultOpen: false, items: mapWindowTemplatesToTreeItems(windowKindId, template.children) } : {}),
 	}));
 }
 
@@ -867,7 +867,7 @@ function groupNamedLayoutsToTreeItems(
 				folder = {
 					id: `framework.display.layout.group.${pathKey}`,
 					label: segment,
-					defaultOpen: true,
+					defaultOpen: false,
 					items: [],
 				};
 				folderByKey.set(pathKey, folder);
@@ -1337,7 +1337,7 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
 	const sections: TreeDataSection[] = host.windowKinds.map((kind) => ({
 		id: `framework.display.windows.${kind.id}`,
 		label: kind.label,
-		defaultOpen: true,
+		defaultOpen: false,
 		items: [
 			{
 				id: `framework.display.windows.${kind.id}.kind`,
@@ -1366,7 +1366,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 				{
 					id: "framework.display.layout.group.saved",
 					label: "Saved",
-					defaultOpen: true,
+					defaultOpen: false,
 					items: groupNamedLayoutsToTreeItems(userLayouts, (layoutId) => host.applyNamedLayout(layoutId), (layoutId) => host.deleteUserLayout(layoutId)),
 				},
 			]
@@ -1376,7 +1376,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 			{
 				id: "framework.display.layout.save",
 				label: resolveTranslationLabel("ui.display.saveLayout"),
-				defaultOpen: true,
+				defaultOpen: false,
 				items: [
 					{
 						id: "framework.display.layout.save.label",
@@ -1415,7 +1415,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 			{
 				id: "framework.display.layout.list",
 				label: resolveTranslationLabel("ui.display.tab.layout"),
-				defaultOpen: true,
+				defaultOpen: false,
 				items: [...builtinItems, ...userItems],
 			},
 		],
@@ -1595,7 +1595,7 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 			{
 				id: "framework.settings.general.section",
 				label: resolveTranslationLabel("ui.settings.tab.general"),
-				defaultOpen: true,
+				defaultOpen: false,
 				items,
 			},
 		],

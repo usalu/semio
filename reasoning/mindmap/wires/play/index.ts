@@ -107,7 +107,7 @@ function wiresPlayKindCatalogSection(
       label: wiresCatalogKindLabel(entry),
       description: entry.id,
     }));
-  return { id: sectionId, label, defaultOpen: true, items };
+  return { id: sectionId, label, defaultOpen: false, items };
 }
 
 /** @emoji 🏷️ WIRES kinds tab: Identity kinds and Relationship kinds (not puzzle Nodes/Edges/Wires). */
@@ -123,7 +123,7 @@ export function buildWiresPlayKindsTree(catalogs: WiresFixtureKindCatalogsV1 | u
         {
           id: "wires-play-kinds.empty",
           label: "Kinds",
-          defaultOpen: true,
+          defaultOpen: false,
           items: [{ id: "wires-play-kinds.empty.msg", label: "No identity or relationship kind catalogs in this fixture" }],
         },
       ],
@@ -216,13 +216,13 @@ export function buildWiresPlayHierarchySections(
       {
         id: "wires-play-hierarchy.identities",
         label: "Identities",
-        defaultOpen: true,
+        defaultOpen: false,
         items: identityItems.length ? identityItems : [{ id: "wires-play-hierarchy.identities.empty", label: "(none)" }],
       },
       {
         id: "wires-play-hierarchy.relationships",
         label: "Relationships",
-        defaultOpen: true,
+        defaultOpen: false,
         items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-hierarchy.relationships.empty", label: "(none)" }],
       },
     ],

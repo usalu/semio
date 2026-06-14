@@ -15330,7 +15330,7 @@ function registerSketchpadWindowBodies(): void {
 				{
 					id: "sketchpad.windows.list",
 					label: "Windows",
-					defaultOpen: true,
+					defaultOpen: false,
 					items: windowKinds.map((windowKind) => ({
 						id: `sketchpad.windows.${windowKind.id}`,
 						label: windowKind.label,
@@ -15346,7 +15346,7 @@ function registerSketchpadWindowBodies(): void {
 			{
 				id: "sketchpad.workbench.panel",
 				label: "Workbench",
-				defaultOpen: true,
+				defaultOpen: false,
 				items: [
 					{
 						id: "sketchpad.workbench.host",
@@ -15363,7 +15363,7 @@ function registerSketchpadWindowBodies(): void {
 			{
 				id: "sketchpad.details.panel",
 				label: "Details",
-				defaultOpen: true,
+				defaultOpen: false,
 				items: [
 					{
 						id: "sketchpad.details.host",

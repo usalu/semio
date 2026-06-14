@@ -518,7 +518,7 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, 
     id: itemId,
     label: `${slot}: ${kind} ${primitiveId}`,
     isSelected: ctx.isSelected(kind, primitiveId),
-    defaultOpen: true,
+    defaultOpen: false,
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
     ...cadPlayHierarchyHoverHandlers(ctx, target),
     ...cadPlayHierarchyEntityChrome(ctx.model, target, ctx),
@@ -612,7 +612,7 @@ export function buildCadPlayHierarchySections(
         label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
         description: object.typology,
         isSelected: isSelected("object", objectId, expandedSelectionKeys),
-        defaultOpen: true,
+        defaultOpen: false,
         onClick: () => onSelect(modelDefinitionId, objectTarget),
         ...cadPlayHierarchyHoverHandlers(pickCtx, objectTarget),
         ...cadPlayHierarchyEntityChrome(model, objectTarget, pickCtx),
@@ -654,7 +654,7 @@ export function buildCadPlayHierarchySections(
     const referencesGroup: TreeDataItem = {
       id: `cad-play-hierarchy.references.${modelDefinitionId}`,
       label: "References",
-      defaultOpen: true,
+      defaultOpen: false,
       items: referenceItems.length ? referenceItems : [{ id: `cad-play-hierarchy.references.${modelDefinitionId}.empty`, label: "(none)" }],
     };
     modelBranches.push({
@@ -677,7 +677,7 @@ export function buildCadPlayHierarchySections(
           defaultOpen: branch.defaultOpen,
           items: branch.items ?? [],
         }))
-      : [{ id: "cad-play-hierarchy.empty", label: "ModelSpace", defaultOpen: true, items: [{ id: "cad-play-hierarchy.empty.msg", label: "(empty)" }] }],
+      : [{ id: "cad-play-hierarchy.empty", label: "ModelSpace", defaultOpen: false, items: [{ id: "cad-play-hierarchy.empty.msg", label: "(empty)" }] }],
     highlightKeyToItemIds,
   };
 }
@@ -901,7 +901,7 @@ export class CadPlayShellController extends Controller {
       kind: "group",
       id: `${pane}-transform`,
       label: "Transform",
-      defaultOpen: true,
+      defaultOpen: false,
       children: CAD_GUMBALL_GROUPS.map((row) => ({
         kind: "toggle" as const,
         id: `${pane}-gumball-${row.key}`,

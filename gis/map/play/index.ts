@@ -375,7 +375,7 @@ function mapPlayWindowMeasures(
       kind: "group",
       id: "gis-map-layers",
       label: "Layers",
-      defaultOpen: true,
+      defaultOpen: false,
       children: mapPlayLayerMeasures(layerVisibility, layerStrokeScale, effectiveLodId, renderMode),
     },
   ];

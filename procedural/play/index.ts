@@ -379,7 +379,7 @@ export function buildProceduralPlayExtensionsTree(entries: readonly FlowExtensio
 				{
 					id: "procedural-play-extensions.empty",
 					label: "Extensions",
-					defaultOpen: true,
+					defaultOpen: false,
 					items: [{ id: "procedural-play-extensions.empty.msg", label: "Loading extensions…" }],
 				},
 			],
@@ -395,7 +395,7 @@ export function buildProceduralPlayExtensionsTree(entries: readonly FlowExtensio
 		{
 			id: "procedural-play-extensions.installed",
 			label: "Installed",
-			defaultOpen: true,
+			defaultOpen: false,
 			items: entries.map((entry) => {
 				const operators = entry.manifest.contributes.operators ?? [];
 				const schemas = entry.manifest.contributes.schemas ?? [];
@@ -413,7 +413,7 @@ export function buildProceduralPlayExtensionsTree(entries: readonly FlowExtensio
 		sections.push({
 			id: "procedural-play-extensions.commands",
 			label: "Commands",
-			defaultOpen: true,
+			defaultOpen: false,
 			items: commandItems,
 		});
 	}
@@ -429,7 +429,7 @@ export function buildProceduralPlayKindsTree(sections: readonly CatalogueSection
 				{
 					id: "procedural-play-kinds.empty",
 					label: "Catalogue",
-					defaultOpen: true,
+					defaultOpen: false,
 					items: [{ id: "procedural-play-kinds.empty.msg", label: "Loading catalogue…" }],
 				},
 			],

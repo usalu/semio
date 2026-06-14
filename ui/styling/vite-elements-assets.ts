@@ -433,6 +433,15 @@ export const GIS_MAP_OPENFREEMAP_TILEJSON = "https://tiles.openfreemap.org/plane
 /** @emoji 🗺 Highest zoom prefetched for offline map play (matches `GIS_MAP_LOD_TILE_Z` building band). */
 export const GIS_MAP_PREFETCH_RASTER_Z_MAX = 13;
 
+/** @emoji 🗺 `fetch` loads missing tiles at runtime; `bundle` serves only cached tiles and copies them into `dist` on build. */
+export type GisMapTileServeMode = "fetch" | "bundle";
+
+export const GIS_MAP_TILE_SERVE_MODE_ENV = "GIS_MAP_TILE_SERVE_MODE";
+
+export function resolveGisMapTileServeMode(value?: string): GisMapTileServeMode {
+  return value === "bundle" ? "bundle" : "fetch";
+}
+
 export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; readonly vt: string } {
   return {
     osm: resolve(repoRoot, ".repo-cache", "osm-tiles"),
@@ -627,10 +636,8 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
 }
 //#endregion 🔖MapTileCache
 
-/** @emoji 🗺 Dev/preview proxy for OpenStreetMap raster tiles at `/osm/:z/:x/:y.png`. */
-export function osmTileProxyVitePlugin(cacheDir: string): Plugin {
-  const cacheRoot = resolve(cacheDir, ".repo-cache", "osm-tiles");
-  const serveOsm: Connect.NextHandleFunction = async (req, res, next) => {
+function createOsmTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
+  return async (req, res, next) => {
     const match = req.url?.match(/^\/osm\/(\d+)\/(\d+)\/(\d+)\.png(?:\?.*)?$/);
     if (!match) {
       next();
@@ -649,6 +656,11 @@ export function osmTileProxyVitePlugin(cacheDir: string): Plugin {
       createReadStream(filePath).pipe(res);
       return;
     }
+    if (mode === "bundle") {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
     try {
       const ok = await fetchOsmTileToCache(cacheRoot, Number(z), Number(x), Number(y));
       if (!ok) {
@@ -663,22 +675,10 @@ export function osmTileProxyVitePlugin(cacheDir: string): Plugin {
       res.end();
     }
   };
-  return {
-    name: "osm-tile-proxy",
-    enforce: "pre",
-    configureServer(server) {
-      server.middlewares.use(serveOsm);
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(serveOsm);
-    },
-  };
 }
 
-/** @emoji 🗺 Dev/preview proxy for OpenFreeMap OSM MVT at `/vt/:z/:x/:y.pbf`. */
-export function mapLibreVectorTileProxyVitePlugin(cacheDir: string): Plugin {
-  const cacheRoot = resolve(cacheDir, ".repo-cache", "openfreemap-vt");
-  const serveVt: Connect.NextHandleFunction = async (req, res, next) => {
+function createVtTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
+  return async (req, res, next) => {
     const match = req.url?.match(/^\/vt\/(\d+)\/(\d+)\/(\d+)\.pbf(?:\?.*)?$/);
     if (!match) {
       next();
@@ -697,6 +697,11 @@ export function mapLibreVectorTileProxyVitePlugin(cacheDir: string): Plugin {
       createReadStream(filePath).pipe(res);
       return;
     }
+    if (mode === "bundle") {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
     try {
       const ok = await fetchVtTileToCache(cacheRoot, Number(z), Number(x), Number(y));
       if (!ok) {
@@ -711,6 +716,79 @@ export function mapLibreVectorTileProxyVitePlugin(cacheDir: string): Plugin {
       res.end();
     }
   };
+}
+
+/** @emoji 🗺 Vite plugins for GIS map raster/vector tiles (`fetch` or offline `bundle`). */
+export function gisMapTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMode = "fetch"): Plugin[] {
+  const { osm, vt } = mapTileCacheRoots(repoRoot);
+  const serveOsm = createOsmTileMiddleware(osm, mode);
+  const serveVt = createVtTileMiddleware(vt, mode);
+  let viteRoot = process.cwd();
+  const plugins: Plugin[] = [
+    {
+      name: "gis-map-osm-tiles",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveOsm);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveOsm);
+      },
+    },
+    {
+      name: "gis-map-vt-tiles",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveVt);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveVt);
+      },
+    },
+  ];
+  if (mode === "bundle") {
+    plugins.push({
+      name: "gis-map-tiles-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        const dist = resolve(viteRoot, "dist");
+        mkdirSync(dist, { recursive: true });
+        if (existsSync(osm)) {
+          cpSync(osm, resolve(dist, "osm"), { recursive: true });
+        }
+        if (existsSync(vt)) {
+          cpSync(vt, resolve(dist, "vt"), { recursive: true });
+        }
+      },
+    });
+  }
+  return plugins;
+}
+
+/** @emoji 🗺 Dev/preview proxy for OpenStreetMap raster tiles at `/osm/:z/:x/:y.png`. */
+export function osmTileProxyVitePlugin(cacheDir: string, mode: GisMapTileServeMode = "fetch"): Plugin {
+  const { osm } = mapTileCacheRoots(cacheDir);
+  const serveOsm = createOsmTileMiddleware(osm, mode);
+  return {
+    name: "osm-tile-proxy",
+    enforce: "pre",
+    configureServer(server) {
+      server.middlewares.use(serveOsm);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(serveOsm);
+    },
+  };
+}
+
+/** @emoji 🗺 Dev/preview proxy for OpenFreeMap OSM MVT at `/vt/:z/:x/:y.pbf`. */
+export function mapLibreVectorTileProxyVitePlugin(cacheDir: string, mode: GisMapTileServeMode = "fetch"): Plugin {
+  const { vt } = mapTileCacheRoots(cacheDir);
+  const serveVt = createVtTileMiddleware(vt, mode);
   return {
     name: "maplibre-vt-proxy",
     enforce: "pre",
@@ -912,7 +990,9 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ...cadFixtureVitePlugin(repoRoot),
       infiniteFixtureVitePlugin(repoRoot),
       ...(playEntryKind === "3d" || playEntryKind === "5d" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
-      ...(playEntryKind === "map" ? [osmTileProxyVitePlugin(repoRoot), mapLibreVectorTileProxyVitePlugin(repoRoot)] : []),
+      ...(playEntryKind === "map"
+        ? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env[GIS_MAP_TILE_SERVE_MODE_ENV]))
+        : []),
       tailwindcss(),
       react(),
       playgroundIframeEmbedHeadersPlugin(),
@@ -942,6 +1022,27 @@ if (import.meta.vitest) {
     it("matches Vite prebundle chunk URLs", () => {
       expect(isPlaygroundOptimizedDepUrl("/node_modules/.vite/deps/chunk-ABC.js?v=1")).toBe(true);
       expect(isPlaygroundOptimizedDepUrl("/index.ts")).toBe(false);
+    });
+  });
+
+  describe("resolveGisMapTileServeMode", () => {
+    it("defaults to fetch", () => {
+      expect(resolveGisMapTileServeMode(undefined)).toBe("fetch");
+      expect(resolveGisMapTileServeMode("")).toBe("fetch");
+      expect(resolveGisMapTileServeMode("online")).toBe("fetch");
+    });
+
+    it("selects bundle only for bundle", () => {
+      expect(resolveGisMapTileServeMode("bundle")).toBe("bundle");
+    });
+  });
+
+  describe("gisMapTilesVitePlugins", () => {
+    it("adds a build copy plugin only for bundle mode", () => {
+      const fetchPlugins = gisMapTilesVitePlugins(repoRoot, "fetch");
+      const bundlePlugins = gisMapTilesVitePlugins(repoRoot, "bundle");
+      expect(fetchPlugins.some((plugin) => plugin.name === "gis-map-tiles-build")).toBe(false);
+      expect(bundlePlugins.some((plugin) => plugin.name === "gis-map-tiles-build")).toBe(true);
     });
   });
 

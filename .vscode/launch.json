@@ -1070,6 +1070,28 @@
       }
     },
     {
+      "name": "📦build🌐gis📍map",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @gis/map/play:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 122
+      }
+    },
+    {
+      "name": "📦build🌐gis📍map🧩tiles",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @gis/map/play:build-tiles",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 123
+      }
+    },
+    {
       "name": "🛠️dev🧩puzzle📷3d🦀rs",
       "type": "node-terminal",
       "request": "launch",

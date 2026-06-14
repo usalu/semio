@@ -269,13 +269,13 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
       {
         id: "puzzle-5d-play-hierarchy.parts",
         label: "Parts",
-        defaultOpen: true,
+        defaultOpen: false,
         items: partItems.length ? partItems : [{ id: "puzzle-5d-play-hierarchy.parts.empty", label: "(none)" }],
       },
       {
         id: "puzzle-5d-play-hierarchy.fasteners",
         label: "Fasteners",
-        defaultOpen: true,
+        defaultOpen: false,
         items: fastenerItems.length ? fastenerItems : [{ id: "puzzle-5d-play-hierarchy.fasteners.empty", label: "(none)" }],
       },
     ],
@@ -310,7 +310,7 @@ function puzzle5dPlayKindCatalogSection(
   label: string,
   entries: readonly Puzzle5dCatalogKind[] | undefined,
   gripKinds?: readonly GripKind[],
-  sectionDefaultOpen = true,
+  sectionDefaultOpen = false,
   bundle?: Puzzle5dKindCatalogBundle,
   fixture3d?: Puzzle3dFixtureV1 | null,
 ): UiTreeSectionNode | null {
@@ -349,10 +349,10 @@ function puzzle5dPlayKindCatalogSection(
 export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTreeNode {
   const bundle: Puzzle5dKindCatalogBundle | undefined = snapshot.kindCatalogs ?? snapshot.sharedKinds.kindCatalogs;
   const sections = [
-    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.parts", "Parts", bundle?.parts, bundle?.grips, true, bundle, snapshot.fixture3d),
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.parts", "Parts", bundle?.parts, bundle?.grips, false, bundle, snapshot.fixture3d),
     puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.grips", "Grips", bundle?.grips, undefined, false, bundle, snapshot.fixture3d),
-    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.fasteners", "Fasteners", bundle?.fasteners, undefined, true, bundle, snapshot.fixture3d),
-    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.ropes", "Ropes", bundle?.ropes, undefined, true, bundle, snapshot.fixture3d),
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.fasteners", "Fasteners", bundle?.fasteners, undefined, false, bundle, snapshot.fixture3d),
+    puzzle5dPlayKindCatalogSection("puzzle-5d-play-kinds.ropes", "Ropes", bundle?.ropes, undefined, false, bundle, snapshot.fixture3d),
   ].filter((section): section is UiTreeSectionNode => section !== null);
   if (!sections.length) {
     return {
@@ -361,7 +361,7 @@ export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTr
         {
           id: "puzzle-5d-play-kinds.empty",
           label: "Kinds",
-          defaultOpen: true,
+          defaultOpen: false,
           items: [{ id: "puzzle-5d-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
         },
       ],
@@ -728,6 +728,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       id: `${windowId}-brush`,
       label: "Brush",
       children: [
+        {
           kind: "slider",
           id: `${windowId}-brush-overlap-budget`,
           label: `Overlap ${this.brushOverlapBudget.toFixed(2)} m³`,

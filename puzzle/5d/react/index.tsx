@@ -1120,6 +1120,47 @@ export const puzzle5dFlatRendererRef: { current: Puzzle2dRenderer | null } = { c
 
 let puzzle5dBrushPairedSyncGuard: "flat" | "volume" | null = null;
 
+function puzzle5dBrushPairedCandidateKey(args: {
+  readonly gripFullId: string;
+  readonly objectKindId: string;
+  readonly sourceVortexIndex: number;
+}): string {
+  return `${args.gripFullId}\u0001${args.objectKindId}\u0001${args.sourceVortexIndex}`;
+}
+
+function puzzle5dBrushPairedKeyFromFlatSession(session: Puzzle2dBrushSessionSnapshot | null): string | null {
+  if (!session?.sourceHandleId) {
+    return null;
+  }
+  const candidate = session.candidates[session.candidateIndex];
+  if (!candidate) {
+    return null;
+  }
+  return puzzle5dBrushPairedCandidateKey({
+    gripFullId: session.sourceHandleId,
+    objectKindId: candidate.nodeKind,
+    sourceVortexIndex: candidate.targetHandleIndex,
+  });
+}
+
+function puzzle5dBrushPairedKeyFromVolumePreview(preview: BrushPreviewState | null): string | null {
+  if (!preview) {
+    return null;
+  }
+  return puzzle5dBrushPairedCandidateKey({
+    gripFullId: preview.targetVortexFullId,
+    objectKindId: preview.objectKindId,
+    sourceVortexIndex: preview.sourceVortexIndex,
+  });
+}
+
+function puzzle5dFlatBrushMirrorsVolumePreview(
+  session: Puzzle2dBrushSessionSnapshot | null,
+  preview: BrushPreviewState | null,
+): boolean {
+  return puzzle5dBrushPairedKeyFromFlatSession(session) === puzzle5dBrushPairedKeyFromVolumePreview(preview);
+}
+
 function puzzle5dGripBindingMeta(model: Model, gripFullId: string): VortexBindingMeta | null {
   const parsed = parseGripFullId(gripFullId);
   if (!parsed) {
@@ -1150,6 +1191,9 @@ export function puzzle5dSyncBrushPreviewFromFlat(
   puzzle5dBrushPairedSyncGuard = "flat";
   try {
     if (!session?.sourceHandleId) {
+      if (!puzzle3dBrushUiStore.getSnapshot().preview) {
+        return;
+      }
       puzzle3dBrushPairedSyncRef.current.clear();
       return;
     }
@@ -1158,10 +1202,14 @@ export function puzzle5dSyncBrushPreviewFromFlat(
     if (!meta || !candidate) {
       return;
     }
+    const semanticCandidate = { objectKindId: candidate.nodeKind, sourceVortexIndex: candidate.targetHandleIndex };
+    if (puzzle5dFlatBrushMirrorsVolumePreview(session, puzzle3dBrushUiStore.getSnapshot().preview)) {
+      return;
+    }
     puzzle3dBrushPairedSyncRef.current.syncFromFlat({
       targetGripFullId: session.sourceHandleId,
       meta,
-      candidate: { objectKindId: candidate.nodeKind, sourceVortexIndex: candidate.targetHandleIndex },
+      candidate: semanticCandidate,
     });
   } finally {
     puzzle5dBrushPairedSyncGuard = null;
@@ -1185,11 +1233,15 @@ export function puzzle5dSyncBrushPreviewFromVolume(
     if (!preview) {
       const flatSession = puzzle2dGetBrushSessionSnapshot();
       if (!flatSession?.sourceHandleId) {
-        flatRenderer.brushCancelSlot();
+        return;
       }
+      flatRenderer.brushCancelSlot();
       return;
     }
     const flatSession = puzzle2dGetBrushSessionSnapshot();
+    if (puzzle5dFlatBrushMirrorsVolumePreview(flatSession, preview)) {
+      return;
+    }
     if (flatSession?.sourceHandleId !== preview.targetVortexFullId) {
       flatRenderer.brushOpenSlot(preview.targetVortexFullId);
     }
@@ -1198,7 +1250,7 @@ export function puzzle5dSyncBrushPreviewFromVolume(
       nextSession?.candidates.findIndex(
         (row) => row.nodeKind === preview.objectKindId && row.targetHandleIndex === preview.sourceVortexIndex,
       ) ?? -1;
-    if (index >= 0) {
+    if (index >= 0 && nextSession?.candidateIndex !== index) {
       puzzle2dApplyBrushSuggestionsCandidateIndex(index, { kindCatalogs: flatCatalogs });
     }
   } finally {
@@ -3422,9 +3474,49 @@ if (import.meta.vitest) {
       };
       try {
         puzzle5dSyncBrushPreviewFromFlat(null, brushSyncModel);
-        expect(cleared).toBe(true);
+        expect(cleared).toBe(false);
       } finally {
         puzzle3dBrushPairedSyncRef.current = prev;
+      }
+    });
+
+    it("puzzle5dSyncBrushPreviewFromFlat skips when volume preview already mirrors flat session", () => {
+      let synced = false;
+      const prev = puzzle3dBrushPairedSyncRef.current;
+      const prevPreview = puzzle3dBrushUiStore.getSnapshot().preview;
+      puzzle3dBrushPairedSyncRef.current = {
+        syncFromFlat: () => {
+          synced = true;
+        },
+        clear: () => {},
+      };
+      puzzle3dBrushUiStore.setSnapshot({
+        ...puzzle3dBrushUiStore.getSnapshot(),
+        preview: {
+          targetVortexFullId: "p1:g0",
+          objectKindId: "kind-b",
+          sourceVortexIndex: 2,
+          meshUrl: "",
+          origin: [0, 0, 0],
+          orientation: [0, 0, 0, 1],
+        },
+      });
+      try {
+        puzzle5dSyncBrushPreviewFromFlat(
+          {
+            sourceHandleId: "p1:g0",
+            candidateIndex: 1,
+            candidates: [
+              { nodeKind: "kind-a", targetHandleIndex: 0 },
+              { nodeKind: "kind-b", targetHandleIndex: 2 },
+            ],
+          } as Puzzle2dBrushSessionSnapshot,
+          brushSyncModel,
+        );
+        expect(synced).toBe(false);
+      } finally {
+        puzzle3dBrushPairedSyncRef.current = prev;
+        puzzle3dBrushUiStore.setSnapshot({ ...puzzle3dBrushUiStore.getSnapshot(), preview: prevPreview });
       }
     });
   });

@@ -9006,6 +9006,14 @@ function BrushSession(props: {
         sceneFixture: props.sceneFixture,
       });
       previewCollidesRef.current = false;
+      const prevPreview = puzzle3dBrushUiStore.getSnapshot().preview;
+      const previewUnchanged =
+        prevPreview?.targetVortexFullId === preview.targetVortexFullId &&
+        prevPreview?.objectKindId === preview.objectKindId &&
+        prevPreview?.sourceVortexIndex === preview.sourceVortexIndex;
+      if (previewUnchanged) {
+        return;
+      }
       patchBrushUi({ preview, menuHoverIndex: puzzle3dBrushUiStore.getSnapshot().menuOpen ? index : null });
       notifyPuzzle3dBrushEngagementSource();
       invalidate();
@@ -9077,7 +9085,15 @@ function BrushSession(props: {
       if (!preview) {
         return;
       }
+      const prevPreview = puzzle3dBrushUiStore.getSnapshot().preview;
+      const previewUnchanged =
+        prevPreview?.targetVortexFullId === preview.targetVortexFullId &&
+        prevPreview?.objectKindId === candidate.objectKindId &&
+        prevPreview?.sourceVortexIndex === candidate.sourceVortexIndex;
       previewCollidesRef.current = false;
+      if (previewUnchanged) {
+        return;
+      }
       patchBrushUi({ preview, targetActive: true });
       notifyPuzzle3dBrushEngagementSource();
       invalidate();
@@ -9328,6 +9344,15 @@ function BrushSession(props: {
     };
     puzzle3dBrushPairedSyncRef.current = {
       syncFromFlat: ({ targetGripFullId, meta, candidate }) => {
+        const currentPreview = puzzle3dBrushUiStore.getSnapshot().preview;
+        if (
+          targetRef.current === targetGripFullId &&
+          currentPreview?.targetVortexFullId === targetGripFullId &&
+          currentPreview.objectKindId === candidate.objectKindId &&
+          currentPreview.sourceVortexIndex === candidate.sourceVortexIndex
+        ) {
+          return;
+        }
         if (targetRef.current && targetRef.current !== targetGripFullId) {
           pairedSyncPendingRef.current = candidate;
           enterTarget(targetGripFullId, meta);

@@ -280,14 +280,21 @@ fn schema_field_output_cardinality(value: &ValueType) -> Cardinality {
     }
 }
 
+fn field_channel_operators(value: &ValueType) -> Vec<String> {
+    match value {
+        ValueType::List(inner) => vec![inner.id()],
+        _ => vec![value.id()],
+    }
+}
+
 /// 🧩 Builds construct/deconstruct/modify operator metadata for a schema.
 pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
     let operator_id = schema_component_operator_id(schema);
     let mut inputs = vec![ChannelSpec::requires(&schema.id, &[schema.id.as_str()]).with_cardinality(Cardinality::ZeroOrOne)];
     for field in &schema.fields {
+        let operators = field_channel_operators(&field.value);
         inputs.push(
-            ChannelSpec::requires(&field.key, &[field.value.id().as_str()])
-                .with_cardinality(schema_field_input_cardinality(&field.value)),
+            ChannelSpec::requires(&field.key, &operators).with_cardinality(schema_field_input_cardinality(&field.value)),
         );
     }
     let mut outputs = vec![ChannelSpec::provides(&schema.id, vec![schema.id.clone()])];
@@ -295,7 +302,7 @@ pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
         let (code, abbreviation, full_name) = derive_channel_names(&field.key);
         outputs.push(
             ChannelSpec::named(code, abbreviation, &field.key, full_name)
-                .with_operators(vec![field.value.id()])
+                .with_operators(field_channel_operators(&field.value))
                 .with_cardinality(schema_field_output_cardinality(&field.value)),
         );
     }
@@ -309,6 +316,7 @@ pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
         summary: format!("Constructs, deconstructs, or modifies {}", schema.name),
         inputs,
         outputs,
+        group: vec!["Schemas".into()],
         ..Default::default()
     }
 }
@@ -2390,6 +2398,7 @@ mod tests {
         assert_eq!(info.outputs.len(), 5);
         assert_eq!(info.inputs[0].cardinality, Cardinality::ZeroOrOne);
         assert_eq!(info.outputs.last().expect("errors").name, "errors");
+        assert_eq!(info.group, vec!["Schemas".to_string()]);
     }
 
     #[test]

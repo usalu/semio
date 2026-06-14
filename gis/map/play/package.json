@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "bun nx run @gis/map/play:dev",
     "build": "bun nx run @gis/map/play:build",
+    "build-tiles": "bun nx run @gis/map/play:build-tiles",
     "test": "bun nx run @gis/map/play:test",
     "tiles": "bun nx run @gis/map/play:tiles",
     "fixture": "bun nx run @gis/map/play:fixture"

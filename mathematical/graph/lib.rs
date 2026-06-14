@@ -2210,6 +2210,12 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         pairs
     }
 
+    fn handle_has_incident_edge(&self, handle_id: HandleId) -> bool {
+        self.edges
+            .values()
+            .any(|edge| P::endpoint_as_u64(edge.source) == handle_id || P::endpoint_as_u64(edge.target) == handle_id)
+    }
+
     fn update_node_drag_proximity(&mut self, dragged_ids: &[NodeId]) {
         self.proximity_connection = None;
         if !self.proximity_enabled() || !P::HAS_PORTS {
@@ -2218,6 +2224,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
         let mut best: Option<(f64, ProximityConnection)> = None;
         for dragged_handle in self.handles.values().filter(|h| dragged.contains(&h.node_id)) {
+            if self.handle_has_incident_edge(dragged_handle.id) {
+                continue;
+            }
             for other_handle in self.handles.values().filter(|h| !dragged.contains(&h.node_id)) {
                 for (source_hid, target_hid) in self.connection_pairs_for_handles(dragged_handle, other_handle) {
                     if !self.is_valid_connection(source_hid, target_hid, None, false) {
@@ -2247,7 +2256,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }
         if let Some((_, conn)) = best {
             self.proximity_connection = Some(conn);
-            self.update_hover(Some(conn.target));
         }
     }
 
@@ -2630,6 +2638,34 @@ mod tests {
         let edge = engine.edges.values().next().expect("edge");
         assert_eq!(Ported::endpoint_as_u64(edge.source), 10);
         assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
+    }
+
+    #[test]
+    fn node_drag_proximity_skips_wired_handles_on_dragged_node() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.proximity_distance_world = 120.0;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 220.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(3, 440.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.create_handle(12, 2, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(13, 3, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.set_handle_role(12, HandleRole::Source);
+        engine.set_handle_role(13, HandleRole::Target);
+        engine.create_edge(100, 10, 11);
+        engine.create_edge(101, 12, 13);
+        engine.pointer_down(220.0, 0.0, false);
+        engine.pointer_move(260.0, 0.0);
+        assert!(
+            engine.render_snapshot().pending_edge.is_none(),
+            "wired mid-node drag must not flip proximity preview between input and output"
+        );
+        engine.pointer_up(260.0, 0.0);
+        assert_eq!(engine.edges.len(), 2);
     }
 
     #[test]

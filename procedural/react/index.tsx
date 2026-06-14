@@ -1653,10 +1653,14 @@ if (import.meta.vitest) {
 			const sections = host.catalogueSections();
 			const brep = sections.find((section) => section.id === "brep");
 			expect(brep?.groups?.some((group) => group.title === "Primitives 3D")).toBe(true);
+			expect(brep?.groups?.some((group) => group.title === "Schemas")).toBe(true);
 			const kinds = JSON.parse(host.kindInfosJson()) as Array<{ id: string; inputs: Array<{ name: string; operators: string[] }> }>;
 			const box = kinds.find((item) => item.id === "brep.prim3d.box");
 			expect(box?.inputs.some((port) => port.name === "width")).toBe(true);
 			expect(box?.inputs[0]?.operators?.length).toBeGreaterThan(0);
+			expect(kinds.some((item) => item.id === "brep.geometry")).toBe(true);
+			expect(kinds.some((item) => item.id === "brep.brep")).toBe(true);
+			expect(kinds.some((item) => item.id === "math.vector")).toBe(true);
 		});
 
 		it("procedural host exposes bim building model operators", async () => {

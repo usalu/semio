@@ -275,7 +275,7 @@ export function sidePanelTreeRootItems(
 	}
 	return {
 		type: "tree",
-		sections: [{ id: sectionId, defaultOpen: true, items }],
+		sections: [{ id: sectionId, defaultOpen: false, items }],
 		...(selection?.selectedIds ? { selectedIds: selection.selectedIds } : {}),
 		...(selection?.highlightedIds ? { highlightedIds: selection.highlightedIds } : {}),
 	};

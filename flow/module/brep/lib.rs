@@ -433,6 +433,36 @@ fn geometry_schema() -> Schema {
     }
 }
 
+fn empty_list_value() -> Value {
+    Value::Dictionary(Dictionary::with_schema("list"))
+}
+
+fn topology_element_schema(id: &str, name: &str, icon: &str) -> Schema {
+    Schema {
+        id: id.into(),
+        module: "brep".into(),
+        name: name.into(),
+        icon: icon.into(),
+        summary: format!("{name} topology element"),
+        fields: vec![FieldSpec::new("handle", ValueType::Text)],
+    }
+}
+
+fn brep_schema() -> Schema {
+    Schema {
+        id: "brep".into(),
+        module: "brep".into(),
+        name: "Brep".into(),
+        icon: "emoji:🧊".into(),
+        summary: "Construct, deconstruct, or modify a brep from vertices, edges, and faces".into(),
+        fields: vec![
+            FieldSpec::new("vertex", ValueType::List(Box::new(ValueType::Schema("vertex".into())))).with_default(empty_list_value()),
+            FieldSpec::new("edge", ValueType::List(Box::new(ValueType::Schema("edge".into())))).with_default(empty_list_value()),
+            FieldSpec::new("face", ValueType::List(Box::new(ValueType::Schema("face".into())))).with_default(empty_list_value()),
+        ],
+    }
+}
+
 fn text_schema() -> Schema {
     Schema {
         id: "text".into(),
@@ -1059,6 +1089,10 @@ impl Operation for ImportObj {
 /// 📦 Registers brep geometry schema and operators.
 pub fn register(registry: &mut Registry) {
     registry.register_schema(geometry_schema());
+    registry.register_schema(topology_element_schema("vertex", "Vertex", "emoji:📍"));
+    registry.register_schema(topology_element_schema("edge", "Edge", "emoji:〰️"));
+    registry.register_schema(topology_element_schema("face", "Face", "emoji:⬜"));
+    registry.register_schema(brep_schema());
     registry.register_schema(text_schema());
 
     reg_geo(registry, "brep.prim3d.box", "Box", "Box", "emoji:📦", "Axis-aligned box solid", vec![
@@ -1682,6 +1716,9 @@ mod tests {
         assert!(json.contains("brep.measure.area"));
         assert!(json.contains("\"operators\""));
         assert!(json.contains("brep.xform.translate"));
+        assert!(json.contains("brep.geometry"));
+        assert!(json.contains("brep.brep"));
+        assert!(json.contains("\"Schemas\""));
     }
 
     #[test]
@@ -1755,6 +1792,32 @@ mod tests {
         let second = tessellate_geometry_json(handle, 0.1);
         assert_eq!(first, second);
         assert!(first.contains("position"));
+    }
+
+    #[test]
+    fn schema_component_round_trips_brep() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let vertex = Dictionary::with_schema("vertex").insert("handle", Value::Atom(Atom::String("v0".into())));
+        let edge = Dictionary::with_schema("edge").insert("handle", Value::Atom(Atom::String("e0".into())));
+        let face = Dictionary::with_schema("face").insert("handle", Value::Atom(Atom::String("f0".into())));
+        let vertex_list = Dictionary::with_schema("list").insert("0", Value::Dictionary(vertex));
+        let edge_list = Dictionary::with_schema("list").insert("0", Value::Dictionary(edge));
+        let face_list = Dictionary::with_schema("list").insert("0", Value::Dictionary(face));
+        let built = reg
+            .dispatch(
+                "brep.brep",
+                &Dictionary::new()
+                    .insert("vertex", Value::Dictionary(vertex_list))
+                    .insert("edge", Value::Dictionary(edge_list))
+                    .insert("face", Value::Dictionary(face_list)),
+            )
+            .unwrap();
+        let brep = built.get("brep").and_then(|value| value.as_dictionary()).expect("brep");
+        assert_eq!(brep.schema(), Some("brep"));
+        let deconstructed = reg.dispatch("brep.brep", &Dictionary::new().insert("brep", Value::Dictionary(brep.clone()))).unwrap();
+        let vertices = deconstructed.get("vertex").and_then(|value| value.as_dictionary()).expect("vertex list");
+        assert!(vertices.get("0").is_some());
     }
 
     #[test]

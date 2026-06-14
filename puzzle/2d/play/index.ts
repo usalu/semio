@@ -890,7 +890,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
     description: puzzle2dFixtureNodeDisplayDescription(node, kindCatalogs),
     icon: puzzle2dPlayNodeHierarchyTreeIcon(node, kindCatalogs),
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(nodeId) }),
-    defaultOpen: true,
+    defaultOpen: false,
     onClick: () => onSelect(nodeId),
     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, nodeId),
     ...puzzle2dPlayHierarchyEntityChrome(node, nodeId, options),
@@ -1012,13 +1012,13 @@ export function buildPuzzle2dPlayHierarchySections(
 			{
 				id: "puzzle-2d-play-hierarchy.nodes",
 				label: "Nodes",
-				defaultOpen: true,
+				defaultOpen: false,
 				items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-hierarchy.nodes.empty", label: "(none)" }],
 			},
 			{
 				id: "puzzle-2d-play-hierarchy.edges",
 				label: "Edges",
-				defaultOpen: true,
+				defaultOpen: false,
 				items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-hierarchy.edges.empty", label: "(none)" }],
 			},
 		],
@@ -1121,7 +1121,7 @@ export function buildPuzzle2dPlayKindsTree(
 				{
 					id: "puzzle-2d-play-kinds.empty",
 					label: "Kinds",
-					defaultOpen: true,
+					defaultOpen: false,
 					items: [{ id: "puzzle-2d-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
 				},
 			],

@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-/** 🧭 `@gis/map/play` task router: `bun ./script.ts <dev|build|test|tiles|fixture>`. */
+/** 🧭 `@gis/map/play` task router: `bun ./script.ts <dev|build|build-tiles|test|tiles|fixture>`. */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
   GIS_MAP_PREFETCH_RASTER_Z_MAX,
+  GIS_MAP_TILE_SERVE_MODE_ENV,
   GIS_MAP_VECTOR_TILE_MAX_Z,
   prefetchMapTiles,
   type GisMapPrefetchBounds,
@@ -183,7 +184,40 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-    runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
+    runBun(
+      ["run", "vite", "build", "--config", "vite.config.ts", ...segments],
+      this.root,
+      playPollingEnv({ [GIS_MAP_TILE_SERVE_MODE_ENV]: "fetch" }),
+    );
+  }
+}
+
+class BuildTilesScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const rasterOnly = segments.includes("--raster-only");
+    const vectorOnly = segments.includes("--vector-only");
+    const zMinRaster = parseFlagInt(segments, "raster-z-min") ?? 0;
+    const zMaxRaster = parseFlagInt(segments, "raster-z-max") ?? GIS_MAP_PREFETCH_RASTER_Z_MAX;
+    const zMinVector = parseFlagInt(segments, "vector-z-min") ?? 0;
+    const zMaxVector = parseFlagInt(segments, "vector-z-max") ?? GIS_MAP_VECTOR_TILE_MAX_Z;
+    const concurrency = parseFlagInt(segments, "concurrency") ?? 4;
+    await prefetchMapTiles({
+      repoRoot: this.repoRoot,
+      bounds: parsePrefetchBounds(segments),
+      raster: !vectorOnly,
+      vector: !rasterOnly,
+      zMinRaster,
+      zMaxRaster,
+      zMinVector,
+      zMaxVector,
+      concurrency,
+    });
+    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runBun(
+      ["run", "vite", "build", "--config", "vite.config.ts", ...segments.filter((s) => !s.startsWith("--"))],
+      this.root,
+      playPollingEnv({ [GIS_MAP_TILE_SERVE_MODE_ENV]: "bundle" }),
+    );
   }
 }
 
@@ -242,6 +276,7 @@ class TilesScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("build", BuildScript)
+  .register("build-tiles", BuildTilesScript)
   .register("test", TestScript)
   .register("tiles", TilesScript)
   .register("fixture", FixtureScript);

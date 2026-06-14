@@ -3,12 +3,13 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Puzzle 5d must show brush suggestions on grips like puzzle 2d and 3d. Unified kind catalogs must carry per-part-kind grip templates and meshUrl, merge 2d and 3d source metas, and project back to embedded canvases.",
-  "summary": "Implemented puzzle 5d brush suggestion parity (merged 2d+3d kind catalogs with grip templates and meshUrl) and paired brush preview sync across flat and volume surfaces.\n\nBrush preview sync:\n- Added Puzzle5dBrushPairedSync + puzzle5dFlatRendererRef in puzzle/5d/react\n- Added puzzle3dBrushPairedSyncRef bridge in puzzle/3d/react BrushSession\n- Host bridge maps engagement candidate picks by semantic {nodeKind, targetHandleIndex} not raw index\n- Mounted sync component in puzzle 5d play chrome\n\nTests: kind catalog suggestion parity + brush paired sync unit tests pass. Pre-existing applyBrushPlacementToModel fastener test still fails.",
+  "summary": "Fixed infinite update loop in Puzzle5dBrushPairedSync.\n\nRoot cause: flat→volume sync called applyCandidateIndex which notified volume engagement epoch; volume→flat sync called puzzle2dApplyBrushSuggestionsCandidateIndex which re-notified flat session — ping-pong without idempotency checks.\n\nFix:\n- Semantic mirror keys compare flat session vs volume preview before syncing either direction\n- Skip volume→flat candidate apply when candidateIndex already matches\n- Skip 3d applyCandidateIndex/applyBootstrapPreview when preview candidate unchanged\n- syncFromFlat early return when 3d preview already mirrors incoming candidate\n- Only clear volume brush when flat session ends and a preview is still showing",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1679"
   },
   "goal": "🎯puzzle🎯5d",
   "sessions": [
-    "⚪837eb618181749818c00e2459b39ce1e"
+    "⚪837eb618181749818c00e2459b39ce1e",
+    "⚪b9b130ee7bd1447aba00f07075a25ed6"
   ]
 }
