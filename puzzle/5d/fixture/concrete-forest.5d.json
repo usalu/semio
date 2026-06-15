@@ -2,9 +2,9 @@
   "schema": "puzzle.5d",
   "domain": "architecture",
   "camera2d": {
-    "x": 0,
-    "y": 0,
-    "zoom": 1
+    "x": 230.72767272727273,
+    "y": 93.53074909090908,
+    "zoom": 2
   },
   "camera3d": {
     "position": [
@@ -17,7 +17,7 @@
       0,
       3
     ],
-    "zoom": 1
+    "zoom": 3
   },
   "parts": [
     {

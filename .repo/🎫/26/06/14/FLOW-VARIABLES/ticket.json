@@ -1,0 +1,19 @@
+{
+  "title": "Flow Variables",
+  "emoji": "🔣",
+  "status": "closed",
+  "description": "Introduce variables to flow: named dictionaries with one schema, typed relay neurons, cluster inputs/outputs from variables on collapse (auto-wrap crossing edges), schema inferred with picker override.",
+  "summary": "Introduced flow variables as named, single-schema dictionary relays. Added Variable widget/neuron (core.variable), schema picker APIs (Registry::schema_ids/schema_refs, FlowSession schemasJson), collapse auto-wrap of crossing edges into typed INPUT/OUTPUT contract ports (replacing anonymous __in/__out), explode restores boundary neurons as Variable widgets, React overlay for name+schema editing, catalogue entry, and tests for relay, collapse contract naming, and schema registry accessors. Rebuilt flow WASM.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1689"
+  },
+  "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
+  "plan": {
+    "client": "cursor",
+    "id": "075be685",
+    "local": "flow_variables_075be685.plan.md"
+  },
+  "sessions": [
+    "⚪8acd65b42caa4ef0b08df87847a3ad06"
+  ]
+}

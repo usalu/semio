@@ -76,7 +76,7 @@ pub mod theme {
 #[cfg(test)]
 mod tests {
     use super::theme::ThemeName;
-    use super::{BOARD_LIGHT, strokes};
+    use super::{strokes, BOARD_LIGHT};
 
     #[test]
     fn board_light_raster_clear_is_opaque() {

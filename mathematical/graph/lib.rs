@@ -1,473 +1,431 @@
 //! 🕸️ Generic property graph engine on infinite canvas; specialize via quadrant crates.
 
 pub mod geometry {
-// #region geometry
-//! 📐 Graph geometry: handle positions, edge beziers, hit-test distances.
+    // #region geometry
+    //! 📐 Graph geometry: handle positions, edge beziers, hit-test distances.
 
-use crate::cavas::vello::kurbo::{Affine, Arc, BezPath, Circle, CubicBez, ParamCurve, Point, Rect, Shape, Stroke, Vec2};
-use crate::NodeShape;
-use crate::cavas::vello::peniko::Color;
-use crate::cavas::vello::Scene;
+    use crate::cavas::vello::kurbo::{Affine, Arc, BezPath, Circle, CubicBez, ParamCurve, Point, Rect, Shape, Stroke, Vec2};
+    use crate::cavas::vello::peniko::Color;
+    use crate::cavas::vello::Scene;
+    use crate::NodeShape;
 
-#[inline]
-pub fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
-    value.max(min).min(max)
-}
-
-#[inline]
-pub fn distance_between(left: Point, right: Point) -> f64 {
-    (right - left).hypot()
-}
-
-#[inline]
-pub fn normalize_or_zero(vector: Vec2) -> Vec2 {
-    let len = vector.hypot();
-    if len <= f64::EPSILON {
-        return Vec2::new(0.0, 0.0);
+    #[inline]
+    pub fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
+        value.max(min).min(max)
     }
-    vector / len
-}
 
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Point {
-    let mut t_best = f64::INFINITY;
-    if ux.abs() > 1e-12 {
-        let tx = ux.signum() * hw / ux;
-        let y_at = uy * tx;
-        if tx > 0.0 && y_at.abs() <= hh + 1e-9 {
-            t_best = t_best.min(tx);
+    #[inline]
+    pub fn distance_between(left: Point, right: Point) -> f64 {
+        (right - left).hypot()
+    }
+
+    #[inline]
+    pub fn normalize_or_zero(vector: Vec2) -> Vec2 {
+        let len = vector.hypot();
+        if len <= f64::EPSILON {
+            return Vec2::new(0.0, 0.0);
         }
+        vector / len
     }
-    if uy.abs() > 1e-12 {
-        let ty = uy.signum() * hh / uy;
-        let x_at = ux * ty;
-        if ty > 0.0 && x_at.abs() <= hw + 1e-9 {
-            t_best = t_best.min(ty);
-        }
-    }
-    if !t_best.is_finite() || t_best <= 0.0 || t_best == f64::INFINITY {
-        return Point::new(hw, 0.0);
-    }
-    Point::new(ux * t_best, uy * t_best)
-}
 
-/// 🕳️ Even-odd clip path: local outer bounds minus the parent node body (keeps handle paint outside transparent nodes).
-pub fn handle_outside_node_clip_path(
-    handle_center: Point,
-    handle_radius: f64,
-    node_center: Point,
-    node_shape: NodeShape,
-    node_radius: f64,
-    node_width: f64,
-    node_height: f64,
-) -> BezPath {
-    let margin = (handle_radius * 2.5).max(4.0);
-    let outer = Rect::new(
-        handle_center.x - margin,
-        handle_center.y - margin,
-        handle_center.x + margin,
-        handle_center.y + margin,
-    );
-    let mut path = BezPath::new();
-    append_shape_elements(&mut path, &outer);
-    match node_shape {
-        NodeShape::Circle => {
-            append_shape_elements(&mut path, &Circle::new(node_center, node_radius.max(1e-9)));
-        }
-        NodeShape::Rectangle => {
-            let hw = node_width.max(1e-9) * 0.5;
-            let hh = node_height.max(1e-9) * 0.5;
-            append_shape_elements(
-                &mut path,
-                &Rect::new(
-                    node_center.x - hw,
-                    node_center.y - hh,
-                    node_center.x + hw,
-                    node_center.y + hh,
-                ),
-            );
-        }
-    }
-    path
-}
-
-fn append_shape_elements(path: &mut BezPath, shape: &impl Shape) {
-    for element in shape.path_elements(0.1) {
-        path.push(element);
-    }
-}
-
-/// 🧭 Outward normal for a handle on a node rim: edge-normal on rectangles, radial on circles.
-pub fn handle_outward_at_node_rim(
-    handle: Point,
-    node_center: Point,
-    node_shape: NodeShape,
-    node_radius: f64,
-    node_width: f64,
-    node_height: f64,
-) -> Option<Vec2> {
-    match node_shape {
-        NodeShape::Circle => {
-            let outward = normalize_or_zero(handle - node_center);
-            if outward.hypot() < 1e-9 {
-                None
-            } else {
-                Some(outward)
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Point {
+        let mut t_best = f64::INFINITY;
+        if ux.abs() > 1e-12 {
+            let tx = ux.signum() * hw / ux;
+            let y_at = uy * tx;
+            if tx > 0.0 && y_at.abs() <= hh + 1e-9 {
+                t_best = t_best.min(tx);
             }
         }
-        NodeShape::Rectangle => {
-            let hw = node_width * 0.5;
-            let hh = node_height * 0.5;
-            if hw < 1e-9 || hh < 1e-9 {
-                return None;
+        if uy.abs() > 1e-12 {
+            let ty = uy.signum() * hh / uy;
+            let x_at = ux * ty;
+            if ty > 0.0 && x_at.abs() <= hw + 1e-9 {
+                t_best = t_best.min(ty);
             }
-            let dx = handle.x - node_center.x;
-            let dy = handle.y - node_center.y;
-            if dx.abs() / hw >= dy.abs() / hh {
-                Some(Vec2::new(if dx < 0.0 { -1.0 } else { 1.0 }, 0.0))
-            } else {
-                Some(Vec2::new(0.0, if dy < 0.0 { -1.0 } else { 1.0 }))
+        }
+        if !t_best.is_finite() || t_best <= 0.0 || t_best == f64::INFINITY {
+            return Point::new(hw, 0.0);
+        }
+        Point::new(ux * t_best, uy * t_best)
+    }
+
+    /// 🕳️ Even-odd clip path: local outer bounds minus the parent node body (keeps handle paint outside transparent nodes).
+    pub fn handle_outside_node_clip_path(handle_center: Point, handle_radius: f64, node_center: Point, node_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> BezPath {
+        let margin = (handle_radius * 2.5).max(4.0);
+        let outer = Rect::new(handle_center.x - margin, handle_center.y - margin, handle_center.x + margin, handle_center.y + margin);
+        let mut path = BezPath::new();
+        append_shape_elements(&mut path, &outer);
+        match node_shape {
+            NodeShape::Circle => {
+                append_shape_elements(&mut path, &Circle::new(node_center, node_radius.max(1e-9)));
+            }
+            NodeShape::Rectangle => {
+                let hw = node_width.max(1e-9) * 0.5;
+                let hh = node_height.max(1e-9) * 0.5;
+                append_shape_elements(&mut path, &Rect::new(node_center.x - hw, node_center.y - hh, node_center.x + hw, node_center.y + hh));
+            }
+        }
+        path
+    }
+
+    fn append_shape_elements(path: &mut BezPath, shape: &impl Shape) {
+        for element in shape.path_elements(0.1) {
+            path.push(element);
+        }
+    }
+
+    /// 🧭 Outward normal for a handle on a node rim: edge-normal on rectangles, radial on circles.
+    pub fn handle_outward_at_node_rim(handle: Point, node_center: Point, node_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
+        match node_shape {
+            NodeShape::Circle => {
+                let outward = normalize_or_zero(handle - node_center);
+                if outward.hypot() < 1e-9 {
+                    None
+                } else {
+                    Some(outward)
+                }
+            }
+            NodeShape::Rectangle => {
+                let hw = node_width * 0.5;
+                let hh = node_height * 0.5;
+                if hw < 1e-9 || hh < 1e-9 {
+                    return None;
+                }
+                let dx = handle.x - node_center.x;
+                let dy = handle.y - node_center.y;
+                if dx.abs() / hw >= dy.abs() / hh {
+                    Some(Vec2::new(if dx < 0.0 { -1.0 } else { 1.0 }, 0.0))
+                } else {
+                    Some(Vec2::new(0.0, if dy < 0.0 { -1.0 } else { 1.0 }))
+                }
             }
         }
     }
-}
 
-fn handle_exterior_cap_arc(center: Point, outward: Vec2, radius: f64) -> Option<Arc> {
-    let out = normalize_or_zero(outward);
-    let r = radius.max(1e-9);
-    if out.hypot() < 1e-9 {
-        return None;
-    }
-    let perp = Vec2::new(-out.y, out.x);
-    let start = center + perp * r;
-    let peak = center + out * r;
-    let start_angle = (start.y - center.y).atan2(start.x - center.x);
-    let arc_pos = Arc::new(center, (r, r), start_angle, std::f64::consts::PI, 0.0);
-    let arc_neg = Arc::new(center, (r, r), start_angle, -std::f64::consts::PI, 0.0);
-    if distance_between(arc_pos.eval(0.5), peak) <= distance_between(arc_neg.eval(0.5), peak) {
-        Some(arc_pos)
-    } else {
-        Some(arc_neg)
-    }
-}
-
-/// 🌗 Closed fill path for the handle cap outside a node body (semicircle on the `outward` side).
-pub fn handle_exterior_cap_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
-    let r = radius.max(1e-9);
-    let mut path = BezPath::new();
-    if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
-        append_shape_elements(&mut path, &arc);
-        path.close_path();
-        return path;
-    }
-    append_shape_elements(&mut path, &Circle::new(center, r));
-    path
-}
-
-/// 🌗 Open arc path for stroking only the exterior handle cap (flat rim edge stays behind the node).
-pub fn handle_exterior_cap_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
-    let r = radius.max(1e-9);
-    let mut path = BezPath::new();
-    if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
-        append_shape_elements(&mut path, &arc);
-        return path;
-    }
-    append_shape_elements(&mut path, &Circle::new(center, r));
-    path
-}
-
-pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
-    let ux = angle.cos();
-    let uy = angle.sin();
-    center + Vec2::new(ux * radius, uy * radius)
-}
-
-/// 🧭 Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
-    let hw = width / 2.0;
-    let hh = height / 2.0;
-    let ux = -angle.sin();
-    let uy = -angle.cos();
-    let local = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
-    center + Vec2::new(local.x, local.y)
-}
-
-/// 🧭 East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
-pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
-    let d = toward - center;
-    f64::atan2(d.y, d.x)
-}
-
-/// 🧭 North-zero rectangle handle angle so the rim point lies on the ray from `center` toward `toward`.
-pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
-    let u = normalize_or_zero(toward - center);
-    f64::atan2(-u.x, -u.y)
-}
-
-/// 🎯 World point at the outer peak of a port handle cap (rim + outward × radius).
-pub fn handle_exterior_cap_peak(center: Point, outward: Vec2, radius: f64) -> Point {
-    let out = normalize_or_zero(outward);
-    let r = radius.max(0.0);
-    if out.hypot() < 1e-9 || r <= 0.0 {
-        return center;
-    }
-    center + out * r
-}
-
-pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
-    let chord = normalize_or_zero(target_point - source_point);
-    let mut source_radial = normalize_or_zero(source_outward);
-    if source_radial == Vec2::new(0.0, 0.0) {
-        source_radial = chord;
-    }
-    let mut target_radial = normalize_or_zero(target_outward);
-    if target_radial == Vec2::new(0.0, 0.0) {
-        target_radial = -chord;
-    }
-    let handle_distance = distance_between(source_point, target_point);
-    let control_length = clamp_f64(handle_distance * 0.12, 8.0, 72.0);
-    let p1 = source_point + source_radial * control_length;
-    let p2 = target_point + target_radial * control_length;
-    CubicBez::new(source_point, p1, p2, target_point)
-}
-
-pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
-    compute_edge_bezier_outward(
-        source_point,
-        target_point,
-        source_point - source_center,
-        target_point - target_center,
-    )
-}
-
-pub fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
-    let mut smallest = f64::INFINITY;
-    let mut previous = curve.eval(0.0);
-    let n = segments.max(1);
-    for index in 1..=n {
-        let t = index as f64 / n as f64;
-        let next = curve.eval(t);
-        smallest = smallest.min(distance_to_segment(point, previous, next));
-        previous = next;
-    }
-    smallest
-}
-
-fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
-    let segment = end - start;
-    let segment_len_squared = segment.dot(segment);
-    if segment_len_squared <= f64::EPSILON {
-        return distance_between(point, start);
-    }
-    let projection = clamp_f64((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
-    let closest = start + segment * projection;
-    distance_between(point, closest)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn outside_node_clip_path_excludes_node_interior() {
-        let node_center = Point::new(0.0, 0.0);
-        let handle_center = Point::new(40.0, 0.0);
-        let clip = handle_outside_node_clip_path(handle_center, 5.0, node_center, NodeShape::Circle, 40.0, 80.0, 80.0);
-        assert!(clip.elements().len() > 4);
-        assert!(node_center.distance(handle_center) > 39.0);
-    }
-
-    fn assert_cap_bulges_outward(center: Point, outward: Vec2, radius: f64) {
+    fn handle_exterior_cap_arc(center: Point, outward: Vec2, radius: f64) -> Option<Arc> {
         let out = normalize_or_zero(outward);
-        let peak = center + out * radius;
-        let arc = handle_exterior_cap_arc(center, outward, radius).expect("exterior arc");
-        assert!(distance_between(arc.eval(0.5), peak) < 0.35, "arc midpoint must sit on outward peak");
-        let fill = handle_exterior_cap_fill_path(center, outward, radius);
-        let bb = fill.bounding_box();
-        let trough = center - out * radius;
-        if out.x.abs() >= out.y.abs() {
-            if out.x > 0.0 {
-                assert!((bb.x1 - peak.x).abs() < 0.25, "east cap must peak at +x");
-                assert!(bb.x0 > trough.x + 0.25, "east cap must not peak inward");
-            } else {
-                assert!((bb.x0 - peak.x).abs() < 0.25, "west cap must peak at -x");
-                assert!(bb.x1 < trough.x - 0.25, "west cap must not peak inward");
-            }
-        } else if out.y > 0.0 {
-            assert!((bb.y1 - peak.y).abs() < 0.25, "south cap must peak at +y");
-            assert!(bb.y0 > trough.y + 0.25, "south cap must not peak inward");
+        let r = radius.max(1e-9);
+        if out.hypot() < 1e-9 {
+            return None;
+        }
+        let perp = Vec2::new(-out.y, out.x);
+        let start = center + perp * r;
+        let peak = center + out * r;
+        let start_angle = (start.y - center.y).atan2(start.x - center.x);
+        let arc_pos = Arc::new(center, (r, r), start_angle, std::f64::consts::PI, 0.0);
+        let arc_neg = Arc::new(center, (r, r), start_angle, -std::f64::consts::PI, 0.0);
+        if distance_between(arc_pos.eval(0.5), peak) <= distance_between(arc_neg.eval(0.5), peak) {
+            Some(arc_pos)
         } else {
-            assert!((bb.y0 - peak.y).abs() < 0.25, "north cap must peak at -y");
-            assert!(bb.y1 < trough.y + 0.25, "north cap must not peak inward");
+            Some(arc_neg)
         }
     }
 
-    #[test]
-    fn edge_bezier_free_target_end_tangent_matches_incoming_chord() {
-        let source = Point::new(0.0, 0.0);
-        let target = Point::new(200.0, 40.0);
-        let curve = compute_edge_bezier_points(source, target, Point::new(-50.0, 0.0), target);
-        let approach = normalize_or_zero(target - source);
-        let tangent = curve.eval(1.0) - curve.eval(0.995);
-        let tangent_dir = normalize_or_zero(Vec2::new(tangent.x, tangent.y));
-        assert!(tangent_dir.dot(approach) > 0.99, "free target tangent should match incoming chord");
+    /// 🌗 Closed fill path for the handle cap outside a node body (semicircle on the `outward` side).
+    pub fn handle_exterior_cap_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+        let r = radius.max(1e-9);
+        let mut path = BezPath::new();
+        if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
+            append_shape_elements(&mut path, &arc);
+            path.close_path();
+            return path;
+        }
+        append_shape_elements(&mut path, &Circle::new(center, r));
+        path
     }
 
-    #[test]
-    fn edge_bezier_starts_outside_handle_cap_peak() {
-        let node_center = Point::new(100.0, 50.0);
-        let width = 160.0;
-        let height = 72.0;
-        let rim = Point::new(node_center.x + width * 0.5, node_center.y);
-        let outward = handle_outward_at_node_rim(rim, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
-        let radius = 5.0;
-        let peak = handle_exterior_cap_peak(rim, outward, radius);
-        let target = Point::new(300.0, 50.0);
-        let curve = compute_edge_bezier_outward(peak, target, outward, -normalize_or_zero(target - peak));
-        let start = curve.eval(0.0);
-        assert!((start.x - peak.x).abs() < 1e-9 && (start.y - peak.y).abs() < 1e-9);
-        assert!(start.x > rim.x + 0.5, "edge must begin outside the port rim under the cap");
+    /// 🌗 Open arc path for stroking only the exterior handle cap (flat rim edge stays behind the node).
+    pub fn handle_exterior_cap_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+        let r = radius.max(1e-9);
+        let mut path = BezPath::new();
+        if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
+            append_shape_elements(&mut path, &arc);
+            return path;
+        }
+        append_shape_elements(&mut path, &Circle::new(center, r));
+        path
     }
 
-    #[test]
-    fn edge_bezier_rectangle_port_uses_outward_normal() {
-        let node_center = Point::new(100.0, 50.0);
-        let width = 120.0;
-        let height = 80.0;
-        let source = Point::new(node_center.x - width * 0.5, node_center.y - 20.0);
-        let target = Point::new(280.0, 50.0);
-        let outward = handle_outward_at_node_rim(source, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
-        let curve = compute_edge_bezier_outward(source, target, outward, -normalize_or_zero(target - source));
-        let leave = curve.eval(0.005) - curve.eval(0.0);
-        let leave_dir = normalize_or_zero(Vec2::new(leave.x, leave.y));
-        assert!(leave_dir.dot(outward) > 0.99, "anchored port should leave along rim outward");
+    pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
+        let ux = angle.cos();
+        let uy = angle.sin();
+        center + Vec2::new(ux * radius, uy * radius)
     }
 
-    #[test]
-    fn rectangle_rim_outward_uses_edge_normal_not_radial() {
-        let node_center = Point::new(100.0, 50.0);
-        let width = 120.0;
-        let height = 80.0;
-        let handle = Point::new(node_center.x - width * 0.5, node_center.y - 20.0);
-        let radial = normalize_or_zero(handle - node_center);
-        let outward = handle_outward_at_node_rim(handle, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
-        assert!((outward.x + 1.0).abs() < 1e-9 && outward.y.abs() < 1e-9);
-        assert!(radial.y.abs() > 0.1, "radial must tilt for off-center left ports");
+    /// 🧭 Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
+        let hw = width / 2.0;
+        let hh = height / 2.0;
+        let ux = -angle.sin();
+        let uy = -angle.cos();
+        let local = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
+        center + Vec2::new(local.x, local.y)
     }
 
-    #[test]
-    fn exterior_cap_paths_bulge_outward_on_all_cardinals() {
-        let radius = 5.0;
-        assert_cap_bulges_outward(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
-        assert_cap_bulges_outward(Point::new(-40.0, 0.0), Vec2::new(-1.0, 0.0), radius);
-        assert_cap_bulges_outward(Point::new(0.0, 30.0), Vec2::new(0.0, 1.0), radius);
-        assert_cap_bulges_outward(Point::new(0.0, -30.0), Vec2::new(0.0, -1.0), radius);
-        let stroke = handle_exterior_cap_stroke_path(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
-        assert!(!stroke.elements().iter().any(|el| matches!(el, crate::cavas::vello::kurbo::PathEl::ClosePath)));
+    /// 🧭 East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
+    pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
+        let d = toward - center;
+        f64::atan2(d.y, d.x)
     }
-}
 
-pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {
-    let mut scene = Scene::new();
-    let stroke = Stroke::new(stroke_width);
-    for curve in curves {
-        scene.stroke(
-            &stroke,
-            Affine::IDENTITY,
-            Color::new(ui_styling::CANVAS_LIGHT.icon_bg),
-            None,
-            curve,
-        );
+    /// 🧭 North-zero rectangle handle angle so the rim point lies on the ray from `center` toward `toward`.
+    pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
+        let u = normalize_or_zero(toward - center);
+        f64::atan2(-u.x, -u.y)
     }
-    scene
-}
-// #endregion geometry
+
+    /// 🎯 World point at the outer peak of a port handle cap (rim + outward × radius).
+    pub fn handle_exterior_cap_peak(center: Point, outward: Vec2, radius: f64) -> Point {
+        let out = normalize_or_zero(outward);
+        let r = radius.max(0.0);
+        if out.hypot() < 1e-9 || r <= 0.0 {
+            return center;
+        }
+        center + out * r
+    }
+
+    pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
+        let chord = normalize_or_zero(target_point - source_point);
+        let mut source_radial = normalize_or_zero(source_outward);
+        if source_radial == Vec2::new(0.0, 0.0) {
+            source_radial = chord;
+        }
+        let mut target_radial = normalize_or_zero(target_outward);
+        if target_radial == Vec2::new(0.0, 0.0) {
+            target_radial = -chord;
+        }
+        let handle_distance = distance_between(source_point, target_point);
+        let control_length = clamp_f64(handle_distance * 0.12, 8.0, 72.0);
+        let p1 = source_point + source_radial * control_length;
+        let p2 = target_point + target_radial * control_length;
+        CubicBez::new(source_point, p1, p2, target_point)
+    }
+
+    pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
+        compute_edge_bezier_outward(source_point, target_point, source_point - source_center, target_point - target_center)
+    }
+
+    pub fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
+        let mut smallest = f64::INFINITY;
+        let mut previous = curve.eval(0.0);
+        let n = segments.max(1);
+        for index in 1..=n {
+            let t = index as f64 / n as f64;
+            let next = curve.eval(t);
+            smallest = smallest.min(distance_to_segment(point, previous, next));
+            previous = next;
+        }
+        smallest
+    }
+
+    fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
+        let segment = end - start;
+        let segment_len_squared = segment.dot(segment);
+        if segment_len_squared <= f64::EPSILON {
+            return distance_between(point, start);
+        }
+        let projection = clamp_f64((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
+        let closest = start + segment * projection;
+        distance_between(point, closest)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn outside_node_clip_path_excludes_node_interior() {
+            let node_center = Point::new(0.0, 0.0);
+            let handle_center = Point::new(40.0, 0.0);
+            let clip = handle_outside_node_clip_path(handle_center, 5.0, node_center, NodeShape::Circle, 40.0, 80.0, 80.0);
+            assert!(clip.elements().len() > 4);
+            assert!(node_center.distance(handle_center) > 39.0);
+        }
+
+        fn assert_cap_bulges_outward(center: Point, outward: Vec2, radius: f64) {
+            let out = normalize_or_zero(outward);
+            let peak = center + out * radius;
+            let arc = handle_exterior_cap_arc(center, outward, radius).expect("exterior arc");
+            assert!(distance_between(arc.eval(0.5), peak) < 0.35, "arc midpoint must sit on outward peak");
+            let fill = handle_exterior_cap_fill_path(center, outward, radius);
+            let bb = fill.bounding_box();
+            let trough = center - out * radius;
+            if out.x.abs() >= out.y.abs() {
+                if out.x > 0.0 {
+                    assert!((bb.x1 - peak.x).abs() < 0.25, "east cap must peak at +x");
+                    assert!(bb.x0 > trough.x + 0.25, "east cap must not peak inward");
+                } else {
+                    assert!((bb.x0 - peak.x).abs() < 0.25, "west cap must peak at -x");
+                    assert!(bb.x1 < trough.x - 0.25, "west cap must not peak inward");
+                }
+            } else if out.y > 0.0 {
+                assert!((bb.y1 - peak.y).abs() < 0.25, "south cap must peak at +y");
+                assert!(bb.y0 > trough.y + 0.25, "south cap must not peak inward");
+            } else {
+                assert!((bb.y0 - peak.y).abs() < 0.25, "north cap must peak at -y");
+                assert!(bb.y1 < trough.y + 0.25, "north cap must not peak inward");
+            }
+        }
+
+        #[test]
+        fn edge_bezier_free_target_end_tangent_matches_incoming_chord() {
+            let source = Point::new(0.0, 0.0);
+            let target = Point::new(200.0, 40.0);
+            let curve = compute_edge_bezier_points(source, target, Point::new(-50.0, 0.0), target);
+            let approach = normalize_or_zero(target - source);
+            let tangent = curve.eval(1.0) - curve.eval(0.995);
+            let tangent_dir = normalize_or_zero(Vec2::new(tangent.x, tangent.y));
+            assert!(tangent_dir.dot(approach) > 0.99, "free target tangent should match incoming chord");
+        }
+
+        #[test]
+        fn edge_bezier_starts_outside_handle_cap_peak() {
+            let node_center = Point::new(100.0, 50.0);
+            let width = 160.0;
+            let height = 72.0;
+            let rim = Point::new(node_center.x + width * 0.5, node_center.y);
+            let outward = handle_outward_at_node_rim(rim, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
+            let radius = 5.0;
+            let peak = handle_exterior_cap_peak(rim, outward, radius);
+            let target = Point::new(300.0, 50.0);
+            let curve = compute_edge_bezier_outward(peak, target, outward, -normalize_or_zero(target - peak));
+            let start = curve.eval(0.0);
+            assert!((start.x - peak.x).abs() < 1e-9 && (start.y - peak.y).abs() < 1e-9);
+            assert!(start.x > rim.x + 0.5, "edge must begin outside the port rim under the cap");
+        }
+
+        #[test]
+        fn edge_bezier_rectangle_port_uses_outward_normal() {
+            let node_center = Point::new(100.0, 50.0);
+            let width = 120.0;
+            let height = 80.0;
+            let source = Point::new(node_center.x - width * 0.5, node_center.y - 20.0);
+            let target = Point::new(280.0, 50.0);
+            let outward = handle_outward_at_node_rim(source, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
+            let curve = compute_edge_bezier_outward(source, target, outward, -normalize_or_zero(target - source));
+            let leave = curve.eval(0.005) - curve.eval(0.0);
+            let leave_dir = normalize_or_zero(Vec2::new(leave.x, leave.y));
+            assert!(leave_dir.dot(outward) > 0.99, "anchored port should leave along rim outward");
+        }
+
+        #[test]
+        fn rectangle_rim_outward_uses_edge_normal_not_radial() {
+            let node_center = Point::new(100.0, 50.0);
+            let width = 120.0;
+            let height = 80.0;
+            let handle = Point::new(node_center.x - width * 0.5, node_center.y - 20.0);
+            let radial = normalize_or_zero(handle - node_center);
+            let outward = handle_outward_at_node_rim(handle, node_center, NodeShape::Rectangle, 0.0, width, height).expect("outward");
+            assert!((outward.x + 1.0).abs() < 1e-9 && outward.y.abs() < 1e-9);
+            assert!(radial.y.abs() > 0.1, "radial must tilt for off-center left ports");
+        }
+
+        #[test]
+        fn exterior_cap_paths_bulge_outward_on_all_cardinals() {
+            let radius = 5.0;
+            assert_cap_bulges_outward(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
+            assert_cap_bulges_outward(Point::new(-40.0, 0.0), Vec2::new(-1.0, 0.0), radius);
+            assert_cap_bulges_outward(Point::new(0.0, 30.0), Vec2::new(0.0, 1.0), radius);
+            assert_cap_bulges_outward(Point::new(0.0, -30.0), Vec2::new(0.0, -1.0), radius);
+            let stroke = handle_exterior_cap_stroke_path(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
+            assert!(!stroke.elements().iter().any(|el| matches!(el, crate::cavas::vello::kurbo::PathEl::ClosePath)));
+        }
+    }
+
+    pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {
+        let mut scene = Scene::new();
+        let stroke = Stroke::new(stroke_width);
+        for curve in curves {
+            scene.stroke(&stroke, Affine::IDENTITY, Color::new(ui_styling::CANVAS_LIGHT.icon_bg), None, curve);
+        }
+        scene
+    }
+    // #endregion geometry
 }
 
 pub mod scene_json {
-// #region scene_json
-//! 🧾 Generic scene descriptor JSON (port/edge-agnostic node base).
+    // #region scene_json
+    //! 🧾 Generic scene descriptor JSON (port/edge-agnostic node base).
 
-use serde::{Deserialize, Serialize};
+    use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CameraJson {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeDescJson {
-    pub id: String,
-    pub x: f64,
-    pub y: f64,
-    #[serde(default)]
-    pub draggable: Option<bool>,
-    #[serde(default)]
-    pub selected: Option<bool>,
-    #[serde(default)]
-    pub style: Option<String>,
-    #[serde(default)]
-    pub text: Option<String>,
-    /// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
-    #[serde(default)]
-    pub icon_kind: Option<String>,
-    /// @emoji 🧩 Semantic node-kind id for compatibility rows at `node` specificity.
-    #[serde(default)]
-    pub node_kind: Option<String>,
-    #[serde(default)]
-    pub user_data: Option<serde_json::Value>,
-    #[serde(default)]
-    pub visible: Option<bool>,
-    #[serde(default)]
-    pub locked: Option<bool>,
-    #[serde(default)]
-    pub root: Option<bool>,
-    pub shape: Option<String>,
-    #[serde(default)]
-    pub radius: Option<f64>,
-    #[serde(default)]
-    pub width: Option<f64>,
-    #[serde(default)]
-    pub height: Option<f64>,
-    #[serde(default)]
-    pub scale: Option<f64>,
-}
-
-fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    obj.get("hidden").and_then(|v| v.as_bool())
-}
-
-/// 🙈 Resolves fixture element visibility from `hidden` or `visible` JSON fields.
-pub fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    match board_json_hidden_flag(obj) {
-        Some(hidden) => Some(!hidden),
-        None => obj.get("visible").and_then(|v| v.as_bool()),
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct CameraJson {
+        pub x: f64,
+        pub y: f64,
+        pub zoom: f64,
     }
-}
 
-/// 🙈 Returns true when a fixture element is visible (default true when unset).
-pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
-    board_json_visible_option(obj).unwrap_or(true)
-}
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct NodeDescJson {
+        pub id: String,
+        pub x: f64,
+        pub y: f64,
+        #[serde(default)]
+        pub draggable: Option<bool>,
+        #[serde(default)]
+        pub selected: Option<bool>,
+        #[serde(default)]
+        pub style: Option<String>,
+        #[serde(default)]
+        pub text: Option<String>,
+        /// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
+        #[serde(default)]
+        pub icon_kind: Option<String>,
+        /// @emoji 🧩 Semantic node-kind id for compatibility rows at `node` specificity.
+        #[serde(default)]
+        pub node_kind: Option<String>,
+        #[serde(default)]
+        pub user_data: Option<serde_json::Value>,
+        #[serde(default)]
+        pub visible: Option<bool>,
+        #[serde(default)]
+        pub locked: Option<bool>,
+        #[serde(default)]
+        pub root: Option<bool>,
+        pub shape: Option<String>,
+        #[serde(default)]
+        pub radius: Option<f64>,
+        #[serde(default)]
+        pub width: Option<f64>,
+        #[serde(default)]
+        pub height: Option<f64>,
+        #[serde(default)]
+        pub scale: Option<f64>,
+    }
 
-/// 🔒 Resolves fixture element locked flag from JSON (`locked` only).
-pub fn board_json_locked_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    obj.get("locked").and_then(|v| v.as_bool())
-}
-// #endregion scene_json
-}
+    fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+        obj.get("hidden").and_then(|v| v.as_bool())
+    }
 
+    /// 🙈 Resolves fixture element visibility from `hidden` or `visible` JSON fields.
+    pub fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+        match board_json_hidden_flag(obj) {
+            Some(hidden) => Some(!hidden),
+            None => obj.get("visible").and_then(|v| v.as_bool()),
+        }
+    }
+
+    /// 🙈 Returns true when a fixture element is visible (default true when unset).
+    pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
+        board_json_visible_option(obj).unwrap_or(true)
+    }
+
+    /// 🔒 Resolves fixture element locked flag from JSON (`locked` only).
+    pub fn board_json_locked_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+        obj.get("locked").and_then(|v| v.as_bool())
+    }
+    // #endregion scene_json
+}
 
 pub use geometry::{
-    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier,
-    encode_board_stroke_scene,
-    handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim,
-    handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero,
-    ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
+    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene, handle_exterior_cap_fill_path, handle_exterior_cap_peak,
+    handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge,
+    rectangle_handle_angle_toward,
 };
 pub use scene_json::{board_json_locked_option, board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
 
@@ -511,10 +469,10 @@ pub enum NodeShape {
 /// 🪝 Port direction for directed edge wiring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum HandleRole {
-  Source,
-  Target,
-  #[default]
-  Any,
+    Source,
+    Target,
+    #[default]
+    Any,
 }
 
 /// 🟠 Retained node state with world-space center and shape extents.
@@ -550,14 +508,7 @@ pub enum BoardEvent {
     EdgeConnected { id: EdgeId, source: HandleId, target: HandleId },
     EdgeRemoved { id: EdgeId },
     SelectionChanged { edge_ids: Vec<EdgeId>, handle_ids: Vec<HandleId>, node_ids: Vec<NodeId> },
-    PreselectChanged {
-        edge_ids: Vec<EdgeId>,
-        handle_ids: Vec<HandleId>,
-        node_ids: Vec<NodeId>,
-        removed_edge_ids: Vec<EdgeId>,
-        removed_handle_ids: Vec<HandleId>,
-        removed_node_ids: Vec<NodeId>,
-    },
+    PreselectChanged { edge_ids: Vec<EdgeId>, handle_ids: Vec<HandleId>, node_ids: Vec<NodeId>, removed_edge_ids: Vec<EdgeId>, removed_handle_ids: Vec<HandleId>, removed_node_ids: Vec<NodeId> },
 }
 
 /// ✅ Selection snapshot maintained by the engine hot path.
@@ -587,32 +538,11 @@ enum HitObject<E> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum InteractionMode {
     DragNode { node_id: NodeId, offset: Vec2 },
-    DragNodes {
-        primary_id: NodeId,
-        offset: Vec2,
-    },
-    DrawEdge {
-        anchor_handle: HandleId,
-        anchor_is_source: bool,
-        fixed_target: Option<HandleId>,
-        cursor: Point,
-        reconnecting: Option<EdgeId>,
-        snap_target: Option<HandleId>,
-    },
-    SelectionPending {
-        start: Point,
-        start_screen: Point,
-    },
-    AreaSelect {
-        start: Point,
-        start_screen: Point,
-    },
-    Pan {
-        start_screen: Point,
-        cam_x: f64,
-        cam_y: f64,
-        zoom: f64,
-    },
+    DragNodes { primary_id: NodeId, offset: Vec2 },
+    DrawEdge { anchor_handle: HandleId, anchor_is_source: bool, fixed_target: Option<HandleId>, cursor: Point, reconnecting: Option<EdgeId>, snap_target: Option<HandleId> },
+    SelectionPending { start: Point, start_screen: Point },
+    AreaSelect { start: Point, start_screen: Point },
+    Pan { start_screen: Point, cam_x: f64, cam_y: f64, zoom: f64 },
     Idle,
 }
 
@@ -647,10 +577,7 @@ fn node_contains_point(node: &Node, point: Point) -> bool {
         NodeShape::Rectangle => {
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
-            point.x >= node.center.x - hw
-                && point.x <= node.center.x + hw
-                && point.y >= node.center.y - hh
-                && point.y <= node.center.y + hh
+            point.x >= node.center.x - hw && point.x <= node.center.x + hw && point.y >= node.center.y - hh && point.y <= node.center.y + hh
         }
     }
 }
@@ -677,8 +604,8 @@ impl GraphPortModel for Ported {
 
 // #region 🔖SelectionMarquee
 pub use cavas::geom_sel::{
-    inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box,
-    world_box_contains_box, world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
+    inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box, world_box_contains_point, world_box_from_points,
+    world_boxes_overlap, WorldBox,
 };
 
 pub const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_CLICK_MAX_DISTANCE_PX;
@@ -687,7 +614,11 @@ pub const SELECTION_MARQUEE_DRAG_THRESHOLD_PX: f64 = ui_styling::metrics::board:
 
 /// 🎯 Normalizes `default` to `replace` for merge-mode strings.
 pub fn normalize_selection_mode(mode: &str) -> String {
-    if mode == "default" { "replace".into() } else { mode.to_string() }
+    if mode == "default" {
+        "replace".into()
+    } else {
+        mode.to_string()
+    }
 }
 
 /// 🎯 Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive).
@@ -787,12 +718,7 @@ pub fn selection_drag_shape(method: &str, start: Point, points: &[Point]) -> Opt
         return Some((b, enclosing, poly));
     }
     let b = world_box_from_points(&[start, last])?;
-    let poly = vec![
-        Point::new(b.min_x, b.min_y),
-        Point::new(b.max_x, b.min_y),
-        Point::new(b.max_x, b.max_y),
-        Point::new(b.min_x, b.max_y),
-    ];
+    let poly = vec![Point::new(b.min_x, b.min_y), Point::new(b.max_x, b.min_y), Point::new(b.max_x, b.max_y), Point::new(b.min_x, b.max_y)];
     Some((b, enclosing, poly))
 }
 
@@ -802,16 +728,7 @@ pub fn selection_screen_overlay_points(method: &str, start_screen: Point, screen
         return None;
     }
     let last = *screen_points.last().unwrap_or(&start_screen);
-    Some(if method == "lasso" {
-        screen_points.to_vec()
-    } else {
-        vec![
-            start_screen,
-            Point::new(last.x, start_screen.y),
-            last,
-            Point::new(start_screen.x, last.y),
-        ]
-    })
+    Some(if method == "lasso" { screen_points.to_vec() } else { vec![start_screen, Point::new(last.x, start_screen.y), last, Point::new(start_screen.x, last.y)] })
 }
 
 /// 🧿 Returns sorted ids for the next preselect set and removed anchor ids.
@@ -827,21 +744,11 @@ pub fn area_preselect_ids(anchor: &BTreeSet<String>, ids: &[String]) -> (Vec<Str
 fn node_rect_bounds(center: Point, width: f64, height: f64) -> WorldBox {
     let hw = width * 0.5;
     let hh = height * 0.5;
-    WorldBox {
-        min_x: center.x - hw,
-        min_y: center.y - hh,
-        max_x: center.x + hw,
-        max_y: center.y + hh,
-    }
+    WorldBox { min_x: center.x - hw, min_y: center.y - hh, max_x: center.x + hw, max_y: center.y + hh }
 }
 
 fn node_circle_bounds(center: Point, radius: f64) -> WorldBox {
-    WorldBox {
-        min_x: center.x - radius,
-        min_y: center.y - radius,
-        max_x: center.x + radius,
-        max_y: center.y + radius,
-    }
+    WorldBox { min_x: center.x - radius, min_y: center.y - radius, max_x: center.x + radius, max_y: center.y + radius }
 }
 
 /// 🎯 Tests whether a graph node body intersects or is contained by the marquee shape.
@@ -865,12 +772,7 @@ pub fn selection_contains_node_bounds(node: &Node, box_: WorldBox, enclosing: bo
 
 /// 🎯 Tests whether a port handle intersects or is contained by the marquee shape.
 pub fn selection_contains_handle_point(pos: Point, pad: f64, box_: WorldBox, enclosing: bool, polygon: &[Point], lasso: bool) -> bool {
-    let bounds = WorldBox {
-        min_x: pos.x - pad,
-        min_y: pos.y - pad,
-        max_x: pos.x + pad,
-        max_y: pos.y + pad,
-    };
+    let bounds = WorldBox { min_x: pos.x - pad, min_y: pos.y - pad, max_x: pos.x + pad, max_y: pos.y + pad };
     if enclosing {
         if lasso {
             polygon_contains_world_box(polygon, bounds)
@@ -920,13 +822,7 @@ pub struct EngineSelectionOptions {
 
 impl Default for EngineSelectionOptions {
     fn default() -> Self {
-        Self {
-            method: "rectangle".into(),
-            mode: "replace".into(),
-            select_nodes: true,
-            select_handles: true,
-            select_edges: true,
-        }
+        Self { method: "rectangle".into(), mode: "replace".into(), select_nodes: true, select_handles: true, select_edges: true }
     }
 }
 
@@ -946,7 +842,7 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub preselect_removed: Selection,
     pub selection_options: EngineSelectionOptions,
     pub handle_pointer_picking: bool,
-    pub     proximity_distance_world: f64,
+    pub proximity_distance_world: f64,
     proximity_distance_override: Option<f64>,
     pub selection_preview_points: Vec<Point>,
     pub selection_preview_crossing: bool,
@@ -1002,35 +898,13 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn create_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64, draggable: bool) {
-        self.nodes.insert(
-            id,
-            Node {
-                center: Point::new(x, y),
-                draggable,
-                height: radius * 2.0,
-                id,
-                radius,
-                shape: NodeShape::Circle,
-                width: radius * 2.0,
-            },
-        );
+        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, height: radius * 2.0, id, radius, shape: NodeShape::Circle, width: radius * 2.0 });
     }
 
     pub fn create_rect_node(&mut self, id: NodeId, x: f64, y: f64, width: f64, height: f64, draggable: bool) {
         let hw = width * 0.5;
         let hh = height * 0.5;
-        self.nodes.insert(
-            id,
-            Node {
-                center: Point::new(x, y),
-                draggable,
-                height,
-                id,
-                radius: hw.max(hh).max(ui_styling::radii::NODE_MIN),
-                shape: NodeShape::Rectangle,
-                width,
-            },
-        );
+        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, height, id, radius: hw.max(hh).max(ui_styling::radii::NODE_MIN), shape: NodeShape::Rectangle, width });
     }
 
     pub fn update_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64) {
@@ -1056,12 +930,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.remove_handle(handle_id);
             }
         } else {
-            let removed_edges: Vec<EdgeId> = self
-                .edges
-                .values()
-                .filter(|edge| P::endpoint_as_u64(edge.source) == id || P::endpoint_as_u64(edge.target) == id)
-                .map(|edge| edge.id)
-                .collect();
+            let removed_edges: Vec<EdgeId> = self.edges.values().filter(|edge| P::endpoint_as_u64(edge.source) == id || P::endpoint_as_u64(edge.target) == id).map(|edge| edge.id).collect();
             for edge_id in removed_edges {
                 self.edges.remove(&edge_id);
                 self.selection.edge_ids.remove(&edge_id);
@@ -1073,16 +942,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
         if P::HAS_PORTS {
-            self.handles.insert(
-                id,
-                Handle {
-                    angle,
-                    id,
-                    node_id,
-                    radius: ui_styling::radii::HANDLE_DEFAULT,
-                    role: HandleRole::Any,
-                },
-            );
+            self.handles.insert(id, Handle { angle, id, node_id, radius: ui_styling::radii::HANDLE_DEFAULT, role: HandleRole::Any });
         }
     }
 
@@ -1175,13 +1035,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     /// @emoji 📦 Starts a group drag when `point` lies inside the padded union bounds of draggable selected nodes.
     pub fn try_begin_selection_union_drag_at(&mut self, point: Point, pad_world: f64) -> bool {
-        let members: Vec<NodeId> = self
-            .selection
-            .node_ids
-            .iter()
-            .copied()
-            .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
-            .collect();
+        let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
         if members.is_empty() {
             return false;
         }
@@ -1219,10 +1073,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.drag_start_positions.insert(*id, node.center);
             }
         }
-        self.interaction = InteractionMode::DragNodes {
-            primary_id,
-            offset: point - primary.center,
-        };
+        self.interaction = InteractionMode::DragNodes { primary_id, offset: point - primary.center };
         self.hover = None;
         true
     }
@@ -1238,13 +1089,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         if !node.draggable {
             return false;
         }
-        let members: Vec<NodeId> = self
-            .selection
-            .node_ids
-            .iter()
-            .copied()
-            .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
-            .collect();
+        let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
         let drag_group = members.contains(&node_id) && members.len() > 1;
         self.drag_start_positions.clear();
         for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
@@ -1253,15 +1098,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         if drag_group {
-            self.interaction = InteractionMode::DragNodes {
-                primary_id: node_id,
-                offset: point - node.center,
-            };
+            self.interaction = InteractionMode::DragNodes { primary_id: node_id, offset: point - node.center };
         } else {
-            self.interaction = InteractionMode::DragNode {
-                node_id,
-                offset: point - node.center,
-            };
+            self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
         }
         self.hover = None;
         true
@@ -1271,29 +1110,15 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     pub fn pointer_down_on_draggable_node_at(&mut self, node_id: NodeId, point: Point, shift: bool, ctrl_or_meta: bool) {
         let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
         let merge_from_modifiers = ctrl_or_meta || shift;
-        let members_before: Vec<NodeId> = self
-            .selection
-            .node_ids
-            .iter()
-            .copied()
-            .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
-            .collect();
+        let members_before: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
         let drag_group_before = members_before.contains(&node_id) && members_before.len() > 1;
-        let force_pick_merge = (merge_mode == "replace" && !drag_group_before)
-            || merge_mode == "subtractive"
-            || (merge_mode == "invertive" && merge_from_modifiers);
+        let force_pick_merge = (merge_mode == "replace" && !drag_group_before) || merge_mode == "subtractive" || (merge_mode == "invertive" && merge_from_modifiers);
         if !drag_group_before || force_pick_merge {
             self.apply_pick_with_mode(HitObject::Node(node_id), merge_mode.as_str());
         }
         if let Some(node) = self.nodes.get(&node_id) {
             if node.draggable {
-                let members: Vec<NodeId> = self
-                    .selection
-                    .node_ids
-                    .iter()
-                    .copied()
-                    .filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable))
-                    .collect();
+                let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
                 let drag_group = members.contains(&node_id) && members.len() > 1;
                 self.drag_start_positions.clear();
                 for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
@@ -1302,15 +1127,9 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     }
                 }
                 if drag_group {
-                    self.interaction = InteractionMode::DragNodes {
-                        primary_id: node_id,
-                        offset: point - node.center,
-                    };
+                    self.interaction = InteractionMode::DragNodes { primary_id: node_id, offset: point - node.center };
                 } else {
-                    self.interaction = InteractionMode::DragNode {
-                        node_id,
-                        offset: point - node.center,
-                    };
+                    self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
                 }
             }
         }
@@ -1453,32 +1272,15 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 }
                 self.interaction = InteractionMode::DragNodes { primary_id, offset };
             }
-            InteractionMode::DrawEdge {
-                anchor_handle,
-                anchor_is_source,
-                fixed_target,
-                reconnecting,
-                ..
-            } => {
+            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
                 if alt {
                     self.proximity_distance_override = Some(0.0);
                 }
-                let snap_target = if alt {
-                    None
-                } else {
-                    self.nearest_wire_snap_handle(anchor_handle, anchor_is_source, fixed_target, reconnecting, point)
-                };
+                let snap_target = if alt { None } else { self.nearest_wire_snap_handle(anchor_handle, anchor_is_source, fixed_target, reconnecting, point) };
                 if alt {
                     self.proximity_distance_override = None;
                 }
-                self.interaction = InteractionMode::DrawEdge {
-                    anchor_handle,
-                    anchor_is_source,
-                    fixed_target,
-                    cursor: point,
-                    reconnecting,
-                    snap_target,
-                };
+                self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor: point, reconnecting, snap_target };
                 let hover = snap_target.or_else(|| {
                     self.hit_test(point).map(|hit| match hit {
                         HitObject::Edge(id) => id,
@@ -1547,20 +1349,13 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let grabbed = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
         let node_drag_proximity = self.proximity_connection.take();
         match grabbed {
-            InteractionMode::DrawEdge {
-                anchor_handle,
-                anchor_is_source,
-                fixed_target,
-                reconnecting,
-                snap_target,
-                ..
-            } => {
-                let endpoint = snap_target
-                    .filter(|hid| self.wire_snap_still_active(*hid, point))
-                    .or_else(|| self.hit_test(point).and_then(|hit| match hit {
+            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, snap_target, .. } => {
+                let endpoint = snap_target.filter(|hid| self.wire_snap_still_active(*hid, point)).or_else(|| {
+                    self.hit_test(point).and_then(|hit| match hit {
                         HitObject::Endpoint(ep) => Some(P::endpoint_as_u64(ep)),
                         _ => None,
-                    }));
+                    })
+                });
                 if !alt {
                     if let Some(hit_hid) = endpoint {
                         let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
@@ -1604,11 +1399,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let end_screen = screen_points.last().copied().unwrap_or(start_screen);
                 let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
                 let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
-                let next = if click_only {
-                    BTreeSet::new()
-                } else {
-                    self.resolve_area_hits(&self.area_initial_string_set(), start, &points, merge_mode.as_str())
-                };
+                let next = if click_only { BTreeSet::new() } else { self.resolve_area_hits(&self.area_initial_string_set(), start, &points, merge_mode.as_str()) };
                 self.commit_selection_from_hits(&next);
                 self.clear_preselect();
                 self.selection_preview_points.clear();
@@ -1638,15 +1429,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 snapshot.edges.push(curve);
             }
         }
-        if let InteractionMode::DrawEdge {
-            anchor_handle,
-            anchor_is_source,
-            fixed_target,
-            cursor,
-            snap_target,
-            ..
-        } = self.interaction
-        {
+        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, snap_target, .. } = self.interaction {
             snapshot.pending_edge = self.draw_edge_preview_curve(anchor_handle, anchor_is_source, fixed_target, cursor, snap_target);
         } else if let Some(conn) = self.proximity_connection {
             snapshot.pending_edge = self.proximity_preview_curve(conn);
@@ -1662,61 +1445,20 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBez> {
         let edge = self.edges.get(&edge_id)?;
-        let (source_position, target_position, source_node, target_node, source_cap_radius, target_cap_radius) =
-            self.endpoint_wire_nodes(edge)?;
-        Some(self.wire_bezier_between(
-            source_position,
-            target_position,
-            source_node,
-            target_node,
-            source_cap_radius,
-            target_cap_radius,
-        ))
+        let (source_position, target_position, source_node, target_node, source_cap_radius, target_cap_radius) = self.endpoint_wire_nodes(edge)?;
+        Some(self.wire_bezier_between(source_position, target_position, source_node, target_node, source_cap_radius, target_cap_radius))
     }
 
-    fn wire_bezier_between(
-        &self,
-        source_point: Point,
-        target_point: Point,
-        source_node: Option<&Node>,
-        target_node: Option<&Node>,
-        source_cap_radius: f64,
-        target_cap_radius: f64,
-    ) -> CubicBez {
+    fn wire_bezier_between(&self, source_point: Point, target_point: Point, source_node: Option<&Node>, target_node: Option<&Node>, source_cap_radius: f64, target_cap_radius: f64) -> CubicBez {
         let chord = normalize_or_zero(target_point - source_point);
-        let source_out = source_node
-            .and_then(|node| {
-                handle_outward_at_node_rim(source_point, node.center, node.shape, node.radius, node.width, node.height)
-            })
-            .filter(|outward| outward.hypot() > f64::EPSILON)
-            .unwrap_or(chord);
-        let target_out = target_node
-            .and_then(|node| {
-                handle_outward_at_node_rim(target_point, node.center, node.shape, node.radius, node.width, node.height)
-            })
-            .filter(|outward| outward.hypot() > f64::EPSILON)
-            .unwrap_or(-chord);
-        let source_wire = if source_node.is_some() {
-            handle_exterior_cap_peak(source_point, source_out, source_cap_radius)
-        } else {
-            source_point
-        };
-        let target_wire = if target_node.is_some() {
-            handle_exterior_cap_peak(target_point, target_out, target_cap_radius)
-        } else {
-            target_point
-        };
+        let source_out = source_node.and_then(|node| handle_outward_at_node_rim(source_point, node.center, node.shape, node.radius, node.width, node.height)).filter(|outward| outward.hypot() > f64::EPSILON).unwrap_or(chord);
+        let target_out = target_node.and_then(|node| handle_outward_at_node_rim(target_point, node.center, node.shape, node.radius, node.width, node.height)).filter(|outward| outward.hypot() > f64::EPSILON).unwrap_or(-chord);
+        let source_wire = if source_node.is_some() { handle_exterior_cap_peak(source_point, source_out, source_cap_radius) } else { source_point };
+        let target_wire = if target_node.is_some() { handle_exterior_cap_peak(target_point, target_out, target_cap_radius) } else { target_point };
         compute_edge_bezier_outward(source_wire, target_wire, source_out, target_out)
     }
 
-    fn draw_edge_preview_curve(
-        &self,
-        anchor_handle: HandleId,
-        anchor_is_source: bool,
-        fixed_target: Option<HandleId>,
-        cursor: Point,
-        snap_target: Option<HandleId>,
-    ) -> Option<CubicBez> {
+    fn draw_edge_preview_curve(&self, anchor_handle: HandleId, anchor_is_source: bool, fixed_target: Option<HandleId>, cursor: Point, snap_target: Option<HandleId>) -> Option<CubicBez> {
         if let Some(fixed_tgt) = fixed_target {
             let tgt_h = self.handles.get(&fixed_tgt)?;
             let tgt_node = self.nodes.get(&tgt_h.node_id)?;
@@ -1725,14 +1467,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let snap_h = self.handles.get(&snap)?;
                 let snap_node = self.nodes.get(&snap_h.node_id)?;
                 let source_point = handle_position(snap_node, snap_h);
-                return Some(self.wire_bezier_between(
-                    source_point,
-                    target_point,
-                    Some(snap_node),
-                    Some(tgt_node),
-                    snap_h.radius,
-                    tgt_h.radius,
-                ));
+                return Some(self.wire_bezier_between(source_point, target_point, Some(snap_node), Some(tgt_node), snap_h.radius, tgt_h.radius));
             }
             return Some(self.wire_bezier_between(cursor, target_point, None, Some(tgt_node), 0.0, tgt_h.radius));
         }
@@ -1744,36 +1479,21 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 let snap_h = self.handles.get(&snap)?;
                 let snap_node = self.nodes.get(&snap_h.node_id)?;
                 let snap_point = handle_position(snap_node, snap_h);
-                return Some(self.wire_bezier_between(
-                    anchor_point,
-                    snap_point,
-                    Some(anchor_node),
-                    Some(snap_node),
-                    anchor.radius,
-                    snap_h.radius,
-                ));
+                return Some(self.wire_bezier_between(anchor_point, snap_point, Some(anchor_node), Some(snap_node), anchor.radius, snap_h.radius));
             }
             Some(self.wire_bezier_between(anchor_point, cursor, Some(anchor_node), None, anchor.radius, 0.0))
         } else if let Some(snap) = snap_target {
             let snap_h = self.handles.get(&snap)?;
             let snap_node = self.nodes.get(&snap_h.node_id)?;
             let snap_point = handle_position(snap_node, snap_h);
-            Some(self.wire_bezier_between(
-                snap_point,
-                anchor_point,
-                Some(snap_node),
-                Some(anchor_node),
-                snap_h.radius,
-                anchor.radius,
-            ))
+            Some(self.wire_bezier_between(snap_point, anchor_point, Some(snap_node), Some(anchor_node), snap_h.radius, anchor.radius))
         } else {
             Some(self.wire_bezier_between(cursor, anchor_point, None, Some(anchor_node), 0.0, anchor.radius))
         }
     }
 
     fn active_proximity_distance_world(&self) -> f64 {
-        self.proximity_distance_override
-            .unwrap_or(self.proximity_distance_world)
+        self.proximity_distance_override.unwrap_or(self.proximity_distance_world)
     }
 
     fn proximity_enabled(&self) -> bool {
@@ -1801,14 +1521,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         distance(cursor, pos) <= self.wire_snap_drag_tolerance_world(handle.radius)
     }
 
-    fn nearest_wire_snap_handle(
-        &self,
-        anchor_handle: HandleId,
-        anchor_is_source: bool,
-        fixed_target: Option<HandleId>,
-        reconnecting: Option<EdgeId>,
-        cursor: Point,
-    ) -> Option<HandleId> {
+    fn nearest_wire_snap_handle(&self, anchor_handle: HandleId, anchor_is_source: bool, fixed_target: Option<HandleId>, reconnecting: Option<EdgeId>, cursor: Point) -> Option<HandleId> {
         if !P::HAS_PORTS || !self.proximity_enabled() {
             return None;
         }
@@ -1845,10 +1558,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         best.map(|(_, id)| id)
     }
 
-    fn endpoint_wire_nodes(
-        &self,
-        edge: &GraphEdge<P::Endpoint>,
-    ) -> Option<(Point, Point, Option<&Node>, Option<&Node>, f64, f64)> {
+    fn endpoint_wire_nodes(&self, edge: &GraphEdge<P::Endpoint>) -> Option<(Point, Point, Option<&Node>, Option<&Node>, f64, f64)> {
         if P::HAS_PORTS {
             let source_handle = self.handles.get(&P::endpoint_as_handle(edge.source)?)?;
             let target_handle = self.handles.get(&P::endpoint_as_handle(edge.target)?)?;
@@ -1856,14 +1566,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             let target_node = self.nodes.get(&target_handle.node_id)?;
             let source_position = handle_position(source_node, source_handle);
             let target_position = handle_position(target_node, target_handle);
-            return Some((
-                source_position,
-                target_position,
-                Some(source_node),
-                Some(target_node),
-                source_handle.radius,
-                target_handle.radius,
-            ));
+            return Some((source_position, target_position, Some(source_node), Some(target_node), source_handle.radius, target_handle.radius));
         }
         let source_node = self.nodes.get(&P::endpoint_as_u64(edge.source))?;
         let target_node = self.nodes.get(&P::endpoint_as_u64(edge.target))?;
@@ -1872,12 +1575,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     fn remove_handle(&mut self, id: HandleId) {
         self.handles.remove(&id);
-        let removed_edges: Vec<EdgeId> = self
-            .edges
-            .values()
-            .filter(|edge| P::endpoint_as_u64(edge.source) == id || P::endpoint_as_u64(edge.target) == id)
-            .map(|edge| edge.id)
-            .collect();
+        let removed_edges: Vec<EdgeId> = self.edges.values().filter(|edge| P::endpoint_as_u64(edge.source) == id || P::endpoint_as_u64(edge.target) == id).map(|edge| edge.id).collect();
         for edge_id in removed_edges {
             self.edges.remove(&edge_id);
             self.selection.edge_ids.remove(&edge_id);
@@ -2063,11 +1761,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     fn push_selection_event(&mut self) {
-        self.events.push(BoardEvent::SelectionChanged {
-            edge_ids: self.selection.edge_ids.iter().copied().collect(),
-            handle_ids: self.selection.handle_ids.iter().copied().collect(),
-            node_ids: self.selection.node_ids.iter().copied().collect(),
-        });
+        self.events.push(BoardEvent::SelectionChanged { edge_ids: self.selection.edge_ids.iter().copied().collect(), handle_ids: self.selection.handle_ids.iter().copied().collect(), node_ids: self.selection.node_ids.iter().copied().collect() });
     }
 
     fn begin_draw_edge_from_handle(&mut self, handle_id: HandleId, cursor: Point) {
@@ -2081,45 +1775,22 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             Some((src, true, Some(target_hid), Some(edge_id)))
         };
         let (anchor_handle, anchor_is_source, fixed_target, reconnecting) = match handle.role {
-            HandleRole::Target => incoming
-                .and_then(|e| reconnect_from_target(e, handle_id))
-                .unwrap_or((handle_id, false, None, None)),
+            HandleRole::Target => incoming.and_then(|e| reconnect_from_target(e, handle_id)).unwrap_or((handle_id, false, None, None)),
             HandleRole::Source => (handle_id, true, None, None),
-            HandleRole::Any => incoming
-                .and_then(|e| reconnect_from_target(e, handle_id))
-                .unwrap_or((handle_id, true, None, None)),
+            HandleRole::Any => incoming.and_then(|e| reconnect_from_target(e, handle_id)).unwrap_or((handle_id, true, None, None)),
         };
-        self.interaction = InteractionMode::DrawEdge {
-            anchor_handle,
-            anchor_is_source,
-            fixed_target,
-            cursor,
-            reconnecting,
-            snap_target: None,
-        };
+        self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, reconnecting, snap_target: None };
     }
 
     fn incoming_edge_for_handle(&self, handle_id: HandleId) -> Option<EdgeId> {
-        self.edges
-            .values()
-            .find(|edge| P::endpoint_as_u64(edge.target) == handle_id)
-            .map(|edge| edge.id)
+        self.edges.values().find(|edge| P::endpoint_as_u64(edge.target) == handle_id).map(|edge| edge.id)
     }
 
     fn displaced_incoming_edge(&self, target_hid: HandleId, reconnecting: Option<EdgeId>) -> Option<EdgeId> {
-        self.edges
-            .values()
-            .find(|edge| Some(edge.id) != reconnecting && P::endpoint_as_u64(edge.target) == target_hid)
-            .map(|edge| edge.id)
+        self.edges.values().find(|edge| Some(edge.id) != reconnecting && P::endpoint_as_u64(edge.target) == target_hid).map(|edge| edge.id)
     }
 
-    fn is_valid_connection(
-        &self,
-        source_hid: HandleId,
-        target_hid: HandleId,
-        reconnecting: Option<EdgeId>,
-        allow_target_replace: bool,
-    ) -> bool {
+    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>, allow_target_replace: bool) -> bool {
         if source_hid == target_hid {
             return false;
         }
@@ -2138,29 +1809,16 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         if !matches!(target_handle.role, HandleRole::Target | HandleRole::Any) {
             return false;
         }
-        if self.edges.values().any(|e| {
-            Some(e.id) != reconnecting && P::endpoint_as_u64(e.source) == source_hid && P::endpoint_as_u64(e.target) == target_hid
-        }) {
+        if self.edges.values().any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.source) == source_hid && P::endpoint_as_u64(e.target) == target_hid) {
             return false;
         }
-        if !allow_target_replace
-            && self
-                .edges
-                .values()
-                .any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid)
-        {
+        if !allow_target_replace && self.edges.values().any(|e| Some(e.id) != reconnecting && P::endpoint_as_u64(e.target) == target_hid) {
             return false;
         }
         if self.enforce_acyclic {
             let src_node = source_handle.node_id;
             let tgt_node = target_handle.node_id;
-            let excluding = reconnecting.or_else(|| {
-                if allow_target_replace {
-                    self.displaced_incoming_edge(target_hid, reconnecting)
-                } else {
-                    None
-                }
-            });
+            let excluding = reconnecting.or_else(|| if allow_target_replace { self.displaced_incoming_edge(target_hid, reconnecting) } else { None });
             if self.would_create_cycle_between_nodes(src_node, tgt_node, excluding) {
                 return false;
             }
@@ -2184,11 +1842,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             return false;
         };
         self.create_edge(new_id, src_ep, tgt_ep);
-        self.events.push(BoardEvent::EdgeConnected {
-            id: new_id,
-            source: source_hid,
-            target: target_hid,
-        });
+        self.events.push(BoardEvent::EdgeConnected { id: new_id, source: source_hid, target: target_hid });
         true
     }
 
@@ -2211,9 +1865,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     fn handle_has_incident_edge(&self, handle_id: HandleId) -> bool {
-        self.edges
-            .values()
-            .any(|edge| P::endpoint_as_u64(edge.source) == handle_id || P::endpoint_as_u64(edge.target) == handle_id)
+        self.edges.values().any(|edge| P::endpoint_as_u64(edge.source) == handle_id || P::endpoint_as_u64(edge.target) == handle_id)
     }
 
     fn update_node_drag_proximity(&mut self, dragged_ids: &[NodeId]) {
@@ -2266,14 +1918,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let target_node = self.nodes.get(&target_handle.node_id)?;
         let source_position = handle_position(source_node, source_handle);
         let target_position = handle_position(target_node, target_handle);
-        Some(self.wire_bezier_between(
-            source_position,
-            target_position,
-            Some(source_node),
-            Some(target_node),
-            source_handle.radius,
-            target_handle.radius,
-        ))
+        Some(self.wire_bezier_between(source_position, target_position, Some(source_node), Some(target_node), source_handle.radius, target_handle.radius))
     }
 
     fn would_create_cycle_between_nodes(&self, source: NodeId, target: NodeId, excluding: Option<EdgeId>) -> bool {
@@ -2536,8 +2181,7 @@ mod tests {
         let preview = engine.render_snapshot().pending_edge.expect("preview");
         let target_node = engine.nodes.get(&2).expect("target node");
         let target_handle = engine.handles.get(&11).expect("target handle");
-        let outward = handle_outward_at_node_rim(inp, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height)
-            .expect("target outward");
+        let outward = handle_outward_at_node_rim(inp, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height).expect("target outward");
         let peak = handle_exterior_cap_peak(inp, outward, target_handle.radius);
         assert!((preview.p3.x - peak.x).abs() < 0.01);
         assert!((preview.p3.y - peak.y).abs() < 0.01);
@@ -2660,10 +2304,7 @@ mod tests {
         engine.create_edge(101, 12, 13);
         engine.pointer_down(220.0, 0.0, false);
         engine.pointer_move(260.0, 0.0);
-        assert!(
-            engine.render_snapshot().pending_edge.is_none(),
-            "wired mid-node drag must not flip proximity preview between input and output"
-        );
+        assert!(engine.render_snapshot().pending_edge.is_none(), "wired mid-node drag must not flip proximity preview between input and output");
         engine.pointer_up(260.0, 0.0);
         assert_eq!(engine.edges.len(), 2);
     }

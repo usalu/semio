@@ -10,12 +10,7 @@ fn material_schema() -> Schema {
         name: "Material".into(),
         icon: "emoji:🧱".into(),
         summary: "Building material with thermal and structural properties".into(),
-        fields: vec![
-            FieldSpec::new("name", ValueType::Text),
-            FieldSpec::decimal_default("density", 2400.0),
-            FieldSpec::decimal_default("conductivity", 1.4),
-            FieldSpec::decimal_default("strength", 30.0),
-        ],
+        fields: vec![FieldSpec::new("name", ValueType::Text), FieldSpec::decimal_default("density", 2400.0), FieldSpec::decimal_default("conductivity", 1.4), FieldSpec::decimal_default("strength", 30.0)],
     }
 }
 
@@ -26,11 +21,7 @@ fn space_schema() -> Schema {
         name: "Space".into(),
         icon: "emoji:🏠".into(),
         summary: "Occupiable space with area and height".into(),
-        fields: vec![
-            FieldSpec::new("name", ValueType::Text),
-            FieldSpec::decimal_default("area", 20.0),
-            FieldSpec::decimal_default("height", 2.8),
-        ],
+        fields: vec![FieldSpec::new("name", ValueType::Text), FieldSpec::decimal_default("area", 20.0), FieldSpec::decimal_default("height", 2.8)],
     }
 }
 
@@ -41,11 +32,7 @@ fn wall_schema() -> Schema {
         name: "Wall".into(),
         icon: "emoji:🧱".into(),
         summary: "Structural or partition wall".into(),
-        fields: vec![
-            FieldSpec::decimal_default("length", 4.0),
-            FieldSpec::decimal_default("height", 2.8),
-            FieldSpec::decimal_default("thickness", 0.2),
-        ],
+        fields: vec![FieldSpec::decimal_default("length", 4.0), FieldSpec::decimal_default("height", 2.8), FieldSpec::decimal_default("thickness", 0.2)],
     }
 }
 
@@ -56,11 +43,7 @@ fn slab_schema() -> Schema {
         name: "Slab".into(),
         icon: "emoji:⬜".into(),
         summary: "Horizontal slab element".into(),
-        fields: vec![
-            FieldSpec::decimal_default("width", 10.0),
-            FieldSpec::decimal_default("depth", 8.0),
-            FieldSpec::decimal_default("thickness", 0.25),
-        ],
+        fields: vec![FieldSpec::decimal_default("width", 10.0), FieldSpec::decimal_default("depth", 8.0), FieldSpec::decimal_default("thickness", 0.25)],
     }
 }
 
@@ -71,11 +54,7 @@ fn column_schema() -> Schema {
         name: "Column".into(),
         icon: "emoji:🏛️".into(),
         summary: "Vertical structural column".into(),
-        fields: vec![
-            FieldSpec::decimal_default("width", 0.4),
-            FieldSpec::decimal_default("depth", 0.4),
-            FieldSpec::decimal_default("height", 3.0),
-        ],
+        fields: vec![FieldSpec::decimal_default("width", 0.4), FieldSpec::decimal_default("depth", 0.4), FieldSpec::decimal_default("height", 3.0)],
     }
 }
 
@@ -86,11 +65,7 @@ fn window_schema() -> Schema {
         name: "Window".into(),
         icon: "emoji:🪟".into(),
         summary: "Glazed opening".into(),
-        fields: vec![
-            FieldSpec::decimal_default("width", 1.2),
-            FieldSpec::decimal_default("height", 1.4),
-            FieldSpec::decimal_default("sill", 0.9),
-        ],
+        fields: vec![FieldSpec::decimal_default("width", 1.2), FieldSpec::decimal_default("height", 1.4), FieldSpec::decimal_default("sill", 0.9)],
     }
 }
 
@@ -117,10 +92,7 @@ fn building_schema() -> Schema {
         name: "Building".into(),
         icon: "emoji:🏗️".into(),
         summary: "Assembled building model".into(),
-        fields: vec![
-            FieldSpec::new("name", ValueType::Text),
-            FieldSpec::new("stories", ValueType::List(Box::new(ValueType::Schema("story".into())))),
-        ],
+        fields: vec![FieldSpec::new("name", ValueType::Text), FieldSpec::new("stories", ValueType::List(Box::new(ValueType::Schema("story".into()))))],
     }
 }
 // #endregion 🔖Schemas
@@ -182,16 +154,7 @@ fn out_gross_volume() -> ChannelSpec {
     ChannelSpec::named("V", "GrV", "grossVolume", "GrossVolume")
 }
 
-fn operator_info(
-    id: &str,
-    name: &str,
-    abbreviation: &str,
-    icon: &str,
-    summary: &str,
-    inputs: Vec<ChannelSpec>,
-    output: ChannelSpec,
-    group: &[&str],
-) -> OperatorInfo {
+fn operator_info(id: &str, name: &str, abbreviation: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
         module: "bim".into(),
@@ -212,19 +175,12 @@ fn register_element(registry: &mut Registry, info: OperatorInfo, operation: Box<
 
 fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
-    dict.get("value")
-        .and_then(|value| value.as_atom())
-        .and_then(|atom| atom.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    dict.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
-    dict.get("value")
-        .and_then(|value| value.as_atom())
-        .and_then(|atom| atom.as_str())
-        .map(str::to_string)
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    dict.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_field_number(dict: &Dictionary, key: &str) -> Option<f64> {
@@ -401,11 +357,8 @@ impl Operation for AssembleStory {
         let elevation = read_channel_number(input, "elevation").unwrap_or(0.0);
         let height = read_channel_number(input, "height")?;
         let (elements, spaces) = collect_elements_and_spaces(input.get("elements").and_then(|value| value.as_dictionary()));
-        let mut story = Dictionary::with_schema("story")
-            .insert("elevation", Value::Atom(Atom::Decimal(elevation)))
-            .insert("height", Value::Atom(Atom::Decimal(height)))
-            .insert("elements", Value::Dictionary(elements))
-            .insert("spaces", Value::Dictionary(spaces));
+        let mut story =
+            Dictionary::with_schema("story").insert("elevation", Value::Atom(Atom::Decimal(elevation))).insert("height", Value::Atom(Atom::Decimal(height))).insert("elements", Value::Dictionary(elements)).insert("spaces", Value::Dictionary(spaces));
         if let Some(slab) = input.get("slab").and_then(|value| value.as_dictionary()) {
             story = story.insert("slab", Value::Dictionary(slab.clone()));
         }
@@ -419,12 +372,7 @@ impl Operation for AssembleBuilding {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let name = read_channel_text(input, "name").unwrap_or_else(|_| "Building".into());
         let stories = list_from_variadic(input.get("stories").and_then(|value| value.as_dictionary()));
-        Ok(channel_output(
-            "building",
-            Dictionary::with_schema("building")
-                .insert("name", Value::Atom(Atom::String(name)))
-                .insert("stories", Value::Dictionary(stories)),
-        ))
+        Ok(channel_output("building", Dictionary::with_schema("building").insert("name", Value::Atom(Atom::String(name))).insert("stories", Value::Dictionary(stories))))
     }
 }
 // #endregion 🔖Assembly
@@ -465,11 +413,7 @@ impl Operation for GrossVolume {
 }
 
 fn read_building<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
-    input
-        .get(key)
-        .and_then(|value| value.as_dictionary())
-        .filter(|dict| dict.schema() == Some("building"))
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("building")).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 // #endregion 🔖Measure
 
@@ -512,11 +456,7 @@ pub fn register(registry: &mut Registry) {
             "Space",
             "emoji:🏠",
             "Defines an occupiable space",
-            vec![
-                text_channel("name", "bim.element.space", "Space"),
-                number_channel("area", "bim.element.space", 20.0),
-                number_channel("height", "bim.element.space", 2.8),
-            ],
+            vec![text_channel("name", "bim.element.space", "Space"), number_channel("area", "bim.element.space", 20.0), number_channel("height", "bim.element.space", 2.8)],
             out_space(),
             &["Elements"],
         ),
@@ -531,11 +471,7 @@ pub fn register(registry: &mut Registry) {
             "Wall",
             "emoji:🧱",
             "Defines a wall element",
-            vec![
-                number_channel("length", "bim.element.wall", 4.0),
-                number_channel("height", "bim.element.wall", 2.8),
-                number_channel("thickness", "bim.element.wall", 0.2),
-            ],
+            vec![number_channel("length", "bim.element.wall", 4.0), number_channel("height", "bim.element.wall", 2.8), number_channel("thickness", "bim.element.wall", 0.2)],
             out_wall(),
             &["Elements"],
         ),
@@ -550,11 +486,7 @@ pub fn register(registry: &mut Registry) {
             "Slab",
             "emoji:⬜",
             "Defines a slab element",
-            vec![
-                number_channel("width", "bim.element.slab", 10.0),
-                number_channel("depth", "bim.element.slab", 8.0),
-                number_channel("thickness", "bim.element.slab", 0.25),
-            ],
+            vec![number_channel("width", "bim.element.slab", 10.0), number_channel("depth", "bim.element.slab", 8.0), number_channel("thickness", "bim.element.slab", 0.25)],
             out_slab(),
             &["Elements"],
         ),
@@ -569,11 +501,7 @@ pub fn register(registry: &mut Registry) {
             "Col",
             "emoji:🏛️",
             "Defines a column element",
-            vec![
-                number_channel("width", "bim.element.column", 0.4),
-                number_channel("depth", "bim.element.column", 0.4),
-                number_channel("height", "bim.element.column", 3.0),
-            ],
+            vec![number_channel("width", "bim.element.column", 0.4), number_channel("depth", "bim.element.column", 0.4), number_channel("height", "bim.element.column", 3.0)],
             out_column(),
             &["Elements"],
         ),
@@ -588,11 +516,7 @@ pub fn register(registry: &mut Registry) {
             "Win",
             "emoji:🪟",
             "Defines a window element",
-            vec![
-                number_channel("width", "bim.element.window", 1.2),
-                number_channel("height", "bim.element.window", 1.4),
-                number_channel("sill", "bim.element.window", 0.9),
-            ],
+            vec![number_channel("width", "bim.element.window", 1.2), number_channel("height", "bim.element.window", 1.4), number_channel("sill", "bim.element.window", 0.9)],
             out_window(),
             &["Elements"],
         ),
@@ -609,11 +533,7 @@ pub fn register(registry: &mut Registry) {
                 "Story",
                 "emoji:🏢",
                 "Assembles a story from elements and optional slab",
-                vec![
-                    number_channel("elevation", "bim.assemble.story", 0.0),
-                    number_channel("height", "bim.assemble.story", 3.0),
-                    ChannelSpec::requires("slab", &["bim.element.slab"]),
-                ],
+                vec![number_channel("elevation", "bim.assemble.story", 0.0), number_channel("height", "bim.assemble.story", 3.0), ChannelSpec::requires("slab", &["bim.element.slab"])],
                 out_story(),
                 &["Assembly"],
             )
@@ -624,46 +544,19 @@ pub fn register(registry: &mut Registry) {
     registry.register_operator(
         OperatorInfo {
             variadic_input: Some(VariadicSpec { slot_key: "stories".into(), min: 1, max: None }),
-            ..operator_info(
-                "bim.assemble.building",
-                "Assemble Building",
-                "Building",
-                "emoji:🏗️",
-                "Assembles a building from stories",
-                vec![text_channel("name", "bim.assemble.building", "Building")],
-                out_building(),
-                &["Assembly"],
-            )
+            ..operator_info("bim.assemble.building", "Assemble Building", "Building", "emoji:🏗️", "Assembles a building from stories", vec![text_channel("name", "bim.assemble.building", "Building")], out_building(), &["Assembly"])
         },
         vec![OperatorImpl { schemas: vec![], operation: Box::new(AssembleBuilding) }],
         &["building"],
     );
 
     registry.register_operator(
-        operator_info(
-            "bim.measure.floorArea",
-            "Floor Area",
-            "Area",
-            "emoji:📐",
-            "Total floor area across all stories",
-            vec![ChannelSpec::requires("building", &["bim.assemble.building"])],
-            out_floor_area(),
-            &["Measure"],
-        ),
+        operator_info("bim.measure.floorArea", "Floor Area", "Area", "emoji:📐", "Total floor area across all stories", vec![ChannelSpec::requires("building", &["bim.assemble.building"])], out_floor_area(), &["Measure"]),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(FloorArea) }],
         &["number"],
     );
     registry.register_operator(
-        operator_info(
-            "bim.measure.grossVolume",
-            "Gross Volume",
-            "Vol",
-            "emoji:📦",
-            "Gross building volume across all stories",
-            vec![ChannelSpec::requires("building", &["bim.assemble.building"])],
-            out_gross_volume(),
-            &["Measure"],
-        ),
+        operator_info("bim.measure.grossVolume", "Gross Volume", "Vol", "emoji:📦", "Gross building volume across all stories", vec![ChannelSpec::requires("building", &["bim.assemble.building"])], out_gross_volume(), &["Measure"]),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(GrossVolume) }],
         &["number"],
     );
@@ -693,13 +586,7 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let out = reg
-            .dispatch(
-                "bim.element.wall",
-                &Dictionary::new()
-                    .insert("length", Value::Dictionary(number_dictionary(5.0)))
-                    .insert("height", Value::Dictionary(number_dictionary(3.0)))
-                    .insert("thickness", Value::Dictionary(number_dictionary(0.2))),
-            )
+            .dispatch("bim.element.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2))))
             .unwrap();
         let wall = channel_payload(&out, "wall");
         assert_eq!(wall.schema(), Some("wall"));
@@ -711,36 +598,18 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let wall = channel_payload(
-            &reg.dispatch(
-                "bim.element.wall",
-                &Dictionary::new()
-                    .insert("length", Value::Dictionary(number_dictionary(4.0)))
-                    .insert("height", Value::Dictionary(number_dictionary(2.8)))
-                    .insert("thickness", Value::Dictionary(number_dictionary(0.2))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.element.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2))))
+                .unwrap(),
             "wall",
         );
         let space = channel_payload(
-            &reg.dispatch(
-                "bim.element.space",
-                &Dictionary::new()
-                    .insert("name", Value::Dictionary(text_dictionary("Lobby")))
-                    .insert("area", Value::Dictionary(number_dictionary(40.0)))
-                    .insert("height", Value::Dictionary(number_dictionary(3.0))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.element.space", &Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Lobby"))).insert("area", Value::Dictionary(number_dictionary(40.0))).insert("height", Value::Dictionary(number_dictionary(3.0))))
+                .unwrap(),
             "space",
         );
         let slab = channel_payload(
-            &reg.dispatch(
-                "bim.element.slab",
-                &Dictionary::new()
-                    .insert("width", Value::Dictionary(number_dictionary(10.0)))
-                    .insert("depth", Value::Dictionary(number_dictionary(8.0)))
-                    .insert("thickness", Value::Dictionary(number_dictionary(0.25))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.element.slab", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(8.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
+                .unwrap(),
             "slab",
         );
         let story = channel_payload(
@@ -750,14 +619,7 @@ mod tests {
                     .insert("elevation", Value::Dictionary(number_dictionary(0.0)))
                     .insert("height", Value::Dictionary(number_dictionary(3.0)))
                     .insert("slab", Value::Dictionary(slab))
-                    .insert(
-                        "elements",
-                        Value::Dictionary(
-                            Dictionary::new()
-                                .insert("0", Value::Dictionary(wall))
-                                .insert("1", Value::Dictionary(space)),
-                        ),
-                    ),
+                    .insert("elements", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(wall)).insert("1", Value::Dictionary(space)))),
             )
             .unwrap(),
             "story",
@@ -775,42 +637,20 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let slab = channel_payload(
-            &reg.dispatch(
-                "bim.element.slab",
-                &Dictionary::new()
-                    .insert("width", Value::Dictionary(number_dictionary(10.0)))
-                    .insert("depth", Value::Dictionary(number_dictionary(8.0)))
-                    .insert("thickness", Value::Dictionary(number_dictionary(0.25))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.element.slab", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(8.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
+                .unwrap(),
             "slab",
         );
         let story = channel_payload(
-            &reg.dispatch(
-                "bim.assemble.story",
-                &Dictionary::new()
-                    .insert("height", Value::Dictionary(number_dictionary(3.0)))
-                    .insert("slab", Value::Dictionary(slab))
-                    .insert("elements", Value::Dictionary(Dictionary::new())),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.assemble.story", &Dictionary::new().insert("height", Value::Dictionary(number_dictionary(3.0))).insert("slab", Value::Dictionary(slab)).insert("elements", Value::Dictionary(Dictionary::new()))).unwrap(),
             "story",
         );
         let building = channel_payload(
-            &reg.dispatch(
-                "bim.assemble.building",
-                &Dictionary::new()
-                    .insert("name", Value::Dictionary(text_dictionary("Tower")))
-                    .insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story)))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.assemble.building", &Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Tower"))).insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story))))).unwrap(),
             "building",
         );
         assert_eq!(building.schema(), Some("building"));
-        let area = channel_payload(
-            &reg.dispatch("bim.measure.floorArea", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(),
-            "floorArea",
-        );
+        let area = channel_payload(&reg.dispatch("bim.measure.floorArea", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(), "floorArea");
         assert_eq!(area.schema(), Some("number"));
         assert_eq!(read_field_number(&area, "value"), Some(80.0));
     }
@@ -820,41 +660,19 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let slab = channel_payload(
-            &reg.dispatch(
-                "bim.element.slab",
-                &Dictionary::new()
-                    .insert("width", Value::Dictionary(number_dictionary(10.0)))
-                    .insert("depth", Value::Dictionary(number_dictionary(10.0)))
-                    .insert("thickness", Value::Dictionary(number_dictionary(0.25))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.element.slab", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(10.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
+                .unwrap(),
             "slab",
         );
         let story = channel_payload(
-            &reg.dispatch(
-                "bim.assemble.story",
-                &Dictionary::new()
-                    .insert("height", Value::Dictionary(number_dictionary(3.0)))
-                    .insert("slab", Value::Dictionary(slab))
-                    .insert("elements", Value::Dictionary(Dictionary::new())),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.assemble.story", &Dictionary::new().insert("height", Value::Dictionary(number_dictionary(3.0))).insert("slab", Value::Dictionary(slab)).insert("elements", Value::Dictionary(Dictionary::new()))).unwrap(),
             "story",
         );
         let building = channel_payload(
-            &reg.dispatch(
-                "bim.assemble.building",
-                &Dictionary::new()
-                    .insert("name", Value::Dictionary(text_dictionary("Block")))
-                    .insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story)))),
-            )
-            .unwrap(),
+            &reg.dispatch("bim.assemble.building", &Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Block"))).insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story))))).unwrap(),
             "building",
         );
-        let volume = channel_payload(
-            &reg.dispatch("bim.measure.grossVolume", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(),
-            "grossVolume",
-        );
+        let volume = channel_payload(&reg.dispatch("bim.measure.grossVolume", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(), "grossVolume");
         assert_eq!(read_field_number(&volume, "value"), Some(300.0));
     }
 
@@ -871,10 +689,7 @@ mod tests {
     #[test]
     fn evaluate_json_wall() {
         let reg = module_registry();
-        let input = Dictionary::new()
-            .insert("length", Value::Dictionary(number_dictionary(4.0)))
-            .insert("height", Value::Dictionary(number_dictionary(2.8)))
-            .insert("thickness", Value::Dictionary(number_dictionary(0.2)));
+        let input = Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2)));
         let out_json = evaluate_json(&reg, "bim.element.wall", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         assert_eq!(channel_payload(&out, "wall").schema(), Some("wall"));
@@ -884,21 +699,11 @@ mod tests {
     fn schema_component_round_trips_wall() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let built = reg
-            .dispatch(
-                "bim.wall",
-                &Dictionary::new()
-                    .insert("length", Value::Dictionary(number_dictionary(5.0)))
-                    .insert("height", Value::Dictionary(number_dictionary(3.0)))
-                    .insert("thickness", Value::Dictionary(number_dictionary(0.2))),
-            )
-            .unwrap();
+        let built =
+            reg.dispatch("bim.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2)))).unwrap();
         let wall = channel_payload(&built, "wall");
         let deconstructed = reg.dispatch("bim.wall", &Dictionary::new().insert("wall", Value::Dictionary(wall))).unwrap();
-        assert_eq!(
-            deconstructed.get("length").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
-            Some(5.0)
-        );
+        assert_eq!(deconstructed.get("length").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(5.0));
     }
 }
 // #endregion 🔖Tests

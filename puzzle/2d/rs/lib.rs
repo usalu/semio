@@ -1,16 +1,14 @@
 //! 🧩 Puzzle 2d board: elements palette, icon codec, `BoardHost`, WASM session on directed port normal graph.
 #![allow(clippy::missing_errors_doc, reason = "Puzzle board bundle is internal to puzzle 2d.")]
 
-pub use mathematical_graph_port_directed_normal::{self as graph, *};
-pub use graph::cavas;
 pub use cavas::vello::kurbo::{CubicBez, Point, Vec2};
-pub use graph::{
-    apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value,
-    apply_normal_undirected_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json,
-    apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json,
-    apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
-};
 pub use gis_map as map;
+pub use graph::cavas;
+pub use graph::{
+    apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_normal_undirected_redraw_layout_to_fixture_v1_json,
+    apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
+};
+pub use mathematical_graph_port_directed_normal::{self as graph, *};
 pub use reasoning_mindmap as mindmap;
 
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
@@ -224,9 +222,7 @@ impl BoardSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph)
-                .await
-                .map_err(|err| JsValue::from_str(&err))?;
+            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
@@ -453,11 +449,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setBrushSessionJson)]
     pub fn set_brush_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state
-            .borrow_mut()
-            .host
-            .set_brush_session_mirror_json(json)
-            .map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_brush_session_mirror_json(json).map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = clearBrushSessionJson)]
@@ -467,11 +459,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setFixtureDropPreviewJson)]
     pub fn set_fixture_drop_preview_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state
-            .borrow_mut()
-            .host
-            .set_fixture_drop_preview_json(json)
-            .map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_fixture_drop_preview_json(json).map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = clearFixtureDropPreview)]
@@ -662,7 +650,10 @@ mod tests {
 
 #[cfg(test)]
 mod host_tests {
-    use super::{compute_edge_bezier_points, distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardElementStyleKind, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction, NodeDescJson, NodeShape, SceneDescriptorJson, WireDescJson};
+    use super::{
+        compute_edge_bezier_points, distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardElementStyleKind, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction,
+        NodeDescJson, NodeShape, SceneDescriptorJson, WireDescJson,
+    };
     use crate::cavas::geom_sel::cubic_bezier_point;
     use crate::cavas::vello::kurbo::Point;
     use serde_json::json;
@@ -693,7 +684,7 @@ mod host_tests {
                 node_kind: None,
                 user_data: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 root: None,
                 shape: Some("circle".into()),
                 radius: Some(40.0),
@@ -702,8 +693,21 @@ mod host_tests {
                 scale: None,
             }],
             handles: vec![
-                HandleDescJson { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("port".into()), color: None, icon_kind: None, user_data: None, visible: None,
-                    locked: None, scale: None },
+                HandleDescJson {
+                    id: "a:h0".into(),
+                    node_id: "a".into(),
+                    angle: 0.0,
+                    radius: None,
+                    selected: None,
+                    style: None,
+                    handle_kind: Some("port".into()),
+                    color: None,
+                    icon_kind: None,
+                    user_data: None,
+                    visible: None,
+                    locked: None,
+                    scale: None,
+                },
                 HandleDescJson {
                     id: "b:h0".into(),
                     node_id: "b".into(),
@@ -720,14 +724,7 @@ mod host_tests {
                     scale: None,
                 },
             ],
-            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None,
-                source_tip: None,
-                target_tip: None,
-                selected: None,
-                style: None,
-                user_data: None,
-                visible: None,
-                locked: None }],
+            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }],
             wires: vec![],
             selection_exit_highlight_ids: vec![],
         }
@@ -917,7 +914,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -942,10 +939,7 @@ mod host_tests {
         let mut without = link_test_scene_no_edge();
         h.sync_descriptor(&without).unwrap();
         let without_edges = h.encoded_scene_hint();
-        assert!(
-            with_edges > without_edges,
-            "overview cached draw must encode edges (with={with_edges}, without={without_edges})"
-        );
+        assert!(with_edges > without_edges, "overview cached draw must encode edges (with={with_edges}, without={without_edges})");
     }
 
     #[test]
@@ -965,7 +959,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1039,7 +1033,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1078,7 +1072,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1120,7 +1114,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1170,7 +1164,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1209,7 +1203,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1240,7 +1234,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1285,7 +1279,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1318,7 +1312,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1397,7 +1391,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1432,7 +1426,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1473,7 +1467,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1533,7 +1527,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1594,7 +1588,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1641,7 +1635,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1720,8 +1714,21 @@ mod host_tests {
                 },
             ],
             handles: vec![
-                HandleDescJson { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("parent".into()), color: None, icon_kind: None, user_data: None, visible: None,
-                    locked: None, scale: None },
+                HandleDescJson {
+                    id: "a:h0".into(),
+                    node_id: "a".into(),
+                    angle: 0.0,
+                    radius: None,
+                    selected: None,
+                    style: None,
+                    handle_kind: Some("parent".into()),
+                    color: None,
+                    icon_kind: None,
+                    user_data: None,
+                    visible: None,
+                    locked: None,
+                    scale: None,
+                },
                 HandleDescJson {
                     id: "b:h0".into(),
                     node_id: "b".into(),
@@ -1766,7 +1773,7 @@ mod host_tests {
             icon_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             scale: None,
         });
         s
@@ -1774,8 +1781,21 @@ mod host_tests {
 
     fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
-        s.handles.push(HandleDescJson { id: "b:h1".into(), node_id: "b".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("child".into()), color: None, icon_kind: None, user_data: None, visible: None,
-                    locked: None, scale: None });
+        s.handles.push(HandleDescJson {
+            id: "b:h1".into(),
+            node_id: "b".into(),
+            angle: 0.0,
+            radius: None,
+            selected: None,
+            style: None,
+            handle_kind: Some("child".into()),
+            color: None,
+            icon_kind: None,
+            user_data: None,
+            visible: None,
+            locked: None,
+            scale: None,
+        });
         s
     }
 
@@ -1793,7 +1813,7 @@ mod host_tests {
             node_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             root: None,
             shape: Some("circle".into()),
             radius: Some(40.0),
@@ -1813,30 +1833,16 @@ mod host_tests {
             icon_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             scale: None,
         });
-        s.edges.push(EdgeDescJson { id: "e-bc".into(), source: "b:h0".into(), target: "c:h0".into(), edge_kind: None,
-                source_tip: None,
-                target_tip: None,
-                selected: None,
-                style: None,
-                user_data: None,
-                visible: None,
-                locked: None });
+        s.edges.push(EdgeDescJson { id: "e-bc".into(), source: "b:h0".into(), target: "c:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
         s
     }
 
     fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
-        s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None,
-                source_tip: None,
-                target_tip: None,
-                selected: None,
-                style: None,
-                user_data: None,
-                visible: None,
-                locked: None });
+        s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
         s
     }
 
@@ -1854,7 +1860,7 @@ mod host_tests {
             icon_kind: None,
             user_data: None,
             visible: None,
-                    locked: None,
+            locked: None,
             scale: None,
         });
         s
@@ -2000,8 +2006,21 @@ mod host_tests {
                     locked: None,
                     scale: None,
                 },
-                HandleDescJson { id: "b:h0".into(), node_id: "b".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("core.rect.top".into()), color: None, icon_kind: None, user_data: None, visible: None,
-                    locked: None, scale: None },
+                HandleDescJson {
+                    id: "b:h0".into(),
+                    node_id: "b".into(),
+                    angle: 0.0,
+                    radius: None,
+                    selected: None,
+                    style: None,
+                    handle_kind: Some("core.rect.top".into()),
+                    color: None,
+                    icon_kind: None,
+                    user_data: None,
+                    visible: None,
+                    locked: None,
+                    scale: None,
+                },
             ],
             edges: vec![],
             wires: vec![],
@@ -2156,19 +2175,7 @@ mod host_tests {
                 },
             ],
             handles: vec![],
-            edges: vec![EdgeDescJson {
-                id: "e1".into(),
-                source: "a".into(),
-                target: "b".into(),
-                edge_kind: Some("wires.owns".into()),
-                source_tip: None,
-                target_tip: None,
-                selected: None,
-                style: None,
-                user_data: None,
-                visible: None,
-                    locked: None,
-            }],
+            edges: vec![EdgeDescJson { id: "e1".into(), source: "a".into(), target: "b".into(), edge_kind: Some("wires.owns".into()), source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }],
             wires: vec![],
             selection_exit_highlight_ids: vec![],
         };
@@ -2801,7 +2808,7 @@ mod host_tests {
                 node_kind: Some("a.kind".into()),
                 user_data: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 root: None,
                 shape: Some("circle".into()),
                 radius: Some(40.0),
@@ -2817,7 +2824,7 @@ mod host_tests {
                 scale: None,
                 selected: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 style: None,
                 handle_kind: Some("port".into()),
                 color: None,
@@ -2874,7 +2881,7 @@ mod host_tests {
                 node_kind: Some("a.kind".into()),
                 user_data: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 root: None,
                 shape: Some("circle".into()),
                 radius: Some(40.0),
@@ -2890,7 +2897,7 @@ mod host_tests {
                 scale: None,
                 selected: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 style: None,
                 handle_kind: Some("port".into()),
                 color: None,
@@ -3029,10 +3036,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_tool("select");
-        h.set_fixture_drop_preview_json(
-            r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#,
-        )
-        .unwrap();
+        h.set_fixture_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#).unwrap();
         let ev = h.drain_events_json();
         assert!(!ev.contains("brushPlace"));
         assert!(h.encoded_scene_hint() > 0);
@@ -3059,10 +3063,7 @@ mod host_tests {
             .to_string(),
         )
         .unwrap();
-        h.set_fixture_drop_preview_json(
-            r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#,
-        )
-        .unwrap();
+        h.set_fixture_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#).unwrap();
         let hint_with_preview = h.encoded_scene_hint();
         assert!(hint_with_preview > 0);
         h.set_fixture_drop_preview_json("").unwrap();
@@ -3152,14 +3153,8 @@ mod host_tests {
         let ev = h.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
         let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
-        let candidates = v.as_array().and_then(|rows| {
-            rows.iter()
-                .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
-                .and_then(|row| row.get("payload"))
-                .and_then(|p| p.get("candidates"))
-                .and_then(|c| c.as_array())
-                .cloned()
-        });
+        let candidates =
+            v.as_array().and_then(|rows| rows.iter().find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates")).and_then(|row| row.get("payload")).and_then(|p| p.get("candidates")).and_then(|c| c.as_array()).cloned());
         assert_eq!(candidates.as_ref().map(|rows| rows.len()), Some(3));
         let first_kind = candidates.as_ref().and_then(|rows| rows.first()).and_then(|row| row.get("nodeKind")).and_then(|x| x.as_str());
         assert_eq!(first_kind, Some("heavy"));
@@ -3200,20 +3195,10 @@ mod host_tests {
         let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
         let candidates = v
             .as_array()
-            .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
-                    .and_then(|row| row.get("payload"))
-                    .and_then(|p| p.get("candidates"))
-                    .and_then(|c| c.as_array())
-                    .cloned()
-            })
+            .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates")).and_then(|row| row.get("payload")).and_then(|p| p.get("candidates")).and_then(|c| c.as_array()).cloned())
             .unwrap_or_default();
         assert_eq!(candidates.len(), 2, "expected one row per compatible handle, got: {ev}");
-        let indices: Vec<u64> = candidates
-            .iter()
-            .filter_map(|row| row.get("targetHandleIndex").and_then(|i| i.as_u64()))
-            .collect();
+        let indices: Vec<u64> = candidates.iter().filter_map(|row| row.get("targetHandleIndex").and_then(|i| i.as_u64())).collect();
         assert!(indices.contains(&0));
         assert!(indices.contains(&1));
     }
@@ -3227,11 +3212,7 @@ mod host_tests {
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
-        let compat_str = fixture
-            .get("meta")
-            .and_then(|m| m.get("kindCompatibility"))
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "[]".to_string());
+        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
             .get("meta")
@@ -3258,7 +3239,7 @@ mod host_tests {
                 node_kind: Some(BASE_KIND.into()),
                 user_data: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 root: None,
                 shape: Some("circle".into()),
                 radius: Some(20.0),
@@ -3322,11 +3303,7 @@ mod host_tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
-        let compat_str = fixture
-            .get("meta")
-            .and_then(|m| m.get("kindCompatibility"))
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "[]".to_string());
+        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
             .get("meta")
@@ -3353,7 +3330,7 @@ mod host_tests {
                 node_kind: Some("Tambour".into()),
                 user_data: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 root: None,
                 shape: Some("circle".into()),
                 radius: Some(40.0),
@@ -3369,7 +3346,7 @@ mod host_tests {
                 scale: None,
                 selected: None,
                 visible: None,
-                    locked: None,
+                locked: None,
                 style: None,
                 handle_kind: Some(DOOR_TAMBOUR_LEFT.into()),
                 color: None,
@@ -3391,20 +3368,11 @@ mod host_tests {
         let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
         let candidates = v
             .as_array()
-            .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
-                    .and_then(|row| row.get("payload"))
-                    .and_then(|p| p.get("candidates"))
-                    .cloned()
-            })
+            .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates")).and_then(|row| row.get("payload")).and_then(|p| p.get("candidates")).cloned())
             .and_then(|c| c.as_array().cloned())
             .unwrap_or_default();
         let ids: Vec<String> = candidates.iter().filter_map(|x| x.as_str().map(str::to_string)).collect();
-        assert!(
-            !ids.iter().any(|id| id == CAPITAL_KIND),
-            "door tambour left must not suggest Capital, got: {ids:?}"
-        );
+        assert!(!ids.iter().any(|id| id == CAPITAL_KIND), "door tambour left must not suggest Capital, got: {ids:?}");
     }
 
     #[test]

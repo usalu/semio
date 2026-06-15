@@ -299,11 +299,7 @@ fn vec3_dot(a: Vec3, b: Vec3) -> f64 {
 }
 
 fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
-    [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-    ]
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
 fn vec3_add(a: Vec3, b: Vec3) -> Vec3 {
@@ -426,14 +422,7 @@ fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<Col
     }
     let tri_mesh = TriMesh::with_flags(verts, tris, TriMeshFlags::ORIENTED | TriMeshFlags::MERGE_DUPLICATE_VERTICES);
     let shape = SharedShape::new(tri_mesh);
-    Some(CollisionBody {
-        parts: vec![CollisionMeshPart {
-            shape,
-            local_pose: Isometry3::identity(),
-        }],
-        local_bounds_min: min,
-        local_bounds_max: max,
-    })
+    Some(CollisionBody { parts: vec![CollisionMeshPart { shape, local_pose: Isometry3::identity() }], local_bounds_min: min, local_bounds_max: max })
 }
 
 fn world_bounds(body: &CollisionBody, world: &Isometry3<f32>) -> (Point3<f32>, Point3<f32>) {
@@ -475,23 +464,10 @@ fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, ma
     if volumes.is_empty() {
         return true;
     }
-    let corners = [
-        min,
-        Point3::new(max.x, min.y, min.z),
-        Point3::new(min.x, max.y, min.z),
-        Point3::new(max.x, max.y, min.z),
-        Point3::new(min.x, min.y, max.z),
-        Point3::new(max.x, min.y, max.z),
-        Point3::new(min.x, max.y, max.z),
-        max,
-    ];
+    let corners = [min, Point3::new(max.x, min.y, min.z), Point3::new(min.x, max.y, min.z), Point3::new(max.x, max.y, min.z), Point3::new(min.x, min.y, max.z), Point3::new(max.x, min.y, max.z), Point3::new(min.x, max.y, max.z), max];
     for volume in volumes {
         let scale = volume_scale_vec(&volume.scale);
-        let world = pose_isometry(
-            volume.origin,
-            volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-            &None,
-        );
+        let world = pose_isometry(volume.origin, volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &None);
         let inv = world.inverse();
         let hx = 0.5 + 1e-3;
         let hy = 0.5 + 1e-3;
@@ -499,11 +475,7 @@ fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, ma
         let mut inside = true;
         for corner in corners {
             let relative = inv * corner;
-            let local = Point3::new(
-                relative.x / scale[0],
-                relative.y / scale[1],
-                relative.z / scale[2],
-            );
+            let local = Point3::new(relative.x / scale[0], relative.y / scale[1], relative.z / scale[2]);
             if local.x.abs() > hx || local.y.abs() > hy || local.z.abs() > hz {
                 inside = false;
                 break;
@@ -546,14 +518,7 @@ fn bodies_intersect(a: &CollisionBody, world_a: &Isometry3<f32>, b: &CollisionBo
     point_inside_body(a, world_a, center) && point_inside_body(b, world_b, center)
 }
 
-fn solid_overlap_volume(
-    a: &CollisionBody,
-    world_a: &Isometry3<f32>,
-    b: &CollisionBody,
-    world_b: &Isometry3<f32>,
-    sample_count: usize,
-    overlap_budget: f64,
-) -> f64 {
+fn solid_overlap_volume(a: &CollisionBody, world_a: &Isometry3<f32>, b: &CollisionBody, world_b: &Isometry3<f32>, sample_count: usize, overlap_budget: f64) -> f64 {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
     let imin = Point3::new(amin.x.max(bmin.x), amin.y.max(bmin.y), amin.z.max(bmin.z));
@@ -578,11 +543,7 @@ fn solid_overlap_volume(
         let ry = (state as f64) / (u32::MAX as f64);
         state = state.wrapping_mul(1664525).wrapping_add(1013904223);
         let rz = (state as f64) / (u32::MAX as f64);
-        let p = Point3::new(
-            imin.x + (imax.x - imin.x) * rx as f32,
-            imin.y + (imax.y - imin.y) * ry as f32,
-            imin.z + (imax.z - imin.z) * rz as f32,
-        );
+        let p = Point3::new(imin.x + (imax.x - imin.x) * rx as f32, imin.y + (imax.y - imin.y) * ry as f32, imin.z + (imax.z - imin.z) * rz as f32);
         if point_inside_body(a, world_a, p) && point_inside_body(b, world_b, p) {
             inside_both += 1;
             if (inside_both as f64 / sample_count as f64) * box_vol > overlap_budget {
@@ -622,10 +583,7 @@ fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<char> {
 }
 
 fn puzzle3d_single_letter_port_families_compatible(source: &str, target: &str) -> bool {
-    match (
-        puzzle3d_single_letter_port_family(source),
-        puzzle3d_single_letter_port_family(target),
-    ) {
+    match (puzzle3d_single_letter_port_family(source), puzzle3d_single_letter_port_family(target)) {
         (None, _) | (_, None) => true,
         (Some(a), Some(b)) => a == b,
     }
@@ -640,19 +598,11 @@ fn catalog_cable_by_id<'a>(catalogs: &'a KindCatalogBundle, cable_kind: &str) ->
 }
 
 fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &KindCatalogBundle) -> String {
-    catalog_vortex_by_id(catalogs, vortex_kind)
-        .and_then(|v| v.default_cable_kind.as_ref())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| DEFAULT_CABLE_KIND_ID.to_string())
+    catalog_vortex_by_id(catalogs, vortex_kind).and_then(|v| v.default_cable_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_CABLE_KIND_ID.to_string())
 }
 
 fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &KindCatalogBundle) -> String {
-    catalog_cable_by_id(catalogs, cable_kind)
-        .and_then(|c| c.default_attraction_kind.as_ref())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .unwrap_or_default()
+    catalog_cable_by_id(catalogs, cable_kind).and_then(|c| c.default_attraction_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default()
 }
 
 fn compat_pair_matches(rule: &KindCompatEntry, a: &str, b: &str) -> bool {
@@ -670,12 +620,7 @@ fn specificity_rank(spec: Option<&str>) -> i32 {
     }
 }
 
-fn attraction_gesture_rule_applies(
-    rule: &KindCompatEntry,
-    attracting: &AttractionVortexContext,
-    attracted: &AttractionVortexContext,
-    catalogs: &KindCatalogBundle,
-) -> bool {
+fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &KindCatalogBundle) -> bool {
     let cable_src = resolve_cable_kind_for_vortex(attracting.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let cable_tgt = resolve_cable_kind_for_vortex(attracted.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let attraction_src = resolve_attraction_kind_for_cable(&cable_src, catalogs);
@@ -694,12 +639,7 @@ fn attraction_gesture_rule_applies(
     }
 }
 
-fn vortices_attraction_compatible_for_drag(
-    attracting: &AttractionVortexContext,
-    attracted: &AttractionVortexContext,
-    rules: &[KindCompatEntry],
-    catalogs: &KindCatalogBundle,
-) -> bool {
+fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &KindCatalogBundle) -> bool {
     let sv = attracting.vortex_kind.as_deref().unwrap_or("");
     let tv = attracted.vortex_kind.as_deref().unwrap_or("");
     if !puzzle3d_vortex_port_shapes_compatible(sv, tv) {
@@ -711,10 +651,7 @@ fn vortices_attraction_compatible_for_drag(
     if rules.is_empty() {
         return true;
     }
-    let mut matched: Vec<&KindCompatEntry> = rules
-        .iter()
-        .filter(|r| attraction_gesture_rule_applies(r, attracting, attracted, catalogs))
-        .collect();
+    let mut matched: Vec<&KindCompatEntry> = rules.iter().filter(|r| attraction_gesture_rule_applies(r, attracting, attracted, catalogs)).collect();
     if matched.is_empty() {
         return false;
     }
@@ -785,9 +722,7 @@ fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, template: &ObjectK
         } else if candidate.object_kind_id.contains("Cylindric") && candidate.object_kind_id.contains("Tambour") {
             score += 11_000;
         }
-        if mid_tambour_host
-            && (candidate.object_kind_id.contains("Last Storey") || candidate.object_kind_id.contains("Single Storey"))
-        {
+        if mid_tambour_host && (candidate.object_kind_id.contains("Last Storey") || candidate.object_kind_id.contains("Single Storey")) {
             score -= 30_000;
         }
         if mid_tambour_host && candidate.object_kind_id == "Cylindric Tambour" {
@@ -797,17 +732,9 @@ fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, template: &ObjectK
     score
 }
 
-fn host_accepts_candidate(
-    rules: &BrushHostRules,
-    target: &AttractionVortexContext,
-    candidate: &BrushCompatibleCandidate,
-    template: &ObjectKindVortexTemplate,
-) -> bool {
+fn host_accepts_candidate(rules: &BrushHostRules, target: &AttractionVortexContext, candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate) -> bool {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
-    if rules.reject_capital_on_tambour
-        && (target_vk.contains("tambour circular") || target_vk.contains("tambour rectangular"))
-        && candidate.object_kind_id.contains("Capital")
-    {
+    if rules.reject_capital_on_tambour && (target_vk.contains("tambour circular") || target_vk.contains("tambour rectangular")) && candidate.object_kind_id.contains("Capital") {
         return false;
     }
     let host_kind = target.object_kind.as_deref().unwrap_or("");
@@ -851,19 +778,10 @@ fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalogBundle, fix
             return Some(url.clone());
         }
     }
-    fixture
-        .objects
-        .iter()
-        .find(|o| o.object_kind.as_deref() == Some(kind_id))
-        .and_then(|o| o.mesh_url.clone())
+    fixture.objects.iter().find(|o| o.object_kind.as_deref() == Some(kind_id)).and_then(|o| o.mesh_url.clone())
 }
 
-fn brush_compatible_candidates(
-    target: &AttractionVortexContext,
-    catalogs: &KindCatalogBundle,
-    rules: &[KindCompatEntry],
-    host_rules: &BrushHostRules,
-) -> Vec<BrushCompatibleCandidate> {
+fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
     let stack_top_target = target_vk.ends_with(" top");
     let stack_bottom_target = target_vk.ends_with(" bottom");
@@ -881,18 +799,11 @@ fn brush_compatible_candidates(
             if stack_bottom_target && !brush_stack_mate_pair(source_vk, target_vk) {
                 continue;
             }
-            let attracting = AttractionVortexContext {
-                object_id: "__brush__".to_string(),
-                object_kind: Some(kind.id.clone()),
-                vortex_kind: Some(source_vk.to_string()),
-            };
+            let attracting = AttractionVortexContext { object_id: "__brush__".to_string(), object_kind: Some(kind.id.clone()), vortex_kind: Some(source_vk.to_string()) };
             if !vortices_attraction_compatible_for_drag(&attracting, target, rules, catalogs) {
                 continue;
             }
-            let candidate = BrushCompatibleCandidate {
-                object_kind_id: kind.id.clone(),
-                source_vortex_index,
-            };
+            let candidate = BrushCompatibleCandidate { object_kind_id: kind.id.clone(), source_vortex_index };
             if !host_accepts_candidate(host_rules, target, &candidate, template) {
                 continue;
             }
@@ -904,11 +815,7 @@ fn brush_compatible_candidates(
             scored.push((candidate, rank));
         }
     }
-    scored.sort_by(|a, b| {
-        b.1.cmp(&a.1)
-            .then_with(|| a.0.object_kind_id.cmp(&b.0.object_kind_id))
-            .then_with(|| a.0.source_vortex_index.cmp(&b.0.source_vortex_index))
-    });
+    scored.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.object_kind_id.cmp(&b.0.object_kind_id)).then_with(|| a.0.source_vortex_index.cmp(&b.0.source_vortex_index)));
     scored.into_iter().map(|(c, _)| c).collect()
 }
 
@@ -925,10 +832,7 @@ fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize) -> Option<
     let vortex = obj.vortices.get(vortex_index)?;
     let orientation = obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let position = vec3_add(obj.origin, quat_rotate_vec(orientation, vortex.position));
-    let direction = normalize_vec3(quat_rotate_vec(
-        orientation,
-        vortex.direction.unwrap_or([0.0, 0.0, -1.0]),
-    ));
+    let direction = normalize_vec3(quat_rotate_vec(orientation, vortex.direction.unwrap_or([0.0, 0.0, -1.0])));
     Some((position, direction))
 }
 
@@ -939,13 +843,7 @@ fn enumerate_brush_fill_vortex_targets(fixture: &FixtureV1) -> Vec<BrushFillVort
         for (i, vortex) in obj.vortices.iter().enumerate() {
             let full_id = puzzle3d_vortex_full_id(&obj.id, &vortex.id);
             if !blocked.contains(&full_id) {
-                out.push(BrushFillVortexTarget {
-                    full_id,
-                    object_id: obj.id.clone(),
-                    object_kind: obj.object_kind.clone(),
-                    vortex_kind: vortex.vortex_kind.clone(),
-                    vortex_index: i,
-                });
+                out.push(BrushFillVortexTarget { full_id, object_id: obj.id.clone(), object_kind: obj.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone(), vortex_index: i });
             }
         }
     }
@@ -956,17 +854,9 @@ fn brush_kind_weight_value(weights: &HashMap<String, f64>, id: &str) -> f64 {
     weights.get(id).copied().unwrap_or(1.0)
 }
 
-fn brush_candidate_suggestion_weight(
-    candidate: &BrushCompatibleCandidate,
-    weights: &BrushKindWeights,
-    catalogs: &KindCatalogBundle,
-) -> f64 {
-    let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)
-        .and_then(|kind| kind.vortices.get(candidate.source_vortex_index))
-        .and_then(|template| template.vortex_kind.as_deref())
-        .unwrap_or("");
-    brush_kind_weight_value(&weights.object_weights, &candidate.object_kind_id)
-        * brush_kind_weight_value(&weights.vortex_weights, vortex_kind)
+fn brush_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &BrushKindWeights, catalogs: &KindCatalogBundle) -> f64 {
+    let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
+    brush_kind_weight_value(&weights.object_weights, &candidate.object_kind_id) * brush_kind_weight_value(&weights.vortex_weights, vortex_kind)
 }
 
 fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
@@ -1014,39 +904,19 @@ fn fill_rng(rng_state: &mut u32) -> f64 {
     *rng_state as f64 / 4_294_967_296.0
 }
 
-fn weighted_order_fill_vortex_targets(
-    targets: &[BrushFillVortexTarget],
-    weights: &BrushKindWeights,
-    rng_state: &mut u32,
-) -> Vec<BrushFillVortexTarget> {
+fn weighted_order_fill_vortex_targets(targets: &[BrushFillVortexTarget], weights: &BrushKindWeights, rng_state: &mut u32) -> Vec<BrushFillVortexTarget> {
     weighted_sample_without_replacement(targets, |target| fill_vortex_target_weight(target, weights), rng_state)
 }
 
-fn weighted_order_brush_compatible_candidates(
-    candidates: &[BrushCompatibleCandidate],
-    weights: &BrushKindWeights,
-    catalogs: &KindCatalogBundle,
-    rng_state: &mut u32,
-) -> Vec<BrushCompatibleCandidate> {
-    weighted_sample_without_replacement(
-        candidates,
-        |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs),
-        rng_state,
-    )
+fn weighted_order_brush_compatible_candidates(candidates: &[BrushCompatibleCandidate], weights: &BrushKindWeights, catalogs: &KindCatalogBundle, rng_state: &mut u32) -> Vec<BrushCompatibleCandidate> {
+    weighted_sample_without_replacement(candidates, |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs), rng_state)
 }
 
-fn fill_candidate_diversity_score(
-    candidate: &BrushCompatibleCandidate,
-    target_vortex_index: usize,
-    target_object_kind: Option<&str>,
-) -> i64 {
+fn fill_candidate_diversity_score(candidate: &BrushCompatibleCandidate, target_vortex_index: usize, target_object_kind: Option<&str>) -> i64 {
     if target_object_kind != Some(candidate.object_kind_id.as_str()) {
         return 0;
     }
-    1000
-        + (candidate.source_vortex_index as i64 - target_vortex_index as i64)
-            .unsigned_abs() as i64
-            * 100
+    1000 + (candidate.source_vortex_index as i64 - target_vortex_index as i64).unsigned_abs() as i64 * 100
 }
 
 fn order_brush_fill_compatible_candidates(
@@ -1058,19 +928,12 @@ fn order_brush_fill_compatible_candidates(
     weights: &BrushKindWeights,
     rng_state: &mut u32,
 ) -> Vec<BrushCompatibleCandidate> {
-    let allowed: Vec<BrushCompatibleCandidate> = candidates
-        .iter()
-        .filter(|candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs) > 0.0)
-        .cloned()
-        .collect();
+    let allowed: Vec<BrushCompatibleCandidate> = candidates.iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs) > 0.0).cloned().collect();
     let target = target_vortex_kind.unwrap_or("");
     let mut cross = Vec::new();
     let mut same = Vec::new();
     for candidate in allowed {
-        let source_vk = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)
-            .and_then(|kind| kind.vortices.get(candidate.source_vortex_index))
-            .and_then(|template| template.vortex_kind.as_deref())
-            .unwrap_or("");
+        let source_vk = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
         if source_vk != target || brush_stack_mate_pair(source_vk, target) {
             cross.push(candidate);
         } else {
@@ -1084,17 +947,8 @@ fn order_brush_fill_compatible_candidates(
             .then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index))
     });
     let mut same_sorted = same;
-    same_sorted.sort_by(|left, right| {
-        left.object_kind_id
-            .cmp(&right.object_kind_id)
-            .then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index))
-    });
-    cross.extend(weighted_order_brush_compatible_candidates(
-        &same_sorted,
-        weights,
-        catalogs,
-        rng_state,
-    ));
+    same_sorted.sort_by(|left, right| left.object_kind_id.cmp(&right.object_kind_id).then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index)));
+    cross.extend(weighted_order_brush_compatible_candidates(&same_sorted, weights, catalogs, rng_state));
     cross
 }
 
@@ -1113,24 +967,8 @@ fn brush_preview_from_candidate(
     let mesh_url = resolve_object_kind_mesh_url(&candidate.object_kind_id, catalogs, fixture)?;
     let source_vk = template.vortex_kind.as_deref().unwrap_or("");
     let use_host = brush_placement_uses_host_orientation(target, source_vk, &candidate.object_kind_id);
-    let (origin, orientation) = compute_brush_placement_pose(
-        template.position,
-        template.direction.unwrap_or([0.0, 0.0, -1.0]),
-        &kind.scale,
-        target_world_position,
-        target_world_direction,
-        reference_orientation,
-        use_host,
-    );
-    Some(BrushPreviewState {
-        target_vortex_full_id: target_full_id.to_string(),
-        object_kind_id: kind.id.clone(),
-        source_vortex_index: candidate.source_vortex_index,
-        mesh_url,
-        origin,
-        orientation,
-        scale: kind.scale.clone(),
-    })
+    let (origin, orientation) = compute_brush_placement_pose(template.position, template.direction.unwrap_or([0.0, 0.0, -1.0]), &kind.scale, target_world_position, target_world_direction, reference_orientation, use_host);
+    Some(BrushPreviewState { target_vortex_full_id: target_full_id.to_string(), object_kind_id: kind.id.clone(), source_vortex_index: candidate.source_vortex_index, mesh_url, origin, orientation, scale: kind.scale.clone() })
 }
 
 struct FillBuilder {
@@ -1153,26 +991,11 @@ impl FillBuilder {
         for obj in &base.objects {
             if let Some(mesh_url) = resolve_object_kind_mesh_url(obj.object_kind.as_deref().unwrap_or(""), catalogs, &base) {
                 if meshes.contains_key(&mesh_url) {
-                    placed.push(PlacedCollisionEntry {
-                        object_id: obj.id.clone(),
-                        mesh_url,
-                        world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale),
-                    });
+                    placed.push(PlacedCollisionEntry { object_id: obj.id.clone(), mesh_url, world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale) });
                 }
             }
         }
-        Self {
-            fixture: base,
-            sequence: Vec::new(),
-            appended_objects: Vec::new(),
-            appended_attractions: Vec::new(),
-            placed,
-            candidate_cache: HashMap::new(),
-            seed_object_ids,
-            rng_state: seed,
-            stalled: false,
-            max_count: FILL_COUNT_MAX,
-        }
+        Self { fixture: base, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: FILL_COUNT_MAX }
     }
 
     fn rng(&mut self) -> f64 {
@@ -1201,13 +1024,7 @@ struct Puzzle3dEngine {
 
 impl Puzzle3dEngine {
     fn new() -> Self {
-        Self {
-            scene: None,
-            meshes: HashMap::new(),
-            brush_cache: HashMap::new(),
-            fill: None,
-            queue: Vec::new(),
-        }
+        Self { scene: None, meshes: HashMap::new(), brush_cache: HashMap::new(), fill: None, queue: Vec::new() }
     }
 
     fn rebuild_queue(&mut self) {
@@ -1220,11 +1037,7 @@ impl Puzzle3dEngine {
             for _ in 0..FILL_COUNT_MAX {
                 self.queue.push(PrecomputeTask::FillStep);
             }
-            let catalogs = scene.kind_catalogs.clone().unwrap_or(KindCatalogBundle {
-                objects: vec![],
-                vortices: vec![],
-                cables: vec![],
-            });
+            let catalogs = scene.kind_catalogs.clone().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
             self.fill = Some(FillBuilder::new(scene.fixture.clone(), scene.seed, &self.meshes, &catalogs));
         } else {
             self.fill = None;
@@ -1244,13 +1057,7 @@ impl Puzzle3dEngine {
         }
     }
 
-    fn preview_collides(
-        meshes: &HashMap<String, CollisionBody>,
-        preview: &BrushPreviewState,
-        placed: &[PlacedCollisionEntry],
-        overlap_budget: f64,
-        sample_count: usize,
-    ) -> Option<bool> {
+    fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize) -> Option<bool> {
         let preview_body = meshes.get(&preview.mesh_url)?;
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
         for entry in placed {
@@ -1263,23 +1070,11 @@ impl Puzzle3dEngine {
         Some(false)
     }
 
-    fn brush_collision_free(
-        &self,
-        target_full_id: &str,
-        candidates: &[BrushCompatibleCandidate],
-        overlap_budget: f64,
-    ) -> BrushCollisionFreeResult {
+    fn brush_collision_free(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
-            return BrushCollisionFreeResult {
-                free: vec![],
-                unknown_pending: true,
-            };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: true };
         };
-        let empty_catalogs = KindCatalogBundle {
-            objects: vec![],
-            vortices: vec![],
-            cables: vec![],
-        };
+        let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
         let target_obj = scene.fixture.objects.iter().find_map(|o| {
             o.vortices.iter().enumerate().find_map(|(i, v)| {
@@ -1292,22 +1087,12 @@ impl Puzzle3dEngine {
             })
         });
         let Some((host, vortex_index, _)) = target_obj else {
-            return BrushCollisionFreeResult {
-                free: vec![],
-                unknown_pending: false,
-            };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         };
         let Some((position, direction)) = vortex_world_from_object(host, vortex_index) else {
-            return BrushCollisionFreeResult {
-                free: vec![],
-                unknown_pending: false,
-            };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         };
-        let target_ctx = AttractionVortexContext {
-            object_id: host.id.clone(),
-            object_kind: host.object_kind.clone(),
-            vortex_kind: host.vortices[vortex_index].vortex_kind.clone(),
-        };
+        let target_ctx = AttractionVortexContext { object_id: host.id.clone(), object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let host_id = host.id.clone();
         let placed: Vec<PlacedCollisionEntry> = scene
             .fixture
@@ -1319,26 +1104,13 @@ impl Puzzle3dEngine {
                 if !self.meshes.contains_key(&mesh_url) {
                     return None;
                 }
-                Some(PlacedCollisionEntry {
-                    object_id: obj.id.clone(),
-                    mesh_url,
-                    world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale),
-                })
+                Some(PlacedCollisionEntry { object_id: obj.id.clone(), mesh_url, world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale) })
             })
             .collect();
         let mut free = Vec::new();
         let mut unknown_pending = false;
         for candidate in candidates {
-            let Some(preview) = brush_preview_from_candidate(
-                target_full_id,
-                candidate,
-                &target_ctx,
-                position,
-                direction,
-                host.orientation,
-                catalogs,
-                &scene.fixture,
-            ) else {
+            let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, position, direction, host.orientation, catalogs, &scene.fixture) else {
                 continue;
             };
             if !self.meshes.contains_key(&preview.mesh_url) {
@@ -1356,16 +1128,9 @@ impl Puzzle3dEngine {
 
     fn compute_brush_cache_entry(&self, target_full_id: &str) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
-            return BrushCollisionFreeResult {
-                free: vec![],
-                unknown_pending: true,
-            };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: true };
         };
-        let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle {
-            objects: vec![],
-            vortices: vec![],
-            cables: vec![],
-        });
+        let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
         let target_obj = scene.fixture.objects.iter().find_map(|o| {
             o.vortices.iter().enumerate().find_map(|(i, v)| {
                 let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
@@ -1377,27 +1142,14 @@ impl Puzzle3dEngine {
             })
         });
         let Some((host, _, vortex)) = target_obj else {
-            return BrushCollisionFreeResult {
-                free: vec![],
-                unknown_pending: false,
-            };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         };
-        let target_ctx = AttractionVortexContext {
-            object_id: host.id.clone(),
-            object_kind: host.object_kind.clone(),
-            vortex_kind: vortex.vortex_kind.clone(),
-        };
+        let target_ctx = AttractionVortexContext { object_id: host.id.clone(), object_kind: host.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone() };
         if !brush_target_vortex_allows_suggestion(vortex.vortex_kind.as_deref(), &scene.weights) {
-            return BrushCollisionFreeResult {
-                free: vec![],
-                unknown_pending: false,
-            };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
-        let compatible: Vec<BrushCompatibleCandidate> = compatible
-            .into_iter()
-            .filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0)
-            .collect();
+        let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
         self.brush_collision_free(target_full_id, &compatible, scene.overlap_budget)
     }
 
@@ -1440,11 +1192,7 @@ impl Puzzle3dEngine {
             fill.stalled = true;
             return false;
         }
-        let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle {
-            objects: vec![],
-            vortices: vec![],
-            cables: vec![],
-        });
+        let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
         let overlap_budget = scene.overlap_budget;
         let weights = scene.weights.clone();
         let kind_compatibility = scene.kind_compatibility.clone();
@@ -1454,24 +1202,9 @@ impl Puzzle3dEngine {
             fill.stalled = true;
             return false;
         }
-        let seed_targets: Vec<_> = free_targets
-            .iter()
-            .filter(|t| fill.seed_object_ids.contains(&t.object_id))
-            .cloned()
-            .collect();
-        let frontier_targets: Vec<_> = free_targets
-            .iter()
-            .filter(|t| !fill.seed_object_ids.contains(&t.object_id))
-            .cloned()
-            .collect();
-        let ordered_targets: Vec<_> = weighted_order_fill_vortex_targets(&seed_targets, &weights, &mut fill.rng_state)
-            .into_iter()
-            .chain(weighted_order_fill_vortex_targets(
-                &frontier_targets,
-                &weights,
-                &mut fill.rng_state,
-            ))
-            .collect();
+        let seed_targets: Vec<_> = free_targets.iter().filter(|t| fill.seed_object_ids.contains(&t.object_id)).cloned().collect();
+        let frontier_targets: Vec<_> = free_targets.iter().filter(|t| !fill.seed_object_ids.contains(&t.object_id)).cloned().collect();
+        let ordered_targets: Vec<_> = weighted_order_fill_vortex_targets(&seed_targets, &weights, &mut fill.rng_state).into_iter().chain(weighted_order_fill_vortex_targets(&frontier_targets, &weights, &mut fill.rng_state)).collect();
         if ordered_targets.is_empty() {
             fill.stalled = true;
             return false;
@@ -1485,49 +1218,18 @@ impl Puzzle3dEngine {
             let Some((position, direction)) = vortex_world_from_object(host, target.vortex_index) else {
                 continue;
             };
-            let target_ctx = AttractionVortexContext {
-                object_id: target.object_id.clone(),
-                object_kind: target.object_kind.clone(),
-                vortex_kind: target.vortex_kind.clone(),
-            };
-            let key = format!(
-                "{}\u{1}{}",
-                target.object_kind.as_deref().unwrap_or(""),
-                target.vortex_kind.as_deref().unwrap_or("")
-            );
-            let compatible = fill
-                .candidate_cache
-                .entry(key)
-                .or_insert_with(|| {
-                    brush_compatible_candidates(&target_ctx, &catalogs, &kind_compatibility, &host_rules)
-                })
-                .clone();
+            let target_ctx = AttractionVortexContext { object_id: target.object_id.clone(), object_kind: target.object_kind.clone(), vortex_kind: target.vortex_kind.clone() };
+            let key = format!("{}\u{1}{}", target.object_kind.as_deref().unwrap_or(""), target.vortex_kind.as_deref().unwrap_or(""));
+            let compatible = fill.candidate_cache.entry(key).or_insert_with(|| brush_compatible_candidates(&target_ctx, &catalogs, &kind_compatibility, &host_rules)).clone();
             if compatible.is_empty() {
                 continue;
             }
-            let ordered_candidates = order_brush_fill_compatible_candidates(
-                &compatible,
-                target.vortex_kind.as_deref(),
-                target.vortex_index,
-                target.object_kind.as_deref(),
-                &catalogs,
-                &weights,
-                &mut fill.rng_state,
-            );
+            let ordered_candidates = order_brush_fill_compatible_candidates(&compatible, target.vortex_kind.as_deref(), target.vortex_index, target.object_kind.as_deref(), &catalogs, &weights, &mut fill.rng_state);
             if ordered_candidates.is_empty() {
                 continue;
             }
             for candidate in &ordered_candidates {
-                let Some(preview) = brush_preview_from_candidate(
-                    &target.full_id,
-                    candidate,
-                    &target_ctx,
-                    position,
-                    direction,
-                    host.orientation,
-                    &catalogs,
-                    &fill.fixture,
-                ) else {
+                let Some(preview) = brush_preview_from_candidate(&target.full_id, candidate, &target_ctx, position, direction, host.orientation, &catalogs, &fill.fixture) else {
                     continue;
                 };
                 if !self.meshes.contains_key(&preview.mesh_url) {
@@ -1540,12 +1242,7 @@ impl Puzzle3dEngine {
                         continue;
                     }
                 }
-                let placed_snapshot: Vec<PlacedCollisionEntry> = fill
-                    .placed
-                    .iter()
-                    .filter(|entry| entry.object_id != target.object_id)
-                    .cloned()
-                    .collect();
+                let placed_snapshot: Vec<PlacedCollisionEntry> = fill.placed.iter().filter(|entry| entry.object_id != target.object_id).cloned().collect();
                 match Self::preview_collides(&self.meshes, &preview, &placed_snapshot, overlap_budget, 512) {
                     None | Some(true) => continue,
                     Some(false) => {}
@@ -1565,15 +1262,7 @@ impl Puzzle3dEngine {
                 let placed_object = next_fixture.objects.last().cloned().unwrap();
                 if let Some(mesh_url) = resolve_object_kind_mesh_url(placed_object.object_kind.as_deref().unwrap_or(""), &catalogs, &next_fixture) {
                     if self.meshes.contains_key(&mesh_url) {
-                        fill.placed.push(PlacedCollisionEntry {
-                            object_id: placed_object.id.clone(),
-                            mesh_url,
-                            world: pose_isometry(
-                                placed_object.origin,
-                                placed_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                                &placed_object.scale,
-                            ),
-                        });
+                        fill.placed.push(PlacedCollisionEntry { object_id: placed_object.id.clone(), mesh_url, world: pose_isometry(placed_object.origin, placed_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &placed_object.scale) });
                     }
                 }
                 let new_attraction = next_fixture.attractions.last().cloned().unwrap();
@@ -1600,36 +1289,15 @@ fn apply_brush_placement_to_fixture(fixture: &FixtureV1, payload: &BrushPlacePay
         return fixture.clone();
     };
     let object_id = format!("puzzle3d.brush.{}", uuid_simple());
-    let vortices: Vec<VortexProps> = kind
-        .vortices
-        .iter()
-        .enumerate()
-        .map(|(index, entry)| VortexProps {
-            id: format!("{object_id}:v{index}"),
-            vortex_kind: entry.vortex_kind.clone(),
-            position: entry.position,
-            direction: entry.direction,
-        })
-        .collect();
+    let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.position, direction: entry.direction }).collect();
     let attracting = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
     let _attraction_id = format!("attraction-{attracting}-{}", payload.target_vortex_full_id);
     let mut next = fixture.clone();
     if next.attractions.iter().any(|a| a.attracting == attracting || a.attracted == payload.target_vortex_full_id) {
         return fixture.clone();
     }
-    next.attractions.push(AttractionProps {
-        attracting,
-        attracted: payload.target_vortex_full_id.clone(),
-    });
-    next.objects.push(FixtureObject {
-        id: object_id,
-        object_kind: Some(kind.id.clone()),
-        mesh_url: Some(mesh_url),
-        origin: payload.origin,
-        orientation: Some(payload.orientation),
-        scale: payload.scale.clone().or(kind.scale.clone()),
-        vortices,
-    });
+    next.attractions.push(AttractionProps { attracting, attracted: payload.target_vortex_full_id.clone() });
+    next.objects.push(FixtureObject { id: object_id, object_kind: Some(kind.id.clone()), mesh_url: Some(mesh_url), origin: payload.origin, orientation: Some(payload.orientation), scale: payload.scale.clone().or(kind.scale.clone()), vortices });
     let _ = template;
     next
 }
@@ -1669,9 +1337,7 @@ pub struct Puzzle3dPrecomputeSession {
 impl Puzzle3dPrecomputeSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self {
-            engine: Puzzle3dEngine::new(),
-        }
+        Self { engine: Puzzle3dEngine::new() }
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), JsValue> {
@@ -1695,19 +1361,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_progress(&self) -> String {
-        let progress = self
-            .engine
-            .fill
-            .as_ref()
-            .map(|f| f.progress())
-            .unwrap_or(FillBuildProgress {
-                count: 0,
-                max_count: FILL_COUNT_MAX,
-                done: true,
-                appended_objects: vec![],
-                appended_attractions: vec![],
-                sequence: vec![],
-            });
+        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 }
@@ -1723,12 +1377,7 @@ mod tests {
 
     #[test]
     fn world_volumes_contain_aabb_respects_oriented_box() {
-        let volumes = vec![WorldVolumeProps {
-            id: "v1".to_string(),
-            origin: [0.0, 0.0, 0.0],
-            orientation: None,
-            scale: Some(serde_json::json!([4.0, 4.0, 4.0])),
-        }];
+        let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!([4.0, 4.0, 4.0])) }];
         let min = Point3::new(-1.0, -1.0, -1.0);
         let max = Point3::new(1.0, 1.0, 1.0);
         assert!(world_volumes_contain_aabb(&volumes, min, max));
@@ -1740,12 +1389,8 @@ mod tests {
     #[test]
     fn brush_candidates_allow_separated_boxes() {
         let mut engine = Puzzle3dEngine::new();
-        let positions: Vec<f32> = vec![
-            -4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0,
-        ];
-        let indices: Vec<u32> = vec![
-            0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2,
-        ];
+        let positions: Vec<f32> = vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0];
+        let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
         engine.register_mesh("/test/obstacle.glb".to_string(), positions.clone(), indices.clone());
         engine.register_mesh("/test/preview.glb".to_string(), positions, indices);
         let scene = SceneConfig {
@@ -1760,12 +1405,7 @@ mod tests {
                         origin: [0.0, 0.0, 0.0],
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
                         scale: None,
-                        vortices: vec![VortexProps {
-                            id: "v0".to_string(),
-                            vortex_kind: Some("port-a".to_string()),
-                            position: [0.0, 0.0, 0.0],
-                            direction: Some([0.0, 0.0, -1.0]),
-                        }],
+                        vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
                     },
                     FixtureObject {
                         id: "host".to_string(),
@@ -1774,12 +1414,7 @@ mod tests {
                         origin: [12.0, 0.0, 0.0],
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
                         scale: None,
-                        vortices: vec![VortexProps {
-                            id: "v0".to_string(),
-                            vortex_kind: Some("port-a".to_string()),
-                            position: [0.0, 0.0, 0.0],
-                            direction: Some([0.0, 0.0, -1.0]),
-                        }],
+                        vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
                     },
                 ],
             },
@@ -1788,22 +1423,12 @@ mod tests {
                     id: "Kind".to_string(),
                     mesh_url: Some("/test/preview.glb".to_string()),
                     scale: None,
-                    vortices: vec![ObjectKindVortexTemplate {
-                        vortex_kind: Some("port-b".to_string()),
-                        position: [0.0, 0.0, 0.0],
-                        direction: Some([0.0, 0.0, -1.0]),
-                    }],
+                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
                 }],
                 vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None }],
                 cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None }],
             }),
-            kind_compatibility: vec![KindCompatEntry {
-                source: "port-b".to_string(),
-                target: "port-a".to_string(),
-                bidirectional: true,
-                important: false,
-                specificity: Some("vortex".to_string()),
-            }],
+            kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
             overlap_budget: DEFAULT_OVERLAP_BUDGET,
             seed: 1,
             host_rules: BrushHostRules::default(),
@@ -1823,67 +1448,26 @@ mod tests {
                 mesh_url: Some("/test/placed.glb".to_string()),
                 scale: None,
                 vortices: vec![
-                    ObjectKindVortexTemplate {
-                        vortex_kind: Some("c-b".to_string()),
-                        position: [0.0, 0.0, 0.0],
-                        direction: Some([0.0, 0.0, 1.0]),
-                    },
-                    ObjectKindVortexTemplate {
-                        vortex_kind: Some("b-s".to_string()),
-                        position: [0.0, 0.0, 0.0],
-                        direction: Some([0.0, 0.0, 1.0]),
-                    },
+                    ObjectKindVortexTemplate { vortex_kind: Some("c-b".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) },
+                    ObjectKindVortexTemplate { vortex_kind: Some("b-s".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) },
                 ],
             }],
-            vortices: vec![
-                VortexKindCatalog { id: "c-b".to_string(), default_cable_kind: None },
-                VortexKindCatalog { id: "c-t".to_string(), default_cable_kind: None },
-                VortexKindCatalog { id: "b-s".to_string(), default_cable_kind: None },
-            ],
+            vortices: vec![VortexKindCatalog { id: "c-b".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "c-t".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "b-s".to_string(), default_cable_kind: None }],
             cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None }],
         };
-        let candidates = vec![
-            BrushCompatibleCandidate {
-                object_kind_id: "Placed".to_string(),
-                source_vortex_index: 0,
-            },
-            BrushCompatibleCandidate {
-                object_kind_id: "Placed".to_string(),
-                source_vortex_index: 1,
-            },
-        ];
+        let candidates = vec![BrushCompatibleCandidate { object_kind_id: "Placed".to_string(), source_vortex_index: 0 }, BrushCompatibleCandidate { object_kind_id: "Placed".to_string(), source_vortex_index: 1 }];
         let mut weights = BrushKindWeights::default();
         weights.vortex_weights.insert("c-b".to_string(), 0.0);
         weights.vortex_weights.insert("c-t".to_string(), 0.0);
         weights.vortex_weights.insert("b-s".to_string(), 1.0);
         weights.object_weights.insert("Placed".to_string(), 1.0);
         let mut rng = 7u32;
-        let ordered = order_brush_fill_compatible_candidates(
-            &candidates,
-            Some("b-s"),
-            1,
-            Some("Host"),
-            &catalogs,
-            &weights,
-            &mut rng,
-        );
+        let ordered = order_brush_fill_compatible_candidates(&candidates, Some("b-s"), 1, Some("Host"), &catalogs, &weights, &mut rng);
         assert_eq!(ordered.len(), 1);
         assert_eq!(ordered[0].source_vortex_index, 1);
         let targets = vec![
-            BrushFillVortexTarget {
-                full_id: "host:v0".to_string(),
-                object_id: "host".to_string(),
-                object_kind: Some("Host".to_string()),
-                vortex_kind: Some("c-t".to_string()),
-                vortex_index: 0,
-            },
-            BrushFillVortexTarget {
-                full_id: "host:v1".to_string(),
-                object_id: "host".to_string(),
-                object_kind: Some("Host".to_string()),
-                vortex_kind: Some("b-s".to_string()),
-                vortex_index: 1,
-            },
+            BrushFillVortexTarget { full_id: "host:v0".to_string(), object_id: "host".to_string(), object_kind: Some("Host".to_string()), vortex_kind: Some("c-t".to_string()), vortex_index: 0 },
+            BrushFillVortexTarget { full_id: "host:v1".to_string(), object_id: "host".to_string(), object_kind: Some("Host".to_string()), vortex_kind: Some("b-s".to_string()), vortex_index: 1 },
         ];
         let target_ordered = weighted_order_fill_vortex_targets(&targets, &weights, &mut rng);
         assert_eq!(target_ordered.len(), 1);
@@ -1894,9 +1478,7 @@ mod tests {
 #[cfg(not(target_arch = "wasm32"))]
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
-        Self {
-            engine: Puzzle3dEngine::new(),
-        }
+        Self { engine: Puzzle3dEngine::new() }
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), String> {
@@ -1920,19 +1502,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_progress(&self) -> String {
-        let progress = self
-            .engine
-            .fill
-            .as_ref()
-            .map(|f| f.progress())
-            .unwrap_or(FillBuildProgress {
-                count: 0,
-                max_count: FILL_COUNT_MAX,
-                done: true,
-                appended_objects: vec![],
-                appended_attractions: vec![],
-                sequence: vec![],
-            });
+        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 }

@@ -1520,7 +1520,7 @@ export function puzzle2dApplyBrushSuggestionsCandidateIndex(
   puzzle2dSharedBrushSession = next;
   puzzle2dNotifyBrushSessionListeners();
   if (driving) {
-    driving.setBrushSession(next);
+    driving.setBrushSession(next, { force: true });
     puzzle2dSyncBrushSessionToAllAuthoringPeers(next, driving);
   } else {
     puzzle2dSyncBrushSessionToAllAuthoringPeers(next);
@@ -5080,9 +5080,9 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🖌️ Mirrors shared brush slot preview into this pane's WASM host. */
-  setBrushSession(snapshot: Puzzle2dBrushSessionSnapshot | null): void {
+  setBrushSession(snapshot: Puzzle2dBrushSessionSnapshot | null, options?: { readonly force?: boolean }): void {
     const json = puzzle2dBrushSessionSnapshotToMirrorJson(snapshot);
-    if (json === this.lastBrushSessionJsonForWasm) {
+    if (!options?.force && json === this.lastBrushSessionJsonForWasm) {
       return;
     }
     if (this.wasmSessionCallBlockedForReentry()) {
@@ -10276,9 +10276,11 @@ if (puzzle2dVitest) {
         suggestionsActive: true,
       }, driving);
       expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node?.nodeKind).toBe("Right");
+      const setBrushSession = vi.spyOn(driving, "setBrushSession");
       puzzle2dApplyBrushSuggestionsCandidateIndex(1, { kindCatalogs: puzzle2dBrushKindCatalogsRef.current });
       expect(puzzle2dGetBrushSessionSnapshot()?.candidateIndex).toBe(1);
       expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node?.nodeKind).toBe("Left");
+      expect(setBrushSession).toHaveBeenCalledWith(expect.objectContaining({ candidateIndex: 1 }), { force: true });
       puzzle2dBrushSuggestionsDrivingRendererRef.current = null;
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
       driving.dispose();
@@ -12400,7 +12402,7 @@ function puzzle2dApplySuggestionsBrushSession(
   };
   puzzle2dSharedBrushSession = next;
   puzzle2dNotifyBrushSessionListeners();
-  driving.setBrushSession(next);
+  driving.setBrushSession(next, { force: true });
   puzzle2dSyncBrushSessionToAllAuthoringPeers(next, driving);
 }
 

@@ -507,7 +507,14 @@ export type FlowNodeChromeV1 =
   | { readonly kind: "plain" }
   | { readonly kind: "slider"; readonly min: number; readonly max: number; readonly step: number }
   | { readonly kind: "note" }
-  | { readonly kind: "image" };
+  | { readonly kind: "image" }
+  | { readonly kind: "variable" };
+
+export interface FlowSchemaRefV1 {
+  readonly id: string;
+  readonly name: string;
+  readonly icon: string;
+}
 
 export interface FlowPreviewGuiV1 {
   readonly id: string;
@@ -525,6 +532,7 @@ export type FlowWidgetV1 =
   | { readonly kind: "inputSlider"; readonly id: string; readonly value: number; readonly min?: number; readonly max?: number; readonly step?: number }
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
   | { readonly kind: "inputImage"; readonly id: string; readonly src?: string }
+  | { readonly kind: "variable"; readonly id: string; readonly name: string; readonly schema: string }
   | { readonly kind: "outputPreview"; readonly id: string; readonly expanded?: readonly string[] }
   | { readonly kind: "outputAction"; readonly id: string; readonly action: string }
   | { readonly kind: "cluster"; readonly id: string; readonly name?: string; readonly tree: FlowTreeV1; readonly flow?: FlowGuiV1 };
@@ -1440,6 +1448,8 @@ export type FlowGraphEditOp =
   | { readonly op: "makeSpace"; readonly anchor: string; readonly dx: number; readonly dy?: number }
   | { readonly op: "setPreviewOff"; readonly ids: readonly string[] }
   | { readonly op: "setSliderValue"; readonly id: string; readonly value: number }
+  | { readonly op: "setVariableName"; readonly id: string; readonly name: string }
+  | { readonly op: "setVariableSchema"; readonly id: string; readonly schema: string }
   | { readonly op: "setNeuronParams"; readonly id: string; readonly paramsJson: string }
   | { readonly op: "collapse"; readonly ids: readonly string[] }
   | { readonly op: "explode"; readonly id: string };
@@ -1474,6 +1484,12 @@ export function runFlowGraphEdit(session: FlowSession, ops: readonly FlowGraphEd
       }
       case "setSliderValue":
         session.setSliderValue(entry.id, entry.value);
+        break;
+      case "setVariableName":
+        (session as FlowSessionVariableApi).setVariableName(entry.id, entry.name);
+        break;
+      case "setVariableSchema":
+        (session as FlowSessionVariableApi).setVariableSchema(entry.id, entry.schema);
         break;
       case "setNeuronParams":
         session.setNeuronParams(entry.id, entry.paramsJson);
@@ -1704,6 +1720,14 @@ const FLOW_SPOTLIGHT_NOTE_ITEM: CatalogueItem = {
   abbreviation: "Note",
   icon: "emoji:📝",
   summary: "Text input",
+};
+
+const FLOW_SPOTLIGHT_VARIABLE_ITEM: CatalogueItem = {
+  kind: "variable",
+  name: "Variable",
+  abbreviation: "Variable",
+  icon: "emoji:🔣",
+  summary: "Named typed dictionary",
 };
 
 interface FlowSpotlightAnchor {
@@ -2155,6 +2179,90 @@ function FlowParamOverlay({
   );
 }
 
+interface FlowVariableOverlayEditor {
+  readonly id: string;
+  readonly name: string;
+  readonly schema: string;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+function flowVariableOverlayEditors(fixtureJson: string, width: number, height: number): FlowVariableOverlayEditor[] {
+  try {
+    const fixture = JSON.parse(fixtureJson) as FlowFixtureV1;
+    const camera = fixture.camera ?? { x: 0, y: 0, zoom: 1 };
+    const editors: FlowVariableOverlayEditor[] = [];
+    for (const widget of fixture.widgets ?? []) {
+      if (widget.kind !== "variable") continue;
+      const layout = fixture.layout?.[widget.id] ?? { x: 0, y: 0 };
+      const screen = flowWorldToScreen({ x: layout.x, y: layout.y }, camera, width, height);
+      editors.push({
+        id: widget.id,
+        name: widget.name,
+        schema: widget.schema,
+        x: screen.x - 72,
+        y: screen.y - 18,
+        w: 144,
+        h: 44,
+      });
+    }
+    return editors;
+  } catch {
+    return [];
+  }
+}
+
+function FlowVariableOverlay({
+  fixtureJson,
+  schemas,
+  width,
+  height,
+  onNameChange,
+  onSchemaChange,
+}: {
+  readonly fixtureJson: string;
+  readonly schemas: readonly FlowSchemaRefV1[];
+  readonly width: number;
+  readonly height: number;
+  readonly onNameChange: (id: string, name: string) => void;
+  readonly onSchemaChange: (id: string, schema: string) => void;
+}): React.JSX.Element | null {
+  const editors = flowVariableOverlayEditors(fixtureJson, width, height);
+  if (!editors.length) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-50" data-testid="flow-variable-overlay">
+      {editors.map((editor) => (
+        <div
+          key={editor.id}
+          className="pointer-events-auto absolute flex flex-col gap-0.5 rounded border border-border bg-background/95 p-1 shadow-sm"
+          style={{ left: editor.x, top: editor.y, width: editor.w, minHeight: editor.h }}
+        >
+          <input
+            className="w-full rounded border border-border bg-background px-1 text-[10px] text-foreground"
+            value={editor.name}
+            aria-label="Variable name"
+            onChange={(event) => onNameChange(editor.id, event.target.value)}
+          />
+          <select
+            className="w-full rounded border border-border bg-background px-1 text-[10px] text-foreground"
+            value={editor.schema}
+            aria-label="Variable schema"
+            onChange={(event) => onSchemaChange(editor.id, event.target.value)}
+          >
+            {schemas.map((schema) => (
+              <option key={schema.id} value={schema.id}>
+                {schema.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement, width: number, height: number, dpr: number): void {
   let state: FlowLabelOverlayPaintState;
   try {
@@ -2542,6 +2650,12 @@ type FlowSessionClusterApi = FlowSession & {
   takePendingClusterExplode(): string | undefined;
 };
 
+type FlowSessionVariableApi = FlowSession & {
+  schemasJson(): string;
+  setVariableName(widgetId: string, name: string): void;
+  setVariableSchema(widgetId: string, schema: string): void;
+};
+
 type FlowSessionChannelApi = FlowSession & {
   hoveredChannelJson(): string;
   selectedChannelsJson(): string;
@@ -2765,6 +2879,8 @@ export function FlowCanvas({
   const [selectionBounds, setSelectionBounds] = useState<FlowSelectionUnionBoundsScreen | null>(null);
   const [selectionBoundsCount, setSelectionBoundsCount] = useState(0);
   const [paramOverlayState, setParamOverlayState] = useState<FlowParamOverlayPaintState | null>(null);
+  const [variableFixtureJson, setVariableFixtureJson] = useState("");
+  const [schemaCatalogue, setSchemaCatalogue] = useState<readonly FlowSchemaRefV1[]>([]);
   const selectionBoundsRef = useRef<FlowSelectionUnionBoundsScreen | null>(null);
   const selectionBoundsCountRef = useRef(0);
   const alignSelectionRef = useRef<(mode: FlowSelectionAlignMode) => void>(() => {});
@@ -2984,6 +3100,11 @@ export function FlowCanvas({
         } catch {
           setParamOverlayState((prev) => (prev === null ? prev : null));
         }
+        try {
+          setVariableFixtureJson(session.fixtureJson());
+        } catch {
+          setVariableFixtureJson("");
+        }
         syncSelectionBoundsOverlay(session);
       }
       reportDrawLod();
@@ -3183,6 +3304,32 @@ export function FlowCanvas({
       persistFixture();
       renderFrame();
       console.log(`[DEBUG] flow neuron param ${nodeId}.${portId}=${String(value)}`);
+    },
+    [emitInteractionState, evaluate, persistFixture, renderFrame],
+  );
+
+  const onVariableNameChange = useCallback(
+    (id: string, name: string) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      runFlowGraphEdit(session, [{ op: "setVariableName", id, name }]);
+      emitInteractionState(session);
+      evaluate();
+      persistFixture();
+      renderFrame();
+    },
+    [emitInteractionState, evaluate, persistFixture, renderFrame],
+  );
+
+  const onVariableSchemaChange = useCallback(
+    (id: string, schema: string) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      runFlowGraphEdit(session, [{ op: "setVariableSchema", id, schema }]);
+      emitInteractionState(session);
+      evaluate();
+      persistFixture();
+      renderFrame();
     },
     [emitInteractionState, evaluate, persistFixture, renderFrame],
   );
@@ -3401,6 +3548,11 @@ export function FlowCanvas({
       const saved = storeRef.current.load();
       const json = saved ?? bootstrapFixtureJsonRef.current ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
       session.loadFixtureJson(json);
+      try {
+        setSchemaCatalogue(JSON.parse((session as FlowSessionVariableApi).schemasJson()) as FlowSchemaRefV1[]);
+      } catch {
+        setSchemaCatalogue([]);
+      }
       syncExtensionSurface(session);
       syncVelloTheme();
       evaluate();
@@ -4001,6 +4153,14 @@ export function FlowCanvas({
         width={viewportRef.current.width}
         height={viewportRef.current.height}
         onParamChange={onNeuronParamChange}
+      />
+      <FlowVariableOverlay
+        fixtureJson={variableFixtureJson}
+        schemas={schemaCatalogue}
+        width={viewportRef.current.width}
+        height={viewportRef.current.height}
+        onNameChange={onVariableNameChange}
+        onSchemaChange={onVariableSchemaChange}
       />
       <input
         ref={imageFileInputRef}

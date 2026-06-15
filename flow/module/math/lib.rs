@@ -51,13 +51,9 @@ impl Operation for Move {
         let schema = subject.schema().unwrap_or("vector");
         let result = xyz_dictionary(schema, read_xyz(subject)? + read_xyz(vector)?);
         if schema == "point" {
-            Ok(Dictionary::new()
-                .insert("point", Value::Dictionary(result))
-                .insert("vector", Value::null()))
+            Ok(Dictionary::new().insert("point", Value::Dictionary(result)).insert("vector", Value::null()))
         } else {
-            Ok(Dictionary::new()
-                .insert("vector", Value::Dictionary(result))
-                .insert("point", Value::null()))
+            Ok(Dictionary::new().insert("vector", Value::Dictionary(result)).insert("point", Value::null()))
         }
     }
 }
@@ -254,12 +250,7 @@ impl Operation for Sum {
         let list = read_dict(input, "list")?;
         let mut total = 0.0;
         for index in list_indices(list) {
-            let value = list
-                .get(&index.to_string())
-                .and_then(|v| v.as_dictionary())
-                .map(read_value_number)
-                .transpose()?
-                .ok_or_else(|| EvalError::MissingInput(index.to_string()))?;
+            let value = list.get(&index.to_string()).and_then(|v| v.as_dictionary()).map(read_value_number).transpose()?.ok_or_else(|| EvalError::MissingInput(index.to_string()))?;
             total += value;
         }
         Ok(channel_output("sum", number_dictionary(total)))
@@ -306,10 +297,7 @@ fn number_dictionary(value: f64) -> Dictionary {
 }
 
 fn xyz_dictionary(schema: &str, value: Vec3) -> Dictionary {
-    Dictionary::with_schema(schema)
-        .insert("x", Value::Atom(Atom::Decimal(value.x)))
-        .insert("y", Value::Atom(Atom::Decimal(value.y)))
-        .insert("z", Value::Atom(Atom::Decimal(value.z)))
+    Dictionary::with_schema(schema).insert("x", Value::Atom(Atom::Decimal(value.x))).insert("y", Value::Atom(Atom::Decimal(value.y))).insert("z", Value::Atom(Atom::Decimal(value.z)))
 }
 
 fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -344,11 +332,7 @@ fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> 
 }
 
 fn read_value_number(input: &Dictionary) -> Result<f64, EvalError> {
-    input
-        .get("value")
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput("value".into()))
+    input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("value".into()))
 }
 
 fn read_xyz(input: &Dictionary) -> Result<Vec3, EvalError> {
@@ -508,28 +492,11 @@ fn schema(id: &str, name: &str) -> Schema {
 }
 
 fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
-    OperatorInfo {
-        id: id.into(),
-        module: "math".into(),
-        name: name.into(),
-        abbreviation: abbreviation.into(),
-        icon: "emoji:➕".into(),
-        summary: summary.into(),
-        inputs,
-        outputs,
-        ..Default::default()
-    }
+    OperatorInfo { id: id.into(), module: "math".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:➕".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
 fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(
-        info,
-        vec![OperatorImpl {
-            schemas: schemas.into_iter().map(str::to_string).collect(),
-            operation,
-        }],
-        produces,
-    );
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }], produces);
 }
 
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -557,10 +524,7 @@ pub fn register(registry: &mut Registry) {
         &["number", "point", "vector"],
     );
     registry.register_operator(
-        OperatorInfo {
-            variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-            ..operator_info("math.addVariadic", "Add Variadic", "Add", "Adds any number of numbers, points, or vectors", vec![], sum_output.clone())
-        },
+        OperatorInfo { variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }), ..operator_info("math.addVariadic", "Add Variadic", "Add", "Adds any number of numbers, points, or vectors", vec![], sum_output.clone()) },
         vec![
             OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Add) },
             OperatorImpl { schemas: vec!["point".into(), "point".into()], operation: Box::new(Add) },
@@ -608,13 +572,7 @@ pub fn register(registry: &mut Registry) {
             "Remap",
             "Map",
             "Remaps a value from one range to another",
-            vec![
-                number_channel("value", "math.remap"),
-                number_channel("fromMin", "math.remap"),
-                number_channel("fromMax", "math.remap"),
-                number_channel("toMin", "math.remap"),
-                number_channel("toMax", "math.remap"),
-            ],
+            vec![number_channel("value", "math.remap"), number_channel("fromMin", "math.remap"), number_channel("fromMax", "math.remap"), number_channel("toMin", "math.remap"), number_channel("toMax", "math.remap")],
             vec![remapped_out()],
         ),
         Box::new(Remap),
@@ -628,37 +586,17 @@ pub fn register(registry: &mut Registry) {
             "Random",
             "Rnd",
             "Random number in range with optional seed",
-            vec![
-                number_channel("seed", "math.random"),
-                number_channel("min", "math.random"),
-                ChannelSpec::number_default("max", 1.0, &["math.random"]),
-            ],
+            vec![number_channel("seed", "math.random"), number_channel("min", "math.random"), ChannelSpec::number_default("max", 1.0, &["math.random"])],
             vec![random_out()],
         ),
         Box::new(Random),
         vec!["number", "number", "number"],
         &["number"],
     );
-    register_simple(
-        registry,
-        operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output.clone()),
-        Box::new(Sum),
-        vec!["list"],
-        &["number"],
-    );
+    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output.clone()), Box::new(Sum), vec!["list"], &["number"]);
     registry.register_operator(
-        operator_info(
-            "math.move",
-            "Move",
-            "Move",
-            "Moves a point or vector by a vector",
-            vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])],
-            move_out(),
-        ),
-        vec![
-            OperatorImpl { schemas: vec!["point".into(), "vector".into()], operation: Box::new(Move) },
-            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Move) },
-        ],
+        operator_info("math.move", "Move", "Move", "Moves a point or vector by a vector", vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])], move_out()),
+        vec![OperatorImpl { schemas: vec!["point".into(), "vector".into()], operation: Box::new(Move) }, OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operation: Box::new(Move) }],
         &["point", "vector"],
     );
     registry.finalize();
@@ -685,10 +623,7 @@ mod tests {
     fn construct_vector_uses_xyz_channels() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("x", Value::Dictionary(number_dictionary(1.0)))
-            .insert("y", Value::Dictionary(number_dictionary(2.0)))
-            .insert("z", Value::Dictionary(number_dictionary(3.0)));
+        let input = Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))).insert("y", Value::Dictionary(number_dictionary(2.0))).insert("z", Value::Dictionary(number_dictionary(3.0)));
         let out = reg.dispatch("math.vector", &input).unwrap();
         let vector = out.get("vector").and_then(|v| v.as_dictionary()).expect("vector channel");
         assert_eq!(vector.schema(), Some("vector"));
@@ -698,30 +633,17 @@ mod tests {
     #[test]
     fn schema_component_round_trips_vector() {
         let reg = module_registry();
-        let built = reg
-            .dispatch(
-                "math.vector",
-                &Dictionary::new()
-                    .insert("x", Value::Dictionary(number_dictionary(1.0)))
-                    .insert("y", Value::Dictionary(number_dictionary(2.0)))
-                    .insert("z", Value::Dictionary(number_dictionary(3.0))),
-            )
-            .unwrap();
+        let built = reg.dispatch("math.vector", &Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))).insert("y", Value::Dictionary(number_dictionary(2.0))).insert("z", Value::Dictionary(number_dictionary(3.0)))).unwrap();
         let vector = built.get("vector").and_then(|value| value.as_dictionary()).expect("vector");
         let deconstructed = reg.dispatch("math.vector", &Dictionary::new().insert("vector", Value::Dictionary(vector.clone()))).unwrap();
-        assert_eq!(
-            deconstructed.get("y").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
-            Some(2.0)
-        );
+        assert_eq!(deconstructed.get("y").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(2.0));
     }
 
     #[test]
     fn move_translates_point() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("subject", Value::Dictionary(xyz_dictionary("point", Vec3::new(1.0, 2.0, 3.0))))
-            .insert("vector", Value::Dictionary(xyz_dictionary("vector", Vec3::new(4.0, 5.0, 6.0))));
+        let input = Dictionary::new().insert("subject", Value::Dictionary(xyz_dictionary("point", Vec3::new(1.0, 2.0, 3.0)))).insert("vector", Value::Dictionary(xyz_dictionary("vector", Vec3::new(4.0, 5.0, 6.0))));
         let out = reg.dispatch("math.move", &input).unwrap();
         let point = out.get("point").and_then(|v| v.as_dictionary()).expect("point channel");
         assert_eq!(point.schema(), Some("point"));
@@ -738,12 +660,7 @@ mod tests {
             vec!["onStartup".into()],
             vec![],
             vec![FlowModuleCommandV1 { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-            vec![FlowModuleSettingV1 {
-                id: "math.defaultPrecision".into(),
-                setting_type: "number".into(),
-                default: serde_json::json!(1),
-                description: "Decimal places for number preview".into(),
-            }],
+            vec![FlowModuleSettingV1 { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
         );
         assert!(json.contains("flow.module/v1"));
         assert!(json.contains("math.vector"));
@@ -765,10 +682,7 @@ mod tests {
     fn random_is_deterministic_with_seed() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("seed", Value::Dictionary(number_dictionary(42.0)))
-            .insert("min", Value::Dictionary(number_dictionary(0.0)))
-            .insert("max", Value::Dictionary(number_dictionary(1.0)));
+        let input = Dictionary::new().insert("seed", Value::Dictionary(number_dictionary(42.0))).insert("min", Value::Dictionary(number_dictionary(0.0))).insert("max", Value::Dictionary(number_dictionary(1.0)));
         let first = reg.dispatch("math.random", &input).unwrap();
         let second = reg.dispatch("math.random", &input).unwrap();
         let first_value = first.get("random").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
@@ -803,12 +717,7 @@ mod wasm_ext {
             vec!["onStartup".into()],
             vec![],
             vec![FlowModuleCommandV1 { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-            vec![FlowModuleSettingV1 {
-                id: "math.defaultPrecision".into(),
-                setting_type: "number".into(),
-                default: serde_json::json!(1),
-                description: "Decimal places for number preview".into(),
-            }],
+            vec![FlowModuleSettingV1 { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
         )
     }
 

@@ -1,784 +1,709 @@
 //! ➡️ Directed port graph base: engine aliases, scene descriptors, layouts, board types.
 
 pub mod scene_json {
-// #region scene_json
-//! 🧾 Directed port graph scene descriptors and fixture JSON helpers.
+    // #region scene_json
+    //! 🧾 Directed port graph scene descriptors and fixture JSON helpers.
 
-use serde::{Deserialize, Serialize};
+    use serde::{Deserialize, Serialize};
 
-pub use mathematical_graph::{CameraJson, NodeDescJson};
-pub use mathematical_graph_port::HandleDescJson;
+    pub use mathematical_graph::{CameraJson, NodeDescJson};
+    pub use mathematical_graph_port::HandleDescJson;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EdgeDescJson {
-    pub id: String,
-    pub source: String,
-    pub target: String,
-    /// @emoji 🧩 Semantic edge-kind id for compatibility at `edge` specificity.
-    #[serde(default)]
-    pub edge_kind: Option<String>,
-    /// @emoji 🔺 Per-instance source tip id from the edge tip registry (`none` disables).
-    #[serde(default)]
-    pub source_tip: Option<String>,
-    /// @emoji 🔺 Per-instance target tip id from the edge tip registry (`none` disables).
-    #[serde(default)]
-    pub target_tip: Option<String>,
-    #[serde(default)]
-    pub selected: Option<bool>,
-    #[serde(default)]
-    pub style: Option<String>,
-    #[serde(default)]
-    pub user_data: Option<serde_json::Value>,
-    #[serde(default)]
-    pub visible: Option<bool>,
-    #[serde(default)]
-    pub locked: Option<bool>,
-}
-
-/// @emoji 🧵 Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WireDescJson {
-    pub id: String,
-    pub source: String,
-    /// @emoji 🧩 Semantic wire-kind id (defaults from catalog when omitted in fixtures).
-    #[serde(default)]
-    pub wire_kind: Option<String>,
-    #[serde(default)]
-    pub target: Option<String>,
-    #[serde(default)]
-    pub end_x: Option<f64>,
-    #[serde(default)]
-    pub end_y: Option<f64>,
-    #[serde(default)]
-    pub selected: Option<bool>,
-    #[serde(default)]
-    pub style: Option<String>,
-    #[serde(default)]
-    pub user_data: Option<serde_json::Value>,
-    #[serde(default)]
-    pub visible: Option<bool>,
-    #[serde(default)]
-    pub locked: Option<bool>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SceneDescriptorJson {
-    pub nodes: Vec<NodeDescJson>,
-    pub handles: Vec<HandleDescJson>,
-    pub edges: Vec<EdgeDescJson>,
-    #[serde(default)]
-    pub wires: Vec<WireDescJson>,
-    /// @emoji 💠 JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
-    #[serde(default)]
-    pub selection_exit_highlight_ids: Vec<String>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct FixtureV1Json {
-    pub schema: String,
-    pub camera: CameraJson,
-    pub nodes: Vec<serde_json::Value>,
-    pub edges: Vec<serde_json::Value>,
-    #[serde(default)]
-    pub meta: Option<serde_json::Value>,
-}
-
-/// 🧾 Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
-pub fn fixture_edge_handle_ids_from_object(eo: &serde_json::Map<String, serde_json::Value>) -> Option<(&str, &str)> {
-    let source = eo.get("source").and_then(|v| v.as_str())?;
-    let target = eo.get("target").and_then(|v| v.as_str())?;
-    Some((source, target))
-}
-
-fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    obj.get("hidden").and_then(|v| v.as_bool())
-}
-
-pub fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    match board_json_hidden_flag(obj) {
-        Some(hidden) => Some(!hidden),
-        None => obj.get("visible").and_then(|v| v.as_bool()),
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct EdgeDescJson {
+        pub id: String,
+        pub source: String,
+        pub target: String,
+        /// @emoji 🧩 Semantic edge-kind id for compatibility at `edge` specificity.
+        #[serde(default)]
+        pub edge_kind: Option<String>,
+        /// @emoji 🔺 Per-instance source tip id from the edge tip registry (`none` disables).
+        #[serde(default)]
+        pub source_tip: Option<String>,
+        /// @emoji 🔺 Per-instance target tip id from the edge tip registry (`none` disables).
+        #[serde(default)]
+        pub target_tip: Option<String>,
+        #[serde(default)]
+        pub selected: Option<bool>,
+        #[serde(default)]
+        pub style: Option<String>,
+        #[serde(default)]
+        pub user_data: Option<serde_json::Value>,
+        #[serde(default)]
+        pub visible: Option<bool>,
+        #[serde(default)]
+        pub locked: Option<bool>,
     }
-}
 
-pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
-    board_json_visible_option(obj).unwrap_or(true)
-}
+    /// @emoji 🧵 Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct WireDescJson {
+        pub id: String,
+        pub source: String,
+        /// @emoji 🧩 Semantic wire-kind id (defaults from catalog when omitted in fixtures).
+        #[serde(default)]
+        pub wire_kind: Option<String>,
+        #[serde(default)]
+        pub target: Option<String>,
+        #[serde(default)]
+        pub end_x: Option<f64>,
+        #[serde(default)]
+        pub end_y: Option<f64>,
+        #[serde(default)]
+        pub selected: Option<bool>,
+        #[serde(default)]
+        pub style: Option<String>,
+        #[serde(default)]
+        pub user_data: Option<serde_json::Value>,
+        #[serde(default)]
+        pub visible: Option<bool>,
+        #[serde(default)]
+        pub locked: Option<bool>,
+    }
 
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-pub fn normalize_board_descriptor_hidden_to_visible(value: &mut serde_json::Value) {
-    let Some(root) = value.as_object_mut() else {
-        return;
-    };
-    for key in ["nodes", "handles", "edges", "wires"] {
-        let Some(rows) = root.get_mut(key).and_then(|v| v.as_array_mut()) else {
-            continue;
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SceneDescriptorJson {
+        pub nodes: Vec<NodeDescJson>,
+        pub handles: Vec<HandleDescJson>,
+        pub edges: Vec<EdgeDescJson>,
+        #[serde(default)]
+        pub wires: Vec<WireDescJson>,
+        /// @emoji 💠 JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
+        #[serde(default)]
+        pub selection_exit_highlight_ids: Vec<String>,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct FixtureV1Json {
+        pub schema: String,
+        pub camera: CameraJson,
+        pub nodes: Vec<serde_json::Value>,
+        pub edges: Vec<serde_json::Value>,
+        #[serde(default)]
+        pub meta: Option<serde_json::Value>,
+    }
+
+    /// 🧾 Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
+    pub fn fixture_edge_handle_ids_from_object(eo: &serde_json::Map<String, serde_json::Value>) -> Option<(&str, &str)> {
+        let source = eo.get("source").and_then(|v| v.as_str())?;
+        let target = eo.get("target").and_then(|v| v.as_str())?;
+        Some((source, target))
+    }
+
+    fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+        obj.get("hidden").and_then(|v| v.as_bool())
+    }
+
+    pub fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+        match board_json_hidden_flag(obj) {
+            Some(hidden) => Some(!hidden),
+            None => obj.get("visible").and_then(|v| v.as_bool()),
+        }
+    }
+
+    pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
+        board_json_visible_option(obj).unwrap_or(true)
+    }
+
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    pub fn normalize_board_descriptor_hidden_to_visible(value: &mut serde_json::Value) {
+        let Some(root) = value.as_object_mut() else {
+            return;
         };
-        for row in rows {
-            let Some(obj) = row.as_object_mut() else {
+        for key in ["nodes", "handles", "edges", "wires"] {
+            let Some(rows) = root.get_mut(key).and_then(|v| v.as_array_mut()) else {
                 continue;
             };
-            if let Some(visible) = board_json_visible_option(obj) {
-                obj.insert("visible".into(), serde_json::json!(visible));
+            for row in rows {
+                let Some(obj) = row.as_object_mut() else {
+                    continue;
+                };
+                if let Some(visible) = board_json_visible_option(obj) {
+                    obj.insert("visible".into(), serde_json::json!(visible));
+                }
             }
         }
     }
-}
-// #endregion scene_json
+    // #endregion scene_json
 }
 
 pub mod types {
-// #region types
-//! 🧩 Directed port graph board types shared by normal and dag leaves.
+    // #region types
+    //! 🧩 Directed port graph board types shared by normal and dag leaves.
 
-use std::collections::{BTreeMap, BTreeSet};
+    use std::collections::{BTreeMap, BTreeSet};
 
-use crate::cavas::vello::kurbo::{Point, Vec2};
-use crate::cavas::vello::peniko::Color;
-use crate::cavas::camera::Camera;
-use crate::NodeKindHandleTemplate;
+    use crate::cavas::camera::Camera;
+    use crate::cavas::vello::kurbo::{Point, Vec2};
+    use crate::cavas::vello::peniko::Color;
+    use crate::NodeKindHandleTemplate;
 
-// #region 🔖GraphPortMode
-/// 🔌 Runtime port-model axis: ported graphs use handles; normal graphs connect node ids directly.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum GraphPortMode {
-    #[default]
-    Ported,
-    Normal,
-}
-
-impl GraphPortMode {
-    pub fn has_ports(self) -> bool {
-        self == GraphPortMode::Ported
-    }
-}
-// #endregion 🔖GraphPortMode
-
-pub use mathematical_graph::NodeShape;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BoardElementStyleKind {
-    Original,
-    Neutral,
-    Hovered,
-    Selected,
-    Highlighted,
-    Disabled,
-}
-
-#[derive(Clone, Debug)]
-pub struct NodeData {
-    pub id: String,
-    pub x: f64,
-    pub y: f64,
-    pub shape: NodeShape,
-    pub radius: f64,
-    pub width: f64,
-    pub height: f64,
-    pub scale: f64,
-    pub draggable: bool,
-    pub selected: bool,
-    pub visible: bool,
-    pub locked: bool,
-    pub root: bool,
-    pub style: Option<String>,
-    pub text: Option<String>,
-    pub icon_kind: Option<String>,
-    pub node_kind: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct WireKindDef {
-    pub name: String,
-    pub default_edge_kind: Option<String>,
-}
-
-#[derive(Clone, Debug)]
-pub struct NodeKindDef {
-    pub name: String,
-    pub scale: f64,
-    pub shape: NodeShape,
-    pub handles: Vec<NodeKindHandleTemplate>,
-    pub icon: Option<String>,
-    pub color_fill: Option<Color>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ActiveTool {
-    Select,
-    Brush,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EdgeStrokePattern {
-    Solid,
-    Dashed,
-    Dotted,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EdgeTipGeometry {
-    Arrow,
-    FineArrow,
-    Diamond,
-    Circle,
-    Bar,
-}
-
-#[derive(Clone, Debug)]
-pub struct EdgeTipDef {
-    pub geometry: EdgeTipGeometry,
-    pub filled: bool,
-    pub scale: f64,
-}
-
-impl EdgeTipDef {
-    pub fn from_catalog_row(eo: &serde_json::Map<String, serde_json::Value>) -> Option<Self> {
-        let id = eo.get("id").and_then(|x| x.as_str()).unwrap_or("");
-        if eo.get("geometry").is_none() {
-            return Self::builtin_for_id(id);
-        }
-        let geometry = match eo.get("geometry").and_then(|x| x.as_str()).map(str::trim) {
-            Some("arrow") => EdgeTipGeometry::Arrow,
-            Some("fine-arrow") | Some("fine_arrow") => EdgeTipGeometry::FineArrow,
-            Some("diamond") => EdgeTipGeometry::Diamond,
-            Some("circle") => EdgeTipGeometry::Circle,
-            Some("bar") => EdgeTipGeometry::Bar,
-            _ => return None,
-        };
-        let filled = eo.get("filled").and_then(|x| x.as_bool()).unwrap_or_else(|| match geometry {
-            EdgeTipGeometry::FineArrow | EdgeTipGeometry::Bar => false,
-            EdgeTipGeometry::Diamond => eo.get("id").and_then(|x| x.as_str()).is_some_and(|id| id.contains("open")),
-            _ => true,
-        });
-        let scale = eo
-            .get("scale")
-            .and_then(|x| x.as_f64())
-            .filter(|v| v.is_finite() && *v > 0.0)
-            .unwrap_or(1.0);
-        Some(Self { geometry, filled, scale })
+    // #region 🔖GraphPortMode
+    /// 🔌 Runtime port-model axis: ported graphs use handles; normal graphs connect node ids directly.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+    pub enum GraphPortMode {
+        #[default]
+        Ported,
+        Normal,
     }
 
-    pub fn builtin_for_id(id: &str) -> Option<Self> {
-        match id.trim().to_ascii_lowercase().as_str() {
-            "arrow" | "filled-arrow" | "filled_arrow" => Some(Self { geometry: EdgeTipGeometry::Arrow, filled: true, scale: 1.0 }),
-            "fine-arrow" | "fine_arrow" => Some(Self { geometry: EdgeTipGeometry::FineArrow, filled: false, scale: 1.0 }),
-            "filled-diamond" | "filled_diamond" => Some(Self { geometry: EdgeTipGeometry::Diamond, filled: true, scale: 1.0 }),
-            "open-diamond" | "open_diamond" => Some(Self { geometry: EdgeTipGeometry::Diamond, filled: false, scale: 1.0 }),
-            _ => None,
+    impl GraphPortMode {
+        pub fn has_ports(self) -> bool {
+            self == GraphPortMode::Ported
         }
     }
-}
+    // #endregion 🔖GraphPortMode
 
-pub fn builtin_edge_tips() -> BTreeMap<String, EdgeTipDef> {
-    let ids = ["arrow", "filled-arrow", "fine-arrow", "filled-diamond", "open-diamond"];
-    let mut m = BTreeMap::new();
-    for id in ids {
-        if let Some(def) = EdgeTipDef::builtin_for_id(id) {
-            m.insert(id.to_string(), def);
+    pub use mathematical_graph::NodeShape;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardElementStyleKind {
+        Original,
+        Neutral,
+        Hovered,
+        Selected,
+        Highlighted,
+        Disabled,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct NodeData {
+        pub id: String,
+        pub x: f64,
+        pub y: f64,
+        pub shape: NodeShape,
+        pub radius: f64,
+        pub width: f64,
+        pub height: f64,
+        pub scale: f64,
+        pub draggable: bool,
+        pub selected: bool,
+        pub visible: bool,
+        pub locked: bool,
+        pub root: bool,
+        pub style: Option<String>,
+        pub text: Option<String>,
+        pub icon_kind: Option<String>,
+        pub node_kind: String,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct WireKindDef {
+        pub name: String,
+        pub default_edge_kind: Option<String>,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct NodeKindDef {
+        pub name: String,
+        pub scale: f64,
+        pub shape: NodeShape,
+        pub handles: Vec<NodeKindHandleTemplate>,
+        pub icon: Option<String>,
+        pub color_fill: Option<Color>,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ActiveTool {
+        Select,
+        Brush,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum EdgeStrokePattern {
+        Solid,
+        Dashed,
+        Dotted,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum EdgeTipGeometry {
+        Arrow,
+        FineArrow,
+        Diamond,
+        Circle,
+        Bar,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct EdgeTipDef {
+        pub geometry: EdgeTipGeometry,
+        pub filled: bool,
+        pub scale: f64,
+    }
+
+    impl EdgeTipDef {
+        pub fn from_catalog_row(eo: &serde_json::Map<String, serde_json::Value>) -> Option<Self> {
+            let id = eo.get("id").and_then(|x| x.as_str()).unwrap_or("");
+            if eo.get("geometry").is_none() {
+                return Self::builtin_for_id(id);
+            }
+            let geometry = match eo.get("geometry").and_then(|x| x.as_str()).map(str::trim) {
+                Some("arrow") => EdgeTipGeometry::Arrow,
+                Some("fine-arrow") | Some("fine_arrow") => EdgeTipGeometry::FineArrow,
+                Some("diamond") => EdgeTipGeometry::Diamond,
+                Some("circle") => EdgeTipGeometry::Circle,
+                Some("bar") => EdgeTipGeometry::Bar,
+                _ => return None,
+            };
+            let filled = eo.get("filled").and_then(|x| x.as_bool()).unwrap_or_else(|| match geometry {
+                EdgeTipGeometry::FineArrow | EdgeTipGeometry::Bar => false,
+                EdgeTipGeometry::Diamond => eo.get("id").and_then(|x| x.as_str()).is_some_and(|id| id.contains("open")),
+                _ => true,
+            });
+            let scale = eo.get("scale").and_then(|x| x.as_f64()).filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0);
+            Some(Self { geometry, filled, scale })
         }
-    }
-    m
-}
 
-#[derive(Clone, Debug)]
-pub struct EdgeKindDef {
-    pub name: String,
-    pub color: Option<Color>,
-    pub stroke_width: f64,
-    pub pattern: EdgeStrokePattern,
-    pub source_tip: Option<String>,
-    pub target_tip: Option<String>,
-    pub directed: bool,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum CompatSpecificity {
-    General = 0,
-    Node = 1,
-    Edge = 2,
-    Handle = 3,
-    Wire = 4,
-}
-
-#[derive(Clone, Debug)]
-pub struct LinkCompatRule {
-    pub source: String,
-    pub target: String,
-    pub bidirectional: bool,
-    pub important: bool,
-    pub specificity: CompatSpecificity,
-}
-
-#[derive(Clone, Debug)]
-pub struct EdgeData {
-    pub id: String,
-    pub source: String,
-    pub target: String,
-    pub selected: bool,
-    pub visible: bool,
-    pub locked: bool,
-    pub style: Option<String>,
-    pub edge_kind: String,
-    pub source_tip: Option<String>,
-    pub target_tip: Option<String>,
-}
-
-#[derive(Clone, Debug)]
-pub struct WireData {
-    pub id: String,
-    pub source: String,
-    pub target: Option<String>,
-    pub end_x: Option<f64>,
-    pub end_y: Option<f64>,
-    pub selected: bool,
-    pub visible: bool,
-    pub locked: bool,
-    pub style: Option<String>,
-    pub wire_kind: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SelectionOptions {
-    pub method: String,
-    pub mode: String,
-    pub select_nodes: bool,
-    pub select_edges: bool,
-    pub select_handles: bool,
-}
-
-#[derive(Clone, Debug)]
-pub enum Interaction {
-    None,
-    Pan {
-        origin: Camera,
-        start_screen: Point,
-    },
-    DragNodes {
-        offset: Vec2,
-        primary_id: String,
-        start_positions: BTreeMap<String, (f64, f64)>,
-        proximity_pair: Option<(String, String)>,
-    },
-    SelectionPending {
-        initial_ids: BTreeSet<String>,
-        start: Point,
-        start_screen: Point,
-    },
-    Selection {
-        initial_ids: BTreeSet<String>,
-        points: Vec<Point>,
-        screen_points: Vec<Point>,
-        start: Point,
-        start_screen: Point,
-    },
-    LinkAtSourceHandle {
-        source_id: String,
-        start_screen: Point,
-    },
-    LinkDragSnap {
-        source_id: String,
-        target_id: Option<String>,
-        end_world: Point,
-    },
-    LinkTargetNode {
-        source_id: String,
-        target_node_id: String,
-    },
-    ExternalLinkPreview {
-        source_id: String,
-        end_world: Point,
-        compatible_node_ids: Vec<String>,
-        ring_node_id: Option<String>,
-        ring_handle_ids: Vec<String>,
-    },
-}
-
-impl Default for Interaction {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct VelloThemePalette {
-    pub raster_clear: Color,
-    pub grid_minor_stroke: Color,
-    pub edge_stroke: Color,
-    pub edge_stroke_hovered: Color,
-    pub edge_stroke_selected: Color,
-    pub edge_stroke_selection_exit: Color,
-    pub edge_stroke_disabled: Color,
-    pub node_fill: Color,
-    pub node_stroke: Color,
-    pub node_fill_hovered: Color,
-    pub node_stroke_hovered: Color,
-    pub node_fill_selected: Color,
-    pub node_stroke_selected: Color,
-    pub node_fill_selection_exit: Color,
-    pub node_stroke_selection_exit: Color,
-    pub node_fill_disabled: Color,
-    pub node_stroke_disabled: Color,
-    pub indirect_handle_fill: Color,
-    pub indirect_handle_stroke: Color,
-    pub handle_fill: Color,
-    pub handle_stroke: Color,
-    pub handle_fill_hovered: Color,
-    pub handle_stroke_hovered: Color,
-    pub handle_fill_selected: Color,
-    pub handle_stroke_selected: Color,
-    pub handle_fill_selection_exit: Color,
-    pub handle_stroke_selection_exit: Color,
-    pub handle_fill_disabled: Color,
-    pub handle_stroke_disabled: Color,
-    pub wire_stroke: Color,
-    pub wire_stroke_hovered: Color,
-    pub wire_stroke_selected: Color,
-    pub wire_stroke_highlighted: Color,
-    pub wire_stroke_disabled: Color,
-    pub selection_preview_fill: Color,
-    pub selection_preview_stroke: Color,
-    pub label_fill: Color,
-    pub label_fill_hovered: Color,
-    pub label_halo: Color,
-}
-
-impl VelloThemePalette {
-    /// @emoji 🎨 Builds a palette from centralized board theme tokens.
-    pub fn from_board_theme(t: &ui_styling::BoardTheme) -> Self {
-        Self {
-            raster_clear: Color::new(t.raster_clear),
-            grid_minor_stroke: Color::new(t.grid_minor_stroke),
-            edge_stroke: Color::new(t.edge_stroke),
-            edge_stroke_hovered: Color::new(t.edge_stroke_hovered),
-            edge_stroke_selected: Color::new(t.edge_stroke_selected),
-            edge_stroke_selection_exit: Color::new(t.edge_stroke_selection_exit),
-            edge_stroke_disabled: Color::new(t.edge_stroke_disabled),
-            node_fill: Color::new(t.node_fill),
-            node_stroke: Color::new(t.node_stroke),
-            node_fill_hovered: Color::new(t.node_fill_hovered),
-            node_stroke_hovered: Color::new(t.node_stroke_hovered),
-            node_fill_selected: Color::new(t.node_fill_selected),
-            node_stroke_selected: Color::new(t.node_stroke_selected),
-            node_fill_selection_exit: Color::new(t.node_fill_selection_exit),
-            node_stroke_selection_exit: Color::new(t.node_stroke_selection_exit),
-            node_fill_disabled: Color::new(t.node_fill_disabled),
-            node_stroke_disabled: Color::new(t.node_stroke_disabled),
-            indirect_handle_fill: Color::new(t.indirect_handle_fill),
-            indirect_handle_stroke: Color::new(t.indirect_handle_stroke),
-            handle_fill: Color::new(t.handle_fill),
-            handle_stroke: Color::new(t.handle_stroke),
-            handle_fill_hovered: Color::new(t.handle_fill_hovered),
-            handle_stroke_hovered: Color::new(t.handle_stroke_hovered),
-            handle_fill_selected: Color::new(t.handle_fill_selected),
-            handle_stroke_selected: Color::new(t.handle_stroke_selected),
-            handle_fill_selection_exit: Color::new(t.handle_fill_selection_exit),
-            handle_stroke_selection_exit: Color::new(t.handle_stroke_selection_exit),
-            handle_fill_disabled: Color::new(t.handle_fill_disabled),
-            handle_stroke_disabled: Color::new(t.handle_stroke_disabled),
-            wire_stroke: Color::new(t.wire_stroke),
-            wire_stroke_hovered: Color::new(t.wire_stroke_hovered),
-            wire_stroke_selected: Color::new(t.wire_stroke_selected),
-            wire_stroke_highlighted: Color::new(t.wire_stroke_highlighted),
-            wire_stroke_disabled: Color::new(t.wire_stroke_disabled),
-            selection_preview_fill: Color::new(t.selection_preview_fill),
-            selection_preview_stroke: Color::new(t.selection_preview_stroke),
-            label_fill: Color::new(t.label_fill),
-            label_fill_hovered: Color::new(t.label_fill_hovered),
-            label_halo: Color::new(t.label_halo),
-        }
-    }
-
-    fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
-        let r = u8::try_from(arr.get(0)?.as_u64().unwrap_or(0).min(255)).ok()?;
-        let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
-        let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
-        let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
-        Some(Color::from_rgba8(r, g, b, a))
-    }
-
-    fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-        if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
-            if let Some(c) = Self::color_from_json_rgba8(arr) {
-                *next = c;
+        pub fn builtin_for_id(id: &str) -> Option<Self> {
+            match id.trim().to_ascii_lowercase().as_str() {
+                "arrow" | "filled-arrow" | "filled_arrow" => Some(Self { geometry: EdgeTipGeometry::Arrow, filled: true, scale: 1.0 }),
+                "fine-arrow" | "fine_arrow" => Some(Self { geometry: EdgeTipGeometry::FineArrow, filled: false, scale: 1.0 }),
+                "filled-diamond" | "filled_diamond" => Some(Self { geometry: EdgeTipGeometry::Diamond, filled: true, scale: 1.0 }),
+                "open-diamond" | "open_diamond" => Some(Self { geometry: EdgeTipGeometry::Diamond, filled: false, scale: 1.0 }),
+                _ => None,
             }
         }
     }
 
-    /// @emoji 🎨 Replaces this palette from the React host UI theme JSON payload.
-    pub fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        let mut next = Self::default();
-        Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
-        Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
-        Self::merge_color_field(&mut next.edge_stroke, &v, "edgeStroke");
-        Self::merge_color_field(&mut next.edge_stroke_hovered, &v, "edgeStrokeHovered");
-        Self::merge_color_field(&mut next.edge_stroke_selected, &v, "edgeStrokeSelected");
-        Self::merge_color_field(&mut next.edge_stroke_selection_exit, &v, "edgeStrokeSelectionExit");
-        Self::merge_color_field(&mut next.edge_stroke_disabled, &v, "edgeStrokeDisabled");
-        Self::merge_color_field(&mut next.node_fill, &v, "nodeFill");
-        Self::merge_color_field(&mut next.node_stroke, &v, "nodeStroke");
-        Self::merge_color_field(&mut next.node_fill_hovered, &v, "nodeFillHovered");
-        Self::merge_color_field(&mut next.node_stroke_hovered, &v, "nodeStrokeHovered");
-        Self::merge_color_field(&mut next.node_fill_selected, &v, "nodeFillSelected");
-        Self::merge_color_field(&mut next.node_stroke_selected, &v, "nodeStrokeSelected");
-        Self::merge_color_field(&mut next.node_fill_selection_exit, &v, "nodeFillSelectionExit");
-        Self::merge_color_field(&mut next.node_stroke_selection_exit, &v, "nodeStrokeSelectionExit");
-        Self::merge_color_field(&mut next.node_fill_disabled, &v, "nodeFillDisabled");
-        Self::merge_color_field(&mut next.node_stroke_disabled, &v, "nodeStrokeDisabled");
-        Self::merge_color_field(&mut next.indirect_handle_fill, &v, "indirectHandleFill");
-        Self::merge_color_field(&mut next.indirect_handle_stroke, &v, "indirectHandleStroke");
-        Self::merge_color_field(&mut next.handle_fill, &v, "handleFill");
-        Self::merge_color_field(&mut next.handle_stroke, &v, "handleStroke");
-        Self::merge_color_field(&mut next.handle_fill_hovered, &v, "handleFillHovered");
-        Self::merge_color_field(&mut next.handle_stroke_hovered, &v, "handleStrokeHovered");
-        Self::merge_color_field(&mut next.handle_fill_selected, &v, "handleFillSelected");
-        Self::merge_color_field(&mut next.handle_stroke_selected, &v, "handleStrokeSelected");
-        Self::merge_color_field(&mut next.handle_fill_selection_exit, &v, "handleFillSelectionExit");
-        Self::merge_color_field(&mut next.handle_stroke_selection_exit, &v, "handleStrokeSelectionExit");
-        Self::merge_color_field(&mut next.handle_fill_disabled, &v, "handleFillDisabled");
-        Self::merge_color_field(&mut next.handle_stroke_disabled, &v, "handleStrokeDisabled");
-        Self::merge_color_field(&mut next.wire_stroke, &v, "wireStroke");
-        Self::merge_color_field(&mut next.wire_stroke_hovered, &v, "wireStrokeHovered");
-        Self::merge_color_field(&mut next.wire_stroke_selected, &v, "wireStrokeSelected");
-        Self::merge_color_field(&mut next.wire_stroke_highlighted, &v, "wireStrokeHighlighted");
-        Self::merge_color_field(&mut next.wire_stroke_disabled, &v, "wireStrokeDisabled");
-        Self::merge_color_field(&mut next.selection_preview_fill, &v, "selectionPreviewFill");
-        Self::merge_color_field(&mut next.selection_preview_stroke, &v, "selectionPreviewStroke");
-        Self::merge_color_field(&mut next.label_fill, &v, "labelFill");
-        Self::merge_color_field(&mut next.label_fill_hovered, &v, "labelFillHovered");
-        Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
-        *self = next;
-        Ok(())
-    }
-}
-
-// #region 🔖Icons
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
-
-use crate::cavas::usvg;
-use crate::cavas::vello::kurbo::{Affine, Rect};
-use crate::cavas::vello::peniko::{Blob, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
-use crate::cavas::vello::Scene;
-
-#[derive(Clone)]
-pub enum CachedIconBody {
-    Vector(Scene),
-    Raster(Arc<ImageData>),
-}
-
-#[derive(Clone)]
-struct CachedIconPaint {
-    bx: f64,
-    by: f64,
-    bw: f64,
-    bh: f64,
-    body: CachedIconBody,
-}
-
-/// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
-pub struct IconPaintCache {
-    cache: RefCell<HashMap<String, CachedIconPaint>>,
-    pub themed_icon_lookup: infinite_cavas::icon_codec::ThemedSvgLookup,
-}
-
-impl Default for IconPaintCache {
-    fn default() -> Self {
-        Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: |_| None }
-    }
-}
-
-impl Clone for IconPaintCache {
-    fn clone(&self) -> Self {
-        Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: self.themed_icon_lookup }
-    }
-}
-
-impl IconPaintCache {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn clear(&self) {
-        self.cache.borrow_mut().clear();
-    }
-
-    fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        svg.hash(&mut hasher);
-        let hx = hasher.finish();
-        let f = fg.to_rgba8();
-        let b = bg.to_rgba8();
-        format!(
-            "v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
-            svg.len(),
-            f.r,
-            f.g,
-            f.b,
-            f.a,
-            b.r,
-            b.g,
-            b.b,
-            b.a
-        )
-    }
-
-    fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        rgba.as_ref().hash(&mut hasher);
-        let hx = hasher.finish();
-        format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
-    }
-
-    pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
-        let resolved = infinite_cavas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
-        let key = match &resolved {
-            infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
-            infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
-                Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg)
-            }
-            infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
-        };
-        {
-            let g = self.cache.borrow();
-            if let Some(c) = g.get(&key) {
-                return Some((c.bx, c.by, c.bw, c.bh, c.body.clone()));
+    pub fn builtin_edge_tips() -> BTreeMap<String, EdgeTipDef> {
+        let ids = ["arrow", "filled-arrow", "fine-arrow", "filled-diamond", "open-diamond"];
+        let mut m = BTreeMap::new();
+        for id in ids {
+            if let Some(def) = EdgeTipDef::builtin_for_id(id) {
+                m.insert(id.to_string(), def);
             }
         }
-        let (bx, by, bw, bh, body) = match resolved {
-            infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
-            infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-                let tree = usvg::Tree::from_str(s.trim(), infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
-                let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
-                if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
-                    return None;
+        m
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct EdgeKindDef {
+        pub name: String,
+        pub color: Option<Color>,
+        pub stroke_width: f64,
+        pub pattern: EdgeStrokePattern,
+        pub source_tip: Option<String>,
+        pub target_tip: Option<String>,
+        pub directed: bool,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum CompatSpecificity {
+        General = 0,
+        Node = 1,
+        Edge = 2,
+        Handle = 3,
+        Wire = 4,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct LinkCompatRule {
+        pub source: String,
+        pub target: String,
+        pub bidirectional: bool,
+        pub important: bool,
+        pub specificity: CompatSpecificity,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct EdgeData {
+        pub id: String,
+        pub source: String,
+        pub target: String,
+        pub selected: bool,
+        pub visible: bool,
+        pub locked: bool,
+        pub style: Option<String>,
+        pub edge_kind: String,
+        pub source_tip: Option<String>,
+        pub target_tip: Option<String>,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct WireData {
+        pub id: String,
+        pub source: String,
+        pub target: Option<String>,
+        pub end_x: Option<f64>,
+        pub end_y: Option<f64>,
+        pub selected: bool,
+        pub visible: bool,
+        pub locked: bool,
+        pub style: Option<String>,
+        pub wire_kind: String,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct SelectionOptions {
+        pub method: String,
+        pub mode: String,
+        pub select_nodes: bool,
+        pub select_edges: bool,
+        pub select_handles: bool,
+    }
+
+    #[derive(Clone, Debug)]
+    pub enum Interaction {
+        None,
+        Pan { origin: Camera, start_screen: Point },
+        DragNodes { offset: Vec2, primary_id: String, start_positions: BTreeMap<String, (f64, f64)>, proximity_pair: Option<(String, String)> },
+        SelectionPending { initial_ids: BTreeSet<String>, start: Point, start_screen: Point },
+        Selection { initial_ids: BTreeSet<String>, points: Vec<Point>, screen_points: Vec<Point>, start: Point, start_screen: Point },
+        LinkAtSourceHandle { source_id: String, start_screen: Point },
+        LinkDragSnap { source_id: String, target_id: Option<String>, end_world: Point },
+        LinkTargetNode { source_id: String, target_node_id: String },
+        ExternalLinkPreview { source_id: String, end_world: Point, compatible_node_ids: Vec<String>, ring_node_id: Option<String>, ring_handle_ids: Vec<String> },
+    }
+
+    impl Default for Interaction {
+        fn default() -> Self {
+            Self::None
+        }
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    pub struct VelloThemePalette {
+        pub raster_clear: Color,
+        pub grid_minor_stroke: Color,
+        pub edge_stroke: Color,
+        pub edge_stroke_hovered: Color,
+        pub edge_stroke_selected: Color,
+        pub edge_stroke_selection_exit: Color,
+        pub edge_stroke_disabled: Color,
+        pub node_fill: Color,
+        pub node_stroke: Color,
+        pub node_fill_hovered: Color,
+        pub node_stroke_hovered: Color,
+        pub node_fill_selected: Color,
+        pub node_stroke_selected: Color,
+        pub node_fill_selection_exit: Color,
+        pub node_stroke_selection_exit: Color,
+        pub node_fill_disabled: Color,
+        pub node_stroke_disabled: Color,
+        pub indirect_handle_fill: Color,
+        pub indirect_handle_stroke: Color,
+        pub handle_fill: Color,
+        pub handle_stroke: Color,
+        pub handle_fill_hovered: Color,
+        pub handle_stroke_hovered: Color,
+        pub handle_fill_selected: Color,
+        pub handle_stroke_selected: Color,
+        pub handle_fill_selection_exit: Color,
+        pub handle_stroke_selection_exit: Color,
+        pub handle_fill_disabled: Color,
+        pub handle_stroke_disabled: Color,
+        pub wire_stroke: Color,
+        pub wire_stroke_hovered: Color,
+        pub wire_stroke_selected: Color,
+        pub wire_stroke_highlighted: Color,
+        pub wire_stroke_disabled: Color,
+        pub selection_preview_fill: Color,
+        pub selection_preview_stroke: Color,
+        pub label_fill: Color,
+        pub label_fill_hovered: Color,
+        pub label_halo: Color,
+    }
+
+    impl VelloThemePalette {
+        /// @emoji 🎨 Builds a palette from centralized board theme tokens.
+        pub fn from_board_theme(t: &ui_styling::BoardTheme) -> Self {
+            Self {
+                raster_clear: Color::new(t.raster_clear),
+                grid_minor_stroke: Color::new(t.grid_minor_stroke),
+                edge_stroke: Color::new(t.edge_stroke),
+                edge_stroke_hovered: Color::new(t.edge_stroke_hovered),
+                edge_stroke_selected: Color::new(t.edge_stroke_selected),
+                edge_stroke_selection_exit: Color::new(t.edge_stroke_selection_exit),
+                edge_stroke_disabled: Color::new(t.edge_stroke_disabled),
+                node_fill: Color::new(t.node_fill),
+                node_stroke: Color::new(t.node_stroke),
+                node_fill_hovered: Color::new(t.node_fill_hovered),
+                node_stroke_hovered: Color::new(t.node_stroke_hovered),
+                node_fill_selected: Color::new(t.node_fill_selected),
+                node_stroke_selected: Color::new(t.node_stroke_selected),
+                node_fill_selection_exit: Color::new(t.node_fill_selection_exit),
+                node_stroke_selection_exit: Color::new(t.node_stroke_selection_exit),
+                node_fill_disabled: Color::new(t.node_fill_disabled),
+                node_stroke_disabled: Color::new(t.node_stroke_disabled),
+                indirect_handle_fill: Color::new(t.indirect_handle_fill),
+                indirect_handle_stroke: Color::new(t.indirect_handle_stroke),
+                handle_fill: Color::new(t.handle_fill),
+                handle_stroke: Color::new(t.handle_stroke),
+                handle_fill_hovered: Color::new(t.handle_fill_hovered),
+                handle_stroke_hovered: Color::new(t.handle_stroke_hovered),
+                handle_fill_selected: Color::new(t.handle_fill_selected),
+                handle_stroke_selected: Color::new(t.handle_stroke_selected),
+                handle_fill_selection_exit: Color::new(t.handle_fill_selection_exit),
+                handle_stroke_selection_exit: Color::new(t.handle_stroke_selection_exit),
+                handle_fill_disabled: Color::new(t.handle_fill_disabled),
+                handle_stroke_disabled: Color::new(t.handle_stroke_disabled),
+                wire_stroke: Color::new(t.wire_stroke),
+                wire_stroke_hovered: Color::new(t.wire_stroke_hovered),
+                wire_stroke_selected: Color::new(t.wire_stroke_selected),
+                wire_stroke_highlighted: Color::new(t.wire_stroke_highlighted),
+                wire_stroke_disabled: Color::new(t.wire_stroke_disabled),
+                selection_preview_fill: Color::new(t.selection_preview_fill),
+                selection_preview_stroke: Color::new(t.selection_preview_stroke),
+                label_fill: Color::new(t.label_fill),
+                label_fill_hovered: Color::new(t.label_fill_hovered),
+                label_halo: Color::new(t.label_halo),
+            }
+        }
+
+        fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+            let r = u8::try_from(arr.get(0)?.as_u64().unwrap_or(0).min(255)).ok()?;
+            let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
+            let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
+            let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
+            Some(Color::from_rgba8(r, g, b, a))
+        }
+
+        fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
+            if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+                if let Some(c) = Self::color_from_json_rgba8(arr) {
+                    *next = c;
                 }
-                let mut s = Scene::new();
-                if preserve_original_style {
-                    let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
-                } else {
-                    infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
-                }
-                (bx, by, bw, bh, CachedIconBody::Vector(s))
-            }
-            infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
-                let svg_t = s.trim();
-                let tree = usvg::Tree::from_str(svg_t, infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
-                let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
-                if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
-                    return None;
-                }
-                let mut s = Scene::new();
-                if preserve_original_style {
-                    let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
-                } else {
-                    infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
-                }
-                (bx, by, bw, bh, CachedIconBody::Vector(s))
-            }
-            infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
-                let bx = 0.0_f64;
-                let by = 0.0_f64;
-                let bw = f64::from(w);
-                let bh = f64::from(h);
-                let img = ImageData {
-                    data: Blob::new(Arc::new(rgba.as_ref().to_vec())),
-                    format: ImageFormat::Rgba8,
-                    alpha_type: ImageAlphaType::Alpha,
-                    width: w,
-                    height: h,
-                };
-                (bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
-            }
-        };
-        let cached = CachedIconPaint { bx, by, bw, bh, body: body.clone() };
-        self.cache.borrow_mut().insert(key, cached);
-        Some((bx, by, bw, bh, body))
-    }
-
-    /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.
-    pub fn append_icon_at_screen_rect(
-        &self,
-        scene: &mut Scene,
-        icon_kind: &str,
-        center: Point,
-        avail_w: f64,
-        avail_h: f64,
-        fg: Color,
-        bg: Color,
-        preserve_original_style: bool,
-    ) {
-        let Some((bx, by, bw, bh, body)) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
-            return;
-        };
-        if !(avail_w > 0.0 && avail_h > 0.0) {
-            return;
-        }
-        let fit_inset = ui_styling::metrics::icon::FIT_INSET;
-        let sx_half = avail_w * fit_inset * 0.5;
-        let sy_half = avail_h * fit_inset * 0.5;
-        let cx = bx + bw * 0.5;
-        let cy = by + bh * 0.5;
-        let scale = (2.0 * sx_half / bw).min(2.0 * sy_half / bh);
-        let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
-        let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
-        let hw = avail_w * clip_inset * 0.5;
-        let hh = avail_h * clip_inset * 0.5;
-        let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
-        scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
-        match &body {
-            CachedIconBody::Vector(icon_scene) => {
-                scene.append(icon_scene, Some(aff));
-            }
-            CachedIconBody::Raster(img) => {
-                scene.draw_image(&ImageBrush::new((**img).clone()), aff);
             }
         }
-        scene.pop_layer();
+
+        /// @emoji 🎨 Replaces this palette from the React host UI theme JSON payload.
+        pub fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
+            let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+            let mut next = Self::default();
+            Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
+            Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
+            Self::merge_color_field(&mut next.edge_stroke, &v, "edgeStroke");
+            Self::merge_color_field(&mut next.edge_stroke_hovered, &v, "edgeStrokeHovered");
+            Self::merge_color_field(&mut next.edge_stroke_selected, &v, "edgeStrokeSelected");
+            Self::merge_color_field(&mut next.edge_stroke_selection_exit, &v, "edgeStrokeSelectionExit");
+            Self::merge_color_field(&mut next.edge_stroke_disabled, &v, "edgeStrokeDisabled");
+            Self::merge_color_field(&mut next.node_fill, &v, "nodeFill");
+            Self::merge_color_field(&mut next.node_stroke, &v, "nodeStroke");
+            Self::merge_color_field(&mut next.node_fill_hovered, &v, "nodeFillHovered");
+            Self::merge_color_field(&mut next.node_stroke_hovered, &v, "nodeStrokeHovered");
+            Self::merge_color_field(&mut next.node_fill_selected, &v, "nodeFillSelected");
+            Self::merge_color_field(&mut next.node_stroke_selected, &v, "nodeStrokeSelected");
+            Self::merge_color_field(&mut next.node_fill_selection_exit, &v, "nodeFillSelectionExit");
+            Self::merge_color_field(&mut next.node_stroke_selection_exit, &v, "nodeStrokeSelectionExit");
+            Self::merge_color_field(&mut next.node_fill_disabled, &v, "nodeFillDisabled");
+            Self::merge_color_field(&mut next.node_stroke_disabled, &v, "nodeStrokeDisabled");
+            Self::merge_color_field(&mut next.indirect_handle_fill, &v, "indirectHandleFill");
+            Self::merge_color_field(&mut next.indirect_handle_stroke, &v, "indirectHandleStroke");
+            Self::merge_color_field(&mut next.handle_fill, &v, "handleFill");
+            Self::merge_color_field(&mut next.handle_stroke, &v, "handleStroke");
+            Self::merge_color_field(&mut next.handle_fill_hovered, &v, "handleFillHovered");
+            Self::merge_color_field(&mut next.handle_stroke_hovered, &v, "handleStrokeHovered");
+            Self::merge_color_field(&mut next.handle_fill_selected, &v, "handleFillSelected");
+            Self::merge_color_field(&mut next.handle_stroke_selected, &v, "handleStrokeSelected");
+            Self::merge_color_field(&mut next.handle_fill_selection_exit, &v, "handleFillSelectionExit");
+            Self::merge_color_field(&mut next.handle_stroke_selection_exit, &v, "handleStrokeSelectionExit");
+            Self::merge_color_field(&mut next.handle_fill_disabled, &v, "handleFillDisabled");
+            Self::merge_color_field(&mut next.handle_stroke_disabled, &v, "handleStrokeDisabled");
+            Self::merge_color_field(&mut next.wire_stroke, &v, "wireStroke");
+            Self::merge_color_field(&mut next.wire_stroke_hovered, &v, "wireStrokeHovered");
+            Self::merge_color_field(&mut next.wire_stroke_selected, &v, "wireStrokeSelected");
+            Self::merge_color_field(&mut next.wire_stroke_highlighted, &v, "wireStrokeHighlighted");
+            Self::merge_color_field(&mut next.wire_stroke_disabled, &v, "wireStrokeDisabled");
+            Self::merge_color_field(&mut next.selection_preview_fill, &v, "selectionPreviewFill");
+            Self::merge_color_field(&mut next.selection_preview_stroke, &v, "selectionPreviewStroke");
+            Self::merge_color_field(&mut next.label_fill, &v, "labelFill");
+            Self::merge_color_field(&mut next.label_fill_hovered, &v, "labelFillHovered");
+            Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
+            *self = next;
+            Ok(())
+        }
     }
 
-    /// @emoji 🎨 Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
-    pub fn board_icon_paint_colors(vello_theme: &VelloThemePalette) -> (Color, Color) {
-        let rgba = vello_theme.raster_clear.to_rgba8();
-        let lum = f64::from(rgba.r) * 0.299 + f64::from(rgba.g) * 0.587 + f64::from(rgba.b) * 0.114;
-        let canvas = if lum < 128.0 {
-            &ui_styling::CANVAS_DARK
-        } else {
-            &ui_styling::CANVAS_LIGHT
-        };
-        (Color::new(canvas.icon_fg), Color::new(canvas.icon_bg))
-    }
-}
-// #endregion 🔖Icons
+    // #region 🔖Icons
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    use std::hash::{Hash, Hasher};
+    use std::sync::Arc;
 
-impl Default for VelloThemePalette {
-    fn default() -> Self {
-        Self::from_board_theme(&ui_styling::BOARD_LIGHT)
-    }
-}
-// #endregion types
-}
+    use crate::cavas::usvg;
+    use crate::cavas::vello::kurbo::{Affine, Rect};
+    use crate::cavas::vello::peniko::{Blob, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
+    use crate::cavas::vello::Scene;
 
+    #[derive(Clone)]
+    pub enum CachedIconBody {
+        Vector(Scene),
+        Raster(Arc<ImageData>),
+    }
+
+    #[derive(Clone)]
+    struct CachedIconPaint {
+        bx: f64,
+        by: f64,
+        bw: f64,
+        bh: f64,
+        body: CachedIconBody,
+    }
+
+    /// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
+    pub struct IconPaintCache {
+        cache: RefCell<HashMap<String, CachedIconPaint>>,
+        pub themed_icon_lookup: infinite_cavas::icon_codec::ThemedSvgLookup,
+    }
+
+    impl Default for IconPaintCache {
+        fn default() -> Self {
+            Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: |_| None }
+        }
+    }
+
+    impl Clone for IconPaintCache {
+        fn clone(&self) -> Self {
+            Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: self.themed_icon_lookup }
+        }
+    }
+
+    impl IconPaintCache {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        pub fn clear(&self) {
+            self.cache.borrow_mut().clear();
+        }
+
+        fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            svg.hash(&mut hasher);
+            let hx = hasher.finish();
+            let f = fg.to_rgba8();
+            let b = bg.to_rgba8();
+            format!("v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}", svg.len(), f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a)
+        }
+
+        fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            rgba.as_ref().hash(&mut hasher);
+            let hx = hasher.finish();
+            format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
+        }
+
+        pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
+            let resolved = infinite_cavas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
+            let key = match &resolved {
+                infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
+                infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
+            };
+            {
+                let g = self.cache.borrow();
+                if let Some(c) = g.get(&key) {
+                    return Some((c.bx, c.by, c.bw, c.bh, c.body.clone()));
+                }
+            }
+            let (bx, by, bw, bh, body) = match resolved {
+                infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                    let tree = usvg::Tree::from_str(s.trim(), infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
+                    let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                    if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+                        return None;
+                    }
+                    let mut s = Scene::new();
+                    if preserve_original_style {
+                        let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
+                    } else {
+                        infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                    }
+                    (bx, by, bw, bh, CachedIconBody::Vector(s))
+                }
+                infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                    let svg_t = s.trim();
+                    let tree = usvg::Tree::from_str(svg_t, infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
+                    let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                    if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+                        return None;
+                    }
+                    let mut s = Scene::new();
+                    if preserve_original_style {
+                        let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
+                    } else {
+                        infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                    }
+                    (bx, by, bw, bh, CachedIconBody::Vector(s))
+                }
+                infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+                    let bx = 0.0_f64;
+                    let by = 0.0_f64;
+                    let bw = f64::from(w);
+                    let bh = f64::from(h);
+                    let img = ImageData { data: Blob::new(Arc::new(rgba.as_ref().to_vec())), format: ImageFormat::Rgba8, alpha_type: ImageAlphaType::Alpha, width: w, height: h };
+                    (bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
+                }
+            };
+            let cached = CachedIconPaint { bx, by, bw, bh, body: body.clone() };
+            self.cache.borrow_mut().insert(key, cached);
+            Some((bx, by, bw, bh, body))
+        }
+
+        /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.
+        pub fn append_icon_at_screen_rect(&self, scene: &mut Scene, icon_kind: &str, center: Point, avail_w: f64, avail_h: f64, fg: Color, bg: Color, preserve_original_style: bool) {
+            let Some((bx, by, bw, bh, body)) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
+                return;
+            };
+            if !(avail_w > 0.0 && avail_h > 0.0) {
+                return;
+            }
+            let fit_inset = ui_styling::metrics::icon::FIT_INSET;
+            let sx_half = avail_w * fit_inset * 0.5;
+            let sy_half = avail_h * fit_inset * 0.5;
+            let cx = bx + bw * 0.5;
+            let cy = by + bh * 0.5;
+            let scale = (2.0 * sx_half / bw).min(2.0 * sy_half / bh);
+            let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+            let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
+            let hw = avail_w * clip_inset * 0.5;
+            let hh = avail_h * clip_inset * 0.5;
+            let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
+            scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+            match &body {
+                CachedIconBody::Vector(icon_scene) => {
+                    scene.append(icon_scene, Some(aff));
+                }
+                CachedIconBody::Raster(img) => {
+                    scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                }
+            }
+            scene.pop_layer();
+        }
+
+        /// @emoji 🎨 Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
+        pub fn board_icon_paint_colors(vello_theme: &VelloThemePalette) -> (Color, Color) {
+            let rgba = vello_theme.raster_clear.to_rgba8();
+            let lum = f64::from(rgba.r) * 0.299 + f64::from(rgba.g) * 0.587 + f64::from(rgba.b) * 0.114;
+            let canvas = if lum < 128.0 { &ui_styling::CANVAS_DARK } else { &ui_styling::CANVAS_LIGHT };
+            (Color::new(canvas.icon_fg), Color::new(canvas.icon_bg))
+        }
+    }
+    // #endregion 🔖Icons
+
+    impl Default for VelloThemePalette {
+        fn default() -> Self {
+            Self::from_board_theme(&ui_styling::BOARD_LIGHT)
+        }
+    }
+    // #endregion types
+}
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_port::*;
-pub use scene_json::{
-    board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureV1Json, SceneDescriptorJson,
-    WireDescJson,
-};
-pub use types::*;
 pub use mathematical_core::{Directed, Ported};
 pub use mathematical_graph::{
-    area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_contains_edge_curve,
-    selection_contains_handle_point, selection_contains_node_bounds, selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points,
-    SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX, SELECTION_MARQUEE_DRAG_THRESHOLD_PX,
+    area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_contains_edge_curve, selection_contains_handle_point, selection_contains_node_bounds,
+    selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points, SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX,
+    SELECTION_MARQUEE_DRAG_THRESHOLD_PX,
 };
+pub use mathematical_graph_port::*;
+pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureV1Json, SceneDescriptorJson, WireDescJson};
+pub use types::*;
 
 /// ➡️ Port graph engine with directed handle endpoints.
 pub type DirectedPortGraphEngine = GraphEngine<Ported, Directed>;
@@ -841,31 +766,18 @@ pub mod force_graph {
 
     /// 🕸️ Ported force layout: resolves handle endpoints, then delegates to normal undirected physics.
     pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
-        let nodes = fixture
-            .as_object()
-            .and_then(|root| root.get("nodes"))
-            .and_then(|v| v.as_array())
-            .cloned()
-            .unwrap_or_default();
+        let nodes = fixture.as_object().and_then(|root| root.get("nodes")).and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let handle_to_node = build_handle_to_node(&nodes);
-        mathematical_graph_normal_undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(
-            fixture,
-            opts,
-            |endpoint, id_to_index| {
-                let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
-                id_to_index.contains_key(&node_id).then_some(node_id)
-            },
-        )
+        mathematical_graph_normal_undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, |endpoint, id_to_index| {
+            let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
+            id_to_index.contains_key(&node_id).then_some(node_id)
+        })
     }
 
     /// 🕸️ JSON entry for ported force layout (handle endpoints resolved before undirected physics).
     pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
         let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() {
-            ForceGraphLayoutOptions::default()
-        } else {
-            serde_json::from_str(options_json).map_err(|e| e.to_string())?
-        };
+        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() { ForceGraphLayoutOptions::default() } else { serde_json::from_str(options_json).map_err(|e| e.to_string())? };
         apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &opts)?;
         serde_json::to_string(&fixture).map_err(|e| e.to_string())
     }
@@ -1438,11 +1350,11 @@ pub mod redraw_layout {
     use serde_json::Value;
     use std::collections::HashMap;
 
+    use crate::board_json_visible_or_true;
+    use crate::fixture_edge_handle_ids_from_object;
     use crate::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
     use crate::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
     use crate::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
-    use crate::board_json_visible_or_true;
-    use crate::fixture_edge_handle_ids_from_object;
 
     #[derive(Debug, Clone, Copy)]
     enum NodeShapeSnap {

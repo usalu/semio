@@ -14,19 +14,17 @@ use serde::Deserialize;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::{
+    board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
+    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
+    normalize_selection_mode, pick_merge_mode_for_modifiers, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
+    EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
+    NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
+};
+use infinite_cavas::camera::Camera;
 use infinite_cavas::geom_sel::{
     cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
     world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
-};
-use infinite_cavas::camera::Camera;
-use crate::{
-    board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
-    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle,
-    handle_position_on_rectangle, merge_ids_into_selection,
-    merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
-    rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
-    FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape,
-    CachedIconBody, IconPaintCache, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
 
 use std::cell::RefCell;
@@ -61,42 +59,12 @@ const BOUNDED_DRAG_HIT_PAD_PX: f64 = ui_styling::metrics::board::BOUNDED_DRAG_HI
 const DEFAULT_WIRE_KIND_ID: &str = "wire.link";
 
 const PUZZLE_2D_LODS: &[Lod; 6] = &[
-    Lod {
-        id: "minimap",
-        name: "Minimap",
-        description: "Whole-board silhouette; group selection and bounded drag only.",
-        max_zoom: 0.15,
-    },
-    Lod {
-        id: "overview",
-        name: "Overview",
-        description: "Topology and indirect handle rings; no per-node picks.",
-        max_zoom: 0.35,
-    },
-    Lod {
-        id: "compact",
-        name: "Compact",
-        description: "Dense graph layout with simplified chrome.",
-        max_zoom: 0.55,
-    },
-    Lod {
-        id: "normal",
-        name: "Normal",
-        description: "Standard editing: nodes, edges, and handle rings.",
-        max_zoom: 1.25,
-    },
-    Lod {
-        id: "detail",
-        name: "Detail",
-        description: "Node icons and richer strokes.",
-        max_zoom: 2.5,
-    },
-    Lod {
-        id: "micro",
-        name: "Micro",
-        description: "Maximum fidelity including handle icons.",
-        max_zoom: f64::INFINITY,
-    },
+    Lod { id: "minimap", name: "Minimap", description: "Whole-board silhouette; group selection and bounded drag only.", max_zoom: 0.15 },
+    Lod { id: "overview", name: "Overview", description: "Topology and indirect handle rings; no per-node picks.", max_zoom: 0.35 },
+    Lod { id: "compact", name: "Compact", description: "Dense graph layout with simplified chrome.", max_zoom: 0.55 },
+    Lod { id: "normal", name: "Normal", description: "Standard editing: nodes, edges, and handle rings.", max_zoom: 1.25 },
+    Lod { id: "detail", name: "Detail", description: "Node icons and richer strokes.", max_zoom: 2.5 },
+    Lod { id: "micro", name: "Micro", description: "Maximum fidelity including handle icons.", max_zoom: f64::INFINITY },
 ];
 
 const PUZZLE_2D_LOD_SCALE: LodScale = LodScale { lods: PUZZLE_2D_LODS };
@@ -238,7 +206,6 @@ struct FixtureDropPreviewSnapshot {
     height: f64,
     icon_kind: Option<String>,
 }
-
 
 #[derive(Clone)]
 pub struct BoardHost {
@@ -408,12 +375,7 @@ impl BoardHost {
 
     /// @emoji 🏷️ Camera, draw LOD, and visible node centers from the WASM host for the JS text overlay (must match the last GPU frame).
     pub fn overlay_paint_state_json(&self) -> String {
-        let nodes: Vec<serde_json::Value> = self
-            .nodes
-            .values()
-            .filter(|n| n.visible)
-            .map(|n| serde_json::json!({ "id": n.id, "x": n.x, "y": n.y }))
-            .collect();
+        let nodes: Vec<serde_json::Value> = self.nodes.values().filter(|n| n.visible).map(|n| serde_json::json!({ "id": n.id, "x": n.x, "y": n.y })).collect();
         serde_json::json!({
             "camera": { "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom },
             "lod": Self::board_draw_lod_label(self.draw_lod_for_frame()),
@@ -718,18 +680,8 @@ impl BoardHost {
                         handles.push(NodeKindHandleTemplate { handle_kind: handle_kind.to_string(), angle, radius });
                     }
                 }
-                let icon = no
-                    .get("icon")
-                    .and_then(|x| x.as_str())
-                    .map(str::trim)
-                    .filter(|s| !s.is_empty())
-                    .map(|s| s.to_string());
-                let color_fill = no
-                    .get("color")
-                    .and_then(|x| x.as_str())
-                    .map(str::trim)
-                    .filter(|s| !s.is_empty())
-                    .and_then(Self::parse_css_hex_color);
+                let icon = no.get("icon").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+                let color_fill = no.get("color").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).and_then(Self::parse_css_hex_color);
                 next.insert(id.to_string(), NodeKindDef { name, scale, shape, handles, icon, color_fill });
             }
             self.node_kinds = next;
@@ -751,12 +703,7 @@ impl BoardHost {
                 Self::reject_kind_catalog_row_legacy_label(eo, "edge")?;
                 let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("edge kind id missing")?;
                 let name = eo.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
-                let color = eo
-                    .get("color")
-                    .and_then(|x| x.as_str())
-                    .map(str::trim)
-                    .filter(|s| !s.is_empty())
-                    .and_then(Self::parse_css_hex_color);
+                let color = eo.get("color").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).and_then(Self::parse_css_hex_color);
                 let stroke_width = eo
                     .get("stroke")
                     .and_then(|x| x.as_f64())
@@ -769,12 +716,7 @@ impl BoardHost {
                     _ => EdgeStrokePattern::Solid,
                 };
                 let source_tip = Self::parse_catalog_tip_slot(eo.get("sourceTip").or_else(|| eo.get("source_tip")).and_then(|x| x.as_str()));
-                let target_tip = Self::parse_catalog_tip_slot(
-                    eo.get("targetTip")
-                        .or_else(|| eo.get("target_tip"))
-                        .and_then(|x| x.as_str())
-                        .or_else(|| eo.get("marker").and_then(|x| x.as_str())),
-                );
+                let target_tip = Self::parse_catalog_tip_slot(eo.get("targetTip").or_else(|| eo.get("target_tip")).and_then(|x| x.as_str()).or_else(|| eo.get("marker").and_then(|x| x.as_str())));
                 let directed = eo.get("directed").and_then(|x| x.as_bool()).unwrap_or(true);
                 next.insert(id.to_string(), EdgeKindDef { name, color, stroke_width, pattern, source_tip, target_tip, directed });
             }
@@ -1450,10 +1392,7 @@ impl BoardHost {
     }
 
     fn handle_port_shapes_compatible(source_handle_kind: &str, target_handle_kind: &str) -> bool {
-        match (
-            Self::handle_port_shape(source_handle_kind),
-            Self::handle_port_shape(target_handle_kind),
-        ) {
+        match (Self::handle_port_shape(source_handle_kind), Self::handle_port_shape(target_handle_kind)) {
             (Some(a), Some(b)) => a == b,
             _ => true,
         }
@@ -1469,10 +1408,7 @@ impl BoardHost {
     }
 
     fn single_letter_port_families_compatible(source_handle_kind: &str, target_handle_kind: &str) -> bool {
-        match (
-            Self::single_letter_port_family(source_handle_kind),
-            Self::single_letter_port_family(target_handle_kind),
-        ) {
+        match (Self::single_letter_port_family(source_handle_kind), Self::single_letter_port_family(target_handle_kind)) {
             (Some(a), Some(b)) => a == b,
             _ => true,
         }
@@ -1510,26 +1446,10 @@ impl BoardHost {
     }
 
     fn resolve_default_wire_kind_for_handle_kind(&self, handle_kind: &str) -> String {
-        self.handle_kinds
-            .get(handle_kind)
-            .and_then(|d| d.default_wire_kind.as_ref())
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string())
+        self.handle_kinds.get(handle_kind).and_then(|d| d.default_wire_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string())
     }
 
-    fn link_gesture_rule_applies_kind_strings(
-        &self,
-        rule: &LinkCompatRule,
-        sn: &str,
-        sh: &str,
-        w_src: &str,
-        e_src: &str,
-        tn: &str,
-        th: &str,
-        _w_tgt: &str,
-        e_tgt: &str,
-    ) -> bool {
+    fn link_gesture_rule_applies_kind_strings(&self, rule: &LinkCompatRule, sn: &str, sh: &str, w_src: &str, e_src: &str, tn: &str, th: &str, _w_tgt: &str, e_tgt: &str) -> bool {
         match rule.specificity {
             CompatSpecificity::General => Self::compat_pair_matches(rule, sh, th),
             CompatSpecificity::Node => Self::compat_pair_matches(rule, sn, tn),
@@ -1553,11 +1473,7 @@ impl BoardHost {
         let w_tgt = self.resolve_default_wire_kind_for_handle_kind(th);
         let e_src = self.resolve_default_edge_kind_for_wire_kind(&w_src);
         let e_tgt = self.resolve_default_edge_kind_for_wire_kind(&w_tgt);
-        let mut matched: Vec<&LinkCompatRule> = self
-            .link_compat_rules
-            .iter()
-            .filter(|rule| self.link_gesture_rule_applies_kind_strings(rule, sn, sh, &w_src, &e_src, tn, th, &w_tgt, &e_tgt))
-            .collect();
+        let mut matched: Vec<&LinkCompatRule> = self.link_compat_rules.iter().filter(|rule| self.link_gesture_rule_applies_kind_strings(rule, sn, sh, &w_src, &e_src, tn, th, &w_tgt, &e_tgt)).collect();
         if matched.is_empty() {
             return false;
         }
@@ -1613,8 +1529,7 @@ impl BoardHost {
             return Some(d_slot);
         }
         let anchor = self.brush_handle_anchor_world(h)?;
-        let anchor_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom)
-            + self.indirect_handle_marker_radius_world(h).max(self.effective_handle_radius(h));
+        let anchor_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.indirect_handle_marker_radius_world(h).max(self.effective_handle_radius(h));
         if distance_between(world, anchor) <= anchor_hit_r {
             return Some(d_slot);
         }
@@ -1648,11 +1563,7 @@ impl BoardHost {
     }
 
     fn brush_kind_weight(weights: &HashMap<String, f64>, id: &str, uniform_fallback: f64) -> f64 {
-        weights
-            .get(id)
-            .copied()
-            .filter(|w| w.is_finite() && *w > 0.0)
-            .unwrap_or(uniform_fallback)
+        weights.get(id).copied().filter(|w| w.is_finite() && *w > 0.0).unwrap_or(uniform_fallback)
     }
 
     fn brush_next_seed(state: u64) -> u64 {
@@ -1683,10 +1594,7 @@ impl BoardHost {
         let mut remaining: Vec<String> = std::mem::take(ids);
         let mut state = seed;
         while !remaining.is_empty() {
-            let weights: Vec<f64> = remaining
-                .iter()
-                .map(|id| Self::brush_kind_weight(weight_map, id.as_str(), uniform))
-                .collect();
+            let weights: Vec<f64> = remaining.iter().map(|id| Self::brush_kind_weight(weight_map, id.as_str(), uniform)).collect();
             state = Self::brush_next_seed(state);
             let pick = Self::brush_weighted_sample_index(&weights, state);
             ids.push(remaining.remove(pick));
@@ -1704,10 +1612,7 @@ impl BoardHost {
             let tn = kind_id.as_str();
             for (i, tmpl) in kind.handles.iter().enumerate() {
                 if self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
-                    out.push(BrushCandidate {
-                        node_kind_id: kind_id.clone(),
-                        target_handle_index: i,
-                    });
+                    out.push(BrushCandidate { node_kind_id: kind_id.clone(), target_handle_index: i });
                 }
             }
         }
@@ -1726,25 +1631,11 @@ impl BoardHost {
     fn brush_sort_candidates_by_handle_proximity(&self, source: &HandleData, candidates: &mut [BrushCandidate]) {
         let source_angle = source.angle;
         candidates.sort_by(|left, right| {
-            let angle_left = self
-                .node_kinds
-                .get(left.node_kind_id.as_str())
-                .and_then(|kind| kind.handles.get(left.target_handle_index))
-                .map(|tmpl| tmpl.angle)
-                .unwrap_or(0.0);
-            let angle_right = self
-                .node_kinds
-                .get(right.node_kind_id.as_str())
-                .and_then(|kind| kind.handles.get(right.target_handle_index))
-                .map(|tmpl| tmpl.angle)
-                .unwrap_or(0.0);
+            let angle_left = self.node_kinds.get(left.node_kind_id.as_str()).and_then(|kind| kind.handles.get(left.target_handle_index)).map(|tmpl| tmpl.angle).unwrap_or(0.0);
+            let angle_right = self.node_kinds.get(right.node_kind_id.as_str()).and_then(|kind| kind.handles.get(right.target_handle_index)).map(|tmpl| tmpl.angle).unwrap_or(0.0);
             let delta_left = Self::brush_handle_alignment_delta(source_angle, angle_left);
             let delta_right = Self::brush_handle_alignment_delta(source_angle, angle_right);
-            delta_left
-                .partial_cmp(&delta_right)
-                .unwrap_or(std::cmp::Ordering::Equal)
-                .then_with(|| left.node_kind_id.cmp(&right.node_kind_id))
-                .then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
+            delta_left.partial_cmp(&delta_right).unwrap_or(std::cmp::Ordering::Equal).then_with(|| left.node_kind_id.cmp(&right.node_kind_id)).then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
         });
     }
 
@@ -1765,11 +1656,7 @@ impl BoardHost {
         }
         let node_kind_id = candidate.node_kind_id.as_str();
         let radius = self.brush_node_size * 0.5 * kind.scale;
-        let (width, height) = if kind.shape == NodeShape::Rectangle {
-            (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
-        } else {
-            (radius * 2.0, radius * 2.0)
-        };
+        let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
         Some(BrushPreviewSnapshot {
             source_handle_id: source_handle_id.to_string(),
             node_kind_id: node_kind_id.to_string(),
@@ -1858,11 +1745,7 @@ impl BoardHost {
     }
 
     fn brush_sync_preview_events(&mut self) {
-        let key = self
-            .brush_preview
-            .as_ref()
-            .map(|p| format!("{}|{}|{}|{}|{}", p.source_handle_id, p.node_kind_id, p.target_handle_index, p.x, p.y))
-            .unwrap_or_default();
+        let key = self.brush_preview.as_ref().map(|p| format!("{}|{}|{}|{}|{}", p.source_handle_id, p.node_kind_id, p.target_handle_index, p.x, p.y)).unwrap_or_default();
         if self.brush_preview_emit_key.as_deref() != Some(key.as_str()) {
             self.brush_preview_emit_key = Some(key.clone());
             if let Some(ref preview) = self.brush_preview {
@@ -1871,16 +1754,8 @@ impl BoardHost {
                 self.push_event("brushPreview", json!({ "node": null, "edge": null }));
             }
         }
-        let candidates_key = format!(
-            "{}|{}|{}",
-            self.brush_slot_source_id.as_deref().unwrap_or(""),
-            self.brush_candidates
-                .iter()
-                .map(|c| format!("{}#{}", c.node_kind_id, c.target_handle_index))
-                .collect::<Vec<_>>()
-                .join(","),
-            self.brush_candidate_index
-        );
+        let candidates_key =
+            format!("{}|{}|{}", self.brush_slot_source_id.as_deref().unwrap_or(""), self.brush_candidates.iter().map(|c| format!("{}#{}", c.node_kind_id, c.target_handle_index)).collect::<Vec<_>>().join(","), self.brush_candidate_index);
         if self.brush_candidates_emit_key.as_deref() != Some(candidates_key.as_str()) {
             self.brush_candidates_emit_key = Some(candidates_key);
             let candidates: Vec<_> = self
@@ -1961,18 +1836,8 @@ impl BoardHost {
     //#region 🪣Fill
     fn fill_preview_bounds(preview: &BrushPreviewSnapshot) -> WorldBox {
         match preview.shape {
-            NodeShape::Rectangle => WorldBox {
-                min_x: preview.x - preview.width / 2.0,
-                min_y: preview.y - preview.height / 2.0,
-                max_x: preview.x + preview.width / 2.0,
-                max_y: preview.y + preview.height / 2.0,
-            },
-            NodeShape::Circle => WorldBox {
-                min_x: preview.x - preview.radius,
-                min_y: preview.y - preview.radius,
-                max_x: preview.x + preview.radius,
-                max_y: preview.y + preview.radius,
-            },
+            NodeShape::Rectangle => WorldBox { min_x: preview.x - preview.width / 2.0, min_y: preview.y - preview.height / 2.0, max_x: preview.x + preview.width / 2.0, max_y: preview.y + preview.height / 2.0 },
+            NodeShape::Circle => WorldBox { min_x: preview.x - preview.radius, min_y: preview.y - preview.radius, max_x: preview.x + preview.radius, max_y: preview.y + preview.radius },
         }
     }
 
@@ -2028,11 +1893,7 @@ impl BoardHost {
     }
 
     fn fill_weight_for_handle(&self, accum: &FillAccum, handle_id: &str, uniform: f64) -> f64 {
-        let hk = if let Some(h) = self.handles.get(handle_id) {
-            h.handle_kind.as_str()
-        } else {
-            accum.virtual_handles.get(handle_id).map(|vh| vh.handle_kind.as_str()).unwrap_or("")
-        };
+        let hk = if let Some(h) = self.handles.get(handle_id) { h.handle_kind.as_str() } else { accum.virtual_handles.get(handle_id).map(|vh| vh.handle_kind.as_str()).unwrap_or("") };
         Self::brush_kind_weight(&self.brush_handle_kind_weights, hk, uniform)
     }
 
@@ -2061,10 +1922,7 @@ impl BoardHost {
                 continue;
             }
             let tn = kind_id.as_str();
-            let compatible = kind
-                .handles
-                .iter()
-                .any(|t| self.link_kinds_compatible_for_brush(sn.as_str(), sh.as_str(), tn, t.handle_kind.as_str()));
+            let compatible = kind.handles.iter().any(|t| self.link_kinds_compatible_for_brush(sn.as_str(), sh.as_str(), tn, t.handle_kind.as_str()));
             if compatible {
                 out.push(kind_id.clone());
             }
@@ -2096,11 +1954,7 @@ impl BoardHost {
         let kind = self.node_kinds.get(node_kind_id)?;
         let target_handle_index = self.fill_pick_target_handle_index(sn.as_str(), sh.as_str(), node_kind_id, kind, seed)?;
         let radius = self.brush_node_size * 0.5 * kind.scale;
-        let (width, height) = if kind.shape == NodeShape::Rectangle {
-            (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
-        } else {
-            (radius * 2.0, radius * 2.0)
-        };
+        let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
         Some(BrushPreviewSnapshot {
             source_handle_id: source_handle_id.to_string(),
             node_kind_id: node_kind_id.to_string(),
@@ -2140,31 +1994,13 @@ impl BoardHost {
         accum.connected_handles.insert(preview.source_handle_id.clone());
         accum.connected_handles.insert(target_handle_id);
         accum.virtual_bounds.push(Self::fill_preview_bounds(&preview));
-        accum.virtual_nodes.insert(
-            node_id.clone(),
-            FillVirtualNode {
-                node_kind: preview.node_kind_id.clone(),
-                x: preview.x,
-                y: preview.y,
-                shape: preview.shape,
-                radius: preview.radius,
-                width: preview.width,
-                height: preview.height,
-            },
-        );
+        accum.virtual_nodes.insert(node_id.clone(), FillVirtualNode { node_kind: preview.node_kind_id.clone(), x: preview.x, y: preview.y, shape: preview.shape, radius: preview.radius, width: preview.width, height: preview.height });
         for (i, tmpl) in preview.handles.iter().enumerate() {
             let hid = format!("{node_id}:h{i}");
             if accum.connected_handles.contains(&hid) {
                 continue;
             }
-            accum.virtual_handles.insert(
-                hid,
-                FillVirtualHandle {
-                    node_id: node_id.clone(),
-                    handle_kind: tmpl.handle_kind.clone(),
-                    template: tmpl.clone(),
-                },
-            );
+            accum.virtual_handles.insert(hid, FillVirtualHandle { node_id: node_id.clone(), handle_kind: tmpl.handle_kind.clone(), template: tmpl.clone() });
         }
         accum.placements.push((node_id, edge_id, preview));
     }
@@ -2209,11 +2045,7 @@ impl BoardHost {
                 break;
             }
         }
-        let placements: Vec<serde_json::Value> = accum
-            .placements
-            .iter()
-            .map(|(node_id, edge_id, preview)| Self::brush_place_json(preview, node_id.as_str(), edge_id.as_str()))
-            .collect();
+        let placements: Vec<serde_json::Value> = accum.placements.iter().map(|(node_id, edge_id, preview)| Self::brush_place_json(preview, node_id.as_str(), edge_id.as_str())).collect();
         serde_json::json!({ "placements": placements }).to_string()
     }
     //#endregion 🪣Fill
@@ -2249,19 +2081,7 @@ impl BoardHost {
             return None;
         }
         let icon_kind = node.get("iconKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        Some(BrushPreviewSnapshot {
-            source_handle_id: source_handle_id.to_string(),
-            node_kind_id: node_kind_id.to_string(),
-            x,
-            y,
-            shape,
-            radius,
-            width,
-            height,
-            handles,
-            target_handle_index,
-            icon_kind,
-        })
+        Some(BrushPreviewSnapshot { source_handle_id: source_handle_id.to_string(), node_kind_id: node_kind_id.to_string(), x, y, shape, radius, width, height, handles, target_handle_index, icon_kind })
     }
 
     /// @emoji 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
@@ -2287,17 +2107,11 @@ impl BoardHost {
                 arr.iter()
                     .filter_map(|x| {
                         if let Some(kind_id) = x.as_str().map(str::trim).filter(|s| !s.is_empty()) {
-                            return Some(BrushCandidate {
-                                node_kind_id: kind_id.to_string(),
-                                target_handle_index: 0,
-                            });
+                            return Some(BrushCandidate { node_kind_id: kind_id.to_string(), target_handle_index: 0 });
                         }
                         let node_kind = x.get("nodeKind").or_else(|| x.get("nodeKindId")).and_then(|n| n.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
                         let target_handle_index = x.get("targetHandleIndex").and_then(|i| i.as_u64()).unwrap_or(0) as usize;
-                        Some(BrushCandidate {
-                            node_kind_id: node_kind.to_string(),
-                            target_handle_index,
-                        })
+                        Some(BrushCandidate { node_kind_id: node_kind.to_string(), target_handle_index })
                     })
                     .collect()
             })
@@ -2459,11 +2273,7 @@ impl BoardHost {
             return;
         }
         let len = self.brush_candidates.len();
-        self.brush_candidate_index = if forward {
-            (self.brush_candidate_index + 1) % len
-        } else {
-            (self.brush_candidate_index + len - 1) % len
-        };
+        self.brush_candidate_index = if forward { (self.brush_candidate_index + 1) % len } else { (self.brush_candidate_index + len - 1) % len };
         self.brush_rebuild_preview();
     }
 
@@ -2497,19 +2307,7 @@ impl BoardHost {
         self.brush_clear_slot();
     }
 
-    fn append_brush_node_icon_paint(
-        &self,
-        scene: &mut Scene,
-        lod: BoardDrawLod,
-        center: Point,
-        shape: NodeShape,
-        radius: f64,
-        width: f64,
-        height: f64,
-        icon_kind: &str,
-        fill: Color,
-        stroke_c: Color,
-    ) {
+    fn append_brush_node_icon_paint(&self, scene: &mut Scene, lod: BoardDrawLod, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, icon_kind: &str, fill: Color, stroke_c: Color, world_space: bool) {
         if !matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
             return;
         }
@@ -2522,15 +2320,12 @@ impl BoardHost {
         let fit_inset = ui_styling::metrics::icon::FIT_INSET;
         let (sx_half, sy_half) = match shape {
             NodeShape::Circle => {
-                let s = self.draw_space_len(radius, false) * fit_inset;
+                let s = self.draw_space_len(radius, world_space) * fit_inset;
                 (s, s)
             }
-            NodeShape::Rectangle => (
-                self.draw_space_len(width, false) * fit_inset * 0.5,
-                self.draw_space_len(height, false) * fit_inset * 0.5,
-            ),
+            NodeShape::Rectangle => (self.draw_space_len(width, world_space) * fit_inset * 0.5, self.draw_space_len(height, world_space) * fit_inset * 0.5),
         };
-        let center_ds = self.draw_space_point(center, false);
+        let center_ds = self.draw_space_point(center, world_space);
         let cx = bx + bw * 0.5;
         let cy = by + bh * 0.5;
         let avail_w = 2.0 * sx_half;
@@ -2539,7 +2334,7 @@ impl BoardHost {
         let aff = Affine::translate((center_ds.x - scale * cx, center_ds.y - scale * cy)) * Affine::scale(scale);
         match shape {
             NodeShape::Circle => {
-                let r_clip = self.draw_space_len(radius, false) * clip_inset;
+                let r_clip = self.draw_space_len(radius, world_space) * clip_inset;
                 let disc = Circle::new(center_ds, r_clip);
                 scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
                 match &body {
@@ -2553,8 +2348,8 @@ impl BoardHost {
                 scene.pop_layer();
             }
             NodeShape::Rectangle => {
-                let hw = self.draw_space_len(width, false) * clip_inset * 0.5;
-                let hh = self.draw_space_len(height, false) * clip_inset * 0.5;
+                let hw = self.draw_space_len(width, world_space) * clip_inset * 0.5;
+                let hh = self.draw_space_len(height, world_space) * clip_inset * 0.5;
                 let clip_r = Rect::from_points(Point::new(center_ds.x - hw, center_ds.y - hh), Point::new(center_ds.x + hw, center_ds.y + hh));
                 scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
                 match &body {
@@ -2570,18 +2365,7 @@ impl BoardHost {
         }
     }
 
-    fn paint_highlighted_node_preview(
-        &self,
-        scene: &mut Scene,
-        _lod: BoardDrawLod,
-        x: f64,
-        y: f64,
-        shape: NodeShape,
-        radius: f64,
-        width: f64,
-        height: f64,
-        icon_kind: Option<&str>,
-    ) {
+    fn paint_highlighted_node_preview(&self, scene: &mut Scene, _lod: BoardDrawLod, x: f64, y: f64, shape: NodeShape, radius: f64, width: f64, height: f64, icon_kind: Option<&str>, world_space: bool) {
         let center = Point::new(x, y);
         let style = BoardElementStyleKind::Highlighted;
         let fill = Self::node_fill_for_style(&self.vello_theme, style);
@@ -2589,8 +2373,8 @@ impl BoardHost {
         let stroke = Stroke::new(ui_styling::strokes::NODE_BODY);
         match shape {
             NodeShape::Circle => {
-                let c = self.draw_space_point(center, false);
-                let r = self.draw_space_len(radius, false);
+                let c = self.draw_space_point(center, world_space);
+                let r = self.draw_space_len(radius, world_space);
                 let circle = Circle::new(c, r);
                 scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
                 scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &circle);
@@ -2598,29 +2382,22 @@ impl BoardHost {
             NodeShape::Rectangle => {
                 let hw = width * 0.5;
                 let hh = height * 0.5;
-                let p0 = self.draw_space_point(Point::new(x - hw, y - hh), false);
-                let p1 = self.draw_space_point(Point::new(x + hw, y + hh), false);
+                let p0 = self.draw_space_point(Point::new(x - hw, y - hh), world_space);
+                let p1 = self.draw_space_point(Point::new(x + hw, y + hh), world_space);
                 let rect = Rect::from_points(p0, p1);
                 scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
                 scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &rect);
             }
         }
         if let Some(icon) = icon_kind.map(str::trim).filter(|s| !s.is_empty()) {
-            self.append_brush_node_icon_paint(scene, BoardDrawLod::Detail, center, shape, radius, width, height, icon, fill, stroke_c);
+            self.append_brush_node_icon_paint(scene, BoardDrawLod::Detail, center, shape, radius, width, height, icon, fill, stroke_c, world_space);
         }
     }
 
-    fn fixture_drop_preview_effective_dims(
-        &self,
-        preview: &FixtureDropPreviewSnapshot,
-    ) -> (NodeShape, f64, f64, f64) {
+    fn fixture_drop_preview_effective_dims(&self, preview: &FixtureDropPreviewSnapshot) -> (NodeShape, f64, f64, f64) {
         if let Some(kind) = self.node_kinds.get(preview.node_kind_id.as_str()) {
             let radius = self.brush_node_size * 0.5 * kind.scale;
-            let (width, height) = if kind.shape == NodeShape::Rectangle {
-                (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
-            } else {
-                (radius * 2.0, radius * 2.0)
-            };
+            let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
             return (kind.shape, radius, width, height);
         }
         (preview.shape, preview.radius, preview.width, preview.height)
@@ -2628,10 +2405,7 @@ impl BoardHost {
 
     fn fixture_drop_preview_from_json(&self, node: &serde_json::Value) -> Option<FixtureDropPreviewSnapshot> {
         let node_kind_id = node.get("nodeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
-        let (x, y) = match (
-            node.get("screenX").and_then(|v| v.as_f64()).filter(|v| v.is_finite()),
-            node.get("screenY").and_then(|v| v.as_f64()).filter(|v| v.is_finite()),
-        ) {
+        let (x, y) = match (node.get("screenX").and_then(|v| v.as_f64()).filter(|v| v.is_finite()), node.get("screenY").and_then(|v| v.as_f64()).filter(|v| v.is_finite())) {
             (Some(sx), Some(sy)) => {
                 let world = self.screen_to_world(Point::new(sx, sy));
                 (world.x, world.y)
@@ -2655,16 +2429,7 @@ impl BoardHost {
             }
         };
         let icon_kind = node.get("iconKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        Some(FixtureDropPreviewSnapshot {
-            node_kind_id: node_kind_id.to_string(),
-            x,
-            y,
-            shape,
-            radius,
-            width,
-            height,
-            icon_kind,
-        })
+        Some(FixtureDropPreviewSnapshot { node_kind_id: node_kind_id.to_string(), x, y, shape, radius, width, height, icon_kind })
     }
 
     /// @emoji 👻 Sets or clears the workbench palette fixture drop ghost node (independent of brush tool).
@@ -2683,35 +2448,21 @@ impl BoardHost {
         Ok(())
     }
 
-    fn append_fixture_drop_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
+    fn append_fixture_drop_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod, world_space: bool) {
         let Some(ref preview) = self.fixture_drop_preview else {
             return;
         };
         let (shape, radius, width, height) = self.fixture_drop_preview_effective_dims(preview);
-        let icon_kind = preview
-            .icon_kind
-            .as_deref()
-            .filter(|s| !s.is_empty())
-            .or_else(|| self.node_kinds.get(preview.node_kind_id.as_str()).and_then(|k| k.icon.as_deref()));
-        self.paint_highlighted_node_preview(scene, lod, preview.x, preview.y, shape, radius, width, height, icon_kind);
+        let icon_kind = preview.icon_kind.as_deref().filter(|s| !s.is_empty()).or_else(|| self.node_kinds.get(preview.node_kind_id.as_str()).and_then(|k| k.icon.as_deref()));
+        self.paint_highlighted_node_preview(scene, lod, preview.x, preview.y, shape, radius, width, height, icon_kind, world_space);
     }
 
-    fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
+    fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod, world_space: bool) {
         let Some(ref preview) = self.brush_preview else {
             return;
         };
         let _ = lod;
-        self.paint_highlighted_node_preview(
-            scene,
-            lod,
-            preview.x,
-            preview.y,
-            preview.shape,
-            preview.radius,
-            preview.width,
-            preview.height,
-            preview.icon_kind.as_deref(),
-        );
+        self.paint_highlighted_node_preview(scene, lod, preview.x, preview.y, preview.shape, preview.radius, preview.width, preview.height, preview.icon_kind.as_deref(), world_space);
         let center = Point::new(preview.x, preview.y);
         let source = match self.handles.get(preview.source_handle_id.as_str()) {
             Some(h) => h,
@@ -2731,18 +2482,12 @@ impl BoardHost {
         };
         let tgt_center = center;
         let curve = compute_edge_bezier_points(src_pos, tgt_pos, Point::new(src_node.x, src_node.y), tgt_center);
-        let p0 = self.draw_space_point(curve.p0, false);
-        let p1 = self.draw_space_point(curve.p1, false);
-        let p2 = self.draw_space_point(curve.p2, false);
-        let p3 = self.draw_space_point(curve.p3, false);
+        let p0 = self.draw_space_point(curve.p0, world_space);
+        let p1 = self.draw_space_point(curve.p1, world_space);
+        let p2 = self.draw_space_point(curve.p2, world_space);
+        let p3 = self.draw_space_point(curve.p3, world_space);
         let bez = CubicBez::new(p0, p1, p2, p3);
-        scene.stroke(
-            &Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT),
-            Affine::IDENTITY,
-            self.vello_theme.wire_stroke_highlighted,
-            None,
-            &bez,
-        );
+        scene.stroke(&Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT), Affine::IDENTITY, self.vello_theme.wire_stroke_highlighted, None, &bez);
     }
 
     /// @emoji 🧩 Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
@@ -2783,11 +2528,7 @@ impl BoardHost {
         }
         let last = *screen_points.last().unwrap_or(&start_screen);
         self.selection_preview_crossing = !selection_drag_enclosing(self.selection_options.method.as_str(), start_screen, screen_points);
-        self.selection_screen_preview = Some(if self.selection_options.method == "lasso" {
-            screen_points.to_vec()
-        } else {
-            vec![start_screen, Point::new(last.x, start_screen.y), last, Point::new(start_screen.x, last.y)]
-        });
+        self.selection_screen_preview = Some(if self.selection_options.method == "lasso" { screen_points.to_vec() } else { vec![start_screen, Point::new(last.x, start_screen.y), last, Point::new(start_screen.x, last.y)] });
     }
 
     fn push_event(&mut self, name: &str, payload: serde_json::Value) {
@@ -2986,15 +2727,7 @@ impl BoardHost {
 
     /// @emoji 🧿 True during area select, link gestures, node drag, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
     pub fn defers_descriptor_sync_from_js(&self) -> bool {
-        matches!(
-            self.interaction,
-            Interaction::LinkAtSourceHandle { .. }
-                | Interaction::LinkDragSnap { .. }
-                | Interaction::LinkTargetNode { .. }
-                | Interaction::ExternalLinkPreview { .. }
-                | Interaction::DragNodes { .. }
-                | Interaction::Pan { .. }
-        )
+        matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. } | Interaction::DragNodes { .. } | Interaction::Pan { .. })
     }
 
     pub fn world_to_screen(&self, p: Point) -> Point {
@@ -3891,7 +3624,10 @@ impl BoardHost {
                 .filter(|s| !s.is_empty())
                 .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
                 .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
-            self.wires.insert(w.id.clone(), WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), locked: w.locked.unwrap_or(false), style: w.style.clone(), wire_kind });
+            self.wires.insert(
+                w.id.clone(),
+                WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), locked: w.locked.unwrap_or(false), style: w.style.clone(), wire_kind },
+            );
         }
         if !self.is_preselect_active() {
             let mut new_selection = BTreeSet::new();
@@ -4132,20 +3868,8 @@ impl BoardHost {
                 }
             }
             let edge_kind = e.get("edgeKind").or_else(|| e.get("edge_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-            let source_tip = e
-                .get("sourceTip")
-                .or_else(|| e.get("source_tip"))
-                .and_then(|v| v.as_str())
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string());
-            let target_tip = e
-                .get("targetTip")
-                .or_else(|| e.get("target_tip"))
-                .and_then(|v| v.as_str())
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string());
+            let source_tip = e.get("sourceTip").or_else(|| e.get("source_tip")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            let target_tip = e.get("targetTip").or_else(|| e.get("target_tip")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
             desc.edges.push(EdgeDescJson {
                 id: id.into(),
                 source: source.into(),
@@ -4282,13 +4006,7 @@ impl BoardHost {
         let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
         let paint_stroke = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_icon && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
-        let outward = if exterior_cap {
-            self.nodes.get(h.node_id.as_str()).and_then(|n| {
-                handle_outward_at_node_rim(center, Point::new(n.x, n.y), n.shape, n.radius, n.width, n.height)
-            })
-        } else {
-            None
-        };
+        let outward = if exterior_cap { self.nodes.get(h.node_id.as_str()).and_then(|n| handle_outward_at_node_rim(center, Point::new(n.x, n.y), n.shape, n.radius, n.width, n.height)) } else { None };
         if paint_fill {
             if let Some(out) = outward {
                 scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &handle_exterior_cap_fill_path(c, out, r));
@@ -4358,9 +4076,7 @@ impl BoardHost {
     fn edge_screen_stroke_width_px(&self, lod: BoardDrawLod) -> f64 {
         match lod {
             BoardDrawLod::Minimap => ui_styling::strokes::EDGE_MINIMAP,
-            BoardDrawLod::Overview | BoardDrawLod::Compact => {
-                (ui_styling::strokes::EDGE_OVERVIEW).max(ui_styling::strokes::EDGE_BASE * self.camera.zoom)
-            }
+            BoardDrawLod::Overview | BoardDrawLod::Compact => (ui_styling::strokes::EDGE_OVERVIEW).max(ui_styling::strokes::EDGE_BASE * self.camera.zoom),
             _ => 2.0 * self.camera.zoom.max(0.75),
         }
     }
@@ -4379,36 +4095,18 @@ impl BoardHost {
         }
     }
 
-    fn paint_node_geometry(
-        &self,
-        scene: &mut Scene,
-        n: &NodeData,
-        lod: BoardDrawLod,
-        world_space: bool,
-        layer: NodeHandlePaintLayer,
-        chrome_pass: StyleChromePass,
-        link_compat: bool,
-    ) {
+    fn paint_node_geometry(&self, scene: &mut Scene, n: &NodeData, lod: BoardDrawLod, world_space: bool, layer: NodeHandlePaintLayer, chrome_pass: StyleChromePass, link_compat: bool) {
         let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
         let resolved_style_kind = self.resolve_node_style_kind(n, chrome_pass);
-        let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
-            BoardElementStyleKind::Highlighted
-        } else {
-            resolved_style_kind
-        };
+        let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { BoardElementStyleKind::Highlighted } else { resolved_style_kind };
         let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
         let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
-        let fill = if lod == BoardDrawLod::Minimap {
-            stroke_c
-        } else {
-            self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
-        };
+        let fill = if lod == BoardDrawLod::Minimap { stroke_c } else { self.resolve_node_fill_color(n, &self.vello_theme, style_kind) };
         let sw = 2.0_f64;
         let paint_fill = if lod == BoardDrawLod::Minimap {
             matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
         } else {
-            matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
-                && !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
+            matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill) && !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
         };
         let paint_stroke = draw_node_stroke && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_node_icons && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
@@ -4446,17 +4144,7 @@ impl BoardHost {
         }
     }
 
-    fn paint_node_icon(
-        &self,
-        scene: &mut Scene,
-        n: &NodeData,
-        world_space: bool,
-        style_kind: BoardElementStyleKind,
-        stroke_c: Color,
-        fill: Color,
-        circle_clip: Option<&Circle>,
-        rect_clip: Option<Rect>,
-    ) {
+    fn paint_node_icon(&self, scene: &mut Scene, n: &NodeData, world_space: bool, style_kind: BoardElementStyleKind, stroke_c: Color, fill: Color, circle_clip: Option<&Circle>, rect_clip: Option<Rect>) {
         if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
             let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
             let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
@@ -4468,10 +4156,7 @@ impl BoardHost {
                         let s = self.draw_space_len(self.scaled_node_radius(n), world_space) * fit_inset;
                         (s, s)
                     }
-                    NodeShape::Rectangle => (
-                        self.draw_space_len(self.scaled_node_width(n), world_space) * fit_inset * 0.5,
-                        self.draw_space_len(self.scaled_node_height(n), world_space) * fit_inset * 0.5,
-                    ),
+                    NodeShape::Rectangle => (self.draw_space_len(self.scaled_node_width(n), world_space) * fit_inset * 0.5, self.draw_space_len(self.scaled_node_height(n), world_space) * fit_inset * 0.5),
                 };
                 let center = self.draw_space_point(Point::new(n.x, n.y), world_space);
                 let cx = bx + bw * 0.5;
@@ -4498,9 +4183,7 @@ impl BoardHost {
                     NodeShape::Rectangle => {
                         let hw = self.draw_space_len(self.scaled_node_width(n), world_space) * clip_inset * 0.5;
                         let hh = self.draw_space_len(self.scaled_node_height(n), world_space) * clip_inset * 0.5;
-                        let clip_r = rect_clip.unwrap_or_else(|| {
-                            Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh))
-                        });
+                        let clip_r = rect_clip.unwrap_or_else(|| Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh)));
                         scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
                         match &body {
                             CachedIconBody::Vector(icon_scene) => {
@@ -4594,16 +4277,7 @@ impl BoardHost {
         }
     }
 
-    fn append_nodes_and_handles(
-        &self,
-        scene: &mut Scene,
-        tile_filter: Option<&WorldBox>,
-        lod: BoardDrawLod,
-        world_space: bool,
-        only_ids: Option<&BTreeSet<String>>,
-        chrome_pass: StyleChromePass,
-        layer: NodeHandlePaintLayer,
-    ) {
+    fn append_nodes_and_handles(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool, only_ids: Option<&BTreeSet<String>>, chrome_pass: StyleChromePass, layer: NodeHandlePaintLayer) {
         let pad = self.drawable_cull_pad_world();
         let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
         let draw_handle_icons = lod == BoardDrawLod::Micro;
@@ -4646,20 +4320,8 @@ impl BoardHost {
         }
     }
 
-    fn append_edges_wires_and_link(
-        &self,
-        scene: &mut Scene,
-        tile_filter: Option<&WorldBox>,
-        lod: BoardDrawLod,
-        world_space: bool,
-        only_ids: Option<&BTreeSet<String>>,
-        overlay_ids: Option<&BTreeSet<String>>,
-    ) {
-        let edge_sw = if world_space {
-            self.edge_world_stroke_width(lod)
-        } else {
-            self.edge_screen_stroke_width_px(lod)
-        };
+    fn append_edges_wires_and_link(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool, only_ids: Option<&BTreeSet<String>>, overlay_ids: Option<&BTreeSet<String>>) {
+        let edge_sw = if world_space { self.edge_world_stroke_width(lod) } else { self.edge_screen_stroke_width_px(lod) };
         for e in self.edges.values() {
             if !self.edge_effectively_visible(e) {
                 continue;
@@ -4681,9 +4343,7 @@ impl BoardHost {
                 let p2 = self.draw_space_point(c.p2, world_space);
                 let p3 = self.draw_space_point(c.p3, world_space);
                 let curve = CubicBez::new(p0, p1, p2, p3);
-                let chrome_pass = overlay_ids
-                    .map(|ids| self.chrome_pass_for_entity(&e.id, ids))
-                    .unwrap_or(StyleChromePass::CachedBase);
+                let chrome_pass = overlay_ids.map(|ids| self.chrome_pass_for_entity(&e.id, ids)).unwrap_or(StyleChromePass::CachedBase);
                 let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, lod, edge_sw);
                 scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
                 let (source_tip, target_tip) = self.resolve_edge_tips(e);
@@ -4707,9 +4367,7 @@ impl BoardHost {
                 let p2 = self.draw_space_point(c.p2, world_space);
                 let p3 = self.draw_space_point(c.p3, world_space);
                 let curve = CubicBez::new(p0, p1, p2, p3);
-                let chrome_pass = overlay_ids
-                    .map(|ids| self.chrome_pass_for_entity(&w.id, ids))
-                    .unwrap_or(StyleChromePass::CachedBase);
+                let chrome_pass = overlay_ids.map(|ids| self.chrome_pass_for_entity(&w.id, ids)).unwrap_or(StyleChromePass::CachedBase);
                 let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w, chrome_pass));
                 scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
             }
@@ -4770,11 +4428,23 @@ impl BoardHost {
                 self.append_indirect_handle_ring(scene, None, &node_id, StyleChromePass::CachedBase, false);
             }
         }
-        if self.fixture_drop_preview.is_some() {
-            self.append_fixture_drop_preview_paint(scene, lod);
-        }
-        if self.active_tool == ActiveTool::Brush || self.brush_preview.is_some() {
-            self.append_brush_preview_paint(scene, lod);
+        let previews_in_world_space = matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Minimap);
+        if previews_in_world_space {
+            let mut preview_layer = Scene::new();
+            if self.fixture_drop_preview.is_some() {
+                self.append_fixture_drop_preview_paint(&mut preview_layer, lod, true);
+            }
+            if self.active_tool == ActiveTool::Brush || self.brush_preview.is_some() {
+                self.append_brush_preview_paint(&mut preview_layer, lod, true);
+            }
+            scene.append(&preview_layer, Some(cam_aff));
+        } else {
+            if self.fixture_drop_preview.is_some() {
+                self.append_fixture_drop_preview_paint(scene, lod, false);
+            }
+            if self.active_tool == ActiveTool::Brush || self.brush_preview.is_some() {
+                self.append_brush_preview_paint(scene, lod, false);
+            }
         }
     }
 
@@ -5204,21 +4874,8 @@ impl BoardHost {
             n = n.saturating_add(1);
         };
         let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
-        self.edges.insert(
-            id.clone(),
-            EdgeData {
-                id: id.clone(),
-                source: source_handle_id.to_string(),
-                target: target_handle_id.to_string(),
-                selected: false,
-                visible: true,
-                locked: false,
-                style: None,
-                edge_kind,
-                source_tip: None,
-                target_tip: None,
-            },
-        );
+        self.edges
+            .insert(id.clone(), EdgeData { id: id.clone(), source: source_handle_id.to_string(), target: target_handle_id.to_string(), selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None });
         self.push_event("edgeCreate", json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
         if let Some(name) = also_emit {
             self.push_event(name, json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
@@ -5789,9 +5446,7 @@ impl BoardHost {
 #[doc(hidden)]
 impl BoardHost {
     pub fn test_resolve_node_style_kind(&self, node_id: &str) -> Option<BoardElementStyleKind> {
-        self.nodes
-            .get(node_id)
-            .map(|n| self.resolve_node_style_kind(n, StyleChromePass::InteractionOverlay))
+        self.nodes.get(node_id).map(|n| self.resolve_node_style_kind(n, StyleChromePass::InteractionOverlay))
     }
 }
 
@@ -5807,13 +5462,10 @@ impl infinite_cavas::canvas_content::CanvasContent for BoardHost {
 // #endregion board_host
 }
 
-
-pub use infinite_cavas as cavas;
-pub use mathematical_graph_port_directed::*;
 pub use board_host::*;
+pub use infinite_cavas as cavas;
 pub use mathematical_graph_normal_undirected::{
-    apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json,
-    apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
-    apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json,
-    ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
+apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
+apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
 };
+pub use mathematical_graph_port_directed::*;

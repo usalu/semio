@@ -50,18 +50,8 @@ impl Operation for Get {
         }
         let mut out = Dictionary::new();
         for offset in 0..count {
-            let resolved = if wrap {
-                indices[(index + offset) % indices.len()]
-            } else {
-                indices
-                    .get(index + offset)
-                    .copied()
-                    .ok_or_else(|| EvalError::InvalidInput("index out of range".into()))?
-            };
-            let value = list
-                .get(&resolved.to_string())
-                .cloned()
-                .ok_or_else(|| EvalError::MissingInput(resolved.to_string()))?;
+            let resolved = if wrap { indices[(index + offset) % indices.len()] } else { indices.get(index + offset).copied().ok_or_else(|| EvalError::InvalidInput("index out of range".into()))? };
+            let value = list.get(&resolved.to_string()).cloned().ok_or_else(|| EvalError::MissingInput(resolved.to_string()))?;
             let payload = match value {
                 Value::Dictionary(dict) => Value::Dictionary(dict),
                 other => Value::Dictionary(Dictionary::new().insert("value", other)),
@@ -169,32 +159,15 @@ fn number_dictionary(value: f64) -> Dictionary {
 }
 
 fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<Dictionary, EvalError> {
-    input
-        .get(key)
-        .and_then(|value| value.as_dictionary())
-        .filter(|dict| dict.schema() == Some("list"))
-        .cloned()
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("list")).cloned().ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
-    input
-        .get(key)
-        .and_then(|value| value.as_dictionary())
-        .and_then(|dict| dict.get("value"))
-        .and_then(|value| value.as_atom())
-        .and_then(|atom| atom.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
-    input
-        .get(key)
-        .and_then(|value| value.as_dictionary())
-        .and_then(|dict| dict.get("value"))
-        .and_then(|value| value.as_atom())
-        .and_then(|atom| atom.as_bool())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn list_indices(list: &Dictionary) -> Vec<usize> {
@@ -231,28 +204,11 @@ fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
 }
 
 fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
-    OperatorInfo {
-        id: id.into(),
-        module: "list".into(),
-        name: name.into(),
-        abbreviation: name.into(),
-        icon: "emoji:📋".into(),
-        summary: summary.into(),
-        inputs,
-        outputs: vec![output],
-        ..Default::default()
-    }
+    OperatorInfo { id: id.into(), module: "list".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📋".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
 fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(
-        info,
-        vec![OperatorImpl {
-            schemas: schemas.into_iter().map(str::to_string).collect(),
-            operation,
-        }],
-        produces,
-    );
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operation }], produces);
 }
 
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -265,20 +221,8 @@ fn module_registry() -> Registry {
 
 /// 📦 Registers all list operators.
 pub fn register(registry: &mut Registry) {
-    register_simple(
-        registry,
-        info("list.empty", "Empty", "Creates an empty list", vec![], list_output_channel("L", "Lst", "list", "EmptyList")),
-        Box::new(Empty),
-        vec![],
-        &["list"],
-    );
-    register_simple(
-        registry,
-        info("list.pack", "Pack", "Wraps input as a list dictionary", vec![ChannelSpec::wildcard()], list_output_channel("L", "Lst", "list", "PackedList")),
-        Box::new(Pack),
-        vec![],
-        &["list"],
-    );
+    register_simple(registry, info("list.empty", "Empty", "Creates an empty list", vec![], list_output_channel("L", "Lst", "list", "EmptyList")), Box::new(Empty), vec![], &["list"]);
+    register_simple(registry, info("list.pack", "Pack", "Wraps input as a list dictionary", vec![ChannelSpec::wildcard()], list_output_channel("L", "Lst", "list", "PackedList")), Box::new(Pack), vec![], &["list"]);
     registry.register_operator(
         OperatorInfo {
             variadic_output: Some(VariadicSpec { slot_key: "value".into(), min: 1, max: None }),
@@ -290,60 +234,27 @@ pub fn register(registry: &mut Registry) {
                 ChannelSpec::named("V", "Val", "value", "ListValue"),
             )
         },
-        vec![OperatorImpl {
-            schemas: vec!["list".into(), "number".into(), "boolean".into()],
-            operation: Box::new(Get),
-        }],
+        vec![OperatorImpl { schemas: vec!["list".into(), "number".into(), "boolean".into()], operation: Box::new(Get) }],
         &["value"],
     );
     register_simple(
         registry,
-        info(
-            "list.set",
-            "Set",
-            "Replaces a value at an index",
-            vec![list_channel("list", "list.set"), number_channel("index", "list.set"), ChannelSpec::any("value")],
-            list_output_channel("L", "Lst", "list", "UpdatedList"),
-        ),
+        info("list.set", "Set", "Replaces a value at an index", vec![list_channel("list", "list.set"), number_channel("index", "list.set"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "list", "UpdatedList")),
         Box::new(Set),
         vec![],
         &["list"],
     );
     register_simple(
         registry,
-        info(
-            "list.append",
-            "Append",
-            "Appends a value at the next index",
-            vec![list_channel("list", "list.append"), ChannelSpec::any("value")],
-            list_output_channel("L", "Lst", "list", "AppendedList"),
-        ),
+        info("list.append", "Append", "Appends a value at the next index", vec![list_channel("list", "list.append"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "list", "AppendedList")),
         Box::new(Append),
         vec![],
         &["list"],
     );
+    register_simple(registry, info("list.size", "Size", "Reports the number of indexed elements", vec![list_channel("list", "list.size")], ChannelSpec::named("C", "Cnt", "count", "ListCount")), Box::new(Size), vec!["list"], &["number"]);
     register_simple(
         registry,
-        info(
-            "list.size",
-            "Size",
-            "Reports the number of indexed elements",
-            vec![list_channel("list", "list.size")],
-            ChannelSpec::named("C", "Cnt", "count", "ListCount"),
-        ),
-        Box::new(Size),
-        vec!["list"],
-        &["number"],
-    );
-    register_simple(
-        registry,
-        info(
-            "list.remove",
-            "Remove",
-            "Removes an index and reindexes",
-            vec![list_channel("list", "list.remove"), number_channel("index", "list.remove")],
-            list_output_channel("L", "Lst", "list", "ReducedList"),
-        ),
+        info("list.remove", "Remove", "Removes an index and reindexes", vec![list_channel("list", "list.remove"), number_channel("index", "list.remove")], list_output_channel("L", "Lst", "list", "ReducedList")),
         Box::new(Remove),
         vec!["list", "number"],
         &["list"],
@@ -361,19 +272,7 @@ pub fn register(registry: &mut Registry) {
         vec!["number", "number", "number"],
         &["list"],
     );
-    register_simple(
-        registry,
-        info(
-            "list.reverse",
-            "Reverse",
-            "Reverses indexed list elements",
-            vec![list_channel("list", "list.reverse")],
-            list_output_channel("R", "Rev", "reversed", "ReversedList"),
-        ),
-        Box::new(Reverse),
-        vec!["list"],
-        &["list"],
-    );
+    register_simple(registry, info("list.reverse", "Reverse", "Reverses indexed list elements", vec![list_channel("list", "list.reverse")], list_output_channel("R", "Rev", "reversed", "ReversedList")), Box::new(Reverse), vec!["list"], &["list"]);
     registry.finalize();
 }
 
@@ -384,10 +283,7 @@ mod tests {
     use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
 
     fn sample_list() -> Dictionary {
-        Dictionary::with_schema("list")
-            .insert("0", Value::Dictionary(number_dictionary(1.0)))
-            .insert("1", Value::Dictionary(number_dictionary(2.0)))
-            .insert("2", Value::Dictionary(number_dictionary(3.0)))
+        Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(number_dictionary(2.0))).insert("2", Value::Dictionary(number_dictionary(3.0)))
     }
 
     #[test]
@@ -448,9 +344,7 @@ mod tests {
     fn append_adds_next_index() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let input = Dictionary::new()
-            .insert("list", Value::Dictionary(sample_list()))
-            .insert("value", Value::Dictionary(number_dictionary(4.0)));
+        let input = Dictionary::new().insert("list", Value::Dictionary(sample_list())).insert("value", Value::Dictionary(number_dictionary(4.0)));
         let out = reg.dispatch("list.append", &input).unwrap();
         let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list channel");
         assert_eq!(list.get("3").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
@@ -462,11 +356,7 @@ mod tests {
         register(&mut reg);
         let input = Dictionary::new().insert(
             "list",
-            Value::Dictionary(
-                Dictionary::with_schema("list")
-                    .insert("0", Value::Dictionary(number_dictionary(1.0)))
-                    .insert("1", Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String("x".into()))))),
-            ),
+            Value::Dictionary(Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String("x".into())))))),
         );
         let err = reg.dispatch("list.size", &input).unwrap_err();
         assert!(matches!(err, EvalError::HeterogeneousList(_)));
@@ -501,16 +391,7 @@ mod wasm_ext {
 
     #[wasm_bindgen]
     pub fn manifest() -> String {
-        build_manifest_json(
-            "list",
-            "List",
-            "0.1.0",
-            &module_registry(),
-            vec!["onStartup".into()],
-            vec![],
-            vec![FlowModuleCommandV1 { id: "list.showHelp".into(), title: "List: Show Help".into() }],
-            vec![],
-        )
+        build_manifest_json("list", "List", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "list.showHelp".into(), title: "List: Show Help".into() }], vec![])
     }
 
     #[wasm_bindgen]

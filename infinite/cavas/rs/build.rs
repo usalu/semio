@@ -31,21 +31,12 @@ fn main() {
     println!("cargo:rerun-if-changed={}", icons_dir.display());
     println!("cargo:rerun-if-changed={}", metabolism_dir.display());
 
-    let raw = fs::read_to_string(&shortcodes_path).unwrap_or_else(|e| {
-        panic!(
-            "read {}: {e}. Run `bun nx run @ui/asset:generate` first.",
-            shortcodes_path.display()
-        )
-    });
+    let raw = fs::read_to_string(&shortcodes_path).unwrap_or_else(|e| panic!("read {}: {e}. Run `bun nx run @ui/asset:generate` first.", shortcodes_path.display()));
     let spec: GeneratedShortcodes = serde_json::from_str(&raw).expect("parse shortcodes.json");
 
     let mut emoji_arms = String::new();
     for (code, emoji) in &spec.emoji {
-        emoji_arms.push_str(&format!(
-            "        {code:?} => Some(ShortcodeResolved::Emoji({emoji:?})),\n",
-            code = code,
-            emoji = emoji
-        ));
+        emoji_arms.push_str(&format!("        {code:?} => Some(ShortcodeResolved::Emoji({emoji:?})),\n", code = code, emoji = emoji));
     }
 
     let mut catalog_arms = String::new();
@@ -57,11 +48,7 @@ fn main() {
         let safe = id.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect::<String>();
         let dest = out_dir.join(format!("shortcode_catalog_{safe}.svg"));
         fs::copy(&svg_path, &dest).unwrap_or_else(|e| panic!("copy {:?} -> {:?}: {e}", svg_path, dest));
-        catalog_arms.push_str(&format!(
-            "        {id:?} => Some(ShortcodeResolved::SvgPlain(include_str!(concat!(env!(\"OUT_DIR\"), \"/shortcode_catalog_{safe}.svg\")))),\n",
-            id = id,
-            safe = safe
-        ));
+        catalog_arms.push_str(&format!("        {id:?} => Some(ShortcodeResolved::SvgPlain(include_str!(concat!(env!(\"OUT_DIR\"), \"/shortcode_catalog_{safe}.svg\")))),\n", id = id, safe = safe));
     }
 
     let mut metabolism_arms = String::new();
@@ -76,11 +63,7 @@ fn main() {
             let safe = stem.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect::<String>();
             let dest = out_dir.join(format!("shortcode_metabolism_{safe}.svg"));
             fs::copy(&path, &dest).unwrap_or_else(|e| panic!("copy {:?} -> {:?}: {e}", path, dest));
-            metabolism_arms.push_str(&format!(
-                "        {stem:?} => Some(ShortcodeResolved::SvgThemed(include_str!(concat!(env!(\"OUT_DIR\"), \"/shortcode_metabolism_{safe}.svg\")))),\n",
-                stem = stem,
-                safe = safe
-            ));
+            metabolism_arms.push_str(&format!("        {stem:?} => Some(ShortcodeResolved::SvgThemed(include_str!(concat!(env!(\"OUT_DIR\"), \"/shortcode_metabolism_{safe}.svg\")))),\n", stem = stem, safe = safe));
         }
     }
 

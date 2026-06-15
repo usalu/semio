@@ -87,14 +87,7 @@ pub struct MeshTransfer {
 
 impl Default for MeshTransfer {
     fn default() -> Self {
-        Self {
-            position: Vec::new(),
-            normal: Vec::new(),
-            index: Vec::new(),
-            edges: Vec::new(),
-            points: Vec::new(),
-            face_groups: Vec::new(),
-        }
+        Self { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges: Vec::new(), points: Vec::new(), face_groups: Vec::new() }
     }
 }
 

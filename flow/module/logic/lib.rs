@@ -8,10 +8,7 @@ pub struct Greater;
 
 impl Operation for Greater {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output(
-            "boolean",
-            boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?),
-        ))
+        Ok(channel_output("boolean", boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?)))
     }
 }
 // #endregion 🔖Greater
@@ -33,23 +30,11 @@ fn boolean_dictionary(value: bool) -> Dictionary {
 }
 
 fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_dictionary())
-        .and_then(|d| d.get("value"))
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_dictionary())
-        .and_then(|d| d.get("value"))
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_bool())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 #[cfg(test)]
@@ -66,17 +51,7 @@ fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
 }
 
 fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
-    OperatorInfo {
-        id: id.into(),
-        module: "logic".into(),
-        name: name.into(),
-        abbreviation: name.into(),
-        icon: "emoji:🔀".into(),
-        summary: summary.into(),
-        inputs,
-        outputs: vec![output],
-        ..Default::default()
-    }
+    OperatorInfo { id: id.into(), module: "logic".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🔀".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -90,24 +65,12 @@ fn module_registry() -> Registry {
 /// 📦 Registers all logic operators.
 pub fn register(registry: &mut Registry) {
     registry.register_operator(
-        info(
-            "logic.greater",
-            "Greater",
-            "True when a > b",
-            vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")],
-            ChannelSpec::named("B", "Boo", "boolean", "Greater"),
-        ),
+        info("logic.greater", "Greater", "True when a > b", vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")], ChannelSpec::named("B", "Boo", "boolean", "Greater")),
         vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(Greater) }],
         &["boolean"],
     );
     registry.register_operator(
-        info(
-            "logic.not",
-            "Not",
-            "Inverts a boolean",
-            vec![boolean_channel("boolean", "logic.not")],
-            ChannelSpec::named("B", "Boo", "boolean", "Negated"),
-        ),
+        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean", "logic.not")], ChannelSpec::named("B", "Boo", "boolean", "Negated")),
         vec![OperatorImpl { schemas: vec!["boolean".into()], operation: Box::new(Not) }],
         &["boolean"],
     );
@@ -133,16 +96,7 @@ mod tests {
 
     #[test]
     fn manifest_lists_logic_operators() {
-        let json = build_manifest_json(
-            "logic",
-            "Logic",
-            "0.1.0",
-            &module_registry(),
-            vec!["onStartup".into()],
-            vec![],
-            vec![FlowModuleCommandV1 { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }],
-            vec![],
-        );
+        let json = build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![]);
         assert!(json.contains("logic.greater"));
     }
 
@@ -166,16 +120,7 @@ mod wasm_ext {
 
     #[wasm_bindgen]
     pub fn manifest() -> String {
-        build_manifest_json(
-            "logic",
-            "Logic",
-            "0.1.0",
-            &module_registry(),
-            vec!["onStartup".into()],
-            vec![],
-            vec![FlowModuleCommandV1 { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }],
-            vec![],
-        )
+        build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![])
     }
 
     #[wasm_bindgen]

@@ -204,7 +204,7 @@ export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = puzzle2dPlayFix
 const PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX = 640;
 const PUZZLE_2D_PLAY_VIEWPORT_MARGIN = 0.18;
 const PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE = 2.25;
-const PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST = 1.6;
+const PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST = 2.5;
 const PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE: Record<Puzzle2dPlayPaneId, number> = {
 	"2d-overview": 0.68,
 	"2d-detail": 2.15,
@@ -2205,8 +2205,8 @@ if (import.meta.vitest) {
 			const camera = puzzle2dPlayViewportCameraForFixtureId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
 			expect(camera.x).toBeCloseTo(authoredNode!.x, 3);
 			expect(camera.y).toBeCloseTo(authoredNode!.y, 3);
-			expect(camera.zoom).toBeGreaterThan(0);
-			expect(camera.zoom).toBeLessThan(0.75);
+			expect(camera.zoom).toBeGreaterThan(0.9);
+			expect(camera.zoom).toBeLessThan(1.5);
 			expect(fixture.nodes[0]?.shape).toBe("circle");
 		});
 

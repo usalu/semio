@@ -50,7 +50,10 @@ macro_rules! _entity_relay_shell {
 #[macro_export]
 macro_rules! entity_relay_sync {
     ($Conn:ident, $Edge:ident, $Node:ty, $hash_fn:expr) => {
-        $crate::_entity_relay_shell!($Conn, $Edge, $Node,
+        $crate::_entity_relay_shell!(
+            $Conn,
+            $Edge,
+            $Node,
             pub fn from_entities(entities: Vec<$Node>) -> Self {
                 let mut child_hashes = Vec::with_capacity(entities.len());
                 for r in &entities {
@@ -80,7 +83,10 @@ macro_rules! entity_full_family {
 #[macro_export]
 macro_rules! entity_relay {
     ($Conn:ident, $Edge:ident, $Node:ty) => {
-        $crate::_entity_relay_shell!($Conn, $Edge, $Node,
+        $crate::_entity_relay_shell!(
+            $Conn,
+            $Edge,
+            $Node,
             pub async fn from_entities(entities: Vec<$Node>) -> Self {
                 let mut child_hashes = Vec::with_capacity(entities.len());
                 for r in &entities {
@@ -205,74 +211,40 @@ macro_rules! entity_input {
 #[macro_export]
 macro_rules! file_system_node_complex_methods {
     ($variant:ident) => {
-        pub async fn file_system_parent(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<
-            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
-        > {
+        pub async fn file_system_parent(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::parent(&iface).await)
         }
-        pub async fn file_system_children(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+        pub async fn file_system_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::children(&iface).await)
         }
-        pub async fn file_system_child(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            id: $crate::id::Id,
-        ) -> crate::external_adapters::async_graphql::Result<
-            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
-        > {
+        pub async fn file_system_child(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::child(&iface, &id).await)
         }
-        pub async fn file_system_path(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_path(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::path(&iface).await)
         }
-        pub async fn file_system_name(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_name(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::name(&iface).await)
         }
-        pub async fn is_file_system_root(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn is_file_system_root(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
             let _ = ctx;
-            Ok(matches!(
-                $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()),
-                $crate::gql::interfaces::FileSystemNodeInterface::Kit(_)
-            ))
+            Ok(matches!($crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()), $crate::gql::interfaces::FileSystemNodeInterface::Kit(_)))
         }
-        pub async fn file_system_kind(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+        pub async fn file_system_kind(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
             let _ = ctx;
-            Ok($crate::gql::interfaces::file_system_vfs::kind(
-                &$crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()),
-            ))
+            Ok($crate::gql::interfaces::file_system_vfs::kind(&$crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone())))
         }
-        pub async fn file_system_has_children(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn file_system_has_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::has_children(&iface).await)
@@ -284,77 +256,43 @@ macro_rules! file_system_node_complex_methods {
 #[macro_export]
 macro_rules! file_system_node_object_methods {
     ($ty:ty, $node_for:path, $default_kind:ident) => {
-        pub async fn file_system_parent(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<
-            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
-        > {
+        pub async fn file_system_parent(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(None);
             };
             Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
         }
-        pub async fn file_system_children(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+        pub async fn file_system_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
             };
             Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
         }
-        pub async fn file_system_child(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            id: $crate::id::Id,
-        ) -> crate::external_adapters::async_graphql::Result<
-            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
-        > {
+        pub async fn file_system_child(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(None);
             };
             Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
         }
-        pub async fn file_system_path(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_path(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(String::new());
             };
             Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
         }
-        pub async fn file_system_name(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_name(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(String::new());
             };
             Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
         }
-        pub async fn is_file_system_root(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<bool> {
-            Ok(matches!(
-                $node_for(self, ctx).await,
-                Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))
-            ))
+        pub async fn is_file_system_root(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+            Ok(matches!($node_for(self, ctx).await, Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))))
         }
-        pub async fn file_system_kind(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
-            Ok($node_for(self, ctx).await
-                .map(|node| $crate::gql::interfaces::file_system_vfs::kind(&node))
-                .unwrap_or($crate::gql::interfaces::FileSystemNodeKind::$default_kind))
+        pub async fn file_system_kind(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            Ok($node_for(self, ctx).await.map(|node| $crate::gql::interfaces::file_system_vfs::kind(&node)).unwrap_or($crate::gql::interfaces::FileSystemNodeKind::$default_kind))
         }
-        pub async fn file_system_has_children(
-            &self,
-            ctx: &crate::external_adapters::async_graphql::Context<'_>,
-        ) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn file_system_has_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(false);
             };
@@ -369,78 +307,46 @@ macro_rules! file_system_node_vfs_complex_ctx {
     ($ty:ty, $node_for:path) => {
         #[crate::external_adapters::async_graphql::ComplexObject]
         impl $ty {
-            pub async fn file_system_parent(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<
-                Option<$crate::gql::interfaces::FileSystemNodeInterface>,
-            > {
+            pub async fn file_system_parent(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(None);
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
             }
-            pub async fn file_system_children(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+            pub async fn file_system_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
             }
-            pub async fn file_system_child(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-                id: $crate::id::Id,
-            ) -> crate::external_adapters::async_graphql::Result<
-                Option<$crate::gql::interfaces::FileSystemNodeInterface>,
-            > {
+            pub async fn file_system_child(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(None);
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
             }
-            pub async fn file_system_path(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<String> {
+            pub async fn file_system_path(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(String::new());
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
             }
-            pub async fn file_system_name(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<String> {
+            pub async fn file_system_name(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(String::new());
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
             }
-            pub async fn is_file_system_root(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<bool> {
-                Ok(matches!(
-                    $node_for(self, ctx).await,
-                    Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))
-                ))
+            pub async fn is_file_system_root(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+                Ok(matches!($node_for(self, ctx).await, Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))))
             }
-            pub async fn file_system_kind(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            pub async fn file_system_kind(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
                 Ok(match $node_for(self, ctx).await {
                     Some(node) => $crate::gql::interfaces::file_system_vfs::kind(&node),
                     None => $crate::gql::interfaces::FileSystemNodeKind::Kit,
                 })
             }
-            pub async fn file_system_has_children(
-                &self,
-                ctx: &crate::external_adapters::async_graphql::Context<'_>,
-            ) -> crate::external_adapters::async_graphql::Result<bool> {
+            pub async fn file_system_has_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(false);
                 };
@@ -730,12 +636,10 @@ pub mod external_adapters {
     pub use sha2;
     pub use thiserror;
     pub use uuid;
+    #[cfg(target_arch = "wasm32")]
+    pub use {base64, getrandom, js_sys, serde_wasm_bindgen, wasm_bindgen, wasm_bindgen_futures, web_sys};
     #[cfg(not(target_arch = "wasm32"))]
     pub use {chrono, rusqlite, tempfile, ureq, walkdir, zip};
-    #[cfg(target_arch = "wasm32")]
-    pub use {
-        base64, getrandom, js_sys, serde_wasm_bindgen, wasm_bindgen, wasm_bindgen_futures, web_sys,
-    };
 }
 //#endregion 🔌ExternalAdapters
 
@@ -897,7 +801,6 @@ pub mod error {
             self.request_id.as_ref().map(|s| crate::id::Id(s.clone()))
         }
     }
-
 
     impl SemioError {
         pub fn invalid<S: Into<String>>(msg: S) -> Self {
@@ -1317,11 +1220,7 @@ pub mod gql_relay {
     impl PageInfoConnection {
         /// @emoji 🪢 Golden `PageInfoConnection` with no edges — valid `EntityConnection` implementor for empty `owns` shells.
         pub fn empty_entity_shell() -> Self {
-            Self {
-                edges: vec![],
-                page_info: Arc::new(PageInfo::default()),
-                hash: h(&["EntityConnection", "PageInfo", "empty"]),
-            }
+            Self { edges: vec![], page_info: Arc::new(PageInfo::default()), hash: h(&["EntityConnection", "PageInfo", "empty"]) }
         }
     }
 
@@ -1585,25 +1484,11 @@ pub mod gql_relay {
 
     impl Typology {
         pub async fn new(owner_kit: std::sync::Weak<crate::kit::Kit>, name: String) -> std::sync::Arc<Self> {
-            std::sync::Arc::new(Self {
-                id: Id::new().await,
-                name: RwLock::new(name),
-                owner_kit,
-                ..Default::default()
-            })
+            std::sync::Arc::new(Self { id: Id::new().await, name: RwLock::new(name), owner_kit, ..Default::default() })
         }
 
-        pub async fn new_with_external_id(
-            owner_kit: std::sync::Weak<crate::kit::Kit>,
-            id: Id,
-            name: String,
-        ) -> std::sync::Arc<Self> {
-            std::sync::Arc::new(Self {
-                id,
-                name: RwLock::new(name),
-                owner_kit,
-                ..Default::default()
-            })
+        pub async fn new_with_external_id(owner_kit: std::sync::Weak<crate::kit::Kit>, id: Id, name: String) -> std::sync::Arc<Self> {
+            std::sync::Arc::new(Self { id, name: RwLock::new(name), owner_kit, ..Default::default() })
         }
 
         pub async fn compute_entity_hash(&self) -> String {
@@ -1611,17 +1496,7 @@ pub mod gql_relay {
             let desc = self.description.read().await;
             let icon = self.icon.read().await;
             let folder_id = self.folder_id.read().await;
-            crate::hash::merkle_node_str(
-                &[
-                    "Typology",
-                    self.id.as_str(),
-                    name.as_str(),
-                    desc.as_deref().unwrap_or(""),
-                    icon.as_deref().unwrap_or(""),
-                    folder_id.as_ref().map(|id| id.as_str()).unwrap_or(""),
-                ],
-                Vec::new(),
-            )
+            crate::hash::merkle_node_str(&["Typology", self.id.as_str(), name.as_str(), desc.as_deref().unwrap_or(""), icon.as_deref().unwrap_or(""), folder_id.as_ref().map(|id| id.as_str()).unwrap_or("")], Vec::new())
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -1668,10 +1543,7 @@ pub mod gql_relay {
         }
     }
 
-    crate::file_system_node_vfs_complex_ctx!(
-        Typology,
-        crate::gql::interfaces::file_system_vfs::node_for_typology
-    );
+    crate::file_system_node_vfs_complex_ctx!(Typology, crate::gql::interfaces::file_system_vfs::node_for_typology);
 
     crate::entity_relay!(TypologyConnection, TypologyEdge, std::sync::Arc<Typology>);
     impl TypologyConnection {
@@ -1763,11 +1635,7 @@ pub mod schema_gap_surfaces {
 
             impl Default for $ConnRust {
                 fn default() -> Self {
-                    Self {
-                        edges: Vec::new(),
-                        page_info: Arc::new(PageInfo::default()),
-                        hash: String::new(),
-                    }
+                    Self { edges: Vec::new(), page_info: Arc::new(PageInfo::default()), hash: String::new() }
                 }
             }
         };
@@ -1819,410 +1687,411 @@ pub mod schema_gap_surfaces {
     macro_rules! gap_surface_family_name_list {
         (@apply_families) => {
             gap_surface_families! {
-        AddedAttributeToConcept,
-        AddedAttributeToDesign,
-        AddedAttributeToDesignInput,
-        AddedAttributeToPiece,
-        AddedAttributeToPieceInput,
-        AddedAttributeToPort,
-        AddedAttributeToQuality,
-        AddedAttributeToTag,
-        AddedAttributeToType,
-        AddedAttributeToTypeInput,
-        AddedAttributesToConcept,
-        AddedAttributesToDesign,
-        AddedAttributesToDesignInput,
-        AddedAttributesToPiece,
-        AddedAttributesToPieceInput,
-        AddedAttributesToPort,
-        AddedAttributesToQuality,
-        AddedAttributesToTag,
-        AddedAttributesToType,
-        AddedAttributesToTypeInput,
-        AddedChildPieceWithParentConnection,
-        AddedChildPieceWithParentConnectionInput,
-        AddedChildPiecesWithParentConnections,
-        AddedChildPiecesWithParentConnectionsInput,
-        AddedConnector,
-        AddedConnectorInput,
-        AddedConnectors,
-        AddedConnectorsInput,
-        AddedHangingChildPieceWithParentConnectionInput,
-        AddedHangingChildPieceWithParentConnection,
-        AddedHangingChildPiecesWithParentConnections,
-        AddedHangingChildPiecesWithParentConnectionsInput,
-        AttributeDiff,
-        AttributeModification,
-        AttributeModifications,
-        AuthorDiff,
-        AuthorModification,
-        AuthorModifications,
-        BenchmarkDiff,
-        BenchmarkModification,
-        BenchmarkModifications,
-        ChangedPieceToType,
-        ChangedPieceToTypeInput,
-        ChangedPiecesToType,
-        ChangedPiecesToTypeInput,
-        ConceptDiff,
-        ConceptModification,
-        ConceptModifications,
-        ConceptOperation,
-        ConnectionDiff,
-        ConnectionModification,
-        ConnectionModifications,
-        ConnectorDiff,
-        ConnectorModification,
-        ConnectorModifications,
-        ConnectorOperation,
-        CreatedConcept,
-        CreatedConcepts,
-        CreatedDesign,
-        CreatedDesignInput,
-        CreatedDesigns,
-        CreatedDesignsInput,
-        CreatedFolder,
-        CreatedFolderInput,
-        MovedToFolder,
-        MovedToFolderInput,
-        CreatedPort,
-        CreatedPorts,
-        CreatedQualities,
-        CreatedQuality,
-        CreatedTag,
-        CreatedTags,
-        CreatedType,
-        CreatedTypeInput,
-        CreatedTypes,
-        CreatedTypesInput,
-        DeletedConcept,
-        DeletedConcepts,
-        DeletedDesign,
-        DeletedDesigns,
-        DeletedPiece,
-        DeletedPieces,
-        DeletedPiecesAndConnections,
-        DeletedPort,
-        DeletedPorts,
-        DeletedQualities,
-        DeletedQuality,
-        DeletedTag,
-        DeletedTags,
-        DeletedType,
-        DeletedTypes,
-        DesignModification,
-        DesignModifications,
-        DesignOperation,
-        DraggedPieces,
-        DraggedPiecesInput,
-        FamilyDiff,
-        FamilyModification,
-        FamilyModifications,
-        FileDiff,
-        FileModification,
-        FileModifications,
-        FixedPieces,
-        FlattenedDesign,
-        FolderDiff,
-        FolderModification,
-        FolderModifications,
-        GroupDiff,
-        GroupModification,
-        GroupModifications,
-        KitModification,
-        KitModifications,
-        KitOperation,
-        LayerDiff,
-        LayerModification,
-        LayerModifications,
-        MovedPiece,
-        MovedPieceInput,
-        MovedPieces,
-        MovedPiecesInput,
-        PieceDiff,
-        PieceModification,
-        PieceModifications,
-        PieceOperation,
-        PiecesOperation,
-        PlaceDiff,
-        PlaceModification,
-        PlaceModifications,
-        PortDiff,
-        PortModification,
-        PortModifications,
-        PortOperation,
-        PropDiff,
-        PropModification,
-        PropModifications,
-        QualityDiff,
-        QualityModification,
-        QualityModifications,
-        QualityOperation,
-        RemovedAttributeFromConcept,
-        RemovedAttributeFromDesign,
-        RemovedAttributeFromPiece,
-        RemovedAttributeFromPort,
-        RemovedAttributeFromQuality,
-        RemovedAttributeFromTag,
-        RemovedAttributeFromType,
-        RemovedAttributesFromConcept,
-        RemovedAttributesFromDesign,
-        RemovedAttributesFromPiece,
-        RemovedAttributesFromPort,
-        RemovedAttributesFromQuality,
-        RemovedAttributesFromTag,
-        RemovedAttributesFromType,
-        RemovedConnector,
-        RemovedConnectors,
-        RenamedConcept,
-        RenamedConnector,
-        RenamedConnectorInput,
-        RenamedPiece,
-        RenamedPieceInput,
-        RenamedPort,
-        RenamedQuality,
-        RenamedTag,
-        RenamedType,
-        RenamedTypeInput,
-        RepresentationDiff,
-        RepresentationModification,
-        RepresentationModifications,
-        SideDiff,
-        SideModification,
-        SideModifications,
-        StatDiff,
-        StatModification,
-        StatModifications,
-        TagDiff,
-        TagModification,
-        TagModifications,
-        TagOperation,
-        TypeDiff,
-        TypeModification,
-        TypeModifications,
-        TypeOperation,
-        UpdatedConceptDescription,
-        UpdatedConceptIcon,
-        UpdatedConnectorDescription,
-        UpdatedConnectorDescriptionInput,
-        UpdatedConnectorIcon,
-        UpdatedConnectorIconInput,
-        UpdatedPieceDescription,
-        UpdatedPieceDescriptionInput,
-        UpdatedPortDescription,
-        UpdatedPortIcon,
-        UpdatedQualityDescription,
-        UpdatedQualityIcon,
-        UpdatedTagDescription,
-        UpdatedTagIcon,
-        UpdatedTypeDescription,
-        UpdatedTypeDescriptionInput,
-        UpdatedTypeIcon,
-        UpdatedTypeIconInput
-            }
+            AddedAttributeToConcept,
+            AddedAttributeToDesign,
+            AddedAttributeToDesignInput,
+            AddedAttributeToPiece,
+            AddedAttributeToPieceInput,
+            AddedAttributeToPort,
+            AddedAttributeToQuality,
+            AddedAttributeToTag,
+            AddedAttributeToType,
+            AddedAttributeToTypeInput,
+            AddedAttributesToConcept,
+            AddedAttributesToDesign,
+            AddedAttributesToDesignInput,
+            AddedAttributesToPiece,
+            AddedAttributesToPieceInput,
+            AddedAttributesToPort,
+            AddedAttributesToQuality,
+            AddedAttributesToTag,
+            AddedAttributesToType,
+            AddedAttributesToTypeInput,
+            AddedChildPieceWithParentConnection,
+            AddedChildPieceWithParentConnectionInput,
+            AddedChildPiecesWithParentConnections,
+            AddedChildPiecesWithParentConnectionsInput,
+            AddedConnector,
+            AddedConnectorInput,
+            AddedConnectors,
+            AddedConnectorsInput,
+            AddedHangingChildPieceWithParentConnectionInput,
+            AddedHangingChildPieceWithParentConnection,
+            AddedHangingChildPiecesWithParentConnections,
+            AddedHangingChildPiecesWithParentConnectionsInput,
+            AttributeDiff,
+            AttributeModification,
+            AttributeModifications,
+            AuthorDiff,
+            AuthorModification,
+            AuthorModifications,
+            BenchmarkDiff,
+            BenchmarkModification,
+            BenchmarkModifications,
+            ChangedPieceToType,
+            ChangedPieceToTypeInput,
+            ChangedPiecesToType,
+            ChangedPiecesToTypeInput,
+            ConceptDiff,
+            ConceptModification,
+            ConceptModifications,
+            ConceptOperation,
+            ConnectionDiff,
+            ConnectionModification,
+            ConnectionModifications,
+            ConnectorDiff,
+            ConnectorModification,
+            ConnectorModifications,
+            ConnectorOperation,
+            CreatedConcept,
+            CreatedConcepts,
+            CreatedDesign,
+            CreatedDesignInput,
+            CreatedDesigns,
+            CreatedDesignsInput,
+            CreatedFolder,
+            CreatedFolderInput,
+            MovedToFolder,
+            MovedToFolderInput,
+            CreatedPort,
+            CreatedPorts,
+            CreatedQualities,
+            CreatedQuality,
+            CreatedTag,
+            CreatedTags,
+            CreatedType,
+            CreatedTypeInput,
+            CreatedTypes,
+            CreatedTypesInput,
+            DeletedConcept,
+            DeletedConcepts,
+            DeletedDesign,
+            DeletedDesigns,
+            DeletedPiece,
+            DeletedPieces,
+            DeletedPiecesAndConnections,
+            DeletedPort,
+            DeletedPorts,
+            DeletedQualities,
+            DeletedQuality,
+            DeletedTag,
+            DeletedTags,
+            DeletedType,
+            DeletedTypes,
+            DesignModification,
+            DesignModifications,
+            DesignOperation,
+            DraggedPieces,
+            DraggedPiecesInput,
+            FamilyDiff,
+            FamilyModification,
+            FamilyModifications,
+            FileDiff,
+            FileModification,
+            FileModifications,
+            FixedPieces,
+            FlattenedDesign,
+            FolderDiff,
+            FolderModification,
+            FolderModifications,
+            GroupDiff,
+            GroupModification,
+            GroupModifications,
+            KitModification,
+            KitModifications,
+            KitOperation,
+            LayerDiff,
+            LayerModification,
+            LayerModifications,
+            MovedPiece,
+            MovedPieceInput,
+            MovedPieces,
+            MovedPiecesInput,
+            PieceDiff,
+            PieceModification,
+            PieceModifications,
+            PieceOperation,
+            PiecesOperation,
+            PlaceDiff,
+            PlaceModification,
+            PlaceModifications,
+            PortDiff,
+            PortModification,
+            PortModifications,
+            PortOperation,
+            PropDiff,
+            PropModification,
+            PropModifications,
+            QualityDiff,
+            QualityModification,
+            QualityModifications,
+            QualityOperation,
+            RemovedAttributeFromConcept,
+            RemovedAttributeFromDesign,
+            RemovedAttributeFromPiece,
+            RemovedAttributeFromPort,
+            RemovedAttributeFromQuality,
+            RemovedAttributeFromTag,
+            RemovedAttributeFromType,
+            RemovedAttributesFromConcept,
+            RemovedAttributesFromDesign,
+            RemovedAttributesFromPiece,
+            RemovedAttributesFromPort,
+            RemovedAttributesFromQuality,
+            RemovedAttributesFromTag,
+            RemovedAttributesFromType,
+            RemovedConnector,
+            RemovedConnectors,
+            RenamedConcept,
+            RenamedConnector,
+            RenamedConnectorInput,
+            RenamedPiece,
+            RenamedPieceInput,
+            RenamedPort,
+            RenamedQuality,
+            RenamedTag,
+            RenamedType,
+            RenamedTypeInput,
+            RepresentationDiff,
+            RepresentationModification,
+            RepresentationModifications,
+            SideDiff,
+            SideModification,
+            SideModifications,
+            StatDiff,
+            StatModification,
+            StatModifications,
+            TagDiff,
+            TagModification,
+            TagModifications,
+            TagOperation,
+            TypeDiff,
+            TypeModification,
+            TypeModifications,
+            TypeOperation,
+            UpdatedConceptDescription,
+            UpdatedConceptIcon,
+            UpdatedConnectorDescription,
+            UpdatedConnectorDescriptionInput,
+            UpdatedConnectorIcon,
+            UpdatedConnectorIconInput,
+            UpdatedPieceDescription,
+            UpdatedPieceDescriptionInput,
+            UpdatedPortDescription,
+            UpdatedPortIcon,
+            UpdatedQualityDescription,
+            UpdatedQualityIcon,
+            UpdatedTagDescription,
+            UpdatedTagIcon,
+            UpdatedTypeDescription,
+            UpdatedTypeDescriptionInput,
+            UpdatedTypeIcon,
+            UpdatedTypeIconInput
+                }
         };
         (@register $builder:expr) => {
-            $crate::register_gap_surface_family_connections!($builder,
-        AddedAttributeToConcept,
-        AddedAttributeToDesign,
-        AddedAttributeToDesignInput,
-        AddedAttributeToPiece,
-        AddedAttributeToPieceInput,
-        AddedAttributeToPort,
-        AddedAttributeToQuality,
-        AddedAttributeToTag,
-        AddedAttributeToType,
-        AddedAttributeToTypeInput,
-        AddedAttributesToConcept,
-        AddedAttributesToDesign,
-        AddedAttributesToDesignInput,
-        AddedAttributesToPiece,
-        AddedAttributesToPieceInput,
-        AddedAttributesToPort,
-        AddedAttributesToQuality,
-        AddedAttributesToTag,
-        AddedAttributesToType,
-        AddedAttributesToTypeInput,
-        AddedChildPieceWithParentConnection,
-        AddedChildPieceWithParentConnectionInput,
-        AddedChildPiecesWithParentConnections,
-        AddedChildPiecesWithParentConnectionsInput,
-        AddedConnector,
-        AddedConnectorInput,
-        AddedConnectors,
-        AddedConnectorsInput,
-        AddedHangingChildPieceWithParentConnectionInput,
-        AddedHangingChildPieceWithParentConnection,
-        AddedHangingChildPiecesWithParentConnections,
-        AddedHangingChildPiecesWithParentConnectionsInput,
-        AttributeDiff,
-        AttributeModification,
-        AttributeModifications,
-        AuthorDiff,
-        AuthorModification,
-        AuthorModifications,
-        BenchmarkDiff,
-        BenchmarkModification,
-        BenchmarkModifications,
-        ChangedPieceToType,
-        ChangedPieceToTypeInput,
-        ChangedPiecesToType,
-        ChangedPiecesToTypeInput,
-        ConceptDiff,
-        ConceptModification,
-        ConceptModifications,
-        ConceptOperation,
-        ConnectionDiff,
-        ConnectionModification,
-        ConnectionModifications,
-        ConnectorDiff,
-        ConnectorModification,
-        ConnectorModifications,
-        ConnectorOperation,
-        CreatedConcept,
-        CreatedConcepts,
-        CreatedDesign,
-        CreatedDesignInput,
-        CreatedDesigns,
-        CreatedDesignsInput,
-        CreatedFolder,
-        CreatedFolderInput,
-        MovedToFolder,
-        MovedToFolderInput,
-        CreatedPort,
-        CreatedPorts,
-        CreatedQualities,
-        CreatedQuality,
-        CreatedTag,
-        CreatedTags,
-        CreatedType,
-        CreatedTypeInput,
-        CreatedTypes,
-        CreatedTypesInput,
-        DeletedConcept,
-        DeletedConcepts,
-        DeletedDesign,
-        DeletedDesigns,
-        DeletedPiece,
-        DeletedPieces,
-        DeletedPiecesAndConnections,
-        DeletedPort,
-        DeletedPorts,
-        DeletedQualities,
-        DeletedQuality,
-        DeletedTag,
-        DeletedTags,
-        DeletedType,
-        DeletedTypes,
-        DesignModification,
-        DesignModifications,
-        DesignOperation,
-        DraggedPieces,
-        DraggedPiecesInput,
-        FamilyDiff,
-        FamilyModification,
-        FamilyModifications,
-        FileDiff,
-        FileModification,
-        FileModifications,
-        FixedPieces,
-        FlattenedDesign,
-        FolderDiff,
-        FolderModification,
-        FolderModifications,
-        GroupDiff,
-        GroupModification,
-        GroupModifications,
-        KitModification,
-        KitModifications,
-        KitOperation,
-        LayerDiff,
-        LayerModification,
-        LayerModifications,
-        MovedPiece,
-        MovedPieceInput,
-        MovedPieces,
-        MovedPiecesInput,
-        PieceDiff,
-        PieceModification,
-        PieceModifications,
-        PieceOperation,
-        PiecesOperation,
-        PlaceDiff,
-        PlaceModification,
-        PlaceModifications,
-        PortDiff,
-        PortModification,
-        PortModifications,
-        PortOperation,
-        PropDiff,
-        PropModification,
-        PropModifications,
-        QualityDiff,
-        QualityModification,
-        QualityModifications,
-        QualityOperation,
-        RemovedAttributeFromConcept,
-        RemovedAttributeFromDesign,
-        RemovedAttributeFromPiece,
-        RemovedAttributeFromPort,
-        RemovedAttributeFromQuality,
-        RemovedAttributeFromTag,
-        RemovedAttributeFromType,
-        RemovedAttributesFromConcept,
-        RemovedAttributesFromDesign,
-        RemovedAttributesFromPiece,
-        RemovedAttributesFromPort,
-        RemovedAttributesFromQuality,
-        RemovedAttributesFromTag,
-        RemovedAttributesFromType,
-        RemovedConnector,
-        RemovedConnectors,
-        RenamedConcept,
-        RenamedConnector,
-        RenamedConnectorInput,
-        RenamedPiece,
-        RenamedPieceInput,
-        RenamedPort,
-        RenamedQuality,
-        RenamedTag,
-        RenamedType,
-        RenamedTypeInput,
-        RepresentationDiff,
-        RepresentationModification,
-        RepresentationModifications,
-        SideDiff,
-        SideModification,
-        SideModifications,
-        StatDiff,
-        StatModification,
-        StatModifications,
-        TagDiff,
-        TagModification,
-        TagModifications,
-        TagOperation,
-        TypeDiff,
-        TypeModification,
-        TypeModifications,
-        TypeOperation,
-        UpdatedConceptDescription,
-        UpdatedConceptIcon,
-        UpdatedConnectorDescription,
-        UpdatedConnectorDescriptionInput,
-        UpdatedConnectorIcon,
-        UpdatedConnectorIconInput,
-        UpdatedPieceDescription,
-        UpdatedPieceDescriptionInput,
-        UpdatedPortDescription,
-        UpdatedPortIcon,
-        UpdatedQualityDescription,
-        UpdatedQualityIcon,
-        UpdatedTagDescription,
-        UpdatedTagIcon,
-        UpdatedTypeDescription,
-        UpdatedTypeDescriptionInput,
-        UpdatedTypeIcon,
-        UpdatedTypeIconInput
+            $crate::register_gap_surface_family_connections!(
+                $builder,
+                AddedAttributeToConcept,
+                AddedAttributeToDesign,
+                AddedAttributeToDesignInput,
+                AddedAttributeToPiece,
+                AddedAttributeToPieceInput,
+                AddedAttributeToPort,
+                AddedAttributeToQuality,
+                AddedAttributeToTag,
+                AddedAttributeToType,
+                AddedAttributeToTypeInput,
+                AddedAttributesToConcept,
+                AddedAttributesToDesign,
+                AddedAttributesToDesignInput,
+                AddedAttributesToPiece,
+                AddedAttributesToPieceInput,
+                AddedAttributesToPort,
+                AddedAttributesToQuality,
+                AddedAttributesToTag,
+                AddedAttributesToType,
+                AddedAttributesToTypeInput,
+                AddedChildPieceWithParentConnection,
+                AddedChildPieceWithParentConnectionInput,
+                AddedChildPiecesWithParentConnections,
+                AddedChildPiecesWithParentConnectionsInput,
+                AddedConnector,
+                AddedConnectorInput,
+                AddedConnectors,
+                AddedConnectorsInput,
+                AddedHangingChildPieceWithParentConnectionInput,
+                AddedHangingChildPieceWithParentConnection,
+                AddedHangingChildPiecesWithParentConnections,
+                AddedHangingChildPiecesWithParentConnectionsInput,
+                AttributeDiff,
+                AttributeModification,
+                AttributeModifications,
+                AuthorDiff,
+                AuthorModification,
+                AuthorModifications,
+                BenchmarkDiff,
+                BenchmarkModification,
+                BenchmarkModifications,
+                ChangedPieceToType,
+                ChangedPieceToTypeInput,
+                ChangedPiecesToType,
+                ChangedPiecesToTypeInput,
+                ConceptDiff,
+                ConceptModification,
+                ConceptModifications,
+                ConceptOperation,
+                ConnectionDiff,
+                ConnectionModification,
+                ConnectionModifications,
+                ConnectorDiff,
+                ConnectorModification,
+                ConnectorModifications,
+                ConnectorOperation,
+                CreatedConcept,
+                CreatedConcepts,
+                CreatedDesign,
+                CreatedDesignInput,
+                CreatedDesigns,
+                CreatedDesignsInput,
+                CreatedFolder,
+                CreatedFolderInput,
+                MovedToFolder,
+                MovedToFolderInput,
+                CreatedPort,
+                CreatedPorts,
+                CreatedQualities,
+                CreatedQuality,
+                CreatedTag,
+                CreatedTags,
+                CreatedType,
+                CreatedTypeInput,
+                CreatedTypes,
+                CreatedTypesInput,
+                DeletedConcept,
+                DeletedConcepts,
+                DeletedDesign,
+                DeletedDesigns,
+                DeletedPiece,
+                DeletedPieces,
+                DeletedPiecesAndConnections,
+                DeletedPort,
+                DeletedPorts,
+                DeletedQualities,
+                DeletedQuality,
+                DeletedTag,
+                DeletedTags,
+                DeletedType,
+                DeletedTypes,
+                DesignModification,
+                DesignModifications,
+                DesignOperation,
+                DraggedPieces,
+                DraggedPiecesInput,
+                FamilyDiff,
+                FamilyModification,
+                FamilyModifications,
+                FileDiff,
+                FileModification,
+                FileModifications,
+                FixedPieces,
+                FlattenedDesign,
+                FolderDiff,
+                FolderModification,
+                FolderModifications,
+                GroupDiff,
+                GroupModification,
+                GroupModifications,
+                KitModification,
+                KitModifications,
+                KitOperation,
+                LayerDiff,
+                LayerModification,
+                LayerModifications,
+                MovedPiece,
+                MovedPieceInput,
+                MovedPieces,
+                MovedPiecesInput,
+                PieceDiff,
+                PieceModification,
+                PieceModifications,
+                PieceOperation,
+                PiecesOperation,
+                PlaceDiff,
+                PlaceModification,
+                PlaceModifications,
+                PortDiff,
+                PortModification,
+                PortModifications,
+                PortOperation,
+                PropDiff,
+                PropModification,
+                PropModifications,
+                QualityDiff,
+                QualityModification,
+                QualityModifications,
+                QualityOperation,
+                RemovedAttributeFromConcept,
+                RemovedAttributeFromDesign,
+                RemovedAttributeFromPiece,
+                RemovedAttributeFromPort,
+                RemovedAttributeFromQuality,
+                RemovedAttributeFromTag,
+                RemovedAttributeFromType,
+                RemovedAttributesFromConcept,
+                RemovedAttributesFromDesign,
+                RemovedAttributesFromPiece,
+                RemovedAttributesFromPort,
+                RemovedAttributesFromQuality,
+                RemovedAttributesFromTag,
+                RemovedAttributesFromType,
+                RemovedConnector,
+                RemovedConnectors,
+                RenamedConcept,
+                RenamedConnector,
+                RenamedConnectorInput,
+                RenamedPiece,
+                RenamedPieceInput,
+                RenamedPort,
+                RenamedQuality,
+                RenamedTag,
+                RenamedType,
+                RenamedTypeInput,
+                RepresentationDiff,
+                RepresentationModification,
+                RepresentationModifications,
+                SideDiff,
+                SideModification,
+                SideModifications,
+                StatDiff,
+                StatModification,
+                StatModifications,
+                TagDiff,
+                TagModification,
+                TagModifications,
+                TagOperation,
+                TypeDiff,
+                TypeModification,
+                TypeModifications,
+                TypeOperation,
+                UpdatedConceptDescription,
+                UpdatedConceptIcon,
+                UpdatedConnectorDescription,
+                UpdatedConnectorDescriptionInput,
+                UpdatedConnectorIcon,
+                UpdatedConnectorIconInput,
+                UpdatedPieceDescription,
+                UpdatedPieceDescriptionInput,
+                UpdatedPortDescription,
+                UpdatedPortIcon,
+                UpdatedQualityDescription,
+                UpdatedQualityIcon,
+                UpdatedTagDescription,
+                UpdatedTagIcon,
+                UpdatedTypeDescription,
+                UpdatedTypeDescriptionInput,
+                UpdatedTypeIcon,
+                UpdatedTypeIconInput
             )
         };
     }
@@ -2231,110 +2100,111 @@ pub mod schema_gap_surfaces {
     macro_rules! gap_surface_existing_relay_name_list {
         (@apply_relays) => {
             gap_surface_existing_relays! {
-        AddedAttributeToConceptInput,
-        AddedAttributeToPortInput,
-        AddedAttributeToQualityInput,
-        AddedAttributeToTagInput,
-        AddedAttributesToConceptInput,
-        AddedAttributesToPortInput,
-        AddedAttributesToQualityInput,
-        AddedAttributesToTagInput,
-        AlternativeCommand,
-        ChangedDescription,
-        CreatedConceptInput,
-        CreatedConceptsInput,
-        CreatedFixedPiece,
-        CreatedPortInput,
-        CreatedPortsInput,
-        CreatedQualitiesInput,
-        CreatedQualityInput,
-        CreatedTagInput,
-        CreatedTagsInput,
-        DraggedPiece,
-        FileBackbone,
-        FileBackboneCommand,
-        FixedPiece,
-        Graph,
-        Kit,
-        LocalProviderCommand,
-        Place,
-        RemoteProviderCommand,
-        RenamedConceptInput,
-        RenamedKit,
-        RenamedPortInput,
-        RenamedQualityInput,
-        RenamedTagInput,
-        Session,
-        SessionCommand,
-        Side,
-        StoreCommand,
-        TheKit,
-        UnsavedChangeCommand,
-        UpdatedConceptDescriptionInput,
-        UpdatedConceptIconInput,
-        UpdatedPortDescriptionInput,
-        UpdatedPortIconInput,
-        UpdatedQualityDescriptionInput,
-        UpdatedQualityIconInput,
-        UpdatedTagDescriptionInput,
-        UpdatedTagIconInput,
-        VersionCommand,
-        WebsocketBackbone,
-        WebsocketBackboneCommand
-            }
+            AddedAttributeToConceptInput,
+            AddedAttributeToPortInput,
+            AddedAttributeToQualityInput,
+            AddedAttributeToTagInput,
+            AddedAttributesToConceptInput,
+            AddedAttributesToPortInput,
+            AddedAttributesToQualityInput,
+            AddedAttributesToTagInput,
+            AlternativeCommand,
+            ChangedDescription,
+            CreatedConceptInput,
+            CreatedConceptsInput,
+            CreatedFixedPiece,
+            CreatedPortInput,
+            CreatedPortsInput,
+            CreatedQualitiesInput,
+            CreatedQualityInput,
+            CreatedTagInput,
+            CreatedTagsInput,
+            DraggedPiece,
+            FileBackbone,
+            FileBackboneCommand,
+            FixedPiece,
+            Graph,
+            Kit,
+            LocalProviderCommand,
+            Place,
+            RemoteProviderCommand,
+            RenamedConceptInput,
+            RenamedKit,
+            RenamedPortInput,
+            RenamedQualityInput,
+            RenamedTagInput,
+            Session,
+            SessionCommand,
+            Side,
+            StoreCommand,
+            TheKit,
+            UnsavedChangeCommand,
+            UpdatedConceptDescriptionInput,
+            UpdatedConceptIconInput,
+            UpdatedPortDescriptionInput,
+            UpdatedPortIconInput,
+            UpdatedQualityDescriptionInput,
+            UpdatedQualityIconInput,
+            UpdatedTagDescriptionInput,
+            UpdatedTagIconInput,
+            VersionCommand,
+            WebsocketBackbone,
+            WebsocketBackboneCommand
+                }
         };
         (@register $builder:expr) => {
-            $crate::register_gap_surface_existing_relay_connections!($builder,
-        AddedAttributeToConceptInput,
-        AddedAttributeToPortInput,
-        AddedAttributeToQualityInput,
-        AddedAttributeToTagInput,
-        AddedAttributesToConceptInput,
-        AddedAttributesToPortInput,
-        AddedAttributesToQualityInput,
-        AddedAttributesToTagInput,
-        AlternativeCommand,
-        ChangedDescription,
-        CreatedConceptInput,
-        CreatedConceptsInput,
-        CreatedFixedPiece,
-        CreatedPortInput,
-        CreatedPortsInput,
-        CreatedQualitiesInput,
-        CreatedQualityInput,
-        CreatedTagInput,
-        CreatedTagsInput,
-        DraggedPiece,
-        FileBackbone,
-        FileBackboneCommand,
-        FixedPiece,
-        Graph,
-        Kit,
-        LocalProviderCommand,
-        Place,
-        RemoteProviderCommand,
-        RenamedConceptInput,
-        RenamedKit,
-        RenamedPortInput,
-        RenamedQualityInput,
-        RenamedTagInput,
-        Session,
-        SessionCommand,
-        Side,
-        StoreCommand,
-        TheKit,
-        UnsavedChangeCommand,
-        UpdatedConceptDescriptionInput,
-        UpdatedConceptIconInput,
-        UpdatedPortDescriptionInput,
-        UpdatedPortIconInput,
-        UpdatedQualityDescriptionInput,
-        UpdatedQualityIconInput,
-        UpdatedTagDescriptionInput,
-        UpdatedTagIconInput,
-        VersionCommand,
-        WebsocketBackbone,
-        WebsocketBackboneCommand
+            $crate::register_gap_surface_existing_relay_connections!(
+                $builder,
+                AddedAttributeToConceptInput,
+                AddedAttributeToPortInput,
+                AddedAttributeToQualityInput,
+                AddedAttributeToTagInput,
+                AddedAttributesToConceptInput,
+                AddedAttributesToPortInput,
+                AddedAttributesToQualityInput,
+                AddedAttributesToTagInput,
+                AlternativeCommand,
+                ChangedDescription,
+                CreatedConceptInput,
+                CreatedConceptsInput,
+                CreatedFixedPiece,
+                CreatedPortInput,
+                CreatedPortsInput,
+                CreatedQualitiesInput,
+                CreatedQualityInput,
+                CreatedTagInput,
+                CreatedTagsInput,
+                DraggedPiece,
+                FileBackbone,
+                FileBackboneCommand,
+                FixedPiece,
+                Graph,
+                Kit,
+                LocalProviderCommand,
+                Place,
+                RemoteProviderCommand,
+                RenamedConceptInput,
+                RenamedKit,
+                RenamedPortInput,
+                RenamedQualityInput,
+                RenamedTagInput,
+                Session,
+                SessionCommand,
+                Side,
+                StoreCommand,
+                TheKit,
+                UnsavedChangeCommand,
+                UpdatedConceptDescriptionInput,
+                UpdatedConceptIconInput,
+                UpdatedPortDescriptionInput,
+                UpdatedPortIconInput,
+                UpdatedQualityDescriptionInput,
+                UpdatedQualityIconInput,
+                UpdatedTagDescriptionInput,
+                UpdatedTagIconInput,
+                VersionCommand,
+                WebsocketBackbone,
+                WebsocketBackboneCommand
             )
         };
     }
@@ -2360,41 +2230,13 @@ pub mod schema_gap_surfaces {
 
     with_gap_surface_family_names!(gap_surface_families);
 
-    gap_surface_family_named!(
-        "ChangedDescriptionInput",
-        GapChangedDescriptionInput,
-        "ChangedDescriptionInputEdge",
-        GapChangedDescriptionInputEdge,
-        "ChangedDescriptionInputConnection",
-        GapChangedDescriptionInputConnection
-    );
+    gap_surface_family_named!("ChangedDescriptionInput", GapChangedDescriptionInput, "ChangedDescriptionInputEdge", GapChangedDescriptionInputEdge, "ChangedDescriptionInputConnection", GapChangedDescriptionInputConnection);
     gap_surface_family_named!("Clump", GapClump, "ClumpEdge", GapClumpEdge, "ClumpConnection", GapClumpConnection);
-    gap_surface_family_named!(
-        "CreatedFixedPieceInput",
-        GapCreatedFixedPieceInput,
-        "CreatedFixedPieceInputEdge",
-        GapCreatedFixedPieceInputEdge,
-        "CreatedFixedPieceInputConnection",
-        GapCreatedFixedPieceInputConnection
-    );
+    gap_surface_family_named!("CreatedFixedPieceInput", GapCreatedFixedPieceInput, "CreatedFixedPieceInputEdge", GapCreatedFixedPieceInputEdge, "CreatedFixedPieceInputConnection", GapCreatedFixedPieceInputConnection);
     gap_surface_family_named!("DesignDiff", GapDesignDiff, "DesignDiffEdge", GapDesignDiffEdge, "DesignDiffConnection", GapDesignDiffConnection);
-    gap_surface_family_named!(
-        "DraggedPieceInput",
-        GapDraggedPieceInput,
-        "DraggedPieceInputEdge",
-        GapDraggedPieceInputEdge,
-        "DraggedPieceInputConnection",
-        GapDraggedPieceInputConnection
-    );
+    gap_surface_family_named!("DraggedPieceInput", GapDraggedPieceInput, "DraggedPieceInputEdge", GapDraggedPieceInputEdge, "DraggedPieceInputConnection", GapDraggedPieceInputConnection);
     gap_surface_family_named!("KitDiff", GapKitDiff, "KitDiffEdge", GapKitDiffEdge, "KitDiffConnection", GapKitDiffConnection);
-    gap_surface_family_named!(
-        "RenamedKitInput",
-        GapRenamedKitInput,
-        "RenamedKitInputEdge",
-        GapRenamedKitInputEdge,
-        "RenamedKitInputConnection",
-        GapRenamedKitInputConnection
-    );
+    gap_surface_family_named!("RenamedKitInput", GapRenamedKitInput, "RenamedKitInputEdge", GapRenamedKitInputEdge, "RenamedKitInputConnection", GapRenamedKitInputConnection);
     gap_surface_family_named!("Version", GapVersion, "VersionEdge", GapVersionEdge, "VersionConnection", GapVersionConnection);
 
     #[macro_export]
@@ -2417,7 +2259,6 @@ pub mod schema_gap_surfaces {
     }
 
     with_gap_surface_existing_relay_names!(gap_surface_existing_relays);
-
 }
 
 //#endregion schema_gap_surfaces
@@ -3001,7 +2842,11 @@ pub mod hash {
                 s.pop();
             }
         }
-        if s == "-0" { "0".into() } else { s }
+        if s == "-0" {
+            "0".into()
+        } else {
+            s
+        }
     }
 
     /// @emoji 🌳 Merkle fold: concatenates `own` in order, then **sorted** `children` hex digests (order-independent set hashing).
@@ -3059,14 +2904,7 @@ pub mod kit {
 
         impl Default for Port {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    owner_type: Weak::new(),
-                    code: RwLock::new(None),
-                    label: RwLock::new(None),
-                    order: RwLock::new(None),
-                    compatible_with: RwLock::new(Vec::new()),
-                }
+                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None), compatible_with: RwLock::new(Vec::new()) }
             }
         }
 
@@ -3293,12 +3131,7 @@ pub mod kit {
 
             /// 🧾 Insert a representation with caller-controlled external [`Id`] (JSON snapshot hydration).
             pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, url: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id,
-                    owner_type,
-                    url: RwLock::new(url),
-                    ..Default::default()
-                })
+                Arc::new(Self { id, owner_type, url: RwLock::new(url), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -3430,10 +3263,7 @@ pub mod kit {
             }
         }
 
-        crate::file_system_node_vfs_complex_ctx!(
-            Representation,
-            crate::gql::interfaces::file_system_vfs::node_for_representation
-        );
+        crate::file_system_node_vfs_complex_ctx!(Representation, crate::gql::interfaces::file_system_vfs::node_for_representation);
         //#endregion 💾 representation
 
         //#region 🏠 type
@@ -3623,9 +3453,7 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_typology
-                    .upgrade()
-                    .map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
+                self.owner_typology.upgrade().map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -3753,10 +3581,7 @@ pub mod kit {
             }
         }
 
-        crate::file_system_node_vfs_complex_ctx!(
-            Type,
-            crate::gql::interfaces::file_system_vfs::node_for_type
-        );
+        crate::file_system_node_vfs_complex_ctx!(Type, crate::gql::interfaces::file_system_vfs::node_for_type);
 
         //#endregion 🏠 type
 
@@ -4127,10 +3952,7 @@ pub mod kit {
                 }
             }
 
-            crate::file_system_node_vfs_complex_ctx!(
-                Piece,
-                crate::gql::interfaces::file_system_vfs::node_for_piece
-            );
+            crate::file_system_node_vfs_complex_ctx!(Piece, crate::gql::interfaces::file_system_vfs::node_for_piece);
         }
         //#endregion ⭕ piece
 
@@ -4343,13 +4165,7 @@ pub mod kit {
                     let child = self.child.read().await;
                     let mut out = Vec::new();
                     let mut seen = HashSet::new();
-                    for connector in [
-                        parent.references_connector().await,
-                        child.references_connector().await,
-                    ]
-                    .into_iter()
-                    .flatten()
-                    {
+                    for connector in [parent.references_connector().await, child.references_connector().await].into_iter().flatten() {
                         if seen.insert(connector.id.clone()) {
                             out.push(connector);
                         }
@@ -4495,17 +4311,12 @@ pub mod kit {
 
                 /// @emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
                 #[graphql(name = "referencesConnectorsTransitive")]
-                pub async fn references_connectors_transitive_field(
-                    &self,
-                ) -> crate::gql_relay::ConnectorConnection {
+                pub async fn references_connectors_transitive_field(&self) -> crate::gql_relay::ConnectorConnection {
                     crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors_transitive().await).await
                 }
             }
 
-            crate::file_system_node_vfs_complex_ctx!(
-                Connection,
-                crate::gql::interfaces::file_system_vfs::node_for_connection
-            );
+            crate::file_system_node_vfs_complex_ctx!(Connection, crate::gql::interfaces::file_system_vfs::node_for_connection);
 
             #[Object(name = "Side")]
             impl Side {
@@ -4516,11 +4327,7 @@ pub mod kit {
                     self.compute_hash().await
                 }
                 pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                    self.owner_connection
-                        .read()
-                        .await
-                        .upgrade()
-                        .map(crate::gql::interfaces::EntityInterface::Connection)
+                    self.owner_connection.read().await.upgrade().map(crate::gql::interfaces::EntityInterface::Connection)
                 }
                 pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                     Some(crate::gql::interfaces::empty_entity_connection())
@@ -4937,31 +4744,9 @@ pub mod kit {
                 let mut file_seen = HashSet::new();
                 let mut pending = VecDeque::new();
                 let root_id = self.id.clone();
-                Self::collect_transitive_references_from_design(
-                    self,
-                    &root_id,
-                    &mut type_seen,
-                    &mut design_seen,
-                    &mut file_seen,
-                    &mut all_types,
-                    &mut all_designs,
-                    &mut all_files,
-                    &mut pending,
-                )
-                .await;
+                Self::collect_transitive_references_from_design(self, &root_id, &mut type_seen, &mut design_seen, &mut file_seen, &mut all_types, &mut all_designs, &mut all_files, &mut pending).await;
                 while let Some(d) = pending.pop_front() {
-                    Self::collect_transitive_references_from_design(
-                        d.as_ref(),
-                        &root_id,
-                        &mut type_seen,
-                        &mut design_seen,
-                        &mut file_seen,
-                        &mut all_types,
-                        &mut all_designs,
-                        &mut all_files,
-                        &mut pending,
-                    )
-                    .await;
+                    Self::collect_transitive_references_from_design(d.as_ref(), &root_id, &mut type_seen, &mut design_seen, &mut file_seen, &mut all_types, &mut all_designs, &mut all_files, &mut pending).await;
                 }
                 (all_types, all_designs, all_files)
             }
@@ -5000,9 +4785,7 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_typology
-                    .upgrade()
-                    .map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
+                self.owner_typology.upgrade().map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -5146,10 +4929,7 @@ pub mod kit {
             }
         }
 
-        crate::file_system_node_vfs_complex_ctx!(
-            Design,
-            crate::gql::interfaces::file_system_vfs::node_for_design
-        );
+        crate::file_system_node_vfs_complex_ctx!(Design, crate::gql::interfaces::file_system_vfs::node_for_design);
         //#endregion 🏘 design
     }
     //#endregion 🏘 design
@@ -5463,9 +5243,9 @@ pub mod kit {
     use crate::external_adapters::async_graphql::Object;
     use crate::external_adapters::async_lock::RwLock;
 
+    use crate::gql_relay::{Family, Typology};
     use crate::hash::h;
     use crate::id::Id;
-    use crate::gql_relay::{Family, Typology};
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
     use crate::timestamp::Timestamp;
 
@@ -5729,16 +5509,7 @@ pub mod kit {
                 }
             }
             for entity in &t.added {
-                self.apply_create_type_scoped(
-                    &entity.owner_id,
-                    &entity.id,
-                    entity.name.clone(),
-                    entity.description.clone(),
-                    entity.icon.clone(),
-                    entity.image.clone(),
-                    entity.unit.clone(),
-                )
-                .await?;
+                self.apply_create_type_scoped(&entity.owner_id, &entity.id, entity.name.clone(), entity.description.clone(), entity.icon.clone(), entity.image.clone(), entity.unit.clone()).await?;
             }
             Ok(())
         }
@@ -5843,16 +5614,7 @@ pub mod kit {
                 }
             }
             for entity in &d.added {
-                self.apply_create_design_scoped(
-                    &entity.owner_id,
-                    &entity.id,
-                    entity.name.clone(),
-                    entity.description.clone(),
-                    entity.icon.clone(),
-                    entity.image.clone(),
-                    entity.unit.clone(),
-                )
-                .await?;
+                self.apply_create_design_scoped(&entity.owner_id, &entity.id, entity.name.clone(), entity.description.clone(), entity.icon.clone(), entity.image.clone(), entity.unit.clone()).await?;
             }
             Ok(())
         }
@@ -5867,10 +5629,7 @@ pub mod kit {
             let topo = self.ensure_default_typology().await;
             let blueprint_type = crate::kit::r#type::Type::new(std::sync::Arc::downgrade(&topo), format!("type-{}", blueprint_id.as_str())).await;
             topo.types.write().await.push(blueprint_type.clone());
-            self.type_weak_by_id
-                .write()
-                .await
-                .insert(blueprint_type.id.clone(), Arc::downgrade(&blueprint_type));
+            self.type_weak_by_id.write().await.insert(blueprint_type.id.clone(), Arc::downgrade(&blueprint_type));
             let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
             let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
             piece.set_name(name).await;
@@ -6037,9 +5796,7 @@ pub mod kit {
                         t.concepts.write().await.push(c.clone());
                     }
                 }
-                crate::gql::interfaces::KitGraphParentWeak::Representation(_)
-                | crate::gql::interfaces::KitGraphParentWeak::Connector(_)
-                | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Representation(_) | crate::gql::interfaces::KitGraphParentWeak::Connector(_) | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
                 crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(())
@@ -6084,16 +5841,7 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_create_design_scoped(
-            self: &Arc<Self>,
-            _owner_id: &Id,
-            design_id: &Id,
-            name: String,
-            description: Option<String>,
-            icon: Option<String>,
-            image: Option<String>,
-            unit: Option<String>,
-        ) -> Result<(), crate::error::SemioError> {
+        async fn apply_create_design_scoped(self: &Arc<Self>, _owner_id: &Id, design_id: &Id, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> Result<(), crate::error::SemioError> {
             let design = self.ensure_design(design_id).await;
             *design.name.write().await = name;
             *design.description.write().await = description;
@@ -6103,16 +5851,7 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_create_type_scoped(
-            self: &Arc<Self>,
-            owner_id: &Id,
-            type_id: &Id,
-            name: String,
-            description: Option<String>,
-            icon: Option<String>,
-            image: Option<String>,
-            unit: Option<String>,
-        ) -> Result<(), crate::error::SemioError> {
+        async fn apply_create_type_scoped(self: &Arc<Self>, owner_id: &Id, type_id: &Id, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> Result<(), crate::error::SemioError> {
             if self.type_by_external_id(type_id).await.is_some() {
                 return Err(crate::error::SemioError::invalid(format!("Type already exists: {}", type_id.as_str())));
             }
@@ -6283,13 +6022,7 @@ pub mod kit {
         /// @emoji 📁 Kit-root files for VFS (no folder; excludes representation-only backing blobs).
         pub async fn vfs_kit_root_files(&self) -> Vec<crate::meta::File> {
             let rep_file_ids = self.file_ids_referenced_by_representations().await;
-            self.files
-                .read()
-                .await
-                .iter()
-                .filter(|f| f.folder_id.is_none() && !Self::file_is_hidden_representation_blob(f, &rep_file_ids))
-                .cloned()
-                .collect()
+            self.files.read().await.iter().filter(|f| f.folder_id.is_none() && !Self::file_is_hidden_representation_blob(f, &rep_file_ids)).cloned().collect()
         }
 
         /// @emoji 🧰 Kinds that own a representation referencing the given file.
@@ -6330,12 +6063,7 @@ pub mod kit {
             let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
             let mut out = Vec::new();
             for design in self.has_designs().await.iter() {
-                if design
-                    .references_types_transitive()
-                    .await
-                    .iter()
-                    .any(|t| type_ids.contains(&t.id))
-                {
+                if design.references_types_transitive().await.iter().any(|t| type_ids.contains(&t.id)) {
                     out.push(design.clone());
                 }
             }
@@ -6575,9 +6303,7 @@ pub mod kit {
                         t.concepts.write().await.push(c.clone());
                     }
                 }
-                crate::gql::interfaces::KitGraphParentWeak::Representation(_)
-                | crate::gql::interfaces::KitGraphParentWeak::Connector(_)
-                | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Representation(_) | crate::gql::interfaces::KitGraphParentWeak::Connector(_) | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
                 crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(c)
@@ -6597,9 +6323,7 @@ pub mod kit {
                         t.concepts.write().await.retain(|item| &item.id != concept_id);
                     }
                 }
-                crate::gql::interfaces::KitGraphParentWeak::Representation(_)
-                | crate::gql::interfaces::KitGraphParentWeak::Connector(_)
-                | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Representation(_) | crate::gql::interfaces::KitGraphParentWeak::Connector(_) | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
                 crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             self.concept_by_id.write().await.remove(concept_id);
@@ -6815,27 +6539,13 @@ pub mod kit {
         /// @emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
         #[graphql(name = "hasFolders")]
         pub async fn has_folders(&self) -> crate::gql_relay::FolderConnection {
-            let rows = self
-                .folders
-                .read()
-                .await
-                .iter()
-                .filter(|f| f.parent_folder_id.is_none())
-                .cloned()
-                .collect();
+            let rows = self.folders.read().await.iter().filter(|f| f.parent_folder_id.is_none()).cloned().collect();
             crate::gql_relay::FolderConnection::from_entities(rows)
         }
         /// @emoji 👪 Kit-root families only (not placed in a folder).
         #[graphql(name = "hasFamilies")]
         pub async fn has_families(&self) -> crate::gql_relay::FamilyConnection {
-            let rows = self
-                .families
-                .read()
-                .await
-                .iter()
-                .filter(|f| f.folder_id.is_none())
-                .cloned()
-                .collect();
+            let rows = self.families.read().await.iter().filter(|f| f.folder_id.is_none()).cloned().collect();
             crate::gql_relay::FamilyConnection::from_entities(rows)
         }
         /// @emoji 🏛️ Kit-root typologies only (not placed in a folder).
@@ -8400,7 +8110,11 @@ pub mod vcs {
         }
         pub async fn reasons(&self) -> Vec<String> {
             let r = self.reason.read().await.clone();
-            if r.is_empty() { vec![] } else { vec![r] }
+            if r.is_empty() {
+                vec![]
+            } else {
+                vec![r]
+            }
         }
     }
     //#endregion ⚠️ conflict
@@ -8716,12 +8430,9 @@ pub mod operation {
 
     use crate::error::SemioError;
     use crate::geom::{OffsetInput, PositionInput};
+    use crate::gql::interfaces::{empty_entity_connection, empty_modification_singleton, EntityConnectionInterface, EntityInterface, GqlModificationInterface, PubInputInterface};
     use crate::hash::h;
     use crate::id::Id;
-    use crate::gql::interfaces::{
-        empty_entity_connection, empty_modification_singleton, EntityConnectionInterface, EntityInterface, GqlModificationInterface,
-        PubInputInterface,
-    };
     use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::vcs::Edit;
 
@@ -9397,10 +9108,7 @@ pub mod operation {
                     }
                     if kit.find_concept(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            concepts: Some(ConceptsCollectionDiff {
-                                modified: vec![ConceptModified { concept: IdRef { id: entity_id.clone() }, diff: ConceptPatch { description: description.clone(), ..Default::default() } }],
-                                ..Default::default()
-                            }),
+                            concepts: Some(ConceptsCollectionDiff { modified: vec![ConceptModified { concept: IdRef { id: entity_id.clone() }, diff: ConceptPatch { description: description.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -9641,15 +9349,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            added: vec![DesignAdded {
-                                owner_id: owner_id.clone(),
-                                id: design_id.clone(),
-                                name: name.clone(),
-                                description: description.clone(),
-                                icon: icon.clone(),
-                                image: image.clone(),
-                                unit: unit.clone(),
-                            }],
+                            added: vec![DesignAdded { owner_id: owner_id.clone(), id: design_id.clone(), name: name.clone(), description: description.clone(), icon: icon.clone(), image: image.clone(), unit: unit.clone() }],
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -9667,15 +9367,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         types: Some(TypesCollectionDiff {
-                            added: vec![TypeAdded {
-                                owner_id: owner_id.clone(),
-                                id: type_id.clone(),
-                                name: name.clone(),
-                                description: description.clone(),
-                                icon: icon.clone(),
-                                image: image.clone(),
-                                unit: unit.clone(),
-                            }],
+                            added: vec![TypeAdded { owner_id: owner_id.clone(), id: type_id.clone(), name: name.clone(), description: description.clone(), icon: icon.clone(), image: image.clone(), unit: unit.clone() }],
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -9688,10 +9380,7 @@ pub mod operation {
                     if kit.design_by_external_id(design_id).await.is_none() {
                         return Err(SemioError::not_found("Design", design_id.as_str()));
                     }
-                    Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff { removed: vec![IdRef { id: design_id.clone() }], ..Default::default() }),
-                        ..Default::default()
-                    }))
+                    Ok(KitDiff(CanonicalKitDiff { designs: Some(DesignsCollectionDiff { removed: vec![IdRef { id: design_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
                 Operation::DeleteType { scope, .. } => {
                     let Scope::Type { type_id } = scope else {
@@ -9700,10 +9389,7 @@ pub mod operation {
                     if kit.type_by_external_id(type_id).await.is_none() {
                         return Err(SemioError::not_found("Type", type_id.as_str()));
                     }
-                    Ok(KitDiff(CanonicalKitDiff {
-                        types: Some(TypesCollectionDiff { removed: vec![IdRef { id: type_id.clone() }], ..Default::default() }),
-                        ..Default::default()
-                    }))
+                    Ok(KitDiff(CanonicalKitDiff { types: Some(TypesCollectionDiff { removed: vec![IdRef { id: type_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
                 Operation::CreateFixedPiece { scope, input } => {
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else {
@@ -9848,38 +9534,26 @@ pub mod operation {
                     let folder_placement: Option<Option<Id>> = Some(new_folder_id.clone());
                     if kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            folders: Some(FoldersCollectionDiff {
-                                modified: vec![FolderModified { folder: IdRef { id: entity_id.clone() }, patch: FolderPatch { parent_folder_id: folder_placement } }],
-                                ..Default::default()
-                            }),
+                            folders: Some(FoldersCollectionDiff { modified: vec![FolderModified { folder: IdRef { id: entity_id.clone() }, patch: FolderPatch { parent_folder_id: folder_placement } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.files.read().await.iter().any(|f| f.id == *entity_id) {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            files: Some(FilesCollectionDiff {
-                                modified: vec![FileModified { file: IdRef { id: entity_id.clone() }, patch: FilePatch { folder_id: folder_placement } }],
-                                ..Default::default()
-                            }),
+                            files: Some(FilesCollectionDiff { modified: vec![FileModified { file: IdRef { id: entity_id.clone() }, patch: FilePatch { folder_id: folder_placement } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.families.read().await.iter().any(|f| f.id == *entity_id) {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            families: Some(FamiliesCollectionDiff {
-                                modified: vec![FamilyModified { family: IdRef { id: entity_id.clone() }, patch: FamilyPatch { folder_id: folder_placement } }],
-                                ..Default::default()
-                            }),
+                            families: Some(FamiliesCollectionDiff { modified: vec![FamilyModified { family: IdRef { id: entity_id.clone() }, patch: FamilyPatch { folder_id: folder_placement } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModified {
-                                    design: IdRef { id: entity_id.clone() },
-                                    diff: DesignDiff { scalars: DesignScalarDiff { folder_id: folder_placement, ..Default::default() }, pieces: None },
-                                }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { folder_id: folder_placement, ..Default::default() }, pieces: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -9887,10 +9561,7 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { folder_id: folder_placement, ..Default::default() } }],
-                                ..Default::default()
-                            }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { folder_id: folder_placement, ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -9903,10 +9574,7 @@ pub mod operation {
                     if !kit.folders.read().await.iter().any(|f| f.id == *entity_id) {
                         return Err(SemioError::not_found("Folder", entity_id.as_str()));
                     }
-                    Ok(KitDiff(CanonicalKitDiff {
-                        folders: Some(FoldersCollectionDiff { removed: vec![IdRef { id: entity_id.clone() }], ..Default::default() }),
-                        ..Default::default()
-                    }))
+                    Ok(KitDiff(CanonicalKitDiff { folders: Some(FoldersCollectionDiff { removed: vec![IdRef { id: entity_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
             }
         }
@@ -10111,10 +9779,7 @@ pub mod operation {
                     };
                     let design = ensure_design_entity(kit, design_id).await?;
                     let owner_id = kit.workspace_kit_id().await;
-                    Ok(vec![Operation::CreateDesign {
-                        scope: Scope::CreateDesign { owner_id, design_id: design_id.clone() },
-                        input: entity_scalars_from_design(&design).await,
-                    }])
+                    Ok(vec![Operation::CreateDesign { scope: Scope::CreateDesign { owner_id, design_id: design_id.clone() }, input: entity_scalars_from_design(&design).await }])
                 }
                 Operation::CreateType { scope, .. } => {
                     let Scope::CreateType { type_id, .. } = scope else {
@@ -10128,10 +9793,7 @@ pub mod operation {
                     };
                     let ty = ensure_type_entity(kit, type_id).await?;
                     let owner_id = kit.workspace_kit_id().await;
-                    Ok(vec![Operation::CreateType {
-                        scope: Scope::CreateType { owner_id, type_id: type_id.clone() },
-                        input: entity_scalars_from_type(&ty).await,
-                    }])
+                    Ok(vec![Operation::CreateType { scope: Scope::CreateType { owner_id, type_id: type_id.clone() }, input: entity_scalars_from_type(&ty).await }])
                 }
                 Operation::CreateFolder { scope, .. } => {
                     let Scope::CreateFolder { folder_id, .. } = scope else {
@@ -10211,13 +9873,7 @@ pub mod operation {
     }
 
     async fn entity_scalars_from_design(design: &Arc<crate::kit::design::Design>) -> Input {
-        Input::EntityScalars {
-            name: design.name.read().await.clone(),
-            description: design.description.read().await.clone(),
-            icon: design.icon.read().await.clone(),
-            image: design.image.read().await.clone(),
-            unit: design.unit.read().await.clone(),
-        }
+        Input::EntityScalars { name: design.name.read().await.clone(), description: design.description.read().await.clone(), icon: design.icon.read().await.clone(), image: design.image.read().await.clone(), unit: design.unit.read().await.clone() }
     }
 
     async fn entity_scalars_from_type(ty: &Arc<crate::kit::r#type::Type>) -> Input {
@@ -11726,32 +11382,11 @@ pub mod kit_backbone {
             let z = o.get("z").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
             Ok((x, y, z))
         };
-        let (u, vv) = if let Some(center_o) = v.get("center").filter(|x| !x.is_null()).and_then(|x| x.as_object()) {
-            f2(center_o, "u", "v")
-                .or_else(|_| f2(center_o, "U", "V"))
-                .unwrap_or((0.0, 0.0))
-        } else {
-            (0.0, 0.0)
-        };
+        let (u, vv) = if let Some(center_o) = v.get("center").filter(|x| !x.is_null()).and_then(|x| x.as_object()) { f2(center_o, "u", "v").or_else(|_| f2(center_o, "U", "V")).unwrap_or((0.0, 0.0)) } else { (0.0, 0.0) };
         let plane_o = v.get("plane").and_then(|x| x.as_object());
-        let (ox, oy, oz) = plane_o
-            .and_then(|p| p.get("origin"))
-            .and_then(|x| x.as_object())
-            .map(f3)
-            .transpose()?
-            .unwrap_or((0.0, 0.0, 0.0));
-        let (xx, xy, xz) = plane_o
-            .and_then(|p| p.get("xAxis").or_else(|| p.get("x_axis")))
-            .and_then(|x| x.as_object())
-            .map(f3)
-            .transpose()?
-            .unwrap_or((1.0, 0.0, 0.0));
-        let (yx, yy, yz) = plane_o
-            .and_then(|p| p.get("yAxis").or_else(|| p.get("y_axis")))
-            .and_then(|x| x.as_object())
-            .map(f3)
-            .transpose()?
-            .unwrap_or((0.0, 1.0, 0.0));
+        let (ox, oy, oz) = plane_o.and_then(|p| p.get("origin")).and_then(|x| x.as_object()).map(f3).transpose()?.unwrap_or((0.0, 0.0, 0.0));
+        let (xx, xy, xz) = plane_o.and_then(|p| p.get("xAxis").or_else(|| p.get("x_axis"))).and_then(|x| x.as_object()).map(f3).transpose()?.unwrap_or((1.0, 0.0, 0.0));
+        let (yx, yy, yz) = plane_o.and_then(|p| p.get("yAxis").or_else(|| p.get("y_axis"))).and_then(|x| x.as_object()).map(f3).transpose()?.unwrap_or((0.0, 1.0, 0.0));
         Ok(crate::geom::PositionInput {
             center: crate::geom::CoordinateInput { u, v: vv },
             plane: crate::geom::PlaneInput { origin: crate::geom::PointInput { x: ox, y: oy, z: oz }, x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz }, y_axis: crate::geom::VectorInput { x: yx, y: yy, z: yz } },
@@ -12073,13 +11708,7 @@ pub mod kit_backbone {
                 let ports: Vec<crate::external_adapters::serde_json::Value> = {
                     let mut pj = Vec::new();
                     for port in t.ports.read().await.iter() {
-                        let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
-                            .compatible_with
-                            .read()
-                            .await
-                            .iter()
-                            .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
-                            .collect();
+                        let compat_items: Vec<crate::external_adapters::serde_json::Value> = port.compatible_with.read().await.iter().map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() })).collect();
                         pj.push(crate::external_adapters::serde_json::json!({
                             "id": port.id.as_str(),
                             "label": port.label.read().await.clone(),
@@ -12095,13 +11724,7 @@ pub mod kit_backbone {
                         let cid = c.id.as_str();
                         let cnm = c.name.read().await.clone();
                         let port_json = if let Some(port) = c.port.read().await.clone() {
-                            let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
-                                .compatible_with
-                                .read()
-                                .await
-                                .iter()
-                                .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
-                                .collect();
+                            let compat_items: Vec<crate::external_adapters::serde_json::Value> = port.compatible_with.read().await.iter().map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() })).collect();
                             crate::external_adapters::serde_json::json!({
                                 "id": port.id.as_str(),
                                 "compatiblePorts": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": compat_items },
@@ -12247,16 +11870,10 @@ pub mod kit_backbone {
                 .collect()
         };
         if !folders_items.is_empty() {
-            root.insert(
-                "folders".into(),
-                crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": folders_items }),
-            );
+            root.insert("folders".into(), crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": folders_items }));
         }
         if !files_items.is_empty() {
-            root.insert(
-                "files".into(),
-                crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": files_items }),
-            );
+            root.insert("files".into(), crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": files_items }));
         }
         let typologies_items: Vec<crate::external_adapters::serde_json::Value> = {
             let mut out = Vec::new();
@@ -12281,10 +11898,7 @@ pub mod kit_backbone {
             }
             out
         };
-        root.insert(
-            "typologies".into(),
-            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": typologies_items }),
-        );
+        root.insert("typologies".into(), crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": typologies_items }));
         if let Some(families) = kit.snapshot_families_projection.read().await.clone() {
             root.insert("families".into(), families);
         }
@@ -12295,10 +11909,7 @@ pub mod kit_backbone {
         if let Some(code) = p_json.get("code").and_then(|v| v.as_str()) {
             *port.code.write().await = Some(code.to_string());
         }
-        let label = p_json
-            .get("label")
-            .and_then(|v| v.as_str())
-            .or_else(|| p_json.get("name").and_then(|v| v.as_str()));
+        let label = p_json.get("label").and_then(|v| v.as_str()).or_else(|| p_json.get("name").and_then(|v| v.as_str()));
         if let Some(label) = label {
             *port.label.write().await = Some(label.to_string());
         }
@@ -12308,18 +11919,12 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🧬 Hydrates kit-level family ports (metabolism) into a shared registry for type connector resolution.
-    pub(crate) async fn hydrate_kit_scope_ports_from_snapshot_value(
-        json: &crate::external_adapters::serde_json::Value,
-    ) -> std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>> {
+    pub(crate) async fn hydrate_kit_scope_ports_from_snapshot_value(json: &crate::external_adapters::serde_json::Value) -> std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>> {
         use std::collections::HashMap;
         use std::sync::Arc;
         let mut ports_by_id: HashMap<String, Arc<crate::kit::r#type::Port>> = HashMap::new();
         let owner = std::sync::Weak::<crate::kit::r#type::Type>::new();
-        let families: Vec<crate::external_adapters::serde_json::Value> = json
-            .get("families")
-            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
-            .map(|rows| rows.to_vec())
-            .unwrap_or_default();
+        let families: Vec<crate::external_adapters::serde_json::Value> = json.get("families").and_then(crate::kit_backbone::json_array_or_block_items_ref).map(|rows| rows.to_vec()).unwrap_or_default();
         for fam in &families {
             let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) else {
                 continue;
@@ -12358,44 +11963,23 @@ pub mod kit_backbone {
     }
 
     /// @emoji 📁 Hydrates kit-level folder rows from projection JSON (`name`, `path`, nested `parent`).
-    pub(crate) async fn hydrate_kit_folders_from_snapshot_value(
-        kit: &std::sync::Arc<crate::kit::Kit>,
-        json: &crate::external_adapters::serde_json::Value,
-    ) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_kit_folders_from_snapshot_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
         let mut folders_slot = kit.folders.write().await;
         folders_slot.clear();
-        let folders_list = json
-            .get("folders")
-            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
-            .cloned()
-            .unwrap_or_default();
+        let folders_list = json.get("folders").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
         for folder_json in &folders_list {
             let Some(fid) = crate::kit_backbone::json_entity_id_ref(folder_json) else {
                 continue;
             };
-            let name = folder_json
-                .get("name")
-                .and_then(|v| v.as_str())
-                .unwrap_or(&fid)
-                .to_string();
-            let path = folder_json
-                .get("path")
-                .and_then(|v| v.as_str())
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| name.clone());
+            let name = folder_json.get("name").and_then(|v| v.as_str()).unwrap_or(&fid).to_string();
+            let path = folder_json.get("path").and_then(|v| v.as_str()).filter(|s| !s.is_empty()).map(|s| s.to_string()).unwrap_or_else(|| name.clone());
             folders_slot.push(crate::meta::Folder {
                 id: fid.into(),
                 name,
                 path,
                 description: folder_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 icon: folder_json.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                parent_folder_id: folder_json
-                    .get("parentFolderId")
-                    .or_else(|| folder_json.get("parent_folder_id"))
-                    .and_then(|v| v.as_str())
-                    .or_else(|| folder_json.get("parent").and_then(crate::kit_backbone::json_entity_id_ref))
-                    .map(|s| s.into()),
+                parent_folder_id: folder_json.get("parentFolderId").or_else(|| folder_json.get("parent_folder_id")).and_then(|v| v.as_str()).or_else(|| folder_json.get("parent").and_then(crate::kit_backbone::json_entity_id_ref)).map(|s| s.into()),
                 owner_kit: std::sync::Arc::downgrade(kit),
             });
         }
@@ -12403,17 +11987,10 @@ pub mod kit_backbone {
     }
 
     /// @emoji 📎 Hydrates kit-level file rows from projection JSON (`blob`, `url`, or `blobHash`).
-    pub(crate) async fn hydrate_kit_files_from_snapshot_value(
-        kit: &std::sync::Arc<crate::kit::Kit>,
-        json: &crate::external_adapters::serde_json::Value,
-    ) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_kit_files_from_snapshot_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
         let mut files_slot = kit.files.write().await;
         files_slot.clear();
-        let files_list = json
-            .get("files")
-            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
-            .cloned()
-            .unwrap_or_default();
+        let files_list = json.get("files").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
         for f_json in &files_list {
             let Some(fid) = crate::kit_backbone::json_entity_id_ref(f_json) else {
                 continue;
@@ -12426,12 +12003,7 @@ pub mod kit_backbone {
                 .or_else(|| f_json.get("remote").and_then(|v| v.as_str()))
                 .unwrap_or("")
                 .to_string();
-            let hash = f_json
-                .get("blobHash")
-                .and_then(|v| v.as_str())
-                .or_else(|| f_json.get("hash").and_then(|v| v.as_str()))
-                .unwrap_or("")
-                .to_string();
+            let hash = f_json.get("blobHash").and_then(|v| v.as_str()).or_else(|| f_json.get("hash").and_then(|v| v.as_str())).unwrap_or("").to_string();
             files_slot.push(crate::meta::File {
                 id: fid.into(),
                 name: f_json.get("name").and_then(|v| v.as_str()).unwrap_or(&fid).to_string(),
@@ -12441,12 +12013,7 @@ pub mod kit_backbone {
                 hash,
                 description: f_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 icon: f_json.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                folder_id: f_json
-                    .get("folderId")
-                    .or_else(|| f_json.get("folder_id"))
-                    .and_then(|v| v.as_str())
-                    .or_else(|| f_json.get("folder").and_then(crate::kit_backbone::json_entity_id_ref))
-                    .map(|s| s.into()),
+                folder_id: f_json.get("folderId").or_else(|| f_json.get("folder_id")).and_then(|v| v.as_str()).or_else(|| f_json.get("folder").and_then(crate::kit_backbone::json_entity_id_ref)).map(|s| s.into()),
                 owner_kit: std::sync::Arc::downgrade(kit),
                 created: None,
                 updated: None,
@@ -12500,12 +12067,7 @@ pub mod kit_backbone {
             }
         }
 
-        let lookup_port = |pid: &str| {
-            ports_by_id
-                .get(pid)
-                .cloned()
-                .or_else(|| kit_scope_ports.get(pid).cloned())
-        };
+        let lookup_port = |pid: &str| ports_by_id.get(pid).cloned().or_else(|| kit_scope_ports.get(pid).cloned());
         if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
             for p_json in ports_list {
                 let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
@@ -12536,11 +12098,7 @@ pub mod kit_backbone {
         if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
             for c_json in connectors_list {
                 let Some(cid) = crate::kit_backbone::json_entity_id_ref(c_json) else { continue };
-                let code = c_json
-                    .get("name")
-                    .and_then(|v| v.as_str())
-                    .or_else(|| c_json.get("code").and_then(|v| v.as_str()))
-                    .unwrap_or(cid);
+                let code = c_json.get("name").and_then(|v| v.as_str()).or_else(|| c_json.get("code").and_then(|v| v.as_str())).unwrap_or(cid);
                 let connector = crate::kit::r#type::Connector::new_with_external_id(owner.clone(), cid.into(), code.to_string()).await;
                 if let Some(desc) = c_json.get("description").and_then(|v| v.as_str()) {
                     *connector.description.write().await = desc.to_string();
@@ -12563,17 +12121,8 @@ pub mod kit_backbone {
                 let Some(rid) = crate::kit_backbone::json_entity_id_ref(r_json) else {
                     continue;
                 };
-                let rname = r_json
-                    .get("name")
-                    .and_then(|v| v.as_str())
-                    .or_else(|| r_json.get("code").and_then(|v| v.as_str()))
-                    .unwrap_or(rid);
-                let url = r_json
-                    .get("url")
-                    .and_then(|v| v.as_str())
-                    .or_else(|| r_json.get("uri").and_then(|v| v.as_str()))
-                    .unwrap_or("")
-                    .to_string();
+                let rname = r_json.get("name").and_then(|v| v.as_str()).or_else(|| r_json.get("code").and_then(|v| v.as_str())).unwrap_or(rid);
+                let url = r_json.get("url").and_then(|v| v.as_str()).or_else(|| r_json.get("uri").and_then(|v| v.as_str())).unwrap_or("").to_string();
                 let rep = crate::kit::r#type::Representation::new_with_external_id(owner.clone(), rid.into(), url).await;
                 *rep.name.write().await = rname.to_string();
                 if let Some(desc) = r_json.get("description").and_then(|v| v.as_str()) {
@@ -12584,11 +12133,7 @@ pub mod kit_backbone {
                 }
                 if let Some(file_json) = r_json.get("file") {
                     if let Some(fid) = crate::kit_backbone::json_entity_id_ref(file_json) {
-                        if let Some(kit_arc) = owner
-                            .upgrade()
-                            .and_then(|ty_arc| ty_arc.owner_typology.upgrade())
-                            .and_then(|topo| topo.owner_kit.upgrade())
-                        {
+                        if let Some(kit_arc) = owner.upgrade().and_then(|ty_arc| ty_arc.owner_typology.upgrade()).and_then(|topo| topo.owner_kit.upgrade()) {
                             let files = kit_arc.files.read().await;
                             if let Some(file) = files.iter().find(|f| f.id.as_str() == fid) {
                                 *rep.file.write().await = Some(file.clone());
@@ -12657,10 +12202,7 @@ pub mod kit_backbone {
             nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
             entity_json: &crate::external_adapters::serde_json::Value,
         ) -> std::sync::Arc<crate::gql_relay::Typology> {
-            if let Some(tid) = entity_json
-                .get("typology")
-                .and_then(crate::kit_backbone::json_entity_id_ref)
-            {
+            if let Some(tid) = entity_json.get("typology").and_then(crate::kit_backbone::json_entity_id_ref) {
                 if let Some(found) = kit.typology_by_id(&tid.into()).await {
                     return found;
                 }
@@ -12687,11 +12229,7 @@ pub mod kit_backbone {
             Ok(())
         }
 
-        async fn hydrate_designs_block(
-            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
-            kit: &std::sync::Arc<crate::kit::Kit>,
-            design_arr: &[crate::external_adapters::serde_json::Value],
-        ) -> Result<(), crate::error::SemioError> {
+        async fn hydrate_designs_block(nested_topo: &std::sync::Arc<crate::gql_relay::Typology>, kit: &std::sync::Arc<crate::kit::Kit>, design_arr: &[crate::external_adapters::serde_json::Value]) -> Result<(), crate::error::SemioError> {
             for d in design_arr {
                 let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
                 let owner_topo = resolve_typology_for_entity_json(kit, nested_topo, d).await;
@@ -12707,10 +12245,7 @@ pub mod kit_backbone {
 
         let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned();
         if let Some(topos) = typologies_arr {
-            let mut topo_entries: Vec<(
-                crate::external_adapters::serde_json::Value,
-                std::sync::Arc<crate::gql_relay::Typology>,
-            )> = Vec::new();
+            let mut topo_entries: Vec<(crate::external_adapters::serde_json::Value, std::sync::Arc<crate::gql_relay::Typology>)> = Vec::new();
             for topo_json in &topos {
                 let tid = topo_json.get("id").and_then(|x| x.as_str()).unwrap_or("default-typology");
                 let tnm = topo_json.get("name").and_then(|x| x.as_str()).unwrap_or("Default");
@@ -12764,10 +12299,7 @@ pub mod kit_backbone {
                 }
             };
             let type_id = type_id_raw.into();
-            let ty = kit
-                .type_by_external_id(&type_id)
-                .await
-                .ok_or_else(|| crate::error::SemioError::not_found("Type", type_id.as_str()))?;
+            let ty = kit.type_by_external_id(&type_id).await.ok_or_else(|| crate::error::SemioError::not_found("Type", type_id.as_str()))?;
             let pose = pj.get("pose");
             let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
             let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
@@ -13909,9 +13441,7 @@ pub mod worker {
                 *self.wip_graph.initial_kit.write().await = ini;
             }
             self.wip_graph.invalidate_materialized_cache().await;
-            self.wip_graph
-                .the_kit_workspace_seq
-                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            self.wip_graph.the_kit_workspace_seq.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Ok(())
         }
 
@@ -14026,10 +13556,7 @@ pub mod worker {
                     let Input::Name { name } = input else {
                         return Err(SemioError::invalid("renameKit expects Input::Name"));
                     };
-                    let diff = Diff {
-                        id: Id::new().await,
-                        summary: Some("renameKit".to_string()),
-                    };
+                    let diff = Diff { id: Id::new().await, summary: Some("renameKit".to_string()) };
                     let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_edit: Arc::downgrade(&tx_edit), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
                     let interface = Arc::new(OperationInterface::RenamedKit(op_evt.clone()));
                     graph.op_history.write().await.push(interface.clone());
@@ -14149,22 +13676,15 @@ pub mod gql {
 
         use crate::external_adapters::async_graphql::{Context, Interface, Object, SimpleObject};
 
-        use crate::geom::entity::{Coordinate, Location, Offset, Plane, Place, Point, Position, Vector};
-        use crate::gql_relay::{
-            AuthorConnection, ChangeConnection, CheckpointConnection, CoordinateEdge, EditConnection, LocationEdge, OffsetEdge, PlaneEdge,
-            PointEdge, PositionEdge, VectorEdge,
-        };
+        use crate::geom::entity::{Coordinate, Location, Offset, Place, Plane, Point, Position, Vector};
+        use crate::gql_relay::{AuthorConnection, ChangeConnection, CheckpointConnection, CoordinateEdge, EditConnection, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge};
         use crate::id::Id;
         use crate::meta::Author;
         use crate::timestamp::Timestamp;
 
         /// @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
         #[derive(Interface)]
-        #[graphql(
-            name = "EntityConnection",
-            field(name = "pageInfo", method = "page_info", ty = "&Arc<crate::gql_relay::PageInfo>"),
-            field(name = "hash", ty = "String")
-        )]
+        #[graphql(name = "EntityConnection", field(name = "pageInfo", method = "page_info", ty = "&Arc<crate::gql_relay::PageInfo>"), field(name = "hash", ty = "String"))]
         pub enum EntityConnectionInterface {
             PageInfo(crate::gql_relay::PageInfoConnection),
             Store(crate::gql::StoreConnection),
@@ -14307,12 +13827,7 @@ pub mod gql {
             field(name = "owns", ty = "Option<EntityConnectionInterface>"),
             field(name = "fileSystemParent", method = "file_system_parent", ty = "Option<FileSystemNodeInterface>"),
             field(name = "fileSystemChildren", method = "file_system_children", ty = "FileSystemNodeConnection"),
-            field(
-                name = "fileSystemChild",
-                method = "file_system_child",
-                arg(name = "id", ty = "crate::id::Id"),
-                ty = "Option<FileSystemNodeInterface>"
-            ),
+            field(name = "fileSystemChild", method = "file_system_child", arg(name = "id", ty = "crate::id::Id"), ty = "Option<FileSystemNodeInterface>"),
             field(name = "fileSystemPath", method = "file_system_path", ty = "String"),
             field(name = "fileSystemName", method = "file_system_name", ty = "String"),
             field(name = "isFileSystemRoot", method = "is_file_system_root", ty = "bool"),
@@ -14367,113 +13882,67 @@ pub mod gql {
 
             /// @emoji 📁 Empty VFS child connection when the backing node cannot be resolved.
             pub fn empty_connection() -> FileSystemNodeConnection {
-                FileSystemNodeConnection {
-                    edges: Vec::new(),
-                    page_info: PageInfo::default(),
-                    hash: String::new(),
-                }
+                FileSystemNodeConnection { edges: Vec::new(), page_info: PageInfo::default(), hash: String::new() }
             }
 
             /// @emoji 📁 Resolve the active kit as a VFS node (ignores the `#[Object]` receiver).
-            pub async fn node_for_kit(
-                _kit: &Kit,
-                ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_kit(_kit: &Kit, ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
-                Some(FileSystemNodeInterface::Kit(
-                    rt.wip_graph.mutable_kit.read().await.clone(),
-                ))
+                Some(FileSystemNodeInterface::Kit(rt.wip_graph.mutable_kit.read().await.clone()))
             }
 
             /// @emoji 📁 Resolve a typology as a VFS node from the live kit graph.
-            pub async fn node_for_typology(
-                topo: &crate::gql_relay::Typology,
-                _ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_typology(topo: &crate::gql_relay::Typology, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let kit = topo.owner_kit.upgrade()?;
                 let tops = kit.typologies.read().await;
                 tops.iter().find(|t| t.id == topo.id).cloned().map(FileSystemNodeInterface::Typology)
             }
 
             /// @emoji 📁 Resolve a kind as a VFS node from the live kit graph.
-            pub async fn node_for_type(
-                ty: &crate::kit::r#type::Type,
-                _ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_type(ty: &crate::kit::r#type::Type, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let kit = ty.owner_kit().await?;
                 let types = kit.types_flat().await;
-                types
-                    .iter()
-                    .find(|t| t.id == ty.id)
-                    .cloned()
-                    .map(FileSystemNodeInterface::Type)
+                types.iter().find(|t| t.id == ty.id).cloned().map(FileSystemNodeInterface::Type)
             }
 
             /// @emoji 📁 Resolve a design as a VFS node from its owning kit graph.
-            pub async fn node_for_design(
-                design: &crate::kit::design::Design,
-                _ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_design(design: &crate::kit::design::Design, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let kit = design.owner_kit().await?;
                 let designs = kit.designs_flat().await;
-                designs
-                    .iter()
-                    .find(|d| d.id == design.id)
-                    .cloned()
-                    .map(FileSystemNodeInterface::Design)
+                designs.iter().find(|d| d.id == design.id).cloned().map(FileSystemNodeInterface::Design)
             }
 
             /// @emoji 📁 Resolve a piece as a VFS node from its owning design.
-            pub async fn node_for_piece(
-                piece: &crate::kit::design::piece::Piece,
-                ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_piece(piece: &crate::kit::design::piece::Piece, ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 let kit = rt.wip_graph.mutable_kit.read().await.clone();
                 let design = piece.owner_design.upgrade()?;
                 let designs = kit.designs_flat().await;
                 let design = designs.iter().find(|d| d.id == design.id)?;
                 let pieces = design.pieces.read().await;
-                pieces
-                    .iter()
-                    .find(|p| p.id == piece.id)
-                    .cloned()
-                    .map(FileSystemNodeInterface::Piece)
+                pieces.iter().find(|p| p.id == piece.id).cloned().map(FileSystemNodeInterface::Piece)
             }
 
             /// @emoji 📁 Resolve a connection as a VFS node from its owning design.
-            pub async fn node_for_connection(
-                connection: &crate::kit::design::connection::Connection,
-                ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_connection(connection: &crate::kit::design::connection::Connection, ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 let kit = rt.wip_graph.mutable_kit.read().await.clone();
                 let design = connection.owner_design.upgrade()?;
                 let designs = kit.designs_flat().await;
                 let design = designs.iter().find(|d| d.id == design.id)?;
                 let connections = design.connections.read().await;
-                connections
-                    .iter()
-                    .find(|c| c.id == connection.id)
-                    .cloned()
-                    .map(FileSystemNodeInterface::Connection)
+                connections.iter().find(|c| c.id == connection.id).cloned().map(FileSystemNodeInterface::Connection)
             }
 
             /// @emoji 📁 Resolve a representation as a VFS node from its owning kind.
-            pub async fn node_for_representation(
-                representation: &crate::kit::r#type::Representation,
-                _ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_representation(representation: &crate::kit::r#type::Representation, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let owner = representation.owner_type.upgrade()?;
                 let kit = owner.owner_kit().await?;
                 let types = kit.types_flat().await;
                 let ty = types.iter().find(|t| t.id == owner.id)?.clone();
                 drop(types);
                 let reps = ty.representations.read().await;
-                reps.iter()
-                    .find(|r| r.id == representation.id)
-                    .cloned()
-                    .map(FileSystemNodeInterface::Representation)
+                reps.iter().find(|r| r.id == representation.id).cloned().map(FileSystemNodeInterface::Representation)
             }
 
             /// @emoji 📁 Resolve a port as a VFS node from its owning kind.
@@ -14488,21 +13957,14 @@ pub mod gql {
             }
 
             /// @emoji 📁 Resolve a connector as a VFS node from its owning kind.
-            pub async fn node_for_connector(
-                connector: &crate::kit::r#type::Connector,
-                _ctx: &Context<'_>,
-            ) -> Option<FileSystemNodeInterface> {
+            pub async fn node_for_connector(connector: &crate::kit::r#type::Connector, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let owner = connector.owner_type.upgrade()?;
                 let kit = owner.owner_kit().await?;
                 let types = kit.types_flat().await;
                 let ty = types.iter().find(|t| t.id == owner.id)?.clone();
                 drop(types);
                 let connectors = ty.connectors.read().await;
-                connectors
-                    .iter()
-                    .find(|c| c.id == connector.id)
-                    .cloned()
-                    .map(FileSystemNodeInterface::Connector)
+                connectors.iter().find(|c| c.id == connector.id).cloned().map(FileSystemNodeInterface::Connector)
             }
 
             /// @emoji 📁 Maps a VFS node to its SDL kind discriminant.
@@ -14607,13 +14069,9 @@ pub mod gql {
                     }
                     FileSystemNodeInterface::Piece(p) => p.owner_design.upgrade().map(FileSystemNodeInterface::Design),
                     FileSystemNodeInterface::Connection(c) => c.owner_design.upgrade().map(FileSystemNodeInterface::Design),
-                    FileSystemNodeInterface::Representation(r) => {
-                        r.owner_type.upgrade().map(FileSystemNodeInterface::Type)
-                    }
+                    FileSystemNodeInterface::Representation(r) => r.owner_type.upgrade().map(FileSystemNodeInterface::Type),
                     FileSystemNodeInterface::Port(p) => p.owner_type.upgrade().map(FileSystemNodeInterface::Type),
-                    FileSystemNodeInterface::Connector(c) => {
-                        c.owner_type.upgrade().map(FileSystemNodeInterface::Type)
-                    }
+                    FileSystemNodeInterface::Connector(c) => c.owner_type.upgrade().map(FileSystemNodeInterface::Type),
                 }
             }
 
@@ -14719,11 +14177,7 @@ pub mod gql {
                 let nodes = children_nodes(node).await;
                 let edges: Vec<_> = nodes.into_iter().enumerate().map(|(i, n)| FileSystemNodeEdge { cursor: format!("{i}"), node: n }).collect();
                 let hash = crate::hash::merkle_node_str(&["FileSystemNodeConnection"], Vec::<String>::new());
-                FileSystemNodeConnection {
-                    edges,
-                    page_info: PageInfo { has_next_page: false, has_previous_page: false, start_cursor: None, end_cursor: None },
-                    hash,
-                }
+                FileSystemNodeConnection { edges, page_info: PageInfo { has_next_page: false, has_previous_page: false, start_cursor: None, end_cursor: None }, hash }
             }
 
             pub async fn child(node: &FileSystemNodeInterface, id: &Id) -> Option<FileSystemNodeInterface> {
@@ -14837,10 +14291,7 @@ pub mod gql {
                             let base = Box::pin(path_inner(&FileSystemNodeInterface::Type(ty))).await;
                             let label = p.label.read().await.clone();
                             let code = p.code.read().await.clone();
-                            let segment = label
-                                .filter(|s| !s.is_empty())
-                                .or(code)
-                                .unwrap_or_else(|| p.id.as_str().to_string());
+                            let segment = label.filter(|s| !s.is_empty()).or(code).unwrap_or_else(|| p.id.as_str().to_string());
                             join_path(&base, segment.as_str())
                         } else {
                             String::new()
@@ -14873,10 +14324,7 @@ pub mod gql {
                     FileSystemNodeInterface::Port(p) => {
                         let label = p.label.read().await.clone();
                         let code = p.code.read().await.clone();
-                        label
-                            .filter(|s| !s.is_empty())
-                            .or(code)
-                            .unwrap_or_else(|| p.id.as_str().to_string())
+                        label.filter(|s| !s.is_empty()).or(code).unwrap_or_else(|| p.id.as_str().to_string())
                     }
                     FileSystemNodeInterface::Connector(c) => c.name.read().await.clone(),
                 }
@@ -15019,11 +14467,7 @@ pub mod gql {
         impl ModificationConnection {
             /// @emoji 🪢 Empty `ModificationConnection` for aggregate `Modifications.modifications`.
             pub fn empty_shell() -> Self {
-                Self {
-                    edges: Vec::new(),
-                    page_info: Arc::new(crate::gql_relay::PageInfo::default()),
-                    hash: crate::hash::h(&["modification-connection", "empty"]),
-                }
+                Self { edges: Vec::new(), page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["modification-connection", "empty"]) }
             }
         }
 
@@ -15136,10 +14580,7 @@ pub mod gql {
 
         impl VectorDiff {
             pub async fn compute_hash(&self) -> String {
-                crate::hash::merkle_node_str(
-                    &["VectorDiff", self.id.as_str(), &format!("{:?}", self.x), &format!("{:?}", self.y), &format!("{:?}", self.z)],
-                    Vec::new(),
-                )
+                crate::hash::merkle_node_str(&["VectorDiff", self.id.as_str(), &format!("{:?}", self.x), &format!("{:?}", self.y), &format!("{:?}", self.z)], Vec::new())
             }
         }
 
@@ -15181,12 +14622,7 @@ pub mod gql {
 
         impl Default for VectorModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Vector::default()),
-                    diff: Arc::new(VectorDiff::default()),
-                    after: Arc::new(Vector::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Vector::default()), diff: Arc::new(VectorDiff::default()), after: Arc::new(Vector::default()) }
             }
         }
 
@@ -15276,10 +14712,7 @@ pub mod gql {
 
         impl PointDiff {
             pub async fn compute_hash(&self) -> String {
-                crate::hash::merkle_node_str(
-                    &["PointDiff", self.id.as_str(), &format!("{:?}", self.x), &format!("{:?}", self.y), &format!("{:?}", self.z)],
-                    Vec::new(),
-                )
+                crate::hash::merkle_node_str(&["PointDiff", self.id.as_str(), &format!("{:?}", self.x), &format!("{:?}", self.y), &format!("{:?}", self.z)], Vec::new())
             }
         }
 
@@ -15320,12 +14753,7 @@ pub mod gql {
 
         impl Default for PointModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Point::default()),
-                    diff: Arc::new(PointDiff::default()),
-                    after: Arc::new(Point::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Point::default()), diff: Arc::new(PointDiff::default()), after: Arc::new(Point::default()) }
             }
         }
 
@@ -15451,12 +14879,7 @@ pub mod gql {
 
         impl Default for CoordinateModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Coordinate::default()),
-                    diff: Arc::new(CoordinateDiff::default()),
-                    after: Arc::new(Coordinate::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Coordinate::default()), diff: Arc::new(CoordinateDiff::default()), after: Arc::new(Coordinate::default()) }
             }
         }
 
@@ -15582,12 +15005,7 @@ pub mod gql {
 
         impl Default for OffsetModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Offset::default()),
-                    diff: Arc::new(OffsetDiff::default()),
-                    after: Arc::new(Offset::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Offset::default()), diff: Arc::new(OffsetDiff::default()), after: Arc::new(Offset::default()) }
             }
         }
 
@@ -15730,12 +15148,7 @@ pub mod gql {
 
         impl Default for PlaneModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Plane::default()),
-                    diff: Arc::new(PlaneDiff::default()),
-                    after: Arc::new(Plane::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Plane::default()), diff: Arc::new(PlaneDiff::default()), after: Arc::new(Plane::default()) }
             }
         }
 
@@ -15869,12 +15282,7 @@ pub mod gql {
 
         impl Default for PositionModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Position::default()),
-                    diff: Arc::new(PositionDiff::default()),
-                    after: Arc::new(Position::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Position::default()), diff: Arc::new(PositionDiff::default()), after: Arc::new(Position::default()) }
             }
         }
 
@@ -15963,16 +15371,7 @@ pub mod gql {
 
         impl LocationDiff {
             pub async fn compute_hash(&self) -> String {
-                crate::hash::merkle_node_str(
-                    &[
-                        "LocationDiff",
-                        self.id.as_str(),
-                        &format!("{:?}", self.longitude),
-                        &format!("{:?}", self.latitude),
-                        &format!("{:?}", self.altitude),
-                    ],
-                    Vec::new(),
-                )
+                crate::hash::merkle_node_str(&["LocationDiff", self.id.as_str(), &format!("{:?}", self.longitude), &format!("{:?}", self.latitude), &format!("{:?}", self.altitude)], Vec::new())
             }
         }
 
@@ -16013,12 +15412,7 @@ pub mod gql {
 
         impl Default for LocationModification {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    before: Arc::new(Location::default()),
-                    diff: Arc::new(LocationDiff::default()),
-                    after: Arc::new(Location::default()),
-                }
+                Self { id: Id::default(), before: Arc::new(Location::default()), diff: Arc::new(LocationDiff::default()), after: Arc::new(Location::default()) }
             }
         }
 
@@ -16147,11 +15541,7 @@ pub mod gql {
                 GqlDiffInterface::Stub(Arc::new(GqlEmptyDiff { id: self.id.clone() }))
             }
             async fn after(&self) -> EntityInterface {
-                EntityInterface::RemoteProvider(Arc::new(crate::gql::RemoteProvider {
-                    id: Id::default(),
-                    uri: String::new(),
-                    url: String::new(),
-                }))
+                EntityInterface::RemoteProvider(Arc::new(crate::gql::RemoteProvider { id: Id::default(), uri: String::new(), url: String::new() }))
             }
         }
 
@@ -16547,11 +15937,7 @@ pub mod gql {
 
         /// @emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
         #[derive(Clone, Interface)]
-        #[graphql(
-            name = "BackboneCommand",
-            field(name = "detach", ty = "crate::operation::ResponseInterface"),
-            field(name = "sync", ty = "crate::operation::ResponseInterface")
-        )]
+        #[graphql(name = "BackboneCommand", field(name = "detach", ty = "crate::operation::ResponseInterface"), field(name = "sync", ty = "crate::operation::ResponseInterface"))]
         pub enum BackboneCommandInterface {
             File(Arc<FileBackboneCommand>),
             Websocket(Arc<WebsocketBackboneCommand>),
@@ -16568,9 +15954,7 @@ pub mod gql {
                     return crate::operation::CommandResponse::fail_msg("no runtime").await.into();
                 };
                 let request_id = Id::new().await;
-                rt.dispatch_wip_wait(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() })
-                    .await
-                    .into()
+                rt.dispatch_wip_wait(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() }).await.into()
             }
             async fn sync(&self, ctx: &Context<'_>) -> crate::operation::ResponseInterface {
                 let _ = ctx;
@@ -16589,9 +15973,7 @@ pub mod gql {
                     return crate::operation::CommandResponse::fail_msg("no runtime").await.into();
                 };
                 let request_id = Id::new().await;
-                rt.dispatch_wip_wait(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() })
-                    .await
-                    .into()
+                rt.dispatch_wip_wait(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() }).await.into()
             }
             async fn sync(&self, ctx: &Context<'_>) -> crate::operation::ResponseInterface {
                 let _ = ctx;
@@ -16830,11 +16212,7 @@ pub mod gql {
                 child_hashes.push(p.id.as_str().to_string());
             }
             let hash = crate::hash::merkle_collection(child_hashes);
-            let edges = providers
-                .into_iter()
-                .enumerate()
-                .map(|(i, node)| RemoteProviderEdge { cursor: crate::gql_relay::edge_cursor(i), node })
-                .collect();
+            let edges = providers.into_iter().enumerate().map(|(i, node)| RemoteProviderEdge { cursor: crate::gql_relay::edge_cursor(i), node }).collect();
             Self { edges, page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash }
         }
 
@@ -17024,13 +16402,7 @@ pub mod gql {
         async fn start(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let _ = rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
-            let sid = rt
-                .sessions
-                .read()
-                .await
-                .first()
-                .map(|s| s.id.clone())
-                .ok_or_else(|| crate::external_adapters::async_graphql::Error::new("no session"))?;
+            let sid = rt.sessions.read().await.first().map(|s| s.id.clone()).ok_or_else(|| crate::external_adapters::async_graphql::Error::new("no session"))?;
             Ok(crate::operation::CommandResponse::ok_id(sid).await.into())
         }
 
@@ -17222,13 +16594,7 @@ pub mod gql {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let entity_id = kit.workspace_kit_id().await;
-            Ok(dispatch_unsaved_kit_operation(
-                rt,
-                &self.change_id,
-                crate::operation::Operation::ChangeDescription { scope: Scope::Entity { entity_id }, input: Input::Description { description: Some(new_description) } },
-            )
-            .await
-            .into())
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::ChangeDescription { scope: Scope::Entity { entity_id }, input: Input::Description { description: Some(new_description) } }).await.into())
         }
 
         #[graphql(name = "createTag")]
@@ -17317,7 +16683,16 @@ pub mod gql {
         }
 
         #[graphql(name = "createQuality")]
-        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_quality(
+            &self,
+            ctx: &Context<'_>,
+            key: String,
+            value: Option<String>,
+            unit: Option<String>,
+            definition: Option<String>,
+            description: Option<String>,
+            icon: Option<String>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17363,7 +16738,15 @@ pub mod gql {
         }
 
         #[graphql(name = "createType")]
-        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_type(
+            &self,
+            ctx: &Context<'_>,
+            name: String,
+            description: Option<String>,
+            icon: Option<String>,
+            image: Option<String>,
+            unit: Option<String>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17379,10 +16762,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateType {
-                    scope: Scope::CreateType { owner_id, type_id },
-                    input: Input::EntityScalars { name, description, icon, image, unit },
-                },
+                operation: crate::operation::Operation::CreateType { scope: Scope::CreateType { owner_id, type_id }, input: Input::EntityScalars { name, description, icon, image, unit } },
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17411,7 +16791,15 @@ pub mod gql {
         }
 
         #[graphql(name = "createDesign")]
-        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_design(
+            &self,
+            ctx: &Context<'_>,
+            name: String,
+            description: Option<String>,
+            icon: Option<String>,
+            image: Option<String>,
+            unit: Option<String>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17427,10 +16815,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateDesign {
-                    scope: Scope::CreateDesign { owner_id, design_id },
-                    input: Input::EntityScalars { name, description, icon, image, unit },
-                },
+                operation: crate::operation::Operation::CreateDesign { scope: Scope::CreateDesign { owner_id, design_id }, input: Input::EntityScalars { name, description, icon, image, unit } },
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17460,29 +16845,15 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateFolder {
-                    scope: Scope::CreateFolder { owner_id, folder_id },
-                    input: Input::CreateFolder { name, path, description, icon, parent_folder_id },
-                },
+                operation: crate::operation::Operation::CreateFolder { scope: Scope::CreateFolder { owner_id, folder_id }, input: Input::CreateFolder { name, path, description, icon, parent_folder_id } },
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
         #[graphql(name = "moveToFolder")]
-        async fn move_to_folder(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "nodeId")] node_id: Id,
-            #[graphql(name = "folderId")] folder_id: Option<Id>,
-        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn move_to_folder(&self, ctx: &Context<'_>, #[graphql(name = "nodeId")] node_id: Id, #[graphql(name = "folderId")] folder_id: Option<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            Ok(dispatch_unsaved_kit_operation(
-                rt,
-                &self.change_id,
-                crate::operation::Operation::MoveToFolder { scope: Scope::Entity { entity_id: node_id }, input: Input::MoveToFolder { folder_id } },
-            )
-            .await
-            .into())
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::MoveToFolder { scope: Scope::Entity { entity_id: node_id }, input: Input::MoveToFolder { folder_id } }).await.into())
         }
 
         async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationInput {
@@ -17519,27 +16890,14 @@ pub mod gql {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            Ok(dispatch_unsaved_kit_operation(
-                rt,
-                &self.change_id,
-                crate::operation::Operation::RenameTag { scope: Scope::Tag { tag_id: self.tag_id.clone() }, input: Input::Name { name: new_name } },
-            )
-            .await
-            .into())
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::RenameTag { scope: Scope::Tag { tag_id: self.tag_id.clone() }, input: Input::Name { name: new_name } }).await.into())
         }
         #[graphql(name = "changeDescription")]
         async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            Ok(dispatch_unsaved_kit_operation(
-                rt,
-                &self.change_id,
-                crate::operation::Operation::ChangeDescription {
-                    scope: Scope::Entity { entity_id: self.tag_id.clone() },
-                    input: Input::Description { description: Some(new_description) },
-                },
-            )
-            .await
-            .into())
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::ChangeDescription { scope: Scope::Entity { entity_id: self.tag_id.clone() }, input: Input::Description { description: Some(new_description) } })
+                .await
+                .into())
         }
         #[graphql(name = "changeIcon")]
         async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
@@ -17578,16 +16936,9 @@ pub mod gql {
         #[graphql(name = "changeDescription")]
         async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            Ok(dispatch_unsaved_kit_operation(
-                rt,
-                &self.change_id,
-                crate::operation::Operation::ChangeDescription {
-                    scope: Scope::Entity { entity_id: self.concept_id.clone() },
-                    input: Input::Description { description: Some(new_description) },
-                },
-            )
-            .await
-            .into())
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::ChangeDescription { scope: Scope::Entity { entity_id: self.concept_id.clone() }, input: Input::Description { description: Some(new_description) } })
+                .await
+                .into())
         }
         #[graphql(name = "changeIcon")]
         async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
@@ -17688,7 +17039,15 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "createPort")]
-        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_port(
+            &self,
+            ctx: &Context<'_>,
+            code: Option<String>,
+            label: Option<String>,
+            description: Option<String>,
+            icon: Option<String>,
+            order: Option<i32>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, label, description, icon, order);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -17706,7 +17065,14 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addConnector")]
-        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_connector(
+            &self,
+            ctx: &Context<'_>,
+            code: String,
+            description: Option<String>,
+            icon: Option<String>,
+            #[graphql(name = "portId")] port_id: Option<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, description, icon, port_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -17832,7 +17198,14 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_fixed_piece(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "blueprintId")] blueprint_id: Id,
+            position: PositionInput,
+            name: Option<String>,
+            description: Option<String>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17902,7 +17275,12 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "deletePiecesAndConnections")]
-        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_pieces_and_connections(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "pieceIds")] piece_ids: Vec<Id>,
+            #[graphql(name = "connectionIds")] connection_ids: Vec<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, piece_ids, connection_ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -18292,10 +17670,7 @@ pub mod gql {
             .register_input_type::<crate::geom::PlaneInput>()
             .register_input_type::<crate::geom::PositionInput>()
             .register_input_type::<crate::geom::LocationInput>();
-        let builder = crate::with_gap_surface_family_names!(
-            register_gap_surface_family_connections,
-            builder
-        );
+        let builder = crate::with_gap_surface_family_names!(register_gap_surface_family_connections, builder);
         let builder = builder
             .register_output_type::<crate::schema_gap_surfaces::GapChangedDescriptionInputConnection>()
             .register_output_type::<crate::schema_gap_surfaces::GapClumpConnection>()
@@ -18305,11 +17680,7 @@ pub mod gql {
             .register_output_type::<crate::schema_gap_surfaces::GapKitDiffConnection>()
             .register_output_type::<crate::schema_gap_surfaces::GapRenamedKitInputConnection>()
             .register_output_type::<crate::schema_gap_surfaces::GapVersionConnection>();
-        crate::with_gap_surface_existing_relay_names!(
-            register_gap_surface_existing_relay_connections,
-            builder
-        )
-        .finish()
+        crate::with_gap_surface_existing_relay_names!(register_gap_surface_existing_relay_connections, builder).finish()
     }
 
     fn is_non_golden_sdl_type(name: &str) -> bool {
@@ -18418,11 +17789,7 @@ pub mod gql {
     pub fn graphql_request_from_json_str(body: &str) -> Result<crate::external_adapters::async_graphql::Request, crate::error::SemioError> {
         use crate::external_adapters::async_graphql::Variables;
         let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(body).map_err(|e| crate::error::SemioError::invalid(format!("graphql json: {e}")))?;
-        let query = v
-            .get("query")
-            .and_then(|x| x.as_str())
-            .ok_or_else(|| crate::error::SemioError::invalid("graphql json: missing query"))?
-            .to_string();
+        let query = v.get("query").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("graphql json: missing query"))?.to_string();
         let mut req = crate::external_adapters::async_graphql::Request::new(query);
         if let Some(vars) = v.get("variables") {
             if !vars.is_null() {
@@ -18461,9 +17828,7 @@ pub mod wasm_bridge {
         if u.is_empty() || u == "dev://empty" {
             return Ok(ParentStore::spawn().await);
         }
-        Err(crate::error::SemioError::invalid(
-            "KitStoreHandle.create: use dev://empty only; seed kit JSON via GraphQL StoreCommand.installProjection",
-        ))
+        Err(crate::error::SemioError::invalid("KitStoreHandle.create: use dev://empty only; seed kit JSON via GraphQL StoreCommand.installProjection"))
     }
 
     fn graphql_execute_request_from_str(s: &str) -> Result<Request, JsValue> {
@@ -18598,7 +17963,6 @@ pub mod kit_store_comprehensive_e2e {
 
     use crate::gql::{build_schema_for, AppSchema};
 
-
     /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `semio/asset/semio/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/semio");
@@ -18611,7 +17975,7 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-/// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.semio.json`) under `semio/asset/semio/`.
+    /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.semio.json`) under `semio/asset/semio/`.
     pub fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/semio/kit-store.comprehensive.semio.json");
         if path.is_file() {
@@ -18630,19 +17994,13 @@ pub mod kit_store_comprehensive_e2e {
     }
 
     pub fn kit_store_json_pointer_get<'a>(v: &'a crate::external_adapters::serde_json::Value, pointer: &str) -> Option<&'a crate::external_adapters::serde_json::Value> {
-        let p = if pointer.starts_with('/') {
-            pointer.to_string()
-        } else {
-            format!("/{}", pointer.replace('.', "/"))
-        };
+        let p = if pointer.starts_with('/') { pointer.to_string() } else { format!("/{}", pointer.replace('.', "/")) };
         v.pointer(&p)
     }
 
     /// @emoji 🪢 Reads a fixture capture scalar from a JSON leaf (`string` or `{ "value": "…" }` IdResult shape).
     pub fn kit_store_capture_scalar(v: &crate::external_adapters::serde_json::Value) -> Option<String> {
-        v.as_str()
-            .map(str::to_string)
-            .or_else(|| v.get("value").and_then(|inner| inner.as_str()).map(str::to_string))
+        v.as_str().map(str::to_string).or_else(|| v.get("value").and_then(|inner| inner.as_str()).map(str::to_string))
     }
 
     async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &crate::external_adapters::serde_json::Value, engine: &str) {
@@ -18662,9 +18020,7 @@ pub mod kit_store_comprehensive_e2e {
                     let position = crate::kit_backbone::position_input_from_json(&input["position"]).expect("position from golden json");
                     let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
                     let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
-                    g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description)
-                        .await
-                        .expect("apply createFixedPiece");
+                    g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
                 }
                 "kit_graph_engine" => {
                     let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
@@ -18721,10 +18077,8 @@ pub mod kit_store_comprehensive_e2e {
         let data = res.data.into_json().unwrap();
         if let Some(captures) = step.get("capture").and_then(|c| c.as_object()) {
             for (name, pointer) in captures {
-                let node = kit_store_json_pointer_get(&data, pointer.as_str().expect("capture pointer"))
-                    .unwrap_or_else(|| panic!("capture pointer {:?} in step {:?}", pointer, step["id"]));
-                let got = kit_store_capture_scalar(node)
-                    .unwrap_or_else(|| panic!("capture value {:?} at {:?} in step {:?}", node, pointer, step["id"]));
+                let node = kit_store_json_pointer_get(&data, pointer.as_str().expect("capture pointer")).unwrap_or_else(|| panic!("capture pointer {:?} in step {:?}", pointer, step["id"]));
+                let got = kit_store_capture_scalar(node).unwrap_or_else(|| panic!("capture value {:?} at {:?} in step {:?}", node, pointer, step["id"]));
                 vars.insert(name.clone(), got);
             }
         }
@@ -18736,18 +18090,13 @@ pub mod kit_store_comprehensive_e2e {
         }
         if let Some(empty) = step.get("expectArrayEmpty").and_then(|a| a.as_array()) {
             for pointer in empty {
-                let arr = kit_store_json_pointer_get(&data, pointer.as_str().expect("pointer"))
-                    .and_then(|v| v.as_array())
-                    .expect("array");
+                let arr = kit_store_json_pointer_get(&data, pointer.as_str().expect("pointer")).and_then(|v| v.as_array()).expect("array");
                 assert!(arr.is_empty(), "step {} expected empty {}", step["id"], pointer);
             }
         }
         if let Some(min_lens) = step.get("expectArrayMinLen").and_then(|o| o.as_object()) {
             for (pointer, min) in min_lens {
-                let len = kit_store_json_pointer_get(&data, pointer)
-                    .and_then(|v| v.as_array())
-                    .map(|a| a.len())
-                    .unwrap_or(0);
+                let len = kit_store_json_pointer_get(&data, pointer).and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
                 assert!(len >= min.as_u64().expect("min") as usize, "step {} min len {}", step["id"], pointer);
             }
         }
@@ -18760,9 +18109,7 @@ pub mod kit_store_comprehensive_e2e {
             for (pointer, spec) in relay_contains {
                 let field = spec["field"].as_str().expect("relay contains field");
                 let want = spec["value"].as_str().expect("relay contains value");
-                let edges = kit_store_json_pointer_get(&data, pointer)
-                    .and_then(|v| v.as_array())
-                    .unwrap_or_else(|| panic!("expectRelayContains edges {:?}", pointer));
+                let edges = kit_store_json_pointer_get(&data, pointer).and_then(|v| v.as_array()).unwrap_or_else(|| panic!("expectRelayContains edges {:?}", pointer));
                 let hit = edges.iter().any(|e| e.pointer("/node").and_then(|n| n.get(field)).and_then(|v| v.as_str()) == Some(want));
                 assert!(hit, "step {} expectRelayContains {:?} field={field} value={want}", step["id"], pointer);
             }
@@ -18916,7 +18263,6 @@ pub mod kit_store_comprehensive_e2e {
 
 //#endregion 📋 kit_store_comprehensive_e2e
 
-
 //#region 🧪 tests
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -18939,20 +18285,9 @@ mod tests {
             if line.starts_with('#') || line.is_empty() {
                 continue;
             }
-            for (kw, kind) in [
-                ("type ", "type"),
-                ("interface ", "interface"),
-                ("union ", "union"),
-                ("input ", "input"),
-                ("enum ", "enum"),
-                ("scalar ", "scalar"),
-            ] {
+            for (kw, kind) in [("type ", "type"), ("interface ", "interface"), ("union ", "union"), ("input ", "input"), ("enum ", "enum"), ("scalar ", "scalar")] {
                 if let Some(rest) = line.strip_prefix(kw) {
-                    let name = rest
-                        .split(|c: char| c.is_whitespace() || c == '{' || c == '(' || c == '&')
-                        .find(|s| !s.is_empty())
-                        .unwrap_or("")
-                        .to_string();
+                    let name = rest.split(|c: char| c.is_whitespace() || c == '{' || c == '(' || c == '&').find(|s| !s.is_empty()).unwrap_or("").to_string();
                     if !name.is_empty() {
                         out.insert((kind.to_string(), name));
                     }
@@ -18974,7 +18309,6 @@ mod tests {
             None
         }
     }
-
 
     use crate::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path;
 
@@ -19025,17 +18359,9 @@ mod tests {
         let gen_keys = collect_schema_decl_keys(&from_fn);
         let missing: Vec<_> = golden_keys.difference(&gen_keys).cloned().collect();
         if std::env::var("SEMIO_GOLDEN_STRICT").ok().as_deref() == Some("1") {
-            assert!(
-                missing.is_empty(),
-                "generated SDL must structurally cover golden (missing {} top-level declarations). Sample: {:?}",
-                missing.len(),
-                missing.iter().take(40).collect::<Vec<_>>()
-            );
+            assert!(missing.is_empty(), "generated SDL must structurally cover golden (missing {} top-level declarations). Sample: {:?}", missing.len(), missing.iter().take(40).collect::<Vec<_>>());
         } else if !missing.is_empty() {
-            eprintln!(
-                "[DEBUG] golden structural gap: {} top-level declarations missing from gql::sdl() (export SEMIO_GOLDEN_STRICT=1 to fail tests on this)",
-                missing.len()
-            );
+            eprintln!("[DEBUG] golden structural gap: {} top-level declarations missing from gql::sdl() (export SEMIO_GOLDEN_STRICT=1 to fail tests on this)", missing.len());
         }
     }
 
@@ -19058,18 +18384,10 @@ mod tests {
 
     /// @emoji 🌱 Opens an unsaved kit change via golden `Mutation.session.store.theKit.startNewChange` (see `schema.golden.graphql` Commands block).
     async fn graphql_start_new_change(schema: &AppSchema) -> String {
-        let mutation = format!(
-            r#"mutation {{ session {{ store(id: "test-store") {{ theKit {{ startNewChange {} }} }} }} }}"#,
-            GQL_RESPONSE_ID
-        );
+        let mutation = format!(r#"mutation {{ session {{ store(id: "test-store") {{ theKit {{ startNewChange {} }} }} }} }}"#, GQL_RESPONSE_ID);
         let res = schema.execute(Request::new(mutation)).await;
         assert!(res.errors.is_empty(), "startNewChange: {:?}", res.errors);
-        res.data
-            .into_json()
-            .unwrap()["session"]["store"]["theKit"]["startNewChange"]["result"]["value"]
-            .as_str()
-            .expect("change id")
-            .to_string()
+        res.data.into_json().unwrap()["session"]["store"]["theKit"]["startNewChange"]["result"]["value"].as_str().expect("change id").to_string()
     }
 
     /// @emoji 🌱 GraphQL tests open a target-schema unsaved change; the internal draft anchor stays hidden.
@@ -19193,11 +18511,7 @@ mod tests {
             assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
             let cp_initial = vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
             assert_eq!(cp_initial, "the kit", "checkpoint.initial must not alias live rename");
-            assert_eq!(
-                vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["kit"]["name"].as_str(),
-                Some("Hello Bundle"),
-                "checkpoint.kit matches golden Workspace.kit-style materialization at wip parent anchor"
-            );
+            assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["kit"]["name"].as_str(), Some("Hello Bundle"), "checkpoint.kit matches golden Workspace.kit-style materialization at wip parent anchor");
 
             g.abort_transaction(&ws_a, &tx_a.id).await.expect("abort");
             let res = schema_a.execute(q_baseline).await;
@@ -19253,18 +18567,10 @@ mod tests {
     fn create_alternative_from_tip_graphql() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let m = format!(
-                r#"mutation($n: String!) {{ session {{ store(id: "test-store") {{ startAlternative(name: $n) {} }} }} }}"#,
-                GQL_RESPONSE_ID
-            );
+            let m = format!(r#"mutation($n: String!) {{ session {{ store(id: "test-store") {{ startAlternative(name: $n) {} }} }} }}"#, GQL_RESPONSE_ID);
             let res = schema.execute(Request::new(m).variables(Variables::from_value(crate::external_adapters::async_graphql::value!({ "n": "branch-a" })))).await;
             assert!(res.errors.is_empty(), "startAlternative errors: {:?}", res.errors);
-            let id: String = res.data
-                .into_json()
-                .unwrap()["session"]["store"]["startAlternative"]["result"]["value"]
-                .as_str()
-                .expect("alt id")
-                .to_string();
+            let id: String = res.data.into_json().unwrap()["session"]["store"]["startAlternative"]["result"]["value"].as_str().expect("alt id").to_string();
 
             let q = r#"{ store { wip { alternatives { edges { node { id name } } } } } }"#;
             let res = schema.execute(q).await;
@@ -19283,13 +18589,8 @@ mod tests {
             g.ensure_default_checkpoint_for_the_kit().await;
             let ws = g.id.clone();
             let tx = g.open_transaction(&ws).await;
-            let forward = crate::operation::Operation::RenameKit {
-                scope: crate::operation::Scope::Kit,
-                input: crate::operation::Input::Name { name: "record-id-kit".into() },
-            };
-            g.record_operation_in_open_transaction(&ws, &tx.id, forward, vec![])
-                .await
-                .expect("record operation");
+            let forward = crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "record-id-kit".into() } };
+            g.record_operation_in_open_transaction(&ws, &tx.id, forward, vec![]).await.expect("record operation");
             let change = tx.changes.read().await.last().expect("change").clone();
             let ids = change.forward_record_ids.read().await.clone();
             assert_eq!(ids.len(), 1);
@@ -19456,12 +18757,7 @@ mod tests {
             assert!(res.errors.is_empty(), "tags query: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
             let edges = data["store"]["wip"]["theKit"]["kit"]["tags"]["edges"].as_array().expect("tag edges");
-            let tag_id = edges
-                .iter()
-                .find(|e| e["node"]["name"].as_str() == Some("tag-to-delete"))
-                .and_then(|e| e["node"]["id"].as_str())
-                .expect("tag-to-delete id")
-                .to_string();
+            let tag_id = edges.iter().find(|e| e["node"]["name"].as_str() == Some("tag-to-delete")).and_then(|e| e["node"]["id"].as_str()).expect("tag-to-delete id").to_string();
             let delete_m = format!(
                 r#"mutation($tx: ID!, $id: ID!) {{
                     session {{
@@ -19666,12 +18962,7 @@ mod tests {
             assert!(design_d2["referencesTypes"]["edges"].as_array().unwrap().is_empty());
             assert_eq!(design_d2["referencesDesigns"]["edges"][0]["node"]["id"], "design-3");
             assert_eq!(design_d2["referencesTypesTransitive"]["edges"][0]["node"]["id"], "type-1");
-            let all_design_ids: Vec<_> = design_d2["referencesDesignsTransitive"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|e| e["node"]["id"].as_str().unwrap())
-                .collect();
+            let all_design_ids: Vec<_> = design_d2["referencesDesignsTransitive"]["edges"].as_array().unwrap().iter().map(|e| e["node"]["id"].as_str().unwrap()).collect();
             assert!(all_design_ids.contains(&"design-3"));
             assert!(all_design_ids.contains(&"design-1"));
             assert_eq!(design_d2["referencesFilesTransitive"]["edges"][0]["node"]["id"], "file-1");
@@ -19687,24 +18978,12 @@ mod tests {
             assert_eq!(kit_json["type"]["representation"]["hasTypes"]["edges"][0]["node"]["id"], "type-1");
             assert_eq!(kit_json["type"]["representation"]["referencesFiles"]["edges"][0]["node"]["id"], "file-1");
             assert_eq!(kit_json["type"]["representation"]["referencedByDesigns"]["edges"].as_array().unwrap().len(), 2);
-            assert!(kit_json["type"]["representation"]["referencedByDesignsTransitive"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|e| e["node"]["id"] == "design-2"));
+            assert!(kit_json["type"]["representation"]["referencedByDesignsTransitive"]["edges"].as_array().unwrap().iter().any(|e| e["node"]["id"] == "design-2"));
             assert_eq!(kit_json["type"]["referencedBy"]["edges"].as_array().unwrap().len(), 2);
-            assert!(kit_json["type"]["referencedByDesignsTransitive"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|e| e["node"]["id"] == "design-2"));
+            assert!(kit_json["type"]["referencedByDesignsTransitive"]["edges"].as_array().unwrap().iter().any(|e| e["node"]["id"] == "design-2"));
             assert_eq!(kit_json["designD3"]["referencedByDesigns"]["edges"][0]["node"]["id"], "design-2");
             assert_eq!(kit_json["fileF1"]["referencesTypes"]["edges"][0]["node"]["id"], "type-1");
-            assert!(kit_json["fileF1"]["referencesDesignsTransitive"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|e| e["node"]["id"] == "design-2"));
+            assert!(kit_json["fileF1"]["referencesDesignsTransitive"]["edges"].as_array().unwrap().iter().any(|e| e["node"]["id"] == "design-2"));
         });
     }
 
@@ -19731,9 +19010,7 @@ mod tests {
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read types: {:?}", read.errors);
             let read_json = read.data.into_json().unwrap();
-            let names = read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"]
-                .as_array()
-                .expect("type edges");
+            let names = read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"].as_array().expect("type edges");
             assert_eq!(names[0]["node"]["name"], "Type-IP");
         });
     }
@@ -19779,9 +19056,7 @@ mod tests {
                     }
                 }"#;
             let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
-            let res = schema
-                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
-                .await;
+            let res = schema.execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let q = r#"query {
                 session {
@@ -19813,17 +19088,12 @@ mod tests {
             let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
             let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
             assert!(file_edges.is_empty(), "representation backing blobs stay off kit-root VFS");
-            let rep_edges = kit_json["hasTypes"]["edges"][0]["node"]["hasRepresentations"]["edges"]
-                .as_array()
-                .expect("representation edges");
+            let rep_edges = kit_json["hasTypes"]["edges"][0]["node"]["hasRepresentations"]["edges"].as_array().expect("representation edges");
             assert_eq!(rep_edges.len(), 1);
             assert_eq!(rep_edges[0]["node"]["id"], "r1");
             assert_eq!(rep_edges[0]["node"]["name"], "chair");
             assert_eq!(rep_edges[0]["node"]["file"]["id"], "f1");
-            assert!(rep_edges[0]["node"]["file"]["url"]
-                .as_str()
-                .unwrap_or("")
-                .starts_with("data:"));
+            assert!(rep_edges[0]["node"]["file"]["url"].as_str().unwrap_or("").starts_with("data:"));
         });
     }
 
@@ -19864,9 +19134,7 @@ mod tests {
                     }
                 }"#;
             let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
-            let res = schema
-                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
-                .await;
+            let res = schema.execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let q = r#"query {
                 session {
@@ -19931,9 +19199,7 @@ mod tests {
                     }
                 }"#;
             let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
-            let res = schema
-                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
-                .await;
+            let res = schema.execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let q = r#"query {
                 session {
@@ -20004,9 +19270,7 @@ mod tests {
                     }
                 }"#;
             let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
-            let res = schema
-                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
-                .await;
+            let res = schema.execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let q = r#"query {
                 session {
@@ -20043,8 +19307,7 @@ mod tests {
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read connector port: {:?}", read.errors);
             let read_json = read.data.into_json().unwrap();
-            let connector_port = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"][0]["node"]
-                ["hasConnectors"]["edges"][0]["node"]["port"];
+            let connector_port = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"][0]["node"]["hasConnectors"]["edges"][0]["node"]["port"];
             assert_eq!(connector_port["id"], "p1");
             let compat = connector_port["copatibleWith"]["edges"].as_array().expect("compat edges");
             assert_eq!(compat.len(), 1);
@@ -20070,22 +19333,10 @@ mod tests {
                     "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }]
                 }
             });
-            let topo = crate::gql_relay::Typology::new_with_external_id(
-                std::sync::Arc::downgrade(&kit),
-                "topo-hydrate".into(),
-                "Default".to_string(),
-            )
-            .await;
+            let topo = crate::gql_relay::Typology::new_with_external_id(std::sync::Arc::downgrade(&kit), "topo-hydrate".into(), "Default".to_string()).await;
             kit.typologies.write().await.push(topo.clone());
-            let ty = crate::kit::r#type::Type::new_with_external_id(
-                std::sync::Arc::downgrade(&topo),
-                "t1".into(),
-                "T1".to_string(),
-            )
-            .await;
-            crate::kit_backbone::hydrate_type_from_snapshot_value(&ty, &t_json, &std::collections::HashMap::new())
-                .await
-                .expect("hydrate type");
+            let ty = crate::kit::r#type::Type::new_with_external_id(std::sync::Arc::downgrade(&topo), "t1".into(), "T1".to_string()).await;
+            crate::kit_backbone::hydrate_type_from_snapshot_value(&ty, &t_json, &std::collections::HashMap::new()).await.expect("hydrate type");
             let ports = ty.ports.read().await;
             assert_eq!(ports.len(), 2);
             let p1 = ports.iter().find(|p| p.id.as_str() == "p1").expect("p1");
@@ -20321,30 +19572,15 @@ mod tests {
             assert!(res.errors.is_empty(), "vfs query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
             let folders = &data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"];
-            let folder_id = folders.as_array().unwrap().iter().find_map(|e| {
-                (e["node"]["name"].as_str() == Some("inbox")).then(|| e["node"]["id"].as_str().unwrap().to_string())
-            }).expect("inbox folder");
+            let folder_id = folders.as_array().unwrap().iter().find_map(|e| (e["node"]["name"].as_str() == Some("inbox")).then(|| e["node"]["id"].as_str().unwrap().to_string())).expect("inbox folder");
             let design_id = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"]
                 .as_array()
                 .unwrap()
                 .iter()
                 .find_map(|e| (e["node"]["name"].as_str() == Some("nested-layout")).then(|| e["node"]["id"].as_str().unwrap().to_string()))
                 .expect("nested-layout design");
-            let inbox = folders
-                .as_array()
-                .unwrap()
-                .iter()
-                .find(|e| e["node"]["name"].as_str() == Some("inbox"))
-                .expect("inbox folder edge");
-            assert!(
-                !inbox["node"]["hasDesigns"]["edges"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .any(|e| e["node"]["name"].as_str() == Some("nested-layout")),
-                "design must not be in inbox before move: {:?}",
-                inbox["node"]["hasDesigns"]
-            );
+            let inbox = folders.as_array().unwrap().iter().find(|e| e["node"]["name"].as_str() == Some("inbox")).expect("inbox folder edge");
+            assert!(!inbox["node"]["hasDesigns"]["edges"].as_array().unwrap().iter().any(|e| e["node"]["name"].as_str() == Some("nested-layout")), "design must not be in inbox before move: {:?}", inbox["node"]["hasDesigns"]);
 
             const MOVE: &str = r#"
                 mutation($tx: ID!, $nodeId: ID!, $folderId: ID) {
@@ -20370,27 +19606,9 @@ mod tests {
             let res = schema.execute(folder_q).await;
             assert!(res.errors.is_empty(), "vfs query after move errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let _design = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .find(|e| e["node"]["name"].as_str() == Some("nested-layout"))
-                .unwrap();
-            let inbox_after = data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .find(|e| e["node"]["name"].as_str() == Some("inbox"))
-                .expect("inbox after move");
-            assert!(
-                inbox_after["node"]["hasDesigns"]["edges"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .any(|e| e["node"]["id"].as_str() == Some(design_id.as_str())),
-                "design not in inbox after move: {:?}",
-                inbox_after["node"]["hasDesigns"]
-            );
+            let _design = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().unwrap().iter().find(|e| e["node"]["name"].as_str() == Some("nested-layout")).unwrap();
+            let inbox_after = data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"].as_array().unwrap().iter().find(|e| e["node"]["name"].as_str() == Some("inbox")).expect("inbox after move");
+            assert!(inbox_after["node"]["hasDesigns"]["edges"].as_array().unwrap().iter().any(|e| e["node"]["id"].as_str() == Some(design_id.as_str())), "design not in inbox after move: {:?}", inbox_after["node"]["hasDesigns"]);
             assert_eq!(inbox_after["node"]["name"].as_str(), Some("inbox"));
         });
     }
@@ -20794,14 +20012,8 @@ mod tests {
     #[test]
     fn architect_fixtures_hydrate_and_cases_catalog() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture");
-        let kit: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(
-            &std::fs::read_to_string(base.join("architect.harness.kit.semio.json")).expect("read harness kit"),
-        )
-        .expect("parse harness kit");
-        let doc: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(
-            &std::fs::read_to_string(base.join("architect.cases.semio.json")).expect("read architect cases"),
-        )
-        .expect("parse cases");
+        let kit: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(base.join("architect.harness.kit.semio.json")).expect("read harness kit")).expect("parse harness kit");
+        let doc: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(base.join("architect.cases.semio.json")).expect("read architect cases")).expect("parse cases");
         assert_eq!(doc["kit"].as_str(), Some("architect.harness.kit.semio.json"));
         let cases = doc["cases"].as_array().expect("cases");
         assert_eq!(cases.len(), 13);
@@ -20809,9 +20021,7 @@ mod tests {
             assert!(cases.iter().any(|c| c["tier"] == tier), "missing tier {tier}");
         }
         block_on(async {
-            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit)
-                .await
-                .expect("hydrate harness");
+            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit).await.expect("hydrate harness");
             let mat = rt.wip_graph.materialized_head_kit().await;
             let mut design_names = Vec::new();
             for d in mat.designs_flat().await.iter() {
@@ -20827,19 +20037,10 @@ mod tests {
     #[test]
     fn metabolism_light_fixture_kinds_for_types_and_ports() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture/metabolism.kit.light.semio.json");
-        let v: crate::external_adapters::serde_json::Value =
-            crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
+        let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
         let typologies = crate::kit_backbone::json_array_or_block_items_ref(kit.get("typologies").expect("typologies")).expect("typologies list");
-        let types_arr: Vec<&crate::external_adapters::serde_json::Value> = typologies
-            .iter()
-            .flat_map(|topo| {
-                topo.get("types")
-                    .and_then(crate::kit_backbone::json_array_or_block_items_ref)
-                    .into_iter()
-                    .flatten()
-            })
-            .collect();
+        let types_arr: Vec<&crate::external_adapters::serde_json::Value> = typologies.iter().flat_map(|topo| topo.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).into_iter().flatten()).collect();
         assert!(!types_arr.is_empty(), "expected seeded types");
         for t in &types_arr {
             let id = t["id"].as_str().expect("type id");
@@ -20847,8 +20048,7 @@ mod tests {
             let exp = format!("semio.metabolism.light.node.{id}");
             assert_eq!(nk, exp.as_str(), "nodeKind must follow semio.metabolism.light.node.<typeId>");
         }
-        let fam_arr =
-            crate::kit_backbone::json_array_or_block_items_ref(kit.get("families").expect("families")).expect("families list");
+        let fam_arr = crate::kit_backbone::json_array_or_block_items_ref(kit.get("families").expect("families")).expect("families list");
         let mut port_rows = 0usize;
         for fam in fam_arr {
             let Some(ports_holder) = fam.get("ports") else { continue };
@@ -20865,10 +20065,7 @@ mod tests {
         }
         assert!(port_rows >= 1, "expected at least one family port in fixture");
         for t in &types_arr {
-            if let Some(connectors) = t
-                .get("connectors")
-                .and_then(|c| crate::kit_backbone::json_array_or_block_items_ref(c))
-            {
+            if let Some(connectors) = t.get("connectors").and_then(|c| crate::kit_backbone::json_array_or_block_items_ref(c)) {
                 for c in connectors {
                     let Some(port) = c.get("port") else { continue };
                     let Some(pid) = port["id"].as_str() else { continue };
@@ -21130,13 +20327,7 @@ mod tests {
             let design_id = crate::id::Id::from("design-scope-1");
             let create = crate::operation::Operation::CreateDesign {
                 scope: crate::operation::Scope::CreateDesign { owner_id: owner_id.clone(), design_id: design_id.clone() },
-                input: crate::operation::Input::EntityScalars {
-                    name: "layout-alpha".to_string(),
-                    description: Some("design description".to_string()),
-                    icon: Some("design-icon".to_string()),
-                    image: None,
-                    unit: Some("m".to_string()),
-                },
+                input: crate::operation::Input::EntityScalars { name: "layout-alpha".to_string(), description: Some("design description".to_string()), icon: Some("design-icon".to_string()), image: None, unit: Some("m".to_string()) },
             };
 
             let diff = create.to_diff(&kit).await.expect("createDesign diff");
@@ -21193,13 +20384,7 @@ mod tests {
             let type_id = crate::id::Id::from("type-scope-1");
             let create = crate::operation::Operation::CreateType {
                 scope: crate::operation::Scope::CreateType { owner_id: owner_id.clone(), type_id: type_id.clone() },
-                input: crate::operation::Input::EntityScalars {
-                    name: "kind-beta".to_string(),
-                    description: Some("type description".to_string()),
-                    icon: None,
-                    image: None,
-                    unit: None,
-                },
+                input: crate::operation::Input::EntityScalars { name: "kind-beta".to_string(), description: Some("type description".to_string()), icon: None, image: None, unit: None },
             };
 
             let diff = create.to_diff(&kit).await.expect("createType diff");
@@ -21231,14 +20416,8 @@ mod tests {
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("typologies").is_some(), "fixture must include typologies collection");
         let topo_items = crate::kit_backbone::json_array_or_block_items_ref(raw.get("typologies").expect("typologies")).expect("typologies list");
-        assert!(
-            topo_items.iter().any(|t| t.get("types").is_some()),
-            "fixture typologies must include types"
-        );
-        assert!(
-            topo_items.iter().any(|t| t.get("designs").is_some()),
-            "fixture typologies must include designs"
-        );
+        assert!(topo_items.iter().any(|t| t.get("types").is_some()), "fixture typologies must include types");
+        assert!(topo_items.iter().any(|t| t.get("designs").is_some()), "fixture typologies must include designs");
     }
 
     //#region 🪪 merkle hashing

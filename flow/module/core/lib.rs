@@ -30,10 +30,7 @@ pub struct Boolean;
 
 impl Operation for Boolean {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output(
-            "boolean",
-            boolean_dictionary(read_bool(input, "value").or_else(|_| read_bool(input, "boolean")).unwrap_or(false)),
-        ))
+        Ok(channel_output("boolean", boolean_dictionary(read_bool(input, "value").or_else(|_| read_bool(input, "boolean")).unwrap_or(false))))
     }
 }
 // #endregion 🔖Boolean
@@ -44,13 +41,29 @@ pub struct Image;
 
 impl Operation for Image {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output(
-            "image",
-            Dictionary::with_schema("image").insert("dataUrl", Value::Atom(Atom::String(read_text(input, "dataUrl").unwrap_or_default()))),
-        ))
+        Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", Value::Atom(Atom::String(read_text(input, "dataUrl").unwrap_or_default())))))
     }
 }
 // #endregion 🔖Image
+
+// #region 🔖Variable
+/// 🔣 Forwards a named dictionary channel unchanged.
+pub struct VariableRelay;
+
+impl Operation for VariableRelay {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let name = read_text(input, "name")?;
+        let schema = read_text(input, "schema").unwrap_or_else(|_| "dictionary".into());
+        let payload = input.get(&name).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(name.clone()))?;
+        if let Some(actual) = payload.schema() {
+            if actual != schema.as_str() {
+                return Err(EvalError::InvalidInput(format!("expected schema {schema}, got {actual}")));
+            }
+        }
+        Ok(channel_output(&name, payload.clone()))
+    }
+}
+// #endregion 🔖Variable
 
 // #region 🔖Helpers
 pub fn number_dictionary(value: f64) -> Dictionary {
@@ -66,54 +79,24 @@ pub fn boolean_dictionary(value: bool) -> Dictionary {
 }
 
 fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_bool())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_str())
-        .map(str::to_string)
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn schema(id: &str, name: &str, summary: &str, fields: Vec<FieldSpec>) -> Schema {
-    Schema {
-        id: id.into(),
-        module: "core".into(),
-        name: name.into(),
-        icon: "emoji:🧱".into(),
-        summary: summary.into(),
-        fields,
-    }
+    Schema { id: id.into(), module: "core".into(), name: name.into(), icon: "emoji:🧱".into(), summary: summary.into(), fields }
 }
 
 fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: Box<dyn Operation>) -> (OperatorInfo, Vec<OperatorImpl>) {
     (
-        OperatorInfo {
-            id: id.into(),
-            module: "core".into(),
-            name: name.into(),
-            abbreviation: name.into(),
-            icon: "emoji:🧱".into(),
-            summary: summary.into(),
-            inputs: vec![],
-            outputs,
-            ..Default::default()
-        },
+        OperatorInfo { id: id.into(), module: "core".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🧱".into(), summary: summary.into(), inputs: vec![], outputs, ..Default::default() },
         vec![OperatorImpl { schemas: vec![], operation }],
     )
 }
@@ -143,6 +126,21 @@ pub fn register(registry: &mut Registry) {
     registry.register_operator(info, implementations, &["boolean"]);
     let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::named("I", "Img", "image", "Image")], Box::new(Image));
     registry.register_operator(info, implementations, &["image"]);
+    registry.register_operator(
+        OperatorInfo {
+            id: "core.variable".into(),
+            module: "core".into(),
+            name: "Variable".into(),
+            abbreviation: "Var".into(),
+            icon: "emoji:🔣".into(),
+            summary: "Relays a named typed dictionary".into(),
+            inputs: vec![ChannelSpec::wildcard()],
+            outputs: vec![ChannelSpec::wildcard()],
+            ..Default::default()
+        },
+        vec![OperatorImpl { schemas: vec![], operation: Box::new(VariableRelay) }],
+        &[],
+    );
     registry.finalize();
 }
 
@@ -151,6 +149,19 @@ pub fn register(registry: &mut Registry) {
 mod tests {
     use super::*;
     use flow_module_wasm::{build_manifest_json, evaluate_json};
+
+    #[test]
+    fn variable_relay_forwards_named_channel() {
+        let mut registry = Registry::new();
+        register(&mut registry);
+        let input = Dictionary::new()
+            .insert("name", Value::Atom(Atom::String("width".into())))
+            .insert("schema", Value::Atom(Atom::String("number".into())))
+            .insert("width", Value::Dictionary(number_dictionary(2.0)));
+        let out = registry.dispatch("core.variable", &input).unwrap();
+        let width = out.get("width").and_then(|v| v.as_dictionary()).expect("width channel");
+        assert_eq!(width.schema(), Some("number"));
+    }
 
     #[test]
     fn number_emits_schema_dictionary() {

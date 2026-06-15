@@ -333,27 +333,13 @@ mod tests {
     async fn sidecar_install_rename_roundtrip() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
-        post_install(
-            &client,
-            &base,
-            &json!({ "create": { "dto": { "id": "00000000-0000-7000-8000-000000000001", "name": "SeedName" } } }),
-        )
-        .await?;
+        post_install(&client, &base, &json!({ "create": { "dto": { "id": "00000000-0000-7000-8000-000000000001", "name": "SeedName" } } })).await?;
 
-        let tx = post_gql(
-            &client,
-            &base,
-            &format!("mutation {{ session {{ store(id: \"{STORE_ID}\") {{ theKit {{ startNewChange {{ {GQL_RESPONSE} }} }} }} }} }}"),
-            None,
-        )
-        .await?;
+        let tx = post_gql(&client, &base, &format!("mutation {{ session {{ store(id: \"{STORE_ID}\") {{ theKit {{ startNewChange {{ {GQL_RESPONSE} }} }} }} }} }}"), None).await?;
         if tx.get("errors").is_some() {
             return Err(format!("startNewChange: {tx}").into());
         }
-        let tx_id = tx
-            .pointer("/data/session/store/theKit/startNewChange/result/value")
-            .and_then(|v| v.as_str())
-            .ok_or("tx id")?;
+        let tx_id = tx.pointer("/data/session/store/theKit/startNewChange/result/value").and_then(|v| v.as_str()).ok_or("tx id")?;
 
         let m1 = post_gql(
             &client,
@@ -409,16 +395,8 @@ mod tests {
         let wip = "/data/session/store/edges/0/node/wip";
         assert_eq!(q2.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("SeedName"), "initialKit stays install baseline");
         assert_eq!(q2.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("RenamedKit"), "theKit.kit materialized head");
-        assert_eq!(
-            q2.pointer(&format!("{wip}/checkpoints/edges/0/node/initial/name")).and_then(|n| n.as_str()),
-            Some("SeedName"),
-            "checkpoint.initial is graph baseline"
-        );
-        assert_eq!(
-            q2.pointer(&format!("{wip}/checkpoints/edges/0/node/kit/name")).and_then(|n| n.as_str()),
-            Some("RenamedKit"),
-            "checkpoint.kit matches wip parent anchor materialization"
-        );
+        assert_eq!(q2.pointer(&format!("{wip}/checkpoints/edges/0/node/initial/name")).and_then(|n| n.as_str()), Some("SeedName"), "checkpoint.initial is graph baseline");
+        assert_eq!(q2.pointer(&format!("{wip}/checkpoints/edges/0/node/kit/name")).and_then(|n| n.as_str()), Some("RenamedKit"), "checkpoint.kit matches wip parent anchor materialization");
 
         server.abort();
         Ok(())
@@ -431,11 +409,7 @@ mod tests {
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
 
-        let mut b = DevBackboneBundleDoc::initialize_with_unsaved_change(
-            "00000000-0000-7000-8000-0000000000cc",
-            "change-bundle-1",
-            "ck-bundle-1",
-        );
+        let mut b = DevBackboneBundleDoc::initialize_with_unsaved_change("00000000-0000-7000-8000-0000000000cc", "change-bundle-1", "ck-bundle-1");
         b.wip.initial_kit = serde_json::json!({
             "id": "00000000-0000-7000-8000-0000000000cc",
             "name": "BundleInstallName",
@@ -523,11 +497,7 @@ mod tests {
         semio::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path()
     }
 
-    async fn run_comprehensive_fixture_sidecar_steps(
-        fixture: &Value,
-        client: &reqwest::Client,
-        base: &str,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn run_comprehensive_fixture_sidecar_steps(fixture: &Value, client: &reqwest::Client, base: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let steps = fixture["sidecarSteps"].as_array().ok_or("sidecarSteps array")?;
         for step in steps {
             match step["kind"].as_str().ok_or("kind")? {
@@ -544,26 +514,12 @@ mod tests {
                 "sidecarInstallRename" => {
                     let seed = step["installName"].as_str().unwrap_or("SeedName");
                     let renamed = step["renamedName"].as_str().unwrap_or("SidecarComprehensiveRenamed");
-                    post_install(
-                        client,
-                        base,
-                        &json!({ "create": { "dto": { "id": "00000000-0000-7000-8000-000000000001", "name": seed } } }),
-                    )
-                    .await?;
-                    let tx = post_gql(
-                        client,
-                        base,
-                        &format!("mutation {{ session {{ store(id: \"{STORE_ID}\") {{ theKit {{ startNewChange {{ {GQL_RESPONSE} }} }} }} }} }}"),
-                        None,
-                    )
-                    .await?;
+                    post_install(client, base, &json!({ "create": { "dto": { "id": "00000000-0000-7000-8000-000000000001", "name": seed } } })).await?;
+                    let tx = post_gql(client, base, &format!("mutation {{ session {{ store(id: \"{STORE_ID}\") {{ theKit {{ startNewChange {{ {GQL_RESPONSE} }} }} }} }} }}"), None).await?;
                     if tx.get("errors").is_some() {
                         return Err(format!("startNewChange: {tx}").into());
                     }
-                    let tx_id = tx
-                        .pointer("/data/session/store/theKit/startNewChange/result/value")
-                        .and_then(|v| v.as_str())
-                        .ok_or("tx id")?;
+                    let tx_id = tx.pointer("/data/session/store/theKit/startNewChange/result/value").and_then(|v| v.as_str()).ok_or("tx id")?;
                     let m1 = post_gql(
                         client,
                         base,
@@ -587,20 +543,11 @@ mod tests {
                         return Err(format!("rename: {m1}").into());
                     }
                     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-                    let q2 = post_gql(
-                        client,
-                        base,
-                        r#"query { session { stores { edges { node { wip { theKit { kit { name } } } } } } } }"#,
-                        None,
-                    )
-                    .await?;
+                    let q2 = post_gql(client, base, r#"query { session { stores { edges { node { wip { theKit { kit { name } } } } } } } }"#, None).await?;
                     if q2.get("errors").is_some() {
                         return Err(format!("materialization query: {q2}").into());
                     }
-                    assert_eq!(
-                        q2.pointer("/data/session/store/edges/0/node/wip/theKit/kit/name").and_then(|n| n.as_str()),
-                        Some(renamed)
-                    );
+                    assert_eq!(q2.pointer("/data/session/store/edges/0/node/wip/theKit/kit/name").and_then(|n| n.as_str()), Some(renamed));
                 }
                 other => return Err(format!("unknown sidecar step kind: {other}").into()),
             }

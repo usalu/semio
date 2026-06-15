@@ -3,13 +3,13 @@
 #![allow(clippy::too_many_lines)]
 
 pub use api::{compile, parse, plan, run};
-pub use executor::QueryResult;
 pub use errors::ArchitectError;
 pub use executor::Executor;
+pub use executor::QueryResult;
 pub use planner::OpPlan;
-pub use transport::{MemoryTransport, OpKind, Transport, TransportError};
 #[cfg(not(target_arch = "wasm32"))]
 pub use transport::SemioTransport;
+pub use transport::{MemoryTransport, OpKind, Transport, TransportError};
 
 #[cfg(target_arch = "wasm32")]
 pub use wasm_api::{architect_compile, architect_run};
@@ -186,10 +186,7 @@ mod parser {
     }
 
     fn ident(input: &str) -> IResult<&str, &str> {
-        ws(recognize(pair(
-            alt((alphanumeric1, tag("_"))),
-            many0(alt((alphanumeric1, tag("_")))),
-        )))(input)
+        ws(recognize(pair(alt((alphanumeric1, tag("_"))), many0(alt((alphanumeric1, tag("_")))))))(input)
     }
 
     fn string_lit(input: &str) -> IResult<&str, String> {
@@ -197,21 +194,12 @@ mod parser {
             delimited(char('"'), recognize(many0(alt((tag("\\\""), tag("\\\\"), nom::bytes::complete::is_not("\"\\"))))), char('"')),
             delimited(char('\''), recognize(many0(alt((tag("\\'"), tag("\\\\"), nom::bytes::complete::is_not("'\\"))))), char('\'')),
         )))(input)?;
-        let unescaped = if inner.contains('\\') {
-            inner.replace("\\'", "'").replace("\\\"", "\"")
-        } else {
-            inner.to_string()
-        };
+        let unescaped = if inner.contains('\\') { inner.replace("\\'", "'").replace("\\\"", "\"") } else { inner.to_string() };
         Ok((rest, unescaped))
     }
 
     fn number_lit(input: &str) -> IResult<&str, serde_json::Value> {
-        map(
-            ws(recognize(pair(
-                opt(char('-')),
-                alt((recognize(pair(digit1, pair(tag("."), digit1))), digit1)),
-            ))),
-            |s: &str| {
+        map(ws(recognize(pair(opt(char('-')), alt((recognize(pair(digit1, pair(tag("."), digit1))), digit1))))), |s: &str| {
             if s.contains('.') {
                 serde_json::Value::from(s.parse::<f64>().unwrap_or(0.0))
             } else {
@@ -221,12 +209,7 @@ mod parser {
     }
 
     fn literal_value(input: &str) -> IResult<&str, serde_json::Value> {
-        alt((
-            map(tag_no_case("true"), |_| serde_json::Value::Bool(true)),
-            map(tag_no_case("false"), |_| serde_json::Value::Bool(false)),
-            map(string_lit, serde_json::Value::String),
-            number_lit,
-        ))(input)
+        alt((map(tag_no_case("true"), |_| serde_json::Value::Bool(true)), map(tag_no_case("false"), |_| serde_json::Value::Bool(false)), map(string_lit, serde_json::Value::String), number_lit))(input)
     }
 
     fn object_literal(input: &str) -> IResult<&str, BTreeMap<String, serde_json::Value>> {
@@ -237,94 +220,52 @@ mod parser {
     }
 
     fn value_literal(input: &str) -> IResult<&str, serde_json::Value> {
-        alt((
-            literal_value,
-            map(delimited(ws(char('[')), separated_list0(ws(char(',')), value_literal), ws(char(']'))), |v| {
-                serde_json::Value::Array(v)
-            }),
-            map(object_literal, |m| serde_json::Value::Object(m.into_iter().collect())),
-        ))(input)
+        alt((literal_value, map(delimited(ws(char('[')), separated_list0(ws(char(',')), value_literal), ws(char(']'))), |v| serde_json::Value::Array(v)), map(object_literal, |m| serde_json::Value::Object(m.into_iter().collect()))))(input)
     }
 
     fn primary_expr(input: &str) -> IResult<&str, Expr> {
         alt((
             map(delimited(ws(char('(')), cut(expr), ws(char(')'))), |e| e),
             map(literal_value, Expr::Const),
-            map(
-                separated_list1(ws(char('.')), ident),
-                |parts: Vec<&str>| {
-                    let mut it = parts.into_iter();
-                    let first = it.next().unwrap_or("_");
-                    let mut cur = Expr::Var {
-                        name: first.to_string(),
-                    };
-                    for p in it {
-                        cur = Expr::Field {
-                            object: Box::new(cur),
-                            name: p.to_string(),
-                        };
-                    }
-                    cur
-                },
-            ),
+            map(separated_list1(ws(char('.')), ident), |parts: Vec<&str>| {
+                let mut it = parts.into_iter();
+                let first = it.next().unwrap_or("_");
+                let mut cur = Expr::Var { name: first.to_string() };
+                for p in it {
+                    cur = Expr::Field { object: Box::new(cur), name: p.to_string() };
+                }
+                cur
+            }),
         ))(input)
     }
 
     fn unary_expr(input: &str) -> IResult<&str, Expr> {
-        alt((
-            map(preceded(ws(char('-')), cut(unary_expr)), |e| Expr::UnaryNeg(Box::new(e))),
-            primary_expr,
-        ))(input)
+        alt((map(preceded(ws(char('-')), cut(unary_expr)), |e| Expr::UnaryNeg(Box::new(e))), primary_expr))(input)
     }
 
     fn mul_expr(input: &str) -> IResult<&str, Expr> {
         let (rest, first) = unary_expr(input)?;
-        let (rest, tail) = many0(pair(
-            ws(alt((char('*'), char('/')))),
-            cut(unary_expr),
-        ))(rest)?;
+        let (rest, tail) = many0(pair(ws(alt((char('*'), char('/')))), cut(unary_expr)))(rest)?;
         let mut cur = first;
         for (op, rhs) in tail {
-            cur = Expr::BinOp {
-                op: if op == '*' { BinOp::Mul } else { BinOp::Div },
-                left: Box::new(cur),
-                right: Box::new(rhs),
-            };
+            cur = Expr::BinOp { op: if op == '*' { BinOp::Mul } else { BinOp::Div }, left: Box::new(cur), right: Box::new(rhs) };
         }
         Ok((rest, cur))
     }
 
     fn add_expr(input: &str) -> IResult<&str, Expr> {
         let (rest, first) = mul_expr(input)?;
-        let (rest, tail) = many0(pair(
-            ws(alt((char('+'), char('-')))),
-            cut(mul_expr),
-        ))(rest)?;
+        let (rest, tail) = many0(pair(ws(alt((char('+'), char('-')))), cut(mul_expr)))(rest)?;
         let mut cur = first;
         for (op, rhs) in tail {
-            cur = Expr::BinOp {
-                op: if op == '+' { BinOp::Add } else { BinOp::Sub },
-                left: Box::new(cur),
-                right: Box::new(rhs),
-            };
+            cur = Expr::BinOp { op: if op == '+' { BinOp::Add } else { BinOp::Sub }, left: Box::new(cur), right: Box::new(rhs) };
         }
         Ok((rest, cur))
     }
 
     fn cmp_expr(input: &str) -> IResult<&str, Expr> {
         let (rest, left) = add_expr(input)?;
-        let (rest, op_rhs) = opt(pair(
-            ws(alt((
-                tag("=="),
-                tag("!="),
-                tag("<="),
-                tag(">="),
-                tag("="),
-                tag("<"),
-                tag(">"),
-            ))),
-            cut(add_expr),
-        ))(rest)?;
+        let (rest, op_rhs) = opt(pair(ws(alt((tag("=="), tag("!="), tag("<="), tag(">="), tag("="), tag("<"), tag(">")))), cut(add_expr)))(rest)?;
         if let Some((op, right)) = op_rhs {
             let bop = match op {
                 "==" | "=" => BinOp::Eq,
@@ -335,14 +276,7 @@ mod parser {
                 ">" => BinOp::Gt,
                 _ => BinOp::Eq,
             };
-            return Ok((
-                rest,
-                Expr::BinOp {
-                    op: bop,
-                    left: Box::new(left),
-                    right: Box::new(right),
-                },
-            ));
+            return Ok((rest, Expr::BinOp { op: bop, left: Box::new(left), right: Box::new(right) }));
         }
         Ok((rest, left))
     }
@@ -371,19 +305,7 @@ mod parser {
 
     fn prop_map(input: &str) -> IResult<&str, BTreeMap<String, serde_json::Value>> {
         let (rest, _) = ws(char('{'))(input)?;
-        let (rest, pairs) = separated_list0(
-            ws(char(',')),
-            pair(
-                ident,
-                preceded(
-                    ws(char(':')),
-                    alt((
-                        literal_value,
-                        map(ident, |s: &str| serde_json::Value::String(s.to_string())),
-                    )),
-                ),
-            ),
-        )(rest)?;
+        let (rest, pairs) = separated_list0(ws(char(',')), pair(ident, preceded(ws(char(':')), alt((literal_value, map(ident, |s: &str| serde_json::Value::String(s.to_string())))))))(rest)?;
         let (rest, _) = ws(char('}'))(rest)?;
         Ok((rest, pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()))
     }
@@ -394,14 +316,7 @@ mod parser {
         let (rest, label) = opt(preceded(ws(char(':')), ident))(rest)?;
         let (rest, props) = opt(prop_map)(rest)?;
         let (rest, _) = ws(char(')'))(rest)?;
-        Ok((
-            rest,
-            NodePattern {
-                var_name: var_name.map(str::to_string),
-                label: label.map(str::to_string),
-                props: props.unwrap_or_default(),
-            },
-        ))
+        Ok((rest, NodePattern { var_name: var_name.map(str::to_string), label: label.map(str::to_string), props: props.unwrap_or_default() }))
     }
 
     fn rel_types(input: &str) -> IResult<&str, (Vec<String>, BTreeMap<String, serde_json::Value>)> {
@@ -409,11 +324,7 @@ mod parser {
         let (rest, _) = opt(ws(char(':')))(rest)?;
         let (rest, first) = opt(ident)(rest)?;
         let (rest, more) = many0(preceded(ws(char('|')), ident))(rest)?;
-        let (rest, props) = if rest.trim_start().starts_with('{') {
-            map(prop_map, Some)(rest)?
-        } else {
-            (rest, None)
-        };
+        let (rest, props) = if rest.trim_start().starts_with('{') { map(prop_map, Some)(rest)? } else { (rest, None) };
         let (rest, _) = ws(char(']'))(rest)?;
         let mut types = Vec::new();
         if let Some(t) = first {
@@ -436,14 +347,7 @@ mod parser {
             (true, _, false) => RelDirection::In,
             (false, _, true) | (false, false, false) => RelDirection::Out,
         };
-        Ok((
-            rest,
-            RelPattern {
-                types: types_props.0,
-                direction,
-                props: types_props.1,
-            },
-        ))
+        Ok((rest, RelPattern { types: types_props.0, direction, props: types_props.1 }))
     }
 
     fn pattern(input: &str) -> IResult<&str, Pattern> {
@@ -470,59 +374,26 @@ mod parser {
     }
 
     fn projection_list(input: &str) -> IResult<&str, Vec<ProjectionItem>> {
-        separated_list1(
-            ws(char(',')),
-            map(
-                pair(expr, opt(preceded(kw("AS"), cut(ident)))),
-                |(e, alias)| ProjectionItem {
-                    expr: e,
-                    alias: alias.map(str::to_string),
-                },
-            ),
-        )(input)
+        separated_list1(ws(char(',')), map(pair(expr, opt(preceded(kw("AS"), cut(ident)))), |(e, alias)| ProjectionItem { expr: e, alias: alias.map(str::to_string) }))(input)
     }
 
     fn yield_clause(input: &str) -> IResult<&str, Vec<YieldItem>> {
         let (rest, _) = kw("YIELD")(input)?;
-        separated_list1(
-            ws(char(',')),
-            map(
-                pair(
-                    separated_list1(ws(char('.')), ident),
-                    opt(preceded(kw("AS"), cut(ident))),
-                ),
-                |(parts, alias)| YieldItem {
-                    key: parts.join("."),
-                    alias: alias.map(str::to_string),
-                },
-            ),
-        )(rest)
+        separated_list1(ws(char(',')), map(pair(separated_list1(ws(char('.')), ident), opt(preceded(kw("AS"), cut(ident)))), |(parts, alias)| YieldItem { key: parts.join("."), alias: alias.map(str::to_string) }))(rest)
     }
 
     fn match_clause(input: &str) -> IResult<&str, MatchClause> {
         let (rest, _) = kw("MATCH")(input)?;
         let (rest, patterns) = cut(pattern_list)(rest)?;
         let (rest, where_expr) = opt(preceded(kw("WHERE"), cut(expr)))(rest)?;
-        Ok((
-            rest,
-            MatchClause {
-                patterns,
-                where_expr,
-            },
-        ))
+        Ok((rest, MatchClause { patterns, where_expr }))
     }
 
     fn with_clause(input: &str) -> IResult<&str, WithClause> {
         let (rest, _) = kw("WITH")(input)?;
         let (rest, projections) = cut(projection_list)(rest)?;
         let (rest, where_expr) = opt(preceded(kw("WHERE"), cut(expr)))(rest)?;
-        Ok((
-            rest,
-            WithClause {
-                projections,
-                where_expr,
-            },
-        ))
+        Ok((rest, WithClause { projections, where_expr }))
     }
 
     fn call_clause(input: &str) -> IResult<&str, CallClause> {
@@ -530,14 +401,7 @@ mod parser {
         let (rest, parts) = cut(separated_list1(ws(char('.')), ident))(rest)?;
         let (rest, args) = delimited(ws(char('(')), opt(object_literal), ws(char(')')))(rest)?;
         let (rest, yield_items) = opt(yield_clause)(rest)?;
-        Ok((
-            rest,
-            CallClause {
-                action_id: parts.join("."),
-                args: args.unwrap_or_default(),
-                yield_items: yield_items.unwrap_or_default(),
-            },
-        ))
+        Ok((rest, CallClause { action_id: parts.join("."), args: args.unwrap_or_default(), yield_items: yield_items.unwrap_or_default() }))
     }
 
     fn unwind_clause(input: &str) -> IResult<&str, UnwindClause> {
@@ -546,54 +410,26 @@ mod parser {
         let (rest, _) = kw("AS")(rest)?;
         let (rest, alias) = cut(ident)(rest)?;
         let (rest, where_expr) = opt(preceded(kw("WHERE"), cut(expr)))(rest)?;
-        Ok((
-            rest,
-            UnwindClause {
-                source,
-                alias: alias.to_string(),
-                where_expr,
-            },
-        ))
+        Ok((rest, UnwindClause { source, alias: alias.to_string(), where_expr }))
     }
 
     fn return_clause(input: &str) -> IResult<&str, ReturnClause> {
         let (rest, _) = kw("RETURN")(input)?;
         let (rest, projections) = cut(projection_list)(rest)?;
         let (rest, order_by) = opt(preceded(pair(kw("ORDER"), kw("BY")), cut(expr)))(rest)?;
-        let (rest, limit) = opt(preceded(
-            kw("LIMIT"),
-            map(ws(digit1), |s: &str| s.parse::<usize>().unwrap_or(0)),
-        ))(rest)?;
-        Ok((
-            rest,
-            ReturnClause {
-                projections,
-                order_by,
-                limit,
-            },
-        ))
+        let (rest, limit) = opt(preceded(kw("LIMIT"), map(ws(digit1), |s: &str| s.parse::<usize>().unwrap_or(0))))(rest)?;
+        Ok((rest, ReturnClause { projections, order_by, limit }))
     }
 
     fn clause(input: &str) -> IResult<&str, Clause> {
-        alt((
-            map(call_clause, Clause::Call),
-            map(unwind_clause, Clause::Unwind),
-            map(with_clause, Clause::With),
-            map(match_clause, Clause::Match),
-        ))(input)
+        alt((map(call_clause, Clause::Call), map(unwind_clause, Clause::Unwind), map(with_clause, Clause::With), map(match_clause, Clause::Match)))(input)
     }
 
     fn query(input: &str) -> IResult<&str, Query> {
         let (rest, clauses) = many1(clause)(input)?;
         let (rest, return_clause) = opt(return_clause)(rest)?;
         let (rest, _) = multispace0(rest)?;
-        Ok((
-            rest,
-            Query {
-                clauses,
-                return_clause,
-            },
-        ))
+        Ok((rest, Query { clauses, return_clause }))
     }
 
     /// @emoji 🔍 Parse architect source into `Query`.
@@ -734,143 +570,25 @@ mod schema {
     }
 
     pub const EDGES: &[EdgeDef] = &[
-        EdgeDef {
-            from: Label::Piece,
-            pred: Predicate::Has,
-            to: Label::Blueprint,
-            field: "blueprint",
-            cardinality: Cardinality::One,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Blueprint,
-            pred: Predicate::Is,
-            to: Label::Type,
-            field: "__typename",
-            cardinality: Cardinality::One,
-            _fragment: Some("... on Type"),
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Blueprint,
-            pred: Predicate::Is,
-            to: Label::Design,
-            field: "__typename",
-            cardinality: Cardinality::One,
-            _fragment: Some("... on Design"),
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Type,
-            pred: Predicate::Has,
-            to: Label::Connector,
-            field: "connectors",
-            cardinality: Cardinality::Many,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Type,
-            pred: Predicate::Has,
-            to: Label::Port,
-            field: "ports",
-            cardinality: Cardinality::Many,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Connector,
-            pred: Predicate::Is,
-            to: Label::Port,
-            field: "port",
-            cardinality: Cardinality::One,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Side,
-            pred: Predicate::References,
-            to: Label::Connector,
-            field: "connector",
-            cardinality: Cardinality::One,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Connection,
-            pred: Predicate::Has,
-            to: Label::Side,
-            field: "parent",
-            cardinality: Cardinality::One,
-            _fragment: None,
-            edge_props: &[("parent", EdgeProp::Parent(true))],
-        },
-        EdgeDef {
-            from: Label::Connection,
-            pred: Predicate::Has,
-            to: Label::Side,
-            field: "child",
-            cardinality: Cardinality::One,
-            _fragment: None,
-            edge_props: &[("parent", EdgeProp::Parent(false))],
-        },
-        EdgeDef {
-            from: Label::Design,
-            pred: Predicate::Has,
-            to: Label::Connection,
-            field: "connections",
-            cardinality: Cardinality::Many,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Design,
-            pred: Predicate::Has,
-            to: Label::Piece,
-            field: "pieces",
-            cardinality: Cardinality::Many,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Kit,
-            pred: Predicate::Has,
-            to: Label::Design,
-            field: "designs",
-            cardinality: Cardinality::Many,
-            _fragment: None,
-            edge_props: &[],
-        },
-        EdgeDef {
-            from: Label::Kit,
-            pred: Predicate::Has,
-            to: Label::Type,
-            field: "types",
-            cardinality: Cardinality::Many,
-            _fragment: None,
-            edge_props: &[],
-        },
+        EdgeDef { from: Label::Piece, pred: Predicate::Has, to: Label::Blueprint, field: "blueprint", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Type, field: "__typename", cardinality: Cardinality::One, _fragment: Some("... on Type"), edge_props: &[] },
+        EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Design, field: "__typename", cardinality: Cardinality::One, _fragment: Some("... on Design"), edge_props: &[] },
+        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Connector, field: "connectors", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Port, field: "ports", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Connector, pred: Predicate::Is, to: Label::Port, field: "port", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Side, pred: Predicate::References, to: Label::Connector, field: "connector", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Connection, pred: Predicate::Has, to: Label::Side, field: "parent", cardinality: Cardinality::One, _fragment: None, edge_props: &[("parent", EdgeProp::Parent(true))] },
+        EdgeDef { from: Label::Connection, pred: Predicate::Has, to: Label::Side, field: "child", cardinality: Cardinality::One, _fragment: None, edge_props: &[("parent", EdgeProp::Parent(false))] },
+        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Connection, field: "connections", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Piece, field: "pieces", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Design, field: "designs", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Type, field: "types", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
     ];
 
-    pub fn resolve_edge(
-        from: Label,
-        pred: Predicate,
-        to: Label,
-        rel: &RelPattern,
-        forward: bool,
-    ) -> Result<EdgeDef, String> {
-        let mut matches: Vec<EdgeDef> = EDGES
-            .iter()
-            .copied()
-            .filter(|e| e.from == from && e.pred == pred && e.to == to && edge_props_match(e, rel))
-            .collect();
+    pub fn resolve_edge(from: Label, pred: Predicate, to: Label, rel: &RelPattern, forward: bool) -> Result<EdgeDef, String> {
+        let mut matches: Vec<EdgeDef> = EDGES.iter().copied().filter(|e| e.from == from && e.pred == pred && e.to == to && edge_props_match(e, rel)).collect();
         if !forward {
-            matches = EDGES
-                .iter()
-                .copied()
-                .filter(|e| e.from == to && e.pred == pred && e.to == from && edge_props_match(e, rel))
-                .collect();
+            matches = EDGES.iter().copied().filter(|e| e.from == to && e.pred == pred && e.to == from && edge_props_match(e, rel)).collect();
         }
         match matches.len() {
             0 => Err(format!("no edge {from:?}-{pred:?}->{to:?}")),
@@ -881,19 +599,12 @@ mod schema {
 
     fn edge_props_match(edge: &EdgeDef, rel: &RelPattern) -> bool {
         if rel.props.is_empty() {
-            return edge.edge_props.is_empty()
-                || edge.edge_props.iter().all(|(_, p)| matches!(p, EdgeProp::Parent(false)));
+            return edge.edge_props.is_empty() || edge.edge_props.iter().all(|(_, p)| matches!(p, EdgeProp::Parent(false)));
         }
         for (k, v) in &rel.props {
             if k == "parent" {
-                let want = v.as_bool().unwrap_or_else(|| {
-                    v.as_str()
-                        .map(|s| s.eq_ignore_ascii_case("true"))
-                        .unwrap_or(false)
-                });
-                let ok = edge.edge_props.iter().any(|(name, p)| {
-                    name == &"parent" && matches!(p, EdgeProp::Parent(g) if *g == want)
-                });
+                let want = v.as_bool().unwrap_or_else(|| v.as_str().map(|s| s.eq_ignore_ascii_case("true")).unwrap_or(false));
+                let ok = edge.edge_props.iter().any(|(name, p)| name == &"parent" && matches!(p, EdgeProp::Parent(g) if *g == want));
                 if !ok {
                     return false;
                 }
@@ -903,21 +614,14 @@ mod schema {
     }
 
     pub fn node_label(node: &NodePattern) -> Result<Label, String> {
-        let lab = node
-            .label
-            .as_deref()
-            .ok_or_else(|| "pattern node requires a label".to_string())?;
+        let lab = node.label.as_deref().ok_or_else(|| "pattern node requires a label".to_string())?;
         Label::parse(lab).ok_or_else(|| format!("unknown label {lab}"))
     }
 
     pub fn rel_predicate(rel: &RelPattern) -> Result<Predicate, String> {
-        let t = rel
-            .types
-            .first()
-            .ok_or_else(|| "relationship requires a predicate".to_string())?;
+        let t = rel.types.first().ok_or_else(|| "relationship requires a predicate".to_string())?;
         Predicate::parse(t).ok_or_else(|| format!("unknown predicate {t}"))
     }
-
 
     pub fn entity_scalar_fields(label: Label) -> &'static [&'static str] {
         match label {
@@ -942,26 +646,10 @@ mod schema {
     }
 
     pub const CALL_TARGETS: &[CallTarget] = &[
-        CallTarget {
-            path: &["session", "start"],
-            kind: super::transport::OpKind::Mutation,
-            gql: "mutation ArchitectCall($input: String) { session { start } }",
-        },
-        CallTarget {
-            path: &["session", "end"],
-            kind: super::transport::OpKind::Mutation,
-            gql: "mutation ArchitectCall { session { end { ok errors { message } } } }",
-        },
-        CallTarget {
-            path: &["subscription", "session"],
-            kind: super::transport::OpKind::Subscription,
-            gql: "subscription ArchitectSub { session { id hash } }",
-        },
-        CallTarget {
-            path: &["subscription", "operation"],
-            kind: super::transport::OpKind::Subscription,
-            gql: "subscription ArchitectSub { operation { id hash } }",
-        },
+        CallTarget { path: &["session", "start"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($input: String) { session { start } }" },
+        CallTarget { path: &["session", "end"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall { session { end { ok errors { message } } } }" },
+        CallTarget { path: &["subscription", "session"], kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { session { id hash } }" },
+        CallTarget { path: &["subscription", "operation"], kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { operation { id hash } }" },
         CallTarget {
             path: &["session", "store", "installProjection"],
             kind: super::transport::OpKind::Mutation,
@@ -972,20 +660,12 @@ mod schema {
             kind: super::transport::OpKind::Mutation,
             gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ok errors { message } } } } } }",
         },
-        CallTarget {
-            path: &["session", "store", "theKit", "save"],
-            kind: super::transport::OpKind::Mutation,
-            gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { save { ok errors { message } } } } } }",
-        },
+        CallTarget { path: &["session", "store", "theKit", "save"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { save { ok errors { message } } } } } }" },
     ];
 
     pub fn resolve_call(action_id: &str) -> Result<CallTarget, String> {
         let parts: Vec<&str> = action_id.split('.').collect();
-        CALL_TARGETS
-            .iter()
-            .copied()
-            .find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b))
-            .ok_or_else(|| format!("unknown CALL target {action_id}"))
+        CALL_TARGETS.iter().copied().find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b)).ok_or_else(|| format!("unknown CALL target {action_id}"))
     }
 
     pub fn call_variables(action_id: &str, args: &BTreeMap<String, serde_json::Value>) -> serde_json::Value {
@@ -1031,18 +711,9 @@ mod transport {
 
     /// @emoji 🌐 Async GraphQL IO boundary (native + wasm).
     pub trait Transport {
-        fn execute(
-            &self,
-            kind: OpKind,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>>;
+        fn execute(&self, kind: OpKind, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>>;
 
-        fn subscribe(
-            &self,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>>;
+        fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>>;
     }
 
     /// @emoji 🧪 In-memory transport for unit tests.
@@ -1061,39 +732,18 @@ mod transport {
     }
 
     impl Transport for MemoryTransport {
-        fn execute(
-            &self,
-            kind: OpKind,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
+        fn execute(&self, kind: OpKind, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
             let key = Self::key(kind, doc);
             let _ = variables;
-            let out = self
-                .responses
-                .get(&key)
-                .or_else(|| self.responses.get(doc))
-                .cloned()
-                .ok_or_else(|| TransportError::Msg(format!("no canned response for {key}")));
+            let out = self.responses.get(&key).or_else(|| self.responses.get(doc)).cloned().ok_or_else(|| TransportError::Msg(format!("no canned response for {key}")));
             Box::pin(async move { out })
         }
 
-        fn subscribe(
-            &self,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
+        fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
             let key = Self::key(OpKind::Subscription, doc);
             let _ = variables;
-            let item = self
-                .responses
-                .get(&key)
-                .or_else(|| self.responses.get(doc))
-                .cloned()
-                .ok_or_else(|| TransportError::Msg(format!("no canned subscription for {key}")));
-            Box::pin(async move {
-                Ok(Box::pin(stream::once(async move { item })) as BoxStream<'static, Result<Value, TransportError>>)
-            })
+            let item = self.responses.get(&key).or_else(|| self.responses.get(doc)).cloned().ok_or_else(|| TransportError::Msg(format!("no canned subscription for {key}")));
+            Box::pin(async move { Ok(Box::pin(stream::once(async move { item })) as BoxStream<'static, Result<Value, TransportError>>) })
         }
     }
 
@@ -1106,61 +756,33 @@ mod transport {
     #[cfg(target_arch = "wasm32")]
     impl JsTransport {
         pub fn new(execute_fn: js_sys::Function, subscribe_fn: js_sys::Function) -> Self {
-            Self {
-                execute_fn,
-                subscribe_fn,
-            }
+            Self { execute_fn, subscribe_fn }
         }
     }
 
     #[cfg(target_arch = "wasm32")]
     impl Transport for JsTransport {
-        fn execute(
-            &self,
-            kind: OpKind,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
+        fn execute(&self, kind: OpKind, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
             let execute_fn = self.execute_fn.clone();
             let doc = doc.to_string();
             let kind_s = format!("{kind:?}");
             Box::pin(async move {
-                let vars = serde_wasm_bindgen::to_value(&variables)
-                    .map_err(|e| TransportError::Msg(e.to_string()))?;
-                let promise = execute_fn
-                    .call2(
-                        &wasm_bindgen::JsValue::NULL,
-                        &wasm_bindgen::JsValue::from_str(&kind_s),
-                        &wasm_bindgen::JsValue::from_str(&doc),
-                    )
-                    .map_err(|e| TransportError::Msg(format!("{e:?}")))?;
+                let vars = serde_wasm_bindgen::to_value(&variables).map_err(|e| TransportError::Msg(e.to_string()))?;
+                let promise = execute_fn.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(&kind_s), &wasm_bindgen::JsValue::from_str(&doc)).map_err(|e| TransportError::Msg(format!("{e:?}")))?;
                 let _ = vars;
-                let val = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(&promise))
-                    .await
-                    .map_err(|e| TransportError::Msg(format!("{e:?}")))?;
+                let val = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(&promise)).await.map_err(|e| TransportError::Msg(format!("{e:?}")))?;
                 serde_wasm_bindgen::from_value(val).map_err(|e| TransportError::Msg(e.to_string()))
             })
         }
 
-        fn subscribe(
-            &self,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
+        fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
             let subscribe_fn = self.subscribe_fn.clone();
             let doc = doc.to_string();
             let vars = variables;
             Box::pin(async move {
                 let _vars = vars;
-                let _stream_factory = subscribe_fn
-                    .call1(
-                        &wasm_bindgen::JsValue::NULL,
-                        &wasm_bindgen::JsValue::from_str(&doc),
-                    )
-                    .map_err(|e| TransportError::Msg(format!("{e:?}")))?;
-                Err(TransportError::Msg(
-                    "JsTransport subscription stream wiring is host-specific".into(),
-                ))
+                let _stream_factory = subscribe_fn.call1(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(&doc)).map_err(|e| TransportError::Msg(format!("{e:?}")))?;
+                Err(TransportError::Msg("JsTransport subscription stream wiring is host-specific".into()))
             })
         }
     }
@@ -1178,20 +800,13 @@ mod transport {
         }
 
         fn gql_value(data: &async_graphql::Value) -> Result<Value, TransportError> {
-            data.clone()
-                .into_json()
-                .map_err(|e| TransportError::Msg(e.to_string()))
+            data.clone().into_json().map_err(|e| TransportError::Msg(e.to_string()))
         }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     impl Transport for SemioTransport {
-        fn execute(
-            &self,
-            kind: OpKind,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
+        fn execute(&self, kind: OpKind, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
             let _ = kind;
             let doc = doc.to_string();
             Box::pin(async move {
@@ -1209,11 +824,7 @@ mod transport {
             })
         }
 
-        fn subscribe(
-            &self,
-            doc: &str,
-            variables: Value,
-        ) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
+        fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
             let doc = doc.to_string();
             Box::pin(async move {
                 use async_graphql::{Request, Variables};
@@ -1222,17 +833,12 @@ mod transport {
                     req = req.variables(Variables::from_json(variables));
                 }
                 let mut sub = self.schema.execute_stream(req);
-                let first = sub
-                    .next()
-                    .await
-                    .ok_or_else(|| TransportError::Msg("empty subscription".into()))?;
+                let first = sub.next().await.ok_or_else(|| TransportError::Msg("empty subscription".into()))?;
                 if !first.errors.is_empty() {
                     return Err(TransportError::Msg(format!("{:?}", first.errors)));
                 }
                 let payload = Self::gql_value(&first.data)?;
-                Ok(Box::pin(stream::once(async move {
-                    Ok(serde_json::json!({ "data": payload }))
-                })) as BoxStream<'static, Result<Value, TransportError>>)
+                Ok(Box::pin(stream::once(async move { Ok(serde_json::json!({ "data": payload })) })) as BoxStream<'static, Result<Value, TransportError>>)
             })
         }
     }
@@ -1259,40 +865,14 @@ mod planner {
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     pub enum Step {
-        GraphQl {
-            op: OpKind,
-            document: String,
-            variables: Value,
-            bind: BindSpec,
-        },
-        Join {
-            on_var: String,
-            key: String,
-        },
-        Filter {
-            expr: Expr,
-        },
-        Unwind {
-            source_var: String,
-            alias: String,
-            where_expr: Option<Expr>,
-        },
-        Project {
-            projections: Vec<ProjectionItem>,
-            where_expr: Option<Expr>,
-        },
-        Order {
-            expr: Expr,
-        },
-        Limit {
-            n: usize,
-        },
-        Call {
-            op: OpKind,
-            document: String,
-            variables: Value,
-            yield_items: Vec<YieldItem>,
-        },
+        GraphQl { op: OpKind, document: String, variables: Value, bind: BindSpec },
+        Join { on_var: String, key: String },
+        Filter { expr: Expr },
+        Unwind { source_var: String, alias: String, where_expr: Option<Expr> },
+        Project { projections: Vec<ProjectionItem>, where_expr: Option<Expr> },
+        Order { expr: Expr },
+        Limit { n: usize },
+        Call { op: OpKind, document: String, variables: Value, yield_items: Vec<YieldItem> },
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1343,20 +923,12 @@ mod planner {
                     for pat in &m.patterns {
                         let plan = plan_pattern(pat)?;
                         if emitted_patterns.insert(plan.document.clone()) {
-                            steps.push(Step::GraphQl {
-                                op: OpKind::Query,
-                                document: plan.document,
-                                variables: json!({}),
-                                bind: plan.bind,
-                            });
+                            steps.push(Step::GraphQl { op: OpKind::Query, document: plan.document, variables: json!({}), bind: plan.bind });
                         }
                     }
                     for (var, count) in &shared {
                         if *count > 1 && join_vars.insert(var.clone()) {
-                            steps.push(Step::Join {
-                                on_var: var.clone(),
-                                key: "id".into(),
-                            });
+                            steps.push(Step::Join { on_var: var.clone(), key: "id".into() });
                         }
                     }
                     for pat in &m.patterns {
@@ -1373,54 +945,34 @@ mod planner {
                     }
                 }
                 Clause::With(w) => {
-                    steps.push(Step::Project {
-                        projections: w.projections.clone(),
-                        where_expr: w.where_expr.clone(),
-                    });
+                    steps.push(Step::Project { projections: w.projections.clone(), where_expr: w.where_expr.clone() });
                 }
                 Clause::Unwind(u) => {
                     let source_var = match &u.source {
                         Expr::Var { name } => name.clone(),
                         other => {
-                            return Err(ArchitectError::Plan(format!(
-                                "UNWIND expects a variable, got {other:?}"
-                            )));
+                            return Err(ArchitectError::Plan(format!("UNWIND expects a variable, got {other:?}")));
                         }
                     };
-                    steps.push(Step::Unwind {
-                        source_var,
-                        alias: u.alias.clone(),
-                        where_expr: u.where_expr.clone(),
-                    });
+                    steps.push(Step::Unwind { source_var, alias: u.alias.clone(), where_expr: u.where_expr.clone() });
                 }
                 Clause::Call(c) => {
-                    let target = schema::resolve_call(&c.action_id)
-                        .map_err(ArchitectError::Plan)?;
-                    steps.push(Step::Call {
-                        op: target.kind,
-                        document: target.gql.to_string(),
-                        variables: schema::call_variables(&c.action_id, &c.args),
-                        yield_items: c.yield_items.clone(),
-                    });
+                    let target = schema::resolve_call(&c.action_id).map_err(ArchitectError::Plan)?;
+                    steps.push(Step::Call { op: target.kind, document: target.gql.to_string(), variables: schema::call_variables(&c.action_id, &c.args), yield_items: c.yield_items.clone() });
                 }
             }
         }
 
         if let Some(ret) = &q.return_clause {
             if ret.order_by.is_some() {
-                steps.push(Step::Order {
-                    expr: ret.order_by.clone().unwrap(),
-                });
+                steps.push(Step::Order { expr: ret.order_by.clone().unwrap() });
             }
             if let Some(n) = ret.limit {
                 steps.push(Step::Limit { n });
             }
         }
 
-        Ok(OpPlan {
-            steps,
-            return_clause: q.return_clause.clone(),
-        })
+        Ok(OpPlan { steps, return_clause: q.return_clause.clone() })
     }
 
     fn plan_pattern(pat: &Pattern) -> Result<PatternPlan, ArchitectError> {
@@ -1435,22 +987,12 @@ mod planner {
         if nodes.is_empty() {
             return Err(ArchitectError::Plan("empty pattern".into()));
         }
-        let anchor = nodes
-            .iter()
-            .min_by_key(|n| selectivity(n))
-            .ok_or_else(|| ArchitectError::Plan("no anchor".into()))?;
-        let anchor_var = anchor
-            .var_name
-            .clone()
-            .unwrap_or_else(|| "__anchor".into());
+        let anchor = nodes.iter().min_by_key(|n| selectivity(n)).ok_or_else(|| ArchitectError::Plan("no anchor".into()))?;
+        let anchor_var = anchor.var_name.clone().unwrap_or_else(|| "__anchor".into());
         let anchor_label = schema::node_label(anchor).map_err(ArchitectError::Plan)?;
 
         let (document, paths) = build_graphql_document(pat, anchor_var.as_str(), anchor_label)?;
-        let bind = BindSpec {
-            anchor_var: anchor_var.clone(),
-            anchor_label: anchor_label.gql_name().to_string(),
-            paths,
-        };
+        let bind = BindSpec { anchor_var: anchor_var.clone(), anchor_label: anchor_label.gql_name().to_string(), paths };
         Ok(PatternPlan { document, bind })
     }
 
@@ -1460,21 +1002,14 @@ mod planner {
         }
         let mut conjuncts = Vec::new();
         for (key, val) in props {
-            let lhs = Expr::Field {
-                object: Box::new(Expr::Var { name: var.to_string() }),
-                name: key.clone(),
-            };
+            let lhs = Expr::Field { object: Box::new(Expr::Var { name: var.to_string() }), name: key.clone() };
             let rhs = match val {
                 serde_json::Value::String(s) => Expr::Const(serde_json::Value::String(s.clone())),
                 serde_json::Value::Bool(b) => Expr::Const(serde_json::Value::Bool(*b)),
                 serde_json::Value::Number(n) => Expr::Const(serde_json::Value::Number(n.clone())),
                 _ => continue,
             };
-            conjuncts.push(Expr::BinOp {
-                op: BinOp::Eq,
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-            });
+            conjuncts.push(Expr::BinOp { op: BinOp::Eq, left: Box::new(lhs), right: Box::new(rhs) });
         }
         match conjuncts.len() {
             0 => None,
@@ -1500,69 +1035,41 @@ mod planner {
         score
     }
 
-    fn build_graphql_document(
-        pat: &Pattern,
-        anchor_var: &str,
-        anchor_label: Label,
-    ) -> Result<(String, BTreeMap<String, JsonPath>), ArchitectError> {
+    fn build_graphql_document(pat: &Pattern, anchor_var: &str, anchor_label: Label) -> Result<(String, BTreeMap<String, JsonPath>), ArchitectError> {
         let mut paths: BTreeMap<String, JsonPath> = BTreeMap::new();
         let mut anchor_path = vec![
-            PathSeg::Field {
-                name: "session".into(),
-            },
-            PathSeg::Field {
-                name: "stores".into(),
-            },
+            PathSeg::Field { name: "session".into() },
+            PathSeg::Field { name: "stores".into() },
             PathSeg::ConnectionEdges,
             PathSeg::ConnectionNode,
-            PathSeg::Field {
-                name: "wip".into(),
-            },
-            PathSeg::Field {
-                name: "theKit".into(),
-            },
-            PathSeg::Field {
-                name: "kit".into(),
-            },
+            PathSeg::Field { name: "wip".into() },
+            PathSeg::Field { name: "theKit".into() },
+            PathSeg::Field { name: "kit".into() },
         ];
 
         match anchor_label {
             Label::Design => {
-                anchor_path.push(PathSeg::Field {
-                    name: "designs".into(),
-                });
+                anchor_path.push(PathSeg::Field { name: "designs".into() });
                 anchor_path.push(PathSeg::ConnectionEdges);
                 anchor_path.push(PathSeg::ConnectionNode);
             }
             Label::Type => {
-                anchor_path.push(PathSeg::Field {
-                    name: "types".into(),
-                });
+                anchor_path.push(PathSeg::Field { name: "types".into() });
                 anchor_path.push(PathSeg::ConnectionEdges);
                 anchor_path.push(PathSeg::ConnectionNode);
             }
             Label::Kit => {}
             _ => {
-                return Err(ArchitectError::Plan(format!(
-                    "anchor label {} must be Kit, Design, or Type for session root",
-                    anchor_label.gql_name()
-                )));
+                return Err(ArchitectError::Plan(format!("anchor label {} must be Kit, Design, or Type for session root", anchor_label.gql_name())));
             }
         }
 
-        paths.insert(
-            anchor_var.to_string(),
-            JsonPath {
-                segments: anchor_path.clone(),
-            },
-        );
+        paths.insert(anchor_var.to_string(), JsonPath { segments: anchor_path.clone() });
 
         for el in &pat.elements {
             if let PatternElement::Node(node) = el {
                 if let Some(v) = &node.var_name {
-                    paths.entry(v.clone()).or_insert(JsonPath {
-                        segments: anchor_path.clone(),
-                    });
+                    paths.entry(v.clone()).or_insert(JsonPath { segments: anchor_path.clone() });
                 }
             }
         }
@@ -1600,15 +1107,10 @@ mod planner {
                     if let PatternElement::Rel(rel) = elements[i + 1] {
                         if i + 2 < elements.len() {
                             if let PatternElement::Node(next) = elements[i + 2] {
-                                if let (Some(from), Some(to)) = (
-                                    node.label.as_ref().and_then(|l| Label::parse(l)),
-                                    next.label.as_ref().and_then(|l| Label::parse(l)),
-                                ) {
+                                if let (Some(from), Some(to)) = (node.label.as_ref().and_then(|l| Label::parse(l)), next.label.as_ref().and_then(|l| Label::parse(l))) {
                                     if let Ok(pred) = schema::rel_predicate(rel) {
                                         let forward = !matches!(rel.direction, RelDirection::In);
-                                        if let Ok(edge) =
-                                            schema::resolve_edge(from, pred, to, rel, forward)
-                                        {
+                                        if let Ok(edge) = schema::resolve_edge(from, pred, to, rel, forward) {
                                             if edge.field == "__typename" {
                                                 if to == Label::Type {
                                                     out.push_str("                      ... on Type { id hash name connectors { edges { node { id hash name port { id hash label code } } } } }\n");
@@ -1616,21 +1118,11 @@ mod planner {
                                                     out.push_str("                      ... on Design { id hash name }\n");
                                                 }
                                             } else if edge.cardinality == schema::Cardinality::Many {
-                                                let child_scalars =
-                                                    schema::entity_scalar_fields(to).join(" ");
-                                                out.push_str(&format!(
-                                                    "                      {} {{ edges {{ node {{ {child_scalars} {} }} }} }}\n",
-                                                    edge.field,
-                                                    build_rel_tail(&elements, i + 2, to)
-                                                ));
+                                                let child_scalars = schema::entity_scalar_fields(to).join(" ");
+                                                out.push_str(&format!("                      {} {{ edges {{ node {{ {child_scalars} {} }} }} }}\n", edge.field, build_rel_tail(&elements, i + 2, to)));
                                             } else {
-                                                let child_scalars =
-                                                    schema::entity_scalar_fields(to).join(" ");
-                                                out.push_str(&format!(
-                                                    "                      {} {{ {child_scalars} {} }}\n",
-                                                    edge.field,
-                                                    build_rel_tail(&elements, i + 2, to)
-                                                ));
+                                                let child_scalars = schema::entity_scalar_fields(to).join(" ");
+                                                out.push_str(&format!("                      {} {{ {child_scalars} {} }}\n", edge.field, build_rel_tail(&elements, i + 2, to)));
                                             }
                                         }
                                     }
@@ -1654,20 +1146,12 @@ mod planner {
             if let PatternElement::Rel(rel) = elements[i] {
                 if i + 1 < elements.len() {
                     if let PatternElement::Node(next) = elements[i + 1] {
-                        if let (Ok(pred), Some(to_lab)) = (
-                            schema::rel_predicate(rel),
-                            next.label.as_ref().and_then(|l| Label::parse(l)),
-                        ) {
+                        if let (Ok(pred), Some(to_lab)) = (schema::rel_predicate(rel), next.label.as_ref().and_then(|l| Label::parse(l))) {
                             let forward = !matches!(rel.direction, RelDirection::In);
-                            if let Ok(edge) =
-                                schema::resolve_edge(from_label, pred, to_lab, rel, forward)
-                            {
+                            if let Ok(edge) = schema::resolve_edge(from_label, pred, to_lab, rel, forward) {
                                 let child_scalars = schema::entity_scalar_fields(to_lab).join(" ");
                                 if edge.cardinality == schema::Cardinality::Many {
-                                    s.push_str(&format!(
-                                        "{} {{ edges {{ node {{ {child_scalars} }} }} }} ",
-                                        edge.field
-                                    ));
+                                    s.push_str(&format!("{} {{ edges {{ node {{ {child_scalars} }} }} }} ", edge.field));
                                 } else {
                                     s.push_str(&format!("{} {{ {child_scalars} }} ", edge.field));
                                 }
@@ -1717,13 +1201,7 @@ mod executor {
             env.finish(plan.return_clause.as_ref())
         }
 
-        pub async fn run_subscription(
-            plan: &OpPlan,
-            transport: &dyn Transport,
-        ) -> Result<
-            Pin<Box<dyn futures_util::Stream<Item = Result<QueryResult, ArchitectError>> + Send>>,
-            ArchitectError,
-        > {
+        pub async fn run_subscription(plan: &OpPlan, transport: &dyn Transport) -> Result<Pin<Box<dyn futures_util::Stream<Item = Result<QueryResult, ArchitectError>> + Send>>, ArchitectError> {
             let has_sub = plan.steps.iter().any(|s| matches!(s, Step::Call { op: OpKind::Subscription, .. }));
             if !has_sub {
                 return Err(ArchitectError::Execute("plan has no subscription CALL".into()));
@@ -1731,19 +1209,11 @@ mod executor {
             let mut env = BindEnv::default();
             for step in &plan.steps {
                 match step {
-                    Step::Call {
-                        op: OpKind::Subscription,
-                        document,
-                        variables,
-                        yield_items,
-                    } => {
+                    Step::Call { op: OpKind::Subscription, document, variables, yield_items } => {
                         let mut sub_stream = transport.subscribe(document, variables.clone()).await?;
                         let yield_items = yield_items.clone();
                         let ret = plan.return_clause.clone();
-                        let first = sub_stream
-                            .next()
-                            .await
-                            .ok_or_else(|| ArchitectError::Execute("empty subscription stream".into()))??;
+                        let first = sub_stream.next().await.ok_or_else(|| ArchitectError::Execute("empty subscription stream".into()))??;
                         env.rows.clear();
                         env.ingest_call_yield(&first, &yield_items);
                         let once = stream::once(async move { env.finish(ret.as_ref()) });
@@ -1764,12 +1234,7 @@ mod executor {
     impl BindEnv {
         async fn apply(&mut self, step: &Step, transport: &dyn Transport) -> Result<(), ArchitectError> {
             match step {
-                Step::GraphQl {
-                    op,
-                    document,
-                    variables,
-                    bind,
-                } => {
+                Step::GraphQl { op, document, variables, bind } => {
                     let data = transport.execute(*op, document, variables.clone()).await?;
                     let expanded = extract_rows(&data, bind)?;
                     if self.rows.is_empty() {
@@ -1784,11 +1249,7 @@ mod executor {
                 Step::Filter { expr } => {
                     self.rows.retain(|row| eval_bool(expr, row));
                 }
-                Step::Unwind {
-                    source_var,
-                    alias,
-                    where_expr,
-                } => {
+                Step::Unwind { source_var, alias, where_expr } => {
                     let mut next = Vec::new();
                     for row in &self.rows {
                         let Some(v) = row.get(source_var) else { continue };
@@ -1806,10 +1267,7 @@ mod executor {
                     }
                     self.rows = next;
                 }
-                Step::Project {
-                    projections,
-                    where_expr,
-                } => {
+                Step::Project { projections, where_expr } => {
                     let mut next = Vec::new();
                     for row in &self.rows {
                         let mut r = Row::new();
@@ -1837,12 +1295,7 @@ mod executor {
                 Step::Limit { n } => {
                     self.rows.truncate(*n);
                 }
-                Step::Call {
-                    op,
-                    document,
-                    variables,
-                    yield_items,
-                } => {
+                Step::Call { op, document, variables, yield_items } => {
                     if *op == OpKind::Subscription {
                         return Ok(());
                     }
@@ -1869,14 +1322,7 @@ mod executor {
 
         fn finish(&self, ret: Option<&ReturnClause>) -> Result<QueryResult, ArchitectError> {
             let Some(ret) = ret else {
-                return Ok(QueryResult {
-                    columns: vec![],
-                    rows: self
-                        .rows
-                        .iter()
-                        .map(|r| Value::Object(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect()))
-                        .collect(),
-                });
+                return Ok(QueryResult { columns: vec![], rows: self.rows.iter().map(|r| Value::Object(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect())).collect() });
             };
             let mut columns = Vec::new();
             let mut rows = Vec::new();
@@ -1898,10 +1344,7 @@ mod executor {
 
     fn extract_rows(data: &Value, bind: &super::planner::BindSpec) -> Result<Vec<Row>, ArchitectError> {
         let root = data.get("data").unwrap_or(data);
-        let anchor_path = bind
-            .paths
-            .get(&bind.anchor_var)
-            .ok_or_else(|| ArchitectError::Execute("bind missing anchor path".into()))?;
+        let anchor_path = bind.paths.get(&bind.anchor_var).ok_or_else(|| ArchitectError::Execute("bind missing anchor path".into()))?;
         let anchors = read_path(root, anchor_path);
         if anchors.is_empty() {
             return Ok(vec![]);
@@ -2088,11 +1531,8 @@ mod executor {
     }
 
     fn json_num(n: f64) -> Value {
-        serde_json::Number::from_f64(n)
-            .map(Value::Number)
-            .unwrap_or(Value::Null)
+        serde_json::Number::from_f64(n).map(Value::Number).unwrap_or(Value::Null)
     }
-
 }
 //#endregion 🔖Executor
 
@@ -2125,15 +1565,7 @@ mod api {
     pub async fn run(text: &str, transport: &dyn Transport) -> Result<QueryResult, ArchitectError> {
         let ast = parse(text)?;
         let plan = plan(&ast)?;
-        if plan.steps.iter().any(|s| {
-            matches!(
-                s,
-                super::planner::Step::Call {
-                    op: super::transport::OpKind::Subscription,
-                    ..
-                }
-            )
-        }) {
+        if plan.steps.iter().any(|s| matches!(s, super::planner::Step::Call { op: super::transport::OpKind::Subscription, .. })) {
             let mut stream = Executor::run_subscription(&plan, transport).await?;
             if let Some(first) = stream.next().await {
                 return first;
@@ -2142,7 +1574,6 @@ mod api {
         }
         Executor::run(&plan, transport).await
     }
-
 }
 //#endregion 🔖Api
 
@@ -2202,18 +1633,10 @@ mod wasm_api {
             .steps
             .iter()
             .map(|step| match step {
-                Step::GraphQl {
-                    op,
-                    document,
-                    variables,
-                    bind,
-                } => {
+                Step::GraphQl { op, document, variables, bind } => {
                     let mut paths = serde_json::Map::new();
                     for (k, p) in &bind.paths {
-                        paths.insert(
-                            k.clone(),
-                            Value::Array(p.segments.iter().map(export_path_seg).collect()),
-                        );
+                        paths.insert(k.clone(), Value::Array(p.segments.iter().map(export_path_seg).collect()));
                     }
                     json!({
                         "kind": "graphQl",
@@ -2229,32 +1652,20 @@ mod wasm_api {
                 }
                 Step::Join { on_var, key } => json!({ "kind": "join", "onVar": on_var, "key": key }),
                 Step::Filter { expr } => json!({ "kind": "filter", "expr": export_expr(expr) }),
-                Step::Unwind {
-                    source_var,
-                    alias,
-                    where_expr,
-                } => json!({
+                Step::Unwind { source_var, alias, where_expr } => json!({
                     "kind": "unwind",
                     "sourceVar": source_var,
                     "alias": alias,
                     "whereExpr": where_expr.as_ref().map(export_expr),
                 }),
-                Step::Project {
-                    projections,
-                    where_expr,
-                } => json!({
+                Step::Project { projections, where_expr } => json!({
                     "kind": "project",
                     "projections": projections.iter().map(export_projection).collect::<Vec<_>>(),
                     "whereExpr": where_expr.as_ref().map(export_expr),
                 }),
                 Step::Order { expr } => json!({ "kind": "order", "expr": export_expr(expr) }),
                 Step::Limit { n } => json!({ "kind": "limit", "n": n }),
-                Step::Call {
-                    op,
-                    document,
-                    variables,
-                    yield_items,
-                } => json!({
+                Step::Call { op, document, variables, yield_items } => json!({
                     "kind": "call",
                     "op": format!("{op:?}"),
                     "document": document,
@@ -2284,10 +1695,7 @@ mod wasm_api {
     pub async fn architect_run(query: &str, execute_fn: js_sys::Function, subscribe_fn: js_sys::Function) -> Result<JsValue, JsValue> {
         console_error_panic_hook::set_once();
         let transport = JsTransport::new(execute_fn, subscribe_fn);
-        api::run(query, &transport)
-            .await
-            .map(|r| serde_wasm_bindgen::to_value(&r).unwrap())
-            .map_err(|e| JsValue::from_str(&e.to_string()))
+        api::run(query, &transport).await.map(|r| serde_wasm_bindgen::to_value(&r).unwrap()).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 
@@ -2317,18 +1725,11 @@ mod tests {
     }
 
     fn cases_for_tier<'a>(doc: &'a serde_json::Value, tier: &str) -> Vec<&'a serde_json::Value> {
-        case_rows(doc)
-            .iter()
-            .filter(|c| c["tier"].as_str() == Some(tier))
-            .collect()
+        case_rows(doc).iter().filter(|c| c["tier"].as_str() == Some(tier)).collect()
     }
 
     fn column_values(result: &QueryResult, column: &str) -> Vec<serde_json::Value> {
-        result
-            .rows
-            .iter()
-            .filter_map(|row| row.get(column).cloned())
-            .collect()
+        result.rows.iter().filter_map(|row| row.get(column).cloned()).collect()
     }
 
     fn assert_query_expect(case_name: &str, result: &QueryResult, expect: &serde_json::Value) {
@@ -2345,9 +1746,7 @@ mod tests {
         if let Some(rows) = expect.get("rowContains").and_then(|v| v.as_array()) {
             for want in rows {
                 let obj = want.as_object().expect("rowContains object");
-                let hit = result.rows.iter().any(|row| {
-                    obj.iter().all(|(k, v)| row.get(k).map(|a| a == v).unwrap_or(false))
-                });
+                let hit = result.rows.iter().any(|row| obj.iter().all(|(k, v)| row.get(k).map(|a| a == v).unwrap_or(false)));
                 assert!(hit, "case {case_name} rowContains {want}");
             }
         }
@@ -2355,10 +1754,7 @@ mod tests {
             for (col, vals) in include {
                 let got = column_values(result, col);
                 for v in vals.as_array().expect("valuesInclude array") {
-                    assert!(
-                        got.iter().any(|g| g == v),
-                        "case {case_name} valuesInclude {col} missing {v}"
-                    );
+                    assert!(got.iter().any(|g| g == v), "case {case_name} valuesInclude {col} missing {v}");
                 }
             }
         }
@@ -2366,10 +1762,7 @@ mod tests {
             for (col, vals) in exclude {
                 let got = column_values(result, col);
                 for v in vals.as_array().expect("valuesExclude array") {
-                    assert!(
-                        !got.iter().any(|g| g == v),
-                        "case {case_name} valuesExclude {col} still has {v}"
-                    );
+                    assert!(!got.iter().any(|g| g == v), "case {case_name} valuesExclude {col} still has {v}");
                 }
             }
         }
@@ -2402,11 +1795,7 @@ mod tests {
 
     fn assert_plan_expect(name: &str, plan: &OpPlan, expect: &serde_json::Value) {
         if let Some(min) = expect.get("minGraphQlSteps").and_then(|v| v.as_u64()) {
-            let n = plan
-                .steps
-                .iter()
-                .filter(|s| matches!(s, planner::Step::GraphQl { .. }))
-                .count();
+            let n = plan.steps.iter().filter(|s| matches!(s, planner::Step::GraphQl { .. })).count();
             assert!(n >= min as usize, "case {name} graphql steps");
         }
         if let Some(vars) = expect.get("joinVars").and_then(|v| v.as_array()) {
@@ -2422,11 +1811,7 @@ mod tests {
             }
         }
         if let Some(min) = expect.get("minFilterSteps").and_then(|v| v.as_u64()) {
-            let n = plan
-                .steps
-                .iter()
-                .filter(|s| matches!(s, planner::Step::Filter { .. }))
-                .count();
+            let n = plan.steps.iter().filter(|s| matches!(s, planner::Step::Filter { .. })).count();
             assert!(n >= min as usize, "case {name} filter steps");
         }
     }
@@ -2491,9 +1876,7 @@ mod tests {
             return semio::gql::build_schema_for(semio::worker::ParentStore::spawn().await);
         }
         let kit = architect_harness_kit();
-        let rt = semio::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit)
-            .await
-            .expect("hydrate architect harness");
+        let rt = semio::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit).await.expect("hydrate architect harness");
         semio::gql::build_schema_for(rt)
     }
 
@@ -2505,9 +1888,7 @@ mod tests {
             let name = case["name"].as_str().unwrap();
             let query = case["query"].as_str().unwrap();
             let transport = SemioTransport::new(semio_schema_for_case(case).await);
-            let result = run(query, &transport)
-                .await
-                .unwrap_or_else(|e| panic!("case {name}: {e}"));
+            let result = run(query, &transport).await.unwrap_or_else(|e| panic!("case {name}: {e}"));
             assert_query_expect(name, &result, &case["expect"]);
         }
     }

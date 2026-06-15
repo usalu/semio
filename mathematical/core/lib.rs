@@ -382,37 +382,9 @@ pub mod tree_layout {
         }
         let id_to_idx: HashMap<String, usize> = ordered_ids.iter().enumerate().map(|(i, s)| (s.clone(), i)).collect();
         let super_idx = ordered_ids.len();
-        let mut nodes: Vec<BuchheimNode> = ordered_ids
-            .iter()
-            .map(|id| BuchheimNode {
-                ancestor: 0,
-                change: 0.0,
-                children: vec![],
-                id: id.clone(),
-                mod_: 0.0,
-                number: 0,
-                parent: None,
-                shift: 0.0,
-                synthetic: false,
-                thread: None,
-                x: -1.0,
-                y: 0.0,
-            })
-            .collect();
-        nodes.push(BuchheimNode {
-            ancestor: super_idx,
-            change: 0.0,
-            children: vec![],
-            id: "__tree_super__".into(),
-            mod_: 0.0,
-            number: 0,
-            parent: None,
-            shift: 0.0,
-            synthetic: true,
-            thread: None,
-            x: -1.0,
-            y: 0.0,
-        });
+        let mut nodes: Vec<BuchheimNode> =
+            ordered_ids.iter().map(|id| BuchheimNode { ancestor: 0, change: 0.0, children: vec![], id: id.clone(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: false, thread: None, x: -1.0, y: 0.0 }).collect();
+        nodes.push(BuchheimNode { ancestor: super_idx, change: 0.0, children: vec![], id: "__tree_super__".into(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: true, thread: None, x: -1.0, y: 0.0 });
         for (i, oid) in ordered_ids.iter().enumerate() {
             let pidx = if roots_set.contains(oid) {
                 super_idx
@@ -657,11 +629,7 @@ mod tests {
         let radii = vec![32.0, 32.0];
         let edges = vec![(0, 1)];
         let pin = vec![None, None];
-        let opts = ForceLayoutOptions {
-            iterations: 120,
-            ideal_edge_length: 80.0,
-            ..Default::default()
-        };
+        let opts = ForceLayoutOptions { iterations: 120, ideal_edge_length: 80.0, ..Default::default() };
         run_force_layout(&mut positions, &radii, &edges, &pin, &opts);
         let dist = (positions[1] - positions[0]).norm();
         assert!(dist.is_finite() && dist > 1.0);

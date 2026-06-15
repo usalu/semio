@@ -755,7 +755,9 @@ function objectKind3d(catalogs: KindCatalogBundle | undefined, partKind: string)
   return project3dKindCatalogs(catalogs)?.objects?.find((row) => row.id === partKind);
 }
 
-function volumeTemplatesForPartKind(model: Model, partKind: string, catalogs: KindCatalogBundle | undefined): NonNullable<Puzzle3dPartKind["vortices"]> | undefined {
+type Puzzle5dVolumeGripTemplate = NonNullable<Puzzle3dPartKind["vortices"]>[number] & { readonly id?: string };
+
+function volumeTemplatesForPartKind(model: Model, partKind: string, catalogs: KindCatalogBundle | undefined): readonly Puzzle5dVolumeGripTemplate[] | undefined {
   const fromCatalog = objectKind3d(catalogs, partKind)?.vortices;
   if (fromCatalog?.length) return fromCatalog;
   const peer = peerPartForKind(model, partKind);
@@ -763,6 +765,7 @@ function volumeTemplatesForPartKind(model: Model, partKind: string, catalogs: Ki
   const templates = peer.grips
     .filter((grip) => grip["3d"])
     .map((grip) => ({
+      id: grip.id,
       vortexKind: grip.gripKind,
       position: grip["3d"]!.position,
       ...(grip["3d"]!.direction ? { direction: grip["3d"]!.direction } : {}),
@@ -780,6 +783,18 @@ function slugGripLocalId(kind: string): string {
   return slug.length > 0 ? slug.slice(0, 48) : "link";
 }
 
+function uniqueGripLocalId(base: string | undefined, index: number, used: Set<string>): string {
+  const seed = (base?.trim() || gripLocalIdFromIndex(index)).replaceAll(PUZZLE_5D_GRIP_ID_SEPARATOR, "-");
+  let id = seed;
+  let suffix = index;
+  while (used.has(id)) {
+    id = `${seed}-${suffix}`;
+    suffix += 1;
+  }
+  used.add(id);
+  return id;
+}
+
 function flatTemplatesFromObjectKind(kind: Puzzle3dPartKind | undefined): readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[] {
   const count = Math.max(kind?.vortices?.length ?? 0, 1);
   return Array.from({ length: count }, (_, index) => ({
@@ -794,17 +809,18 @@ function buildGripsUnified(
   partKind: string,
   catalogs: KindCatalogBundle | undefined,
   flatTemplates?: readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[],
-  volumeTemplates?: Puzzle3dPartKind["vortices"],
+  volumeTemplates?: readonly Puzzle5dVolumeGripTemplate[],
 ): Grip[] {
   const kind3d = objectKind3d(catalogs, partKind);
   const vortices = volumeTemplates ?? kind3d?.vortices ?? [];
   const flat = flatTemplates ?? flatTemplatesFromObjectKind(kind3d);
   const count = Math.max(vortices.length, flat.length, 1);
   const grips: Grip[] = [];
+  const usedIds = new Set<string>();
   for (let index = 0; index < count; index += 1) {
     const vortex = vortices[index];
     const handle = flat[index] ?? flat[0];
-    const localId = vortex?.vortexKind ? slugGripLocalId(vortex.vortexKind) : gripLocalIdFromIndex(index);
+    const localId = uniqueGripLocalId(vortex?.id ?? (vortex?.vortexKind ? slugGripLocalId(vortex.vortexKind) : undefined), index, usedIds);
     grips.push({
       id: localId,
       gripKind: vortex?.vortexKind ?? handle?.handleKind ?? BUILTIN_PORT_HANDLE_KIND,
@@ -838,10 +854,11 @@ function mergeGripsFlatAndVolume(
 ): Grip[] {
   const count = Math.max(volumeGrips.length, flatHandles.length);
   const out: Grip[] = [];
+  const usedIds = new Set<string>();
   for (let index = 0; index < count; index += 1) {
     const volume = volumeGrips[index];
     const flat = flatHandles[index];
-    const localId = volume?.id ?? parseGripFullId(flat?.id ?? "")?.gripId ?? gripLocalIdFromIndex(index);
+    const localId = uniqueGripLocalId(volume?.id ?? parseGripFullId(flat?.id ?? "")?.gripId, index, usedIds);
     out.push({
       id: localId,
       gripKind: volume?.gripKind ?? flat?.handleKind ?? BUILTIN_PORT_HANDLE_KIND,
@@ -1251,6 +1268,7 @@ export function puzzle5dSyncBrushPreviewFromVolume(
         (row) => row.nodeKind === preview.objectKindId && row.targetHandleIndex === preview.sourceVortexIndex,
       ) ?? -1;
     if (index >= 0 && nextSession?.candidateIndex !== index) {
+      flatRenderer.setBrushCandidateIndex(index);
       puzzle2dApplyBrushSuggestionsCandidateIndex(index, { kindCatalogs: flatCatalogs });
     }
   } finally {
@@ -3655,6 +3673,56 @@ if (import.meta.vitest) {
       const placed = result.model.parts.find((part) => part.id === result.partId);
       expect(placed?.["2d"]?.x).toBe(80);
       expect(placed?.["3d"]?.meshUrl).toBe("/mesh/capsule.glb");
+    });
+
+    it("keeps repeated brush grip kinds unique across flat and volume projections", () => {
+      const model: Model = {
+        ...brushHostModel(),
+        kindCatalogs: {
+          parts: [
+            {
+              id: "Capsule",
+              name: "Capsule",
+              meshUrl: "/mesh/capsule.glb",
+              grips: [
+                {
+                  gripKind: "b-l",
+                  "2d": { angle: Math.PI, gripKind: "b-l" },
+                  "3d": { position: [-1, 0, 0], direction: [1, 0, 0] },
+                },
+                {
+                  gripKind: "b-l",
+                  "2d": { angle: 0, gripKind: "b-l" },
+                  "3d": { position: [1, 0, 0], direction: [-1, 0, 0] },
+                },
+              ],
+            },
+          ],
+        },
+      };
+      const result = applyBrushPlacementToModel(
+        model,
+        puzzle5dBrushPlacementFromFlat({
+          nodeKind: "Capsule",
+          shape: "circle",
+          sourceHandleId: "host:port",
+          targetHandleIndex: 0,
+          x: 80,
+          y: 0,
+          handles: [
+            { angle: Math.PI, handleKind: "b-l" },
+            { angle: 0, handleKind: "b-l" },
+          ],
+        }),
+      );
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") return;
+      const fixture2d = project2d(result.model);
+      const fixture3d = project3d(result.model);
+      const placed2d = fixture2d.nodes.find((node) => node.id === result.partId);
+      const placed3d = fixture3d.objects.find((object) => object.id === result.partId);
+      expect(new Set(placed2d?.handles.map((handle) => handle.id)).size).toBe(placed2d?.handles.length);
+      expect(new Set(placed3d?.vortices.map((vortex) => vortex.id)).size).toBe(placed3d?.vortices.length);
     });
   });
 

@@ -59,29 +59,14 @@ pub struct FlowModuleSettingV1 {
 }
 
 /// 📦 Builds a `flow.module/v1` JSON manifest from registry catalogue metadata.
-pub fn build_manifest_json(
-    id: &str,
-    name: &str,
-    version: &str,
-    registry: &Registry,
-    activation_events: Vec<String>,
-    widgets: Vec<FlowModuleWidgetV1>,
-    commands: Vec<FlowModuleCommandV1>,
-    settings: Vec<FlowModuleSettingV1>,
-) -> String {
+pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, activation_events: Vec<String>, widgets: Vec<FlowModuleWidgetV1>, commands: Vec<FlowModuleCommandV1>, settings: Vec<FlowModuleSettingV1>) -> String {
     let manifest = FlowModuleManifestV1 {
         schema: "flow.module/v1".into(),
         id: id.into(),
         name: name.into(),
         version: version.into(),
         activation_events,
-        contributes: FlowModuleContributesV1 {
-            schemas: registry.schema_catalogue(),
-            operators: registry.operator_catalogue(),
-            widgets,
-            commands,
-            settings,
-        },
+        contributes: FlowModuleContributesV1 { schemas: registry.schema_catalogue(), operators: registry.operator_catalogue(), widgets, commands, settings },
     };
     serde_json::to_string(&manifest).unwrap_or_else(|_| "{}".into())
 }
