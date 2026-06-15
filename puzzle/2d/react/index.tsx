@@ -1506,14 +1506,14 @@ export function puzzle2dApplyBrushSuggestionsCandidateIndex(
   }
   const drained = puzzle2dGetBrushSessionSnapshot();
   let preview =
-    drained?.candidateIndex === index && drained.preview && !puzzle2dBrushPreviewIsEmpty(drained.preview) ? drained.preview : null;
+    drained?.candidateIndex === index && drained.preview && puzzle2dBrushPreviewIsComplete(drained.preview) ? drained.preview : null;
   if (!preview) {
     preview = puzzle2dBuildBrushSuggestionsPreview(driving, session.sourceHandleId, candidate, kindCatalogs, brushNodeSize, offset);
   }
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: index,
     candidates: session.candidates,
-    preview: preview && !puzzle2dBrushPreviewIsEmpty(preview) ? preview : null,
+    preview: preview && puzzle2dBrushPreviewIsComplete(preview) ? preview : null,
     sourceHandleId: session.sourceHandleId,
     suggestionsActive: true,
   };
@@ -5295,6 +5295,10 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
+  private isBrushSuggestionsDrivingPane(): boolean {
+    return puzzle2dBrushSuggestionsDrivingRendererRef.current === this;
+  }
+
   /** @emoji 🖌️ Selects the active brush candidate by catalog index. */
   setBrushCandidateIndex(index: number): void {
     if (this.wasmSessionCallBlockedForReentry()) {
@@ -5303,7 +5307,9 @@ export class Puzzle2dRenderer {
     }
     try {
       this.session.brushSetCandidateIndex(index);
-      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.applyWasmDrainToScene(this.session.drainEventsJson(), {
+        skipBrushSessionMirrorSync: this.isBrushSuggestionsDrivingPane(),
+      });
       this.markDirty();
     } catch (err) {
       console.error("[DEBUG] brushSetCandidateIndex failed", err);
@@ -5318,7 +5324,9 @@ export class Puzzle2dRenderer {
     }
     try {
       this.session.brushOpenSlot(handleId);
-      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.applyWasmDrainToScene(this.session.drainEventsJson(), {
+        skipBrushSessionMirrorSync: this.isBrushSuggestionsDrivingPane(),
+      });
       this.rememberBrushSessionMirrorJson(puzzle2dGetBrushSessionSnapshot());
       this.markDirty();
     } catch (err) {
@@ -10280,6 +10288,7 @@ if (puzzle2dVitest) {
       puzzle2dApplyBrushSuggestionsCandidateIndex(1, { kindCatalogs: puzzle2dBrushKindCatalogsRef.current });
       expect(puzzle2dGetBrushSessionSnapshot()?.candidateIndex).toBe(1);
       expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node?.nodeKind).toBe("Left");
+      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.edge).toEqual({ sourceHandleId: "a:h0", targetHandleIndex: 0 });
       expect(setBrushSession).toHaveBeenCalledWith(expect.objectContaining({ candidateIndex: 1 }), { force: true });
       puzzle2dBrushSuggestionsDrivingRendererRef.current = null;
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
@@ -12242,6 +12251,16 @@ function puzzle2dBrushPreviewIsEmpty(preview: Puzzle2dEventMap["brushPreview"] |
   return preview.node === null || preview.node === undefined;
 }
 
+/** @emoji 🖌️ True when a brush preview has both node and mating edge metadata. */
+function puzzle2dBrushPreviewIsComplete(preview: Puzzle2dEventMap["brushPreview"] | null | undefined): boolean {
+  if (puzzle2dBrushPreviewIsEmpty(preview)) {
+    return false;
+  }
+  const edge = preview!.edge;
+  const sourceHandleId = String(edge?.sourceHandleId ?? "").trim();
+  return sourceHandleId.length > 0 && Number.isFinite(Number(edge?.targetHandleIndex));
+}
+
 /** @emoji 🖌️ Builds a fixture {@link Puzzle2dBrushPlacePayload} from the shared suggestions session snapshot. */
 export function puzzle2dBrushPlacePayloadFromSessionSnapshot(session: Puzzle2dBrushSessionSnapshot): Puzzle2dBrushPlacePayload | null {
   const preview = session.preview;
@@ -12294,7 +12313,7 @@ export function puzzle2dCommitSuggestionsCandidate(renderer: Puzzle2dRenderer, i
   if (!session?.sourceHandleId || index < 0 || index >= session.candidates.length) {
     return false;
   }
-  if (session.candidateIndex !== index || !session.preview || puzzle2dBrushPreviewIsEmpty(session.preview)) {
+  if (session.candidateIndex !== index || !session.preview || !puzzle2dBrushPreviewIsComplete(session.preview)) {
     puzzle2dApplyBrushSuggestionsCandidateIndex(index);
   } else if (session.candidateIndex !== index) {
     renderer.setBrushCandidateIndex(index);
@@ -12321,8 +12340,20 @@ function puzzle2dUpdateBrushSessionFromSource(
   preview: Puzzle2dEventMap["brushPreview"] | null | undefined,
 ): void {
   const prev = puzzle2dSharedBrushSession;
-  const resolvedPreview =
+  const suggestionsActive = candidates?.suggestionsActive === true || (candidates === null && prev?.suggestionsActive === true);
+  let resolvedPreview =
     preview === undefined ? (prev?.preview ?? null) : puzzle2dBrushPreviewIsEmpty(preview) ? null : preview;
+  if (suggestionsActive && preview !== undefined) {
+    if (puzzle2dBrushPreviewIsComplete(preview)) {
+      resolvedPreview = preview;
+    } else if (puzzle2dBrushPreviewIsComplete(prev?.preview)) {
+      resolvedPreview = prev!.preview;
+    } else if (!puzzle2dBrushPreviewIsEmpty(preview) && prev?.preview?.edge) {
+      resolvedPreview = { ...preview, edge: preview!.edge ?? prev.preview.edge };
+    } else {
+      resolvedPreview = puzzle2dBrushPreviewIsEmpty(preview) ? (prev?.preview ?? null) : preview;
+    }
+  }
   const sourceFromCandidates = candidates?.sourceHandleId?.trim() ?? "";
   const sourceHandleId =
     sourceFromCandidates.length > 0
@@ -12339,7 +12370,6 @@ function puzzle2dUpdateBrushSessionFromSource(
       return;
     }
   }
-  const suggestionsActive = candidates?.suggestionsActive === true || (candidates === null && prev?.suggestionsActive === true);
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: candidates?.index ?? prev?.candidateIndex ?? 0,
     candidates: nextCandidates,
@@ -12396,7 +12426,7 @@ function puzzle2dApplySuggestionsBrushSession(
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: 0,
     candidates,
-    preview: preview && !puzzle2dBrushPreviewIsEmpty(preview) ? preview : null,
+    preview: preview && puzzle2dBrushPreviewIsComplete(preview) ? preview : null,
     sourceHandleId,
     suggestionsActive: true,
   };

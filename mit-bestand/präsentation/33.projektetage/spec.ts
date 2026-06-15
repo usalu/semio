@@ -85,11 +85,13 @@ export const introSpec: IntroSpec = {
 export const ASSET_CATALOGUE = "/bauteilbörse.png";
 export const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 export const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
+export const ASSET_ZUKUNFT_BAU_ENTWERFEN_MIT_BESTAND = "/zukunft-bau-entwerfen-mit-bestand.png";
 
 export const CATALOGUE_PARTICIPANT = "catalogue";
 export const CATALOGUE_COL1 = "catalogue-col1";
 export const CATALOGUE_COL2 = "catalogue-col2";
 export const CATALOGUE_COL3 = "catalogue-col3";
+export const ZUKUNFT_BAU_PARTICIPANT = "zukunft-bau-entwerfen-mit-bestand";
 
 export const CATALOGUE_EMBODIMENT_FULL = "catalogue--full";
 export const CATALOGUE_EMBODIMENT_COL1_CROP = "catalogue-col1--crop";
@@ -98,6 +100,7 @@ export const CATALOGUE_EMBODIMENT_COL2_CROP = "catalogue-col2--crop";
 export const CATALOGUE_EMBODIMENT_COL2_LABEL = "catalogue-col2--label";
 export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
 export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
+export const ZUKUNFT_BAU_EMBODIMENT = "zukunft-bau-entwerfen-mit-bestand--figure";
 
 /** @emoji 📐 `bauteilbörse.png` pixel width÷height (1222×896). */
 export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
@@ -107,6 +110,27 @@ export const CATALOGUE_FRAME = {
 	y: 0.1,
 	width: 0.746,
 	height: 0.75,
+};
+
+export const ZUKUNFT_BAU_SOURCE_ASPECT = 1135 / 970;
+export const ZUKUNFT_BAU_SLIDE_ASPECT = 960 / 700;
+
+export const ZUKUNFT_BAU_FRAME = {
+	x: (1 - ZUKUNFT_BAU_SOURCE_ASPECT / ZUKUNFT_BAU_SLIDE_ASPECT) / 2,
+	y: 0,
+	width: ZUKUNFT_BAU_SOURCE_ASPECT / ZUKUNFT_BAU_SLIDE_ASPECT,
+	height: 1,
+};
+
+export const zukunftBauParticipant: Participant = { id: ZUKUNFT_BAU_PARTICIPANT };
+
+export const zukunftBauEmbodiment: Embodiment = {
+	kind: "figure",
+	id: ZUKUNFT_BAU_EMBODIMENT,
+	src: ASSET_ZUKUNFT_BAU_ENTWERFEN_MIT_BESTAND,
+	alt: "Zukunft Bau: Entwerfen mit Bestand",
+	crop: { x: 0, y: 0, width: 1, height: 1 },
+	sourceAspect: ZUKUNFT_BAU_SOURCE_ASPECT,
 };
 
 /** @emoji 🏷 Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
@@ -324,6 +348,7 @@ export function columnLabelMorphFrom(
 }
 
 export const mediaParticipants: Participant[] = [
+	zukunftBauParticipant,
 	{ id: CATALOGUE_PARTICIPANT },
 	{ id: CATALOGUE_COL1 },
 	{ id: CATALOGUE_COL2 },
@@ -334,6 +359,7 @@ export const mediaParticipants: Participant[] = [
 ];
 
 export const mediaEmbodiments: Embodiment[] = [
+	zukunftBauEmbodiment,
 	{
 		kind: "figure",
 		id: CATALOGUE_EMBODIMENT_FULL,

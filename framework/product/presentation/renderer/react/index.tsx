@@ -912,6 +912,46 @@ export function patchPresentationAutoAnimateStyleSheet(
 	}
 	sheet.innerHTML = css + presentationMorphGhostAutoAnimateCss(durationSeconds);
 }
+
+/** @emoji 🩹 Applies reveal auto-animate sheet fixes for the current slide pair. */
+export function patchPresentationAutoAnimateRunStyleSheet(
+	sheet: { innerHTML: string },
+	durationSeconds: number,
+	fromSlide: HTMLElement | undefined,
+	toSlide: HTMLElement | undefined,
+): void {
+	if (fromSlide !== undefined && toSlide !== undefined && isIntroFlowSlide(fromSlide) && isIntroFlowSlide(toSlide)) {
+		return;
+	}
+	patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds, {
+		manyToOneMorph:
+			fromSlide !== undefined &&
+			toSlide !== undefined &&
+			isManyToOneMorphTransition(fromSlide, toSlide),
+	});
+}
+
+export interface PresentationAutoAnimateRunSlides {
+	readonly fromSlide?: HTMLElement;
+	readonly toSlide?: HTMLElement;
+}
+
+/** @emoji 🔎 Resolves an auto-animate slide pair when reveal.js omits it from the `autoanimate` event. */
+export function resolvePresentationAutoAnimateRunSlides(
+	explicit: PresentationAutoAnimateRunSlides,
+	pending: PresentationAutoAnimateRunSlides | undefined,
+): PresentationAutoAnimateRunSlides {
+	if (explicit.fromSlide !== undefined && explicit.toSlide !== undefined) {
+		return explicit;
+	}
+	if (pending?.fromSlide !== undefined && pending.toSlide !== undefined) {
+		return pending;
+	}
+	return {
+		fromSlide: explicit.fromSlide ?? pending?.fromSlide,
+		toSlide: explicit.toSlide ?? pending?.toSlide,
+	};
+}
 //#endregion 🔖ArrangementSettled
 
 //#region 🔖HiddenPreflight
@@ -4762,6 +4802,7 @@ export const PresentationDeck: FC<{
 			syncSlideAspect(deckEl);
 		};
 		let autoAnimateFinalizeTimer: ReturnType<typeof setTimeout> | undefined;
+		let pendingAutoAnimateRunSlides: PresentationAutoAnimateRunSlides | undefined;
 		const scheduleFinalizeAutoAnimateRest = (): void => {
 			const durationSeconds =
 				typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
@@ -4788,6 +4829,7 @@ export const PresentationDeck: FC<{
 			if (!toSlide) {
 				return;
 			}
+			pendingAutoAnimateRunSlides = { fromSlide, toSlide };
 			const fromAnimateId = fromSlide.getAttribute("data-auto-animate-id");
 			const toAnimateId = toSlide.getAttribute("data-auto-animate-id");
 			if (!fromAnimateId || fromAnimateId !== toAnimateId) {
@@ -4835,30 +4877,25 @@ export const PresentationDeck: FC<{
 			};
 			const fromSlide = animateEvent.data?.fromSlide;
 			const toSlide = animateEvent.data?.toSlide;
-			if (fromSlide && toSlide) {
-				prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
+			const runSlides = resolvePresentationAutoAnimateRunSlides(
+				{ fromSlide, toSlide },
+				pendingAutoAnimateRunSlides,
+			);
+			if (runSlides.fromSlide && runSlides.toSlide) {
+				prepareArrangementBeforeAutoAnimate(runSlides.fromSlide, runSlides.toSlide);
 			}
 			const sheet = animateEvent.sheet;
 			if (sheet && typeof sheet.innerHTML === "string") {
-				if (
-					fromSlide !== undefined &&
-					toSlide !== undefined &&
-					isIntroFlowSlide(fromSlide) &&
-					isIntroFlowSlide(toSlide)
-				) {
-					sheet.innerHTML = patchAutoAnimateUniformScale(sheet.innerHTML);
-				} else {
-					const durationSeconds =
-						typeof deck.getConfig().autoAnimateDuration === "number"
-							? deck.getConfig().autoAnimateDuration
-							: 1;
-					patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds, {
-						manyToOneMorph:
-							fromSlide !== undefined &&
-							toSlide !== undefined &&
-							isManyToOneMorphTransition(fromSlide, toSlide),
-					});
-				}
+				const durationSeconds =
+					typeof deck.getConfig().autoAnimateDuration === "number"
+						? deck.getConfig().autoAnimateDuration
+						: 1;
+				patchPresentationAutoAnimateRunStyleSheet(
+					sheet,
+					durationSeconds,
+					runSlides.fromSlide,
+					runSlides.toSlide,
+				);
 			}
 			scheduleFinalizeAutoAnimateRest();
 		};
@@ -5798,6 +5835,28 @@ if (import.meta.vitest) {
 			patchPresentationAutoAnimateStyleSheet(sheet, 0.8, { introFlowMorph: true });
 			expect(sheet.innerHTML).toContain("scale(1, 2)");
 			expect(sheet.innerHTML).not.toContain("scale(2)");
+		});
+
+		it("leaves intro flow auto-animate sheets identical to reveal.js output", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const toSlide = document.createElement("section");
+			toSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const sheet = { innerHTML: "transform: translate(10px, 20px) scale(0.4, 1.2) !important;" };
+			patchPresentationAutoAnimateRunStyleSheet(sheet, 0.8, fromSlide, toSlide);
+			expect(sheet.innerHTML).toBe("transform: translate(10px, 20px) scale(0.4, 1.2) !important;");
+		});
+
+		it("uses pending slide pair when reveal autoanimate omits event slides", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const toSlide = document.createElement("section");
+			toSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const resolved = resolvePresentationAutoAnimateRunSlides({}, { fromSlide, toSlide });
+			const sheet = { innerHTML: "transform: translate(10px, 20px) scale(0.4, 1.2) !important;" };
+			patchPresentationAutoAnimateRunStyleSheet(sheet, 0.8, resolved.fromSlide, resolved.toSlide);
+			expect(resolved).toEqual({ fromSlide, toSlide });
+			expect(sheet.innerHTML).toBe("transform: translate(10px, 20px) scale(0.4, 1.2) !important;");
 		});
 
 		it("preserves anisotropic scale() in the auto-animate sheet for many-to-one morph", () => {

@@ -12,7 +12,9 @@ import {
 	loadPresentationFromSlideGlob,
 	resolveArrangement,
 	type Presentation,
+	type Slide,
 	type SlideFile,
+	type Thought,
 } from "@framework/presentation/core";
 import { presentationMeta } from "./spec.ts";
 import {
@@ -21,15 +23,81 @@ import {
 	CATALOGUE_COL3,
 	CATALOGUE_EMBODIMENT_COL1_LABEL,
 	CATALOGUE_SPLIT,
+	ZUKUNFT_BAU_EMBODIMENT,
+	ZUKUNFT_BAU_FRAME,
+	ZUKUNFT_BAU_PARTICIPANT,
 	columnLabelMorphFrom,
 	inlineColumnLabelPosition,
+	zukunftBauEmbodiment,
+	zukunftBauParticipant,
 } from "./spec.ts";
 import "./globals.css";
 // #endregion 🔌Adapters
 
 //#region 🔖Deck
 const slideModules = import.meta.glob<{ default: SlideFile }>("./slide/**/*.ts", { eager: true });
-export const deck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+const sourceDeck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+
+function zukunftBauSlide(id: string, name: string): Slide {
+	return {
+		arrangement: {
+			id,
+			name,
+			dispositions: [
+				{
+					participantId: ZUKUNFT_BAU_PARTICIPANT,
+					embodimentId: ZUKUNFT_BAU_EMBODIMENT,
+					emphasis: "active",
+					position: ZUKUNFT_BAU_FRAME,
+				},
+			],
+		},
+	};
+}
+
+function addZukunftBauScope(thought: Thought): Thought {
+	const participants = thought.participants?.some((participant) => participant.id === zukunftBauParticipant.id)
+		? thought.participants
+		: [...(thought.participants ?? []), zukunftBauParticipant];
+	const embodiments = thought.embodiments?.some((embodiment) => embodiment.id === zukunftBauEmbodiment.id)
+		? thought.embodiments
+		: [...(thought.embodiments ?? []), zukunftBauEmbodiment];
+	return {
+		...thought,
+		participants,
+		embodiments,
+	};
+}
+
+function addZukunftBauBookends(presentation: Presentation): Presentation {
+	const firstSlide = zukunftBauSlide("zukunft-bau-auftakt", "Zukunft Bau Auftakt");
+	const lastSlide = zukunftBauSlide("zukunft-bau-abschluss", "Zukunft Bau Abschluss");
+	return {
+		...presentation,
+		chapters: presentation.chapters.map((chapter, chapterIndex) => ({
+			...chapter,
+			sequences: chapter.sequences.map((sequence, sequenceIndex) => ({
+				...sequence,
+				thoughts: sequence.thoughts.map((thought, thoughtIndex) => {
+					const scoped = addZukunftBauScope(thought);
+					if (chapterIndex === 0 && sequenceIndex === 0 && thoughtIndex === 0) {
+						return { ...scoped, slides: [firstSlide, ...scoped.slides] };
+					}
+					if (
+						chapterIndex === presentation.chapters.length - 1 &&
+						sequenceIndex === chapter.sequences.length - 1 &&
+						thoughtIndex === sequence.thoughts.length - 1
+					) {
+						return { ...scoped, slides: [...scoped.slides, lastSlide] };
+					}
+					return scoped;
+				}),
+			})),
+		})),
+	};
+}
+
+export const deck: Presentation = addZukunftBauBookends(sourceDeck);
 
 function mount(): void {
 	const el = document.getElementById("root");
@@ -56,7 +124,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus expanded media render slides", () => {
-			expect(countArrangements(deck)).toBeGreaterThanOrEqual(11);
+			expect(countArrangements(deck)).toBeGreaterThanOrEqual(13);
 			expect(deck.language).toBe("de");
 		});
 
@@ -65,6 +133,15 @@ if (import.meta.vitest) {
 			expect(introSlide).toEqual({
 				h: 0,
 				v: 0,
+				chapter: "Hauptteil",
+				sequence: "Einführung",
+				thought: "Einleitung",
+				slide: "Zukunft Bau Auftakt",
+			});
+			const titleSlide = collectPresentationSlides(deck)[1];
+			expect(titleSlide).toEqual({
+				h: 0,
+				v: 1,
 				chapter: "Hauptteil",
 				sequence: "Einführung",
 				thought: "Einleitung",
@@ -77,6 +154,24 @@ if (import.meta.vitest) {
 				sequence: "Einführung",
 				thought: "Medien",
 				slide: "Bauteilkatalog",
+			});
+		});
+
+		it("bookends the deck with the Zukunft Bau Entwerfen mit Bestand image", () => {
+			const slides = collectPresentationSlides(deck);
+			expect(slides.at(0)?.slide).toBe("Zukunft Bau Auftakt");
+			expect(slides.at(-1)?.slide).toBe("Zukunft Bau Abschluss");
+			const firstThought = deck.chapters[0]?.sequences[0]?.thoughts[0];
+			const lastThought = deck.chapters.at(-1)?.sequences.at(-1)?.thoughts.at(-1);
+			expect(firstThought?.slides[0]?.arrangement.dispositions[0]).toMatchObject({
+				participantId: ZUKUNFT_BAU_PARTICIPANT,
+				embodimentId: ZUKUNFT_BAU_EMBODIMENT,
+				position: ZUKUNFT_BAU_FRAME,
+			});
+			expect(lastThought?.slides.at(-1)?.arrangement.dispositions[0]).toMatchObject({
+				participantId: ZUKUNFT_BAU_PARTICIPANT,
+				embodimentId: ZUKUNFT_BAU_EMBODIMENT,
+				position: ZUKUNFT_BAU_FRAME,
 			});
 		});
 
@@ -201,6 +296,7 @@ if (import.meta.vitest) {
 			expect(deck.chapters[0]?.sequences[0]?.name).toBe("Einführung");
 			expect(deck.chapters[0]?.sequences[0]?.thoughts.map((thought) => thought.name)).toEqual(["Einleitung", "Medien"]);
 			expect(deck.chapters[0]?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Zukunft Bau Auftakt",
 				"Titel",
 				"Beschreibung",
 				"Ziel",
@@ -214,6 +310,7 @@ if (import.meta.vitest) {
 				"Bauteilarten",
 				"Bauteilbeschriftungen",
 				"Medienüberblick",
+				"Zukunft Bau Abschluss",
 			]);
 		});
 	});
