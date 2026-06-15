@@ -386,7 +386,7 @@
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	.presentation-morph-slot--figure {
+	.presentation-morph-slot--figure:not(.presentation-figure-scroll-content) {
 	position: relative !important;
 	left: auto !important;
 	top: auto !important;
@@ -754,13 +754,158 @@
 }
 
 .reveal .presentation-media-figure,
-.reveal .presentation-media-video {
+.reveal .presentation-media-video,
+.reveal .presentation-media-iframe {
 	display: block;
 	max-height: 100%;
 	max-width: 100%;
 	width: 100%;
 	height: 100%;
+	border: 0;
+	background: var(--color-background);
+}
+
+.reveal .presentation-media-figure,
+.reveal .presentation-media-video {
 	object-fit: cover;
+}
+
+.reveal .presentation-figure-scroll-viewport {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	box-sizing: border-box;
+	overscroll-behavior: contain;
+}
+
+.reveal .presentation-figure-scroll-viewport--overlay {
+	position: relative;
+	overflow: hidden;
+	--scrollbar-thumb-active: var(--accent, var(--muted-foreground));
+}
+
+.reveal .presentation-figure-scroll-scroller {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.reveal .presentation-figure-scroll-scroller::-webkit-scrollbar {
+	display: none;
+}
+
+.reveal .presentation-figure-scroll-scroller--axis-x {
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.reveal .presentation-figure-scroll-scroller--axis-y {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.reveal .presentation-figure-scroll-bar {
+	position: absolute;
+	pointer-events: auto;
+	z-index: 1;
+}
+
+.reveal .presentation-figure-scroll-bar--axis-y {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: var(--scrollbar-size, var(--spacing-double, 8px));
+}
+
+.reveal .presentation-figure-scroll-bar--axis-x {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: var(--scrollbar-size, var(--spacing-double, 8px));
+}
+
+.reveal .presentation-figure-scroll-bar-thumb {
+	position: absolute;
+	left: 0;
+	top: 0;
+	pointer-events: auto;
+	opacity: 0;
+	background-color: var(--scrollbar-thumb, var(--border-color));
+	transition:
+		opacity 120ms ease,
+		background-color 120ms ease;
+}
+
+.reveal .presentation-figure-scroll-bar:hover .presentation-figure-scroll-bar-thumb,
+.reveal .presentation-figure-scroll-bar--dragging .presentation-figure-scroll-bar-thumb {
+	opacity: 1;
+}
+
+.reveal .presentation-figure-scroll-bar--axis-y .presentation-figure-scroll-bar-thumb {
+	width: 100%;
+}
+
+.reveal .presentation-figure-scroll-bar--axis-x .presentation-figure-scroll-bar-thumb {
+	height: 100%;
+}
+
+.reveal .presentation-figure-scroll-bar-thumb:hover {
+	background-color: var(--scrollbar-thumb-hover, var(--muted-foreground));
+}
+
+.reveal .presentation-figure-scroll-bar-thumb:active {
+	background-color: var(--scrollbar-thumb-active, var(--accent, var(--muted-foreground)));
+}
+
+.reveal .presentation-figure-scroll-viewport--axis-x {
+	overflow: hidden;
+}
+
+.reveal .presentation-figure-scroll-viewport--axis-y {
+	overflow: hidden;
+}
+
+.reveal .presentation-morph-slot.presentation-figure-scroll-content {
+	display: block;
+	flex-shrink: 0;
+	align-items: unset;
+	justify-content: unset;
+	overflow: visible;
+}
+
+.reveal .presentation-figure-scroll-media {
+	display: block;
+	flex-shrink: 0;
+	max-width: none;
+	max-height: none;
+	object-fit: unset;
+}
+
+.reveal .presentation-disposition-frame--figure-scroll {
+	display: block;
+	overflow: hidden;
+}
+
+.reveal .presentation-disposition-frame:has(.presentation-figure-scroll-viewport) {
+	display: block;
+	overflow: hidden;
+	align-items: unset;
+	justify-content: unset;
+}
+
+.reveal .presentation-morph-anchor:has(.presentation-figure-scroll-viewport) {
+	display: block;
+	overflow: hidden;
+	align-items: unset;
+	justify-content: unset;
+}
+
+.reveal .slides section[data-auto-animate] .presentation-figure-scroll-viewport {
+	overflow: hidden;
 }
 
 .reveal .presentation-figure-crop-fill {
@@ -771,8 +916,14 @@
 	background-position: var(--presentation-figure-bg-position);
 }
 
-.reveal .presentation-morph-slot--figure {
+.reveal .presentation-morph-slot--figure:not(.presentation-figure-scroll-content) {
 	overflow: hidden;
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal .presentation-morph-slot--figure.presentation-figure-scroll-content {
 	background-repeat: no-repeat;
 	background-size: var(--presentation-figure-bg-size, cover);
 	background-position: var(--presentation-figure-bg-position);
@@ -993,7 +1144,7 @@
 	background-color: var(--base);
 }
 
-.reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {
+.reveal .presentation-disposition-frame:has(.presentation-media-pdf-document:not(.presentation-media-pdf-document--scroll)) {
 	overflow: hidden;
 }
 
@@ -1006,6 +1157,12 @@
 	min-height: 0;
 	min-width: 0;
 	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf-document--scroll {
+	display: block;
+	flex-shrink: 0;
+	overflow: visible;
 }
 
 .reveal .presentation-media-pdf {

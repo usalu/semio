@@ -37,6 +37,8 @@ import "./globals.css";
 //#region 🔖Deck
 const slideModules = import.meta.glob<{ default: SlideFile }>("./slide/**/*.ts", { eager: true });
 const sourceDeck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+const INTRO_TITLE_PARTICIPANT = "title";
+const INTRO_TITLE_MORPH_FRAME = { x: 0.05, y: 0.36, width: 0.9, height: 0.28 };
 
 function zukunftBauSlide(id: string, name: string): Slide {
 	return {
@@ -51,6 +53,34 @@ function zukunftBauSlide(id: string, name: string): Slide {
 					position: ZUKUNFT_BAU_FRAME,
 				},
 			],
+		},
+	};
+}
+
+function addZukunftBauTitleMorph(slide: Slide | undefined): Slide | undefined {
+	if (!slide) {
+		return slide;
+	}
+	return {
+		...slide,
+		arrangement: {
+			...slide.arrangement,
+			dispositions: slide.arrangement.dispositions.map((disposition) =>
+				disposition.participantId === INTRO_TITLE_PARTICIPANT
+					? {
+							...disposition,
+							position: INTRO_TITLE_MORPH_FRAME,
+							morphFrom: [
+								...(disposition.morphFrom ?? []),
+								{
+									participantId: ZUKUNFT_BAU_PARTICIPANT,
+									embodimentId: ZUKUNFT_BAU_EMBODIMENT,
+									position: INTRO_TITLE_MORPH_FRAME,
+								},
+							],
+						}
+					: disposition,
+			),
 		},
 	};
 }
@@ -70,7 +100,10 @@ function addZukunftBauScope(thought: Thought): Thought {
 }
 
 function addZukunftBauBookends(presentation: Presentation): Presentation {
-	const firstSlide = zukunftBauSlide("zukunft-bau-auftakt", "Zukunft Bau Auftakt");
+	const firstSlide = {
+		...zukunftBauSlide("zukunft-bau-auftakt", "Zukunft Bau Auftakt"),
+		transition: { kind: "morph" as const },
+	};
 	const lastSlide = zukunftBauSlide("zukunft-bau-abschluss", "Zukunft Bau Abschluss");
 	return {
 		...presentation,
@@ -81,7 +114,11 @@ function addZukunftBauBookends(presentation: Presentation): Presentation {
 				thoughts: sequence.thoughts.map((thought, thoughtIndex) => {
 					const scoped = addZukunftBauScope(thought);
 					if (chapterIndex === 0 && sequenceIndex === 0 && thoughtIndex === 0) {
-						return { ...scoped, slides: [firstSlide, ...scoped.slides] };
+						const [titleSlide, ...restSlides] = scoped.slides;
+						return {
+							...scoped,
+							slides: [firstSlide, ...(titleSlide ? [addZukunftBauTitleMorph(titleSlide)] : []), ...restSlides],
+						};
 					}
 					if (
 						chapterIndex === presentation.chapters.length - 1 &&
@@ -168,6 +205,19 @@ if (import.meta.vitest) {
 				embodimentId: ZUKUNFT_BAU_EMBODIMENT,
 				position: ZUKUNFT_BAU_FRAME,
 			});
+			expect(firstThought?.slides[1]?.arrangement.dispositions[0]?.morphFrom).toEqual([
+				{
+					participantId: ZUKUNFT_BAU_PARTICIPANT,
+					embodimentId: ZUKUNFT_BAU_EMBODIMENT,
+					position: INTRO_TITLE_MORPH_FRAME,
+				},
+			]);
+			expect(firstThought?.slides[1]?.arrangement.dispositions[0]?.position).toEqual(INTRO_TITLE_MORPH_FRAME);
+			expect(firstThought?.slides[0]?.transition).toEqual({ kind: "morph" });
+			expect(expandThoughtSlides(firstThought!).slice(0, 2).map((slide) => slide.autoAnimateId)).toEqual([
+				"einleitung--m0",
+				"einleitung--m0",
+			]);
 			expect(lastThought?.slides.at(-1)?.arrangement.dispositions[0]).toMatchObject({
 				participantId: ZUKUNFT_BAU_PARTICIPANT,
 				embodimentId: ZUKUNFT_BAU_EMBODIMENT,

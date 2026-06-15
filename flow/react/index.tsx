@@ -530,6 +530,7 @@ export interface FlowTreeV1 {
 export type FlowWidgetV1 =
   | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[]; readonly outputPorts?: readonly string[] }
   | { readonly kind: "inputSlider"; readonly id: string; readonly value: number; readonly min?: number; readonly max?: number; readonly step?: number }
+  | { readonly kind: "inputStepper"; readonly id: string; readonly schema: string; readonly fields?: readonly { readonly key: string; readonly value: number }[]; readonly step?: number }
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
   | { readonly kind: "inputImage"; readonly id: string; readonly src?: string }
   | { readonly kind: "variable"; readonly id: string; readonly name: string; readonly schema: string }
@@ -599,6 +600,8 @@ function flowWidgetTreeSignature(widget: FlowWidgetV1): string {
       );
     case "inputSlider":
       return JSON.stringify(canonicalizeFlowValue({ value: widget.value }));
+    case "inputStepper":
+      return JSON.stringify(canonicalizeFlowValue({ schema: widget.schema, fields: widget.fields ?? [] }));
     case "inputNote":
       return JSON.stringify(canonicalizeFlowValue({ text: widget.text }));
     case "inputImage":
@@ -776,7 +779,7 @@ export function flowDirtyComputePathReady(fixtureJson: string, dirtyPath: readon
   for (const widgetId of dirtyPath) {
     const widget = widgetById.get(widgetId);
     if (!widget) continue;
-    if (widget.kind === "inputSlider" || widget.kind === "inputNote" || widget.kind === "inputImage") continue;
+    if (widget.kind === "inputSlider" || widget.kind === "inputNote" || widget.kind === "inputImage" || widget.kind === "inputStepper") continue;
     if (widget.kind === "outputPreview" || widget.kind === "outputAction") continue;
     if (widget.kind === "neuron") {
       const incoming = flowIncomingSynapseCount(widgetId, fixture.synapses);
@@ -1448,6 +1451,7 @@ export type FlowGraphEditOp =
   | { readonly op: "makeSpace"; readonly anchor: string; readonly dx: number; readonly dy?: number }
   | { readonly op: "setPreviewOff"; readonly ids: readonly string[] }
   | { readonly op: "setSliderValue"; readonly id: string; readonly value: number }
+  | { readonly op: "setStepperFieldValue"; readonly id: string; readonly key: string; readonly value: number }
   | { readonly op: "setVariableName"; readonly id: string; readonly name: string }
   | { readonly op: "setVariableSchema"; readonly id: string; readonly schema: string }
   | { readonly op: "setNeuronParams"; readonly id: string; readonly paramsJson: string }
@@ -1484,6 +1488,9 @@ export function runFlowGraphEdit(session: FlowSession, ops: readonly FlowGraphEd
       }
       case "setSliderValue":
         session.setSliderValue(entry.id, entry.value);
+        break;
+      case "setStepperFieldValue":
+        (session as FlowSessionStepperApi).setStepperFieldValue(entry.id, entry.key, entry.value);
         break;
       case "setVariableName":
         (session as FlowSessionVariableApi).setVariableName(entry.id, entry.name);
@@ -2263,6 +2270,93 @@ function FlowVariableOverlay({
   );
 }
 
+interface FlowStepperField {
+  readonly key: string;
+  readonly label: string;
+  readonly value: number;
+  readonly step: number;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+interface FlowStepperWidgetState {
+  readonly widgetId: string;
+  readonly fields: readonly FlowStepperField[];
+}
+
+interface FlowStepperOverlayState {
+  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly width: number;
+  readonly height: number;
+  readonly steppers: readonly FlowStepperWidgetState[];
+}
+
+function FlowStepperOverlay({
+  state,
+  width,
+  height,
+  onFieldChange,
+}: {
+  readonly state: FlowStepperOverlayState | null;
+  readonly width: number;
+  readonly height: number;
+  readonly onFieldChange: (widgetId: string, key: string, value: number) => void;
+}): React.JSX.Element | null {
+  if (!state?.steppers?.length) return null;
+  const zoom = Math.max(0.05, Number(state.camera?.zoom) || 1);
+  const camera = { x: Number(state.camera?.x) || 0, y: Number(state.camera?.y) || 0, zoom };
+  const viewportW = Number(state.width) || width;
+  const viewportH = Number(state.height) || height;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-visible" data-testid="flow-stepper-overlay">
+      {state.steppers.flatMap(({ widgetId, fields }) =>
+        fields.map((field) => {
+          const screen = flowWorldToScreen({ x: field.x, y: field.y }, camera, viewportW, viewportH);
+          const w = Math.max(80, field.w * zoom);
+          const h = Math.max(18, field.h * zoom);
+          const left = screen.x - w * 0.5;
+          const top = screen.y - h * 0.5;
+          return (
+            <div
+              key={`${widgetId}:${field.key}`}
+              className="pointer-events-auto absolute flex items-center gap-0.5 overflow-hidden rounded border border-border bg-background/90 px-1 shadow-sm"
+              style={{ left, top, width: w, height: h }}
+            >
+              <span className="shrink-0 select-none text-[9px] text-muted-foreground">{field.label}</span>
+              <button
+                type="button"
+                className="shrink-0 select-none px-0.5 text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                onClick={() => onFieldChange(widgetId, field.key, field.value - field.step)}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                className="min-w-0 flex-1 bg-transparent text-center text-[10px] text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                value={field.value}
+                step={field.step}
+                onChange={(event) => {
+                  const n = Number.parseFloat(event.target.value);
+                  if (Number.isFinite(n)) onFieldChange(widgetId, field.key, n);
+                }}
+              />
+              <button
+                type="button"
+                className="shrink-0 select-none px-0.5 text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                onClick={() => onFieldChange(widgetId, field.key, field.value + field.step)}
+              >
+                +
+              </button>
+            </div>
+          );
+        }),
+      )}
+    </div>
+  );
+}
+
 function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement, width: number, height: number, dpr: number): void {
   let state: FlowLabelOverlayPaintState;
   try {
@@ -2656,6 +2750,11 @@ type FlowSessionVariableApi = FlowSession & {
   setVariableSchema(widgetId: string, schema: string): void;
 };
 
+type FlowSessionStepperApi = FlowSession & {
+  setStepperFieldValue(widgetId: string, key: string, value: number): void;
+  stepperOverlayStateJson(): string;
+};
+
 type FlowSessionChannelApi = FlowSession & {
   hoveredChannelJson(): string;
   selectedChannelsJson(): string;
@@ -2879,6 +2978,7 @@ export function FlowCanvas({
   const [selectionBounds, setSelectionBounds] = useState<FlowSelectionUnionBoundsScreen | null>(null);
   const [selectionBoundsCount, setSelectionBoundsCount] = useState(0);
   const [paramOverlayState, setParamOverlayState] = useState<FlowParamOverlayPaintState | null>(null);
+  const [stepperOverlayState, setStepperOverlayState] = useState<FlowStepperOverlayState | null>(null);
   const [variableFixtureJson, setVariableFixtureJson] = useState("");
   const [schemaCatalogue, setSchemaCatalogue] = useState<readonly FlowSchemaRefV1[]>([]);
   const selectionBoundsRef = useRef<FlowSelectionUnionBoundsScreen | null>(null);
@@ -3101,6 +3201,12 @@ export function FlowCanvas({
           setParamOverlayState((prev) => (prev === null ? prev : null));
         }
         try {
+          const nextStepper = JSON.parse((session as FlowSessionStepperApi).stepperOverlayStateJson()) as FlowStepperOverlayState;
+          setStepperOverlayState((prev) => (JSON.stringify(prev) === JSON.stringify(nextStepper) ? prev : nextStepper));
+        } catch {
+          setStepperOverlayState((prev) => (prev === null ? prev : null));
+        }
+        try {
           setVariableFixtureJson(session.fixtureJson());
         } catch {
           setVariableFixtureJson("");
@@ -3304,6 +3410,19 @@ export function FlowCanvas({
       persistFixture();
       renderFrame();
       console.log(`[DEBUG] flow neuron param ${nodeId}.${portId}=${String(value)}`);
+    },
+    [emitInteractionState, evaluate, persistFixture, renderFrame],
+  );
+
+  const onStepperFieldChange = useCallback(
+    (widgetId: string, key: string, value: number) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      runFlowGraphEdit(session, [{ op: "setStepperFieldValue", id: widgetId, key, value }]);
+      emitInteractionState(session);
+      evaluate();
+      persistFixture();
+      renderFrame();
     },
     [emitInteractionState, evaluate, persistFixture, renderFrame],
   );
@@ -4161,6 +4280,12 @@ export function FlowCanvas({
         height={viewportRef.current.height}
         onNameChange={onVariableNameChange}
         onSchemaChange={onVariableSchemaChange}
+      />
+      <FlowStepperOverlay
+        state={stepperOverlayState}
+        width={viewportRef.current.width}
+        height={viewportRef.current.height}
+        onFieldChange={onStepperFieldChange}
       />
       <input
         ref={imageFileInputRef}

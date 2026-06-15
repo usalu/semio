@@ -73,6 +73,8 @@ export interface FigureEmbodiment {
 	readonly sourceAspect?: number;
 	/** @emoji 🧩 When set, crop backgrounds use edge-aligned positions so adjacent cells do not overlap. */
 	readonly mosaic?: FigureMosaicGrid;
+	/** @emoji 📜 When false, clip cover overflow instead of one-axis scroll (default scrollable; mosaic tiles always clip). */
+	readonly scroll?: boolean;
 }
 
 /** @emoji 🎬 Video clip on a slide. */
@@ -85,6 +87,8 @@ export interface VideoEmbodiment {
 	readonly loop?: boolean;
 	readonly muted?: boolean;
 	readonly controls?: boolean;
+	/** @emoji 📜 When false, clip cover overflow instead of one-axis scroll (default scrollable). */
+	readonly scroll?: boolean;
 }
 
 /** @emoji 📄 PDF document page on a slide. */
@@ -97,6 +101,16 @@ export interface PdfEmbodiment {
 	/** Ordered subset for prev/next navigation (e.g. thesis excerpt `[1, 12, 25, 35, 42, 43, 51]`). */
 	readonly pages?: readonly number[];
 	readonly alt?: string;
+	/** @emoji 📜 When false, clip cover overflow instead of one-axis scroll (default scrollable). */
+	readonly scroll?: boolean;
+}
+
+/** @emoji 🪟 Embedded HTML document on a slide. */
+export interface IframeEmbodiment {
+	readonly kind: "iframe";
+	readonly id: string;
+	readonly src: string;
+	readonly title?: string;
 }
 
 /** @emoji • Bulleted list body. */
@@ -265,6 +279,7 @@ export type Embodiment =
 	| FigureEmbodiment
 	| VideoEmbodiment
 	| PdfEmbodiment
+	| IframeEmbodiment
 	| BulletEmbodiment
 	| AuthorsEmbodiment
 	| AffiliationsEmbodiment;

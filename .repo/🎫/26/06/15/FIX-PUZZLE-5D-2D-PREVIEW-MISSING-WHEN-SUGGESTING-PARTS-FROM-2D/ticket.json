@@ -3,13 +3,14 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "When adding a new suggested part in 2D in puzzle 5d, the preview shows in 3D but the new 2D node and edge are missing in 2D. Root cause: puzzle5dSyncBrushPreviewFromVolume calls flatRenderer.brushCancelSlot() when volume preview is null but flat session has sourceHandleId, racing with 2D-originated suggestions before volume sync completes.",
-  "summary": "Fixed puzzle 5d 2D brush suggestion preview gaps. (1) Volume→flat paired sync no longer cancels flat slots while flat is driving suggestions (origin tracking). (2) Intermittent missing preview edge: WASM drains during candidate changes no longer clobber the shared suggestions session on the driving pane; previews must include both node and edge before accepting drained WASM state, and suggestions-active session updates preserve the last complete preview when WASM briefly emits empty partial data.",
+  "summary": "Fixed puzzle 5d 2d view after clicking a suggested part: only handle labels appeared because placement updated the unified model (3d correct) but never synced project2d(model) to flat WASM authoring peers. Added puzzle5dCommitBrushPlacementToPlay to apply unified placement, guard structural deletes, sync fixture descriptor to all peers, push authoritative scene, and finalize suggestions brush state. Registered this as puzzle2dSetBrushPlaceCommitHandler in Puzzle5dPlayHostBridgeInstaller; routed onBrushPlace through the same path. Exported puzzle2dFinalizeBrushSuggestionsPlacement and use it from both 2d and 5d commit paths.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1687"
   },
   "goal": "🎯puzzle🎯5d",
   "sessions": [
     "⚪584580f06ef044a597f03f3af3b7274c",
-    "⚪3e499883aa9146e8a17d5a31f9a93fef"
+    "⚪3e499883aa9146e8a17d5a31f9a93fef",
+    "⚪94c9efdea9cc4d8b9bfadcc4b51de1e1"
   ]
 }

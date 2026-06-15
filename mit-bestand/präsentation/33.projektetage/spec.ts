@@ -85,7 +85,7 @@ export const introSpec: IntroSpec = {
 export const ASSET_CATALOGUE = "/bauteilbörse.png";
 export const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 export const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
-export const ASSET_ZUKUNFT_BAU_ENTWERFEN_MIT_BESTAND = "/zukunft-bau-entwerfen-mit-bestand.png";
+export const ASSET_ZUKUNFT_BAU_ENTWERFEN_MIT_BESTAND = "/zukunft-bau-entwerfen-mit-bestand.html";
 
 export const CATALOGUE_PARTICIPANT = "catalogue";
 export const CATALOGUE_COL1 = "catalogue-col1";
@@ -100,7 +100,7 @@ export const CATALOGUE_EMBODIMENT_COL2_CROP = "catalogue-col2--crop";
 export const CATALOGUE_EMBODIMENT_COL2_LABEL = "catalogue-col2--label";
 export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
 export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
-export const ZUKUNFT_BAU_EMBODIMENT = "zukunft-bau-entwerfen-mit-bestand--figure";
+export const ZUKUNFT_BAU_EMBODIMENT = "zukunft-bau-entwerfen-mit-bestand--iframe";
 
 /** @emoji 📐 `bauteilbörse.png` pixel width÷height (1222×896). */
 export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
@@ -112,25 +112,20 @@ export const CATALOGUE_FRAME = {
 	height: 0.75,
 };
 
-export const ZUKUNFT_BAU_SOURCE_ASPECT = 1135 / 970;
-export const ZUKUNFT_BAU_SLIDE_ASPECT = 960 / 700;
-
 export const ZUKUNFT_BAU_FRAME = {
-	x: (1 - ZUKUNFT_BAU_SOURCE_ASPECT / ZUKUNFT_BAU_SLIDE_ASPECT) / 2,
+	x: 0,
 	y: 0,
-	width: ZUKUNFT_BAU_SOURCE_ASPECT / ZUKUNFT_BAU_SLIDE_ASPECT,
+	width: 1,
 	height: 1,
 };
 
 export const zukunftBauParticipant: Participant = { id: ZUKUNFT_BAU_PARTICIPANT };
 
 export const zukunftBauEmbodiment: Embodiment = {
-	kind: "figure",
+	kind: "iframe",
 	id: ZUKUNFT_BAU_EMBODIMENT,
 	src: ASSET_ZUKUNFT_BAU_ENTWERFEN_MIT_BESTAND,
-	alt: "Zukunft Bau: Entwerfen mit Bestand",
-	crop: { x: 0, y: 0, width: 1, height: 1 },
-	sourceAspect: ZUKUNFT_BAU_SOURCE_ASPECT,
+	title: "Zukunft Bau: Entwerfen mit Bestand",
 };
 
 /** @emoji 🏷 Grid keys of all 3×5 catalogue tiles → semantic participant ids. */

@@ -550,7 +550,7 @@ if (import.meta.vitest) {
         { id: "logic", title: "Logic", items: [{ kind: "neuron", neuronKind: "logic.not", name: "Not", summary: "Invert" }] },
         { id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] },
         { id: "text", title: "Text", items: [{ kind: "neuron", neuronKind: "text.upper", name: "Upper", summary: "Uppercase" }] },
-        { id: "inputs", title: "Inputs", items: [{ kind: "inputSlider", name: "Slider", summary: "Number" }, { kind: "inputImage", name: "Image", summary: "Image" }] },
+        { id: "inputs", title: "Inputs", items: [{ kind: "inputSlider", name: "Slider", summary: "Number" }, { kind: "inputStepper", name: "Stepper", summary: "Composite" }, { kind: "inputImage", name: "Image", summary: "Image" }] },
         { id: "outputs", title: "Outputs", items: [{ kind: "outputPreview", name: "Preview", summary: "Preview" }] },
       ];
       expect(flowPlayCatalogueIncludesAllNeuronModules(sections)).toBe(true);

@@ -50,6 +50,10 @@ import {
   puzzle2dGetBrushSessionSnapshot,
   puzzle2dApplyBrushSuggestionsCandidateIndex,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
+  puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
+  puzzle2dPushAuthoritativeSceneToAllAuthoringPeers,
+  puzzle2dFinalizeBrushSuggestionsPlacement,
+  puzzle2dGuardBrushPlacementStructuralDeletes,
   usePuzzle2dRenderer,
   type Puzzle2dBrushSessionSnapshot,
   type Puzzle2dRenderer,
@@ -1002,6 +1006,19 @@ export function puzzle5dBrushPlacementFromFlat(payload: Puzzle2dBrushPlacePayloa
   };
 }
 
+/** @emoji 🖌️ Commits a flat brush placement into the unified model and syncs every flat authoring pane. */
+export function puzzle5dCommitBrushPlacementToPlay(store: Store, payload: Puzzle2dBrushPlacePayload): boolean {
+  const placed = store.applyBrushPlacementDetailed(puzzle5dBrushPlacementFromFlat(payload));
+  if (!placed) {
+    return false;
+  }
+  puzzle2dGuardBrushPlacementStructuralDeletes(placed.partId, placed.fastenerId);
+  puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(project2d(store.read()));
+  puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+  puzzle2dFinalizeBrushSuggestionsPlacement();
+  return true;
+}
+
 /** @emoji 🖌️ Builds a unified placement from a volume brush payload. */
 export function puzzle5dBrushPlacementFromVolume(payload: BrushPlacePayload): Puzzle5dBrushPlacement {
   return {
@@ -1754,11 +1771,16 @@ export class Store {
 
   /** @emoji 🖌️ Commits one unified brush placement and clears any active fill session. */
   applyBrushPlacement(placement: Puzzle5dBrushPlacement): boolean {
+    return this.applyBrushPlacementDetailed(placement) !== null;
+  }
+
+  /** @emoji 🖌️ Commits one unified brush placement and returns placed ids for flat peer sync. */
+  applyBrushPlacementDetailed(placement: Puzzle5dBrushPlacement): { readonly partId: string; readonly fastenerId: string } | null {
     const result = applyBrushPlacementToModel(this.snapshot.model, placement);
-    if (result.kind !== "placed") return false;
+    if (result.kind !== "placed") return null;
     this.fillSession = null;
     this.setSnapshot({ ...this.snapshot, model: result.model, connectSession: null, fillCount: 0, fillBuildDone: true });
-    return true;
+    return { partId: result.partId, fastenerId: result.fastenerId };
   }
 
   /** @emoji 🗑️ Applies a flat structural delete (node → part, edge → tie) onto the unified model. */
@@ -3756,6 +3778,23 @@ if (import.meta.vitest) {
       const placed = result.model.parts.find((part) => part.id === result.partId);
       expect(placed?.["2d"]?.x).toBe(80);
       expect(placed?.["3d"]?.meshUrl).toBe("/mesh/capsule.glb");
+    });
+
+    it("puzzle5dCommitBrushPlacementToPlay updates unified model and flat projection", () => {
+      const store = createStore(brushHostModel());
+      const placed = puzzle5dCommitBrushPlacementToPlay(store, {
+        nodeKind: "Capsule",
+        sourceHandleId: "host:port",
+        targetHandleIndex: 0,
+        x: 80,
+        y: 0,
+        handles: [{ angle: Math.PI, handleKind: "port" }],
+      });
+      expect(placed).toBe(true);
+      const fixture = project2d(store.read());
+      expect(fixture.nodes).toHaveLength(3);
+      expect(fixture.edges).toHaveLength(1);
+      expect(fixture.nodes.some((node) => node.x === 80 && node.y === 0)).toBe(true);
     });
 
     it("keeps repeated brush grip kinds unique across flat and volume projections", () => {

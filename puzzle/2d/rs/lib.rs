@@ -447,6 +447,21 @@ impl BoardSession {
         self.state.borrow().host.brush_fill_json(max_count, u64::from(seed))
     }
 
+    #[wasm_bindgen(js_name = brushFillSessionBegin)]
+    pub fn brush_fill_session_begin_wasm(&mut self, max_count: u32, seed: u32) {
+        self.state.borrow_mut().host.brush_fill_session_begin(max_count, u64::from(seed));
+    }
+
+    #[wasm_bindgen(js_name = brushFillSessionStep)]
+    pub fn brush_fill_session_step_wasm(&mut self, chunk_budget: u32) -> String {
+        self.state.borrow_mut().host.brush_fill_session_step(chunk_budget)
+    }
+
+    #[wasm_bindgen(js_name = brushFillSessionClear)]
+    pub fn brush_fill_session_clear_wasm(&mut self) {
+        self.state.borrow_mut().host.brush_fill_session_clear();
+    }
+
     #[wasm_bindgen(js_name = setBrushSessionJson)]
     pub fn set_brush_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_brush_session_mirror_json(json).map_err(|e| JsValue::from_str(&e))
@@ -3029,6 +3044,46 @@ mod host_tests {
         let many_v: serde_json::Value = serde_json::from_str(&many).unwrap();
         let many_n = many_v.get("placements").and_then(|x| x.as_array()).map(|a| a.len()).unwrap_or(0);
         assert!(many_n < 1000, "collision should cap fill before 1000 on a tight scene");
+    }
+
+    #[test]
+    fn board_host_brush_fill_session_step_matches_brush_fill_json() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_suggestion_offset(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [
+                        { "handleKind": "child", "angle": 0.0 },
+                        { "handleKind": "child", "angle": 3.141592653589793 }
+                    ]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(&h.brush_fill_json(12, 77)).unwrap();
+        h.brush_fill_session_begin(12, 77);
+        let mut stepped: Vec<serde_json::Value> = Vec::new();
+        let mut done = false;
+        while !done {
+            let chunk: serde_json::Value = serde_json::from_str(&h.brush_fill_session_step(4)).unwrap();
+            done = chunk.get("done").and_then(|x| x.as_bool()).unwrap_or(true);
+            if let Some(rows) = chunk.get("placements").and_then(|x| x.as_array()) {
+                stepped.extend(rows.iter().cloned());
+            }
+        }
+        h.brush_fill_session_clear();
+        assert_eq!(stepped, expected.get("placements").and_then(|x| x.as_array()).cloned().unwrap_or_default());
     }
 
     #[test]

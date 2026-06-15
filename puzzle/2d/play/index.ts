@@ -78,6 +78,13 @@ import {
 	type Puzzle2dKindHoverDomain,
 	type Puzzle2dHoverPayload,
 	type CameraState,
+	applyBrushFillPlacementsToFixture,
+	clonePuzzle2dFixtureV1,
+	PUZZLE_2D_FILL_BUILD_CHUNK_BUDGET,
+	PUZZLE_2D_FILL_COUNT_MAX,
+	type Puzzle2dBrushPlacePayload,
+	type Puzzle2dFillBuildProgress,
+	type Puzzle2dRenderer,
 } from "../react/index.tsx";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
@@ -118,8 +125,167 @@ const PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_MAX = 160;
 const PUZZLE_2D_SUGGESTION_OFFSET_SLIDER_STEP = 4;
 
 const PUZZLE_2D_FILL_COUNT_SLIDER_MIN = 0;
-const PUZZLE_2D_FILL_COUNT_SLIDER_MAX = 1000;
+const PUZZLE_2D_FILL_COUNT_SLIDER_MAX = PUZZLE_2D_FILL_COUNT_MAX;
 const PUZZLE_2D_FILL_COUNT_SLIDER_STEP = 1;
+
+/** @emoji 🪣 Cached fill session for O(1) prefix application on the play host. */
+export type Puzzle2dFillSessionState = {
+	readonly baseFixture: Puzzle2dFixtureV1 | null;
+	readonly sequence: readonly Puzzle2dBrushPlacePayload[];
+	readonly appendedNodes: readonly Puzzle2dFixtureNodeV1[];
+	readonly appendedEdges: readonly Puzzle2dFixtureV1["edges"][number][];
+	readonly seed: number;
+};
+
+/** @emoji 🪣 Latest fill build progress (updated each chunked step). */
+export const puzzle2dFillBuildProgressRef: { current: Puzzle2dFillBuildProgress } = {
+	current: { count: 0, maxCount: PUZZLE_2D_FILL_COUNT_MAX, done: false },
+};
+
+export const puzzle2dFillSessionRef: { current: Puzzle2dFillSessionState } = {
+	current: { baseFixture: null, sequence: [], appendedNodes: [], appendedEdges: [], seed: 0 },
+};
+
+let puzzle2dFillBuildTimer: ReturnType<typeof setTimeout> | null = null;
+let puzzle2dFillSessionReadyEpoch = 0;
+const puzzle2dFillSessionReadyListeners = new Set<() => void>();
+
+/** @emoji 🪣 Subscribes to fill session rebuilds. */
+export function subscribePuzzle2dFillSessionReady(listener: () => void): () => void {
+	puzzle2dFillSessionReadyListeners.add(listener);
+	return () => {
+		puzzle2dFillSessionReadyListeners.delete(listener);
+	};
+}
+
+/** @emoji 🪣 Epoch bumped when a fill session is prepared or extended. */
+export function getPuzzle2dFillSessionReadyEpoch(): number {
+	return puzzle2dFillSessionReadyEpoch;
+}
+
+function notifyPuzzle2dFillSessionReady(): void {
+	puzzle2dFillSessionReadyEpoch += 1;
+	for (const listener of puzzle2dFillSessionReadyListeners) {
+		listener();
+	}
+}
+
+function cancelPuzzle2dFillBuild(): void {
+	if (puzzle2dFillBuildTimer !== null) {
+		clearTimeout(puzzle2dFillBuildTimer);
+		puzzle2dFillBuildTimer = null;
+	}
+}
+
+function nextPuzzle2dFillSeed(): number {
+	return (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+}
+
+function puzzle2dFillAppendedSlice(
+	core: Puzzle2dFixtureV1,
+	sequence: readonly Puzzle2dBrushPlacePayload[],
+	catalogs?: KindCatalogBundle,
+): Pick<Puzzle2dFillSessionState, "appendedNodes" | "appendedEdges"> {
+	if (sequence.length === 0) {
+		return { appendedNodes: [], appendedEdges: [] };
+	}
+	const applied = applyBrushFillPlacementsToFixture(core, sequence, catalogs);
+	return {
+		appendedNodes: applied.nodes.slice(core.nodes.length),
+		appendedEdges: applied.edges.slice(core.edges.length),
+	};
+}
+
+function composePuzzle2dFillFixture(
+	base: Puzzle2dFixtureV1,
+	appendedNodes: readonly Puzzle2dFixtureNodeV1[],
+	appendedEdges: readonly Puzzle2dFixtureV1["edges"][number][],
+	count: number,
+): Puzzle2dFixtureV1 {
+	if (count <= 0) {
+		return base;
+	}
+	return {
+		...base,
+		nodes: [...base.nodes, ...appendedNodes.slice(0, count)],
+		edges: [...base.edges, ...appendedEdges.slice(0, count)],
+	};
+}
+
+/** @emoji 🪣 Applies a fill prefix count onto the cached base fixture. */
+export function applyPuzzle2dFillCount(count: number, catalogs?: KindCatalogBundle): Puzzle2dFixtureV1 | null {
+	const session = puzzle2dFillSessionRef.current;
+	if (!session.baseFixture) {
+		return null;
+	}
+	const available = session.sequence.length;
+	const n = Math.max(0, Math.min(PUZZLE_2D_FILL_COUNT_MAX, Math.round(count), available));
+	return composePuzzle2dFillFixture(session.baseFixture, session.appendedNodes, session.appendedEdges, n);
+}
+
+/** @emoji 🪣 Clears the cached fill session and returns the base fixture when present. */
+export function clearPuzzle2dFillSession(renderer?: Puzzle2dRenderer | null): Puzzle2dFixtureV1 | null {
+	cancelPuzzle2dFillBuild();
+	renderer?.endBrushFillSession();
+	const base = puzzle2dFillSessionRef.current.baseFixture;
+	puzzle2dFillSessionRef.current = { baseFixture: null, sequence: [], appendedNodes: [], appendedEdges: [], seed: 0 };
+	puzzle2dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_2D_FILL_COUNT_MAX, done: false };
+	notifyPuzzle2dFillSessionReady();
+	return base;
+}
+
+/** @emoji 🪣 Starts a chunked fill session build against a fixture snapshot. */
+export function preparePuzzle2dFillSession(
+	baseFixture: Puzzle2dFixtureV1,
+	renderer: Puzzle2dRenderer | null | undefined,
+	kindCatalogs?: KindCatalogBundle,
+): void {
+	cancelPuzzle2dFillBuild();
+	if (!renderer) {
+		return;
+	}
+	const core = clonePuzzle2dFixtureV1(baseFixture);
+	const seed = nextPuzzle2dFillSeed();
+	puzzle2dFillSessionRef.current = {
+		baseFixture: core,
+		sequence: [],
+		appendedNodes: [],
+		appendedEdges: [],
+		seed,
+	};
+	puzzle2dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_2D_FILL_COUNT_MAX, done: false };
+	notifyPuzzle2dFillSessionReady();
+	renderer.beginBrushFillSession(core, PUZZLE_2D_FILL_COUNT_MAX, seed);
+	const tick = (): void => {
+		const started = performance.now();
+		const step = renderer.stepBrushFillSession(PUZZLE_2D_FILL_BUILD_CHUNK_BUDGET);
+		const session = puzzle2dFillSessionRef.current;
+		const nextSequence = [...session.sequence, ...step.placements];
+		const appended = puzzle2dFillAppendedSlice(core, nextSequence, kindCatalogs);
+		puzzle2dFillSessionRef.current = {
+			...session,
+			sequence: nextSequence,
+			appendedNodes: appended.appendedNodes,
+			appendedEdges: appended.appendedEdges,
+		};
+		puzzle2dFillBuildProgressRef.current = {
+			count: step.count,
+			maxCount: PUZZLE_2D_FILL_COUNT_MAX,
+			done: step.done,
+		};
+		console.log(
+			`[DEBUG] puzzle2d fill build chunk count=${step.count}/${PUZZLE_2D_FILL_COUNT_MAX} done=${step.done} ms=${(performance.now() - started).toFixed(1)}`,
+		);
+		notifyPuzzle2dFillSessionReady();
+		if (!step.done) {
+			puzzle2dFillBuildTimer = setTimeout(tick, 0);
+			return;
+		}
+		renderer.endBrushFillSession();
+		puzzle2dFillBuildTimer = null;
+	};
+	puzzle2dFillBuildTimer = setTimeout(tick, 0);
+}
 
 const PUZZLE_2D_PLAY_WINDOW_SPECS: { readonly pane: Puzzle2dPlayPaneId; readonly label: string; readonly bodyKey: string }[] = [
 	{ pane: "2d-overview", label: "Overview", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW },
@@ -1322,6 +1488,10 @@ export class Puzzle2dPlayShellController extends Controller {
 			"2d-overview": "",
 			"2d-selection": "",
 		};
+		subscribePuzzle2dFillSessionReady(() => {
+			this.emit();
+			this.rebuildShellMode();
+		});
 		this.rebuildShellMode();
 	}
 
@@ -1343,15 +1513,23 @@ export class Puzzle2dPlayShellController extends Controller {
 						{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
 					];
 		const sessionActive = this.activeTool === "brush" || this.activeTool === "fill";
+		const fillProgress = puzzle2dFillBuildProgressRef.current;
+		const fillSliderMax = fillProgress.done
+			? PUZZLE_2D_FILL_COUNT_SLIDER_MAX
+			: Math.max(fillProgress.count, this.fillCount > 0 ? this.fillCount : 0, 1);
+		const fillLabel =
+			fillProgress.done || fillProgress.count === 0
+				? `Fill ${this.fillCount}`
+				: `Fill ${this.fillCount} (building ${fillProgress.count}/${fillProgress.maxCount})`;
 		const control =
 			this.activeTool === "fill"
 				? {
 						kind: "slider" as const,
 						id: "puzzle2d-fill-count",
-						label: `Fill ${this.fillCount}`,
+						label: fillLabel,
 						value: this.fillCount,
 						min: PUZZLE_2D_FILL_COUNT_SLIDER_MIN,
-						max: PUZZLE_2D_FILL_COUNT_SLIDER_MAX,
+						max: fillSliderMax,
 						step: PUZZLE_2D_FILL_COUNT_SLIDER_STEP,
 						onChange: puzzle2dPlayCmd("engagementControlChange", { pane }),
 					}
@@ -1808,7 +1986,10 @@ export class Puzzle2dPlayShellController extends Controller {
 				if (this.activeTool !== "fill") {
 					break;
 				}
-				const count = Math.round(Math.max(PUZZLE_2D_FILL_COUNT_SLIDER_MIN, Math.min(PUZZLE_2D_FILL_COUNT_SLIDER_MAX, Number(value) || 0)));
+				const available = puzzle2dFillSessionRef.current.sequence.length;
+				const fillProgress = puzzle2dFillBuildProgressRef.current;
+				const maxAllowed = fillProgress.done ? PUZZLE_2D_FILL_COUNT_SLIDER_MAX : Math.max(available, 1);
+				const count = Math.round(Math.max(PUZZLE_2D_FILL_COUNT_SLIDER_MIN, Math.min(maxAllowed, Number(value) || 0)));
 				if (count === this.fillCount) {
 					break;
 				}
@@ -2504,6 +2685,30 @@ if (import.meta.vitest) {
 			const engagement = ctrl.mainMode.windowKinds.find((wk) => wk.id === "2d-overview")?.engagement;
 			expect(engagement?.sessionActive).toBe(true);
 			expect(engagement?.control?.kind).toBe("slider");
+		});
+
+		it("applyPuzzle2dFillCount composes cached appended nodes without replaying placements", () => {
+			const base = PUZZLE_2D_PLAY_EMPTY_FIXTURE;
+			const placement = {
+				sourceHandleId: "missing",
+				nodeKind: "brush.kind",
+				x: 0,
+				y: 0,
+				handles: [{ handleKind: "child", angle: 0 }],
+				targetHandleIndex: 0,
+			};
+			puzzle2dFillSessionRef.current = {
+				baseFixture: base,
+				sequence: [placement],
+				appendedNodes: [{ id: "fill.node", shape: "circle", radius: 20, x: 0, y: 0, handles: [] }],
+				appendedEdges: [{ id: "fill.edge", source: "missing", target: "fill.node.h0" }],
+				seed: 1,
+			};
+			const applied = applyPuzzle2dFillCount(1);
+			expect(applied?.nodes).toHaveLength(1);
+			expect(applied?.edges).toHaveLength(1);
+			clearPuzzle2dFillSession();
+			expect(puzzle2dFillSessionRef.current.baseFixture).toBeNull();
 		});
 
 		it("engagementSubmit Brush activates brush on shell and forwards setActiveTool to host", () => {

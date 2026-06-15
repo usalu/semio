@@ -2342,10 +2342,12 @@ import {
   project3dKindCatalogs,
   puzzle5dBrushPlacementFromFlat,
   puzzle5dBrushPlacementFromVolume,
+  puzzle5dCommitBrushPlacementToPlay,
   Puzzle5dBrushPairedSync,
   puzzle5dFlatRendererRef,
   type Store as Puzzle5dStore,
 } from "@puzzle/5d/react";
+import { puzzle2dSetBrushPlaceCommitHandler, type Puzzle2dBrushPlacePayload } from "@puzzle/2d/react";
 import type { Playground } from "@framework/playground/core";
 import {
   PUZZLE_5D_PLAY_APP_ID,
@@ -2413,6 +2415,18 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
   reactHostPort.useEffect(() => {
     installPuzzle3dPlayBrushHost(store.read().meta);
   }, [store]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const commitBrushPlacement = (payload: Parameters<typeof puzzle5dCommitBrushPlacementToPlay>[1]) => {
+      if (puzzle5dCommitBrushPlacementToPlay(store, payload)) {
+        controller.setBrushEngagementPossibles([]);
+      }
+    };
+    puzzle2dSetBrushPlaceCommitHandler(commitBrushPlacement);
+    return () => {
+      puzzle2dSetBrushPlaceCommitHandler(null);
+    };
+  }, [controller, store]);
 
   reactHostPort.useEffect(() => {
     const bridge: Puzzle5dPlayHostBridge = {
@@ -2674,7 +2688,7 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
     controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dProximity");
   }, []);
   const onBrushPlace = reactHostPort.useCallback((payload: Parameters<typeof puzzle5dBrushPlacementFromFlat>[0]) => {
-    if (storeRef.current.applyBrushPlacement(puzzle5dBrushPlacementFromFlat(payload))) {
+    if (puzzle5dCommitBrushPlacementToPlay(storeRef.current, payload)) {
       controllerRef.current?.setBrushEngagementPossibles([]);
     }
   }, []);
@@ -3001,6 +3015,13 @@ import {
   puzzle2dPlaySelectSameKindIds,
   puzzle2dPlayToggleEntityFlag,
   puzzle2dPlayCmd,
+  applyPuzzle2dFillCount,
+  clearPuzzle2dFillSession,
+  getPuzzle2dFillSessionReadyEpoch,
+  preparePuzzle2dFillSession,
+  puzzle2dFillBuildProgressRef,
+  PUZZLE_2D_FILL_COUNT_MAX,
+  subscribePuzzle2dFillSessionReady,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
@@ -3036,7 +3057,6 @@ import {
   puzzle2dCommitBrushPlacementToPlay,
   puzzle2dSetBrushPlaceCommitHandler,
   puzzle2dActiveRenderer,
-  applyBrushFillPlacementsToFixture,
   DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dSyncSelectionToAllAuthoringPeers,
@@ -4544,9 +4564,12 @@ function Puzzle2dPlayInner({
   const [puzzle2dGridSnapEnabled, setPuzzle2dGridSnapEnabled] = reactHostPort.useState(false);
   const [puzzle2dActiveTool, setPuzzle2dActiveTool] = reactHostPort.useState<Puzzle2dActiveTool>("select");
   const [puzzle2dSuggestionOffset, setPuzzle2dSuggestionOffset] = reactHostPort.useState(DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX);
-  const puzzle2dFillBaseFixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1 | null>(null);
-  const puzzle2dFillSequenceRef = reactHostPort.useRef<Puzzle2dBrushPlacePayload[]>([]);
-  const puzzle2dFillSeedRef = reactHostPort.useRef(0);
+  const puzzle2dFillSessionReadyEpoch = reactHostPort.useSyncExternalStore(
+    subscribePuzzle2dFillSessionReady,
+    getPuzzle2dFillSessionReadyEpoch,
+    () => 0,
+  );
+  void puzzle2dFillSessionReadyEpoch;
   const puzzle2dShellController = puzzle2dRuntime.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
   const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => puzzle2dRuntime.subscribe(onStoreChange),
@@ -4587,14 +4610,26 @@ function Puzzle2dPlayInner({
     [puzzle2dActiveTool, puzzle2dShellController],
   );
 
-  const preparePuzzle2dFillSession = reactHostPort.useCallback((base: Puzzle2dFixtureV1) => {
-    puzzle2dFillBaseFixtureRef.current = clonePuzzle2dFixtureV1(base);
-    puzzle2dFillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
-    const renderer = puzzle2dActiveRenderer();
-    puzzle2dFillSequenceRef.current =
-      renderer?.computeBrushFillSequence(puzzle2dFillBaseFixtureRef.current, 1000, puzzle2dFillSeedRef.current) ?? [];
-    console.log("[DEBUG] puzzle2d fill sequence length", puzzle2dFillSequenceRef.current.length, "seed", puzzle2dFillSeedRef.current);
-  }, []);
+  const preparePuzzle2dFillSessionOnHost = reactHostPort.useCallback(
+    (base: Puzzle2dFixtureV1) => {
+      preparePuzzle2dFillSession(base, puzzle2dActiveRenderer(), puzzle2dFixtureMergedKindCatalogs(base));
+    },
+    [],
+  );
+
+  const puzzle2dFillAutoStartedRef = reactHostPort.useRef(false);
+  reactHostPort.useEffect(() => {
+    if (puzzle2dActiveTool !== "fill") {
+      puzzle2dFillAutoStartedRef.current = false;
+      return;
+    }
+    const progress = puzzle2dFillBuildProgressRef.current;
+    if (!progress.done || progress.count === 0 || puzzle2dFillAutoStartedRef.current) {
+      return;
+    }
+    puzzle2dFillAutoStartedRef.current = true;
+    puzzle2dShellController?.run("engagementControlChange", { pane: "2d-overview", value: 1 });
+  }, [puzzle2dActiveTool, puzzle2dFillSessionReadyEpoch, puzzle2dShellController]);
 
   reactHostPort.useEffect(() => {
     puzzle2dShellController?.setKindCatalogs(PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS);
@@ -5611,29 +5646,26 @@ function Puzzle2dPlayInner({
             const prev = prevTool ?? puzzle2dActiveTool;
             setPuzzle2dActiveTool(tool);
             if (tool === "fill" && prev !== "fill") {
-              preparePuzzle2dFillSession(fixture);
+              preparePuzzle2dFillSessionOnHost(fixture);
               puzzle2dShellController?.setBrushEngagementPossibles([]);
             } else if (prev === "fill" && tool !== "fill") {
-              const base = puzzle2dFillBaseFixtureRef.current;
+              const base = clearPuzzle2dFillSession(puzzle2dActiveRenderer());
               if (base) {
                 patchFixture(() => clonePuzzle2dFixtureV1(base));
               }
-              puzzle2dFillBaseFixtureRef.current = null;
-              puzzle2dFillSequenceRef.current = [];
             }
             break;
           }
           case "setFillCount": {
             const { count } = args as { count?: number };
-            const n = Math.max(0, Math.min(1000, Math.round(Number(count) ?? 0)));
-            const base = puzzle2dFillBaseFixtureRef.current;
-            if (!base) {
+            const n = Math.max(0, Math.min(PUZZLE_2D_FILL_COUNT_MAX, Math.round(Number(count) ?? 0)));
+            const catalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+            const next = applyPuzzle2dFillCount(n, catalogs);
+            if (!next) {
               break;
             }
-            const prefix = puzzle2dFillSequenceRef.current.slice(0, n);
-            const catalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
-            patchFixture(() => applyBrushFillPlacementsToFixture(base, prefix, catalogs));
-            console.log("[DEBUG] puzzle2d fill count", n, "applied", prefix.length);
+            patchFixture(() => next);
+            console.log("[DEBUG] puzzle2d fill count", n, "applied", n);
             break;
           }
           case "setSuggestionOffset":
@@ -5864,7 +5896,7 @@ function Puzzle2dPlayInner({
     puzzle2dSelectionMode,
     puzzle2dSelectionTargets,
     puzzle2dShellController,
-    preparePuzzle2dFillSession,
+    preparePuzzle2dFillSessionOnHost,
     fixture,
     patchFixture,
     selectionIds,

@@ -12919,10 +12919,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
     () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
     [currentActiveTab, sortedTabs],
   );
-  const activeTabTree = reactHostPort.useMemo(
-    () => (activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
-    [activeTab?.tree, tabs],
-  );
+  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -13037,10 +13034,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const showTabBar = sortedTabs.length > 0;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = reactHostPort.useMemo(
-    () => (activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
-    [activeTab?.tree, tabs],
-  );
+  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {

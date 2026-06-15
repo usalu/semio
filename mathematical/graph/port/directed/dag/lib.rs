@@ -130,6 +130,16 @@ pub fn slider_widget_height() -> f64 {
     DAG_CHANNEL_ROW_HEIGHT
 }
 
+/// 📐 Stepper widget width aligned with computation components.
+pub fn stepper_widget_width() -> f64 {
+    DAG_COMPONENT_WIDTH
+}
+
+/// 📐 Stepper widget height — one row per field.
+pub fn stepper_widget_height(field_count: usize) -> f64 {
+    field_count.max(1) as f64 * DAG_CHANNEL_ROW_HEIGHT
+}
+
 fn io_widget_label_center(node: &DagNodeSpec) -> (f64, f64) {
     let hh = node.height * 0.5;
     (node.x, node.y - hh * 0.2)
@@ -485,7 +495,17 @@ fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expand
 }
 // #endregion 🔖PreviewContent
 
-/// 🧩 Tagged node kind: computation, slider, select, or screen.
+/// 🎚️ One named numeric field inside a stepper input widget.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagStepperField {
+    pub key: String,
+    pub label: String,
+    pub value: f64,
+    pub step: f64,
+}
+
+/// 🧩 Tagged node kind: computation, slider, stepper, select, or screen.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum DagNodeKind {
@@ -502,6 +522,10 @@ pub enum DagNodeKind {
         max: f64,
         step: f64,
         value: f64,
+        output: IoPortSpec,
+    },
+    Stepper {
+        fields: Vec<DagStepperField>,
         output: IoPortSpec,
     },
     Select {
@@ -629,7 +653,7 @@ impl DagNodeSpec {
     pub fn outputs(&self) -> &[IoPortSpec] {
         match &self.kind {
             DagNodeKind::Computation { outputs, .. } | DagNodeKind::Cluster { outputs, .. } => outputs,
-            DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } | DagNodeKind::Note { output, .. } | DagNodeKind::Image { output, .. } => std::slice::from_ref(output),
+            DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } | DagNodeKind::Note { output, .. } | DagNodeKind::Image { output, .. } | DagNodeKind::Stepper { output, .. } => std::slice::from_ref(output),
             _ => EMPTY_PORTS,
         }
     }
@@ -854,6 +878,10 @@ pub fn fit_node_size(node: &mut DagNodeSpec) {
         DagNodeKind::Slider { output, .. } => {
             node.width = slider_widget_width(&node.name, output);
             node.height = slider_widget_height();
+        }
+        DagNodeKind::Stepper { fields, .. } => {
+            node.width = stepper_widget_width();
+            node.height = stepper_widget_height(fields.len());
         }
         DagNodeKind::Note { text, .. } => {
             let (w, h) = note_widget_size(text);
@@ -2996,7 +3024,7 @@ impl DagHost {
             } else if uses_computation_layout(&node.kind) && lod.shows_computation_layout() {
                 let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
                 ("horizontal", lx, ly)
-            } else if matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls() {
+            } else if matches!(node.kind, DagNodeKind::Slider { .. } | DagNodeKind::Stepper { .. }) && lod.shows_controls() {
                 let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
                 ("horizontal", lx, ly)
             } else {
@@ -3122,7 +3150,51 @@ impl DagHost {
         rows
     }
 
-    /// 🎛️ Inline default editor anchors for unconnected primitive neuron inputs.
+    /// �️ Stepper widget field anchors for the HTML stepper overlay.
+    pub fn stepper_overlay_state_json(&self) -> Result<String, String> {
+        let cam = &self.fixture.camera;
+        let mut steppers: Vec<serde_json::Value> = Vec::new();
+        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
+            let node = self.node_spec_for_paint(idx, fixture_node);
+            let DagNodeKind::Stepper { fields, .. } = &node.kind else {
+                continue;
+            };
+            if fields.is_empty() {
+                continue;
+            }
+            let editor_w = node.width - DAG_NODE_EDGE_INSET * 2.0;
+            let field_rows: Vec<serde_json::Value> = fields
+                .iter()
+                .enumerate()
+                .map(|(index, field)| {
+                    let world_y = channel_row_center_y(node.y, node.height, index);
+                    serde_json::json!({
+                        "key": field.key,
+                        "label": field.label,
+                        "value": field.value,
+                        "step": field.step,
+                        "x": node.x,
+                        "y": world_y,
+                        "w": editor_w,
+                        "h": DAG_CHANNEL_ROW_HEIGHT,
+                    })
+                })
+                .collect();
+            steppers.push(serde_json::json!({
+                "widgetId": fixture_node.id,
+                "fields": field_rows,
+            }));
+        }
+        serde_json::to_string(&serde_json::json!({
+            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
+            "width": self.width,
+            "height": self.height,
+            "steppers": steppers,
+        }))
+        .map_err(|err| err.to_string())
+    }
+
+    /// �🎛️ Inline default editor anchors for unconnected primitive neuron inputs.
     pub fn param_overlay_paint_state_json(&self) -> Result<String, String> {
         let lod = self.draw_lod_for_frame();
         let cam = &self.fixture.camera;
@@ -3783,6 +3855,18 @@ impl DagHost {
                         if lod.shows_detail_text() {
                             let pos = world_to_screen(cam, viewport, Point::new(node.x, node.y));
                             append_label(scene, label, pos, paint_px * 0.95, label_fill, label_halo);
+                        }
+                    }
+                }
+                DagNodeKind::Stepper { fields, .. } => {
+                    if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
+                        Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        for row_index in 1..fields.len() {
+                            let divider_y = channel_row_divider_y(node.y, node.height, row_index);
+                            let divider = Line::new(Point::new(node.x - hw, divider_y), Point::new(node.x + hw, divider_y));
+                            scene.stroke(&Stroke::new(chrome_stroke), *aff, internal_chrome_stroke, None, &divider);
                         }
                     }
                 }

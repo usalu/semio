@@ -9,13 +9,22 @@ use std::hash::{Hash, Hasher};
 use std::sync::OnceLock;
 
 use dag::{
-    computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, would_create_cycle,
-    DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
+    computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle,
+    DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
 };
 use neural::{channel_output, cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Widget
+/// 📏 One named numeric field inside a stepper input widget.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StepperFieldSpec {
+    pub key: String,
+    #[serde(default)]
+    pub value: f64,
+}
+
 /// 🎛️ Flow widget discriminant.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -41,6 +50,15 @@ pub enum Widget {
         #[serde(default = "default_slider_max")]
         max: f64,
         #[serde(default = "default_slider_step")]
+        step: f64,
+    },
+    InputStepper {
+        id: String,
+        #[serde(default = "default_stepper_schema")]
+        schema: String,
+        #[serde(default)]
+        fields: Vec<StepperFieldSpec>,
+        #[serde(default = "default_stepper_step")]
         step: f64,
     },
     InputNote {
@@ -96,6 +114,45 @@ fn default_slider_max() -> f64 {
 
 fn default_slider_step() -> f64 {
     FLOW_SLIDER_STEP
+}
+
+fn default_stepper_schema() -> String {
+    "vector".into()
+}
+
+fn default_stepper_step() -> f64 {
+    0.1
+}
+
+fn default_stepper_fields_for_schema(schema: &str) -> Vec<StepperFieldSpec> {
+    match schema {
+        "vector" | "point" => vec![
+            StepperFieldSpec { key: "x".into(), value: 0.0 },
+            StepperFieldSpec { key: "y".into(), value: 0.0 },
+            StepperFieldSpec { key: "z".into(), value: 0.0 },
+        ],
+        _ => vec![],
+    }
+}
+
+fn stepper_output_port(schema: &str) -> IoPortSpec {
+    match schema {
+        "vector" => IoPortSpec::named("V", "Vec", "vector", "Vector"),
+        "point" => IoPortSpec::named("P", "Pnt", "point", "Point"),
+        other => {
+            let code: String = other.chars().take(1).map(|c| c.to_ascii_uppercase()).collect();
+            let abbrev: String = other.chars().take(3).collect();
+            IoPortSpec::named(&code, &abbrev, other, other)
+        }
+    }
+}
+
+fn effective_stepper_fields<'a>(schema: &str, fields: &'a [StepperFieldSpec]) -> Vec<StepperFieldSpec> {
+    if fields.is_empty() {
+        default_stepper_fields_for_schema(schema)
+    } else {
+        fields.to_vec()
+    }
 }
 
 fn default_neuron_preview() -> bool {
@@ -272,6 +329,14 @@ fn tree_from_fixture(fixture: &FlowFixtureV1, kind_infos: &HashMap<String, Opera
                 Some(Neuron { id: id.clone(), kind: neuronKind.clone(), params, tree: None })
             }
             Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+            Widget::InputStepper { id, schema, fields, .. } => {
+                let effective = effective_stepper_fields(schema, fields);
+                let mut params = Dictionary::new();
+                for field in &effective {
+                    params = params.insert(&field.key, NeuralValue::Atom(Atom::Decimal(field.value)));
+                }
+                Some(Neuron { id: id.clone(), kind: "core.stepper".into(), params, tree: None })
+            }
             Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
             Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
             Widget::Variable { id, name, schema } => Some(Neuron {
@@ -327,6 +392,7 @@ fn widget_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { neuronKind, .. } => neuronKind.clone(),
         Widget::InputSlider { .. } => "Slider".into(),
+        Widget::InputStepper { schema, .. } => schema.clone(),
         Widget::InputNote { .. } => "Note".into(),
         Widget::InputImage { .. } => "Image".into(),
         Widget::Variable { name, .. } => name.clone(),
@@ -349,6 +415,11 @@ fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInf
             (name, abbreviation, String::new())
         }),
         Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
+        Widget::InputStepper { schema, .. } => {
+            let title = if schema.is_empty() { "Stepper" } else { schema.as_str() };
+            let (name, abbreviation) = dag::normalize_node_display(title, title);
+            (name, abbreviation, "emoji:🎚️".into())
+        }
         Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝".into()),
         Widget::InputImage { .. } => ("Image".into(), "Image".into(), "emoji:🖼️".into()),
         Widget::Variable { name, .. } => (name.clone(), name.chars().take(3).collect::<String>(), "emoji:🔣".into()),
@@ -534,6 +605,7 @@ fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashM
     match widget {
         Widget::Neuron { id, neuronKind, params, input_ports, output_ports, .. } => neuron_io_layout(id, neuronKind, input_ports, output_ports, params, synapses, kind_infos),
         Widget::InputSlider { .. } => (vec![], vec![IoPortSpec::named("N", "Num", "number", "Number")], false, false),
+        Widget::InputStepper { schema, .. } => (vec![], vec![stepper_output_port(schema)], false, false),
         Widget::InputNote { .. } => (vec![], vec![IoPortSpec::named("T", "Txt", "text", "Text")], false, false),
         Widget::InputImage { .. } => (vec![], vec![IoPortSpec::named("I", "Img", "image", "Image")], false, false),
         Widget::Variable { name, schema, .. } => {
@@ -554,6 +626,10 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
         Widget::InputSlider { .. } => {
             let output = IoPortSpec::named("N", "Num", "number", "Number");
             (slider_widget_width(&label, &output), slider_widget_height())
+        }
+        Widget::InputStepper { schema, fields, .. } => {
+            let count = if fields.is_empty() { default_stepper_fields_for_schema(schema).len() } else { fields.len() };
+            (stepper_widget_width(), stepper_widget_height(count))
         }
         Widget::InputNote { text, .. } => note_widget_size(text),
         Widget::OutputAction { .. } => (io_widget_width(&label), io_widget_height(&label)),
@@ -582,7 +658,7 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
 
 fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> DagNodeSpec {
     let id = match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::Cluster { id, .. } => id.clone(),
+        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputStepper { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::Cluster { id, .. } => id.clone(),
     };
     let (width, height) = widget_node_size(widget, synapses, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
@@ -594,6 +670,12 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
         }
         Widget::InputSlider { value, min, max, step, .. } => {
             DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") } }
+        }
+        Widget::InputStepper { schema, fields, step, .. } => {
+            let effective = effective_stepper_fields(schema, fields);
+            let dag_fields = effective.iter().map(|f| DagStepperField { key: f.key.clone(), label: f.key.clone(), value: f.value, step: *step }).collect();
+            let output = stepper_output_port(schema);
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Stepper { fields: dag_fields, output } }
         }
         Widget::InputNote { text, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } },
         Widget::InputImage { src, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Image { src: src.clone(), output: IoPortSpec::named("I", "Img", "image", "Image") } },
@@ -772,6 +854,14 @@ enum WidgetDescriptor {
         #[serde(default)]
         step: Option<f64>,
     },
+    InputStepper {
+        #[serde(default)]
+        id: Option<String>,
+        #[serde(default)]
+        schema: Option<String>,
+        #[serde(default)]
+        step: Option<f64>,
+    },
     InputNote {
         #[serde(default)]
         id: Option<String>,
@@ -806,6 +896,7 @@ fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
     let id = match descriptor {
         WidgetDescriptor::Neuron { id, .. }
         | WidgetDescriptor::InputSlider { id, .. }
+        | WidgetDescriptor::InputStepper { id, .. }
         | WidgetDescriptor::InputNote { id, .. }
         | WidgetDescriptor::InputImage { id }
         | WidgetDescriptor::OutputPreview { id }
@@ -828,6 +919,11 @@ fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos:
         WidgetDescriptor::InputSlider { value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
             Widget::InputSlider { id, value, min, max, step }
+        }
+        WidgetDescriptor::InputStepper { schema, step, .. } => {
+            let schema = schema.clone().filter(|s| !s.trim().is_empty()).unwrap_or_else(default_stepper_schema);
+            let step = step.unwrap_or_else(default_stepper_step);
+            Widget::InputStepper { id, fields: vec![], schema, step }
         }
         WidgetDescriptor::InputNote { text, .. } => Widget::InputNote { id, text: text.clone().unwrap_or_default() },
         WidgetDescriptor::InputImage { .. } => Widget::InputImage { id, src: String::new() },
@@ -1989,6 +2085,14 @@ impl FlowHost {
                 Widget::InputSlider { id, value, .. } => {
                     seeds.insert(id.clone(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(*value)))));
                 }
+                Widget::InputStepper { id, schema, fields, .. } => {
+                    let effective = effective_stepper_fields(schema, fields);
+                    let mut dict = Dictionary::with_schema(schema);
+                    for field in &effective {
+                        dict = dict.insert(&field.key, NeuralValue::Atom(Atom::Decimal(field.value)));
+                    }
+                    seeds.insert(id.clone(), channel_output(schema, dict));
+                }
                 Widget::InputNote { id, text } => {
                     seeds.insert(id.clone(), channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(text.clone())))));
                 }
@@ -2026,6 +2130,13 @@ impl FlowHost {
             match (widget, &mut node.kind) {
                 (Widget::InputSlider { value, .. }, DagNodeKind::Slider { value: dag_value, .. }) => {
                     *dag_value = *value;
+                }
+                (Widget::InputStepper { schema, fields, step, .. }, DagNodeKind::Stepper { fields: dag_fields, .. }) => {
+                    let effective = effective_stepper_fields(schema, fields);
+                    for (dag_field, spec) in dag_fields.iter_mut().zip(effective.iter()) {
+                        dag_field.value = spec.value;
+                        dag_field.step = *step;
+                    }
                 }
                 (Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => {
                     *dag_text = text.clone();
@@ -2235,6 +2346,7 @@ impl FlowHost {
         let prefix = match descriptor {
             WidgetDescriptor::Neuron { neuronKind, .. } => neuronKind.replace('.', "_"),
             WidgetDescriptor::InputSlider { .. } => "slider".into(),
+            WidgetDescriptor::InputStepper { .. } => "stepper".into(),
             WidgetDescriptor::InputNote { .. } => "note".into(),
             WidgetDescriptor::InputImage { .. } => "image".into(),
             WidgetDescriptor::Variable { .. } => "variable".into(),
@@ -2261,6 +2373,29 @@ impl FlowHost {
         }
         self.sync_dag_display_from_widgets();
         let _ = self.evaluate();
+    }
+
+    pub fn set_stepper_field_value(&mut self, widget_id: &str, field_key: &str, value: f64) {
+        self.begin_change();
+        for widget in &mut self.fixture.widgets {
+            if let Widget::InputStepper { id, fields, schema, .. } = widget {
+                if id != widget_id {
+                    continue;
+                }
+                if fields.is_empty() {
+                    *fields = default_stepper_fields_for_schema(schema);
+                }
+                if let Some(field) = fields.iter_mut().find(|f| f.key == field_key) {
+                    field.value = value;
+                }
+            }
+        }
+        self.sync_dag_display_from_widgets();
+        let _ = self.evaluate();
+    }
+
+    pub fn stepper_overlay_state_json(&self) -> Result<String, String> {
+        self.dag.stepper_overlay_state_json()
     }
 
     pub fn set_note_text(&mut self, widget_id: &str, text: &str) {
@@ -2693,7 +2828,7 @@ fn dedupe_fixture_widgets(fixture: &mut FlowFixtureV1) {
 
 fn widget_id_for(widget: &Widget) -> &str {
     match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::Cluster { id, .. } => id,
+        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputStepper { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::Cluster { id, .. } => id,
     }
 }
 
@@ -2954,6 +3089,16 @@ impl FlowSession {
     #[wasm_bindgen(js_name = setSliderValue)]
     pub fn set_slider_value(&self, widget_id: &str, value: f64) {
         self.state.borrow_mut().host.set_slider_value(widget_id, value);
+    }
+
+    #[wasm_bindgen(js_name = setStepperFieldValue)]
+    pub fn set_stepper_field_value(&self, widget_id: &str, field_key: &str, value: f64) {
+        self.state.borrow_mut().host.set_stepper_field_value(widget_id, field_key, value);
+    }
+
+    #[wasm_bindgen(js_name = stepperOverlayStateJson)]
+    pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
+        self.state.borrow().host.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = setNoteText)]

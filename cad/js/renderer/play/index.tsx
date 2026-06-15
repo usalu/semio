@@ -1605,26 +1605,45 @@ function useCadPlayChromePublish(): (snapshot: CadPlayChromeSnapshot | null) => 
   return useCadPlayChrome().publishSnapshot;
 }
 
-class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(
-    private readonly buildSections: () => TreeDataSection[],
-    private readonly buildHighlightedIds: () => readonly string[],
-  ) {
-    super();
-  }
+const cadPlayChromeSnapshotRef: { current: CadPlayChromeSnapshot | null } = { current: null };
 
-  resolveTab(): SidePanelTabConfig {
+class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
     return {
       id: CAD_PLAY_HIERARCHY_TAB_ID,
       icon: ListTree,
       name: "Hierarchy",
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => this.buildSections(), () => this.buildHighlightedIds()),
+      tree: new CallbackTreePanelDefinition(() => {
+        const snapshot = cadPlayChromeSnapshotRef.current;
+        if (!snapshot) return [{ id: "cad-play-hierarchy.empty", label: "Hierarchy", items: [] }];
+        const build = buildCadPlayHierarchySections(
+          snapshot.modelsByDefinitionId,
+          snapshot.activeModelDefinitionId,
+          snapshot.selection,
+          snapshot.selectTarget,
+          snapshot.hoverTarget,
+          snapshot.toggleHidden,
+          snapshot.toggleLocked,
+          snapshot.referencesByModelDefinitionId,
+          snapshot.selectedReference,
+          snapshot.selectReference,
+          snapshot.hoverReference,
+          snapshot.toggleReferenceHidden,
+          snapshot.toggleReferenceLocked,
+        );
+        const hoveredKey = snapshot.hoveredKey;
+        const highlightedIds: string[] = [];
+        if (hoveredKey) {
+          const ids = new Set<string>();
+          for (const alias of spatialHoverKeyAliases(hoveredKey)) {
+            for (const itemId of build.highlightKeyToItemIds[alias] ?? []) ids.add(itemId);
+          }
+          highlightedIds.push(...ids);
+        }
+        return { sections: build.sections, highlightedIds };
+      }),
     };
-  }
-
-  buildTab(): SidePanelTabConfig {
-    return this.resolveTab();
   }
 }
 //#endregion 🔖CadPlayChrome
@@ -2313,7 +2332,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const flushedModelsDigest = reactHostPort.useMemo(() => cadPlayModelsDigest(flushedModelsByDefinitionId), [flushedModelsByDefinitionId, liveModel.revision, modelDefinitionRevision]);
 
   reactHostPort.useEffect(() => {
-    publishCadPlayChrome({
+    const snapshot: CadPlayChromeSnapshot = {
       modelsByDefinitionId: flushedModelsByDefinitionId,
       referencesByModelDefinitionId,
       activeModelDefinitionId,
@@ -2329,8 +2348,15 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       hoverReference: hoverHierarchyReference,
       toggleReferenceHidden: toggleHierarchyReferenceHidden,
       toggleReferenceLocked: toggleHierarchyReferenceLocked,
-    });
-    return () => publishCadPlayChrome(null);
+    };
+    cadPlayChromeSnapshotRef.current = snapshot;
+    publishCadPlayChrome(snapshot);
+    runtime.notifyChrome();
+    return () => {
+      cadPlayChromeSnapshotRef.current = null;
+      publishCadPlayChrome(null);
+      runtime.notifyChrome();
+    };
   }, [
     activeModelDefinitionId,
     flushedModelsByDefinitionId,
@@ -2342,6 +2368,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     pointerFocus.hover,
     publishCadPlayChrome,
     referencesByModelDefinitionId,
+    runtime,
     selectHierarchyReference,
     selectHierarchyTarget,
     selectedReference,
@@ -3117,15 +3144,7 @@ export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null):
       type: "section",
       id: "cad-play-details.selection",
       label: "Selection",
-      children: [
-        {
-          type: "keyValue",
-          entries: [
-            { label: "Model definition", value: snapshot.activeModelDefinitionId },
-            { label: "Selected targets", value: String(snapshot.selection.length) },
-          ],
-        },
-      ],
+      children: [...buildCadPlaySelectionInspectorChildren(snapshot)],
     });
   }
   if (sections.length === 0) {
@@ -3141,37 +3160,63 @@ export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null):
   return uiDeclarativeSectionsToTree(sections);
 }
 
-class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly readSnapshot: () => CadPlayChromeSnapshot | null) {
-    super();
+/** @emoji 🎯 Builds read-only selection rows for the CAD play details tree. */
+export function buildCadPlaySelectionInspectorChildren(snapshot: CadPlayChromeSnapshot): readonly UiNode[] {
+  const children: UiNode[] = [
+    {
+      type: "field",
+      id: "cad-play-details.selection.modelDefinition",
+      label: "Model definition",
+      child: { type: "text", value: snapshot.activeModelDefinitionId },
+    },
+    {
+      type: "field",
+      id: "cad-play-details.selection.count",
+      label: "Selected targets",
+      child: { type: "text", value: String(snapshot.selection.length) },
+    },
+  ];
+  for (const [index, target] of snapshot.selection.entries()) {
+    const label = snapshot.selection.length === 1 ? "Target" : `Target ${index + 1}`;
+    const detail = target.editable === false ? `${target.kind} · ${target.id} · locked` : `${target.kind} · ${target.id}`;
+    children.push({
+      type: "field",
+      id: `cad-play-details.selection.target.${index}`,
+      label,
+      child: { type: "text", value: detail },
+    });
   }
+  return children;
+}
 
-  resolveTab(): SidePanelTabConfig {
+class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
     return {
       id: "cad-play-catalog",
       icon: Shapes,
       name: "Catalog",
       order: 1,
-      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildCadPlayCatalogTree(this.readSnapshot()), new CommandBus())),
+      tree: new CallbackTreePanelDefinition(() =>
+        uiTreeNodeToTreePanelConfig(buildCadPlayCatalogTree(cadPlayChromeSnapshotRef.current), new CommandBus()),
+      ),
     };
   }
 }
 
 class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(
-    private readonly readSnapshot: () => CadPlayChromeSnapshot | null,
-    private readonly commandBus: CommandBus,
-  ) {
+  constructor(private readonly commandBus: CommandBus) {
     super();
   }
 
-  resolveTab(): SidePanelTabConfig {
+  buildTab(): SidePanelTabConfig {
     return {
       id: "cad-play-details",
       icon: ListTree,
       name: "Selection",
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(this.readSnapshot()), this.commandBus)),
+      tree: new CallbackTreePanelDefinition(() =>
+        uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(cadPlayChromeSnapshotRef.current), this.commandBus),
+      ),
     };
   }
 }
@@ -3192,58 +3237,17 @@ function CadPlayRoot(): ReactNode {
     return null;
   }
   const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
-  const chromeKey = chromeSnapshot
-    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${chromeSnapshot.selectedReference?.id ?? ""}\u0001${cadPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}\u0001${cadPlayReferencesDigest(chromeSnapshot.referencesByModelDefinitionId)}`
-    : "";
-  const hierarchyBuild = reactHostPort.useMemo(() => {
-    if (!chromeSnapshot) {
-      return { sections: [] as TreeDataSection[], highlightKeyToItemIds: {} as Readonly<Record<string, readonly string[]>> };
-    }
-    return buildCadPlayHierarchySections(
-      chromeSnapshot.modelsByDefinitionId,
-      chromeSnapshot.activeModelDefinitionId,
-      chromeSnapshot.selection,
-      chromeSnapshot.selectTarget,
-      chromeSnapshot.hoverTarget,
-      chromeSnapshot.toggleHidden,
-      chromeSnapshot.toggleLocked,
-      chromeSnapshot.referencesByModelDefinitionId,
-      chromeSnapshot.selectedReference,
-      chromeSnapshot.selectReference,
-      chromeSnapshot.hoverReference,
-      chromeSnapshot.toggleReferenceHidden,
-      chromeSnapshot.toggleReferenceLocked,
-    );
-  }, [chromeKey, chromeSnapshot]);
-  const hierarchyHighlightedIds = reactHostPort.useMemo(() => {
-    const hoveredKey = chromeSnapshot?.hoveredKey;
-    if (!hoveredKey) {
-      return [];
-    }
-    const ids = new Set<string>();
-    for (const alias of spatialHoverKeyAliases(hoveredKey)) {
-      for (const itemId of hierarchyBuild.highlightKeyToItemIds[alias] ?? []) ids.add(itemId);
-    }
-    return [...ids];
-  }, [chromeSnapshot?.hoveredKey, hierarchyBuild.highlightKeyToItemIds]);
+  const cadPlayHierarchyPanel = reactHostPort.useMemo(() => new CadPlayHierarchyPanelDefinition(), []);
+  const cadPlayCatalogPanel = reactHostPort.useMemo(() => new CadPlayCatalogPanelDefinition(), []);
+  const cadPlayDetailsPanel = reactHostPort.useMemo(
+    () => new CadPlayDetailsPanelDefinition(runtimeRef.current!.commandBus),
+    [],
+  );
   const workbenchTabs = reactHostPort.useMemo(
-    () => [
-      new CadPlayCatalogPanelDefinition(() => chromeSnapshot).resolveTab(),
-      ...(chromeSnapshot
-        ? [
-            new CadPlayHierarchyPanelDefinition(
-              () => hierarchyBuild.sections,
-              () => hierarchyHighlightedIds,
-            ).resolveTab(),
-          ]
-        : []),
-    ],
-    [chromeSnapshot, hierarchyBuild.sections, hierarchyHighlightedIds],
+    () => [cadPlayHierarchyPanel.resolveTab(), cadPlayCatalogPanel.resolveTab()],
+    [cadPlayHierarchyPanel, cadPlayCatalogPanel],
   );
-  const detailsTabs = reactHostPort.useMemo(
-    () => [new CadPlayDetailsPanelDefinition(() => chromeSnapshot, runtimeRef.current!.commandBus).resolveTab()],
-    [chromeSnapshot],
-  );
+  const detailsTabs = reactHostPort.useMemo(() => [cadPlayDetailsPanel.resolveTab()], [cadPlayDetailsPanel]);
   const slotNavbarCenter = reactHostPort.useMemo(() => <CadPlayFixtureNavbarSelect />, []);
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
@@ -3774,6 +3778,33 @@ if (import.meta.vitest) {
       const positionField = referenceSection!.items.find((item) => item.id === "cad-play-details.reference.ref-a.origin");
       expect(positionField?.control?.type).toBe("vec3");
       expect((positionField?.control as { value?: readonly number[] } | undefined)?.value).toEqual([1, 2, 3]);
+    });
+
+    it("buildCadPlayDetailsTree renders selection section for canvas targets", () => {
+      const modelDefinitionId = defaultModelDefinitionId();
+      const snapshot: CadPlayChromeSnapshot = {
+        modelsByDefinitionId: { [modelDefinitionId]: new Model() },
+        referencesByModelDefinitionId: {},
+        activeModelDefinitionId: modelDefinitionId,
+        selection: [{ kind: "object", id: "wall-a", editable: true }],
+        selectedReference: null,
+        hoveredKey: null,
+        fileStatus: "",
+        selectTarget: () => {},
+        hoverTarget: () => {},
+        toggleHidden: () => {},
+        toggleLocked: () => {},
+        selectReference: () => {},
+        hoverReference: () => {},
+        toggleReferenceHidden: () => {},
+        toggleReferenceLocked: () => {},
+      };
+      const tree = buildCadPlayDetailsTree(snapshot);
+      const selectionSection = tree.sections.find((section) => section.id === "cad-play-details.selection");
+      expect(selectionSection).toBeDefined();
+      const targetField = selectionSection!.items.find((item) => item.id === "cad-play-details.selection.target.0");
+      expect(targetField?.label).toBe("Target");
+      expect(targetField?.description).toBe("object · wall-a");
     });
 
     it("updateCadPlayReferenceInMap toggles reference flags", () => {

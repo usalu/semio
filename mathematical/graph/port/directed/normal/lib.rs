@@ -196,6 +196,14 @@ struct FillAccum {
 }
 
 #[derive(Clone, Debug)]
+struct BrushFillSession {
+    accum: FillAccum,
+    state: u64,
+    max_count: usize,
+    stalled: bool,
+}
+
+#[derive(Clone, Debug)]
 struct FixtureDropPreviewSnapshot {
     node_kind_id: String,
     x: f64,
@@ -290,6 +298,8 @@ pub struct BoardHost {
     brush_alt_pressed: bool,
     /// @emoji ✨ Suggestions menu opened a slot outside brush tool — use suggestion offset and highlight source handle.
     brush_slot_suggestions_active: bool,
+    /// @emoji 🪣 Resumable greedy fill session for chunked WASM builds.
+    brush_fill_session: Option<BrushFillSession>,
     pub port_mode: GraphPortMode,
 }
 
@@ -353,6 +363,7 @@ impl Default for BoardHost {
             brush_handle_kind_weights: HashMap::new(),
             brush_alt_pressed: false,
             brush_slot_suggestions_active: false,
+            brush_fill_session: None,
             port_mode: GraphPortMode::Ported,
         }
     }
@@ -2005,48 +2016,103 @@ impl BoardHost {
         accum.placements.push((node_id, edge_id, preview));
     }
 
+    fn brush_fill_try_place_once(&self, accum: &mut FillAccum, state: &mut u64, max: usize) -> bool {
+        if accum.placements.len() >= max {
+            return false;
+        }
+        let mut free = self.fill_collect_free_handles(accum);
+        if free.is_empty() {
+            return false;
+        }
+        *state = Self::brush_next_seed(*state);
+        self.fill_order_handles(accum, &mut free, *state);
+        for source_handle_id in &free {
+            let mut kinds = self.fill_compatible_node_kind_ids(accum, source_handle_id.as_str());
+            if kinds.is_empty() {
+                continue;
+            }
+            *state = Self::brush_next_seed(*state);
+            Self::brush_weighted_order_strings(&mut kinds, *state, &self.brush_node_kind_weights);
+            for node_kind_id in &kinds {
+                *state = Self::brush_next_seed(*state);
+                let Some(preview) = self.fill_build_preview(accum, source_handle_id.as_str(), node_kind_id.as_str(), *state) else {
+                    continue;
+                };
+                if self.fill_collides(accum, &preview) {
+                    continue;
+                }
+                Self::fill_apply_placement(accum, preview);
+                return true;
+            }
+        }
+        false
+    }
+
+    fn brush_fill_placements_json(accum: &FillAccum, from: usize) -> Vec<serde_json::Value> {
+        accum
+            .placements
+            .iter()
+            .skip(from)
+            .map(|(node_id, edge_id, preview)| Self::brush_place_json(preview, node_id.as_str(), edge_id.as_str()))
+            .collect()
+    }
+
     /// @emoji 🪣 Deterministic frontier fill sequence (weighted distribution + AABB collision).
     pub fn brush_fill_json(&self, max_count: u32, seed: u64) -> String {
         let mut accum = FillAccum::default();
         let max = max_count.min(1000) as usize;
         let mut state = seed;
         while accum.placements.len() < max {
-            let mut free = self.fill_collect_free_handles(&accum);
-            if free.is_empty() {
-                break;
-            }
-            state = Self::brush_next_seed(state);
-            self.fill_order_handles(&accum, &mut free, state);
-            let mut placed = false;
-            for source_handle_id in &free {
-                let mut kinds = self.fill_compatible_node_kind_ids(&accum, source_handle_id.as_str());
-                if kinds.is_empty() {
-                    continue;
-                }
-                state = Self::brush_next_seed(state);
-                Self::brush_weighted_order_strings(&mut kinds, state, &self.brush_node_kind_weights);
-                for node_kind_id in &kinds {
-                    state = Self::brush_next_seed(state);
-                    let Some(preview) = self.fill_build_preview(&accum, source_handle_id.as_str(), node_kind_id.as_str(), state) else {
-                        continue;
-                    };
-                    if self.fill_collides(&accum, &preview) {
-                        continue;
-                    }
-                    Self::fill_apply_placement(&mut accum, preview);
-                    placed = true;
-                    break;
-                }
-                if placed {
-                    break;
-                }
-            }
-            if !placed {
+            if !self.brush_fill_try_place_once(&mut accum, &mut state, max) {
                 break;
             }
         }
-        let placements: Vec<serde_json::Value> = accum.placements.iter().map(|(node_id, edge_id, preview)| Self::brush_place_json(preview, node_id.as_str(), edge_id.as_str())).collect();
+        let placements = Self::brush_fill_placements_json(&accum, 0);
         serde_json::json!({ "placements": placements }).to_string()
+    }
+
+    /// @emoji 🪣 Starts a resumable fill session for chunked builds.
+    pub fn brush_fill_session_begin(&mut self, max_count: u32, seed: u64) {
+        self.brush_fill_session = Some(BrushFillSession {
+            accum: FillAccum::default(),
+            state: seed,
+            max_count: max_count.min(1000) as usize,
+            stalled: false,
+        });
+    }
+
+    /// @emoji 🪣 Clears the resumable fill session.
+    pub fn brush_fill_session_clear(&mut self) {
+        self.brush_fill_session = None;
+    }
+
+    /// @emoji 🪣 Places up to `chunk_budget` fill nodes and returns new placements since the last step.
+    pub fn brush_fill_session_step(&mut self, chunk_budget: u32) -> String {
+        let Some(mut session) = self.brush_fill_session.take() else {
+            return serde_json::json!({ "placements": [], "done": true, "count": 0 }).to_string();
+        };
+        if session.stalled || session.accum.placements.len() >= session.max_count {
+            let done = session.stalled || session.accum.placements.len() >= session.max_count;
+            let count = session.accum.placements.len();
+            self.brush_fill_session = Some(session);
+            return serde_json::json!({ "placements": [], "done": done, "count": count }).to_string();
+        }
+        let before = session.accum.placements.len();
+        let budget = chunk_budget.clamp(1, 64) as usize;
+        for _ in 0..budget {
+            if session.accum.placements.len() >= session.max_count {
+                break;
+            }
+            if !self.brush_fill_try_place_once(&mut session.accum, &mut session.state, session.max_count) {
+                session.stalled = true;
+                break;
+            }
+        }
+        let placements = Self::brush_fill_placements_json(&session.accum, before);
+        let done = session.stalled || session.accum.placements.len() >= session.max_count;
+        let count = session.accum.placements.len();
+        self.brush_fill_session = Some(session);
+        serde_json::json!({ "placements": placements, "done": done, "count": count }).to_string()
     }
     //#endregion 🪣Fill
 

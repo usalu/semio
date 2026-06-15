@@ -1143,6 +1143,26 @@ export interface Puzzle2dLinkTargetRingPayload {
 /** @emoji 🖌️ Active puzzle 2d viewport tool. */
 export type Puzzle2dActiveTool = "select" | "brush" | "fill";
 
+/** @emoji 🪣 Maximum fill slider count in play authoring. */
+export const PUZZLE_2D_FILL_COUNT_MAX = 1000;
+
+/** @emoji 🪣 Fill placements built per async chunk while the session warms up. */
+export const PUZZLE_2D_FILL_BUILD_CHUNK_BUDGET = 8;
+
+/** @emoji 🪣 Fill build progress surfaced on the play engagement slider. */
+export type Puzzle2dFillBuildProgress = {
+  readonly count: number;
+  readonly maxCount: number;
+  readonly done: boolean;
+};
+
+/** @emoji 🪣 Chunk result from {@link Puzzle2dRenderer.stepBrushFillSession}. */
+export type Puzzle2dBrushFillSessionStep = {
+  readonly placements: readonly Puzzle2dBrushPlacePayload[];
+  readonly done: boolean;
+  readonly count: number;
+};
+
 /** @emoji 📐 Default brush node span in world units (play authoring uses the same value). */
 export const DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX = 40;
 
@@ -4653,6 +4673,8 @@ export class Puzzle2dRenderer {
   private scheduledSelectEmitRafId: number | null = null;
   private pendingSelectEmitSnapshot: Puzzle2dSelectionSnapshot | null = null;
   private kindCompatJson = "[]";
+  private brushFillSessionDepth = 0;
+  private brushFillSessionCompatRestoreJson: string | null = null;
   private lastPushedKindCompatJson: string | null = null;
   private kindCatalogsBundle: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
   private kindCatalogsJson = serializeKindCatalogBundle(DEFAULT_KIND_CATALOG_BUNDLE);
@@ -5225,14 +5247,9 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
-  /** @emoji 🪣 Computes a deterministic fill sequence against a fixture snapshot (temporarily syncs WASM, then restores the live scene). */
-  computeBrushFillSequence(fixture: Puzzle2dFixtureV1, maxCount: number, seed: number): Puzzle2dBrushPlacePayload[] {
-    if (this.wasmSessionCallBlockedForReentry()) {
-      return [];
-    }
-    const capped = Math.max(0, Math.min(1000, Math.round(maxCount)));
+  /** @emoji 🪣 Syncs WASM brush/fill probe state for a fixture snapshot without restoring the live scene. */
+  private syncWasmBrushFillProbe(fixture: Puzzle2dFixtureV1): void {
     const fillCompat = puzzle2dFixtureMetaKindCompatibility(fixture);
-    const prevCompatJson = this.kindCompatJson;
     if (fillCompat !== undefined) {
       const normalized = (fillCompat ?? []).map((p) => {
         const rawSp = String(p.specificity ?? "handle")
@@ -5247,27 +5264,95 @@ export class Puzzle2dRenderer {
           specificity,
         };
       });
+      if (this.brushFillSessionDepth === 0) {
+        this.brushFillSessionCompatRestoreJson = this.kindCompatJson;
+      }
       this.session.setHandleLinkCompatJson(JSON.stringify(normalized));
     }
+    this.session.syncDescriptorJson(puzzle2dWasmDescriptorJsonFromFixture(fixture));
+    this.session.setSuggestionOffset(this.suggestionOffset);
+    this.session.setBrushNodeSize(this.brushNodeSize);
+    this.session.setBrushKindWeights(
+      JSON.stringify({ nodeWeights: this.brushNodeKindWeights, handleWeights: this.brushHandleKindWeights }),
+    );
+  }
+
+  /** @emoji 🪣 Restores live WASM scene state after a brush/fill probe or session. */
+  private restoreWasmAfterBrushFillProbe(): void {
+    this.pushSceneToWasmDriver();
+    if (this.brushFillSessionCompatRestoreJson !== null) {
+      this.session.setHandleLinkCompatJson(this.brushFillSessionCompatRestoreJson);
+      this.brushFillSessionCompatRestoreJson = null;
+    }
+  }
+
+  /** @emoji 🪣 Computes a deterministic fill sequence against a fixture snapshot (temporarily syncs WASM, then restores the live scene). */
+  computeBrushFillSequence(fixture: Puzzle2dFixtureV1, maxCount: number, seed: number): Puzzle2dBrushPlacePayload[] {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return [];
+    }
+    const capped = Math.max(0, Math.min(PUZZLE_2D_FILL_COUNT_MAX, Math.round(maxCount)));
     try {
-      this.session.syncDescriptorJson(puzzle2dWasmDescriptorJsonFromFixture(fixture));
-      this.session.setSuggestionOffset(this.suggestionOffset);
-      this.session.setBrushNodeSize(this.brushNodeSize);
-      this.session.setBrushKindWeights(
-        JSON.stringify({ nodeWeights: this.brushNodeKindWeights, handleWeights: this.brushHandleKindWeights }),
-      );
+      this.syncWasmBrushFillProbe(fixture);
       const json = this.session.brushFillJson(capped, seed >>> 0);
-      this.pushSceneToWasmDriver();
       const parsed = JSON.parse(json) as { placements?: Puzzle2dBrushPlacePayload[] };
       return parsed.placements ?? [];
     } catch (err) {
       console.error("[DEBUG] computeBrushFillSequence failed", err);
-      this.pushSceneToWasmDriver();
       return [];
     } finally {
-      if (fillCompat !== undefined) {
-        this.session.setHandleLinkCompatJson(prevCompatJson);
-      }
+      this.restoreWasmAfterBrushFillProbe();
+    }
+  }
+
+  /** @emoji 🪣 Starts a chunked fill session against a fixture snapshot. */
+  beginBrushFillSession(fixture: Puzzle2dFixtureV1, maxCount: number, seed: number): void {
+    if (this.wasmSessionCallBlockedForReentry() || this.brushFillSessionDepth > 0) {
+      return;
+    }
+    const capped = Math.max(0, Math.min(PUZZLE_2D_FILL_COUNT_MAX, Math.round(maxCount)));
+    this.brushFillSessionDepth += 1;
+    try {
+      this.syncWasmBrushFillProbe(fixture);
+      this.session.brushFillSessionBegin(capped, seed >>> 0);
+    } catch (err) {
+      console.error("[DEBUG] beginBrushFillSession failed", err);
+      this.brushFillSessionDepth -= 1;
+      this.restoreWasmAfterBrushFillProbe();
+    }
+  }
+
+  /** @emoji 🪣 Places the next fill chunk for the active session. */
+  stepBrushFillSession(chunkBudget = PUZZLE_2D_FILL_BUILD_CHUNK_BUDGET): Puzzle2dBrushFillSessionStep {
+    if (this.wasmSessionCallBlockedForReentry() || this.brushFillSessionDepth === 0) {
+      return { placements: [], done: true, count: 0 };
+    }
+    try {
+      const json = this.session.brushFillSessionStep(Math.max(1, Math.round(chunkBudget)));
+      const parsed = JSON.parse(json) as { placements?: Puzzle2dBrushPlacePayload[]; done?: boolean; count?: number };
+      return {
+        placements: parsed.placements ?? [],
+        done: parsed.done === true,
+        count: Math.max(0, Math.round(Number(parsed.count) || 0)),
+      };
+    } catch (err) {
+      console.error("[DEBUG] stepBrushFillSession failed", err);
+      return { placements: [], done: true, count: 0 };
+    }
+  }
+
+  /** @emoji 🪣 Ends the active fill session and restores the live WASM scene. */
+  endBrushFillSession(): void {
+    if (this.brushFillSessionDepth === 0) {
+      return;
+    }
+    try {
+      this.session.brushFillSessionClear();
+    } catch (err) {
+      console.error("[DEBUG] endBrushFillSession failed", err);
+    } finally {
+      this.brushFillSessionDepth -= 1;
+      this.restoreWasmAfterBrushFillProbe();
     }
   }
 
@@ -12177,13 +12262,18 @@ export function puzzle2dCommitBrushPlacementToPlay(
   if (placed) {
     puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
   }
+  puzzle2dFinalizeBrushSuggestionsPlacement();
+  return placed;
+}
+
+/** @emoji 🖌️ Clears suggestions brush slot state on the driving pane after a successful placement. */
+export function puzzle2dFinalizeBrushSuggestionsPlacement(): void {
   const driving = puzzle2dBrushSuggestionsDrivingRendererRef.current;
   puzzle2dSyncBrushSessionToAllAuthoringPeers(null, driving ?? undefined, { force: true });
-  if (placed && driving) {
+  if (driving) {
     puzzle2dFinalizeBrushPlacementOnDrivingPane(driving);
     puzzle2dBrushSuggestionsDrivingRendererRef.current = null;
   }
-  return placed;
 }
 
 /** @emoji 📦 Commits a palette node drop into the fixture and every authoring pane immediately (mirrors {@link puzzle2dCommitBrushPlacementToPlay}). */
@@ -12326,7 +12416,7 @@ export function puzzle2dCommitSuggestionsCandidate(renderer: Puzzle2dRenderer, i
   if (!puzzle2dBrushPlaceCommitHandler) {
     renderer.brushCommitSlot();
     closePuzzle2dBrushMenu();
-    puzzle2dSyncBrushSessionToAllAuthoringPeers(null, undefined, { force: true });
+    puzzle2dFinalizeBrushSuggestionsPlacement();
     return true;
   }
   puzzle2dInvokeBrushPlaceCommit(payload);

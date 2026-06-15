@@ -2863,7 +2863,17 @@ function typologyPatternKindUniform(kind: ResolvedTypologyStyle["pattern"]["kind
 }
 
 const TYPOLOGY_PATTERN_VERTEX_PREFIX = "varying vec3 vTypologyWorldPos;\n";
-const TYPOLOGY_PATTERN_VERTEX_INJECT = "#include <worldpos_vertex>\nvTypologyWorldPos = worldPosition.xyz;\n";
+const TYPOLOGY_PATTERN_VERTEX_INJECT = `#include <worldpos_vertex>
+vec4 typologyWorldPosition = vec4(transformed, 1.0);
+#ifdef USE_BATCHING
+  typologyWorldPosition = batchingMatrix * typologyWorldPosition;
+#endif
+#ifdef USE_INSTANCING
+  typologyWorldPosition = instanceMatrix * typologyWorldPosition;
+#endif
+typologyWorldPosition = modelMatrix * typologyWorldPosition;
+vTypologyWorldPos = typologyWorldPosition.xyz;
+`;
 const TYPOLOGY_PATTERN_FRAGMENT_PREFIX = "varying vec3 vTypologyWorldPos;\nuniform float uPatternKind;\nuniform float uPatternDirection;\nuniform float uPatternSpacing;\nuniform float uPatternLineWidth;\nuniform vec3 uPatternColor;\n";
 const TYPOLOGY_PATTERN_FRAGMENT_BLEND = `
 vec3 applyTypologyPattern(vec3 baseColor, vec3 worldPos, vec3 surfaceNormal) {
@@ -7345,6 +7355,24 @@ if (import.meta.vitest) {
       expect(props.color).toBe("#8B7355");
       expect(props.opacity).toBe(0.78);
       expect(typologyStyleCacheKey(style)).toContain("hatch");
+    });
+
+    it("createTypologyStyledMaterial injects self-contained world position for patterns", () => {
+      const material = createTypologyStyledMaterial({
+        color: "#c0ffee",
+        edgeColor: "#102030",
+        opacity: 0.8,
+        pattern: { kind: "hatch", direction: 30, spacing: 0.4, lineWidth: 0.02, color: "#203040" },
+      });
+      const shader = {
+        uniforms: {},
+        vertexShader: "#include <common>\nvoid main() {\nvec3 transformed = vec3(position);\n#include <worldpos_vertex>\n}",
+        fragmentShader: "#include <common>\nvoid main() {\nvec3 outgoingLight = vec3(1.0);\nvec3 normal = vec3(0.0, 0.0, 1.0);\n#include <output_fragment>\n}",
+      };
+      material.onBeforeCompile(shader as never, {} as never);
+      expect(shader.vertexShader).toContain("vec4 typologyWorldPosition = vec4(transformed, 1.0);");
+      expect(shader.vertexShader).toContain("typologyWorldPosition = instanceMatrix * typologyWorldPosition;");
+      expect(shader.vertexShader).not.toContain("vTypologyWorldPos = worldPosition.xyz;");
     });
 
     it("createSolidTypologyStyleResolver maps solids to their object typology style", () => {

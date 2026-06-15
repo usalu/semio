@@ -1,8 +1,8 @@
 {
-  "title": "Fix Interactive Disposition Resize",
+  "title": "Cad Play Details Selection Tree Empty",
   "status": "closed",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
-  "summary": "Lasso partial/full enclosure now uses the first horizontal mouse step (left = partial/crossing, right = full/enclosing) instead of the last pointer position. Rectangle selection still compares drag start vs end. Canonical logic lives in `@ui/react` (`marqueeCoverageFromGesture`, `marqueeIsCrossingFromPath`) and `mathematical_graph` (`selection_drag_enclosing`). Updated procedural, CAD, puzzle 3d, puzzle 2d (Rust/wasm), flow (board_host), and board engine overlay preview. Added Rust and puzzle 3d unit tests.",
+  "summary": "Fixed CAD play Selection details panel staying empty/stale: SidePanel no longer memoizes resolved tree config (re-resolve on each render so CallbackTreePanelDefinition reads fresh snapshot); CAD play uses cadPlayChromeSnapshotRef with stable panel tab definitions and runtime.notifyChrome() on snapshot publish; buildCadPlaySelectionInspectorChildren shows labeled target rows instead of blank keyValue items.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1612"
   },
@@ -21,6 +21,7 @@
     "⚪cd7c4b1d508e4fe49afcd35a4c042bcd",
     "⚪35345b81b2eb4f5881864f6103501887",
     "⚪58dde3a6dacc40709dcafadf4badef48",
-    "⚪ab5a003e2c0f479085c8f6745a72b592"
+    "⚪ab5a003e2c0f479085c8f6745a72b592",
+    "⚪1f768cb5235442359bcbc27d621106a0"
   ]
 }

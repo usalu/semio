@@ -1,0 +1,14 @@
+{
+  "title": "Add Input Stepper Widget to Flow",
+  "emoji": "🎚️",
+  "status": "closed",
+  "description": "Add a new `inputStepper` standalone widget to the flow canvas. Input channels for composite types (e.g., vector with x/y/z) should be represented as separate stepper widgets — analogous to how `inputSlider` is a separate widget for number inputs. The stepper widget shows one numeric stepper per field, outputs a typed dictionary (e.g., `{$schema: \"vector\", x: 1, y: 2, z: 3}`), and integrates into the catalogue/spotlight.",
+  "summary": "Added `inputStepper` as a new standalone input widget for composite numeric types (vector, point) with per-field stepper controls.\n\n**DAG module** (`mathematical/graph/port/directed/dag/lib.rs`):\n- Added `DagStepperField` struct with `key`, `label`, `value`, `step`\n- Added `DagNodeKind::Stepper { fields, output }` variant\n- Added `stepper_widget_width()` and `stepper_widget_height(field_count)` sizing functions\n- Updated `outputs()`, `fit_node_size()`, `label_overlay_rows_for_node()`, and `paint_node_visual()` for Stepper\n- Added `stepper_overlay_state_json()` returning world-space positions for each field row\n\n**Flow core** (`flow/core/lib.rs`):\n- Added `StepperFieldSpec` struct and `Widget::InputStepper` variant with `WidgetDescriptor` counterpart\n- Added all helper functions and updated all match arms throughout\n- Added `FlowHost::set_stepper_field_value()`, `stepper_overlay_state_json()` and WASM bindings\n\n**Flow React** (`flow/react/index.tsx`):\n- Added `inputStepper` to `FlowWidgetV1`, `flowWidgetTreeSignature`, `flowDirtyComputePathReady`\n- Added `setStepperFieldValue` op, `FlowSessionStepperApi` type, `FlowStepperOverlay` component\n- Integrated overlay state sync in `renderFrame` and added component to canvas render tree\n\n**Flow play** (`flow/play/index.ts`):\n- Added `inputStepper` to the Inputs catalogue section",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1695"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪71530c41439249a492f700b470960bdc"
+  ]
+}
