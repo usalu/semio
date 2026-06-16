@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/3d/play` task router: `bun ./script.ts <dev|build|test> [args…]`. */
+/** 🧭 `@puzzle/3d/play` task router: `bun ./script.ts <dev|build|test> [fixture <id>] [args…]`. */
 import {
   BundleScript,
   ScriptRouter,
+  consumePlaygroundFixtureArgv,
   playPollingEnv,
   runBun,
   runBundleScriptMain,
@@ -11,10 +12,13 @@ import {
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
 import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
+import { resolvePuzzle3dPlayFixtureSlug } from "./index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBunxDev(this.root, segments, {
+    const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolvePuzzle3dPlayFixtureSlug);
+    Object.assign(process.env, fixtureEnv);
+    runViteBunxDev(this.root, viteSegments, {
       portEnv: playgroundPortEnv("puzzle-3d"),
       defaultPort: playgroundDevPortString("puzzle-3d"),
       fixedPort: true,
@@ -25,7 +29,8 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
+    const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolvePuzzle3dPlayFixtureSlug);
+    runBun(["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], this.root, playPollingEnv(fixtureEnv));
   }
 }
 

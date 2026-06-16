@@ -5,7 +5,7 @@
 // #region 🔌Adapters
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { cpSync, createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,10 +13,13 @@ import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 import { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind } from "./playground-embed-url.ts";
 import {
+  PLAYGROUND_LOCKED_FIXTURE_ENV,
   PLAYGROUND_PORTS,
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundDevPortString,
+  playgroundLockedFixtureIdFromEnv,
+  playgroundPlayViteDefine,
   playgroundPortEnv,
   playgroundTestPort,
   playgroundTestPortString,
@@ -177,6 +180,89 @@ export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], pla
   };
 }
 
+const PUZZLE_3D_LOCKED_FIXTURE_JSON_REL: Readonly<Record<string, readonly string[]>> = {
+  nakagin: [
+    "puzzle/3d/fixture/nakagin-capsule-tower.3d.json",
+    "puzzle/5d/fixture/nakagin-capsule-tower.5d.json",
+  ],
+  "concrete-forest": [
+    "puzzle/3d/fixture/concrete-forest.3d.json",
+    "puzzle/5d/fixture/concrete-forest.5d.json",
+  ],
+};
+
+/** @emoji 🔎 Collects `/mesh/*.glb` basenames referenced anywhere in fixture JSON. */
+export function puzzle3dMeshBasenamesInJson(value: unknown, out = new Set<string>()): Set<string> {
+  if (typeof value === "string") {
+    const match = /^\/mesh\/([^?#]+\.glb)$/i.exec(value.trim());
+    if (match) {
+      out.add(decodeURIComponent(match[1]!));
+    }
+    return out;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      puzzle3dMeshBasenamesInJson(item, out);
+    }
+    return out;
+  }
+  if (value && typeof value === "object") {
+    for (const entry of Object.values(value as Record<string, unknown>)) {
+      puzzle3dMeshBasenamesInJson(entry, out);
+    }
+  }
+  return out;
+}
+
+/** @emoji 🔒 GLB basenames required by {@link PLAYGROUND_LOCKED_FIXTURE_ENV}, if set. */
+export function puzzle3dLockedFixtureMeshBasenames(repoRoot: string): Set<string> | undefined {
+  const fixtureId = playgroundLockedFixtureIdFromEnv();
+  if (!fixtureId) {
+    return undefined;
+  }
+  const relPaths = PUZZLE_3D_LOCKED_FIXTURE_JSON_REL[fixtureId];
+  if (!relPaths?.length) {
+    return undefined;
+  }
+  const basenames = new Set<string>();
+  for (const rel of relPaths) {
+    const filePath = resolve(repoRoot, rel);
+    if (!existsSync(filePath)) {
+      continue;
+    }
+    try {
+      puzzle3dMeshBasenamesInJson(JSON.parse(readFileSync(filePath, "utf8")), basenames);
+    } catch {
+      continue;
+    }
+  }
+  basenames.add("placeholder.glb");
+  return basenames;
+}
+
+/** @emoji 📦 Copies kit GLBs into a static `dist/mesh` tree (optional basename filter). */
+export function copyPuzzle3dKitGlbs(meshRoots: readonly string[], dest: string, onlyBasenames?: ReadonlySet<string>): void {
+  mkdirSync(dest, { recursive: true });
+  const copied = new Set<string>();
+  const want = (basename: string) => !onlyBasenames || onlyBasenames.has(basename);
+  for (const meshRoot of meshRoots) {
+    if (!existsSync(meshRoot)) {
+      continue;
+    }
+    for (const entry of readdirSync(meshRoot)) {
+      if (!entry.endsWith(".glb") || !want(entry) || copied.has(entry)) {
+        continue;
+      }
+      const src = resolve(meshRoot, entry);
+      if (!statSync(src).isFile()) {
+        continue;
+      }
+      cpSync(src, resolve(dest, entry));
+      copied.add(entry);
+    }
+  }
+}
+
 /** @emoji 🧊 Vite: serve and copy kit meshes at `/mesh/*` for puzzle 3d play and sketchpad. */
 export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
   const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
@@ -201,14 +287,9 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
         viteRoot = config.root;
       },
       closeBundle() {
-        const dest = resolve(viteRoot, "dist", "meshes");
+        const dest = resolve(viteRoot, "dist", "mesh");
         mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
-        for (const meshRoot of meshRoots) {
-          if (!existsSync(meshRoot)) {
-            continue;
-          }
-          cpSync(meshRoot, dest, { recursive: true });
-        }
+        copyPuzzle3dKitGlbs(meshRoots, dest, puzzle3dLockedFixtureMeshBasenames(repoRoot));
         if (existsSync(placeholderMesh)) {
           cpSync(placeholderMesh, resolve(dest, "placeholder.glb"));
         }
@@ -600,22 +681,36 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
       jobs.push({ kind: "vt", z, x, y });
     }
   }
-  log(`[gis/map/play] prefetch ${jobs.length} tiles (raster z${zMinRaster}-${zMaxRaster}, vector z${zMinVector}-${zMaxVector})`);
-  let downloaded = 0;
+  const zoomLabel = `(raster z${zMinRaster}-${zMaxRaster}, vector z${zMinVector}-${zMaxVector})`;
   let skipped = 0;
-  let failed = 0;
-  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-  for (let i = 0; i < jobs.length; i += concurrency) {
-    const batch = jobs.slice(i, i + concurrency);
-    await Promise.all(
-      batch.map(async (job) => {
+  const pending = skipExisting
+    ? jobs.filter((job) => {
         const cacheRoot = job.kind === "osm" ? osm : vt;
         const ext = job.kind === "osm" ? "png" : "pbf";
         const filePath = resolve(cacheRoot, `${job.z}/${job.x}/${job.y}.${ext}`);
-        if (skipExisting && existsSync(filePath)) {
+        if (existsSync(filePath)) {
           skipped++;
-          return;
+          return false;
         }
+        return true;
+      })
+    : jobs;
+  log(
+    `[gis/map/play] prefetch ${jobs.length} tiles ${zoomLabel}` +
+      (skipExisting ? ` (${skipped} cached, ${pending.length} to fetch)` : ""),
+  );
+  if (pending.length === 0) {
+    log(`[gis/map/play] prefetch done: downloaded=0 skipped=${skipped} failed=0`);
+    return { downloaded: 0, skipped, failed: 0 };
+  }
+  let downloaded = 0;
+  let failed = 0;
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+  for (let i = 0; i < pending.length; i += concurrency) {
+    const batch = pending.slice(i, i + concurrency);
+    await Promise.all(
+      batch.map(async (job) => {
+        const cacheRoot = job.kind === "osm" ? osm : vt;
         const ok =
           job.kind === "osm"
             ? await fetchOsmTileToCache(cacheRoot, job.z, job.x, job.y)
@@ -627,7 +722,7 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
         }
       }),
     );
-    if (delayMs > 0 && i + concurrency < jobs.length) {
+    if (delayMs > 0 && i + concurrency < pending.length) {
       await sleep(delayMs);
     }
   }
@@ -984,7 +1079,11 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     publicDir: resolve(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
-    define: playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : undefined,
+    define: {
+      ...playgroundPlayViteDefine(
+        playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : {},
+      ),
+    },
     plugins: [
       ...uiAssetsVitePlugin(uiAssetsRoot),
       ...cadFixtureVitePlugin(repoRoot),
@@ -1056,6 +1155,38 @@ if (import.meta.vitest) {
       const z2 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 2, 2).length;
       const z4 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 4, 4).length;
       expect(z4).toBeGreaterThan(z2);
+    });
+  });
+
+  describe("prefetchMapTiles", () => {
+    it("skips tiles already present in cache without fetching", async () => {
+      const { osm } = mapTileCacheRoots(repoRoot);
+      const tile = { z: 0, x: 0, y: 0 };
+      const filePath = resolve(osm, `${tile.z}/${tile.x}/${tile.y}.png`);
+      const hadCache = existsSync(filePath);
+      if (!hadCache) {
+        mkdirSync(resolve(filePath, ".."), { recursive: true });
+        writeFileSync(filePath, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+      }
+      const lines: string[] = [];
+      const result = await prefetchMapTiles({
+        repoRoot,
+        bounds: GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
+        raster: true,
+        vector: false,
+        zMinRaster: 0,
+        zMaxRaster: 0,
+        concurrency: 4,
+        delayMs: 0,
+        log: (line) => lines.push(line),
+      });
+      expect(result.skipped).toBeGreaterThan(0);
+      expect(result.downloaded).toBe(0);
+      expect(lines.some((line) => line.includes("cached"))).toBe(true);
+      if (!hadCache) {
+        const { unlinkSync } = await import("node:fs");
+        unlinkSync(filePath);
+      }
     });
   });
 

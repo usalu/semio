@@ -16,7 +16,12 @@
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
 		"react-pdf": "^10.3.0",
-		"reveal.js": "^5.2.1"
+		"rehype-stringify": "^10.0.1",
+		"remark-gfm": "^4.0.1",
+		"remark-parse": "^11.0.0",
+		"remark-rehype": "^11.1.1",
+		"reveal.js": "^5.2.1",
+		"unified": "^11.0.5"
 	},
 	"devDependencies": {
 		"@types/react": "^19.2.8",

@@ -1,11 +1,14 @@
 #!/usr/bin/env bun
-/** 🧭 `@cad/js/renderer` task router: `bun ./script.ts <dev|build|test|policy> [args…]`. */
+/** 🧭 `@cad/js/renderer` task router: `bun ./script.ts <dev|build|test|policy> [fixture <id>] [args…]`. */
 import type { FileLinter } from "../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../../repo/lib/js/src/index.ts";
 import {
   BundleScript,
   ScriptRouter,
+  consumePlaygroundFixtureArgv,
+  playPollingEnv,
+  runBun,
   runBundleScriptMain,
   runViteBuild,
   runViteDev,
@@ -13,6 +16,7 @@ import {
 } from "../../../repo/lib/js/src/index.ts";
 import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 import { defineLint } from "../../../repo/lib/js/src/index.ts";
+import { resolveCadPlayFixtureSlug } from "./play/fixture-slugs.ts";
 
 export const policyFile = "index.tsx";
 
@@ -24,7 +28,9 @@ export const policy = defineLint("@cad/js/renderer-index", (l: FileLinter) => {
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteDev(this.root, segments, {
+    const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolveCadPlayFixtureSlug);
+    Object.assign(process.env, fixtureEnv);
+    runViteDev(this.root, viteSegments, {
       config: "play/vite.config.ts",
       portEnv: playgroundPortEnv("cad"),
       defaultPort: playgroundDevPortString("cad"),
@@ -34,7 +40,8 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBuild(this.root, segments, "play/vite.config.ts");
+    const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolveCadPlayFixtureSlug);
+    runBun(["run", "vite", "build", "--config", "play/vite.config.ts", ...viteSegments], this.root, playPollingEnv(fixtureEnv));
   }
 }
 

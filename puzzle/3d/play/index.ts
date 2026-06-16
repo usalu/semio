@@ -15,7 +15,9 @@ import {
   PLAYGROUND_NO_FIXTURE_ID,
   type PlaygroundFixtureCatalog,
   type PlaygroundFixtureHost,
+  isPlaygroundFixtureLocked,
   isPlaygroundNoFixtureId,
+  playgroundResolvedFixtureId,
   Platform,
   WindowKindRuntime,
   buildPlaygroundBrowseFilterTools,
@@ -175,6 +177,13 @@ export const PUZZLE_3D_PLAY_FIXTURE_OPTIONS = [
   { id: PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
   { id: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
 ] as const;
+
+/** @emoji 🔒 Resolves a playground fixture slug (e.g. `concrete`) to a puzzle 3d fixture id. */
+export function resolvePuzzle3dPlayFixtureSlug(slug: string): string | undefined {
+  const aliases: Record<string, string> = { concrete: PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID };
+  const normalized = aliases[slug] ?? slug;
+  return PUZZLE_3D_PLAY_FIXTURE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
+}
 
 const PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID: Record<string, unknown> = {
   [PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID]: nakaginPuzzle3dFixtureJson,
@@ -1678,7 +1687,7 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
 
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
 export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
-  private activeFixtureId = PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+  private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
   readonly mainMode = new ModeRuntime("main", "Puzzle 3D", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
@@ -1963,7 +1972,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return this.fixture;
   }
 
-  getFixtureCatalog(): PlaygroundFixtureCatalog {
+  getFixtureCatalog(): PlaygroundFixtureCatalog | null {
+    if (isPlaygroundFixtureLocked()) return null;
     if (!this.fixtureCatalogCache || this.fixtureCatalogCache.activeFixtureId !== this.activeFixtureId) {
       this.fixtureCatalogCache = { activeFixtureId: this.activeFixtureId, options: PUZZLE_3D_PLAY_FIXTURE_OPTIONS };
     }
@@ -2456,6 +2466,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   override run(command: string, args?: unknown): void {
     switch (command) {
       case "setActiveFixture": {
+        if (isPlaygroundFixtureLocked()) return;
         const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
         const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
         if (nextId === this.activeFixtureId) return;
@@ -4056,6 +4067,11 @@ if (import.meta.vitest) {
   }
 
   describe("puzzle 3D play fixture", () => {
+    it("resolvePuzzle3dPlayFixtureSlug maps concrete shorthand", () => {
+      expect(resolvePuzzle3dPlayFixtureSlug("concrete")).toBe(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+      expect(resolvePuzzle3dPlayFixtureSlug("nakagin")).toBe(PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID);
+    });
+
     it("parses nakagin fixture", () => {
       const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       expect(f?.domain).toBe("architecture");
@@ -4073,6 +4089,21 @@ if (import.meta.vitest) {
       const third = ctrl.getFixtureCatalog();
       expect(third).not.toBe(first);
       expect(third.activeFixtureId).toBe(PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID);
+    });
+
+    it("getFixtureCatalog returns null when fixture host is locked", () => {
+      const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
+      (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID =
+        PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+      try {
+        const bus = new CommandBus();
+        const ctrl = new Puzzle3dPlayShellController(bus, () => {});
+        expect(ctrl.getFixtureCatalog()).toBeNull();
+        ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
+        expect(ctrl.getFixtureCatalog()).toBeNull();
+      } finally {
+        (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+      }
     });
 
     it("parses concrete forest fixture with b and c vortex compatibility rules", () => {

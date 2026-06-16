@@ -37,6 +37,30 @@
         },
         "forwardAllArgs": true
       }
+    },
+    "dev-concrete-forest": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "puzzle/5d/play",
+        "command": "bun ./script.ts dev fixture concrete",
+        "env": {
+          "PUZZLE_5D_PLAY_PORT": "6014",
+          "NODE_OPTIONS": "",
+          "NX_NATIVE_COMMAND_RUNNER": "false",
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_TUI": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build-concrete-forest": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "puzzle/5d/play",
+        "command": "bun ./script.ts build fixture concrete",
+        "forwardAllArgs": true
+      }
     }
   }
 }

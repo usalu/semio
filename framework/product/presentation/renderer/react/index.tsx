@@ -14,6 +14,8 @@ import type {
     Arrangement,
     FigureEmbodiment,
     FigureMosaicGrid,
+    IframeEmbodiment,
+    MarkdownEmbodiment,
     MediaTeaser,
     ParticipantEmphasis,
     Slide,
@@ -55,6 +57,7 @@ import {
     applyElementsSurfaceChrome,
     Expertise,
     Icon,
+    Scrollable,
     SelectionMarquee,
     type ElementsSurfaceChromeInput,
 } from "@ui/react";
@@ -79,6 +82,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
 import "./globals.css";
+import { compileMarkdownToHtml } from "./markdown.ts";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 // #endregion 🔌Adapters
@@ -95,6 +99,7 @@ export type {
     Embodiment,
     FigureEmbodiment,
     IframeEmbodiment,
+    MarkdownEmbodiment,
     MediaTeaser,
     MediaScrollOrigin,
     Participant,
@@ -2884,6 +2889,53 @@ function IframeMorphView({
 	);
 }
 
+function MarkdownMorphView({
+	morphId: anchorId,
+	embodiment,
+	emphasis,
+}: {
+	readonly morphId: string;
+	readonly embodiment: MarkdownEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+}): ReactNode {
+	const [html, setHtml] = useState("");
+	useEffect(() => {
+		let cancelled = false;
+		void (async () => {
+			const markdown =
+				embodiment.markdown ??
+				(await fetch(resolvePresentationAssetUrl(embodiment.src)).then((response) => response.text()));
+			const compiled = await compileMarkdownToHtml(markdown);
+			if (!cancelled) {
+				setHtml(compiled);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [embodiment.markdown, embodiment.src]);
+	return (
+		<div
+			data-id={anchorId}
+			className={[
+				morphAnchorClass(emphasis),
+				"presentation-markdown-morph",
+				"h-full w-full min-h-0 min-w-0",
+			]
+				.filter(Boolean)
+				.join(" ")}
+			aria-label={embodiment.title}
+		>
+			<Scrollable orientation="both" className="h-full w-full p-small">
+				<div
+					className="prose prose-sm max-w-none dark:prose-invert presentation-markdown-prose presentation-markdown-prose--top-left"
+					dangerouslySetInnerHTML={{ __html: html }}
+				/>
+			</Scrollable>
+		</div>
+	);
+}
+
 function PdfMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -3249,6 +3301,9 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 			break;
 		case "iframe":
 			content = <IframeMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
+		case "markdown":
+			content = <MarkdownMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "pdf":
 			content = (

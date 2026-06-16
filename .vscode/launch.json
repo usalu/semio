@@ -675,6 +675,25 @@
       }
     },
     {
+      "name": "🛠️dev📐cad🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:cad:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "CAD_JS_RENDERER_PLAY_PORT": "6020"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 165.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev📐cad🧪kernel🪜fixture",
       "type": "node-terminal",
       "request": "launch",
@@ -980,6 +999,25 @@
       }
     },
     {
+      "name": "🛠️dev🔧procedural🧩hexagonal-column",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:procedural:hexagonal-column",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCEDURAL_PLAY_PORT": "6018"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.85
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural🧪geometry-brep",
       "type": "node-terminal",
       "request": "launch",
@@ -1141,6 +1179,44 @@
       }
     },
     {
+      "name": "🛠️dev🧩puzzle📷3d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:3d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_3D_PLAY_PORT": "6013"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 180.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle👯5d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:5d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_5D_PLAY_PORT": "6014"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 185.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
@@ -1180,6 +1256,50 @@
     },
     // #endregion
     // #region 📦 Build
+    {
+      "name": "📦build📐cad🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:cad:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 118
+      }
+    },
+    {
+      "name": "📦build🧩puzzle📷3d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:puzzle:3d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 119
+      }
+    },
+    {
+      "name": "📦build🧩puzzle👯5d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:puzzle:5d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 120
+      }
+    },
+    {
+      "name": "📦build🔧procedural🧩hexagonal-column",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:procedural:hexagonal-column",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 121
+      }
+    },
     {
       "name": "📦build📖storybook",
       "type": "node-terminal",

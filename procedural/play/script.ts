@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
-/** 🧭 `@procedural/play` task router. */
+/** 🧭 `@procedural/play` task router: `bun ./script.ts <dev|build|test> [fixture <id>] [args…]`. */
 import { join } from "node:path";
 import {
 	BundleScript,
 	ScriptRouter,
+	consumePlaygroundFixtureArgv,
 	playPollingEnv,
 	runBun,
 	runBundleScriptMain,
@@ -11,23 +12,27 @@ import {
 	runVitest,
 } from "../../repo/lib/js/src/index.ts";
 import { playgroundDevPortString, playgroundPortEnv } from "../../ui/styling/playground-dev-ports.ts";
+import { PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID, resolveProceduralPlayFixtureSlug } from "./fixture-slugs.ts";
 
 const wasmScript = join(import.meta.dir, "../../flow/core/script.ts");
 const moduleWasmScripts = ["core", "math", "text", "logic", "dictionary", "list", "brep", "bim"].map((name) =>
 	join(import.meta.dir, `../../flow/module/${name}/script.ts`),
 );
 
-function runFlowModuleWasmBuilds(root: string): void {
+function runFlowModuleWasmBuilds(root: string, env: NodeJS.ProcessEnv = playPollingEnv()): void {
 	for (const script of moduleWasmScripts) {
-		runBun([script, "wasm"], root, playPollingEnv());
+		runBun([script, "wasm"], root, env);
 	}
 }
 
 class DevScript extends BundleScript {
 	run(segments: string[]): void {
-		runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-		runFlowModuleWasmBuilds(this.root);
-		runViteBunxDev(this.root, segments, {
+		const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolveProceduralPlayFixtureSlug);
+		const env = playPollingEnv(fixtureEnv);
+		runBun([wasmScript, "wasm"], this.root, env);
+		runFlowModuleWasmBuilds(this.root, env);
+		Object.assign(process.env, fixtureEnv);
+		runViteBunxDev(this.root, viteSegments, {
 			portEnv: playgroundPortEnv("procedural"),
 			defaultPort: playgroundDevPortString("procedural"),
 			fixedPort: true,
@@ -37,9 +42,11 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
 	run(segments: string[]): void {
-		runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-		runFlowModuleWasmBuilds(this.root);
-		runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
+		const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolveProceduralPlayFixtureSlug);
+		const env = playPollingEnv(fixtureEnv);
+		runBun([wasmScript, "wasm"], this.root, env);
+		runFlowModuleWasmBuilds(this.root, env);
+		runBun(["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], this.root, env);
 	}
 }
 

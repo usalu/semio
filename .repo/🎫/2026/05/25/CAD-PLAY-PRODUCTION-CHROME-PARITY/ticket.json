@@ -1,6 +1,6 @@
 {
-  "title": "Cad Play Details Selection Tree Empty",
-  "status": "closed",
+  "title": "Cad Play Production Chrome Parity",
+  "status": "open",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
   "summary": "Fixed CAD play Selection details panel staying empty/stale: SidePanel no longer memoizes resolved tree config (re-resolve on each render so CallbackTreePanelDefinition reads fresh snapshot); CAD play uses cadPlayChromeSnapshotRef with stable panel tab definitions and runtime.notifyChrome() on snapshot publish; buildCadPlaySelectionInspectorChildren shows labeled target rows instead of blank keyValue items.",
   "github": {
@@ -22,6 +22,7 @@
     "⚪35345b81b2eb4f5881864f6103501887",
     "⚪58dde3a6dacc40709dcafadf4badef48",
     "⚪ab5a003e2c0f479085c8f6745a72b592",
-    "⚪1f768cb5235442359bcbc27d621106a0"
+    "⚪1f768cb5235442359bcbc27d621106a0",
+    "⚪6d806b4e92d34d72b47f58465c7a7456"
   ]
 }

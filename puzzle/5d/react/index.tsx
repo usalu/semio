@@ -2448,16 +2448,14 @@ const FiveD3d = reactHostPort.memo(function FiveD3d(props: FiveDProps) {
   const fixtureRevision = snap.model.parts.length + snap.model.fasteners.length * 4099;
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="3d" data-five-d-instance={props.instanceId}>
-      <reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-        <Puzzle3dPartStateProvider
-          fixture={fixture3d}
-          fixtureRevision={fixtureRevision}
-          onConnect={props.puzzle3d?.onConnect}
-          onRelocate={props.puzzle3d?.onRelocate}
-        >
-          <FiveD3dInner {...props} />
-        </Puzzle3dPartStateProvider>
-      </reactHostPort.Suspense>
+      <Puzzle3dPartStateProvider
+        fixture={fixture3d}
+        fixtureRevision={fixtureRevision}
+        onConnect={props.puzzle3d?.onConnect}
+        onRelocate={props.puzzle3d?.onRelocate}
+      >
+        <FiveD3dInner {...props} />
+      </Puzzle3dPartStateProvider>
     </div>
   );
 });

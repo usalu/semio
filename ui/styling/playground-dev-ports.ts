@@ -87,6 +87,24 @@ export const PLAYGROUND_EMBED_SITE_DEV_PORTS = {
 } as const;
 
 export type PlaygroundEmbedSiteKind = keyof typeof PLAYGROUND_EMBED_SITE_DEV_PORTS;
+
+/** @emoji 🔒 Process env var locking a playground to one fixture (hides navbar dropdown). */
+export const PLAYGROUND_LOCKED_FIXTURE_ENV = "PLAYGROUND_LOCKED_FIXTURE_ID";
+
+/** @emoji 🔒 Locked fixture id from process env, if any. */
+export function playgroundLockedFixtureIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
+	const raw = env[PLAYGROUND_LOCKED_FIXTURE_ENV]?.trim();
+	return raw || undefined;
+}
+
+/** @emoji 🔌 Vite `define` entries for playground play bundles. */
+export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
+	return {
+		"import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID": JSON.stringify(playgroundLockedFixtureIdFromEnv() ?? ""),
+		"import.meta.vitest": "undefined",
+		...extra,
+	};
+}
 //#endregion 🔖PlaygroundDevPorts
 
 if (import.meta.vitest) {
@@ -108,6 +126,19 @@ if (import.meta.vitest) {
 		it("keeps cad and dag on distinct dev ports", () => {
 			expect(playgroundDevPort("cad")).toBe(6020);
 			expect(playgroundDevPort("dag")).toBe(6017);
+		});
+
+		it("playgroundPlayViteDefine embeds locked fixture env", () => {
+			const prev = process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+			try {
+				delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+				expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID"]).toBe('""');
+				process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = "concrete-forest";
+				expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID"]).toBe('"concrete-forest"');
+			} finally {
+				if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+				else process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = prev;
+			}
 		});
 	});
 }

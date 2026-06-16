@@ -113,7 +113,10 @@ import {
   type UiTableHostSurfaceNode,
   enforcePlaygroundWindowEngagementInput,
   enforceWindowKindsEngagementInput,
+  isPlaygroundFixtureLocked,
   isPlaygroundNoFixtureId,
+  playgroundLockedFixtureId,
+  playgroundResolvedFixtureId,
   PLAYGROUND_NO_FIXTURE_ID,
   resolvePlaygroundFixtureCatalog,
   type PlaygroundFixtureCatalog,
@@ -537,6 +540,9 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 
 function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
   void commandBus;
+  if (import.meta.env.PUZZLE_PLAY_ENTRY === "map") {
+    return undefined;
+  }
   const dragByItemId = collectUiTreeItemDragData(sections);
   if (dragByItemId.size === 0) {
     return undefined;
@@ -1564,7 +1570,6 @@ export const mountReactApp = mountPlaygroundApp;
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
 import { sceneHostPort } from "@ui/react";
-import nakaginPuzzle3dFixtureJson from "../../../../../puzzle/3d/fixture/nakagin-capsule-tower.3d.json";
 import {
   PlayCanvas,
   ObjectStateProvider,
@@ -1579,6 +1584,7 @@ import {
   puzzle3dBrushEngagementSourceRef,
   requestPuzzle3dZoomToSelection,
   subscribePuzzle3dBrushEngagementSource,
+  brushMeshUrlsForFillSession,
   isLoadableMeshUrl,
   resolveObjectKindMeshUrl,
   type FixtureV1,
@@ -1604,6 +1610,9 @@ import {
   PUZZLE_3D_PLAY_APP_ID,
   PUZZLE_3D_PLAY_STORE_ID,
   PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS,
+  PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+  brushMeshUrlsForFillSession,
+  puzzle3dPlayFixtureJson,
   Puzzle3dPlayShellController,
   installPuzzle3dPlayBrushHost,
   clearPuzzle3dFillSession,
@@ -2293,17 +2302,11 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
   registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, "tags");
   registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, "list-tree");
   registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, "settings");
-  const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+  const fixture = parseFixtureV1(puzzle3dPlayFixtureJson(playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID)) as unknown);
   if (fixture) {
-    const catalogs = parseKindCatalogs(fixture.meta);
-    const urls = [
-      ...new Set(
-        fixture.objects
-          .map((object) => resolveObjectKindMeshUrl(object.objectKind ?? "", catalogs, fixture) ?? object.meshUrl)
-          .filter((url): url is string => Boolean(url)),
-      ),
-    ];
-    for (const url of urls) {
+    const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+    const compatibility = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
+    for (const url of brushMeshUrlsForFillSession(fixture, catalogs, compatibility)) {
       if (isLoadableMeshUrl(url)) {
         sceneHostPort.drei.useGLTF.preload(url);
       }
@@ -2746,6 +2749,10 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
   const store = usePuzzle5dPlayStore();
   const modelPartCount = reactHostPort.useSyncExternalStore(store.subscribe, () => store.read().parts.length, () => store.read().parts.length);
   const fillSeedRef = reactHostPort.useRef(1);
+  const fillBaseCaptureRef = reactHostPort.useRef<ReturnType<Puzzle5dStore["read"]> | null>(null);
+  const fillPrepareTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fillSessionPreparedRef = reactHostPort.useRef(false);
+  const prevActiveToolRef = reactHostPort.useRef(snapshot?.activeTool);
   const bindingValid =
     node.controllerId === PUZZLE_5D_PLAY_CONTROLLER_ID &&
     node.surfaceId === PUZZLE_5D_PLAY_3D_SURFACE_ID &&
@@ -2761,10 +2768,34 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
     const urls = [...new Set(store.read().parts.flatMap((part) => (part.puzzle3d ? [part.puzzle3d.meshUrl] : [])))];
     for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
   }, [bindingValid, modelPartCount, store]);
+  reactHostPort.useLayoutEffect(() => {
+    const prev = prevActiveToolRef.current;
+    prevActiveToolRef.current = snapshot?.activeTool;
+    if (snapshot?.activeTool === "fill" && prev !== "fill") {
+      fillBaseCaptureRef.current = structuredClone(store.read());
+      fillSessionPreparedRef.current = false;
+      fillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+    }
+    if (snapshot?.activeTool !== "fill") {
+      fillBaseCaptureRef.current = null;
+      fillSessionPreparedRef.current = false;
+    }
+  }, [snapshot?.activeTool, store]);
+  const volumeKindCatalogs = reactHostPort.useMemo(
+    () => project3dKindCatalogs(snapshot?.kindCatalogs ?? snapshot?.sharedKinds.kindCatalogs),
+    [snapshot?.kindCatalogs, snapshot?.sharedKinds.kindCatalogs],
+  );
   reactHostPort.useEffect(() => {
-    if (!bindingValid || snapshot?.activeTool !== "fill") return;
-    fillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
-  }, [bindingValid, snapshot?.activeTool]);
+    if (!bindingValid || snapshot?.activeTool !== "fill" || !snapshot.fixture3d) {
+      return;
+    }
+    const urls = brushMeshUrlsForFillSession(snapshot.fixture3d, volumeKindCatalogs, snapshot.model.kindCompatibility);
+    for (const url of urls) {
+      if (isLoadableMeshUrl(url)) {
+        sceneHostPort.drei.useGLTF.preload(url);
+      }
+    }
+  }, [bindingValid, snapshot?.activeTool, snapshot?.fixture3d, snapshot?.model.kindCompatibility, volumeKindCatalogs]);
   const onSelect = reactHostPort.useCallback((selection: { readonly objectIds: readonly string[] }) => {
     controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: selection.objectIds });
   }, []);
@@ -2780,25 +2811,39 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
     }
   }, []);
   const onFillMeshesReady = reactHostPort.useCallback(() => {
-    const activeStore = storeRef.current;
-    const activeController = controllerRef.current;
-    const model = activeStore.read();
-    activeStore.setFillBuildDone(false);
-    const sequence = buildPuzzle5dFillSequence({
-      model,
-      seed: fillSeedRef.current,
-      overlapBudget: brushOverlapBudgetRef.current,
-      meshRootForUrl: puzzle3dBrushMeshRootForFill,
-    });
-    activeStore.prepareFillSession(sequence, model, fillSeedRef.current);
-    activeStore.setFillBuildDone(true);
-    if (sequence.length > 0) {
-      activeController?.run("setFillCount", { count: 1 });
+    if (fillPrepareTimerRef.current !== null) {
+      clearTimeout(fillPrepareTimerRef.current);
     }
+    fillPrepareTimerRef.current = setTimeout(() => {
+      fillPrepareTimerRef.current = null;
+      const base = fillBaseCaptureRef.current;
+      if (!base || fillSessionPreparedRef.current) {
+        return;
+      }
+      const activeStore = storeRef.current;
+      const activeController = controllerRef.current;
+      activeStore.setFillBuildDone(false);
+      const sequence = buildPuzzle5dFillSequence({
+        model: base,
+        seed: fillSeedRef.current,
+        overlapBudget: brushOverlapBudgetRef.current,
+        meshRootForUrl: puzzle3dBrushMeshRootForFill,
+      });
+      activeStore.prepareFillSession(sequence, base, fillSeedRef.current);
+      activeStore.setFillBuildDone(true);
+      fillSessionPreparedRef.current = true;
+      if (sequence.length > 0) {
+        activeController?.run("setFillCount", { count: 1 });
+      }
+    }, 0);
   }, []);
-  const volumeKindCatalogs = reactHostPort.useMemo(
-    () => project3dKindCatalogs(snapshot?.kindCatalogs ?? snapshot?.sharedKinds.kindCatalogs),
-    [snapshot?.kindCatalogs, snapshot?.sharedKinds.kindCatalogs],
+  reactHostPort.useEffect(
+    () => () => {
+      if (fillPrepareTimerRef.current !== null) {
+        clearTimeout(fillPrepareTimerRef.current);
+      }
+    },
+    [],
   );
   const onFixtureDrop = reactHostPort.useCallback(
     (detail: Puzzle3dFixtureDropDetail) => {
@@ -4509,7 +4554,9 @@ const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS = PUZZLE_2D_PLAY_IS_WIRES
   ? WIRES_PLAY_FIXTURE_OPTIONS
   : [...PUZZLE_2D_PLAY_FIXTURE_OPTIONS, { id: WIRES_PLAY_FIXTURE_METABOLISM_ID, label: "Metabolism (WIRES)" }];
 
-const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = playgroundResolvedFixtureId(
+  PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+);
 
 function puzzle2dPlayFixtureForNavbarId(fixtureId: string): Puzzle2dFixtureV1 {
   if (isPlaygroundNoFixtureId(fixtureId)) {
@@ -5934,17 +5981,17 @@ function Puzzle2dPlayInner({
     [activeFixtureId, bumpSceneAuthoringEpoch, triptychCamerasForFixture],
   );
 
-  const slotNavbarCenter = reactHostPort.useMemo(
-    () => (
+  const slotNavbarCenter = reactHostPort.useMemo(() => {
+    if (isPlaygroundFixtureLocked()) return null;
+    return (
       <NavbarFixtureSelect
         id="puzzle2d.play.fixture"
         value={activeFixtureId}
         options={PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS}
         onValueChange={applyNavbarFixtureId}
       />
-    ),
-    [activeFixtureId, applyNavbarFixtureId],
-  );
+    );
+  }, [activeFixtureId, applyNavbarFixtureId]);
 
   puzzle2dPlayRuntimeRef.current = puzzle2dRuntime;
   puzzle2dPlayShellRef.current = shellValue;

@@ -36,6 +36,30 @@
         },
         "forwardAllArgs": true
       }
+    },
+    "dev-hexagonal-column": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "procedural/play",
+        "command": "bun ./script.ts dev fixture hexagonal-column",
+        "env": {
+          "PROCEDURAL_PLAY_PORT": "6018",
+          "NODE_OPTIONS": "",
+          "NX_NATIVE_COMMAND_RUNNER": "false",
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_TUI": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build-hexagonal-column": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "procedural/play",
+        "command": "bun ./script.ts build fixture hexagonal-column",
+        "forwardAllArgs": true
+      }
     }
   }
 }

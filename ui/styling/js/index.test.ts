@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { resolve } from "node:path";
 import {
 	clearColorResolveCache,
 	currentStylingThemeName,
@@ -10,6 +11,10 @@ import {
 	tokenVar,
 } from "./resolve.ts";
 import { STYLING_BOARD_THEMES } from "./tokens.generated.ts";
+import { puzzle3dLockedFixtureMeshBasenames, puzzle3dMeshBasenamesInJson } from "../vite-elements-assets.ts";
+import { PLAYGROUND_LOCKED_FIXTURE_ENV } from "../playground-dev-ports.ts";
+
+const repoRoot = resolve(import.meta.dir, "../../..");
 
 describe("styling resolve", () => {
 	it("tokenVar and tokenHex read generated palette", () => {
@@ -43,5 +48,43 @@ describe("styling resolve", () => {
 	it("resolveColorRgba returns byte tuple", () => {
 		clearColorResolveCache();
 		expect(resolveColorRgba("var(--color-gray)", "gray")).toEqual([123, 130, 125, 255]);
+	});
+
+	it("ui.css keeps spacing tokens in @theme inline for production builds", async () => {
+		const { readFile } = await import("node:fs/promises");
+		const { resolve } = await import("node:path");
+		const uiCss = await readFile(resolve(import.meta.dir, "ui.css"), "utf8");
+		expect(uiCss).toContain("--ui-spacing: var(--spacing-compact)");
+		expect(uiCss).toContain("--spacing-single: calc(1 * var(--ui-spacing))");
+		expect(uiCss).toContain("--spacing-double: calc(2 * var(--ui-spacing))");
+		expect(uiCss).toContain("--glass-panel-blur: 40px");
+		expect(uiCss).toContain("--radius-sm: 0rem");
+		expect(uiCss).toContain("--toolbar-footer-offset: calc(2 * var(--spacing-double))");
+		expect(uiCss).not.toMatch(/@layer base\s*\{[^}]*:root[^}]*--spacing:\s*var\(--spacing-compact\)/s);
+	});
+});
+
+describe("puzzle3d mesh build helpers", () => {
+	it("collects mesh basenames from fixture JSON", () => {
+		const basenames = puzzle3dMeshBasenamesInJson({
+			objects: [{ meshUrl: "/mesh/hexagonal-cut-concrete-forest-left.glb" }],
+			meta: { kindCatalogs: { objects: [{ meshUrl: "/mesh/capsule_J.glb" }] } },
+		});
+		expect([...basenames].sort()).toEqual(["capsule_J.glb", "hexagonal-cut-concrete-forest-left.glb"]);
+	});
+
+	it("returns only concrete forest glbs when fixture is locked", () => {
+		const prev = process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+		try {
+			process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = "concrete-forest";
+			const basenames = puzzle3dLockedFixtureMeshBasenames(repoRoot);
+			expect(basenames?.has("hexagonal-cut-concrete-forest-left.glb")).toBe(true);
+			expect(basenames?.has("hexagonal-cut-concrete-forest-right.glb")).toBe(true);
+			expect(basenames?.has("capsule_J.glb")).toBe(false);
+			expect(basenames?.has("placeholder.glb")).toBe(true);
+		} finally {
+			if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+			else process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = prev;
+		}
 	});
 });

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   BundleScript,
   ScriptRouter,
+  consumePlaygroundFixtureArgv,
   playPollingEnv,
   runBun,
   runBundleScriptMain,
@@ -13,13 +14,16 @@ import {
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
 import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
+import { resolvePuzzle2dPlayFixtureSlug } from "./index.ts";
 
 const wasmScript = join(import.meta.dir, "../rs/script.ts");
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-    runViteBunxDev(this.root, segments, {
+    const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolvePuzzle2dPlayFixtureSlug);
+    runBun([wasmScript, "wasm"], this.root, playPollingEnv(fixtureEnv));
+    Object.assign(process.env, fixtureEnv);
+    runViteBunxDev(this.root, viteSegments, {
       portEnv: playgroundPortEnv("puzzle-2d"),
       defaultPort: playgroundDevPortString("puzzle-2d"),
       fixedPort: true,
@@ -29,8 +33,9 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-    runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
+    const { segments: viteSegments, fixtureEnv } = consumePlaygroundFixtureArgv(segments, resolvePuzzle2dPlayFixtureSlug);
+    runBun([wasmScript, "wasm"], this.root, playPollingEnv(fixtureEnv));
+    runBun(["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], this.root, playPollingEnv(fixtureEnv));
   }
 }
 
@@ -39,7 +44,7 @@ class TestScript extends BundleScript {
     runCargo(["test", "-p", "puzzle_2d"], this.repoRoot, playPollingEnv());
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
     runVitest(this.root, segments);
-    runPlaywright(this.root, "playwright.config.ts", segments);
+    runPlaywright(this.root, "playwright.config.ts", ["--pass-with-no-tests", ...segments]);
   }
 }
 

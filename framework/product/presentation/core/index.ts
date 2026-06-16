@@ -158,6 +158,15 @@ export interface IframeEmbodiment {
 	readonly teaser?: MediaTeaser;
 }
 
+/** @emoji 📝 Markdown body on a slide; rendered with repo prose typography in React renderers. */
+export interface MarkdownEmbodiment {
+	readonly kind: "markdown";
+	readonly id: string;
+	readonly src: string;
+	readonly markdown?: string;
+	readonly title?: string;
+}
+
 /** @emoji • Bulleted list body. */
 export interface BulletEmbodiment {
 	readonly kind: "bullet";
@@ -325,6 +334,7 @@ export type Embodiment =
 	| VideoEmbodiment
 	| PdfEmbodiment
 	| IframeEmbodiment
+	| MarkdownEmbodiment
 	| BulletEmbodiment
 	| AuthorsEmbodiment
 	| AffiliationsEmbodiment;
@@ -908,6 +918,31 @@ export function centerDispositionBoundsOffset(bounds: DispositionPosition): Disp
 		y: (1 - bounds.height) / 2 - bounds.y,
 		width: 0,
 		height: 0,
+	};
+}
+
+/** @emoji 📐 Default slide width÷height used by the React renderer when unset (960×700). */
+export const PRESENTATION_DEFAULT_SLIDE_ASPECT = 960 / 700;
+
+/** @emoji 📐 Largest centered frame whose on-slide physical aspect matches {@link sourceAspect}. */
+export function figureFrameForSourceAspect(
+	sourceAspect: number,
+	slideAspect = PRESENTATION_DEFAULT_SLIDE_ASPECT,
+	padding = { x: 0.04, y: 0.06 },
+): DispositionPosition {
+	const maxWidth = 1 - padding.x * 2;
+	const maxHeight = 1 - padding.y * 2;
+	let height = maxHeight;
+	let width = (height * sourceAspect) / slideAspect;
+	if (width > maxWidth) {
+		width = maxWidth;
+		height = (width * slideAspect) / sourceAspect;
+	}
+	return {
+		x: (1 - width) / 2,
+		y: (1 - height) / 2,
+		width,
+		height,
 	};
 }
 
@@ -2693,6 +2728,23 @@ if (import.meta.vitest) {
 			const centered = centerResolvedArrangement(resolved);
 			expect(centered[0]?.position?.x).toBeCloseTo(0.35);
 			expect(centered[0]?.position?.y).toBeCloseTo(0.25);
+		});
+	});
+
+	describe("figureFrameForSourceAspect", () => {
+		const slideAspect = PRESENTATION_DEFAULT_SLIDE_ASPECT;
+
+		it("matches the source physical aspect inside default padding", () => {
+			const sourceAspect = 1536 / 1024;
+			const frame = figureFrameForSourceAspect(sourceAspect, slideAspect);
+			expect((frame.width / frame.height) * slideAspect).toBeCloseTo(sourceAspect, 10);
+			expect(frame.x).toBeCloseTo((1 - frame.width) / 2, 10);
+			expect(frame.y).toBeCloseTo((1 - frame.height) / 2, 10);
+		});
+
+		it("prefers full width for wider-than-slide sources", () => {
+			const frame = figureFrameForSourceAspect(2, slideAspect);
+			expect(frame.width).toBeCloseTo(0.92, 10);
 		});
 	});
 

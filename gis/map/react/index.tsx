@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { cn, floatingMenuSurfaceClass, Icon, type IconName } from "@ui/react";
 import initGisMapWasm, { MapSession } from "../rs/pkg/gis_map.js";
 
-if (import.meta.env.VITEST) {
+if (import.meta.vitest) {
   const { readFileSync } = await import("node:fs");
   const { initSync } = await import("../rs/pkg/gis_map.js");
   const wasmPath = new URL("../rs/pkg/gis_map_bg.wasm", import.meta.url).pathname;

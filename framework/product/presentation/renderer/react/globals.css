@@ -765,6 +765,22 @@
 	background: var(--color-background);
 }
 
+.reveal .presentation-markdown-morph {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-markdown-prose {
+	width: 100%;
+	margin: 0;
+}
+
+.reveal .presentation-markdown-prose--top-left > :first-child {
+	margin-top: 0;
+}
+
 .reveal .presentation-media-teaser {
 	position: relative;
 	width: 100%;

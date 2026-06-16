@@ -18,10 +18,11 @@ export const policy = defineLint("@ui/react-bundle", (l: BundleLinter) => {
   return dependencyBoundaryBreachesForBundleDir(repoRoot, l.root());
 });
 
-const storybookEnv = () =>
+const storybookEnv = (extra: Record<string, string | undefined> = {}) =>
   devToolingEnv({
     WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
     CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
+    ...extra,
   });
 
 class DevScript extends BundleScript {
@@ -38,7 +39,11 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    spawnBunx(["storybook", "build", "-c", ".storybook", ...segments], this.repoRoot, storybookEnv());
+    spawnBunx(
+      ["storybook", "build", "-c", ".storybook", ...segments],
+      this.repoRoot,
+      storybookEnv({ STORYBOOK_PRODUCTION_SLICES: "ui,puzzle" }),
+    );
   }
 }
 

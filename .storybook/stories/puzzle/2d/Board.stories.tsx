@@ -14,14 +14,12 @@ import {
 	Handle,
 	Node,
 	usePuzzle2dEvent,
-} from "../../../../puzzle/2d/index.tsx";
-import {
 	BUILTIN_PORT_HANDLE_KIND,
 	DEFAULT_KIND_CATALOG_BUNDLE,
 	fixtureMetaKindCatalogBundle,
 	puzzle2dFixtureMetaKindCompatibility,
 	mergeKindCatalogBundleByRowId,
-} from "../../../../puzzle/2d/index";
+} from "@puzzle/2d/react";
 import nakaginCapsuleTowerPuzzle2dFixture from "../../../../puzzle/2d/fixture/nakagin-capsule-tower.2d.json";
 
 const meta = {

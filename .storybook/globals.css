@@ -4,7 +4,7 @@
 @source "./";
 @source "./stories";
 @source "../semio/client/lib/js";
-@source "../semio/dev/algorithms";
+@source "../semio/dev/algorithm";
 @source "../framework/product/playground/renderer/react";
 @source "../puzzle/2d/react";
 @source "../puzzle/3d/react";

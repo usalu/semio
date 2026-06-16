@@ -613,6 +613,31 @@ export function isPlaygroundNoFixtureId(fixtureId: string | null | undefined): b
   return fixtureId == null || fixtureId === "" || fixtureId === PLAYGROUND_NO_FIXTURE_ID;
 }
 
+declare global {
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+  interface ImportMetaEnv {
+    readonly PLAYGROUND_LOCKED_FIXTURE_ID?: string;
+  }
+}
+
+/** @emoji 🔒 Fixture id baked in at build time for single-fixture playground hosts. */
+export function playgroundLockedFixtureId(): string | undefined {
+  const raw = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID?.trim();
+  return raw || undefined;
+}
+
+/** @emoji 🔒 True when this playground host is locked to one fixture (no navbar dropdown). */
+export function isPlaygroundFixtureLocked(): boolean {
+  return playgroundLockedFixtureId() !== undefined;
+}
+
+/** @emoji 🎯 Resolves the active fixture id honoring a locked host override. */
+export function playgroundResolvedFixtureId(defaultFixtureId: string): string {
+  return playgroundLockedFixtureId() ?? defaultFixtureId;
+}
+
 const playgroundFixtureCatalogWithNoOptionCache = new Map<string, PlaygroundFixtureCatalog>();
 
 function playgroundFixtureCatalogCacheKey(activeFixtureId: string, options: readonly PlaygroundFixtureOption[]): string {
@@ -641,6 +666,7 @@ export function playgroundFixtureCatalogWithNoOption(
 
 /** @emoji 🔎 Reads a fixture catalog from a controller when it implements {@link PlaygroundFixtureHost}. */
 export function resolvePlaygroundFixtureCatalog(controller: Controller | undefined): PlaygroundFixtureCatalog | null {
+  if (isPlaygroundFixtureLocked()) return null;
   if (!controller) return null;
   const host = controller as Controller & PlaygroundFixtureHost;
   if (typeof host.getFixtureCatalog !== "function") return null;
@@ -1097,6 +1123,29 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const ctrl = new DemoPlaygroundController(bus, () => undefined);
       expect(resolvePlaygroundFixtureCatalog(ctrl)).toBeNull();
+    });
+
+    it("returns null when the playground host fixture is locked", () => {
+      const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
+      (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = "concrete-forest";
+      try {
+        class FixtureDemoController extends Controller implements PlaygroundFixtureHost {
+          constructor(bus: CommandBus) {
+            super("fixture-demo-locked", bus, () => undefined);
+          }
+
+          getFixtureCatalog(): PlaygroundFixtureCatalog {
+            return { activeFixtureId: "a", options: [{ id: "a", label: "Alpha" }] };
+          }
+
+          run(): void {}
+        }
+        const bus = new CommandBus();
+        const ctrl = new FixtureDemoController(bus);
+        expect(resolvePlaygroundFixtureCatalog(ctrl)).toBeNull();
+      } finally {
+        (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+      }
     });
 
     it("returns catalog with No fixture when the controller implements PlaygroundFixtureHost", () => {

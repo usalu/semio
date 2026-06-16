@@ -89,6 +89,8 @@ import {
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
 
+export { PUZZLE_2D_FILL_COUNT_MAX };
+
 //#region 🔖Ids
 export type Puzzle2dPlayPaneId = "2d-overview" | "2d-detail" | "2d-selection";
 
@@ -348,6 +350,13 @@ export const PUZZLE_2D_PLAY_FIXTURE_OPTIONS = [
 	{ id: PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
 ] as const;
 
+/** @emoji 🔒 Resolves a playground fixture slug (e.g. `concrete`) to a puzzle 2d fixture id. */
+export function resolvePuzzle2dPlayFixtureSlug(slug: string): string | undefined {
+	const aliases: Record<string, string> = { concrete: PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID };
+	const normalized = aliases[slug] ?? slug;
+	return PUZZLE_2D_PLAY_FIXTURE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
+}
+
 const PUZZLE_2D_PLAY_FIXTURE_JSON_BY_ID: Record<string, unknown> = {
 	[PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID]: nakaginFixtureJson,
 	[PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID]: concreteForestFixtureJson,
@@ -447,13 +456,13 @@ function puzzle2dPlayViewportCameraFromBounds(
 	const worldSpan = Math.max(2 * bounds.halfSpan * PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE, 1);
 	const zoom = clampPuzzle2dPlayViewportZoom((usable / worldSpan) * PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST);
 	return {
-		x: bounds.cx + fixture.camera.x,
-		y: bounds.cy + fixture.camera.y,
+		x: bounds.cx,
+		y: bounds.cy,
 		zoom,
 	};
 }
 
-/** @emoji 📷 Viewport camera centered on fixture node bounds; `fixture.camera` is a pan offset (use zero to center). */
+/** @emoji 📷 Viewport camera centered on fixture node bounds with zoom fitted for growth. */
 export function puzzle2dPlayViewportCameraFromFixture(fixture: Puzzle2dFixtureV1, rawFixture?: unknown): CameraState {
 	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
 	return puzzle2dPlayViewportCameraFromBounds(fixture, bounds);

@@ -25,6 +25,11 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
+const productionStorySlices = (process.env.STORYBOOK_PRODUCTION_SLICES ?? "")
+	.split(",")
+	.map((slice) => slice.trim())
+	.filter(Boolean);
+const productionSliceBuild = productionStorySlices.length > 0;
 
 const uiReactDir = resolve(repoRootPath, "ui/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
@@ -59,9 +64,26 @@ function storybookScopeMatches(prefix: string): boolean {
 	return storybookScope === prefix || storybookScope.startsWith(`${prefix}/`);
 }
 
-const loadUiStack = storybookScopeMatches("ui");
-const loadPuzzleStack = storybookScopeMatches("puzzle");
-const loadSemioStack = storybookScopeMatches("semio");
+/** @emoji 🎯 Active storybook slice for ui / puzzle / semio stacks. */
+function storybookSliceActive(prefix: string): boolean {
+	if (storybookScope) return storybookScopeMatches(prefix);
+	if (productionSliceBuild) return productionStorySlices.includes(prefix);
+	return true;
+}
+
+function buildStoryGlobs(): string[] {
+	if (storybookScope) {
+		return [`./stories/${storybookScopePrefix}**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`];
+	}
+	if (productionSliceBuild) {
+		return productionStorySlices.map((slice) => `./stories/${slice}/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`);
+	}
+	return [`./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`];
+}
+
+const loadUiStack = storybookSliceActive("ui");
+const loadPuzzleStack = storybookSliceActive("puzzle");
+const loadSemioStack = storybookSliceActive("semio");
 
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
@@ -74,6 +96,8 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
 		alias["@puzzle/3d/react"] = toVitePath(puzzle3dReactDir);
 		alias["@puzzle/5d/react"] = toVitePath(puzzle5dReactDir);
+		alias["@infinite/cavas/react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
+		alias["@elements/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
 		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
 	}
 	if (loadSemioStack) {
@@ -103,7 +127,7 @@ function buildScopeWatchIgnores(): string[] {
 }
 
 const config: StorybookConfig = {
-	stories: [`./stories/${storybookScopePrefix}**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`],
+	stories: buildStoryGlobs(),
 	addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
 	framework: {
 		name: getAbsolutePath("@storybook/react-vite"),
@@ -208,6 +232,7 @@ const config: StorybookConfig = {
 			"@framework/playground/core",
 			"@framework/playground/renderer/react",
 			"@puzzle/2d/react",
+			"@infinite/cavas/react-renderer",
 		]);
 		if (loadSemioStack) {
 			optimizeExclude.add("@semio/ui");
@@ -237,10 +262,10 @@ const config: StorybookConfig = {
 			config.define = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("production"),
-				__STORYBOOK_SCOPE__: JSON.stringify(""),
-				__STORYBOOK_LOAD_UI__: JSON.stringify(true),
-				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(true),
-				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(true),
+				__STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
+				__STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
+				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
+				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(loadSemioStack),
 			};
 		}
 		config.worker = {

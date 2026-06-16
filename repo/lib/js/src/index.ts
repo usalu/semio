@@ -990,6 +990,25 @@ export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv
   });
 }
 
+/** @emoji 🔒 Parses optional `fixture <id>` argv prefix for playground play scripts. */
+export function consumePlaygroundFixtureArgv(
+  segments: string[],
+  resolveFixtureId: (slug: string) => string | undefined,
+): { readonly segments: string[]; readonly fixtureEnv: NodeJS.ProcessEnv } {
+  if (segments[0] !== "fixture" || !segments[1]) {
+    return { segments, fixtureEnv: {} };
+  }
+  const fixtureId = resolveFixtureId(segments[1]);
+  if (!fixtureId) {
+    console.error(`[play] unknown fixture ${JSON.stringify(segments[1])}`);
+    process.exit(1);
+  }
+  return {
+    segments: segments.slice(2),
+    fixtureEnv: { PLAYGROUND_LOCKED_FIXTURE_ID: fixtureId },
+  };
+}
+
 /** ▶️Playwright test run in bundle directory. */
 export function runPlaywright(bundleRoot: string, config: string, segments: string[] = []): void {
   runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, playPollingEnv());

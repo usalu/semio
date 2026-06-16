@@ -11,14 +11,10 @@
 //#region 🗃️Exports
 // Builtin Metabolism kit and UI icons only — test JSON lives in `@semio/fixture`.
 
-import { assembleSplitInitialKitFromDirectory } from "../fixture/script.ts";
+import metabolismShallowKit from "../fixture/metabolism.shallow.kit.semio.json";
 import { createIconComponent } from "@ui/react";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const MetabolismKitData = assembleSplitInitialKitFromDirectory(
-  join(dirname(fileURLToPath(import.meta.url)), "../fixture/kit/dev/metabolism/wip/initialKit"),
-);
+const MetabolismKitData = { wip: { initialKit: metabolismShallowKit } };
 
 //#region 🔖Icons
 export const AddIcon = createIconComponent("plus");

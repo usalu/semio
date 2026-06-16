@@ -17,7 +17,9 @@ import {
 	createProductPlaygroundPlatform,
 	enforcePlaygroundWindowEngagementInput,
 	isPlaygroundNoFixtureId,
+	isPlaygroundFixtureLocked,
 	PLAYGROUND_NO_FIXTURE_ID,
+	playgroundResolvedFixtureId,
 	registerWindowBody,
 	type AppTools,
 	type CommandDescriptor,
@@ -114,6 +116,13 @@ export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout(
 export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
 export const PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID = "procedural-default";
+
+import {
+	PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID,
+	resolveProceduralPlayFixtureSlug,
+} from "./fixture-slugs.ts";
+
+export { PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID, resolveProceduralPlayFixtureSlug };
 
 const proceduralFixtureModules = import.meta.glob("../fixture/*.procedural.json", { eager: true }) as Record<
 	string,
@@ -653,7 +662,7 @@ export function proceduralPlayFixtureJson(fixtureId: string = PROCEDURAL_PLAY_FI
 /** @emoji 🎛 Procedural play shell controller. */
 export class ProceduralPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Procedural", undefined);
-	private activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
+	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
 	private fixtureJson = PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON;
 	private readonly fixtureStore: ProceduralPlayFixtureStore;
 	private hostBridge: ProceduralPlayHostBridge | null = null;
@@ -698,13 +707,17 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.fixtureStore = fixtureStore;
 		this.fixtureEdges = this.parseFixtureEdges(this.fixtureJson);
 		this.rebuildShellMode();
+		if (isPlaygroundFixtureLocked()) {
+			this.loadFixtureById(this.activeFixtureId);
+		}
 	}
 
 	hasStoredFixture(): boolean {
 		return this.fixtureStore.load() != null;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog {
+	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
+		if (isPlaygroundFixtureLocked()) return null;
 		return { activeFixtureId: this.activeFixtureId, options: [...PROCEDURAL_PLAY_FIXTURE_OPTIONS] };
 	}
 
@@ -1376,6 +1389,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			return;
 		}
 		if (command === "setActiveFixture") {
+			if (isPlaygroundFixtureLocked()) return;
 			const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
 			this.loadFixtureById(fixtureId);
 			return;
@@ -2245,6 +2259,32 @@ if (import.meta.vitest) {
 			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.find((option) => option.id === "sphere-cut-with-torus")?.label).toBe(
 				"Sphere Cut With Torus",
 			);
+			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID)).toBe(
+				true,
+			);
+		});
+
+		it("resolveProceduralPlayFixtureSlug maps hexagonal-column shorthand", async () => {
+			const { resolveProceduralPlayFixtureSlug, PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID } = await import(
+				"./fixture-slugs.ts"
+			);
+			expect(resolveProceduralPlayFixtureSlug("hexagonal-column")).toBe(PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID);
+			expect(resolveProceduralPlayFixtureSlug("column")).toBe(PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID);
+		});
+
+		it("getFixtureCatalog returns null when fixture host is locked", () => {
+			const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
+			(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID =
+				PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID;
+			try {
+				const bus = new CommandBus();
+				const ctrl = new ProceduralPlayController(bus, () => {});
+				expect(ctrl.getFixtureCatalog()).toBeNull();
+				ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
+				expect(ctrl.getFixtureCatalog()).toBeNull();
+			} finally {
+				(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+			}
 		});
 
 		it("setActiveFixture loads file fixtures from procedural/fixture", () => {

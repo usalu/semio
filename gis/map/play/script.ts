@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@gis/map/play` task router: `bun ./script.ts <dev|build|build-tiles|test|tiles|fixture>`. */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import {
   GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
@@ -212,6 +212,10 @@ class BuildTilesScript extends BundleScript {
       zMaxVector,
       concurrency,
     });
+    const distDir = join(this.root, "dist");
+    if (existsSync(distDir)) {
+      rmSync(distDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+    }
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
     runBun(
       ["run", "vite", "build", "--config", "vite.config.ts", ...segments.filter((s) => !s.startsWith("--"))],

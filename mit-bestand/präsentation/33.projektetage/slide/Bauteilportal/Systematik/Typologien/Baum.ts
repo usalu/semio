@@ -1,8 +1,12 @@
-import type { SlideFile } from "@framework/presentation/core";
+import {
+	figureFrameForSourceAspect,
+	type SlideFile,
+} from "@framework/presentation/core";
 
 const PARTICIPANT = "typologien-baum";
 const EMBODIMENT = "typologien-baum--figure";
-const FRAME = { x: 0.04, y: 0.06, width: 0.92, height: 0.88 };
+const SOURCE_ASPECT = 1536 / 1024;
+const FRAME = figureFrameForSourceAspect(SOURCE_ASPECT);
 
 export default {
 	order: 0,
@@ -13,6 +17,7 @@ export default {
 			id: EMBODIMENT,
 			src: "/typologienbaum.png",
 			alt: "Generator-Typologiebaum",
+			sourceAspect: SOURCE_ASPECT,
 		},
 	],
 	arrangement: {

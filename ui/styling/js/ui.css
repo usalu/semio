@@ -51,79 +51,8 @@
 /* Set base all components */
 @layer base {
   :root {
-    --radius: 0rem;
-    --radius-xs: 0rem;
-    --radius-sm: 0rem;
-    --radius-md: 0rem;
-    --radius-lg: 0rem;
-    --radius-xl: 0rem;
-    --radius-2xl: 0rem;
-    --radius-3xl: 0rem;
-    --radius-4xl: 0rem;
-    --radius-full: 0rem;
-    --shadow-2xs: 0 0 rgb(0 0 0 / 0);
-    --shadow-xs: 0 0 rgb(0 0 0 / 0);
-    --shadow-sm: 0 0 rgb(0 0 0 / 0);
-    --shadow-md: 0 0 rgb(0 0 0 / 0);
-    --shadow-lg: 0 0 rgb(0 0 0 / 0);
-    --shadow-xl: 0 0 rgb(0 0 0 / 0);
-    --shadow-2xl: 0 0 rgb(0 0 0 / 0);
-    --inset-shadow-2xs: inset 0 0 rgb(0 0 0 / 0);
-    --inset-shadow-xs: inset 0 0 rgb(0 0 0 / 0);
-    --inset-shadow-sm: inset 0 0 rgb(0 0 0 / 0);
-    --drop-shadow-xs: 0 0 rgb(0 0 0 / 0);
-    --drop-shadow-sm: 0 0 rgb(0 0 0 / 0);
-    --drop-shadow-md: 0 0 rgb(0 0 0 / 0);
-    --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
-    --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
-    --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
     --spacing-compact: 0.2rem;
     --spacing-touch: 0.275rem;
-    --spacing: var(--spacing-compact);
-    --spacing-single: calc(1 * var(--spacing));
-    --spacing-double: calc(2 * var(--spacing));
-    --size-tiny: calc(3 * var(--spacing));
-    --size-small: calc(5 * var(--spacing));
-    --size-workbench: calc(1.5 * var(--size-small));
-    --size-medium: calc(7 * var(--spacing));
-    --size-large: calc(9 * var(--spacing));
-    --size-huge: calc(11 * var(--spacing));
-    --size-mega: calc(13 * var(--spacing));
-    --size-giga: calc(15 * var(--spacing));
-    --toolbar-item-height: var(--size-medium);
-    --toolbar-gap: var(--spacing-single);
-    --toolbar-group-gap: var(--spacing-double);
-    --toolbar-padding-inline: var(--spacing-single);
-    --toolbar-divider-height: var(--size-small);
-    --toolbar-footer-offset: calc(2 * var(--spacing-double));
-    --text-2xs: 0.6rem;
-    --text-2xs--line-height: calc(0.9 / 0.6);
-    --text-xs: 0.7rem;
-    --text-xs--line-height: calc(1 / 0.7);
-    --text-sm: 0.8rem;
-    --text-sm--line-height: calc(1.2 / 0.8);
-    --text-base: 0.9rem;
-    --text-base--line-height: calc(1.4 / 0.9);
-    --text-lg: 1rem;
-    --text-lg--line-height: calc(1.6 / 1);
-    --text-xl: 1.125rem;
-    --text-xl--line-height: calc(1.6 / 1.125);
-    --text-2xl: 1.35rem;
-    --text-2xl--line-height: calc(1.9 / 1.35);
-    --text-3xl: 1.7rem;
-    --text-3xl--line-height: calc(2.1 / 1.7);
-    --text-4xl: 2rem;
-    --text-4xl--line-height: calc(2.3 / 2);
-    --text-5xl: 2.7rem;
-    --text-5xl--line-height: 1;
-    --text-6xl: 3.4rem;
-    --text-6xl--line-height: 1;
-    --text-7xl: 4rem;
-    --text-7xl--line-height: 1;
-    --text-8xl: 5.4rem;
-    --text-8xl--line-height: 1;
-    --text-9xl: 7.2rem;
-    --text-9xl--line-height: 1;
     --base: var(--color-light);
     --canvas: var(--color-light-8-9);
     --window: var(--color-light-6-7);
@@ -131,23 +60,6 @@
     --overlay: transparent;
     --temporary: var(--color-light-4-7);
     --foreground: var(--color-dark);
-    --z-base: 0;
-    --z-canvas: 3;
-    --z-window: 5;
-    --z-panel: 10;
-    --z-overlay: 20;
-    --z-temporary: 30;
-    --z-navbar: 100;
-    --z-modal: 1000;
-    --z-tutorial: 10000;
-    --glass-blur: 24px;
-    --glass-panel-blur: 40px;
-    --glass-window-options-blur: 14px;
-    --glass-saturate: 1.45;
-    --glass-panel-alpha: 0.58;
-    --glass-window-options-alpha: 0.22;
-    --glass-toolbar-alpha: 0.3;
-    --glass-menu-alpha: 0.36;
     --muted: var(--color-light-8-9);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-primary);
@@ -181,7 +93,6 @@
     --destructive-bg: var(--color-light-8-9);
     --destructive-foreground: var(--color-danger);
     --destructive-border: var(--color-danger);
-    --scrollbar-size: var(--spacing-double);
     --scrollbar-thumb: var(--border-color);
     --scrollbar-thumb-hover: var(--muted-foreground);
     --color-new: var(--success-border);
@@ -687,7 +598,7 @@
 }
 
 .touch {
-  --spacing: var(--spacing-touch);
+  --ui-spacing: var(--spacing-touch);
   --toolbar-item-height: var(--size-large);
   --toolbar-gap: var(--spacing-double);
   --toolbar-padding-inline: var(--spacing-double);
@@ -771,12 +682,101 @@
   .prose blockquote {
     border: 1px solid var(--border-color);
     border-radius: 0;
-    padding: var(--spacing);
+    padding: var(--ui-spacing);
   }
 }
 /* https://reactflow.dev/learn/customization/theming */
 
 @theme inline {
+  --ui-spacing: var(--spacing-compact);
+  --spacing-single: calc(1 * var(--ui-spacing));
+  --spacing-double: calc(2 * var(--ui-spacing));
+  --size-tiny: calc(3 * var(--ui-spacing));
+  --size-small: calc(5 * var(--ui-spacing));
+  --size-workbench: calc(1.5 * var(--size-small));
+  --size-medium: calc(7 * var(--ui-spacing));
+  --size-large: calc(9 * var(--ui-spacing));
+  --size-huge: calc(11 * var(--ui-spacing));
+  --size-mega: calc(13 * var(--ui-spacing));
+  --size-giga: calc(15 * var(--ui-spacing));
+  --radius: 0rem;
+  --radius-xs: 0rem;
+  --radius-sm: 0rem;
+  --radius-md: 0rem;
+  --radius-lg: 0rem;
+  --radius-xl: 0rem;
+  --radius-2xl: 0rem;
+  --radius-3xl: 0rem;
+  --radius-4xl: 0rem;
+  --radius-full: 0rem;
+  --shadow-2xs: 0 0 rgb(0 0 0 / 0);
+  --shadow-xs: 0 0 rgb(0 0 0 / 0);
+  --shadow-sm: 0 0 rgb(0 0 0 / 0);
+  --shadow-md: 0 0 rgb(0 0 0 / 0);
+  --shadow-lg: 0 0 rgb(0 0 0 / 0);
+  --shadow-xl: 0 0 rgb(0 0 0 / 0);
+  --shadow-2xl: 0 0 rgb(0 0 0 / 0);
+  --inset-shadow-2xs: inset 0 0 rgb(0 0 0 / 0);
+  --inset-shadow-xs: inset 0 0 rgb(0 0 0 / 0);
+  --inset-shadow-sm: inset 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-xs: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-sm: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-md: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
+  --toolbar-item-height: var(--size-medium);
+  --toolbar-gap: var(--spacing-single);
+  --toolbar-group-gap: var(--spacing-double);
+  --toolbar-padding-inline: var(--spacing-single);
+  --toolbar-divider-height: var(--size-small);
+  --toolbar-footer-offset: calc(2 * var(--spacing-double));
+  --text-2xs: 0.6rem;
+  --text-2xs--line-height: calc(0.9 / 0.6);
+  --text-xs: 0.7rem;
+  --text-xs--line-height: calc(1 / 0.7);
+  --text-sm: 0.8rem;
+  --text-sm--line-height: calc(1.2 / 0.8);
+  --text-base: 0.9rem;
+  --text-base--line-height: calc(1.4 / 0.9);
+  --text-lg: 1rem;
+  --text-lg--line-height: calc(1.6 / 1);
+  --text-xl: 1.125rem;
+  --text-xl--line-height: calc(1.6 / 1.125);
+  --text-2xl: 1.35rem;
+  --text-2xl--line-height: calc(1.9 / 1.35);
+  --text-3xl: 1.7rem;
+  --text-3xl--line-height: calc(2.1 / 1.7);
+  --text-4xl: 2rem;
+  --text-4xl--line-height: calc(2.3 / 2);
+  --text-5xl: 2.7rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.4rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 5.4rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 7.2rem;
+  --text-9xl--line-height: 1;
+  --z-base: 0;
+  --z-canvas: 3;
+  --z-window: 5;
+  --z-panel: 10;
+  --z-overlay: 20;
+  --z-temporary: 30;
+  --z-navbar: 100;
+  --z-modal: 1000;
+  --z-tutorial: 10000;
+  --glass-blur: 24px;
+  --glass-panel-blur: 40px;
+  --glass-window-options-blur: 14px;
+  --glass-saturate: 1.45;
+  --glass-panel-alpha: 0.58;
+  --glass-window-options-alpha: 0.22;
+  --glass-toolbar-alpha: 0.3;
+  --glass-menu-alpha: 0.36;
+  --scrollbar-size: var(--spacing-double);
   --color-background: var(--base);
   --color-base: var(--base);
   --color-canvas: var(--canvas);
@@ -1081,14 +1081,14 @@
 }
 
 @utility size-dot {
-  width: calc(2 * var(--spacing));
-  height: calc(2 * var(--spacing));
+  width: calc(2 * var(--ui-spacing));
+  height: calc(2 * var(--ui-spacing));
 }
 @utility w-dot {
-  width: calc(2 * var(--spacing));
+  width: calc(2 * var(--ui-spacing));
 }
 @utility h-dot {
-  height: calc(2 * var(--spacing));
+  height: calc(2 * var(--ui-spacing));
 }
 
 @utility size-single {

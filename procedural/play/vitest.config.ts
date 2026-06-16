@@ -28,7 +28,7 @@ export default defineConfig({
 	test: {
 		mode: "test",
 		environment: "node",
-		include: ["index.ts"],
+		include: ["index.ts", "fixture-slugs.ts"],
 		passWithNoTests: false,
 	},
 });

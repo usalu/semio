@@ -5,28 +5,28 @@
     background-color: var(--info-bg);
     color: var(--info-foreground);
     border-color: var(--info-border);
-    border-inline-start-width: var(--spacing);
+    border-inline-start-width: var(--ui-spacing);
   }
   .aside-tip {
     @apply my-4 p-4 border;
     background-color: var(--success-bg);
     color: var(--success-foreground);
     border-color: var(--success-border);
-    border-inline-start-width: var(--spacing);
+    border-inline-start-width: var(--ui-spacing);
   }
   .aside-caution {
     @apply my-4 p-4 border;
     background-color: var(--warning-bg);
     color: var(--warning-foreground);
     border-color: var(--warning-border);
-    border-inline-start-width: var(--spacing);
+    border-inline-start-width: var(--ui-spacing);
   }
   .aside-danger {
     @apply my-4 p-4 border;
     background-color: var(--destructive-bg);
     color: var(--destructive-foreground);
     border-color: var(--destructive-border);
-    border-inline-start-width: var(--spacing);
+    border-inline-start-width: var(--ui-spacing);
   }
 
   .leading-none {

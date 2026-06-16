@@ -24,7 +24,7 @@ export default defineConfig({
 	},
 	test: {
 		environment: "jsdom",
-		include: ["index.tsx"],
+		include: ["index.tsx", "markdown.ts"],
 		passWithNoTests: false,
 		setupFiles: ["./vitest.setup.ts"],
 	},

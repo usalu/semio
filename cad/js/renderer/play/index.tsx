@@ -28,6 +28,8 @@ import {
   enforcePlaygroundWindowEngagementInput,
   windowEngagementsEqual,
   type CommandDescriptor,
+  isPlaygroundFixtureLocked,
+  playgroundLockedFixtureId,
 } from "@framework/playground/core";
 import {
   ORBIT_CAMERA_VIEW_COMMAND,
@@ -1226,6 +1228,8 @@ const SHAPE_ASSETS = [
   { id: "concrete-forest-right", key: "d", label: "Concrete forest (right)", json: geometryConcreteForestRight as Record<string, unknown> },
 ] as const;
 
+export { resolveCadPlayFixtureSlug } from "./fixture-slugs.ts";
+
 const PLAY_REPL_SPEC: InteractionSpec = {
   schema: "spatial.interaction/v1",
   id: "",
@@ -2015,6 +2019,11 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     }
     setModelDefinitionRevision((r) => r + 1);
   }, []);
+
+  reactHostPort.useEffect(() => {
+    const locked = playgroundLockedFixtureId();
+    if (locked) handleShapeAssetChange(locked);
+  }, [handleShapeAssetChange]);
 
   const modelsForActiveDefinition = reactHostPort.useMemo(() => ensurePlayQuadModelSlots(modelsByDefinitionId), [activeModelDefinitionId, modelsByDefinitionId]);
 
@@ -3252,7 +3261,10 @@ function CadPlayRoot(): ReactNode {
     [cadPlayHierarchyPanel, cadPlayCatalogPanel],
   );
   const detailsTabs = reactHostPort.useMemo(() => [cadPlayDetailsPanel.resolveTab()], [cadPlayDetailsPanel]);
-  const slotNavbarCenter = reactHostPort.useMemo(() => <CadPlayFixtureNavbarSelect />, []);
+  const slotNavbarCenter = reactHostPort.useMemo(
+    () => (isPlaygroundFixtureLocked() ? null : <CadPlayFixtureNavbarSelect />),
+    [],
+  );
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
       <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>

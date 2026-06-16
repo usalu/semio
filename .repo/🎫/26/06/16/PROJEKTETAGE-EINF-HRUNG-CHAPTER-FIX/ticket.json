@@ -1,0 +1,13 @@
+{
+  "title": "Projektetage Einführung Chapter Fix",
+  "emoji": "📽",
+  "status": "open",
+  "description": "Rename chapter Hauptteil to Einführung, restructure slide paths, move chapter to beginning of deck, update all references and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1708"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪b1e0a7ea306d41398fa0268c54301169"
+  ]
+}

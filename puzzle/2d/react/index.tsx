@@ -43,7 +43,7 @@ const Puzzle2dEventBindingController = CavasEventBindingController;
 // #region 🔖GpuWasmBridge
 import initPuzzle2dWasm, { boardComputeEdgeBezier, boardHandlePositionCircle, boardHandlePositionRectangle, boardRedrawHandlesFixtureJson, boardRedrawLayoutFixtureJson, BoardSession, initSync } from "../rs/pkg/puzzle_2d.js";
 
-if (import.meta.env.VITEST) {
+if (import.meta.vitest) {
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");

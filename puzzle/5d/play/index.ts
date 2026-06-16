@@ -24,7 +24,9 @@ import {
   type PlaygroundFixtureCatalog,
   type PlaygroundFixtureHost,
   type PlaygroundKeybinding,
+  isPlaygroundFixtureLocked,
   isPlaygroundNoFixtureId,
+  playgroundResolvedFixtureId,
   playgroundTreePanelRootItems,
   platformFromViewContext,
   type UiTreeItemNode,
@@ -137,6 +139,13 @@ export const PUZZLE_5D_PLAY_FIXTURE_OPTIONS = [
   { id: PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
   { id: PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
 ] as const;
+
+/** @emoji 🔒 Resolves a playground fixture slug (e.g. `concrete`) to a puzzle 5d fixture id. */
+export function resolvePuzzle5dPlayFixtureSlug(slug: string): string | undefined {
+  const aliases: Record<string, string> = { concrete: PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID };
+  const normalized = aliases[slug] ?? slug;
+  return PUZZLE_5D_PLAY_FIXTURE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
+}
 
 const PUZZLE_5D_PLAY_FIXTURE_URL_BY_ID: Readonly<Record<string, string>> = {
   [PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID]: "/puzzle-5d-fixture/concrete-forest.5d.json",
@@ -565,7 +574,7 @@ export class Puzzle5dStoreBridge extends Store<Puzzle5dStoreSnapshot> {
 /** @emoji 🎛 Puzzle 5d play shell controller shared by declarative 2d and 3d windows. */
 export class Puzzle5dPlayShellController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("main", "Puzzle 5d", undefined);
-  private activeFixtureId = PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+  private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
   readonly puzzle5dStore: Puzzle5dStore = createStore(puzzle5dPlayEmptyModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
   private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
@@ -872,7 +881,8 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return windowKinds;
   }
 
-  getFixtureCatalog(): PlaygroundFixtureCatalog {
+  getFixtureCatalog(): PlaygroundFixtureCatalog | null {
+    if (isPlaygroundFixtureLocked()) return null;
     return { activeFixtureId: this.activeFixtureId, options: PUZZLE_5D_PLAY_FIXTURE_OPTIONS };
   }
 
@@ -903,6 +913,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     let changed = true;
     switch (command) {
       case "setActiveFixture": {
+        if (isPlaygroundFixtureLocked()) return;
         const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
         const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
         if (nextId === this.activeFixtureId) {
