@@ -62,6 +62,37 @@ export interface FigureMosaicGrid {
 	readonly frame?: DispositionPosition;
 }
 
+/** @emoji ✨ Frosted overlay hinting at hidden or upcoming media; optional {@link MediaTeaser.label}. */
+export interface MediaTeaser {
+	readonly label?: string;
+}
+
+/** @emoji 📜 Normalized scroll origin for scrollable media (CSS background-position semantics). */
+export interface MediaScrollOrigin {
+	readonly x?: number;
+	readonly y?: number;
+}
+
+export const MEDIA_SCROLL_ORIGIN_CENTER: MediaScrollOrigin = { x: 50, y: 50 };
+export const MEDIA_SCROLL_ORIGIN_TOP_LEFT: MediaScrollOrigin = { x: 0, y: 0 };
+
+/** @emoji 📜 Resolves optional {@link MediaScrollOrigin} to x/y percents (default center). */
+export function resolveMediaScrollOrigin(origin: MediaScrollOrigin | undefined): {
+	readonly x: number;
+	readonly y: number;
+} {
+	return { x: origin?.x ?? 50, y: origin?.y ?? 50 };
+}
+
+/** @emoji 📜 Initial scroll percent along one cover-overflow axis from a scroll origin. */
+export function mediaScrollPercentForAxis(
+	axis: "x" | "y",
+	origin: MediaScrollOrigin | undefined,
+): number {
+	const resolved = resolveMediaScrollOrigin(origin);
+	return axis === "x" ? resolved.x : resolved.y;
+}
+
 /** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
 	readonly kind: "figure";
@@ -75,6 +106,10 @@ export interface FigureEmbodiment {
 	readonly mosaic?: FigureMosaicGrid;
 	/** @emoji 📜 When false, clip cover overflow instead of one-axis scroll (default scrollable; mosaic tiles always clip). */
 	readonly scroll?: boolean;
+	/** @emoji ✨ When set, shows a glassy veil over the figure (optional label). */
+	readonly teaser?: MediaTeaser;
+	/** @emoji 📜 Initial scroll origin as CSS background-position percents (default center). */
+	readonly scrollOrigin?: MediaScrollOrigin;
 }
 
 /** @emoji 🎬 Video clip on a slide. */
@@ -89,6 +124,10 @@ export interface VideoEmbodiment {
 	readonly controls?: boolean;
 	/** @emoji 📜 When false, clip cover overflow instead of one-axis scroll (default scrollable). */
 	readonly scroll?: boolean;
+	/** @emoji ✨ When set, shows a glassy veil over the video (optional label). */
+	readonly teaser?: MediaTeaser;
+	/** @emoji 📜 Initial scroll origin as CSS background-position percents (default center). */
+	readonly scrollOrigin?: MediaScrollOrigin;
 }
 
 /** @emoji 📄 PDF document page on a slide. */
@@ -103,6 +142,10 @@ export interface PdfEmbodiment {
 	readonly alt?: string;
 	/** @emoji 📜 When false, clip cover overflow instead of one-axis scroll (default scrollable). */
 	readonly scroll?: boolean;
+	/** @emoji ✨ When set, shows a glassy veil over the pdf (optional label). */
+	readonly teaser?: MediaTeaser;
+	/** @emoji 📜 Initial scroll origin as CSS background-position percents (default center). */
+	readonly scrollOrigin?: MediaScrollOrigin;
 }
 
 /** @emoji 🪟 Embedded HTML document on a slide. */
@@ -111,6 +154,8 @@ export interface IframeEmbodiment {
 	readonly id: string;
 	readonly src: string;
 	readonly title?: string;
+	/** @emoji ✨ When set, shows a glassy veil in front of the iframe (optional label). */
+	readonly teaser?: MediaTeaser;
 }
 
 /** @emoji • Bulleted list body. */
@@ -2648,6 +2693,19 @@ if (import.meta.vitest) {
 			const centered = centerResolvedArrangement(resolved);
 			expect(centered[0]?.position?.x).toBeCloseTo(0.35);
 			expect(centered[0]?.position?.y).toBeCloseTo(0.25);
+		});
+	});
+
+	describe("resolveMediaScrollOrigin", () => {
+		it("defaults to center when scroll origin is omitted", () => {
+			expect(resolveMediaScrollOrigin(undefined)).toEqual({ x: 50, y: 50 });
+		});
+
+		it("resolves partial scroll origins and axis percents", () => {
+			expect(resolveMediaScrollOrigin({ x: 0 })).toEqual({ x: 0, y: 50 });
+			expect(mediaScrollPercentForAxis("x", MEDIA_SCROLL_ORIGIN_TOP_LEFT)).toBe(0);
+			expect(mediaScrollPercentForAxis("y", MEDIA_SCROLL_ORIGIN_TOP_LEFT)).toBe(0);
+			expect(mediaScrollPercentForAxis("y", MEDIA_SCROLL_ORIGIN_CENTER)).toBe(50);
 		});
 	});
 

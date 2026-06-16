@@ -327,17 +327,13 @@ registerPreviewExtractor((context) => {
 });
 
 registerPreviewExtractor((context) => {
-	if (!context.value || typeof context.value !== "object" || Array.isArray(context.value)) return [];
-	const dict = context.value as Record<string, unknown>;
-	const point = parsePreviewVec3(dict.point);
+	const point = parseChannelPoint(context.value);
 	if (!point) return [];
 	return [{ widgetId: context.widgetId, port: context.port, direction: context.direction, kind: "point", position: point }];
 });
 
 registerPreviewExtractor((context) => {
-	if (!context.value || typeof context.value !== "object" || Array.isArray(context.value)) return [];
-	const dict = context.value as Record<string, unknown>;
-	const vector = parsePreviewVec3(dict.vector);
+	const vector = parseChannelVector(context.value);
 	if (!vector) return [];
 	return [{ widgetId: context.widgetId, port: context.port, direction: context.direction, kind: "vector", directionVec: vector }];
 });
@@ -577,6 +573,36 @@ function parseVec3Loose(input: unknown): Vec3 | null {
 
 function parsePreviewVec3(input: unknown): Vec3 | null {
 	return parseVec3Loose(input);
+}
+
+function channelSchema(value: unknown): string | null {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+	const schema = (value as Record<string, unknown>).$schema;
+	return typeof schema === "string" ? schema : null;
+}
+
+/** @emoji 📍 Resolves a flow channel value to a point position for 3D preview. */
+function parseChannelPoint(value: unknown): Vec3 | null {
+	if (Array.isArray(value)) return parsePreviewVec3(value);
+	if (!value || typeof value !== "object") return null;
+	const dict = value as Record<string, unknown>;
+	if (channelSchema(value) === "vector") return null;
+	const nested = dict.point ?? dict.position ?? dict.center;
+	if (nested !== undefined) return parsePreviewVec3(nested);
+	if (channelSchema(value) === "point") return parsePreviewVec3(dict);
+	return null;
+}
+
+/** @emoji ➡️ Resolves a flow channel value to a vector direction for 3D preview. */
+function parseChannelVector(value: unknown): Vec3 | null {
+	if (Array.isArray(value)) return parsePreviewVec3(value);
+	if (!value || typeof value !== "object") return null;
+	const dict = value as Record<string, unknown>;
+	if (channelSchema(value) === "point") return null;
+	const nested = dict.vector ?? dict.direction ?? dict.normal ?? dict.tangent;
+	if (nested !== undefined) return parsePreviewVec3(nested);
+	if (channelSchema(value) === "vector") return parsePreviewVec3(dict);
+	return null;
 }
 
 function collectGeometryRefsFromValue(value: unknown, refs: GeometryRef[]): void {
@@ -1598,6 +1624,29 @@ if (import.meta.vitest) {
 				}),
 			);
 			expect(items).toContainEqual({ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: box.handle });
+		});
+
+		it("extractChannelPreviewItems collects schema point and vector outputs", () => {
+			const pointNode = channelPayload(
+				JSON.parse(host.evaluate("math.point", JSON.stringify({ x: numberDict(2), y: numberDict(0), z: numberDict(1) }))) as {
+					point: { $schema?: string; x?: number; y?: number; z?: number };
+				},
+				"point",
+			);
+			const vectorNode = channelPayload(
+				JSON.parse(host.evaluate("math.vector", JSON.stringify({ x: numberDict(0), y: numberDict(3), z: numberDict(0) }))) as {
+					vector: { $schema?: string; x?: number; y?: number; z?: number };
+				},
+				"vector",
+			);
+			const items = extractPreviewItems(
+				JSON.stringify({
+					pt: { in: {}, out: { point: pointNode } },
+					vec: { in: {}, out: { vector: vectorNode } },
+				}),
+			);
+			expect(items).toContainEqual({ widgetId: "pt", port: "point", direction: "out", kind: "point", position: [2, 0, 1] });
+			expect(items).toContainEqual({ widgetId: "vec", port: "vector", direction: "out", kind: "vector", directionVec: [0, 3, 0] });
 		});
 
 		it("previewOffForItem is ignored in show selected mode", async () => {

@@ -1995,8 +1995,8 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					pt: { in: {}, out: { point: { point: { x: 1, y: 0, z: 0 } } } },
-					vec: { in: {}, out: { vector: { vector: { x: 0, y: 1, z: 0 } } } },
+					pt: { in: {}, out: { point: { $schema: "point", x: 1, y: 0, z: 0 } } },
+					vec: { in: {}, out: { vector: { $schema: "vector", x: 0, y: 1, z: 0 } } },
 				}),
 			});
 			expect(ctrl.getPreviewItems()).toEqual([
@@ -2010,8 +2010,8 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
 				outputsJson: JSON.stringify({
-					pt: { in: {}, out: { point: { point: { x: 0, y: 0, z: 0 } } } },
-					vec: { in: {}, out: { vector: { vector: { x: 1, y: 0, z: 0 } } } },
+					pt: { in: {}, out: { point: { $schema: "point", x: 0, y: 0, z: 0 } } },
+					vec: { in: {}, out: { vector: { $schema: "vector", x: 1, y: 0, z: 0 } } },
 				}),
 			});
 			ctrl.run("selectAll");

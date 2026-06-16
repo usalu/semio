@@ -1,0 +1,13 @@
+{
+  "title": "Initial Scroll Position for Presentation Media",
+  "emoji": "📜",
+  "status": "open",
+  "description": "Extend presentations to control initial scroll position (default center). Set Baukomponenten grid to top-left.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1701"
+  },
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪fbcaac1edee942cb91c6c696570cf0a6"
+  ]
+}

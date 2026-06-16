@@ -1,7 +1,7 @@
 {
   "title": "Procedural Preview All Types",
   "emoji": "👁️",
-  "status": "closed",
+  "status": "open",
   "description": "Extend procedural preview pipeline so point and vector outputs are rendered alongside geometry (curves, surfaces, solids). Unify into ProceduralPreviewItem model.",
   "summary": "Fixed 3D preview disappearing on any flow interaction. Root cause: pointer-up runs evaluate() then persistFixture(); evaluate updates output preview widget dicts, persistFixture syncs fixture via setFixtureJson which cleared previewItems after they were set. applyFixtureJson now only resets preview/selection when resetInteraction:true (fixture load/reset/preset); flow sync updates fixtureJson without clearing preview state.",
   "github": {
@@ -16,6 +16,7 @@
   "sessions": [
     "⚪8a19f20b29444f3badde561f1217fb49",
     "⚪0b62c69847244fa5b1d3dd4e5e792892",
-    "⚪972c7fa8d1874952a8ef5f145d77a9d5"
+    "⚪972c7fa8d1874952a8ef5f145d77a9d5",
+    "⚪9a34a1326d764d9abd5e1be9004da61b"
   ]
 }

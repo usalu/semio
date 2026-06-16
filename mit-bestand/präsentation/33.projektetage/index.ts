@@ -113,7 +113,9 @@ function addZukunftBauBookends(presentation: Presentation): Presentation {
 				...sequence,
 				thoughts: sequence.thoughts.map((thought, thoughtIndex) => {
 					const scoped = addZukunftBauScope(thought);
-					if (chapterIndex === 0 && sequenceIndex === 0 && thoughtIndex === 0) {
+					const isIntroThought =
+						chapter.name === "Hauptteil" && sequence.name === "Einführung" && thought.name === "Einleitung";
+					if (isIntroThought) {
 						const [titleSlide, ...restSlides] = scoped.slides;
 						return {
 							...scoped,
@@ -161,7 +163,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus expanded media render slides", () => {
-			expect(countArrangements(deck)).toBeGreaterThanOrEqual(13);
+			expect(countArrangements(deck)).toBeGreaterThanOrEqual(15);
 			expect(deck.language).toBe("de");
 		});
 
@@ -341,11 +343,12 @@ if (import.meta.vitest) {
 		});
 
 		it("loads every slide from slide/<chapter>/<sequence>/<thought>/<slide>.ts paths", () => {
-			expect(deck.chapters).toHaveLength(1);
-			expect(deck.chapters[0]?.name).toBe("Hauptteil");
-			expect(deck.chapters[0]?.sequences[0]?.name).toBe("Einführung");
-			expect(deck.chapters[0]?.sequences[0]?.thoughts.map((thought) => thought.name)).toEqual(["Einleitung", "Medien"]);
-			expect(deck.chapters[0]?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+			expect(deck.chapters).toHaveLength(2);
+			expect(deck.chapters.map((chapter) => chapter.name)).toEqual(["Bauteilportal", "Hauptteil"]);
+			const hauptteil = deck.chapters.find((chapter) => chapter.name === "Hauptteil");
+			expect(hauptteil?.sequences[0]?.name).toBe("Einführung");
+			expect(hauptteil?.sequences[0]?.thoughts.map((thought) => thought.name)).toEqual(["Einleitung", "Medien"]);
+			expect(hauptteil?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Zukunft Bau Auftakt",
 				"Titel",
 				"Beschreibung",
@@ -355,13 +358,68 @@ if (import.meta.vitest) {
 				"Universitäten",
 				"Lehrstühle",
 			]);
-			expect(deck.chapters[0]?.sequences[0]?.thoughts[1]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+			expect(hauptteil?.sequences[0]?.thoughts[1]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Bauteilkatalog",
 				"Bauteilarten",
 				"Bauteilbeschriftungen",
 				"Medienüberblick",
 				"Zukunft Bau Abschluss",
 			]);
+			const bauteilportal = deck.chapters.find((chapter) => chapter.name === "Bauteilportal");
+			expect(bauteilportal?.sequences.map((sequence) => sequence.name)).toEqual(["Ausgangslage", "Systematik"]);
+			expect(bauteilportal?.sequences[0]?.thoughts[0]?.name).toBe("Bauteilbörsen");
+			expect(bauteilportal?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Baukomponenten",
+			]);
+			expect(bauteilportal?.sequences[1]?.name).toBe("Systematik");
+			expect(bauteilportal?.sequences[1]?.thoughts[0]?.name).toBe("Typologien");
+			expect(bauteilportal?.sequences[1]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Baum",
+			]);
+		});
+
+		it("shows the typology tree figure on Baum", () => {
+			const slide = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Systematik")
+				?.thoughts.find((thought) => thought.name === "Typologien")
+				?.slides.find((entry) => entry.arrangement.name === "Baum");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe("typologien-baum");
+			const embodiment = slide?.embodiments?.find((entry) => entry.id === "typologien-baum--figure");
+			expect(embodiment).toMatchObject({
+				kind: "figure",
+				src: "/typologienbaum.png",
+				alt: "Generator-Typologiebaum",
+			});
+		});
+
+		it("lays out nine bauteilbörse figures in a 3×3 grid on Baukomponenten", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Ausgangslage")
+				?.thoughts.find((entry) => entry.name === "Bauteilbörsen");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Baukomponenten");
+			expect(slide?.arrangement.dispositions).toHaveLength(9);
+			expect(slide?.arrangement.dispositions.map((disposition) => disposition.participantId)).toEqual([
+				"betondeckenplatten",
+				"gipsplatten",
+				"holzbalken-2",
+				"holzbalken",
+				"metallprofile",
+				"stahltragwerk",
+				"träger-hea",
+				"träger-ipe",
+				"trennwand-glas",
+			]);
+			const kinds = thought?.embodiments?.map((embodiment) => embodiment.kind) ?? [];
+			expect(kinds.filter((kind) => kind === "figure")).toHaveLength(8);
+			expect(kinds).toContain("pdf");
+			for (const embodiment of thought?.embodiments ?? []) {
+				if (embodiment.kind === "figure" || embodiment.kind === "pdf") {
+					expect(embodiment.scrollOrigin).toEqual({ x: 0, y: 0 });
+				}
+			}
 		});
 	});
 }

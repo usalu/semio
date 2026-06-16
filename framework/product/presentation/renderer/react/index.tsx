@@ -14,6 +14,7 @@ import type {
     Arrangement,
     FigureEmbodiment,
     FigureMosaicGrid,
+    MediaTeaser,
     ParticipantEmphasis,
     Slide,
     PdfEmbodiment,
@@ -40,6 +41,7 @@ import {
     parsePresentationSlideHash,
     presentationLanguage,
     presentationSlideAt,
+    resolveMediaScrollOrigin,
     resolutionScopeForArrangement,
     resolveArrangement,
     resolveEmbodiment,
@@ -93,6 +95,8 @@ export type {
     Embodiment,
     FigureEmbodiment,
     IframeEmbodiment,
+    MediaTeaser,
+    MediaScrollOrigin,
     Participant,
     ParticipantEmphasis,
     PdfEmbodiment, Presentation,
@@ -128,6 +132,7 @@ export {
     resolutionScopeForArrangement,
     resolveArrangement,
     resolveEmbodiment,
+    resolveMediaScrollOrigin,
     resolveTextMorphRoot,
     split,
     splitFigureGrid,
@@ -1707,6 +1712,37 @@ export function pdfEmbodimentScrollEnabled(embodiment: PdfEmbodiment): boolean {
 	return embodiment.scroll !== false;
 }
 
+/** @emoji ✨ True when a media embodiment should show the glassy teaser veil. */
+export function mediaTeaserActive(teaser: MediaTeaser | undefined): teaser is MediaTeaser {
+	return teaser !== undefined;
+}
+
+function MediaTeaserWrap({
+	teaser,
+	children,
+}: {
+	readonly teaser?: MediaTeaser;
+	readonly children: ReactNode;
+}): ReactNode {
+	if (!mediaTeaserActive(teaser)) {
+		return children;
+	}
+	return (
+		<div className="presentation-media-teaser">
+			<div className="presentation-media-teaser__content">{children}</div>
+			<div
+				className="presentation-media-teaser__veil"
+				aria-hidden={teaser.label === undefined}
+				{...(teaser.label !== undefined ? { role: "img", "aria-label": teaser.label } : {})}
+			>
+				{teaser.label !== undefined ? (
+					<span className="presentation-media-teaser__label">{teaser.label}</span>
+				) : null}
+			</div>
+		</div>
+	);
+}
+
 /** @emoji ↔️ Which axis overflows under uniform cover (frame vs source aspect). */
 export function figureCoverOverflowAxis(
 	frameWidth: number,
@@ -1956,7 +1992,7 @@ function useFigureScrollOverlayBar(
 function useFigureScrollViewportSync(
 	viewportRef: RefObject<HTMLElement | null>,
 	axis: "x" | "y" | null,
-	positionPercent: number,
+	scrollOrigin: { readonly x: number; readonly y: number },
 	enabled: boolean,
 ): void {
 	const syncedScrollSizeRef = useRef(0);
@@ -1980,6 +2016,7 @@ function useFigureScrollViewportSync(
 				return;
 			}
 			applyingRef.current = true;
+			const positionPercent = axis === "x" ? scrollOrigin.x : scrollOrigin.y;
 			if (axis === "x") {
 				viewport.scrollLeft = figureScrollOffsetForBackgroundPosition(
 					"x",
@@ -2011,20 +2048,20 @@ function useFigureScrollViewportSync(
 			viewport.removeEventListener("scroll", onUserScroll);
 			stopLayout();
 		};
-	}, [axis, enabled, positionPercent, viewportRef]);
+	}, [axis, enabled, scrollOrigin.x, scrollOrigin.y, viewportRef]);
 }
 
 function FigureScrollViewport({
 	enabled,
 	axis,
-	positionPercent,
+	scrollOrigin,
 	className,
 	style,
 	children,
 }: {
 	readonly enabled: boolean;
 	readonly axis: "x" | "y" | null;
-	readonly positionPercent: number;
+	readonly scrollOrigin: { readonly x: number; readonly y: number };
 	readonly className?: string;
 	readonly style?: CSSProperties;
 	readonly children: ReactNode;
@@ -2033,7 +2070,7 @@ function FigureScrollViewport({
 	const barRef = useRef<HTMLDivElement>(null);
 	const thumbRef = useRef<HTMLDivElement>(null);
 	const thumbDragRef = useRef<{ readonly startPointer: number; readonly startScroll: number } | null>(null);
-	useFigureScrollViewportSync(scrollerRef, axis, positionPercent, enabled);
+	useFigureScrollViewportSync(scrollerRef, axis, scrollOrigin, enabled);
 	useFigureScrollOverlayBar(scrollerRef, barRef, thumbRef, axis, enabled);
 	const onWheel = useCallback(
 		(event: React.WheelEvent<HTMLDivElement>) => {
@@ -2383,6 +2420,7 @@ function FigureImageMorphView({
 		sourceAspect,
 	);
 	const axis = coverScroll.axis;
+	const scrollOrigin = resolveMediaScrollOrigin(embodiment.scrollOrigin);
 	const scrollElementStyle = scrollEnabled
 		? figureCoverScrollElementStyle(
 				effectivePortSize.width,
@@ -2392,14 +2430,15 @@ function FigureImageMorphView({
 		: undefined;
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
-			<FigureScrollViewport
-				enabled={scrollEnabled}
-				axis={axis}
-				positionPercent={50}
-				style={{ width: "100%", height: "100%" }}
-			>
-				<img
-					className={[
+			<MediaTeaserWrap teaser={embodiment.teaser}>
+				<FigureScrollViewport
+					enabled={scrollEnabled}
+					axis={axis}
+					scrollOrigin={scrollOrigin}
+					style={{ width: "100%", height: "100%" }}
+				>
+					<img
+						className={[
 						"presentation-media-figure",
 						scrollEnabled ? "presentation-figure-scroll-media" : undefined,
 					]
@@ -2420,6 +2459,7 @@ function FigureImageMorphView({
 					}}
 				/>
 			</FigureScrollViewport>
+			</MediaTeaserWrap>
 		</div>
 	);
 }
@@ -2480,7 +2520,6 @@ function FigureCropMorphView({
 	const backgroundPosition = String(
 		backgroundVars["--presentation-figure-bg-position" as keyof typeof backgroundVars] ?? "50% 50%",
 	);
-	const [positionX, positionY] = backgroundPosition.split(/\s+/).map((token) => Number.parseFloat(token));
 	const sourceAspect = embodiment.sourceAspect ?? 1;
 	useLayoutEffect(() => {
 		const frame = frameRef.current;
@@ -2498,12 +2537,7 @@ function FigureCropMorphView({
 	const scrollAxis =
 		figureBackgroundSizeScrollAxis(backgroundSize) ??
 		figureCoverOverflowAxis(effectivePortSize.width, effectivePortSize.height, sourceAspect);
-	const scrollPositionPercent =
-		scrollAxis === "x"
-			? (Number.isFinite(positionX) ? positionX : 50)
-			: scrollAxis === "y"
-				? (Number.isFinite(positionY) ? positionY : 50)
-				: 50;
+	const scrollOrigin = resolveMediaScrollOrigin(embodiment.scrollOrigin);
 	const frameStyle = anchorOnWrapper
 		? {
 				position: "relative" as const,
@@ -2527,16 +2561,18 @@ function FigureCropMorphView({
 		.join(" ");
 	if (!scrollEnabled) {
 		return (
-			<div
-				{...(anchorOnWrapper ? {} : { "data-id": anchorId })}
-				className={["presentation-disposition-frame", slotClassName].join(" ")}
-				style={{ ...frameStyle, ...backgroundVars }}
-				{...(morphCropFrom && embodiment.crop
-					? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
-					: {})}
-				role="img"
-				aria-label={embodiment.alt ?? ""}
-			/>
+			<MediaTeaserWrap teaser={embodiment.teaser}>
+				<div
+					{...(anchorOnWrapper ? {} : { "data-id": anchorId })}
+					className={["presentation-disposition-frame", slotClassName].join(" ")}
+					style={{ ...frameStyle, ...backgroundVars }}
+					{...(morphCropFrom && embodiment.crop
+						? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
+						: {})}
+					role="img"
+					aria-label={embodiment.alt ?? ""}
+				/>
+			</MediaTeaserWrap>
 		);
 	}
 	const scrollContentStyle: CSSProperties = {
@@ -2554,9 +2590,9 @@ function FigureCropMorphView({
 		),
 		["--presentation-figure-bg-position" as string]:
 			scrollAxis === "x"
-				? `0% ${Number.isFinite(positionY) ? positionY : 50}%`
+				? `0% ${scrollOrigin.y}%`
 				: scrollAxis === "y"
-					? `${Number.isFinite(positionX) ? positionX : 50}% 0%`
+					? `${scrollOrigin.x}% 0%`
 					: backgroundPosition,
 		["--presentation-figure-bg-size-morph" as string]: backgroundVars[
 			"--presentation-figure-bg-size-morph" as keyof typeof backgroundVars
@@ -2572,31 +2608,33 @@ function FigureCropMorphView({
 		],
 	};
 	return (
-		<div
-			ref={frameRef}
-			{...(anchorOnWrapper ? {} : { "data-id": anchorId })}
-			className={["presentation-disposition-frame", "presentation-disposition-frame--figure-scroll"].join(
-				" ",
-			)}
-			style={frameStyle}
-		>
-			<FigureScrollViewport
-				enabled
-				axis={scrollAxis}
-				positionPercent={scrollPositionPercent}
-				style={{ width: "100%", height: "100%" }}
+		<MediaTeaserWrap teaser={embodiment.teaser}>
+			<div
+				ref={frameRef}
+				{...(anchorOnWrapper ? {} : { "data-id": anchorId })}
+				className={["presentation-disposition-frame", "presentation-disposition-frame--figure-scroll"].join(
+					" ",
+				)}
+				style={frameStyle}
 			>
-				<div
-					className={[slotClassName, "presentation-figure-scroll-content"].join(" ")}
-					style={scrollContentStyle}
-					{...(morphCropFrom && embodiment.crop
-						? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
-						: {})}
-					role="img"
-					aria-label={embodiment.alt ?? ""}
-				/>
-			</FigureScrollViewport>
-		</div>
+				<FigureScrollViewport
+					enabled
+					axis={scrollAxis}
+					scrollOrigin={scrollOrigin}
+					style={{ width: "100%", height: "100%" }}
+				>
+					<div
+						className={[slotClassName, "presentation-figure-scroll-content"].join(" ")}
+						style={scrollContentStyle}
+						{...(morphCropFrom && embodiment.crop
+							? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
+							: {})}
+						role="img"
+						aria-label={embodiment.alt ?? ""}
+					/>
+				</FigureScrollViewport>
+			</div>
+		</MediaTeaserWrap>
 	);
 }
 
@@ -2777,6 +2815,7 @@ function VideoMorphView({
 		sourceAspect,
 	);
 	const axis = coverScroll.axis;
+	const scrollOrigin = resolveMediaScrollOrigin(embodiment.scrollOrigin);
 	const scrollElementStyle = scrollEnabled
 		? figureCoverScrollElementStyle(
 				effectivePortSize.width,
@@ -2786,13 +2825,14 @@ function VideoMorphView({
 		: undefined;
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
-			<FigureScrollViewport
-				enabled={scrollEnabled}
-				axis={axis}
-				positionPercent={50}
-				style={{ width: "100%", height: "100%" }}
-			>
-				<video
+			<MediaTeaserWrap teaser={embodiment.teaser}>
+				<FigureScrollViewport
+					enabled={scrollEnabled}
+					axis={axis}
+					scrollOrigin={scrollOrigin}
+					style={{ width: "100%", height: "100%" }}
+				>
+					<video
 					className={[
 						"presentation-media-video",
 						scrollEnabled ? "presentation-figure-scroll-media" : undefined,
@@ -2816,6 +2856,7 @@ function VideoMorphView({
 					}}
 				/>
 			</FigureScrollViewport>
+			</MediaTeaserWrap>
 		</div>
 	);
 }
@@ -2831,12 +2872,14 @@ function IframeMorphView({
 }): ReactNode {
 	return (
 		<div data-id={anchorId} className={morphAnchorClass(emphasis)}>
-			<iframe
-				className="presentation-media-iframe"
-				src={resolvePresentationAssetUrl(embodiment.src)}
-				title={embodiment.title ?? ""}
-				loading="eager"
-			/>
+			<MediaTeaserWrap teaser={embodiment.teaser}>
+				<iframe
+					className="presentation-media-iframe"
+					src={resolvePresentationAssetUrl(embodiment.src)}
+					title={embodiment.title ?? ""}
+					loading="eager"
+				/>
+			</MediaTeaserWrap>
 		</div>
 	);
 }
@@ -2910,6 +2953,7 @@ function PdfMorphView({
 		scrollEnabled && pageViewport !== null
 			? figureCoverOverflowAxis(effectiveContainer.width, effectiveContainer.height, pageAspect)
 			: null;
+	const scrollOrigin = resolveMediaScrollOrigin(embodiment.scrollOrigin);
 	const coverScale = useMemo(() => {
 		if (pageViewport === null) {
 			return null;
@@ -2983,13 +3027,14 @@ function PdfMorphView({
 	);
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
-			<FigureScrollViewport
-				enabled={scrollEnabled}
-				axis={scrollAxis}
-				positionPercent={50}
-				style={{ width: "100%", height: "100%" }}
-			>
-				<Document
+			<MediaTeaserWrap teaser={embodiment.teaser}>
+				<FigureScrollViewport
+					enabled={scrollEnabled}
+					axis={scrollAxis}
+					scrollOrigin={scrollOrigin}
+					style={{ width: "100%", height: "100%" }}
+				>
+					<Document
 					className={[
 						"presentation-media-pdf-document",
 						scrollEnabled ? "presentation-media-pdf-document--scroll" : undefined,
@@ -3014,6 +3059,7 @@ function PdfMorphView({
 					) : null}
 				</Document>
 			</FigureScrollViewport>
+			</MediaTeaserWrap>
 			{showPageNav ? (
 				<div className="presentation-pdf-page-nav" role="group" aria-label="PDF pages">
 					<button
@@ -6479,6 +6525,70 @@ if (import.meta.vitest) {
 			expect(container.querySelector('[data-id="doc"] .react-pdf__Document')).toBeTruthy();
 		});
 
+		it("renders glassy teaser veils on media embodiments with optional labels", () => {
+			const deck: Presentation = {
+				id: "teaser-test",
+				name: "Teaser",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "teaser",
+								thoughts: [
+									{
+										id: "teaser",
+										participants: [{ id: "fig" }, { id: "clip" }, { id: "embed" }],
+										embodiments: [
+											{ kind: "figure", id: "fig--figure", src: "/a.png", teaser: {} },
+											{
+												kind: "video",
+												id: "clip--video",
+												src: "/demo.mp4",
+												teaser: { label: "Coming soon" },
+											},
+											{
+												kind: "iframe",
+												id: "embed--iframe",
+												src: "/demo.html",
+												teaser: { label: "Interactive demo" },
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "slide",
+													dispositions: [
+														{ participantId: "fig", embodimentId: "fig--figure", emphasis: "active" },
+														{ participantId: "clip", embodimentId: "clip--video", emphasis: "active" },
+														{ participantId: "embed", embodimentId: "embed--iframe", emphasis: "active" },
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const figureVeil = container.querySelector('[data-id="fig"] .presentation-media-teaser__veil');
+			const videoLabel = container.querySelector(
+				'[data-id="clip"] .presentation-media-teaser__label',
+			);
+			const iframeVeil = container.querySelector('[data-id="embed"] .presentation-media-teaser__veil');
+			expect(figureVeil).toBeTruthy();
+			expect(videoLabel?.textContent).toBe("Coming soon");
+			expect(iframeVeil?.querySelector(".presentation-media-teaser__label")?.textContent).toBe(
+				"Interactive demo",
+			);
+			expect(container.querySelector('[data-id="embed"] iframe.presentation-media-iframe')).toBeTruthy();
+		});
+
 		it("applies absolute positioning for dispositions with position", () => {
 			const deck: Presentation = {
 				id: "position-test",
@@ -6913,12 +7023,24 @@ if (import.meta.vitest) {
 			expect(figureCoverOverflowAxis(100, 100, 1)).toBeNull();
 		});
 
+		it("figureScrollOffsetForBackgroundPosition maps origin percents to scroll offsets", () => {
+			expect(figureScrollOffsetForBackgroundPosition("y", 50, 1000, 400)).toBe(300);
+			expect(figureScrollOffsetForBackgroundPosition("y", 0, 1000, 400)).toBe(0);
+			expect(figureScrollOffsetForBackgroundPosition("x", 0, 800, 200)).toBe(0);
+		});
+
 		it("figureBackgroundSizeScrollAxis maps crop background-size to one scroll axis", () => {
 			expect(figureBackgroundSizeScrollAxis("400% auto")).toBe("x");
 			expect(figureBackgroundSizeScrollAxis("auto 1600%")).toBe("y");
 			expect(figureBackgroundSizeScrollAxis("cover")).toBeNull();
 			expect(figureCropScrollBackgroundSize("cover", "x")).toBe("100% auto");
 			expect(figureCropScrollBackgroundSize("cover", "y")).toBe("auto 100%");
+		});
+
+		it("mediaTeaserActive is true only when teaser is set", () => {
+			expect(mediaTeaserActive(undefined)).toBe(false);
+			expect(mediaTeaserActive({})).toBe(true);
+			expect(mediaTeaserActive({ label: "Preview" })).toBe(true);
 		});
 
 		it("figureEmbodimentScrollEnabled defaults on and respects mosaic and scroll:false", () => {

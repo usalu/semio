@@ -681,6 +681,10 @@ export function buildCadPlayHierarchySections(
     highlightKeyToItemIds,
   };
 }
+
+export function buildCadPlayHierarchyPendingSections(): TreeDataSection[] {
+  return [{ id: "cad-play-hierarchy.pending", label: "Hierarchy", items: [{ id: "cad-play-hierarchy.pending.item", label: "(empty)" }] }];
+}
 //#endregion 🔖CadPlayHierarchy
 
 //#region 🔖Toolbar
@@ -1616,7 +1620,7 @@ class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const snapshot = cadPlayChromeSnapshotRef.current;
-        if (!snapshot) return [{ id: "cad-play-hierarchy.empty", label: "Hierarchy", items: [] }];
+        if (!snapshot) return buildCadPlayHierarchyPendingSections();
         const build = buildCadPlayHierarchySections(
           snapshot.modelsByDefinitionId,
           snapshot.activeModelDefinitionId,
@@ -3634,6 +3638,12 @@ if (import.meta.vitest) {
       model!.bump();
       const after = cadPlayModelsDigest({ "spatial.shape": model! });
       expect(after).not.toBe(before);
+    });
+
+    it("buildCadPlayHierarchyPendingSections declares an item for initial mount", () => {
+      const sections = buildCadPlayHierarchyPendingSections();
+      expect(sections).toHaveLength(1);
+      expect(sections[0]?.items?.length).toBeGreaterThan(0);
     });
 
     it("buildCadPlayHierarchySections lists objects after box commit object binding", async () => {

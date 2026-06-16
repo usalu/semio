@@ -7,6 +7,7 @@ import {
 	remapSplitDispositions,
 	split,
 	splitFigureGrid,
+	MEDIA_SCROLL_ORIGIN_TOP_LEFT,
 	type Disposition,
 	type DispositionPosition,
 	type Embodiment,
@@ -426,3 +427,77 @@ export const mediaEmbodiments: Embodiment[] = [
 	...CATALOGUE_SPLIT.embodiments,
 ];
 //#endregion 🔖Catalogue
+
+//#region 🔖Baukomponenten
+export const BAUKOMPONENTEN_FRAME = { x: 0.04, y: 0.06, width: 0.92, height: 0.88 };
+export const BAUKOMPONENTEN_GAP = 0.012;
+
+export const BAUKOMPONENTEN_ITEMS = [
+	{ id: "betondeckenplatten", src: "/bauteilbörse-betondeckenplatten.png", kind: "figure", alt: "Betondeckenplatten" },
+	{ id: "gipsplatten", src: "/bauteilbörse-gipsplatten.png", kind: "figure", alt: "Gipsplatten" },
+	{ id: "holzbalken-2", src: "/bauteilbörse-holzbalken-2.png", kind: "figure", alt: "Holzbalken" },
+	{ id: "holzbalken", src: "/bauteilbörse-holzbalken.png", kind: "figure", alt: "Holzbalken" },
+	{ id: "metallprofile", src: "/bauteilbörse-metallprofile.png", kind: "figure", alt: "Metallprofile" },
+	{ id: "stahltragwerk", src: "./bauteilbörse-stahltragwerk.pdf", kind: "pdf", alt: "Stahltragwerk" },
+	{ id: "träger-hea", src: "/bauteilbörse-träger-hea.png", kind: "figure", alt: "Träger HEA" },
+	{ id: "träger-ipe", src: "/bauteilbörse-träger-ipe.png", kind: "figure", alt: "Träger IPE" },
+	{ id: "trennwand-glas", src: "/bauteilbörse-trennwand-glas.png", kind: "figure", alt: "Trennwand Glas" },
+] as const;
+
+/** @emoji 🧩 Participants, embodiments, and grid dispositions for the Baukomponenten 3×3 slide. */
+export function baukomponentenGridArtifacts(): {
+	readonly participants: Participant[];
+	readonly embodiments: Embodiment[];
+	readonly dispositions: Disposition[];
+} {
+	const cells = splitFigureGrid({
+		rows: 3,
+		columns: 3,
+		frame: BAUKOMPONENTEN_FRAME,
+		gap: BAUKOMPONENTEN_GAP,
+	});
+	const participants: Participant[] = [];
+	const embodiments: Embodiment[] = [];
+	const dispositions: Disposition[] = [];
+	for (const [index, item] of BAUKOMPONENTEN_ITEMS.entries()) {
+		const position = cells[index]?.position;
+		if (!position) {
+			throw new Error(`baukomponentenGridArtifacts: missing grid cell for index ${index}.`);
+		}
+		participants.push({ id: item.id });
+		if (item.kind === "figure") {
+			const embodimentId = `${item.id}--figure`;
+			embodiments.push({
+				kind: "figure",
+				id: embodimentId,
+				src: item.src,
+				alt: item.alt,
+				scrollOrigin: MEDIA_SCROLL_ORIGIN_TOP_LEFT,
+			});
+			dispositions.push({
+				participantId: item.id,
+				embodimentId,
+				emphasis: "active",
+				position,
+			});
+			continue;
+		}
+		const embodimentId = `${item.id}--doc`;
+		embodiments.push({
+			kind: "pdf",
+			id: embodimentId,
+			src: item.src,
+			page: 1,
+			alt: item.alt,
+			scrollOrigin: MEDIA_SCROLL_ORIGIN_TOP_LEFT,
+		});
+		dispositions.push({
+			participantId: item.id,
+			embodimentId,
+			emphasis: "active",
+			position,
+		});
+	}
+	return { participants, embodiments, dispositions };
+}
+//#endregion 🔖Baukomponenten

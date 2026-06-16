@@ -1,0 +1,14 @@
+{
+  "title": "Add Teaser to Presentation Media",
+  "emoji": "✨",
+  "status": "closed",
+  "description": "Add a new feature to images, iframes, video, etc: teaser. Optionally a label can be provided to a teaser. When teaser is active then the element is glassy. e.g. on iframe wrap it into a another div with a glassy div infront of it.",
+  "summary": "Added optional `teaser` to figure, video, pdf, and iframe embodiments. When set, media renders inside a `MediaTeaserWrap` with a frosted glass veil overlay and optional label. CSS uses backdrop-filter blur/saturate. Tests cover `mediaTeaserActive` and teaser rendering for figure, video, and iframe.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1699"
+  },
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪c549af21e3384f99b6529fd08d8a945e"
+  ]
+}
