@@ -474,6 +474,9 @@ function initThree() {
                         } else if (w.wall_id === 'W') {
                             w.u = selectedObject.position.y - cy;
                             w.v = selectedObject.position.z - cz;
+                        } else if (w.wall_id === 'H') {
+                            w.u = selectedObject.position.x - cx;
+                            w.v = selectedObject.position.y - cy;
                         }
                         rebuildAndRetainSelection(w.id);
                     }
@@ -608,6 +611,8 @@ function initThree() {
                 if (az < 0.5) {
                     if (ay >= ax) wallId = worldNormal.y > 0 ? 'N' : 'S';
                     else wallId = worldNormal.x > 0 ? 'E' : 'W';
+                } else if (worldNormal.z > 0.5) {
+                    wallId = 'H';
                 }
 
                 if (wallId) {
@@ -799,6 +804,12 @@ function render3DZones() {
                 wy = cy + w.u;
                 wz = cz + w.v;
                 rotY = -Math.PI/2;
+            } else if (w.wall_id === 'H') {
+                wx = cx + w.u;
+                wy = cy + w.v;
+                wz = (numStories * storyHeight) + offset;
+                rotX = 0;
+                rotY = 0;
             }
             
             wMesh.position.set(wx, wy, wz);
@@ -811,10 +822,16 @@ function render3DZones() {
         if (selectedWall && selectedWall.zoneId === zone.id) {
             const wallId = selectedWall.wallId;
             const isN_S = (wallId === 'N' || wallId === 'S');
+            const isH = (wallId === 'H');
             const fullHeight = storyHeight * numStories;
-            const wWidth = isN_S ? width : length;
             
-            const wallGeom = new THREE.PlaneGeometry(wWidth, fullHeight);
+            let wallGeom;
+            if (isH) {
+                wallGeom = new THREE.PlaneGeometry(width, length);
+            } else {
+                const wWidth = isN_S ? width : length;
+                wallGeom = new THREE.PlaneGeometry(wWidth, fullHeight);
+            }
             const wallMat = new THREE.MeshBasicMaterial({
                 color: 0xfacc15,
                 transparent: true,
@@ -852,6 +869,12 @@ function render3DZones() {
                 wy = cy;
                 wz = cz;
                 rotY = -Math.PI/2;
+            } else if (wallId === 'H') {
+                wx = cx;
+                wy = cy;
+                wz = fullHeight + offset;
+                rotX = 0;
+                rotY = 0;
             }
             
             wallMesh.position.set(wx, wy, wz);
@@ -946,6 +969,15 @@ function getRustStatePayload() {
         building_rotation_deg: buildingRotationDeg,
         heating_system: document.getElementById('heating-system').value,
     };
+
+    if (document.getElementById('custom-wall-override').checked) {
+        params.custom_wall_insulation = {
+            thickness_m: parseFloat(document.getElementById('custom-wall-thickness').value) || 0.2,
+            lambda: parseFloat(document.getElementById('custom-wall-lambda').value) || 0.035
+        };
+    } else {
+        params.custom_wall_insulation = null;
+    }
     
     let polys = zones.map(z => [[
         [z.geometry.x, z.geometry.y],
@@ -969,7 +1001,8 @@ function getRustStatePayload() {
         N: { gross_wall_area: 0, window_area: 0 },
         E: { gross_wall_area: 0, window_area: 0 },
         S: { gross_wall_area: 0, window_area: 0 },
-        W: { gross_wall_area: 0, window_area: 0 }
+        W: { gross_wall_area: 0, window_area: 0 },
+        H: { gross_wall_area: 0, window_area: 0 }
     };
     
     unionPolys.forEach((multi, idx) => {
@@ -1038,6 +1071,20 @@ function getRustStatePayload() {
         });
     });
     
+    // Add roof windows (skylights) which don't map to a vertical wall
+    envelope_data.H.gross_wall_area = floor_area_2d; // Total roof area is the floor area
+    zones.forEach(z => {
+        (z.windows || []).forEach(w => {
+            if (w.wall_id === 'H') {
+                if (!z._windowsHandled) z._windowsHandled = new Set();
+                if (!z._windowsHandled.has(w.id)) {
+                    envelope_data.H.window_area += (w.width * w.height);
+                    z._windowsHandled.add(w.id);
+                }
+            }
+        });
+    });
+    
     let total_floor_area = floor_area_2d * num_stories;
     let total_roof_area = floor_area_2d;
     let total_ground_area = floor_area_2d;
@@ -1077,6 +1124,27 @@ function syncUIFromState(state) {
     document.getElementById('num-stories').value = state.params.num_stories;
     buildingRotationDeg = state.params.building_rotation_deg;
     document.getElementById('heating-system').value = state.params.heating_system;
+    
+    const cwCheckbox = document.getElementById('custom-wall-override');
+    const cwLambda = document.getElementById('custom-wall-lambda');
+    const cwThickness = document.getElementById('custom-wall-thickness');
+    
+    if (state.params.custom_wall_insulation) {
+        cwCheckbox.checked = true;
+        cwLambda.value = state.params.custom_wall_insulation.lambda;
+        cwThickness.value = state.params.custom_wall_insulation.thickness_m;
+        cwLambda.disabled = false;
+        cwThickness.disabled = false;
+    } else {
+        cwCheckbox.checked = false;
+        cwLambda.disabled = true;
+        cwThickness.disabled = true;
+    }
+    
+    const thicknessDisplay = document.getElementById('thickness-display');
+    if (thicknessDisplay && cwThickness) {
+        thicknessDisplay.innerText = Math.round(parseFloat(cwThickness.value || 0) * 100) + ' cm';
+    }
     
     renderZoneList();
     render3DZones();
@@ -1125,7 +1193,58 @@ function displayRustResults(data) {
         content.innerHTML = html;
         overlay.classList.add('visible');
     }
+    updateInsulationVisualizer(data);
 }
+
+function updateInsulationVisualizer(data) {
+    const breakdown = data.wall_insulation_breakdown;
+    const visBaseU = document.getElementById('vis-base-u');
+    const visIns = document.getElementById('vis-insulation');
+    const visInsLabel = document.getElementById('vis-ins-label');
+    const mathRBase = document.getElementById('math-r-base');
+    const mathRIns = document.getElementById('math-r-ins');
+    const mathUFinal = document.getElementById('math-u-final');
+
+    if (!breakdown) return;
+
+    if (visBaseU) {
+        visBaseU.textContent = `U: ${breakdown.u_wall_base.toFixed(2)}`;
+    }
+
+    const hasOverride = document.getElementById('custom-wall-override').checked;
+    if (hasOverride) {
+        const thickness = parseFloat(document.getElementById('custom-wall-thickness').value) || 0.2;
+        // Map thickness (0 to 0.5m) to width (0px to 140px)
+        const maxWidth = 140;
+        const maxThickness = 0.5;
+        const widthPx = Math.round((thickness / maxThickness) * maxWidth);
+        
+        if (visIns) {
+            visIns.style.width = `${widthPx}px`;
+            if (widthPx > 0) {
+                visIns.classList.add('has-width');
+            } else {
+                visIns.classList.remove('has-width');
+            }
+        }
+        if (visInsLabel) {
+            visInsLabel.textContent = `${Math.round(thickness * 100)} cm`;
+        }
+        if (mathRBase) mathRBase.textContent = breakdown.r_wall_base.toFixed(3) + ' m²K/W';
+        if (mathRIns) mathRIns.textContent = breakdown.r_insulation.toFixed(3) + ' m²K/W';
+        if (mathUFinal) mathUFinal.textContent = breakdown.u_wall_final.toFixed(3) + ' W/m²K';
+    } else {
+        if (visIns) {
+            visIns.style.width = '0px';
+            visIns.classList.remove('has-width');
+        }
+        if (visInsLabel) visInsLabel.textContent = '0 cm';
+        if (mathRBase) mathRBase.textContent = '--';
+        if (mathRIns) mathRIns.textContent = '--';
+        if (mathUFinal) mathUFinal.textContent = '--';
+    }
+}
+
 
 async function dispatchState() {
     try {
@@ -1137,6 +1256,9 @@ async function dispatchState() {
             }
         }
         const payload = getRustStatePayload();
+        
+        // Removed Graph integration
+
         const numZones = payload.ui_state && payload.ui_state.raw_zones ? payload.ui_state.raw_zones.length : 0;
         logToConsole(`Dispatching state to WASM... (${numZones} zones)`);
         
@@ -1362,12 +1484,54 @@ function initEventListeners() {
     const btnRedo = document.getElementById('btn-redo');
     if (btnRedo) btnRedo.addEventListener('click', handleRedo);
 
-    ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system'].forEach(id => {
+    ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system', 'usage-profile'].forEach(id => {
         document.getElementById(id).addEventListener('change', () => {
             render3DZones();
             dispatchState();
         });
     });
+
+    const cwCheckbox = document.getElementById('custom-wall-override');
+    const cwLambda = document.getElementById('custom-wall-lambda');
+    const cwThickness = document.getElementById('custom-wall-thickness');
+    const thicknessDisplay = document.getElementById('thickness-display');
+
+    if (cwCheckbox) {
+        cwCheckbox.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            cwLambda.disabled = !checked;
+            cwThickness.disabled = !checked;
+            dispatchState();
+        });
+    }
+    
+    if (cwLambda) cwLambda.addEventListener('change', dispatchState);
+    if (cwThickness) {
+        cwThickness.addEventListener('input', (e) => {
+            const val_m = parseFloat(e.target.value) || 0;
+            if (thicknessDisplay) {
+                thicknessDisplay.innerText = Math.round(val_m * 100) + ' cm';
+            }
+        });
+        cwThickness.addEventListener('change', dispatchState);
+    }
+    
+    // Modal controls
+    const btnOpenSimulator = document.getElementById('btn-open-simulator');
+    const btnCloseSimulator = document.getElementById('btn-close-simulator');
+    const simulatorModal = document.getElementById('simulator-modal');
+    
+    if (btnOpenSimulator) {
+        btnOpenSimulator.addEventListener('click', () => {
+            simulatorModal.classList.add('active');
+        });
+    }
+    
+    if (btnCloseSimulator) {
+        btnCloseSimulator.addEventListener('click', () => {
+            simulatorModal.classList.remove('active');
+        });
+    }
 }
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────

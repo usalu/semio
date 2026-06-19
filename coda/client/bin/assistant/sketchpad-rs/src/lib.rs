@@ -33,6 +33,9 @@ pub struct EnvelopeData {
     pub s: EnvelopeDirectionData,
     #[serde(rename = "W")]
     pub w: EnvelopeDirectionData,
+    #[serde(rename = "H")]
+    #[serde(default)]
+    pub h: EnvelopeDirectionData,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -46,6 +49,12 @@ pub struct BuildingGeometry {
     pub envelope_data: EnvelopeData,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct CustomInsulation {
+    pub thickness_m: f64,
+    pub lambda: f64,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Parameters {
     pub building_type: String,
@@ -56,6 +65,10 @@ pub struct Parameters {
     pub window_to_wall_ratio: f64,
     pub building_rotation_deg: f64,
     pub heating_system: String,
+    pub custom_wall_insulation: Option<CustomInsulation>,
+    
+    // Explicit physics parameters fetched from Neo4j (DIN V 18599 & TABULA)
+    // (Removed graph parameters)
 }
 
 impl Default for Parameters {
@@ -69,6 +82,8 @@ impl Default for Parameters {
             window_to_wall_ratio: 0.15,
             building_rotation_deg: 0.0,
             heating_system: "Gas Condensing Boiler".to_string(),
+            custom_wall_insulation: None,
+            // (Removed graph parameters)
         }
     }
 }
@@ -210,14 +225,16 @@ fn calculate_energy(state: &State) -> Value {
     let win_e = geometry.envelope_data.e.window_area;
     let win_s = geometry.envelope_data.s.window_area;
     let win_w = geometry.envelope_data.w.window_area;
+    let win_h = geometry.envelope_data.h.window_area;
 
     let a_wall = geometry.envelope_data.n.gross_wall_area
         + geometry.envelope_data.e.gross_wall_area
         + geometry.envelope_data.s.gross_wall_area
         + geometry.envelope_data.w.gross_wall_area;
 
-    let a_window = win_n + win_e + win_s + win_w;
-    let net_wall = a_wall - a_window;
+    let a_window = win_n + win_e + win_s + win_w + win_h;
+    let net_wall = a_wall - (win_n + win_e + win_s + win_w); // Only vertical windows reduce wall area
+
 
     // Lookup TABULA
     let year_class = &state.params.year_class;
@@ -253,6 +270,24 @@ fn calculate_energy(state: &State) -> Value {
             g_value = v.get("g_value").and_then(Value::as_f64).unwrap_or(0.7);
             break;
         }
+    }
+    
+    // Always find existing state u_wall for the breakdown
+    let mut u_wall_existing = u_wall;
+    for (k, v) in TABULA_DB.iter() {
+        if k.starts_with(&prefix) && k.ends_with(".001") {
+            u_wall_existing = v.get("u_wall").and_then(Value::as_f64).unwrap_or(1.0);
+            break;
+        }
+    }
+
+    let r_base = 1.0 / u_wall_existing;
+    let mut r_ins = 0.0;
+
+    // Apply custom wall insulation override if specified
+    if let Some(ref custom_ins) = state.params.custom_wall_insulation {
+        r_ins = custom_ins.thickness_m / custom_ins.lambda;
+        u_wall = 1.0 / (r_base + r_ins);
     }
 
     let delta_u_tbr = match state.params.scenario.as_str() {
@@ -291,19 +326,45 @@ fn calculate_energy(state: &State) -> Value {
     
     // win_n, win_e, win_s, win_w are already calculated.
     
-    let sol_factor = 0.6 * (1.0 - 0.3) * 0.9 * g_value;
-    let q_sol_n = sol_factor * win_n * 160.0;
-    let q_sol_e = sol_factor * win_e * 271.0;
-    let q_sol_s = sol_factor * win_s * 392.0;
-    let q_sol_w = sol_factor * win_w * 271.0;
-    let q_sol = q_sol_n + q_sol_e + q_sol_s + q_sol_w;
+    let sol_factor_vertical = 0.6 * (1.0 - 0.3) * 0.9 * g_value;
+    let sol_factor_horizontal = 0.8 * (1.0 - 0.3) * 0.9 * g_value;
     
-    let q_int = 0.0528 * d_hs * a_floor_total;
+    let q_sol_n = sol_factor_vertical * win_n * 160.0;
+    let q_sol_e = sol_factor_vertical * win_e * 271.0;
+    let q_sol_s = sol_factor_vertical * win_s * 392.0;
+    let q_sol_w = sol_factor_vertical * win_w * 271.0;
+    let q_sol_h = sol_factor_horizontal * win_h * 392.0;
+    
+    let q_sol = q_sol_n + q_sol_e + q_sol_s + q_sol_w + q_sol_h;
+    
+    // Internal heat gains according to equation (9)
+    let phi_int = 3.0; // average thermal output of internal heat sources [W/m²]
+    let q_int = 0.024 * phi_int * d_hs * a_floor_total;
     let q_gn = q_sol + q_int;
+    
     let q_h_nd = f64::max(0.0, q_ht - 0.95 * q_gn);
     
-    let eff = 0.9;
-    let q_final = q_h_nd / eff;
+    // 1. Determine System Properties: (e_g_h, q_d_h_specific, q_s_h_specific)
+    let (e_g_h, q_d_h_spec, q_s_h_spec) = match state.params.heating_system.as_str() {
+        "Gas Condensing Boiler" => (1.05, 15.0, 0.0),      // High efficiency, typical pipes
+        "Gas Non-Condensing Boiler" => (1.18, 15.0, 5.0),  // Older tech, has storage tank
+        "Air Source Heat Pump" => (0.35, 10.0, 5.0),       // COP ~2.8, modern pipes
+        "Biomass Pellet Boiler" => (1.25, 15.0, 10.0),     // Lower efficiency, large buffer tank
+        "Direct Electric Heating" => (1.00, 0.0, 0.0),     // 100% efficient at point of use, no pipes
+        _ => (1.10, 15.0, 0.0), // Default fallback
+    };
+
+    // 2. Calculate absolute losses (Specific Loss * Floor Area)
+    let q_d_h_total = q_d_h_spec * a_floor_total;
+    let q_s_h_total = q_s_h_spec * a_floor_total;
+
+    // 3. Apply TABULA Equation 20 (Simplified): Heat Output of Generator
+    // Q_g_h_out = Q_h_nd + Q_d_h + Q_s_h
+    let q_g_h_out = q_h_nd + q_d_h_total + q_s_h_total;
+
+    // 4. Apply TABULA Equation 19: Delivered Energy
+    // Q_del_h = Q_g_h_out * e_g_h
+    let q_final = q_g_h_out * e_g_h;
 
     serde_json::json!({
         "status": "success",
@@ -327,7 +388,9 @@ fn calculate_energy(state: &State) -> Value {
             "ventilation_loss_kWh_a": q_ht_ve
         },
         "heat_gains": {
-            "solar_gains_kWh_a": q_sol
+            "solar_gains_kWh_a": q_sol,
+            "internal_gains_kWh_a": q_int,
+            "total_gains_kWh_a": q_gn
         },
         "heating_demand": {
             "Q_H_nd_kWh_a": q_h_nd,
@@ -336,6 +399,12 @@ fn calculate_energy(state: &State) -> Value {
         "final_energy": {
             "Q_final_kWh_a": q_final,
             "specific_Q_final_kWh_m2a": q_final / a_floor_total
+        },
+        "wall_insulation_breakdown": {
+            "u_wall_base": u_wall_existing,
+            "r_wall_base": r_base,
+            "r_insulation": r_ins,
+            "u_wall_final": u_wall
         }
     })
 }
@@ -367,47 +436,56 @@ pub fn get_history_log() -> String {
 
 #[wasm_bindgen]
 pub fn update_state(state_json: &str) -> String {
-    if let Ok(new_state) = serde_json::from_str::<State>(state_json) {
-        STORE.with(|store| {
-            let mut store = store.borrow_mut();
-            store.set_state(new_state);
-            let res = calculate_energy(store.current());
-            serde_json::to_string(&res).unwrap()
-        })
-    } else {
-        serde_json::json!({ "status": "error", "message": "Invalid state payload" }).to_string()
+    match serde_json::from_str::<State>(state_json) {
+        Ok(new_state) => {
+            STORE.with(|store| {
+                let mut store = store.borrow_mut();
+                store.set_state(new_state);
+                let res = calculate_energy(store.current());
+                serde_json::to_string(&res).unwrap()
+            })
+        }
+        Err(e) => {
+            serde_json::json!({ "status": "error", "message": format!("Invalid state payload: {}", e) }).to_string()
+        }
     }
 }
 
 #[wasm_bindgen]
 pub fn update_geometry(geom_json: &str) -> String {
-    if let Ok(geometry) = serde_json::from_str::<BuildingGeometry>(geom_json) {
-        STORE.with(|store| {
-            let mut store = store.borrow_mut();
-            let mut new_state = store.current().clone();
-            new_state.geometry = Some(geometry.clone());
-            store.apply_action(new_state, Action::UpdateGeometry(geometry), "Updated building geometry");
-            let res = calculate_energy(store.current());
-            serde_json::to_string(&res).unwrap()
-        })
-    } else {
-        serde_json::json!({ "status": "error", "message": "Invalid geometry payload" }).to_string()
+    match serde_json::from_str::<BuildingGeometry>(geom_json) {
+        Ok(geometry) => {
+            STORE.with(|store| {
+                let mut store = store.borrow_mut();
+                let mut new_state = store.current().clone();
+                new_state.geometry = Some(geometry.clone());
+                store.apply_action(new_state, Action::UpdateGeometry(geometry), "Updated building geometry");
+                let res = calculate_energy(store.current());
+                serde_json::to_string(&res).unwrap()
+            })
+        }
+        Err(e) => {
+            serde_json::json!({ "status": "error", "message": format!("Invalid geometry payload: {}", e) }).to_string()
+        }
     }
 }
 
 #[wasm_bindgen]
 pub fn update_parameters(params_json: &str) -> String {
-    if let Ok(params) = serde_json::from_str::<Parameters>(params_json) {
-        STORE.with(|store| {
-            let mut store = store.borrow_mut();
-            let mut new_state = store.current().clone();
-            new_state.params = params.clone();
-            store.apply_action(new_state, Action::UpdateParameters(params), "Updated parameters");
-            let res = calculate_energy(store.current());
-            serde_json::to_string(&res).unwrap()
-        })
-    } else {
-        serde_json::json!({ "status": "error", "message": "Invalid parameters payload" }).to_string()
+    match serde_json::from_str::<Parameters>(params_json) {
+        Ok(params) => {
+            STORE.with(|store| {
+                let mut store = store.borrow_mut();
+                let mut new_state = store.current().clone();
+                new_state.params = params.clone();
+                store.apply_action(new_state, Action::UpdateParameters(params), "Updated parameters");
+                let res = calculate_energy(store.current());
+                serde_json::to_string(&res).unwrap()
+            })
+        }
+        Err(e) => {
+            serde_json::json!({ "status": "error", "message": format!("Invalid parameters payload: {}", e) }).to_string()
+        }
     }
 }
 
@@ -445,4 +523,30 @@ pub fn redo() -> String {
             serde_json::json!({ "status": "error", "message": "No redo history" }).to_string()
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_update_state() {
+        let json_payload = r#"{
+            "geometry": null,
+            "params": {
+                "building_type": "SFH",
+                "year_class": "2016-...",
+                "scenario": "Existing State",
+                "story_height": 2.8,
+                "num_stories": 1,
+                "window_to_wall_ratio": 0.15,
+                "building_rotation_deg": 0.0,
+                "heating_system": "Gas Condensing Boiler",
+                "custom_wall_insulation": null
+            },
+            "ui_state": null
+        }"#;
+        let res = update_state(json_payload);
+        println!("{}", res);
+        assert!(res.contains("success"));
+    }
 }
