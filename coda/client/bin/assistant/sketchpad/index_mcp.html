@@ -765,6 +765,111 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Thermal Bridge Category</label>
+                        <select id="thermal-bridge">
+                            <option value="Standard Default">Standard Default</option>
+                            <option value="Good Planning">Good Planning</option>
+                            <option value="Excellent Planning">Excellent Planning</option>
+                            <option value="Internal Insulation Issues">Internal Insulation Issues</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Ground Contact Type</label>
+                        <select id="ground-contact">
+                            <option value="Unheated Basement">Unheated Basement</option>
+                            <option value="Floor Slab On Ground">Floor Slab On Ground</option>
+                            <option value="Heated Basement">Heated Basement</option>
+                            <option value="Ventilated Crawl Space">Ventilated Crawl Space</option>
+                            <option value="Groundwater Contact">Groundwater Contact</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Shutter Control</label>
+                        <select id="shutter-control">
+                            <option value="Manual">Manual</option>
+                            <option value="Automated">Automated</option>
+                            <option value="None">None</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Climate Region</label>
+                        <select id="climate-region">
+                            <option value="Potsdam">Potsdam</option>
+                            <option value="Bremerhaven">Bremerhaven</option>
+                            <option value="Rostock">Rostock</option>
+                            <option value="Hamburg">Hamburg</option>
+                            <option value="Essen">Essen</option>
+                            <option value="BadMarienberg">Bad Marienberg</option>
+                            <option value="Kassel">Kassel</option>
+                            <option value="Braunlage">Braunlage</option>
+                            <option value="Chemnitz">Chemnitz</option>
+                            <option value="Hof">Hof</option>
+                            <option value="Fichtelberg">Fichtelberg</option>
+                            <option value="Mannheim">Mannheim</option>
+                            <option value="Passau">Passau</option>
+                            <option value="Stoetten">Stoetten</option>
+                            <option value="GarmischPartenkirchen">Garmisch-Partenkirchen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Insulation -->
+            <div class="section-card">
+                <h3>🧱 Custom Insulation</h3>
+                <div class="form-row">
+                    <div>
+                        <label>Wall Material</label>
+                        <select id="custom-wall-mat" class="trigger-calc">
+                            <option value="none">None (Use Tabula)</option>
+                            <option value="0.035">EPS (0.035 W/mK)</option>
+                            <option value="0.035">Mineral Wool (0.035 W/mK)</option>
+                            <option value="0.025">PUR/PIR (0.025 W/mK)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Thickness (m)</label>
+                        <input type="number" id="custom-wall-thick" class="trigger-calc" value="0" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Roof Material</label>
+                        <select id="custom-roof-mat" class="trigger-calc">
+                            <option value="none">None (Use Tabula)</option>
+                            <option value="0.035">Mineral Wool (0.035 W/mK)</option>
+                            <option value="0.035">EPS (0.035 W/mK)</option>
+                            <option value="0.025">PUR/PIR (0.025 W/mK)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Thickness (m)</label>
+                        <input type="number" id="custom-roof-thick" class="trigger-calc" value="0" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Floor Material</label>
+                        <select id="custom-floor-mat" class="trigger-calc">
+                            <option value="none">None (Use Tabula)</option>
+                            <option value="0.035">XPS (0.035 W/mK)</option>
+                            <option value="0.035">EPS (0.035 W/mK)</option>
+                            <option value="0.025">PUR/PIR (0.025 W/mK)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Thickness (m)</label>
+                        <input type="number" id="custom-floor-thick" class="trigger-calc" value="0" step="0.01" min="0">
+                    </div>
+                </div>
             </div>
 
             <!-- Advanced Wall Simulator Button -->
@@ -799,11 +904,24 @@
                     <div>
                         <label>Usage Profile (DIN V 18599)</label>
                         <select id="usage-profile">
-                            <option value="Single Office">Single Office</option>
-                            <option value="Multi-Person Office">Multi-Person Office</option>
-                            <option value="Meeting Room">Meeting Room</option>
+                            <option value="SingleOffice">Single Office</option>
                             <option value="Residential">Residential</option>
-                            <option value="Retail">Retail</option>
+                            <option value="RetailStore">Retail Store</option>
+                            <option value="HospitalRoom">Hospital Room</option>
+                            <option value="Restaurant">Restaurant</option>
+                            <option value="Gymnasium">Gymnasium</option>
+                            <option value="IndustrialHeavy">Industrial Heavy</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Automation Class</label>
+                        <select id="automation-class">
+                            <option value="C">Class C (Standard)</option>
+                            <option value="A">Class A (High Efficiency)</option>
+                            <option value="B">Class B (Advanced)</option>
+                            <option value="D">Class D (Non-Energy Efficient)</option>
                         </select>
                     </div>
                 </div>

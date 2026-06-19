@@ -968,15 +968,45 @@ function getRustStatePayload() {
         window_to_wall_ratio: 0.15,
         building_rotation_deg: buildingRotationDeg,
         heating_system: document.getElementById('heating-system').value,
+        thermal_bridge_category: document.getElementById('thermal-bridge').value,
+        ground_contact_type: document.getElementById('ground-contact').value,
+        shutter_control: document.getElementById('shutter-control').value,
+        climate_region: document.getElementById('climate-region').value,
+        usage_profile: document.getElementById('usage-profile').value,
+        automation_class: document.getElementById('automation-class').value,
     };
 
-    if (document.getElementById('custom-wall-override').checked) {
+    const wallMat = document.getElementById('custom-wall-mat') ? document.getElementById('custom-wall-mat').value : 'none';
+    const wallThick = document.getElementById('custom-wall-thick') ? parseFloat(document.getElementById('custom-wall-thick').value) || 0 : 0;
+    if (wallMat !== 'none' && wallThick > 0) {
         params.custom_wall_insulation = {
-            thickness_m: parseFloat(document.getElementById('custom-wall-thickness').value) || 0.2,
-            lambda: parseFloat(document.getElementById('custom-wall-lambda').value) || 0.035
+            thickness_m: wallThick,
+            lambda: parseFloat(wallMat)
         };
     } else {
         params.custom_wall_insulation = null;
+    }
+
+    const roofMat = document.getElementById('custom-roof-mat') ? document.getElementById('custom-roof-mat').value : 'none';
+    const roofThick = document.getElementById('custom-roof-thick') ? parseFloat(document.getElementById('custom-roof-thick').value) || 0 : 0;
+    if (roofMat !== 'none' && roofThick > 0) {
+        params.custom_roof_insulation = {
+            thickness_m: roofThick,
+            lambda: parseFloat(roofMat)
+        };
+    } else {
+        params.custom_roof_insulation = null;
+    }
+
+    const floorMat = document.getElementById('custom-floor-mat') ? document.getElementById('custom-floor-mat').value : 'none';
+    const floorThick = document.getElementById('custom-floor-thick') ? parseFloat(document.getElementById('custom-floor-thick').value) || 0 : 0;
+    if (floorMat !== 'none' && floorThick > 0) {
+        params.custom_floor_insulation = {
+            thickness_m: floorThick,
+            lambda: parseFloat(floorMat)
+        };
+    } else {
+        params.custom_floor_insulation = null;
     }
     
     let polys = zones.map(z => [[
@@ -1124,6 +1154,12 @@ function syncUIFromState(state) {
     document.getElementById('num-stories').value = state.params.num_stories;
     buildingRotationDeg = state.params.building_rotation_deg;
     document.getElementById('heating-system').value = state.params.heating_system;
+    document.getElementById('thermal-bridge').value = state.params.thermal_bridge_category || "Standard Default";
+    document.getElementById('ground-contact').value = state.params.ground_contact_type || "Unheated Basement";
+    document.getElementById('shutter-control').value = state.params.shutter_control || "Manual";
+    document.getElementById('climate-region').value = state.params.climate_region || "Potsdam";
+    document.getElementById('usage-profile').value = state.params.usage_profile || "Residential";
+    document.getElementById('automation-class').value = state.params.automation_class || "C";
     
     const cwCheckbox = document.getElementById('custom-wall-override');
     const cwLambda = document.getElementById('custom-wall-lambda');
@@ -1484,11 +1520,21 @@ function initEventListeners() {
     const btnRedo = document.getElementById('btn-redo');
     if (btnRedo) btnRedo.addEventListener('click', handleRedo);
 
-    ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system', 'usage-profile'].forEach(id => {
-        document.getElementById(id).addEventListener('change', () => {
-            render3DZones();
-            dispatchState();
-        });
+    ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system', 'usage-profile', 'thermal-bridge', 'ground-contact', 'shutter-control', 'climate-region', 'automation-class',
+     'custom-wall-mat', 'custom-wall-thick', 'custom-roof-mat', 'custom-roof-thick', 'custom-floor-mat', 'custom-floor-thick'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => {
+                render3DZones();
+                dispatchState();
+            });
+            if (el.type === 'number' || el.type === 'range') {
+                el.addEventListener('input', () => {
+                    render3DZones();
+                    dispatchState();
+                });
+            }
+        }
     });
 
     const cwCheckbox = document.getElementById('custom-wall-override');
