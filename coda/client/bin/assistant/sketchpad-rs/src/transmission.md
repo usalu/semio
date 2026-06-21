@@ -202,7 +202,6 @@ pub struct BuildingComponent {
   $U_{new} = \frac{1}{\frac{1}{U_{existing}} + \frac{d}{\lambda}}$
 
   The UI provides four standard materials with their typical $\lambda$ values:
-  
   1. **EPS (Expanded Polystyrene)**
      - **Use Case in TABULA:** The absolute standard for external wall insulation (ETICS/WDVS) in "Standard Refurbishment" scenarios.
      - **Standard Lambda ($\lambda$):** 0.035 - 0.040 W/(m·K)
@@ -266,7 +265,6 @@ Beyond geometry mapping, the engine dynamically calculates the temperature prope
 
 Once all values are mapped and calculated, it feeds the component arrays into the three `calculate_h_t` functions, sums them into `h_tr`, and applies the custom `theta_int - theta_e` delta to calculate the final `q_ht_tr` energy loss.
 
-
 ---
 
 ## DIN 18599 Reference Tables and Data
@@ -275,13 +273,13 @@ Once all values are mapped and calculated, it feeds the component arrays into th
 
 You cannot calculate transmission using just one document. The standard modularizes the logic:
 
-1.  **DIN/TS 18599-2 (The Physics Engine):** This document dictates *how* to calculate transmission. It holds the core equations:
-    *   **Transmission Heat Sink (Loss):** **$Q_{T,sink} = H_T \cdot (\theta_i - \theta_e) \cdot t$** (when inside is warmer).
-    *   **Transmission Heat Source (Gain):** **$Q_{T,source} = H_T \cdot (\theta_e - \theta_i) \cdot t$** (when outside is warmer).
-    *   **Total Heat Transfer Coefficient:** **$H_T = H_{T,D} \text{ (Direct)} + H_{T,iu} \text{ (Unheated)} + H_{T,g} \text{ (Ground)} + H_{T,WB} \text{ (Bridges)}$**.
-2.  **DIN/TS 18599-10 (The Boundary Conditions):** This document dictates *when* and *under what conditions* transmission happens. It provides the exact temperatures (**$\theta$**) and the operating times (**$t$**).
-3.  **DIN/TS 18599-1 (The Geometry):** Dictates the raw sizes (Areas and Lengths) of the building.
-4.  **External ISO Norms (The Materials):** The DIN 18599 series *does not* tell you how insulating a brick wall is. You must calculate U-values and Psi-values using external norms (ISO 6946, 10077, 10211).
+1. **DIN/TS 18599-2 (The Physics Engine):** This document dictates _how_ to calculate transmission. It holds the core equations:
+   - **Transmission Heat Sink (Loss):** **$Q_{T,sink} = H_T \cdot (\theta_i - \theta_e) \cdot t$** (when inside is warmer).
+   - **Transmission Heat Source (Gain):** **$Q_{T,source} = H_T \cdot (\theta_e - \theta_i) \cdot t$** (when outside is warmer).
+   - **Total Heat Transfer Coefficient:** **$H_T = H_{T,D} \text{ (Direct)} + H_{T,iu} \text{ (Unheated)} + H_{T,g} \text{ (Ground)} + H_{T,WB} \text{ (Bridges)}$**.
+2. **DIN/TS 18599-10 (The Boundary Conditions):** This document dictates _when_ and _under what conditions_ transmission happens. It provides the exact temperatures (**$\theta$**) and the operating times (**$t$**).
+3. **DIN/TS 18599-1 (The Geometry):** Dictates the raw sizes (Areas and Lengths) of the building.
+4. **External ISO Norms (The Materials):** The DIN 18599 series _does not_ tell you how insulating a brick wall is. You must calculate U-values and Psi-values using external norms (ISO 6946, 10077, 10211).
 
 ### Part 2: The Master List of ALL Transmission Inputs
 
@@ -291,28 +289,28 @@ To write your software, your data model must collect all of the following parame
 
 These are the physical dimensions of the building envelope.
 
-*   **$A_j$ (Component Area):** The area in **$m^2$** of every wall, roof, window, and door facing the exterior, the ground, or an unheated space.
-*   **$l_j$ (Thermal Bridge Length):** The length in meters of every linear structural joint (e.g., balcony connections, window perimeters) if doing detailed thermal bridge calculations.
-*   **$P$ (Perimeter Length):** The exposed perimeter of the ground slab (required for ground transmission correction).
+- **$A_j$ (Component Area):** The area in **$m^2$** of every wall, roof, window, and door facing the exterior, the ground, or an unheated space.
+- **$l_j$ (Thermal Bridge Length):** The length in meters of every linear structural joint (e.g., balcony connections, window perimeters) if doing detailed thermal bridge calculations.
+- **$P$ (Perimeter Length):** The exposed perimeter of the ground slab (required for ground transmission correction).
 
 #### Category B: Material Thermal Properties (Sourced via External Norms)
 
 These define how well the materials resist heat flow.
 
-*   **$U_j$ (Thermal Transmittance / U-Value):** Measured in **$W/(m^2K)$**. Sourced via DIN EN ISO 6946 (opaque elements) or DIN EN ISO 10077-1 (windows/doors).
-*   **$\Psi_j$ (Linear Thermal Transmittance / Psi-Value):** Measured in **$W/(mK)$**. The heat leak rate of a specific joint. Sourced via DIN EN ISO 10211 or DIN 4108 Beiblatt 2.
-*   **$R_s$ (Surface Thermal Resistances):** Fixed constants used in U-value calculations (**$0.04$** external, **$0.13$** internal walls).
+- **$U_j$ (Thermal Transmittance / U-Value):** Measured in **$W/(m^2K)$**. Sourced via DIN EN ISO 6946 (opaque elements) or DIN EN ISO 10077-1 (windows/doors).
+- **$\Psi_j$ (Linear Thermal Transmittance / Psi-Value):** Measured in **$W/(mK)$**. The heat leak rate of a specific joint. Sourced via DIN EN ISO 10211 or DIN 4108 Beiblatt 2.
+- **$R_s$ (Surface Thermal Resistances):** Fixed constants used in U-value calculations (**$0.04$** external, **$0.13$** internal walls).
 
 #### Category C: Structural Correction Factors (Sourced via DIN 18599-2)
 
 These factors mathematically adjust the raw U-values based on orientation, location, or dynamic elements.
 
-*   **$f_{neig,j}$ (Inclination Factor):** Adjusts window U-values based on tilt. Found in **Part 2, Table 7** (e.g., **$1.0$** for vertical, **$1.2$** for horizontal single glazing).
-*   **$F_x$ (Temperature Correction Factor):** Reduces heat loss calculations for components that don't face the harsh exterior directly. Found in **Part 2, Tables 5 & 6**.
-    *   Examples: **$0.8$** (Unheated Attic), **$0.5$** (Unheated Basement), **$0.35$** (Unheated Staircase).
-*   **$\Delta U_{WB}$ (Simplified Thermal Bridge Addition):** If you don't calculate exact lengths (**$l_j \cdot \Psi_j$**), you add a flat penalty to all U-values.
-    *   Values: **$0.10$** (Standard), **$0.05$** (Good planning), **$0.03$** (Excellent planning), **$0.15$** (Internal insulation issues).
-*   **$f_{sh}$ (Shutter Fraction):** The percentage of time a night-shutter is closed, improving the window's U-value (**$U_{w,eff}$**). Found in **Part 2, Annex G**.
+- **$f_{neig,j}$ (Inclination Factor):** Adjusts window U-values based on tilt. Found in **Part 2, Table 7** (e.g., **$1.0$** for vertical, **$1.2$** for horizontal single glazing).
+- **$F_x$ (Temperature Correction Factor):** Reduces heat loss calculations for components that don't face the harsh exterior directly. Found in **Part 2, Tables 5 & 6**.
+  - Examples: **$0.8$** (Unheated Attic), **$0.5$** (Unheated Basement), **$0.35$** (Unheated Staircase).
+- **$\Delta U_{WB}$ (Simplified Thermal Bridge Addition):** If you don't calculate exact lengths (**$l_j \cdot \Psi_j$**), you add a flat penalty to all U-values.
+  - Values: **$0.10$** (Standard), **$0.05$** (Good planning), **$0.03$** (Excellent planning), **$0.15$** (Internal insulation issues).
+- **$f_{sh}$ (Shutter Fraction):** The percentage of time a night-shutter is closed, improving the window's U-value (**$U_{w,eff}$**). Found in **Part 2, Annex G**.
 
 #### Category D: Climate & Boundary Conditions (Sourced via DIN 18599-10)
 
@@ -320,35 +318,35 @@ These are the exact numerical triggers that drive the equations, dictating the *
 
 **1. Setpoint Temperatures (The targets):**
 
-*   **$\theta_{i,h,soll}$ (Heating Setpoint):** e.g., **$20^\circ C$** (Residential), **$21^\circ C$** (Office), **$15^\circ C$** (Heavy Industry).
-*   **$\theta_{i,c,soll}$ (Cooling Setpoint):** e.g., **$25^\circ C$** (Residential), **$24^\circ C$** (Office).
-*   **$\Delta\theta_{i,NA}$ (Setback Temp):** The allowed temperature drop during nights/weekends. Almost universally **$4.0 K$**.
-*   **Design Extremes:** **$\theta_{i,h,min}$** (e.g., **$20^\circ C$**) and **$\theta_{i,c,max}$** (e.g., **$26^\circ C$**) used only for sizing peak equipment loads.
+- **$\theta_{i,h,soll}$ (Heating Setpoint):** e.g., **$20^\circ C$** (Residential), **$21^\circ C$** (Office), **$15^\circ C$** (Heavy Industry).
+- **$\theta_{i,c,soll}$ (Cooling Setpoint):** e.g., **$25^\circ C$** (Residential), **$24^\circ C$** (Office).
+- **$\Delta\theta_{i,NA}$ (Setback Temp):** The allowed temperature drop during nights/weekends. Almost universally **$4.0 K$**.
+- **Design Extremes:** **$\theta_{i,h,min}$** (e.g., **$20^\circ C$**) and **$\theta_{i,c,max}$** (e.g., **$26^\circ C$**) used only for sizing peak equipment loads.
 
 **2. Building Automation (The smart offsets):**
 
-*   **$\Delta\theta_{EMS}$ (Automation Shift):** If the building has smart controls, the setpoints are artificially lowered to save energy calculation-wise.
-    *   Class A: **$-1.5 K$** to **$-2.0 K$** | Class B: **$-1.0 K$** | Class C/D: **$0.0 K$**.
-*   **$f_{adapt}$:** Multiplier for adaptive control (**$1.35$** for Classes A/B, **$1.0$** for C/D).
+- **$\Delta\theta_{EMS}$ (Automation Shift):** If the building has smart controls, the setpoints are artificially lowered to save energy calculation-wise.
+  - Class A: **$-1.5 K$** to **$-2.0 K$** | Class B: **$-1.0 K$** | Class C/D: **$0.0 K$**.
+- **$f_{adapt}$:** Multiplier for adaptive control (**$1.35$** for Classes A/B, **$1.0$** for C/D).
 
 **3. External Climate:**
 
-*   **$\theta_e$ (Monthly External Temperature):** 12 specific values depending on the climate region (e.g., Region 4 Potsdam ranges from **$0.1^\circ C$** in Jan to **$18.4^\circ C$** in July).
-*   **$\theta_{e,min}$ (Winter Peak Design):** Fixed at **$-12^\circ C$**.
+- **$\theta_e$ (Monthly External Temperature):** 12 specific values depending on the climate region (e.g., Region 4 Potsdam ranges from **$0.1^\circ C$** in Jan to **$18.4^\circ C$** in July).
+- **$\theta_{e,min}$ (Winter Peak Design):** Fixed at **$-12^\circ C$**.
 
 **4. Operating Times (The duration of heat flow):**
 
-*   **$t_{h,op,d}$ (Daily Heating Hours):** e.g., **$17 \text{ h/d}$** (Residential), **$13 \text{ h/d}$** (Offices).
-*   **$d_{nutz}$ (Usage Days per year):** e.g., **$365 \text{ d/a}$** (Residential), **$250 \text{ d/a}$** (Offices, meaning weekends are at setback temperatures).
-*   **$d_{mth}$ (Days per month):** Standard calendar days (28, 30, 31).
+- **$t_{h,op,d}$ (Daily Heating Hours):** e.g., **$17 \text{ h/d}$** (Residential), **$13 \text{ h/d}$** (Offices).
+- **$d_{nutz}$ (Usage Days per year):** e.g., **$365 \text{ d/a}$** (Residential), **$250 \text{ d/a}$** (Offices, meaning weekends are at setback temperatures).
+- **$d_{mth}$ (Days per month):** Standard calendar days (28, 30, 31).
 
 ### Implementation Summary
 
 To build the transmission module, your software needs to:
 
-1.  Load **Category A** (Geometry) and **Category B** (U-values) to calculate the static building shell **$H_T$**.
-2.  Apply the modifiers from **Category C** (DIN 18599-2) to adjust for unheated spaces and bridges.
-3.  Run a monthly loop using the temperatures and times from **Category D** (DIN 18599-10) to figure out exactly how many Watt-hours of energy transferred through that shell over the course of the year.
+1. Load **Category A** (Geometry) and **Category B** (U-values) to calculate the static building shell **$H_T$**.
+2. Apply the modifiers from **Category C** (DIN 18599-2) to adjust for unheated spaces and bridges.
+3. Run a monthly loop using the temperatures and times from **Category D** (DIN 18599-10) to figure out exactly how many Watt-hours of energy transferred through that shell over the course of the year.
 
 ### The Transmission Formulas (from DIN/TS 18599-2)
 
@@ -356,33 +354,33 @@ To build the transmission module, your software needs to:
 
 This calculates the actual energy (in Watt-hours or kWh) lost or gained through the envelope over a specific time period (usually a month).
 
-*   **Transmission Heat Sink (Loss - when heating is needed):**
+- **Transmission Heat Sink (Loss - when heating is needed):**
 
-    $$
-    Q_{T,sink} = \sum H_{T,j} \cdot (\theta_i - \theta_e) \cdot t
-    $$
+  $$
+  Q_{T,sink} = \sum H_{T,j} \cdot (\theta_i - \theta_e) \cdot t
+  $$
 
-    *(Calculated for all components **$j$** where **$\theta_i > \theta_e$**)*
+  _(Calculated for all components **$j$** where **$\theta_i > \theta_e$**)_
 
-*   **Transmission Heat Source (Gain - when cooling is needed):**
+- **Transmission Heat Source (Gain - when cooling is needed):**
 
-    $$
-    Q_{T,source} = \sum H_{T,j} \cdot (\theta_e - \theta_i) \cdot t
-    $$
+  $$
+  Q_{T,source} = \sum H_{T,j} \cdot (\theta_e - \theta_i) \cdot t
+  $$
 
-    *(Calculated for all components **$j$** where **$\theta_e > \theta_i$**)*
+  _(Calculated for all components **$j$** where **$\theta_e > \theta_i$**)_
 
 **$\theta_i$ (Indoor Target Temperature - Heating **$\theta_{i,h,soll}$** / Cooling **$\theta_{i,c,soll}$**):**
 
-*   *Where to find:* **Table 5** (Residential): 
-    *   **Heating Setpoint ($\theta_{i,h,soll}$):** 20.0 °C
-    *   **Cooling Setpoint ($\theta_{i,c,soll}$):** 25.0 °C
-    *   **Building Automation Shift ($\Delta\theta_{EMS}$):**
-        *   Class D (No automation): 0.0 K
-        *   Class C (Standard): -0.5 K
-        *   Class B (Advanced): -1.0 K
-        *   Class A (High Energy Performance): -1.5 K
-*   and **Table 7** (Non-Residential, depending on the usage profile 1-43):
+- _Where to find:_ **Table 5** (Residential):
+  - **Heating Setpoint ($\theta_{i,h,soll}$):** 20.0 °C
+  - **Cooling Setpoint ($\theta_{i,c,soll}$):** 25.0 °C
+  - **Building Automation Shift ($\Delta\theta_{EMS}$):**
+    - Class D (No automation): 0.0 K
+    - Class C (Standard): -0.5 K
+    - Class B (Advanced): -1.0 K
+    - Class A (High Energy Performance): -1.5 K
+- and **Table 7** (Non-Residential, depending on the usage profile 1-43):
 
 | Lfd. Nr. | Nutzung (Usage Profile)             | Heating Temp. (°C) | Cooling Temp. (°C) | Automation Shift (Class D / C / B / A) |
 | :------- | :---------------------------------- | :----------------- | :----------------- | :------------------------------------- |
@@ -430,12 +428,12 @@ This calculates the actual energy (in Watt-hours or kWh) lost or gained through 
 | 42       | Arztpraxen/Therapeutische Praxen    | 22                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
 | 43       | Lagerhallen, Logistikhallen         | 12                 | 26                 | 0 K / 0 K / -0.5 K / -1.0 K            |
 
-* *Details:* Must be adjusted by the Building Automation shift ( **$\Delta\theta_{EMS}$** ) found in **Table 5/9**.
+- _Details:_ Must be adjusted by the Building Automation shift ( **$\Delta\theta_{EMS}$** ) found in **Table 5/9**.
 
 **$\theta_e$ (External Climate Temperature):**
 
-* *Where to find:* **Annex E, Table E.1**.
-* *Details:* Provides the 12 monthly average external temperatures for 15 German climate regions.
+- _Where to find:_ **Annex E, Table E.1**.
+- _Details:_ Provides the 12 monthly average external temperatures for 15 German climate regions.
 
 | Region | Referenzort            | Jan  | Feb  | Mrz  | Apr  | Mai  | Jun  | Jul  | Aug  | Sep  | Okt  | Nov  | Dez  | Jahreswert |
 | :----- | :--------------------- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--------- |
@@ -461,31 +459,31 @@ While the monthly averages (Table E.1) are used to calculate the annual energy d
 
 For maximum load calculations, Table 12 provides the extreme single-day external temperatures:
 
-*   **Design Temperature for Heating ($\theta_{e,min}$):** $-12.0\ ^\circ\text{C}$ (Used universally for the winter design day in January to calculate maximum heating load).
-*   **Design Temperatures for Cooling ($\theta_{e,max}$):**
-    *   $25.0\ ^\circ\text{C}$ (Used for the summer design day in July).
-    *   $20.3\ ^\circ\text{C}$ (Used for the autumn design day in September).
-    *(Note: The maximum cooling design temperature is relatively mild ($25.0\ ^\circ\text{C}$) because DIN 18599 balances it against simultaneous extreme solar radiation ($I_{S,max}$) of up to $927\ \text{W/m}^2$ on the same day. The combination of $25\ ^\circ\text{C}$ ambient air plus max solar gain produces the peak cooling demand).*
+- **Design Temperature for Heating ($\theta_{e,min}$):** $-12.0\ ^\circ\text{C}$ (Used universally for the winter design day in January to calculate maximum heating load).
+- **Design Temperatures for Cooling ($\theta_{e,max}$):**
+  - $25.0\ ^\circ\text{C}$ (Used for the summer design day in July).
+  - $20.3\ ^\circ\text{C}$ (Used for the autumn design day in September).
+    _(Note: The maximum cooling design temperature is relatively mild ($25.0\ ^\circ\text{C}$) because DIN 18599 balances it against simultaneous extreme solar radiation ($I_{S,max}$) of up to $927\ \text{W/m}^2$ on the same day. The combination of $25\ ^\circ\text{C}$ ambient air plus max solar gain produces the peak cooling demand)._
 
 **$t$ (Operating Time/Duration):**
 
-*   *Where to find:* Derived from **$d_{nutz}$** (Usage days) and **$t_{h,op,d}$** (Daily operating hours) found in **Table 5** (Res) and **Table 6** (Non-Res). Also requires **$d_{mth}$** (Days per month) from **Table 11**.
+- _Where to find:_ Derived from **$d_{nutz}$** (Usage days) and **$t_{h,op,d}$** (Daily operating hours) found in **Table 5** (Res) and **Table 6** (Non-Res). Also requires **$d_{mth}$** (Days per month) from **Table 11**.
 
-1.  **Days per Month ($d_{mth}$) - From Table 11**
-    These are the standard calendar days used to determine the total hours available in a given month. The standard assumes a non-leap year (365 days).
-    *   Jan: 31 | Feb: 28 | Mar: 31 | Apr: 30 | May: 31 | Jun: 30
-    *   Jul: 31 | Aug: 31 | Sep: 30 | Oct: 31 | Nov: 30 | Dec: 31
-    *   Total hours in a month: $t_{mth} = d_{mth} \times 24 \text{ hours}$ (e.g., January = 744 hours).
+1. **Days per Month ($d_{mth}$) - From Table 11**
+   These are the standard calendar days used to determine the total hours available in a given month. The standard assumes a non-leap year (365 days).
+   - Jan: 31 | Feb: 28 | Mar: 31 | Apr: 30 | May: 31 | Jun: 30
+   - Jul: 31 | Aug: 31 | Sep: 30 | Oct: 31 | Nov: 30 | Dec: 31
+   - Total hours in a month: $t_{mth} = d_{mth} \times 24 \text{ hours}$ (e.g., January = 744 hours).
 
-2.  **Residential Buildings (Wohngebäude) - From Table 5**
-    For any residential building, the operating times are strictly fixed to one profile:
-    *   Usage days per year ($d_{nutz,a}$): 365 days
-    *   Daily heating/cooling operation ($t_{h,op,d}$): 17 hours/day
-    *   *Application:* This means a residential home is fully heated for 17 hours a day, 7 days a week. The remaining 7 hours of the day are calculated using the setback temperature ($\Delta\theta_{i,NA} = 4\text{ K}$).
+2. **Residential Buildings (Wohngebäude) - From Table 5**
+   For any residential building, the operating times are strictly fixed to one profile:
+   - Usage days per year ($d_{nutz,a}$): 365 days
+   - Daily heating/cooling operation ($t_{h,op,d}$): 17 hours/day
+   - _Application:_ This means a residential home is fully heated for 17 hours a day, 7 days a week. The remaining 7 hours of the day are calculated using the setback temperature ($\Delta\theta_{i,NA} = 4\text{ K}$).
 
-3.  **Non-Residential Buildings (Nichtwohngebäude) - From Table 6**
-    For non-residential buildings, the operating times depend entirely on the usage profile. I have extracted the Usage Days per Year ($d_{nutz,a}$) and the Daily Heating Operation Hours ($t_{h,op,d}$) for all 43 profiles.
-    *(Note: The daily heating operation time $t_{h,op,d}$ in the standard already includes the necessary pre-heating and post-heating times required to bring the building up to temperature before people arrive).*
+3. **Non-Residential Buildings (Nichtwohngebäude) - From Table 6**
+   For non-residential buildings, the operating times depend entirely on the usage profile. I have extracted the Usage Days per Year ($d_{nutz,a}$) and the Daily Heating Operation Hours ($t_{h,op,d}$) for all 43 profiles.
+   _(Note: The daily heating operation time $t_{h,op,d}$ in the standard already includes the necessary pre-heating and post-heating times required to bring the building up to temperature before people arrive)._
 
 | Lfd. Nr. | Nutzung (Usage Profile)             | Usage Days / Year (d_nutz) | Daily Heating Hours (t_h,op,d) |
 | :------- | :---------------------------------- | :------------------------- | :----------------------------- |
@@ -543,31 +541,31 @@ $$
 
 **$F_x$ (Temperature Correction Factor):**
 
-*   *Where to find:* **Table 5** (Unheated rooms) and **Table 6** (Ground slabs/basements).
-*   *Details:* e.g., **$F_x = 0.8$** for unheated attics, **$F_x = 0.5$** for unheated basements.
+- _Where to find:_ **Table 5** (Unheated rooms) and **Table 6** (Ground slabs/basements).
+- _Details:_ e.g., **$F_x = 0.8$** for unheated attics, **$F_x = 0.5$** for unheated basements.
 
-*   **Table 5: Unheated Spaces ($F_x$ für unbeheizte Räume):**
+- **Table 5: Unheated Spaces ($F_x$ für unbeheizte Räume):**
 
-    | Lfd. Nr. | Art des angrenzenden unbeheizten Raumes (Type of Unheated Space)    | F_x Factor |
-    | :------- | :------------------------------------------------------------------ | :--------- |
-    | 1        | Dachraum (Unheated Attic / Roof space)                              | 0.8        |
-    | 2        | Unbeheizter Glasvorbau / Wintergarten (Unheated Sunspace)           | 0.8        |
-    | 3        | Kriechkeller, stark belüftet (Crawl space, heavily ventilated)      | 0.8        |
-    | 4        | Angrenzender unbeheizter Raum (Standard adjacent unheated room)     | 0.5        |
-    | 5        | Unbeheizter Keller (Unheated Basement, general)                     | 0.5        |
-    | 6        | Treppenhaus, außenliegend (Staircase with large exterior walls)     | 0.5        |
-    | 7        | Kriechkeller, unbelüftet (Crawl space, unventilated)                | 0.5        |
-    | 8        | Treppenhaus, innenliegend (Staircase mostly surrounded by building) | 0.35       |
+  | Lfd. Nr. | Art des angrenzenden unbeheizten Raumes (Type of Unheated Space)    | F_x Factor |
+  | :------- | :------------------------------------------------------------------ | :--------- |
+  | 1        | Dachraum (Unheated Attic / Roof space)                              | 0.8        |
+  | 2        | Unbeheizter Glasvorbau / Wintergarten (Unheated Sunspace)           | 0.8        |
+  | 3        | Kriechkeller, stark belüftet (Crawl space, heavily ventilated)      | 0.8        |
+  | 4        | Angrenzender unbeheizter Raum (Standard adjacent unheated room)     | 0.5        |
+  | 5        | Unbeheizter Keller (Unheated Basement, general)                     | 0.5        |
+  | 6        | Treppenhaus, außenliegend (Staircase with large exterior walls)     | 0.5        |
+  | 7        | Kriechkeller, unbelüftet (Crawl space, unventilated)                | 0.5        |
+  | 8        | Treppenhaus, innenliegend (Staircase mostly surrounded by building) | 0.35       |
 
-*   **Table 6: Ground Contact ($F_x$ für Bauteile gegen Erdreich):**
+- **Table 6: Ground Contact ($F_x$ für Bauteile gegen Erdreich):**
 
-    | Lfd. Nr. | Bauteil gegen Erdreich (Component against the ground)               | F_x Factor |
-    | :------- | :------------------------------------------------------------------ | :--------- |
-    | 1        | Bodenplatte auf Erdreich (Floor slab directly on ground)            | 0.5        |
-    | 2        | Wände gegen Erdreich, < 1,5m Tiefe (Basement walls, shallow depth)  | 0.5        |
-    | 3        | Wände gegen Erdreich, > 1,5m Tiefe (Basement walls, deep depth)     | 0.5        |
-    | 4        | Fußboden des beheizten Kellers (Floor of a heated basement)         | 0.5        |
-    | 5        | Bauteile gegen Grundwasser (Components touching groundwater)        | 1.0        |
+  | Lfd. Nr. | Bauteil gegen Erdreich (Component against the ground)              | F_x Factor |
+  | :------- | :----------------------------------------------------------------- | :--------- |
+  | 1        | Bodenplatte auf Erdreich (Floor slab directly on ground)           | 0.5        |
+  | 2        | Wände gegen Erdreich, < 1,5m Tiefe (Basement walls, shallow depth) | 0.5        |
+  | 3        | Wände gegen Erdreich, > 1,5m Tiefe (Basement walls, deep depth)    | 0.5        |
+  | 4        | Fußboden des beheizten Kellers (Floor of a heated basement)        | 0.5        |
+  | 5        | Bauteile gegen Grundwasser (Components touching groundwater)       | 1.0        |
 
 #### 3. Direct Transmission to Exterior (**$H_{T,D}$**)
 
@@ -579,20 +577,20 @@ $$
 
 **$f_{neig,j}$ (Inclination Factor):**
 
-*   *Where to find:* **Table 7** (18599-2)
-*   *Details:* Adjusts window U-values based on their tilt angle (**$0^\circ$** to **$90^\circ$**) and glazing type (single, double, triple). Default is **$1.0$** for opaque walls.
+- _Where to find:_ **Table 7** (18599-2)
+- _Details:_ Adjusts window U-values based on their tilt angle (**$0^\circ$** to **$90^\circ$**) and glazing type (single, double, triple). Default is **$1.0$** for opaque walls.
 
-*   **Table 7: Inclination Factor ($f_{neig,j}$):**
+- **Table 7: Inclination Factor ($f_{neig,j}$):**
 
-    | Neigung (Grad °) | Einfachglas (Single) | Zweifachglas (Double) | Dreifachglas (Triple) * |
-    | :--------------- | :------------------- | :-------------------- | :---------------------- |
-    | 0° (Horizontal)  | 1,25                 | 1,21                  | 1,20                    |
-    | 15°              | 1,21                 | 1,22                  | 1,16                    |
-    | 30°              | 1,19                 | 1,21                  | 1,13                    |
-    | 45°              | 1,21                 | 1,15                  | 1,07                    |
-    | 60°              | 1,00                 | 1,13                  | 1,05                    |
-    | 75°              | 1,00                 | 1,08                  | 1,02                    |
-    | 90° (Vertikal)   | 1,00                 | 1,00                  | 1,00                    |
+  | Neigung (Grad °) | Einfachglas (Single) | Zweifachglas (Double) | Dreifachglas (Triple) \* |
+  | :--------------- | :------------------- | :-------------------- | :----------------------- |
+  | 0° (Horizontal)  | 1,25                 | 1,21                  | 1,20                     |
+  | 15°              | 1,21                 | 1,22                  | 1,16                     |
+  | 30°              | 1,19                 | 1,21                  | 1,13                     |
+  | 45°              | 1,21                 | 1,15                  | 1,07                     |
+  | 60°              | 1,00                 | 1,13                  | 1,05                     |
+  | 75°              | 1,00                 | 1,08                  | 1,02                     |
+  | 90° (Vertikal)   | 1,00                 | 1,00                  | 1,00                     |
 
 ##### 1. Das mathematische Prinzip
 
@@ -609,9 +607,10 @@ R_T = R_{si} + \sum \left( \frac{d_i}{\lambda_i} \right) + R_{se}
 $$
 
 Dabei ist:
-*   $d_i$: Dicke der Schicht $i$ in Metern ($m$).
-*   $\lambda_i$: Wärmeleitfähigkeit des Materials der Schicht $i$ in $W/(m \cdot K)$.
-*   $R_{si}, R_{se}$: Übergangswiderstände (konstant, wie von dir genannt).
+
+- $d_i$: Dicke der Schicht $i$ in Metern ($m$).
+- $\lambda_i$: Wärmeleitfähigkeit des Materials der Schicht $i$ in $W/(m \cdot K)$.
+- $R_{si}, R_{se}$: Übergangswiderstände (konstant, wie von dir genannt).
 
 #### 4. Transmission to Unheated Spaces (**$H_{T,iu}$**)
 
@@ -621,7 +620,7 @@ $$
 H_{T,iu} = \sum (U_j \cdot A_j)
 $$
 
-*(Note: To get the effective heat transfer, this is multiplied by the temperature correction factor **$F_x$** as shown in Formula 2).*
+_(Note: To get the effective heat transfer, this is multiplied by the temperature correction factor **$F_x$** as shown in Formula 2)._
 
 ```rust
 pub struct Material {
@@ -646,7 +645,7 @@ impl BuildingComponent {
         let sum_r: f64 = self.layers.iter()
             .map(|l| l.thickness / l.material.lambda)
             .sum();
-        
+
         let r_t = self.r_si + sum_r + self.r_se;
         1.0 / r_t
     }
@@ -658,8 +657,8 @@ impl BuildingComponent {
         let sum_r: f64 = self.layers.iter()
             .map(|l| l.thickness / l.material.lambda)
             .sum();
-        
-        let r_t = self.r_si + sum_r + self.r_si; 
+
+        let r_t = self.r_si + sum_r + self.r_si;
         1.0 / r_t
     }
 }
@@ -669,22 +668,22 @@ impl BuildingComponent {
 
 Calculates the extra heat lost through structural joints (balconies, window frames, corners). The standard allows for two calculation methods.
 
-*   **Simplified Method (Flat Addition):**
-    $$
-    H_{T,WB} = \Delta U_{WB} \cdot \sum A_j
-    $$
+- **Simplified Method (Flat Addition):**
+  $$
+  H_{T,WB} = \Delta U_{WB} \cdot \sum A_j
+  $$
 
 **$\Delta U_{WB}$ (Simplified Thermal Bridge Penalty):**
 
-*   *Where to find:* **Section 6.1.4 (Text categories)** (18599-2)
-*   *Details:* Flat values of **$0.10$** (default), **$0.05$**, **$0.03$**, or **$0.15 W/(m^2K)$** depending on the construction quality and adherence to DIN 4108 Beiblatt 2.
+- _Where to find:_ **Section 6.1.4 (Text categories)** (18599-2)
+- _Details:_ Flat values of **$0.10$** (default), **$0.05$**, **$0.03$**, or **$0.15 W/(m^2K)$** depending on the construction quality and adherence to DIN 4108 Beiblatt 2.
 
-| Penalty Value ($\Delta U_{WB}$) | Construction Condition / Requirement (Anwendungsbedingung) |
-| :------------------------------ | :---------------------------------------------------------- |
+| Penalty Value ($\Delta U_{WB}$) | Construction Condition / Requirement (Anwendungsbedingung)                                                                                                                                                 |
+| :------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0.15 W/(m²K)                    | Increased Penalty: Must be used for buildings with internal insulation (Innendämmung) where solid floor ceilings intersect the exterior wall without thermal separation, creating massive thermal bridges. |
-| 0.10 W/(m²K)                    | Standard Default (Ohne Nachweis): Used when no special thermal bridge planning is done, or if the construction details do not conform to the standard examples provided in DIN 4108 Beiblatt 2. |
-| 0.05 W/(m²K)                    | Good Planning (Kategorie A): Allowed only if it is explicitly proven that all thermal bridges in the building match the standard, energy-optimized design examples shown in DIN 4108 Beiblatt 2. |
-| 0.03 W/(m²K)                    | Excellent Planning (Kategorie B): Allowed only if proven that all thermal bridges match the highly-insulated, premium design examples (Category B) defined in DIN 4108 Beiblatt 2. |
+| 0.10 W/(m²K)                    | Standard Default (Ohne Nachweis): Used when no special thermal bridge planning is done, or if the construction details do not conform to the standard examples provided in DIN 4108 Beiblatt 2.            |
+| 0.05 W/(m²K)                    | Good Planning (Kategorie A): Allowed only if it is explicitly proven that all thermal bridges in the building match the standard, energy-optimized design examples shown in DIN 4108 Beiblatt 2.           |
+| 0.03 W/(m²K)                    | Excellent Planning (Kategorie B): Allowed only if proven that all thermal bridges match the highly-insulated, premium design examples (Category B) defined in DIN 4108 Beiblatt 2.                         |
 
 #### 6. Effective Thermal Transmittance for Windows with Shutters (**$U_{w,eff}$**)
 
@@ -696,42 +695,42 @@ $$
 
 **$f_{sh}$ (Shutter Usage Fraction):**
 
-*   *Where to find:* **Annex G, Tables G.1, G.2, G.3** (18599-2)
-*   *Details:* The fraction of the day the shutter is closed, depending on the automation control type.
+- _Where to find:_ **Annex G, Tables G.1, G.2, G.3** (18599-2)
+- _Details:_ The fraction of the day the shutter is closed, depending on the automation control type.
 
-*   **Table G.1: Residential Buildings (Wohngebäude):**
+- **Table G.1: Residential Buildings (Wohngebäude):**
 
-    | Monat (Month) | f_sh : Manuell (Manual Control) | f_sh : Automatisch (Automated / Motorized) |
-    | :------------ | :------------------------------ | :----------------------------------------- |
-    | Januar        | 0,43                            | 0,61                                       |
-    | Februar       | 0,38                            | 0,54                                       |
-    | März          | 0,32                            | 0,45                                       |
-    | April         | 0,25                            | 0,36                                       |
-    | Mai           | 0,20                            | 0,28                                       |
-    | Juni          | 0,16                            | 0,23                                       |
-    | Juli          | 0,18                            | 0,25                                       |
-    | August        | 0,23                            | 0,33                                       |
-    | September     | 0,29                            | 0,42                                       |
-    | Oktober       | 0,37                            | 0,53                                       |
-    | November      | 0,42                            | 0,60                                       |
-    | Dezember      | 0,45                            | 0,64                                       |
+  | Monat (Month) | f_sh : Manuell (Manual Control) | f_sh : Automatisch (Automated / Motorized) |
+  | :------------ | :------------------------------ | :----------------------------------------- |
+  | Januar        | 0,43                            | 0,61                                       |
+  | Februar       | 0,38                            | 0,54                                       |
+  | März          | 0,32                            | 0,45                                       |
+  | April         | 0,25                            | 0,36                                       |
+  | Mai           | 0,20                            | 0,28                                       |
+  | Juni          | 0,16                            | 0,23                                       |
+  | Juli          | 0,18                            | 0,25                                       |
+  | August        | 0,23                            | 0,33                                       |
+  | September     | 0,29                            | 0,42                                       |
+  | Oktober       | 0,37                            | 0,53                                       |
+  | November      | 0,42                            | 0,60                                       |
+  | Dezember      | 0,45                            | 0,64                                       |
 
-*   **Table G.2 & G.3: Non-Residential Buildings (Nichtwohngebäude):**
+- **Table G.2 & G.3: Non-Residential Buildings (Nichtwohngebäude):**
 
-    | Monat (Month) | f_sh : Non-Residential (Manual) | f_sh : Non-Residential (Automated / BMS)   |
-    | :------------ | :------------------------------ | :----------------------------------------- |
-    | Januar        | 0,00                            | 0,61                                       |
-    | Februar       | 0,00                            | 0,54                                       |
-    | März          | 0,00                            | 0,45                                       |
-    | April         | 0,00                            | 0,36                                       |
-    | Mai           | 0,00                            | 0,28                                       |
-    | Juni          | 0,00                            | 0,23                                       |
-    | Juli          | 0,00                            | 0,25                                       |
-    | August        | 0,00                            | 0,33                                       |
-    | September     | 0,00                            | 0,42                                       |
-    | Oktober       | 0,00                            | 0,53                                       |
-    | November      | 0,00                            | 0,60                                       |
-    | Dezember      | 0,00                            | 0,64                                       |
+  | Monat (Month) | f_sh : Non-Residential (Manual) | f_sh : Non-Residential (Automated / BMS) |
+  | :------------ | :------------------------------ | :--------------------------------------- |
+  | Januar        | 0,00                            | 0,61                                     |
+  | Februar       | 0,00                            | 0,54                                     |
+  | März          | 0,00                            | 0,45                                     |
+  | April         | 0,00                            | 0,36                                     |
+  | Mai           | 0,00                            | 0,28                                     |
+  | Juni          | 0,00                            | 0,23                                     |
+  | Juli          | 0,00                            | 0,25                                     |
+  | August        | 0,00                            | 0,33                                     |
+  | September     | 0,00                            | 0,42                                     |
+  | Oktober       | 0,00                            | 0,53                                     |
+  | November      | 0,00                            | 0,60                                     |
+  | Dezember      | 0,00                            | 0,64                                     |
 
 #### 7. Specific Heat Transfer Coefficient (**$H'_T$**)
 

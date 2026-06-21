@@ -974,6 +974,14 @@ function getRustStatePayload() {
         climate_region: document.getElementById('climate-region').value,
         usage_profile: document.getElementById('usage-profile').value,
         automation_class: document.getElementById('automation-class').value,
+        
+        // Ventilation
+        air_tightness: document.getElementById('air-tightness') ? document.getElementById('air-tightness').value : 'CategoryII',
+        has_atd: document.getElementById('has-atd') ? document.getElementById('has-atd').checked : false,
+        mech_supply: document.getElementById('mech-supply') ? parseFloat(document.getElementById('mech-supply').value) || 0 : 0,
+        mech_exhaust: document.getElementById('mech-exhaust') ? parseFloat(document.getElementById('mech-exhaust').value) || 0 : 0,
+        heat_recovery: document.getElementById('heat-recovery') ? (parseFloat(document.getElementById('heat-recovery').value) || 0) / 100.0 : 0,
+        mech_hours: document.getElementById('mech-hours') ? parseFloat(document.getElementById('mech-hours').value) || 0 : 0,
     };
 
     const wallMat = document.getElementById('custom-wall-mat') ? document.getElementById('custom-wall-mat').value : 'none';
@@ -1521,7 +1529,8 @@ function initEventListeners() {
     if (btnRedo) btnRedo.addEventListener('click', handleRedo);
 
     ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system', 'usage-profile', 'thermal-bridge', 'ground-contact', 'shutter-control', 'climate-region', 'automation-class',
-     'custom-wall-mat', 'custom-wall-thick', 'custom-roof-mat', 'custom-roof-thick', 'custom-floor-mat', 'custom-floor-thick'].forEach(id => {
+     'custom-wall-mat', 'custom-wall-thick', 'custom-roof-mat', 'custom-roof-thick', 'custom-floor-mat', 'custom-floor-thick',
+     'air-tightness', 'has-atd', 'mech-supply', 'mech-exhaust', 'heat-recovery', 'mech-hours'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('change', () => {

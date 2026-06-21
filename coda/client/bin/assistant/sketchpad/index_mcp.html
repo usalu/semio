@@ -822,6 +822,50 @@
                 </div>
             </div>
 
+            <!-- Ventilation Parameters -->
+            <div class="section-card">
+                <h3>💨 Ventilation Parameters</h3>
+                <div class="form-row single">
+                    <div>
+                        <label>Air Tightness Category</label>
+                        <select id="air-tightness" class="trigger-calc">
+                            <option value="CategoryII">Category II (New/Untested)</option>
+                            <option value="CategoryI">Category I (Tested)</option>
+                            <option value="CategoryIII">Category III (Existing)</option>
+                            <option value="CategoryIV">Category IV (Leaky)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            <input type="checkbox" id="has-atd" class="trigger-calc" style="width: auto;"> 
+                            Has Air Transfer Devices (ATD)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Mech. Supply (m³/h)</label>
+                        <input type="number" id="mech-supply" class="trigger-calc" value="0" step="10" min="0">
+                    </div>
+                    <div>
+                        <label>Mech. Exhaust (m³/h)</label>
+                        <input type="number" id="mech-exhaust" class="trigger-calc" value="0" step="10" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Heat Recovery (%)</label>
+                        <input type="number" id="heat-recovery" class="trigger-calc" value="0" step="5" min="0" max="100">
+                    </div>
+                    <div>
+                        <label>Mech. Sys Hrs/Day</label>
+                        <input type="number" id="mech-hours" class="trigger-calc" value="0" step="1" min="0" max="24">
+                    </div>
+                </div>
+            </div>
+
             <!-- Custom Insulation -->
             <div class="section-card">
                 <h3>🧱 Custom Insulation</h3>
