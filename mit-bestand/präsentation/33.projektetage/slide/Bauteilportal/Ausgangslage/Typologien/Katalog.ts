@@ -3,25 +3,25 @@ import {
 	type SlideFile,
 } from "@framework/presentation/core";
 
-const PARTICIPANT = "entwurfswerkzeug-katalog";
-const EMBODIMENT = "entwurfswerkzeug-katalog--figure";
-const SOURCE_ASPECT = 688 / 1948;
+const PARTICIPANT = "typologien-katalog";
+const EMBODIMENT = "typologien-katalog--figure";
+const SOURCE_ASPECT = 1264 / 713;
 const FRAME = figureFrameForSourceAspect(SOURCE_ASPECT);
 
 export default {
-	order: 0,
+	order: 2,
 	participants: [{ id: PARTICIPANT }],
 	embodiments: [
 		{
 			kind: "figure",
 			id: EMBODIMENT,
-			src: "/entwurfswerkzeug-katalog.png",
-			alt: "Entwurfswerkzeug Katalog",
+			src: "/katalog.png",
+			alt: "Typologien-Katalog",
 			sourceAspect: SOURCE_ASPECT,
 		},
 	],
 	arrangement: {
-		id: "entwurfswerkzeug-katalog",
+		id: "typologien-katalog",
 		name: "Katalog",
 		dispositions: [
 			{

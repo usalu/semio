@@ -781,6 +781,72 @@
 	margin-top: 0;
 }
 
+.reveal .presentation-json-morph {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-json-tree {
+	font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+	font-size: 0.72rem;
+	line-height: 1.45;
+	color: var(--color-foreground);
+}
+
+.reveal .presentation-json-line {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0;
+	width: 100%;
+	text-align: left;
+}
+
+.reveal .presentation-json-toggle {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+
+.reveal .presentation-json-caret {
+	display: inline-block;
+	width: 1.1ch;
+	color: color-mix(in srgb, var(--color-foreground) 55%, transparent);
+}
+
+.reveal .presentation-json-key {
+	color: color-mix(in srgb, var(--color-primary, #7dd3fc) 88%, white);
+}
+
+.reveal .presentation-json-colon {
+	color: color-mix(in srgb, var(--color-foreground) 55%, transparent);
+}
+
+.reveal .presentation-json-string {
+	color: color-mix(in srgb, #86efac 90%, white);
+}
+
+.reveal .presentation-json-number {
+	color: color-mix(in srgb, #fcd34d 90%, white);
+}
+
+.reveal .presentation-json-boolean,
+.reveal .presentation-json-null {
+	color: color-mix(in srgb, #f9a8d4 90%, white);
+}
+
+.reveal .presentation-json-meta,
+.reveal .presentation-json-preview,
+.reveal .presentation-json-unknown {
+	color: color-mix(in srgb, var(--color-foreground) 68%, transparent);
+}
+
 .reveal .presentation-media-teaser {
 	position: relative;
 	width: 100%;
@@ -859,6 +925,14 @@
 .reveal .presentation-figure-scroll-scroller--axis-y {
 	overflow-x: hidden;
 	overflow-y: auto;
+}
+
+.reveal .presentation-figure-scroll-viewport--axis-both {
+	overflow: hidden;
+}
+
+.reveal .presentation-figure-scroll-scroller--axis-both {
+	overflow: auto;
 }
 
 .reveal .presentation-figure-scroll-bar {

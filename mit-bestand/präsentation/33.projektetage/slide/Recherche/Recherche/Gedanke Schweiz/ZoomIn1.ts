@@ -3,26 +3,26 @@ import {
 	type SlideFile,
 } from "@framework/presentation/core";
 
-const PARTICIPANT = "entwurfswerkzeug-katalog";
-const EMBODIMENT = "entwurfswerkzeug-katalog--figure";
-const SOURCE_ASPECT = 688 / 1948;
+const PARTICIPANT = "recherche-schweiz-zoom-in-1";
+const EMBODIMENT = "recherche-schweiz-zoom-in-1--figure";
+const SOURCE_ASPECT = 1984 / 1014;
 const FRAME = figureFrameForSourceAspect(SOURCE_ASPECT);
 
 export default {
-	order: 0,
+	order: 1,
 	participants: [{ id: PARTICIPANT }],
 	embodiments: [
 		{
 			kind: "figure",
 			id: EMBODIMENT,
-			src: "/entwurfswerkzeug-katalog.png",
-			alt: "Entwurfswerkzeug Katalog",
+			src: "/recherche-schweiz-zoom-in-1.png",
+			alt: "Recherche Schweiz Zoom In 1",
 			sourceAspect: SOURCE_ASPECT,
 		},
 	],
 	arrangement: {
-		id: "entwurfswerkzeug-katalog",
-		name: "Katalog",
+		id: "recherche-schweiz-zoom-in-1",
+		name: "Zoom In 1",
 		dispositions: [
 			{
 				participantId: PARTICIPANT,

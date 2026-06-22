@@ -167,6 +167,15 @@ export interface MarkdownEmbodiment {
 	readonly title?: string;
 }
 
+/** @emoji 🧬 JSON document on a slide; rendered as an expandable syntax tree in React renderers. */
+export interface JsonEmbodiment {
+	readonly kind: "json";
+	readonly id: string;
+	readonly src: string;
+	readonly json?: unknown;
+	readonly title?: string;
+}
+
 /** @emoji • Bulleted list body. */
 export interface BulletEmbodiment {
 	readonly kind: "bullet";
@@ -335,6 +344,7 @@ export type Embodiment =
 	| PdfEmbodiment
 	| IframeEmbodiment
 	| MarkdownEmbodiment
+	| JsonEmbodiment
 	| BulletEmbodiment
 	| AuthorsEmbodiment
 	| AffiliationsEmbodiment;

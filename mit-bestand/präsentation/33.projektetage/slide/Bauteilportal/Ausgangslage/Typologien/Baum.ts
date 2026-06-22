@@ -9,7 +9,7 @@ const SOURCE_ASPECT = 1536 / 1024;
 const FRAME = figureFrameForSourceAspect(SOURCE_ASPECT);
 
 export default {
-	order: 0,
+	order: 1,
 	participants: [{ id: PARTICIPANT }],
 	embodiments: [
 		{

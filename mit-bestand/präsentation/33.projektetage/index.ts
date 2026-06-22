@@ -27,6 +27,7 @@ import {
 	ZUKUNFT_BAU_EMBODIMENT,
 	ZUKUNFT_BAU_FRAME,
 	ZUKUNFT_BAU_PARTICIPANT,
+	BAUKOMPONENTEN_ITEMS,
 	columnLabelMorphFrom,
 	inlineColumnLabelPosition,
 	zukunftBauEmbodiment,
@@ -39,7 +40,7 @@ import "./globals.css";
 const slideModules = import.meta.glob<{ default: SlideFile }>("./slide/**/*.ts", { eager: true });
 const sourceDeck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
 
-const CHAPTER_ORDER = ["Einführung", "Bauteilportal", "Entwurfswerkzeug"] as const;
+const CHAPTER_ORDER = ["Einführung", "Recherche", "Bauteilportal", "Entwurfswerkzeug"] as const;
 
 function reorderChapters(presentation: Presentation): Presentation {
 	const byName = new Map(presentation.chapters.map((chapter) => [chapter.name, chapter]));
@@ -121,32 +122,24 @@ function addZukunftBauBookends(presentation: Presentation): Presentation {
 		...zukunftBauSlide("zukunft-bau-auftakt", "Zukunft Bau Auftakt"),
 		transition: { kind: "morph" as const },
 	};
-	const lastSlide = zukunftBauSlide("zukunft-bau-abschluss", "Zukunft Bau Abschluss");
 	return {
 		...presentation,
-		chapters: presentation.chapters.map((chapter, chapterIndex) => ({
+		chapters: presentation.chapters.map((chapter) => ({
 			...chapter,
-			sequences: chapter.sequences.map((sequence, sequenceIndex) => ({
+			sequences: chapter.sequences.map((sequence) => ({
 				...sequence,
-				thoughts: sequence.thoughts.map((thought, thoughtIndex) => {
-					const scoped = addZukunftBauScope(thought);
+				thoughts: sequence.thoughts.map((thought) => {
 					const isIntroThought =
 						chapter.name === "Einführung" && sequence.name === "Einleitung" && thought.name === "Einleitung";
-					if (isIntroThought) {
-						const [titleSlide, ...restSlides] = scoped.slides;
-						return {
-							...scoped,
-							slides: [firstSlide, ...(titleSlide ? [addZukunftBauTitleMorph(titleSlide)] : []), ...restSlides],
-						};
+					if (!isIntroThought) {
+						return thought;
 					}
-					if (
-						chapterIndex === presentation.chapters.length - 1 &&
-						sequenceIndex === chapter.sequences.length - 1 &&
-						thoughtIndex === sequence.thoughts.length - 1
-					) {
-						return { ...scoped, slides: [...scoped.slides, lastSlide] };
-					}
-					return scoped;
+					const scoped = addZukunftBauScope(thought);
+					const [titleSlide, ...restSlides] = scoped.slides;
+					return {
+						...scoped,
+						slides: [firstSlide, ...(titleSlide ? [addZukunftBauTitleMorph(titleSlide)] : []), ...restSlides],
+					};
 				}),
 			})),
 		})),
@@ -178,13 +171,20 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
+	function bauteilboersenThought(presentation: Presentation): Thought | undefined {
+		return presentation.chapters
+			.find((chapter) => chapter.name === "Bauteilportal")
+			?.sequences.find((sequence) => sequence.name === "Ausgangslage")
+			?.thoughts.find((thought) => thought.name === "Bauteilbörsen");
+	}
+
 	describe("projektetage deck", () => {
-		it("declares intro plus expanded media render slides", () => {
+		it("declares intro plus expanded render slides", () => {
 			expect(countArrangements(deck)).toBeGreaterThanOrEqual(15);
 			expect(deck.language).toBe("de");
 		});
 
-		it("uses German bookmark names on intro and media slides", () => {
+		it("uses German bookmark names on intro and catalogue slides", () => {
 			const introSlide = collectPresentationSlides(deck)[0];
 			expect(introSlide).toEqual({
 				h: 0,
@@ -205,18 +205,19 @@ if (import.meta.vitest) {
 			});
 			const catalogueSlide = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
 			expect(catalogueSlide).toMatchObject({
-				h: 1,
-				chapter: "Einführung",
-				sequence: "Medien",
-				thought: "Medien",
+				h: 2,
+				v: 1,
+				chapter: "Bauteilportal",
+				sequence: "Ausgangslage",
+				thought: "Bauteilbörsen",
 				slide: "Bauteilkatalog",
 			});
 		});
 
-		it("bookends the deck with the Zukunft Bau Entwerfen mit Bestand image", () => {
+		it("opens with the Zukunft Bau Entwerfen mit Bestand image and closes with Abschluss", () => {
 			const slides = collectPresentationSlides(deck);
 			expect(slides.at(0)?.slide).toBe("Zukunft Bau Auftakt");
-			expect(slides.at(-1)?.slide).toBe("Zukunft Bau Abschluss");
+			expect(slides.at(-1)?.slide).toBe("Abschluss");
 			const firstThought = deck.chapters[0]?.sequences[0]?.thoughts[0];
 			const lastThought = deck.chapters.at(-1)?.sequences.at(-1)?.thoughts.at(-1);
 			expect(firstThought?.slides[0]?.arrangement.dispositions[0]).toMatchObject({
@@ -237,24 +238,35 @@ if (import.meta.vitest) {
 				"einleitung--m0",
 				"einleitung--m0",
 			]);
-			expect(lastThought?.slides.at(-1)?.arrangement.dispositions[0]).toMatchObject({
-				participantId: ZUKUNFT_BAU_PARTICIPANT,
-				embodimentId: ZUKUNFT_BAU_EMBODIMENT,
-				position: ZUKUNFT_BAU_FRAME,
+			const abschluss = lastThought?.slides.at(-1);
+			expect(abschluss?.arrangement.name).toBe("Abschluss");
+			expect(abschluss?.arrangement.dispositions).toHaveLength(2);
+			expect(
+				lastThought?.embodiments?.find((entry) => entry.id === "abschluss-heading--text"),
+			).toMatchObject({
+				kind: "text",
+				lines: ["Vielen Dank für Ihre Aufmerksamkeit!"],
+				level: "heading",
+			});
+			expect(
+				lastThought?.embodiments?.find((entry) => entry.id === "abschluss-sponsorship--text"),
+			).toMatchObject({
+				kind: "text",
+				level: "body",
 			});
 		});
 
 		it("assembles the catalogue with morphTo targets for the focus slide", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			const catalogue = media?.slides.find((slide) => slide.arrangement.id === "catalogue");
+			const bauteilboersen = bauteilboersenThought(deck);
+			const catalogue = bauteilboersen?.slides.find((slide) => slide.arrangement.id === "catalogue");
 			expect(catalogue?.arrangement.dispositions).toHaveLength(1);
 			expect(catalogue?.arrangement.dispositions[0]?.morphTo).toHaveLength(10);
 			expect(catalogue?.arrangement.settleBeforeMorphTo).toBeUndefined();
 		});
 
 		it("names all ten catalogue morph targets semantically", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			const catalogue = media?.slides.find((slide) => slide.arrangement.id === "catalogue");
+			const bauteilboersen = bauteilboersenThought(deck);
+			const catalogue = bauteilboersen?.slides.find((slide) => slide.arrangement.id === "catalogue");
 			expect(catalogue?.arrangement.dispositions[0]?.morphTo?.map((slot) => slot.participantId)).toEqual([
 				"Rippenplatte 1",
 				"Rippenplatte 2",
@@ -270,8 +282,8 @@ if (import.meta.vitest) {
 		});
 
 		it("focuses ten catalogue tile participants for column morph", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
+			const bauteilboersen = bauteilboersenThought(deck);
+			const focus = bauteilboersen?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
 			const dispositions = focus?.arrangement.dispositions ?? [];
 			expect(dispositions).toHaveLength(10);
 			expect(dispositions.map((disposition) => disposition.participantId)).toEqual([
@@ -289,9 +301,9 @@ if (import.meta.vitest) {
 		});
 
 		it("assigns one auto-animate run across catalogue, focus, and labels", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			expect(media).toBeDefined();
-			const expanded = expandThoughtSlides(media!);
+			const bauteilboersen = bauteilboersenThought(deck);
+			expect(bauteilboersen).toBeDefined();
+			const expanded = expandThoughtSlides(bauteilboersen!);
 			const morphIds = expanded
 				.filter((slide) => ["catalogue", "catalogue-focus", "catalogue-labels"].includes(slide.id))
 				.map((slide) => slide.autoAnimateId);
@@ -301,9 +313,9 @@ if (import.meta.vitest) {
 		});
 
 		it("expands ten morph sources and three resting labels on Bauteilbeschriftungen", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			expect(media).toBeDefined();
-			const expanded = expandThoughtSlides(media!);
+			const bauteilboersen = bauteilboersenThought(deck);
+			expect(bauteilboersen).toBeDefined();
+			const expanded = expandThoughtSlides(bauteilboersen!);
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(labelSlide).toBeDefined();
 			expect(arrangementRestDispositions(labelSlide!.arrangement)).toHaveLength(3);
@@ -321,9 +333,9 @@ if (import.meta.vitest) {
 		});
 
 		it("morphs each column participant into inline label dispositions on one row", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			expect(media).toBeDefined();
-			const expanded = expandThoughtSlides(media!);
+			const bauteilboersen = bauteilboersenThought(deck);
+			expect(bauteilboersen).toBeDefined();
+			const expanded = expandThoughtSlides(bauteilboersen!);
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			const labelDispositions = labelSlide ? arrangementRestDispositions(labelSlide.arrangement) : [];
@@ -338,24 +350,21 @@ if (import.meta.vitest) {
 			);
 			const yPositions = labelDispositions.map((disposition) => disposition.position?.y);
 			expect(new Set(yPositions).size).toBe(1);
-			const scope = buildResolutionScope([media!]);
+			const scope = buildResolutionScope([bauteilboersen!]);
 			const resolved = resolveArrangement(scope, labelSlide!.arrangement);
 			expect(resolved.filter((entry) => entry.embodiment.kind === "text")).toHaveLength(3);
 		});
 
-		it("includes figure, video, and pdf embodiments in the media thought", () => {
-			const media = deck.chapters[0]?.sequences.find((sequence) => sequence.name === "Medien")?.thoughts.find((thought) => thought.name === "Medien");
-			const kinds = media?.embodiments?.map((embodiment) => embodiment.kind) ?? [];
-			expect(kinds).toContain("figure");
-			expect(kinds).toContain("video");
-			expect(kinds).toContain("pdf");
-		});
-
 		it("loads every slide from slide/<chapter>/<sequence>/<thought>/<slide>.ts paths", () => {
-			expect(deck.chapters).toHaveLength(3);
-			expect(deck.chapters.map((chapter) => chapter.name)).toEqual(["Einführung", "Bauteilportal", "Entwurfswerkzeug"]);
+			expect(deck.chapters).toHaveLength(4);
+			expect(deck.chapters.map((chapter) => chapter.name)).toEqual([
+				"Einführung",
+				"Recherche",
+				"Bauteilportal",
+				"Entwurfswerkzeug",
+			]);
 			const einführung = deck.chapters.find((chapter) => chapter.name === "Einführung");
-			expect(einführung?.sequences.map((sequence) => sequence.name)).toEqual(["Einleitung", "Medien"]);
+			expect(einführung?.sequences.map((sequence) => sequence.name)).toEqual(["Einleitung"]);
 			expect(einführung?.sequences[0]?.thoughts.map((thought) => thought.name)).toEqual(["Einleitung"]);
 			expect(einführung?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Zukunft Bau Auftakt",
@@ -367,67 +376,113 @@ if (import.meta.vitest) {
 				"Universitäten",
 				"Lehrstühle",
 			]);
-			expect(einführung?.sequences[1]?.thoughts.map((thought) => thought.name)).toEqual(["Medien"]);
-			expect(einführung?.sequences[1]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
-				"Bauteilkatalog",
-				"Bauteilarten",
-				"Bauteilbeschriftungen",
-				"Medienüberblick",
+			const recherche = deck.chapters.find((chapter) => chapter.name === "Recherche");
+			expect(recherche?.sequences.map((sequence) => sequence.name)).toEqual(["Recherche"]);
+			expect(recherche?.sequences[0]?.thoughts.map((thought) => thought.name)).toEqual(["Gedanke Schweiz"]);
+			expect(recherche?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Überblick",
+				"Zoom In 1",
+				"Zoom In 2",
+				"Zoom In 3",
 			]);
 			const bauteilportal = deck.chapters.find((chapter) => chapter.name === "Bauteilportal");
 			expect(bauteilportal?.sequences.map((sequence) => sequence.name)).toEqual(["Ausgangslage", "Systematik"]);
-			expect(bauteilportal?.sequences[0]?.thoughts[0]?.name).toBe("Bauteilbörsen");
+			expect(bauteilportal?.sequences[0]?.thoughts.map((thought) => thought.name)).toEqual([
+				"Bauteilbörsen",
+				"Typologien",
+			]);
 			expect(bauteilportal?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Baukomponenten",
+				"Bauteilkatalog",
+				"Bauteilarten",
+				"Bauteilbeschriftungen",
+			]);
+			expect(bauteilportal?.sequences[0]?.thoughts[1]?.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Typologien",
+				"Baum",
+				"Katalog",
 			]);
 			expect(bauteilportal?.sequences[1]?.name).toBe("Systematik");
 			expect(bauteilportal?.sequences[1]?.thoughts.map((thought) => thought.name)).toEqual([
 				"Eingabeprozess",
 				"Generatoren",
-				"Typologien",
 			]);
 			expect(bauteilportal?.sequences[1]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Eingabearten",
 				"Eingabeoberfläche",
+				"Eingabeoberfläche Annotiert",
+				"Manuelles Prüfen",
+				"Import Besipiel",
+				"Import Verarbeitung",
+				"Output",
 			]);
 			expect(bauteilportal?.sequences[1]?.thoughts[1]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Bauteillogik",
 				"Modelle",
 				"Konnektivität",
 			]);
-			expect(bauteilportal?.sequences[1]?.thoughts[2]?.slides.map((slide) => slide.arrangement.name)).toEqual([
-				"Baum",
-			]);
 			const entwurfswerkzeug = deck.chapters.find((chapter) => chapter.name === "Entwurfswerkzeug");
 			expect(entwurfswerkzeug?.sequences.map((sequence) => sequence.name)).toEqual(["Benutzeroberfläche"]);
 			expect(entwurfswerkzeug?.sequences[0]?.thoughts[0]?.name).toBe("Benutzeroberfläche");
 			expect(entwurfswerkzeug?.sequences[0]?.thoughts[0]?.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Katalog",
-				"Zukunft Bau Abschluss",
+				"Filter",
+				"Detail",
+				"Puzzle",
+				"Abschluss",
 			]);
 		});
 
-		it("lays out three entwurfswerkzeug figures in one row on Katalog", () => {
+		it("embeds the 3D puzzle iframe full-frame on Puzzle", () => {
 			const thought = deck.chapters
 				.find((chapter) => chapter.name === "Entwurfswerkzeug")
 				?.sequences.find((sequence) => sequence.name === "Benutzeroberfläche")
 				?.thoughts.find((entry) => entry.name === "Benutzeroberfläche");
-			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Katalog");
-			expect(slide?.arrangement.dispositions).toHaveLength(3);
-			expect(slide?.arrangement.dispositions.map((disposition) => disposition.participantId)).toEqual([
-				"entwurfswerkzeug-detail",
-				"entwurfswerkzeug-filter",
-				"entwurfswerkzeug-katalog",
-			]);
-			const xPositions = slide?.arrangement.dispositions.map((disposition) => disposition.position?.x ?? 0) ?? [];
-			expect(xPositions[0]).toBeLessThan(xPositions[1]!);
-			expect(xPositions[1]).toBeLessThan(xPositions[2]!);
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Puzzle");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]).toMatchObject({
+				participantId: "puzzle-3d",
+				embodimentId: "puzzle-3d--iframe",
+				position: { x: 0, y: 0, width: 1, height: 1 },
+			});
+			expect(thought?.embodiments?.find((entry) => entry.id === "puzzle-3d--iframe")).toMatchObject({
+				kind: "iframe",
+				src: "https://v4.3d.puzzle.semio-tech.com/",
+			});
+		});
+
+		it("lays out each entwurfswerkzeug catalog step as a single centered figure", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Entwurfswerkzeug")
+				?.sequences.find((sequence) => sequence.name === "Benutzeroberfläche")
+				?.thoughts.find((entry) => entry.name === "Benutzeroberfläche");
 			for (const item of [
-				{ id: "entwurfswerkzeug-detail", src: "/entwurfswerkzeug-detail.png", sourceAspect: 674 / 1948 },
-				{ id: "entwurfswerkzeug-filter", src: "/entwurfswerkzeug-filter.png", sourceAspect: 674 / 1948 },
-				{ id: "entwurfswerkzeug-katalog", src: "/entwurfswerkzeug-katalog.png", sourceAspect: 688 / 1948 },
+				{
+					slide: "Katalog",
+					participantId: "entwurfswerkzeug-katalog",
+					src: "/entwurfswerkzeug-katalog.png",
+					sourceAspect: 688 / 1948,
+				},
+				{
+					slide: "Filter",
+					participantId: "entwurfswerkzeug-filter",
+					src: "/entwurfswerkzeug-filter.png",
+					sourceAspect: 674 / 1948,
+				},
+				{
+					slide: "Detail",
+					participantId: "entwurfswerkzeug-detail",
+					src: "/entwurfswerkzeug-detail.png",
+					sourceAspect: 674 / 1948,
+				},
 			]) {
-				expect(thought?.embodiments?.find((entry) => entry.id === `${item.id}--figure`)).toMatchObject({
+				const slide = thought?.slides.find((entry) => entry.arrangement.name === item.slide);
+				expect(slide?.arrangement.dispositions).toHaveLength(1);
+				expect(slide?.arrangement.dispositions[0]).toMatchObject({
+					participantId: item.participantId,
+					embodimentId: `${item.participantId}--figure`,
+				});
+				expect(thought?.embodiments?.find((entry) => entry.id === `${item.participantId}--figure`)).toMatchObject({
 					kind: "figure",
 					src: item.src,
 					sourceAspect: item.sourceAspect,
@@ -448,7 +503,7 @@ if (import.meta.vitest) {
 				position: { x: 0, y: 0, width: 1, height: 1 },
 			});
 			expect(
-				slide?.embodiments?.find((entry) => entry.id === "procedural-bauteillogik--iframe"),
+				thought?.embodiments?.find((entry) => entry.id === "procedural-bauteillogik--iframe"),
 			).toMatchObject({
 				kind: "iframe",
 				src: "https://v4.procedural.semio-tech.com/",
@@ -467,7 +522,7 @@ if (import.meta.vitest) {
 				embodimentId: "cad-modelle--iframe",
 				position: { x: 0, y: 0, width: 1, height: 1 },
 			});
-			expect(slide?.embodiments?.find((entry) => entry.id === "cad-modelle--iframe")).toMatchObject({
+			expect(thought?.embodiments?.find((entry) => entry.id === "cad-modelle--iframe")).toMatchObject({
 				kind: "iframe",
 				src: "https://v4.cad.semio-tech.com/",
 			});
@@ -550,10 +605,164 @@ if (import.meta.vitest) {
 			);
 		});
 
-		it("shows the typology tree figure on Baum", () => {
+		it("shows the eingabeoberfläche annotiert figure on Eingabeoberfläche Annotiert", () => {
 			const thought = deck.chapters
 				.find((chapter) => chapter.name === "Bauteilportal")
 				?.sequences.find((sequence) => sequence.name === "Systematik")
+				?.thoughts.find((entry) => entry.name === "Eingabeprozess");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Eingabeoberfläche Annotiert");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe(
+				"eingabeprozess-eingabeoberfläche-annotiert",
+			);
+			const embodiment = thought?.embodiments?.find(
+				(entry) => entry.id === "eingabeprozess-eingabeoberfläche-annotiert--figure",
+			);
+			expect(embodiment).toMatchObject({
+				kind: "figure",
+				src: "/eingabeprozess-eingabeoberfläche-annotiert.png",
+				alt: "Annotierte Eingabeoberfläche im Eingabeprozess",
+				sourceAspect: 746 / 659,
+			});
+			const position = slide?.arrangement.dispositions[0]?.position;
+			expect(position).toBeDefined();
+			expect((position!.width / position!.height) * PRESENTATION_DEFAULT_SLIDE_ASPECT).toBeCloseTo(
+				746 / 659,
+				10,
+			);
+		});
+
+		it("shows the manuelles prüfen figure on Manuelles Prüfen", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Systematik")
+				?.thoughts.find((entry) => entry.name === "Eingabeprozess");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Manuelles Prüfen");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe("eingabeprozess-manuelles-prüfen");
+			const embodiment = thought?.embodiments?.find(
+				(entry) => entry.id === "eingabeprozess-manuelles-prüfen--figure",
+			);
+			expect(embodiment).toMatchObject({
+				kind: "figure",
+				src: "/eingabeprozess-formular.png",
+				alt: "Manuelles Prüfen im Eingabeprozess",
+				sourceAspect: 860 / 1183,
+			});
+			const position = slide?.arrangement.dispositions[0]?.position;
+			expect(position).toBeDefined();
+			expect((position!.width / position!.height) * PRESENTATION_DEFAULT_SLIDE_ASPECT).toBeCloseTo(
+				860 / 1183,
+				10,
+			);
+		});
+
+		it("lays out three bauteilbörse figures in a 1×3 grid on Import Besipiel", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Systematik")
+				?.thoughts.find((entry) => entry.name === "Eingabeprozess");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Import Besipiel");
+			expect(slide?.arrangement.dispositions).toHaveLength(3);
+			expect(slide?.arrangement.dispositions.map((disposition) => disposition.participantId)).toEqual([
+				"import-besipiel-holzbalken",
+				"import-besipiel-rippenplatte",
+				"import-besipiel-träger-heb",
+			]);
+			for (const [index, item] of [
+				{ id: "import-besipiel-holzbalken", src: "/bauteilbörse-holzbalken.png", alt: "Holzbalken" },
+				{ id: "import-besipiel-rippenplatte", src: "/bauteilbörse-rippenplatte.png", alt: "Rippenplatte" },
+				{ id: "import-besipiel-träger-heb", src: "/bauteilbörse-träger-heb.png", alt: "Träger HEB" },
+			].entries()) {
+				const disposition = slide?.arrangement.dispositions[index];
+				expect(disposition?.embodimentId).toBe(`${item.id}--figure`);
+				const embodiment = thought?.embodiments?.find((entry) => entry.id === `${item.id}--figure`);
+				expect(embodiment).toMatchObject({
+					kind: "figure",
+					src: item.src,
+					alt: item.alt,
+					scrollOrigin: { x: 0, y: 0 },
+				});
+			}
+			const [left, middle, right] = slide?.arrangement.dispositions.map((disposition) => disposition.position) ?? [];
+			expect(left?.x ?? 0).toBeLessThan(middle?.x ?? 0);
+			expect((middle?.x ?? 0) + (middle?.width ?? 0)).toBeLessThanOrEqual((right?.x ?? 0) + 0.001);
+		});
+
+		it("shows the import verarbeitung figure on Import Verarbeitung", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Systematik")
+				?.thoughts.find((entry) => entry.name === "Eingabeprozess");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Import Verarbeitung");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe("eingabeprozess-import-verarbeitung");
+			const embodiment = thought?.embodiments?.find(
+				(entry) => entry.id === "eingabeprozess-import-verarbeitung--figure",
+			);
+			expect(embodiment).toMatchObject({
+				kind: "figure",
+				src: "/import-verarbeitung.png",
+				alt: "Import Verarbeitung im Eingabeprozess",
+				sourceAspect: 1278 / 1288,
+			});
+			const position = slide?.arrangement.dispositions[0]?.position;
+			expect(position).toBeDefined();
+			expect((position!.width / position!.height) * PRESENTATION_DEFAULT_SLIDE_ASPECT).toBeCloseTo(
+				1278 / 1288,
+				10,
+			);
+		});
+
+		it("shows the eingabeprozess output json on Output", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Systematik")
+				?.thoughts.find((entry) => entry.name === "Eingabeprozess");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Output");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe("eingabeprozess-output");
+			const embodiment = thought?.embodiments?.find((entry) => entry.id === "eingabeprozess-output--json");
+			expect(embodiment).toMatchObject({
+				kind: "json",
+				src: "/eingabeprozess-output.json",
+				title: "Eingabeprozess Output",
+			});
+			expect(slide?.arrangement.dispositions[0]?.position).toEqual({
+				x: 0.04,
+				y: 0.06,
+				width: 0.92,
+				height: 0.88,
+			});
+		});
+
+		it("shows the typologien figure on Typologien", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Ausgangslage")
+				?.thoughts.find((entry) => entry.name === "Typologien");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Typologien");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe("typologien");
+			const embodiment = thought?.embodiments?.find((entry) => entry.id === "typologien--figure");
+			expect(embodiment).toMatchObject({
+				kind: "figure",
+				src: "/typologien.png",
+				alt: "Typologien-Katalog",
+				sourceAspect: 984 / 1448,
+			});
+			const position = slide?.arrangement.dispositions[0]?.position;
+			expect(position).toBeDefined();
+			expect((position!.width / position!.height) * PRESENTATION_DEFAULT_SLIDE_ASPECT).toBeCloseTo(
+				984 / 1448,
+				10,
+			);
+		});
+
+		it("shows the typology tree figure on Baum", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Ausgangslage")
 				?.thoughts.find((entry) => entry.name === "Typologien");
 			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Baum");
 			expect(slide?.arrangement.dispositions).toHaveLength(1);
@@ -571,6 +780,86 @@ if (import.meta.vitest) {
 				1536 / 1024,
 				10,
 			);
+		});
+
+		it("shows the typologien katalog figure on Katalog", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Bauteilportal")
+				?.sequences.find((sequence) => sequence.name === "Ausgangslage")
+				?.thoughts.find((entry) => entry.name === "Typologien");
+			const slide = thought?.slides.find((entry) => entry.arrangement.name === "Katalog");
+			expect(slide?.arrangement.dispositions).toHaveLength(1);
+			expect(slide?.arrangement.dispositions[0]?.participantId).toBe("typologien-katalog");
+			const embodiment = thought?.embodiments?.find((entry) => entry.id === "typologien-katalog--figure");
+			expect(embodiment).toMatchObject({
+				kind: "figure",
+				src: "/katalog.png",
+				alt: "Typologien-Katalog",
+				sourceAspect: 1264 / 713,
+			});
+			const position = slide?.arrangement.dispositions[0]?.position;
+			expect(position).toBeDefined();
+			expect((position!.width / position!.height) * PRESENTATION_DEFAULT_SLIDE_ASPECT).toBeCloseTo(
+				1264 / 713,
+				10,
+			);
+		});
+
+		it("shows the recherche schweiz figures on Gedanke Schweiz", () => {
+			const thought = deck.chapters
+				.find((chapter) => chapter.name === "Recherche")
+				?.sequences.find((sequence) => sequence.name === "Recherche")
+				?.thoughts.find((entry) => entry.name === "Gedanke Schweiz");
+			expect(thought?.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Überblick",
+				"Zoom In 1",
+				"Zoom In 2",
+				"Zoom In 3",
+			]);
+			for (const item of [
+				{
+					slide: "Überblick",
+					participantId: "recherche-schweiz-überblick",
+					src: "/recherche-schweiz-überblick.png",
+					sourceAspect: 1987 / 1015,
+				},
+				{
+					slide: "Zoom In 1",
+					participantId: "recherche-schweiz-zoom-in-1",
+					src: "/recherche-schweiz-zoom-in-1.png",
+					sourceAspect: 1984 / 1014,
+				},
+				{
+					slide: "Zoom In 2",
+					participantId: "recherche-schweiz-zoom-in-2",
+					src: "/recherche-schweiz-zoom-in-2.png",
+					sourceAspect: 1988 / 1018,
+				},
+				{
+					slide: "Zoom In 3",
+					participantId: "recherche-schweiz-zoom-in-3",
+					src: "/recherche-schweiz-zoom-in-3.png",
+					sourceAspect: 1981 / 1017,
+				},
+			]) {
+				const slide = thought?.slides.find((entry) => entry.arrangement.name === item.slide);
+				expect(slide?.arrangement.dispositions).toHaveLength(1);
+				expect(slide?.arrangement.dispositions[0]).toMatchObject({
+					participantId: item.participantId,
+					embodimentId: `${item.participantId}--figure`,
+				});
+				expect(thought?.embodiments?.find((entry) => entry.id === `${item.participantId}--figure`)).toMatchObject({
+					kind: "figure",
+					src: item.src,
+					sourceAspect: item.sourceAspect,
+				});
+				const position = slide?.arrangement.dispositions[0]?.position;
+				expect(position).toBeDefined();
+				expect((position!.width / position!.height) * PRESENTATION_DEFAULT_SLIDE_ASPECT).toBeCloseTo(
+					item.sourceAspect,
+					10,
+				);
+			}
 		});
 
 		it("lays out nine bauteilbörse figures in a 3×3 grid on Baukomponenten", () => {
@@ -591,10 +880,15 @@ if (import.meta.vitest) {
 				"träger-ipe",
 				"trennwand-glas",
 			]);
-			const kinds = thought?.embodiments?.map((embodiment) => embodiment.kind) ?? [];
+			const gridEmbodimentIds = BAUKOMPONENTEN_ITEMS.map((item) =>
+				item.kind === "figure" ? `${item.id}--figure` : `${item.id}--doc`,
+			);
+			const gridEmbodiments =
+				thought?.embodiments?.filter((embodiment) => gridEmbodimentIds.includes(embodiment.id)) ?? [];
+			const kinds = gridEmbodiments.map((embodiment) => embodiment.kind);
 			expect(kinds.filter((kind) => kind === "figure")).toHaveLength(8);
 			expect(kinds).toContain("pdf");
-			for (const embodiment of thought?.embodiments ?? []) {
+			for (const embodiment of gridEmbodiments) {
 				if (embodiment.kind === "figure" || embodiment.kind === "pdf") {
 					expect(embodiment.scrollOrigin).toEqual({ x: 0, y: 0 });
 				}

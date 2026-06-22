@@ -1,8 +1,8 @@
 {
   "title": "Cad Play Production Chrome Parity",
-  "status": "open",
+  "status": "closed",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
-  "summary": "Fixed CAD play Selection details panel staying empty/stale: SidePanel no longer memoizes resolved tree config (re-resolve on each render so CallbackTreePanelDefinition reads fresh snapshot); CAD play uses cadPlayChromeSnapshotRef with stable panel tab definitions and runtime.notifyChrome() on snapshot publish; buildCadPlaySelectionInspectorChildren shows labeled target rows instead of blank keyValue items.",
+  "summary": "Moved Bauteilkatalog, Bauteilarten, and Bauteilbeschriftungen from Einführung/Medien to Bauteilportal/Ausgangslage/Bauteilbörsen after Baukomponenten. Einführung/Medien now only contains Medienüberblick. Updated deck tests; all 23 pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1612"
   },

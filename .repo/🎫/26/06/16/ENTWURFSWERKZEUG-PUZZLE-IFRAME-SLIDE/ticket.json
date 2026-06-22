@@ -1,0 +1,13 @@
+{
+  "title": "Entwurfswerkzeug Puzzle Iframe Slide",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Add to Entwurfswerkzeug a slide which is an iframe https://v4.3d.puzzle.semio-tech.com/",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1715"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪535e74f885d9404b894cf77fabb9713e"
+  ]
+}

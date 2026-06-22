@@ -3,9 +3,9 @@ import {
 	type SlideFile,
 } from "@framework/presentation/core";
 
-const PARTICIPANT = "entwurfswerkzeug-katalog";
-const EMBODIMENT = "entwurfswerkzeug-katalog--figure";
-const SOURCE_ASPECT = 688 / 1948;
+const PARTICIPANT = "recherche-schweiz-überblick";
+const EMBODIMENT = "recherche-schweiz-überblick--figure";
+const SOURCE_ASPECT = 1987 / 1015;
 const FRAME = figureFrameForSourceAspect(SOURCE_ASPECT);
 
 export default {
@@ -15,14 +15,14 @@ export default {
 		{
 			kind: "figure",
 			id: EMBODIMENT,
-			src: "/entwurfswerkzeug-katalog.png",
-			alt: "Entwurfswerkzeug Katalog",
+			src: "/recherche-schweiz-überblick.png",
+			alt: "Recherche Schweiz Überblick",
 			sourceAspect: SOURCE_ASPECT,
 		},
 	],
 	arrangement: {
-		id: "entwurfswerkzeug-katalog",
-		name: "Katalog",
+		id: "recherche-schweiz-überblick",
+		name: "Überblick",
 		dispositions: [
 			{
 				participantId: PARTICIPANT,

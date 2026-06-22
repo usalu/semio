@@ -2,7 +2,7 @@ import type { SlideFile } from "@framework/presentation/core";
 import { catalogueFocusDispositions, mediaEmbodiments, mediaParticipants } from "../../../../spec.ts";
 
 export default {
-	order: 1,
+	order: 2,
 	arrangement: {
 		id: "catalogue-focus",
 		name: "Bauteilarten",

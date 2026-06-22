@@ -15,6 +15,7 @@ import type {
     FigureEmbodiment,
     FigureMosaicGrid,
     IframeEmbodiment,
+    JsonEmbodiment,
     MarkdownEmbodiment,
     MediaTeaser,
     ParticipantEmphasis,
@@ -83,6 +84,7 @@ import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
 import "./globals.css";
 import { compileMarkdownToHtml } from "./markdown.ts";
+import { renderJsonTree } from "./json.tsx";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 // #endregion 🔌Adapters
@@ -99,6 +101,7 @@ export type {
     Embodiment,
     FigureEmbodiment,
     IframeEmbodiment,
+    JsonEmbodiment,
     MarkdownEmbodiment,
     MediaTeaser,
     MediaScrollOrigin,
@@ -1794,52 +1797,6 @@ export function figureCropScrollContentSize(bgSize: string): CSSProperties {
 	return { width: "100%", height: "100%", minWidth: "100%", minHeight: "100%" };
 }
 
-/** @emoji 📐 Inner scroll content size when background-size is `cover`. */
-export function figureCoverScrollContentSize(
-	portWidth: number,
-	portHeight: number,
-	sourceAspect: number,
-): { readonly axis: "x" | "y" | null; readonly style: CSSProperties } {
-	const axis = figureCoverOverflowAxis(portWidth, portHeight, sourceAspect);
-	if (!axis) {
-		return { axis: null, style: { width: "100%", height: "100%" } };
-	}
-	if (axis === "y") {
-		const heightPercent = (portWidth / sourceAspect / portHeight) * 100;
-		return { axis, style: { width: "100%", height: `${heightPercent}%` } };
-	}
-	const widthPercent = ((sourceAspect * portHeight) / portWidth) * 100;
-	return { axis, style: { width: `${widthPercent}%`, height: "100%" } };
-}
-
-/** @emoji 🖼 One-axis cover sizing for img/video inside a scroll viewport. */
-export function figureCoverScrollElementStyle(
-	portWidth: number,
-	portHeight: number,
-	sourceAspect: number,
-): CSSProperties {
-	const { axis } = figureCoverScrollContentSize(portWidth, portHeight, sourceAspect);
-	if (!axis) {
-		return { width: "100%", height: "100%" };
-	}
-	if (axis === "y") {
-		return {
-			width: "100%",
-			height: "auto",
-			aspectRatio: String(sourceAspect),
-			maxWidth: "none",
-			maxHeight: "none",
-		};
-	}
-	return {
-		width: "auto",
-		height: "100%",
-		aspectRatio: String(sourceAspect),
-		maxWidth: "none",
-		maxHeight: "none",
-	};
-}
-
 /** @emoji ↔️ Scroll offset matching CSS background-position along one axis. */
 export function figureScrollOffsetForBackgroundPosition(
 	axis: "x" | "y",
@@ -1855,33 +1812,210 @@ export function figureScrollOffsetForBackgroundPosition(
 export function figureCropScrollBackgroundSize(
 	bgSize: string,
 	scrollAxis?: "x" | "y" | null,
+	zoom = 1,
 ): string {
 	const axis = figureBackgroundSizeScrollAxis(bgSize) ?? scrollAxis ?? null;
 	if (axis === "x") {
-		return "100% auto";
+		return zoom > 1 ? `${zoom * 100}% auto` : "100% auto";
 	}
 	if (axis === "y") {
-		return "auto 100%";
+		return zoom > 1 ? `auto ${zoom * 100}%` : "auto 100%";
+	}
+	return figureBackgroundSizeZoomed(bgSize, zoom);
+}
+
+/** @emoji 🔍 Minimum ctrl+wheel zoom (cover baseline). */
+export const FIGURE_WHEEL_ZOOM_MIN = 1;
+
+/** @emoji 🔍 Maximum ctrl+wheel zoom multiplier. */
+export const FIGURE_WHEEL_ZOOM_MAX = 8;
+
+const FIGURE_WHEEL_ZOOM_FACTOR = 1.1;
+
+/** @emoji 🔍 Next zoom level from a wheel delta and current multiplier. */
+export function figureWheelZoomStep(deltaY: number, currentZoom: number): number {
+	const factor = deltaY < 0 ? FIGURE_WHEEL_ZOOM_FACTOR : 1 / FIGURE_WHEEL_ZOOM_FACTOR;
+	return Math.min(FIGURE_WHEEL_ZOOM_MAX, Math.max(FIGURE_WHEEL_ZOOM_MIN, currentZoom * factor));
+}
+
+/** @emoji 🔍 Keep the pointer anchor fixed while zooming scrollable figure content. */
+export function figureWheelZoomAdjustScroll(
+	scroller: HTMLElement,
+	clientX: number,
+	clientY: number,
+	prevZoom: number,
+	nextZoom: number,
+): void {
+	if (prevZoom <= 0 || nextZoom === prevZoom) {
+		return;
+	}
+	const rect = scroller.getBoundingClientRect();
+	const anchorX = clientX - rect.left;
+	const anchorY = clientY - rect.top;
+	const ratio = nextZoom / prevZoom;
+	scroller.scrollLeft = Math.max(0, (scroller.scrollLeft + anchorX) * ratio - anchorX);
+	scroller.scrollTop = Math.max(0, (scroller.scrollTop + anchorY) * ratio - anchorY);
+}
+
+/** @emoji 🔍 Scale a crop `background-size` string by a zoom multiplier. */
+export function figureBackgroundSizeZoomed(bgSize: string, zoom: number): string {
+	if (zoom <= 1) {
+		return bgSize;
+	}
+	const horizontal = bgSize.match(/^([\d.]+)% auto$/);
+	if (horizontal) {
+		return `${Number.parseFloat(horizontal[1]) * zoom}% auto`;
+	}
+	const vertical = bgSize.match(/^auto ([\d.]+)%$/);
+	if (vertical) {
+		return `auto ${Number.parseFloat(vertical[1]) * zoom}%`;
 	}
 	return bgSize;
 }
 
-function figureScrollViewportClass(axis: "x" | "y" | null): string {
+/** @emoji 🔍 Apply ctrl+wheel zoom to cover scroll content sizing. */
+export function figureCoverScrollContentSize(
+	portWidth: number,
+	portHeight: number,
+	sourceAspect: number,
+	zoom = 1,
+): { readonly axis: "x" | "y" | "both" | null; readonly style: CSSProperties } {
+	const base = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
+	if (zoom <= 1) {
+		return base;
+	}
+	if (base.axis === null) {
+		const widthPercent = ((sourceAspect * portHeight * zoom) / portWidth) * 100;
+		const heightPercent = ((portWidth * zoom) / sourceAspect / portHeight) * 100;
+		return {
+			axis: "both",
+			style: { width: `${widthPercent}%`, height: `${heightPercent}%` },
+		};
+	}
+	if (base.axis === "y") {
+		const heightPercent = Number.parseFloat(String(base.style.height)) * zoom;
+		return {
+			axis: zoom > 1 ? "both" : "y",
+			style: {
+				width: zoom > 1 ? `${zoom * 100}%` : "100%",
+				height: `${heightPercent}%`,
+			},
+		};
+	}
+	const widthPercent = Number.parseFloat(String(base.style.width)) * zoom;
+	return {
+		axis: zoom > 1 ? "both" : "x",
+		style: {
+			width: `${widthPercent}%`,
+			height: zoom > 1 ? `${zoom * 100}%` : "100%",
+		},
+	};
+}
+
+function figureCoverScrollContentSizeAtZoom(
+	portWidth: number,
+	portHeight: number,
+	sourceAspect: number,
+	_zoom: number,
+): { readonly axis: "x" | "y" | null; readonly style: CSSProperties } {
+	const axis = figureCoverOverflowAxis(portWidth, portHeight, sourceAspect);
+	if (!axis) {
+		return { axis: null, style: { width: "100%", height: "100%" } };
+	}
+	if (axis === "y") {
+		const heightPercent = (portWidth / sourceAspect / portHeight) * 100;
+		return { axis, style: { width: "100%", height: `${heightPercent}%` } };
+	}
+	const widthPercent = ((sourceAspect * portHeight) / portWidth) * 100;
+	return { axis, style: { width: `${widthPercent}%`, height: "100%" } };
+}
+
+/** @emoji 🔍 Apply ctrl+wheel zoom to img/video cover element sizing. */
+export function figureCoverScrollElementStyle(
+	portWidth: number,
+	portHeight: number,
+	sourceAspect: number,
+	zoom = 1,
+): CSSProperties {
+	if (zoom <= 1) {
+		const { axis } = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
+		if (!axis) {
+			return { width: "100%", height: "100%" };
+		}
+		if (axis === "y") {
+			return {
+				width: "100%",
+				height: "auto",
+				aspectRatio: String(sourceAspect),
+				maxWidth: "none",
+				maxHeight: "none",
+			};
+		}
+		return {
+			width: "auto",
+			height: "100%",
+			aspectRatio: String(sourceAspect),
+			maxWidth: "none",
+			maxHeight: "none",
+		};
+	}
+	const { axis } = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
+	if (!axis) {
+		return {
+			width: `${zoom * 100}%`,
+			height: "auto",
+			aspectRatio: String(sourceAspect),
+			maxWidth: "none",
+			maxHeight: "none",
+		};
+	}
+	if (axis === "y") {
+		return {
+			width: `${zoom * 100}%`,
+			height: "auto",
+			aspectRatio: String(sourceAspect),
+			maxWidth: "none",
+			maxHeight: "none",
+		};
+	}
+	return {
+		width: "auto",
+		height: `${zoom * 100}%`,
+		aspectRatio: String(sourceAspect),
+		maxWidth: "none",
+		maxHeight: "none",
+	};
+}
+
+const FigureZoomContext = createContext(1);
+
+/** @emoji 🔍 Ctrl+wheel zoom multiplier for the enclosing {@link FigureScrollViewport}. */
+export function useFigureZoom(): number {
+	return useContext(FigureZoomContext);
+}
+
+function figureScrollViewportClass(axis: "x" | "y" | "both" | null): string {
 	if (axis === "x") {
 		return "presentation-figure-scroll-viewport presentation-figure-scroll-viewport--axis-x";
 	}
 	if (axis === "y") {
 		return "presentation-figure-scroll-viewport presentation-figure-scroll-viewport--axis-y";
 	}
+	if (axis === "both") {
+		return "presentation-figure-scroll-viewport presentation-figure-scroll-viewport--axis-both";
+	}
 	return "presentation-figure-scroll-viewport";
 }
 
-function figureScrollScrollerClass(axis: "x" | "y" | null): string {
+function figureScrollScrollerClass(axis: "x" | "y" | "both" | null): string {
 	if (axis === "x") {
 		return "presentation-figure-scroll-scroller presentation-figure-scroll-scroller--axis-x";
 	}
 	if (axis === "y") {
 		return "presentation-figure-scroll-scroller presentation-figure-scroll-scroller--axis-y";
+	}
+	if (axis === "both") {
+		return "presentation-figure-scroll-scroller presentation-figure-scroll-scroller--axis-both";
 	}
 	return "presentation-figure-scroll-scroller";
 }
@@ -2060,6 +2194,7 @@ function FigureScrollViewport({
 	enabled,
 	axis,
 	scrollOrigin,
+	slideEpoch,
 	className,
 	style,
 	children,
@@ -2067,24 +2202,74 @@ function FigureScrollViewport({
 	readonly enabled: boolean;
 	readonly axis: "x" | "y" | null;
 	readonly scrollOrigin: { readonly x: number; readonly y: number };
+	readonly slideEpoch?: number;
 	readonly className?: string;
 	readonly style?: CSSProperties;
 	readonly children: ReactNode;
 }): ReactNode {
+	const [zoom, setZoom] = useState(1);
 	const scrollerRef = useRef<HTMLDivElement>(null);
+	const pendingZoomAnchorRef = useRef<{
+		readonly clientX: number;
+		readonly clientY: number;
+		readonly prevZoom: number;
+		readonly nextZoom: number;
+	} | null>(null);
 	const barRef = useRef<HTMLDivElement>(null);
 	const thumbRef = useRef<HTMLDivElement>(null);
 	const thumbDragRef = useRef<{ readonly startPointer: number; readonly startScroll: number } | null>(null);
-	useFigureScrollViewportSync(scrollerRef, axis, scrollOrigin, enabled);
-	useFigureScrollOverlayBar(scrollerRef, barRef, thumbRef, axis, enabled);
+	const scrollActive = enabled || zoom > 1;
+	const scrollAxis: "x" | "y" | "both" | null = zoom > 1 ? "both" : axis;
+	const overlayAxis: "x" | "y" | null = scrollAxis === "both" ? axis : scrollAxis;
+	useEffect(() => {
+		setZoom(1);
+	}, [slideEpoch]);
+	useLayoutEffect(() => {
+		const pending = pendingZoomAnchorRef.current;
+		const scroller = scrollerRef.current;
+		if (!pending || !scroller) {
+			return;
+		}
+		figureWheelZoomAdjustScroll(
+			scroller,
+			pending.clientX,
+			pending.clientY,
+			pending.prevZoom,
+			pending.nextZoom,
+		);
+		pendingZoomAnchorRef.current = null;
+	}, [zoom]);
+	useFigureScrollViewportSync(scrollerRef, overlayAxis, scrollOrigin, scrollActive && overlayAxis !== null);
+	useFigureScrollOverlayBar(scrollerRef, barRef, thumbRef, overlayAxis, scrollActive && overlayAxis !== null);
 	const onWheel = useCallback(
 		(event: React.WheelEvent<HTMLDivElement>) => {
-			if (!enabled || axis === null) {
+			if (event.ctrlKey) {
+				event.preventDefault();
+				event.stopPropagation();
+				const nextZoom = figureWheelZoomStep(event.deltaY, zoom);
+				if (nextZoom === zoom) {
+					return;
+				}
+				pendingZoomAnchorRef.current = {
+					clientX: event.clientX,
+					clientY: event.clientY,
+					prevZoom: zoom,
+					nextZoom,
+				};
+				const scroller = scrollerRef.current;
+				if (scroller) {
+					figureWheelZoomAdjustScroll(scroller, event.clientX, event.clientY, zoom, nextZoom);
+					pendingZoomAnchorRef.current = null;
+				}
+				setZoom(nextZoom);
+				return;
+			}
+			if (!scrollActive || scrollAxis === null || scrollAxis === "both") {
 				return;
 			}
 			const viewport = event.currentTarget;
 			const delta =
-				axis === "x"
+				scrollAxis === "x"
 					? Math.abs(event.deltaX) > Math.abs(event.deltaY)
 						? event.deltaX
 						: event.deltaY
@@ -2093,25 +2278,25 @@ function FigureScrollViewport({
 				return;
 			}
 			const max =
-				axis === "x"
+				scrollAxis === "x"
 					? viewport.scrollWidth - viewport.clientWidth
 					: viewport.scrollHeight - viewport.clientHeight;
 			if (max <= 0) {
 				return;
 			}
 			const next =
-				axis === "x" ? viewport.scrollLeft + delta : viewport.scrollTop + delta;
+				scrollAxis === "x" ? viewport.scrollLeft + delta : viewport.scrollTop + delta;
 			if (next > 0 && next < max) {
 				event.stopPropagation();
 			}
 		},
-		[axis, enabled],
+		[scrollActive, scrollAxis, zoom],
 	);
 	const onThumbPointerDown = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
 			const scroller = scrollerRef.current;
 			const bar = barRef.current;
-			if (!enabled || axis === null || scroller === null) {
+			if (!scrollActive || overlayAxis === null || scroller === null) {
 				return;
 			}
 			event.preventDefault();
@@ -2119,44 +2304,44 @@ function FigureScrollViewport({
 			event.currentTarget.setPointerCapture(event.pointerId);
 			bar?.classList.add("presentation-figure-scroll-bar--dragging");
 			thumbDragRef.current = {
-				startPointer: axis === "y" ? event.clientY : event.clientX,
-				startScroll: axis === "y" ? scroller.scrollTop : scroller.scrollLeft,
+				startPointer: overlayAxis === "y" ? event.clientY : event.clientX,
+				startScroll: overlayAxis === "y" ? scroller.scrollTop : scroller.scrollLeft,
 			};
 		},
-		[axis, barRef, enabled],
+		[overlayAxis, barRef, scrollActive],
 	);
 	const onThumbPointerMove = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
 			const drag = thumbDragRef.current;
 			const scroller = scrollerRef.current;
-			if (!enabled || axis === null || drag === null || scroller === null) {
+			if (!scrollActive || overlayAxis === null || drag === null || scroller === null) {
 				return;
 			}
-			const clientSize = axis === "y" ? scroller.clientHeight : scroller.clientWidth;
-			const scrollSize = axis === "y" ? scroller.scrollHeight : scroller.scrollWidth;
+			const clientSize = overlayAxis === "y" ? scroller.clientHeight : scroller.clientWidth;
+			const scrollSize = overlayAxis === "y" ? scroller.scrollHeight : scroller.scrollWidth;
 			const maxScroll = scrollSize - clientSize;
 			const metrics = figureScrollOverlayThumbMetrics(
 				clientSize,
 				scrollSize,
-				axis === "y" ? scroller.scrollTop : scroller.scrollLeft,
+				overlayAxis === "y" ? scroller.scrollTop : scroller.scrollLeft,
 			);
 			const maxThumbOffset = Math.max(0, clientSize - metrics.thumbSize);
 			if (maxThumbOffset <= 0 || maxScroll <= 0) {
 				return;
 			}
-			const pointer = axis === "y" ? event.clientY : event.clientX;
+			const pointer = overlayAxis === "y" ? event.clientY : event.clientX;
 			const delta = pointer - drag.startPointer;
 			const nextScroll = Math.max(
 				0,
 				Math.min(maxScroll, drag.startScroll + (delta / maxThumbOffset) * maxScroll),
 			);
-			if (axis === "y") {
+			if (overlayAxis === "y") {
 				scroller.scrollTop = nextScroll;
 			} else {
 				scroller.scrollLeft = nextScroll;
 			}
 		},
-		[axis, enabled],
+		[overlayAxis, scrollActive],
 	);
 	const onThumbPointerUp = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
@@ -2168,52 +2353,254 @@ function FigureScrollViewport({
 		},
 		[barRef],
 	);
-	if (!enabled) {
+	if (!scrollActive) {
 		return (
-			<div className={className} style={style}>
-				{children}
-			</div>
+			<FigureZoomContext.Provider value={zoom}>
+				<div className={className} style={style} onWheel={onWheel}>
+					{children}
+				</div>
+			</FigureZoomContext.Provider>
 		);
 	}
 	return (
-		<div
-			className={[
-				figureScrollViewportClass(axis),
-				"presentation-figure-scroll-viewport--overlay",
-				className,
-			]
-				.filter(Boolean)
-				.join(" ")}
-			style={style}
-		>
+		<FigureZoomContext.Provider value={zoom}>
 			<div
-				ref={scrollerRef}
-				className={figureScrollScrollerClass(axis)}
-				onWheel={onWheel}
+				className={[
+					figureScrollViewportClass(scrollAxis),
+					"presentation-figure-scroll-viewport--overlay",
+					className,
+				]
+					.filter(Boolean)
+					.join(" ")}
+				style={style}
 			>
-				{children}
-			</div>
-			{axis !== null ? (
 				<div
-					ref={barRef}
-					className={`presentation-figure-scroll-bar presentation-figure-scroll-bar--axis-${axis}`}
-					style={{ display: "none" }}
-					aria-hidden="true"
+					ref={scrollerRef}
+					className={figureScrollScrollerClass(scrollAxis)}
+					onWheel={onWheel}
 				>
-					<div
-						ref={thumbRef}
-						className="presentation-figure-scroll-bar-thumb"
-						onPointerDown={onThumbPointerDown}
-						onPointerMove={onThumbPointerMove}
-						onPointerUp={onThumbPointerUp}
-						onPointerCancel={onThumbPointerUp}
-					/>
+					{children}
 				</div>
-			) : null}
-		</div>
+				{overlayAxis !== null ? (
+					<div
+						ref={barRef}
+						className={`presentation-figure-scroll-bar presentation-figure-scroll-bar--axis-${overlayAxis}`}
+						style={{ display: "none" }}
+						aria-hidden="true"
+					>
+						<div
+							ref={thumbRef}
+							className="presentation-figure-scroll-bar-thumb"
+							onPointerDown={onThumbPointerDown}
+							onPointerMove={onThumbPointerMove}
+							onPointerUp={onThumbPointerUp}
+							onPointerCancel={onThumbPointerUp}
+						/>
+					</div>
+				) : null}
+			</div>
+		</FigureZoomContext.Provider>
 	);
 }
 //#endregion 🔖FigureScroll
+
+function FigureZoomedImage({
+	className,
+	portWidth,
+	portHeight,
+	sourceAspect,
+	scrollEnabled,
+	src,
+	alt,
+	onLoad,
+}: {
+	readonly className: string;
+	readonly portWidth: number;
+	readonly portHeight: number;
+	readonly sourceAspect: number;
+	readonly scrollEnabled: boolean;
+	readonly src: string;
+	readonly alt: string;
+	readonly onLoad: (event: React.SyntheticEvent<HTMLImageElement>) => void;
+}): ReactNode {
+	const zoom = useFigureZoom();
+	const elementStyle = scrollEnabled
+		? figureCoverScrollElementStyle(portWidth, portHeight, sourceAspect, zoom)
+		: zoom > 1
+			? {
+					width: `${zoom * 100}%`,
+					height: "auto",
+					aspectRatio: String(sourceAspect),
+					maxWidth: "none",
+					maxHeight: "none",
+				}
+			: undefined;
+	const mergedClassName = [
+		className,
+		(scrollEnabled || zoom > 1) ? "presentation-figure-scroll-media" : undefined,
+	]
+		.filter(Boolean)
+		.join(" ");
+	return (
+		<img
+			className={mergedClassName}
+			style={elementStyle}
+			src={src}
+			alt={alt}
+			onLoad={onLoad}
+		/>
+	);
+}
+
+function FigureZoomedVideo({
+	className,
+	portWidth,
+	portHeight,
+	sourceAspect,
+	scrollEnabled,
+	src,
+	poster,
+	loop,
+	muted,
+	controls,
+	onLoadedMetadata,
+}: {
+	readonly className: string;
+	readonly portWidth: number;
+	readonly portHeight: number;
+	readonly sourceAspect: number;
+	readonly scrollEnabled: boolean;
+	readonly src: string;
+	readonly poster?: string;
+	readonly loop?: boolean;
+	readonly muted?: boolean;
+	readonly controls?: boolean;
+	readonly onLoadedMetadata: (event: React.SyntheticEvent<HTMLVideoElement>) => void;
+}): ReactNode {
+	const zoom = useFigureZoom();
+	const elementStyle = scrollEnabled
+		? figureCoverScrollElementStyle(portWidth, portHeight, sourceAspect, zoom)
+		: zoom > 1
+			? {
+					width: `${zoom * 100}%`,
+					height: "auto",
+					aspectRatio: String(sourceAspect),
+					maxWidth: "none",
+					maxHeight: "none",
+				}
+			: undefined;
+	const mergedClassName = [
+		className,
+		(scrollEnabled || zoom > 1) ? "presentation-figure-scroll-media" : undefined,
+	]
+		.filter(Boolean)
+		.join(" ");
+	return (
+		<video
+			className={mergedClassName}
+			style={elementStyle}
+			src={src}
+			poster={poster}
+			autoPlay={false}
+			loop={loop ?? false}
+			muted={muted ?? true}
+			controls={controls ?? true}
+			playsInline
+			preload="metadata"
+			onLoadedMetadata={onLoadedMetadata}
+		/>
+	);
+}
+
+function FigureZoomedPdfPage({
+	currentPage,
+	coverScale,
+	ready,
+	onPageLoadSuccess,
+}: {
+	readonly currentPage: number;
+	readonly coverScale: number | null;
+	readonly ready: boolean;
+	readonly onPageLoadSuccess: (page: {
+		getViewport: (options: { readonly scale: number }) => { readonly width: number; readonly height: number };
+	}) => void;
+}): ReactNode {
+	const zoom = useFigureZoom();
+	if (!ready) {
+		return null;
+	}
+	return (
+		<Page
+			key={currentPage}
+			className="presentation-media-pdf"
+			pageNumber={currentPage}
+			scale={(coverScale ?? 1) * zoom}
+			onLoadSuccess={onPageLoadSuccess}
+			renderTextLayer={false}
+			renderAnnotationLayer={false}
+		/>
+	);
+}
+
+function FigureZoomedCropScrollContent({
+	className,
+	portWidth,
+	portHeight,
+	sourceAspect,
+	backgroundSize,
+	backgroundPosition,
+	backgroundVars,
+	ariaLabel,
+	morphCropData,
+}: {
+	readonly className: string;
+	readonly portWidth: number;
+	readonly portHeight: number;
+	readonly sourceAspect: number;
+	readonly backgroundSize: string;
+	readonly backgroundPosition: string;
+	readonly backgroundVars: CSSProperties;
+	readonly ariaLabel: string;
+	readonly morphCropData?: string;
+}): ReactNode {
+	const zoom = useFigureZoom();
+	const scrollContentStyle: CSSProperties = {
+		...(backgroundSize === "cover"
+			? figureCoverScrollContentSize(portWidth, portHeight, sourceAspect, zoom).style
+			: figureCropScrollContentSize(figureBackgroundSizeZoomed(backgroundSize, zoom))),
+		backgroundImage: backgroundVars.backgroundImage,
+		["--presentation-figure-bg-size" as string]: figureCropScrollBackgroundSize(
+			backgroundSize,
+			figureBackgroundSizeScrollAxis(backgroundSize) ??
+				figureCoverOverflowAxis(portWidth, portHeight, sourceAspect),
+			zoom,
+		),
+		["--presentation-figure-bg-position" as string]: backgroundPosition,
+		["--presentation-figure-bg-size-morph" as string]: backgroundVars[
+			"--presentation-figure-bg-size-morph" as keyof typeof backgroundVars
+		],
+		["--presentation-figure-bg-position-morph" as string]: backgroundVars[
+			"--presentation-figure-bg-position-morph" as keyof typeof backgroundVars
+		],
+		["--presentation-figure-bg-grid-size" as string]: backgroundVars[
+			"--presentation-figure-bg-grid-size" as keyof typeof backgroundVars
+		],
+		["--presentation-figure-bg-grid-position" as string]: backgroundVars[
+			"--presentation-figure-bg-grid-position" as keyof typeof backgroundVars
+		],
+	};
+	return (
+		<div
+			className={className}
+			style={scrollContentStyle}
+			{...(morphCropData !== undefined
+				? { "data-presentation-morph-crop": morphCropData }
+				: {})}
+			role="img"
+			aria-label={ariaLabel}
+		/>
+	);
+}
 
 /** @emoji 📐 Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
 export function readPercentDispositionFrame(element: HTMLElement): DispositionPosition | null {
@@ -2426,13 +2813,6 @@ function FigureImageMorphView({
 	);
 	const axis = coverScroll.axis;
 	const scrollOrigin = resolveMediaScrollOrigin(embodiment.scrollOrigin);
-	const scrollElementStyle = scrollEnabled
-		? figureCoverScrollElementStyle(
-				effectivePortSize.width,
-				effectivePortSize.height,
-				sourceAspect,
-			)
-		: undefined;
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<MediaTeaserWrap teaser={embodiment.teaser}>
@@ -2440,30 +2820,29 @@ function FigureImageMorphView({
 					enabled={scrollEnabled}
 					axis={axis}
 					scrollOrigin={scrollOrigin}
+					slideEpoch={slideEpoch}
 					style={{ width: "100%", height: "100%" }}
 				>
-					<img
-						className={[
-						"presentation-media-figure",
-						scrollEnabled ? "presentation-figure-scroll-media" : undefined,
-					]
-						.filter(Boolean)
-						.join(" ")}
-					style={scrollElementStyle}
-					src={resolvePresentationAssetUrl(embodiment.src)}
-					alt={embodiment.alt ?? ""}
-					onLoad={(event) => {
-						const image = event.currentTarget;
-						if (
-							embodiment.sourceAspect === undefined &&
-							image.naturalWidth > 0 &&
-							image.naturalHeight > 0
-						) {
-							setSourceAspect(image.naturalWidth / image.naturalHeight);
-						}
-					}}
-				/>
-			</FigureScrollViewport>
+					<FigureZoomedImage
+						className="presentation-media-figure"
+						portWidth={effectivePortSize.width}
+						portHeight={effectivePortSize.height}
+						sourceAspect={sourceAspect}
+						scrollEnabled={scrollEnabled}
+						src={resolvePresentationAssetUrl(embodiment.src)}
+						alt={embodiment.alt ?? ""}
+						onLoad={(event) => {
+							const image = event.currentTarget;
+							if (
+								embodiment.sourceAspect === undefined &&
+								image.naturalWidth > 0 &&
+								image.naturalHeight > 0
+							) {
+								setSourceAspect(image.naturalWidth / image.naturalHeight);
+							}
+						}}
+					/>
+				</FigureScrollViewport>
 			</MediaTeaserWrap>
 		</div>
 	);
@@ -2580,38 +2959,6 @@ function FigureCropMorphView({
 			</MediaTeaserWrap>
 		);
 	}
-	const scrollContentStyle: CSSProperties = {
-		...(backgroundSize === "cover"
-			? figureCoverScrollContentSize(
-					effectivePortSize.width,
-					effectivePortSize.height,
-					sourceAspect,
-				).style
-			: figureCropScrollContentSize(backgroundSize)),
-		backgroundImage: backgroundVars.backgroundImage,
-		["--presentation-figure-bg-size" as string]: figureCropScrollBackgroundSize(
-			backgroundSize,
-			scrollAxis,
-		),
-		["--presentation-figure-bg-position" as string]:
-			scrollAxis === "x"
-				? `0% ${scrollOrigin.y}%`
-				: scrollAxis === "y"
-					? `${scrollOrigin.x}% 0%`
-					: backgroundPosition,
-		["--presentation-figure-bg-size-morph" as string]: backgroundVars[
-			"--presentation-figure-bg-size-morph" as keyof typeof backgroundVars
-		],
-		["--presentation-figure-bg-position-morph" as string]: backgroundVars[
-			"--presentation-figure-bg-position-morph" as keyof typeof backgroundVars
-		],
-		["--presentation-figure-bg-grid-size" as string]: backgroundVars[
-			"--presentation-figure-bg-grid-size" as keyof typeof backgroundVars
-		],
-		["--presentation-figure-bg-grid-position" as string]: backgroundVars[
-			"--presentation-figure-bg-grid-position" as keyof typeof backgroundVars
-		],
-	};
 	return (
 		<MediaTeaserWrap teaser={embodiment.teaser}>
 			<div
@@ -2626,16 +2973,29 @@ function FigureCropMorphView({
 					enabled
 					axis={scrollAxis}
 					scrollOrigin={scrollOrigin}
+					slideEpoch={slideEpoch}
 					style={{ width: "100%", height: "100%" }}
 				>
-					<div
+					<FigureZoomedCropScrollContent
 						className={[slotClassName, "presentation-figure-scroll-content"].join(" ")}
-						style={scrollContentStyle}
-						{...(morphCropFrom && embodiment.crop
-							? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
-							: {})}
-						role="img"
-						aria-label={embodiment.alt ?? ""}
+						portWidth={effectivePortSize.width}
+						portHeight={effectivePortSize.height}
+						sourceAspect={sourceAspect}
+						backgroundSize={backgroundSize}
+						backgroundPosition={
+							scrollAxis === "x"
+								? `0% ${scrollOrigin.y}%`
+								: scrollAxis === "y"
+									? `${scrollOrigin.x}% 0%`
+									: backgroundPosition
+						}
+						backgroundVars={backgroundVars}
+						ariaLabel={embodiment.alt ?? ""}
+						morphCropData={
+							morphCropFrom && embodiment.crop
+								? JSON.stringify(embodiment.crop)
+								: undefined
+						}
 					/>
 				</FigureScrollViewport>
 			</div>
@@ -2821,13 +3181,6 @@ function VideoMorphView({
 	);
 	const axis = coverScroll.axis;
 	const scrollOrigin = resolveMediaScrollOrigin(embodiment.scrollOrigin);
-	const scrollElementStyle = scrollEnabled
-		? figureCoverScrollElementStyle(
-				effectivePortSize.width,
-				effectivePortSize.height,
-				sourceAspect,
-			)
-		: undefined;
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<MediaTeaserWrap teaser={embodiment.teaser}>
@@ -2835,32 +3188,28 @@ function VideoMorphView({
 					enabled={scrollEnabled}
 					axis={axis}
 					scrollOrigin={scrollOrigin}
+					slideEpoch={slideEpoch}
 					style={{ width: "100%", height: "100%" }}
 				>
-					<video
-					className={[
-						"presentation-media-video",
-						scrollEnabled ? "presentation-figure-scroll-media" : undefined,
-					]
-						.filter(Boolean)
-						.join(" ")}
-					style={scrollElementStyle}
-					src={embodiment.src}
-					poster={embodiment.poster}
-					autoPlay={false}
-					loop={embodiment.loop ?? false}
-					muted={embodiment.muted ?? true}
-					controls={embodiment.controls ?? true}
-					playsInline
-					preload="metadata"
-					onLoadedMetadata={(event) => {
-						const video = event.currentTarget;
-						if (video.videoWidth > 0 && video.videoHeight > 0) {
-							setSourceAspect(video.videoWidth / video.videoHeight);
-						}
-					}}
-				/>
-			</FigureScrollViewport>
+					<FigureZoomedVideo
+						className="presentation-media-video"
+						portWidth={effectivePortSize.width}
+						portHeight={effectivePortSize.height}
+						sourceAspect={sourceAspect}
+						scrollEnabled={scrollEnabled}
+						src={embodiment.src}
+						poster={embodiment.poster}
+						loop={embodiment.loop}
+						muted={embodiment.muted}
+						controls={embodiment.controls}
+						onLoadedMetadata={(event) => {
+							const video = event.currentTarget;
+							if (video.videoWidth > 0 && video.videoHeight > 0) {
+								setSourceAspect(video.videoWidth / video.videoHeight);
+							}
+						}}
+					/>
+				</FigureScrollViewport>
 			</MediaTeaserWrap>
 		</div>
 	);
@@ -2931,6 +3280,52 @@ function MarkdownMorphView({
 					className="prose prose-sm max-w-none dark:prose-invert presentation-markdown-prose presentation-markdown-prose--top-left"
 					dangerouslySetInnerHTML={{ __html: html }}
 				/>
+			</Scrollable>
+		</div>
+	);
+}
+
+function JsonMorphView({
+	morphId: anchorId,
+	embodiment,
+	emphasis,
+}: {
+	readonly morphId: string;
+	readonly embodiment: JsonEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+}): ReactNode {
+	const [data, setData] = useState<unknown>(embodiment.json ?? null);
+	useEffect(() => {
+		let cancelled = false;
+		if (embodiment.json !== undefined) {
+			setData(embodiment.json);
+			return;
+		}
+		void (async () => {
+			const text = await fetch(resolvePresentationAssetUrl(embodiment.src)).then((response) => response.text());
+			const parsed = JSON.parse(text) as unknown;
+			if (!cancelled) {
+				setData(parsed);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [embodiment.json, embodiment.src]);
+	return (
+		<div
+			data-id={anchorId}
+			className={[
+				morphAnchorClass(emphasis),
+				"presentation-json-morph",
+				"h-full w-full min-h-0 min-w-0",
+			]
+				.filter(Boolean)
+				.join(" ")}
+			aria-label={embodiment.title}
+		>
+			<Scrollable orientation="both" className="h-full w-full p-small">
+				{renderJsonTree(data)}
 			</Scrollable>
 		</div>
 	);
@@ -3084,6 +3479,7 @@ function PdfMorphView({
 					enabled={scrollEnabled}
 					axis={scrollAxis}
 					scrollOrigin={scrollOrigin}
+					slideEpoch={slideEpoch}
 					style={{ width: "100%", height: "100%" }}
 				>
 					<Document
@@ -3098,17 +3494,12 @@ function PdfMorphView({
 					error={<span className="presentation-media-pdf-error">PDF</span>}
 					onLoadSuccess={onDocumentLoadSuccess}
 				>
-					{ready ? (
-						<Page
-							key={currentPage}
-							className="presentation-media-pdf"
-							pageNumber={currentPage}
-							scale={coverScale ?? 1}
-							onLoadSuccess={onPageLoadSuccess}
-							renderTextLayer={false}
-							renderAnnotationLayer={false}
-						/>
-					) : null}
+					<FigureZoomedPdfPage
+						currentPage={currentPage}
+						coverScale={coverScale}
+						ready={ready}
+						onPageLoadSuccess={onPageLoadSuccess}
+					/>
 				</Document>
 			</FigureScrollViewport>
 			</MediaTeaserWrap>
@@ -3304,6 +3695,9 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 			break;
 		case "markdown":
 			content = <MarkdownMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
+		case "json":
+			content = <JsonMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "pdf":
 			content = (
@@ -7092,6 +7486,33 @@ if (import.meta.vitest) {
 			expect(figureCropScrollBackgroundSize("cover", "y")).toBe("auto 100%");
 		});
 
+		it("figureWheelZoomStep clamps ctrl+wheel zoom between cover baseline and max", () => {
+			expect(figureWheelZoomStep(-100, 1)).toBeCloseTo(1.1);
+			expect(figureWheelZoomStep(100, 1)).toBe(1);
+			expect(figureWheelZoomStep(-100, FIGURE_WHEEL_ZOOM_MAX)).toBe(FIGURE_WHEEL_ZOOM_MAX);
+			expect(figureWheelZoomStep(100, 2)).toBeCloseTo(2 / 1.1);
+		});
+
+		it("figureBackgroundSizeZoomed scales crop background-size strings", () => {
+			expect(figureBackgroundSizeZoomed("400% auto", 2)).toBe("800% auto");
+			expect(figureBackgroundSizeZoomed("auto 1600%", 1.5)).toBe("auto 2400%");
+			expect(figureBackgroundSizeZoomed("cover", 2)).toBe("cover");
+		});
+
+		it("figureCoverScrollElementStyle grows with ctrl+wheel zoom", () => {
+			const base = figureCoverScrollElementStyle(565, 350, 1200 / 1080);
+			const zoomed = figureCoverScrollElementStyle(565, 350, 1200 / 1080, 2);
+			expect(base.width).toBe("100%");
+			expect(zoomed.width).toBe("200%");
+		});
+
+		it("figureCoverScrollContentSize enables both axes when zoomed past cover", () => {
+			const square = figureCoverScrollContentSize(100, 100, 1, 2);
+			expect(square.axis).toBe("both");
+			const tall = figureCoverScrollContentSize(200, 100, 1, 2);
+			expect(tall.axis).toBe("both");
+		});
+
 		it("mediaTeaserActive is true only when teaser is set", () => {
 			expect(mediaTeaserActive(undefined)).toBe(false);
 			expect(mediaTeaserActive({})).toBe(true);
@@ -7188,6 +7609,7 @@ if (import.meta.vitest) {
 			expect(css).toContain(".presentation-figure-scroll-viewport--axis-y");
 			expect(css).toContain(".presentation-figure-scroll-scroller--axis-x");
 			expect(css).toContain(".presentation-figure-scroll-scroller--axis-y");
+			expect(css).toContain(".presentation-figure-scroll-scroller--axis-both");
 			expect(css).toContain(".presentation-figure-scroll-viewport--overlay");
 			expect(css).toContain(".presentation-figure-scroll-bar-thumb");
 			expect(css).toContain(".presentation-figure-scroll-media");

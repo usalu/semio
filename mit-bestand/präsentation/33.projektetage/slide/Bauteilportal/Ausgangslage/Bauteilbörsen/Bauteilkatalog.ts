@@ -9,7 +9,7 @@ import {
 } from "../../../../spec.ts";
 
 export default {
-	order: 0,
+	order: 1,
 	participants: mediaParticipants,
 	embodiments: mediaEmbodiments,
 	arrangement: {

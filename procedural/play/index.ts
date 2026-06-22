@@ -663,7 +663,7 @@ export function proceduralPlayFixtureJson(fixtureId: string = PROCEDURAL_PLAY_FI
 export class ProceduralPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Procedural", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
-	private fixtureJson = PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON;
+	private fixtureJson = proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID));
 	private readonly fixtureStore: ProceduralPlayFixtureStore;
 	private hostBridge: ProceduralPlayHostBridge | null = null;
 	private previewText = "—";
@@ -707,9 +707,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.fixtureStore = fixtureStore;
 		this.fixtureEdges = this.parseFixtureEdges(this.fixtureJson);
 		this.rebuildShellMode();
-		if (isPlaygroundFixtureLocked()) {
-			this.loadFixtureById(this.activeFixtureId);
-		}
 	}
 
 	hasStoredFixture(): boolean {
@@ -809,9 +806,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	private loadFixtureById(fixtureId: string): void {
 		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-		if (nextId === this.activeFixtureId && nextId !== PLAYGROUND_NO_FIXTURE_ID) return;
+		const nextJson = proceduralFixtureJsonForId(nextId);
+		if (nextId === this.activeFixtureId && nextJson === this.fixtureJson) return;
 		this.activeFixtureId = nextId;
-		this.applyFixtureJson(proceduralFixtureJsonForId(nextId), true);
+		this.applyFixtureJson(nextJson, true);
 	}
 
 	getFixtureJson(): string {
@@ -2283,7 +2281,29 @@ if (import.meta.vitest) {
 				ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
 				expect(ctrl.getFixtureCatalog()).toBeNull();
 			} finally {
-				(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+				if (prev === undefined) {
+					delete (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID;
+				} else {
+					(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+				}
+			}
+		});
+
+		it("locked fixture host loads file fixture on construct", () => {
+			const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
+			(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID =
+				PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID;
+			try {
+				const bus = new CommandBus();
+				const ctrl = new ProceduralPlayController(bus, () => {});
+				expect(ctrl.getFixtureJson()).toContain("brep.solid.extrude");
+				expect(ctrl.getFixtureJson()).toContain("brep_curve_polygon_9");
+			} finally {
+				if (prev === undefined) {
+					delete (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID;
+				} else {
+					(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+				}
 			}
 		});
 

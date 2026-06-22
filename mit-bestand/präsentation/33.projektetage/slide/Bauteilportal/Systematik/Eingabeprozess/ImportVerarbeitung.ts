@@ -3,26 +3,26 @@ import {
 	type SlideFile,
 } from "@framework/presentation/core";
 
-const PARTICIPANT = "entwurfswerkzeug-katalog";
-const EMBODIMENT = "entwurfswerkzeug-katalog--figure";
-const SOURCE_ASPECT = 688 / 1948;
+const PARTICIPANT = "eingabeprozess-import-verarbeitung";
+const EMBODIMENT = "eingabeprozess-import-verarbeitung--figure";
+const SOURCE_ASPECT = 1278 / 1288;
 const FRAME = figureFrameForSourceAspect(SOURCE_ASPECT);
 
 export default {
-	order: 0,
+	order: 5,
 	participants: [{ id: PARTICIPANT }],
 	embodiments: [
 		{
 			kind: "figure",
 			id: EMBODIMENT,
-			src: "/entwurfswerkzeug-katalog.png",
-			alt: "Entwurfswerkzeug Katalog",
+			src: "/import-verarbeitung.png",
+			alt: "Import Verarbeitung im Eingabeprozess",
 			sourceAspect: SOURCE_ASPECT,
 		},
 	],
 	arrangement: {
-		id: "entwurfswerkzeug-katalog",
-		name: "Katalog",
+		id: "eingabeprozess-import-verarbeitung",
+		name: "Import Verarbeitung",
 		dispositions: [
 			{
 				participantId: PARTICIPANT,

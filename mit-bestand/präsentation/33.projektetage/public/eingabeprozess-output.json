@@ -1,0 +1,252 @@
+{
+  "item": {
+    "item_id": "item_concrete_slab_6840_1495",
+    "canonical_title": "Rippenplatte aus Spannbeton",
+    "component_family": "structure",
+    "component_type": "slab",
+    "component_subtype": "ribbed_slab",
+    "material_family": "mineral",
+    "primary_material": "prestressed_concrete",
+    "secondary_materials": ["reinforcement_steel", "in_situ_concrete_topping"],
+    "newness_type": "reclaimed",
+    "structural_role": "load_bearing",
+    "is_batch": true,
+    "short_description": "Wiederverwendbare Rippenplatte aus Stahlbeton/Spannbeton aus dem IBS-Bauteilkatalog."
+  },
+  "listing": {
+    "listing_id": "listing_ibs_90",
+    "item_id": "item_concrete_slab_6840_1495",
+    "source_platform": "ibs",
+    "source_url": "https://bauteile-ibs.ch/components/90-rippenplatte-stahlbeton-l684m-b1495m",
+    "external_listing_id": "90",
+    "original_title": "Rippenplatte Stahlbeton L=6.84m, B=1.495m",
+    "page_status": "live_restricted",
+    "data_source_type": "technical_inventory",
+    "data_confidence": "high",
+    "last_verified_at": "2026-06-15"
+  },
+  "documentation_assets": [
+    {
+      "asset_type": "marketplace_listing",
+      "source_url": "https://bauteile-ibs.ch/components/90-rippenplatte-stahlbeton-l684m-b1495m",
+      "file_format": "html",
+      "asset_confidence": "high"
+    },
+    {
+      "asset_type": "pdf_factsheet",
+      "title": "LYS01 Factsheet",
+      "file_format": "pdf",
+      "asset_confidence": "high"
+    },
+    {
+      "asset_type": "cad_file",
+      "file_format": "dwg",
+      "asset_confidence": "medium"
+    },
+    {
+      "asset_type": "image",
+      "file_format": "jpg/png",
+      "asset_confidence": "medium"
+    }
+  ],
+  "variant_batch": {
+    "variant_id": "variant_6840_1495_480",
+    "item_id": "item_concrete_slab_6840_1495",
+    "variant_label": "L=6.84m, B=1.495m",
+    "quantity": 188,
+    "quantity_unit": "piece",
+    "length_mm": 6840,
+    "width_mm": 1495,
+    "height_mm": 480,
+    "dimension_notes": "Exact geometry should be verified against PDF/DWG before design use."
+  },
+  "technical_attributes": [
+    {
+      "attribute_group": "structural_concrete",
+      "attribute_name": "prestressed",
+      "value_boolean": true,
+      "confidence": "medium"
+    },
+    {
+      "attribute_group": "structural_concrete",
+      "attribute_name": "compressive_strength",
+      "value_number": 67.4,
+      "unit": "MPa",
+      "confidence": "medium"
+    },
+    {
+      "attribute_group": "structural_concrete",
+      "attribute_name": "carbonation_depth",
+      "value_number": 21,
+      "unit": "mm",
+      "confidence": "medium"
+    },
+    {
+      "attribute_group": "deconstruction",
+      "attribute_name": "cutting_required",
+      "value_boolean": true,
+      "confidence": "medium"
+    },
+    {
+      "attribute_group": "deconstruction",
+      "attribute_name": "likely_tool",
+      "value_text": "diamond_saw",
+      "confidence": "medium"
+    }
+  ],
+  "availability_snapshot": {
+    "snapshot_id": "snapshot_ibs_90_2026_06_15",
+    "listing_id": "listing_ibs_90",
+    "checked_at": "2026-06-15",
+    "availability_status": "project_restricted",
+    "quantity_available": 188,
+    "quantity_unit": "piece",
+    "price_amount": null,
+    "currency": null,
+    "price_type": "unknown",
+    "contact_required": true,
+    "availability_notes": "Quantity is shown in catalogue, but live procurement and third-party availability must be confirmed."
+  },
+  "condition": {
+    "condition_id": "condition_concrete_slab_001",
+    "item_id": "item_concrete_slab_6840_1495",
+    "condition_raw": "Used structural concrete element from existing building inventory.",
+    "condition_normalized": "used_good",
+    "tested_status": "partial_test",
+    "inspection_method": "technical_pdf_and_visual_inventory",
+    "damage_notes": "Detailed crack, spalling, corrosion and edge-damage inspection required before reuse."
+  },
+  "risk_assessment": {
+    "risk_id": "risk_concrete_slab_001",
+    "item_id": "item_concrete_slab_6840_1495",
+    "risk_level": "high",
+    "hazard_flags": [
+      "chlorides",
+      "corrosion",
+      "moisture_damage",
+      "hydrocarbons",
+      "unknown_pollutants",
+      "structural_uncertainty",
+      "missing_certification"
+    ],
+    "pollutant_test_status": "partial_test",
+    "structural_verification_required": true,
+    "engineer_review_status": "required",
+    "reuse_restrictions": "Do not use as load-bearing element without structural engineering review and pollutant verification.",
+    "risk_notes": "Structural capacity, durability, pollutant status, lifting method and connection details must be confirmed."
+  },
+  "environmental_data": {
+    "environmental_id": "env_concrete_slab_001",
+    "item_id": "item_concrete_slab_6840_1495",
+    "co2_new_component_kg": 908,
+    "co2_reuse_component_kg": -635,
+    "environmental_data_confidence": "medium",
+    "lca_method": "source_platform_estimate"
+  },
+  "derived_data": {
+    "likely_use_cases": {
+      "value": [
+        "reuse_as_structural_floor_slab_after_review",
+        "reuse_as_non_structural_platform",
+        "reuse_as_landscape_or_infrastructure_element",
+        "reuse_as_heavy_precast_component"
+      ],
+      "derived": true,
+      "confidence": "medium",
+      "reasoning_source": "category_rule",
+      "review_required": true
+    },
+    "procurement_complexity": {
+      "value": "high",
+      "derived": true,
+      "confidence": "high",
+      "reasoning_source": "material_logic",
+      "review_required": true
+    },
+    "handling_requirements": {
+      "value": [
+        "crane_likely_required",
+        "heavy_transport_required",
+        "lifting_plan_required",
+        "storage_on_hard_surface_required"
+      ],
+      "derived": true,
+      "confidence": "medium",
+      "reasoning_source": "material_logic",
+      "review_required": true
+    },
+    "likely_missing_data": {
+      "value": [
+        "final_availability_confirmation",
+        "reservation_status",
+        "exact_pickup_window",
+        "transport_cost",
+        "reuse_design_load_case",
+        "legal_release_for_third_party_use"
+      ],
+      "derived": true,
+      "confidence": "high",
+      "reasoning_source": "source_context",
+      "review_required": true
+    },
+    "reuse_barriers": {
+      "value": [
+        "structural_liability",
+        "pollutant_uncertainty",
+        "high_logistics_cost",
+        "dimensional_inflexibility",
+        "possible_deconstruction_damage"
+      ],
+      "derived": true,
+      "confidence": "high",
+      "reasoning_source": "material_logic",
+      "review_required": true
+    }
+  },
+  "reuse_assessment": {
+    "assessment_id": "reuse_concrete_slab_001",
+    "item_id": "item_concrete_slab_6840_1495",
+    "reuse_confidence_score": "B_design_ready",
+    "procurement_readiness": "not_ready",
+    "design_readiness": "medium",
+    "technical_readiness": "requires_engineering_review",
+    "recommended_next_action": [
+      "check_availability",
+      "contact_seller_or_owner",
+      "request_structural_review",
+      "request_pollutant_test",
+      "estimate_transport_and_crane_cost",
+      "verify_dwg_geometry"
+    ],
+    "assessment_notes": "Good technical documentation, but not procurement-ready without availability, logistics and engineering confirmation."
+  },
+  "design_object": {
+    "design_object_type": "fixed_inventory_component",
+    "can_be_scaled": false,
+    "can_be_cut": "possible_but_requires_review",
+    "quantity_constraint": 188,
+    "geometry_constraint": {
+      "length_mm": 6840,
+      "width_mm": 1495,
+      "height_mm": 480
+    },
+    "design_warnings": [
+      "fixed_dimensions",
+      "limited_quantity",
+      "structural_review_required",
+      "pollutant_review_required",
+      "heavy_lifting_required",
+      "availability_not_confirmed"
+    ],
+    "allowed_design_use": [
+      "conceptual_design",
+      "reuse_option_study",
+      "non_structural_design_placeholder"
+    ],
+    "blocked_until_verified": [
+      "final_structural_load_bearing_use",
+      "procurement_commitment",
+      "construction_documentation"
+    ]
+  }
+}
