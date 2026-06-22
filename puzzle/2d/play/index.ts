@@ -2083,7 +2083,15 @@ export const buildPuzzle2dPlaySelectionDeclarativeBody = buildPuzzle2dPlayDeclar
 
 /** @emoji 🧩 Registers puzzle 2d play window kinds on the supplied controller (layout supplied by host). */
 export function attachPuzzle2dPlayWindowKinds(controller: Puzzle2dPlayShellController, layout: unknown): AppRuntime {
-	const app = new AppRuntime(PUZZLE_2D_PLAY_APP_ID, "Puzzle 2D play", undefined, controller, layout as never, []);
+	const isWires = import.meta.env?.PUZZLE_PLAY_ENTRY === "wires";
+	const app = new AppRuntime(
+		PUZZLE_2D_PLAY_APP_ID,
+		isWires ? "semio · reasoning · mindmap · wires" : "semio · puzzle · 2d",
+		undefined,
+		controller,
+		layout as never,
+		[],
+	);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
 	return app;

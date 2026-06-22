@@ -598,7 +598,7 @@ export function registerPresentationPlayDeclarativeBodies(): void {
 
 function buildPresentationPlayAppRuntime(controller: PresentationPlayController): AppRuntime {
 	const layout = createStackLayout(["tile-editor"], ["Tile editor"]);
-	const app = createPlayAppRuntime(PRESENTATION_PLAY_APP_ID, "Presentation Tile Play", controller, layout, controller.mainMode);
+	const app = createPlayAppRuntime(PRESENTATION_PLAY_APP_ID, "semio · framework · product · presentation", controller, layout, controller.mainMode);
 	app.panelTabs = [
 		{
 			id: `${PRESENTATION_PLAY_APP_ID}.hierarchy`,

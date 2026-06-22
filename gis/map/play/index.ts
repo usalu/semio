@@ -647,7 +647,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
 
 function buildMapPlayAppRuntime(ctrl: MapPlayController): AppRuntime {
   const layout = createStackLayout(["gis-map-main"], ["World Map"]);
-  return createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "GIS Map", ctrl, layout, ctrl.mainMode);
+  return createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "semio · gis · map", ctrl, layout, ctrl.mainMode);
 }
 
 export class PlaygroundMap extends Playground {

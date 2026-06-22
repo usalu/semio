@@ -3252,7 +3252,7 @@ class Puzzle3dPlaySnapshotStore extends Store<Puzzle3dPlaySnapshot> {
 }
 
 export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellController): AppRuntime {
-  const app = new AppRuntime(PUZZLE_3D_PLAY_APP_ID, "Puzzle 3D play", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
+  const app = new AppRuntime(PUZZLE_3D_PLAY_APP_ID, "semio · puzzle · 3d", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
     new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, [], controller.placeholderWindowEngagement(), PUZZLE_3D_VIEW_TEMPLATES),
   ]);
   app.defaultModeId = controller.mainMode.id;

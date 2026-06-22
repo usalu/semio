@@ -286,7 +286,7 @@ export function registerDagPlayDeclarativeBodies(): void {
 }
 
 export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntime {
-  return createPlayAppRuntime(DAG_PLAY_APP_ID, "DAG", controller, DAG_PLAY_LAYOUT, controller.mainMode);
+  return createPlayAppRuntime(DAG_PLAY_APP_ID, "semio · mathematical · graph · port · directed · dag", controller, DAG_PLAY_LAYOUT, controller.mainMode);
 }
 
 export class PlaygroundDag extends Playground {

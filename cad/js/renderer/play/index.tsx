@@ -1104,7 +1104,7 @@ export const buildCadPlayEnergyDeclarativeBody = buildCadPlayDeclarativeBodyForP
 export const buildCadPlayStructureClassicDeclarativeBody = buildCadPlayDeclarativeBodyForPane("structure-classic");
 
 export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppRuntime {
-  const app = createPlayAppRuntime(CAD_PLAY_APP_ID, "CAD play", controller, CAD_PLAY_LAYOUT as never, controller.mainMode);
+  const app = createPlayAppRuntime(CAD_PLAY_APP_ID, "semio · cad", controller, CAD_PLAY_LAYOUT as never, controller.mainMode);
   app.panelTabs = [];
   app.onActiveWindowChange = (shellWindowId) => {
     const pane = cadPlayPaneFromShellWindowId(shellWindowId);

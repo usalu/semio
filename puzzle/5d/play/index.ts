@@ -1240,7 +1240,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
 export function buildPuzzle5dPlayAppRuntime(controller: Puzzle5dPlayShellController): AppRuntime {
   const app = new AppRuntime(
     PUZZLE_5D_PLAY_APP_ID,
-    "Puzzle 5d play",
+    "semio · puzzle · 5d",
     undefined,
     controller,
     createDefaultLayout([PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_ID], "row", [50, 50], [PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_WINDOW_LABEL]) as never,

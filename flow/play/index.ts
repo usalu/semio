@@ -501,7 +501,7 @@ export function registerFlowPlayDeclarativeBodies(): void {
 }
 
 export function buildFlowPlayAppRuntime(controller: FlowPlayController): AppRuntime {
-  return createPlayAppRuntime(FLOW_PLAY_APP_ID, "Flow", controller, FLOW_PLAY_LAYOUT, controller.mainMode);
+  return createPlayAppRuntime(FLOW_PLAY_APP_ID, "semio · flow", controller, FLOW_PLAY_LAYOUT, controller.mainMode);
 }
 
 export class PlaygroundFlow extends Playground {

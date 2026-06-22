@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@mit-bestand/praesentation/projektetage",
   "version": "0.1.0",
-  "description": "mit-bestand · 33. projektetage declarative presentation",
+  "description": "Entwerfen mit Bestand · 33. Projektetage der Bauforschung Zukunft Bau ",
   "type": "module",
   "private": true,
   "scripts": {

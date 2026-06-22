@@ -1611,7 +1611,6 @@ import {
   PUZZLE_3D_PLAY_STORE_ID,
   PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS,
   PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-  brushMeshUrlsForFillSession,
   puzzle3dPlayFixtureJson,
   Puzzle3dPlayShellController,
   installPuzzle3dPlayBrushHost,

@@ -1703,7 +1703,7 @@ export function registerProceduralPlayDeclarativeBodies(): void {
 }
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {
-	return createPlayAppRuntime(PROCEDURAL_PLAY_APP_ID, "Procedural", controller, PROCEDURAL_PLAY_LAYOUT, controller.mainMode);
+	return createPlayAppRuntime(PROCEDURAL_PLAY_APP_ID, "semio · procedural", controller, PROCEDURAL_PLAY_LAYOUT, controller.mainMode);
 }
 
 /** @emoji 🛝 Procedural playground app. */
