@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@gis/map/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/gis-map-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -15,10 +15,10 @@ export default createPlaygroundPlayViteConfig({
   playDir,
   repoRoot,
   playEntryKind: "map",
-  extraAliases: [{ find: "@gis/map/react", replacement: path.resolve(playDir, "../react/index.tsx") }],
-  resolveDedupe: ["react", "react-dom", "@gis/map/react", "three"],
+  extraAliases: [{ find: "@semio-tech/gis-map-react", replacement: path.resolve(playDir, "../react/index.tsx") }],
+  resolveDedupe: ["react", "react-dom", "@semio-tech/gis-map-react", "three"],
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@infinite/cavas/react-renderer", "@gis/map/react"],
+    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/infinite-cavas-react-renderer", "@semio-tech/gis-map-react"],
     esbuildOptions: { target: "esnext" },
   },
   watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/Cargo.toml", "../rs/script.ts"],

@@ -12,7 +12,7 @@
   "sessions": [
     "⚪2ce2d35fc901465ebd3a37fea9630abc"
   ],
-  "closeSummary": "JS: piecePatchToWireCommands, connectionPatchToWireCommands, connectionDiffWireKeyForDataKey; expanded buildSchemaEntityChangeCommands (Piece/Connection); resolveDesignIdForPieceOrConnection; kitStoreClientUpdatePiece/Connection; kitStoreClientAddChildByKind/RemoveChildByKind/AddPiece/RemovePiece/AddConnection; tag orderIndex in oneChangeTagCommandForField. React: useKitAdd/Remove + piece/connection hooks use these; live-read hooks use KitStoreClient read* promises only; embedded test client stubs read*. Removed rxjs+zod deps from @compose/react. Tests: js +1 describe (4 tests), react stub surface test. Ran npm run build/test @compose/js, @compose/react, depcruise:layers (pass).",
+  "closeSummary": "JS: piecePatchToWireCommands, connectionPatchToWireCommands, connectionDiffWireKeyForDataKey; expanded buildSchemaEntityChangeCommands (Piece/Connection); resolveDesignIdForPieceOrConnection; kitStoreClientUpdatePiece/Connection; kitStoreClientAddChildByKind/RemoveChildByKind/AddPiece/RemovePiece/AddConnection; tag orderIndex in oneChangeTagCommandForField. React: useKitAdd/Remove + piece/connection hooks use these; live-read hooks use KitStoreClient read* promises only; embedded test client stubs read*. Removed rxjs+zod deps from @semio-tech/compose-react. Tests: js +1 describe (4 tests), react stub surface test. Ran npm run build/test @semio-tech/compose-js, @semio-tech/compose-react, depcruise:layers (pass).",
   "filesTouched": [
     "compose/js/index.ts",
     "compose/react/index.tsx",

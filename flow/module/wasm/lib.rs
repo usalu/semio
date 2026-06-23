@@ -107,7 +107,7 @@ mod tests {
 
     impl Operation for Echo {
         fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-            Ok(input.clone())
+            Ok(channel_output("x", input.clone()))
         }
     }
 

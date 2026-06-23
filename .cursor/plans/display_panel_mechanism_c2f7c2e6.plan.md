@@ -9,7 +9,7 @@ todos:
     content: Add WindowTemplate, NamedLayout, templateId/instanceId on window node, templates on BaseWindowKindRuntime, and display PanelKind + StoragePort/NamedLayoutStore in framework/core/index.ts
     status: completed
   - id: mode-canvas
-    content: Extend @ui/react Mode with onLayoutChange and external window-template drop handling
+    content: Extend @semio-tech/ui-react Mode with onLayoutChange and external window-template drop handling
     status: completed
   - id: shell-canvas
     content: Refactor ShellModeCanvas for dynamic template instances, apply-layout, and live-layout capture
@@ -40,7 +40,7 @@ isProject: false
 
 # Display Panel Mechanism
 
-Add a general "Display" left panel with two tabs: **Windows** (window kinds + drag-to-place templates) and **Layout** (reusable, user-savable named layouts). The mechanism is defined once in `@framework/core` + the shared shell renderer, so all products inherit it.
+Add a general "Display" left panel with two tabs: **Windows** (window kinds + drag-to-place templates) and **Layout** (reusable, user-savable named layouts). The mechanism is defined once in `@semio-tech/framework-core` + the shared shell renderer, so all products inherit it.
 
 ## Decisions (confirmed)
 - `display` becomes a brand-new left `PanelKind`; the legacy `windows` kind is removed/repurposed.
@@ -58,7 +58,7 @@ Add a general "Display" left panel with two tabs: **Windows** (window kinds + dr
 - `#region 🔖SideTab`: change `PanelKind` to `"display" | "overview" | "workbench" | "details" | "settings" | "chat"`, and `LEFT_PANEL_KINDS = ["workbench", "display", "overview"]` (display adjacent to workbench). Update `PANEL_KINDS`/`panelSide` accordingly.
 - New `#region 🔖DisplayStore`: a render-neutral `StoragePort` interface (`get(key)/set(key,value)/remove(key)`) and a `NamedLayoutStore extends Store<NamedLayout[]>` that loads/saves user layouts per app id behind that port (no direct browser API in core — satisfies the "external libs behind an interface" rule).
 
-## 2. `@ui/react` `Mode` canvas (`ui/react/index.tsx`)
+## 2. `@semio-tech/ui-react` `Mode` canvas (`ui/react/index.tsx`)
 - Extend `ModeProps` (line 15703) with `onLayoutChange?(layout: WindowLayoutNode)` and `onTemplateDrop?(payload, target)`.
 - In `Mode` (line 16597): call `onLayoutChange` whenever `setLayoutState` mutates from user docking/closing/resizing (drag-dock, `closeWindow`, axis resize).
 - Add external-drop handling in the existing drop-zone logic (`refreshDropZone`/drop handlers near 16699+): accept a new MIME `application/x-compose-window-template`; on drop, compute the target stack/side and invoke `onTemplateDrop` (the shell inserts the new window). This reuses the existing `ModeDropZone` machinery already built for internal window dragging.
@@ -74,7 +74,7 @@ Add a general "Display" left panel with two tabs: **Windows** (window kinds + dr
 - Parse/serialize already exists (`parseWindowLayout`/`stringifyWindowLayout`) for persistence.
 
 ## 4. DisplayPanel component (`framework/product/platform/renderer/react/index.tsx`, new region)
-A single React component rendered as the `content` of a `SidePanelTabConfig` section (same pattern as the puzzle inspector panel), with two internal tabs using existing `@ui/react` primitives:
+A single React component rendered as the `content` of a `SidePanelTabConfig` section (same pattern as the puzzle inspector panel), with two internal tabs using existing `@semio-tech/ui-react` primitives:
 - **Windows tab**: list `activeMode.windowKinds`; under each kind list its `templates` as draggable rows. Each row sets `dataTransfer` MIME `application/x-compose-window-template` with `{ windowKindId, templateId }` (mirrors the existing tree palette drag mechanism, `dragData` at `ui/react/index.tsx:7859`).
 - **Layout tab**: list builtin + user `NamedLayout`s; click applies (replace arrangement); a "Save current layout" action snapshots the live layout into the `NamedLayoutStore`; user layouts get a delete affordance.
 - Reads window kinds/layouts and the apply/save callbacks from a small `DisplayContext` provided by `ShellModeCanvas`/`ProductShell`.

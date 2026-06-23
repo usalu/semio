@@ -1,13 +1,13 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "@coda/desktop",
+  "name": "@semio-tech/coda-desktop",
   "version": "1.0.0",
   "description": "Electron desktop app for visualizing and interacting with coda (ACC design assistant)",
   "main": ".vite/build/main.js",
   "dependencies": {
     "@electron/fuses": "^2.0.0",
-    "@ui/react": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "electron-squirrel-startup": "^1.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

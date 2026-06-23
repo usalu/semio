@@ -18,7 +18,7 @@
 - Prompt: "fix"
 - Found regression in current workspace state: Kit diagram `Diagram` call no longer had `elementsSelectable` flags, so diagram clicks/lasso could not drive shared selection.
 - Re-applied the selection flags in `Kit.tsx`.
-- Ran validation: `npx nx test @compose/js --skipNxCache` (pass).
+- Ran validation: `npx nx test @semio-tech/compose-js --skipNxCache` (pass).
 
 ## Summary
 

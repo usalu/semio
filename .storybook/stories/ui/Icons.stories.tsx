@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Cursor, LoadingRow, Spinner } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Cursor, LoadingRow, Spinner } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🖼️#region 🛒Icons

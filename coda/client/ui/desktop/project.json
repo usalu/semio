@@ -1,5 +1,5 @@
 {
-  "name": "@coda/desktop",
+  "name": "@semio-tech/coda-desktop",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

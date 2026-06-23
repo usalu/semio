@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Slider } from "@ui/react";
+import { Slider } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

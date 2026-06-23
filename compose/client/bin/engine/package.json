@@ -1,12 +1,11 @@
 {
-  "name": "@compose/engine",
+  "name": "@semio-tech/compose-engine",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "compose/client/bin/engine",
   "projectType": "application",
   "devDependencies": {
-    "@compose/asset": "*",
-    "@compose/ui": "*",
+    "@semio-tech/compose-asset": "*",
     "vite-plugin-singlefile": "*"
   },
   "author": {

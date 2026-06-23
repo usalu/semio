@@ -103,7 +103,7 @@ Files: [procedural/react/index.tsx](procedural/react/index.tsx), [procedural/pla
 
 - Replace `BREP_FLOW_KINDS`/`BREP_EVAL_HANDLERS`/virtual-module overrides with loading the brep WASM module through the normal flow module path; `ProceduralExtensionHost` keeps only: load brep wasm, register its manifest, and expose `tessellateGeometry` by calling the brep wasm `tessellate` (preview at L1409-1451 unchanged downstream of `MeshTransfer`).
 - Remove `geometry/brep/js` OpenCascade kernel and `brepjs`/`brepjs-opencascade` deps; delete now-dead TS contracts or move the still-needed mesh-buffer types into the wasm bridge.
-- Update Vite/optimizeDeps/aliases for `@flow/module-brep` (mirror module-core handling), and procedural play `script.ts` wasm build list + `vitest.config.ts` aliases.
+- Update Vite/optimizeDeps/aliases for `@semio-tech/flow-module-brep` (mirror module-core handling), and procedural play `script.ts` wasm build list + `vitest.config.ts` aliases.
 - Update `launch.json`, root `package.json` workspaces (`flow/module/*/pkg`), and `procedural/play/index.ts` extension-tree counts.
 
 ## Validation

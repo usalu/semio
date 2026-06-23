@@ -56,21 +56,21 @@ flowchart TB
   RX --> PLAT["platform ProductShell"]
 ```
 
-### 1. Establish/confirm shared floating-surface helpers in @ui/react
+### 1. Establish/confirm shared floating-surface helpers in @semio-tech/ui-react
 - Confirm there is a single exported helper for floating menus/popovers backed by `ui-glass-menu` and for aside panels backed by `panelGlassFrameClass`. If a popover surface helper is missing, add one in [ui/react/index.tsx](ui/react/index.tsx) under the existing glass region (reuse `getGlassSurfaceClass`, `borderNormalClass`). No new files.
 
 ### 2. CAD: replace `cadChrome*` opaque chrome with shared glass
-- In [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx): replace `cadChromePopoverClass`/`cadChromeMenuButtonClass` (selection menu ~5726, suggestions popover ~5809) with the shared glass-menu surface + menu-item classes from `@ui/react`.
+- In [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx): replace `cadChromePopoverClass`/`cadChromeMenuButtonClass` (selection menu ~5726, suggestions popover ~5809) with the shared glass-menu surface + menu-item classes from `@semio-tech/ui-react`.
 - Replace `cadChromePanelAsideClass` (`bg-panel`, ~5761) with the shared `ui-glass-panel` + `panel-chrome-frame` pattern so the aside matches `ProductShell` side panels.
 - Remove the now-unused `cadChrome*` constants (greenfield: no compatibility shims).
 
 ### 3. Procedural: remove hardcoded colors, use tokens + glass
 - Transform-detail overlay (~846-855): swap `border-zinc-700 bg-zinc-950/90 text-zinc-100` and the inner `select` for the shared glass-menu surface + semantic token text/border classes.
 - Container `bg-zinc-900` (~1489) -> `bg-canvas`.
-- `WorldCanvas background="#18181b"` (~1494) -> resolved token hex via `@ui/styling` (mirror CAD's `SpatialSceneColorPalette` / `resolveSemanticColorHex` approach in [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx) ~1903-1977) so dark/light themes track the design system.
+- `WorldCanvas background="#18181b"` (~1494) -> resolved token hex via `@semio-tech/ui-styling` (mirror CAD's `SpatialSceneColorPalette` / `resolveSemanticColorHex` approach in [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx) ~1903-1977) so dark/light themes track the design system.
 
 ### 4. Flow: audit + align overlays
-- Flow HTML overlays already use semantic tokens; verify the context menu/search palette route through the shared glass-menu surface (via `ContextMenuController` in `@ui/react`) and that the canvas container uses `bg-canvas` ([flow/react/index.tsx](flow/react/index.tsx) ~2900). Fix any stragglers to the shared classes.
+- Flow HTML overlays already use semantic tokens; verify the context menu/search palette route through the shared glass-menu surface (via `ContextMenuController` in `@semio-tech/ui-react`) and that the canvas container uses `bg-canvas` ([flow/react/index.tsx](flow/react/index.tsx) ~2900). Fix any stragglers to the shared classes.
 
 ### 5. Playground/platform: confirm parity
 - Spot-check declarative `UiNode` chrome in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (~688-712 buttons/sections using `bg-background`/`border-border`) and `ProductShell` in [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx). These already share the system; only adjust if they visibly diverge from the glass surfaces.

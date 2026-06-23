@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Stepper } from "@ui/react";
+import { Stepper } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

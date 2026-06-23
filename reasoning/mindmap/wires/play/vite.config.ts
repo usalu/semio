@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@reasoning/mindmap/wires/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/reasoning-mindmap-wires-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -18,14 +18,14 @@ export default createPlaygroundPlayViteConfig({
   repoRoot,
   playEntryKind: "wires",
   extraAliases: [
-    { find: "@reasoning/mindmap/wires/react", replacement: path.resolve(playDir, "../react/index.ts") },
-    { find: "@reasoning/mindmap/react", replacement: path.resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
-    { find: "@reasoning/mindmap/wires/play", replacement: path.resolve(playDir, "index.ts") },
-    { find: "@puzzle/2d/react", replacement: path.resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+    { find: "@semio-tech/reasoning-mindmap-wires-react", replacement: path.resolve(playDir, "../react/index.ts") },
+    { find: "@semio-tech/reasoning-mindmap-react", replacement: path.resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
+    { find: "@semio-tech/reasoning-mindmap-wires-play", replacement: path.resolve(playDir, "index.ts") },
+    { find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(repoRoot, "puzzle/2d/react/index.tsx") },
     { find: /^three$/, replacement: threeModule },
     { find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
   ],
-  resolveDedupe: ["react", "react-dom", "three", "@puzzle/2d/react", "@reasoning/mindmap/wires/react"],
+  resolveDedupe: ["react", "react-dom", "three", "@semio-tech/puzzle-2d-react", "@semio-tech/reasoning-mindmap-wires-react"],
   optimizeDeps: {
     include: [
       "react",
@@ -36,11 +36,11 @@ export default createPlaygroundPlayViteConfig({
       "@react-three/fiber",
       "@react-three/drei",
       "lucide-react",
-      "@infinite/cavas/react-renderer",
-      "@puzzle/2d/react",
-      "@reasoning/mindmap/react",
+      "@semio-tech/infinite-cavas-react-renderer",
+      "@semio-tech/puzzle-2d-react",
+      "@semio-tech/reasoning-mindmap-react",
     ],
-    exclude: ["@reasoning/mindmap/wires/react", "@reasoning/mindmap/wires/play"],
+    exclude: ["@semio-tech/reasoning-mindmap-wires-react", "@semio-tech/reasoning-mindmap-wires-play"],
     esbuildOptions: { target: "esnext" },
   },
   watchIgnored: [

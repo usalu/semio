@@ -12,4 +12,4 @@
 
 ## Note
 
-- Root `bun install` failed here (`@compose/sketchpad` 404 from registry); relative CSS paths avoid requiring a linked `@elements/styling` package for Vite. Workspace `package.json` still declares `@elements/styling` for explicit dependency graph.
+- Root `bun install` failed here (`@semio-tech/compose-sketchpad` 404 from registry); relative CSS paths avoid requiring a linked `@elements/styling` package for Vite. Workspace `package.json` still declares `@elements/styling` for explicit dependency graph.

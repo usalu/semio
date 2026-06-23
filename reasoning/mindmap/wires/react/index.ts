@@ -1,10 +1,10 @@
 // #region 🧲Header
-/** @emoji 🔗 `@reasoning/mindmap/wires/react` — WIRES fixture parsing and puzzle 2d board adapter. */
+/** @emoji 🔗 `@semio-tech/reasoning-mindmap-wires-react` — WIRES fixture parsing and puzzle 2d board adapter. */
 // #endregion 🧲Header
 
 import metabolismWiresJson from "../fixture/metabolism.wires.json";
-import type { CameraState, EdgeKind, KindCatalogBundle, NodeKind, Puzzle2dFixtureEdgeV1, Puzzle2dFixtureNodeV1, Puzzle2dFixtureV1 } from "@puzzle/2d/react";
-import type { MindmapFixtureEdgeV1, MindmapFixtureNodeV1, MindmapFixtureV1 } from "@reasoning/mindmap/react";
+import type { CameraState, EdgeKind, KindCatalogBundle, NodeKind, Puzzle2dFixtureEdgeV1, Puzzle2dFixtureNodeV1, Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import type { MindmapFixtureEdgeV1, MindmapFixtureNodeV1, MindmapFixtureV1 } from "@semio-tech/reasoning-mindmap-react";
 
 /** @emoji 🧩 Board slice embedded in {@link WiresFixtureV1}. */
 export type WiresFixtureBoardV1 = MindmapFixtureV1;

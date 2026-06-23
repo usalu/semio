@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧪 Vitest for `@gis/map/play`. */
+/** @emoji 🧪 Vitest for `@semio-tech/gis-map-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -14,9 +14,9 @@ export default defineConfig({
   root: playDir,
   resolve: {
     alias: {
-      "@framework/playground/core": path.resolve(playDir, "../../../framework/product/playground/core/index.ts"),
-      "@framework/platform/core": path.resolve(playDir, "../../../framework/product/platform/core/index.ts"),
-      "@gis/map/react": path.resolve(playDir, "../react/index.tsx"),
+      "@semio-tech/framework-playground-core": path.resolve(playDir, "../../../framework/product/playground/core/index.ts"),
+      "@semio-tech/framework-platform-core": path.resolve(playDir, "../../../framework/product/platform/core/index.ts"),
+      "@semio-tech/gis-map-react": path.resolve(playDir, "../react/index.tsx"),
     },
   },
   test: {

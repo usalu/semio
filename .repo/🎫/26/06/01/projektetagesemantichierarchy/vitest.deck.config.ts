@@ -12,13 +12,13 @@ export default defineConfig({
 	root: deckRoot,
 	resolve: {
 		alias: {
-			"@framework/presentation/core": resolve(repoRoot, "framework/product/presentation/core/index.ts"),
-			"@framework/presentation/renderer/react": resolve(
+			"@semio-tech/framework-presentation-core": resolve(repoRoot, "framework/product/presentation/core/index.ts"),
+			"@semio-tech/framework-presentation-renderer-react": resolve(
 				repoRoot,
 				"framework/product/presentation/renderer/react/index.tsx",
 			),
-			"@framework/core": resolve(repoRoot, "framework/core/index.ts"),
-			"@ui/react": resolve(repoRoot, "ui/react/index.tsx"),
+			"@semio-tech/framework-core": resolve(repoRoot, "framework/core/index.ts"),
+			"@semio-tech/ui-react": resolve(repoRoot, "ui/react/index.tsx"),
 		},
 	},
 	test: {

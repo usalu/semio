@@ -1,12 +1,12 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@geometry/brep/js",
+  "name": "@semio-tech/geometry-brep-js",
   "version": "0.1.0",
   "description": "🧭 brep WASM bridge and mesh contracts.",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @geometry/brep/js:test"
+    "test": "bun nx run @semio-tech/geometry-brep-js:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

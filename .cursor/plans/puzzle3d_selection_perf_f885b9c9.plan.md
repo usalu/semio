@@ -56,7 +56,7 @@ Rework `buildPuzzle3dPlayInspectorBody` (1363-1489): build `Map` indexes for obj
 Wrap `parseKindCompatibility`/`parseKindCatalogs`/`blockedVortexFullIdsFromAttractions` (1178-1180) in `useMemo` keyed on `snap.fixture` so selection-only snapshot bumps don't re-parse.
 
 ## Validation
-- Extend existing in-file vitest blocks (no new test files): store membership/diff-notify tests near `createSelectionSnapshotStore` tests (index.tsx ~7213), aggregated-inspector test in play tests (~1759). Run `bun nx run @puzzle/3d/play:test` and the react package test.
+- Extend existing in-file vitest blocks (no new test files): store membership/diff-notify tests near `createSelectionSnapshotStore` tests (index.tsx ~7213), aggregated-inspector test in play tests (~1759). Run `bun nx run @semio-tech/puzzle-3d-play:test` and the react package test.
 - Runtime: run the 3D play dev server, add a temporary `[DEBUG]` `performance.now()` around the Ctrl+A path, confirm select-all drops from ~5s to sub-second, then remove the debug logs.
 
 ## Constraints

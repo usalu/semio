@@ -22,7 +22,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // 🧷 Direct file alias — survives `wasm-pack build --no-pack` regenerating `pkg/`.
-      "@compose/rs-wasm": path.resolve(__dirname, "../rs/pkg/compose.js"),
+      "@semio-tech/compose-rs-wasm": path.resolve(__dirname, "../rs/pkg/compose.js"),
     },
   },
   test: {

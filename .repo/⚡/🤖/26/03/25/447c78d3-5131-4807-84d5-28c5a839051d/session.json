@@ -2626,8 +2626,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/compose/js/index.ts",
-            "oldString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit } = await import(\"@compose/assets\");",
-            "newString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@compose/assets\");"
+            "oldString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit } = await import(\"@semio-tech/compose-assets\");",
+            "newString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@semio-tech/compose-assets\");"
           },
           "tool_use_id": "toolu_vrtx_019nVS3wMyZqzqrJSXuCpSgj__vscode-1774381248929",
           "cwd": "/workspaces/semio"
@@ -2654,8 +2654,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/compose/js/index.ts",
-            "oldString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit } = await import(\"@compose/assets\");",
-            "newString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@compose/assets\");"
+            "oldString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit } = await import(\"@semio-tech/compose-assets\");",
+            "newString": "  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@semio-tech/compose-assets\");"
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_019nVS3wMyZqzqrJSXuCpSgj__vscode-1774381248929",

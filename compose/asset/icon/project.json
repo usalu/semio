@@ -1,12 +1,12 @@
 {
-  "name": "@compose/icon",
+  "name": "@semio-tech/compose-icon",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/asset/icon",
-        "command": "bun -e \"console.log('@compose/icon delegates to @ui/asset; run build on ui/asset.')\"",
+        "command": "bun -e \"console.log('@semio-tech/compose-icon delegates to @semio-tech/ui-asset; run build on ui/asset.')\"",
         "forwardAllArgs": true
       }
     }

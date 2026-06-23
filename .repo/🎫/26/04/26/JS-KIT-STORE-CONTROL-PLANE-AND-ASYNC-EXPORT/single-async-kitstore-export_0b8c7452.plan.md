@@ -1,6 +1,6 @@
 ---
 name: single-async-kitstore-export
-overview: Collapse `@compose/js` to a single exported `KitStore` class with thick async typesafe methods (one per `compose/rs` semantic command), RxJS used only internally, callback-based event subscription, and a single dedicated Worker carrying GraphQL strings to one `wasm-bindgen` `KitStoreHandle`. Strip every line of domain knowledge (diffs, flatten preview, best-representation, anchoring math, applyDiff, entity classes) from `@compose/js`, `@compose/react`, `@compose/sketchpad`, `@compose/ui`, `@compose/algorithms` — those concerns live exclusively in `compose/rs`.
+overview: Collapse `@semio-tech/compose-js` to a single exported `KitStore` class with thick async typesafe methods (one per `compose/rs` semantic command), RxJS used only internally, callback-based event subscription, and a single dedicated Worker carrying GraphQL strings to one `wasm-bindgen` `KitStoreHandle`. Strip every line of domain knowledge (diffs, flatten preview, best-representation, anchoring math, applyDiff, entity classes) from `@semio-tech/compose-js`, `@semio-tech/compose-react`, `@semio-tech/compose-sketchpad`, `@compose/ui`, `@semio-tech/compose-algorithms` — those concerns live exclusively in `compose/rs`.
 todos:
  - id: wire-types
    content: "Rewrite `🔌WireTypes` region in `compose/js/index.ts`: handwritten TS for KitFullDto, every Input/Result, KitEvent, BackboneConfig, BackboneStatus, VcsState, KitConflict, Unsubscribe, ReadKitCommandBatchInput/Result"
@@ -21,16 +21,16 @@ todos:
    content: "Update `compose/js/package.json`: add `rxjs`, remove `zod`, `fflate`, `comlink`, `@types/comlink`; clean `vite.config.ts`"
    status: completed
  - id: delete-kit-entities
-   content: "Removed `kitEntities.ts` as a separate module: body merged into `compose/react/kitWasmClient.ts` (`🧩KitEntitiesMerged`); `@compose/js` wire DTO aliased `ComposeKitWireDto` to avoid clashing with zod `KitFullDto`. Domain still lives in that region until hooks migrate to rs-only."
+   content: "Removed `kitEntities.ts` as a separate module: body merged into `compose/react/kitWasmClient.ts` (`🧩KitEntitiesMerged`); `@semio-tech/compose-js` wire DTO aliased `ComposeKitWireDto` to avoid clashing with zod `KitFullDto`. Domain still lives in that region until hooks migrate to rs-only."
    status: completed
  - id: migrate-react
-   content: Rewrite `compose/react/index.tsx` hooks/scopes against `KitStore` only (no diff math, no entity classes); remove every re-export of deleted `@compose/js` symbols
+   content: Rewrite `compose/react/index.tsx` hooks/scopes against `KitStore` only (no diff math, no entity classes); remove every re-export of deleted `@semio-tech/compose-js` symbols
    status: completed
  - id: migrate-sketchpad
-   content: Update `compose/sketchpad/index.tsx` to consume only `@compose/react` hooks; strip any direct `@compose/js` import
+   content: Update `compose/sketchpad/index.tsx` to consume only `@semio-tech/compose-react` hooks; strip any direct `@semio-tech/compose-js` import
    status: completed
  - id: delete-native-adapter
-   content: "Delete standalone `nativeAlgorithmAdapter.ts`: logic merged into `compose/algorithms/index.ts` under `🧮NativeKitStoreRunners`; stories/main import `../index` / `../../index`. TS path still uses `KitStore` + `@compose/react` entities for diff display until rs preview commands exist."
+   content: "Delete standalone `nativeAlgorithmAdapter.ts`: logic merged into `compose/algorithms/index.ts` under `🧮NativeKitStoreRunners`; stories/main import `../index` / `../../index`. TS path still uses `KitStore` + `@semio-tech/compose-react` entities for diff display until rs preview commands exist."
    status: completed
  - id: migrate-ui
    content: Strip every applyDiff/previewWithDiff/pickBestRepresentation/flattenDesignCachedOp/composeToThreeRootBasis/Plane.toMatrix usage from `compose/ui/index.tsx`; replace with typed `KitStore` calls + pure linear-algebra helpers
@@ -51,13 +51,13 @@ isProject: false
 
 ## Hard rules (from `compose/js/AGENTS.md` + `compose/rs/AGENTS.md` + user)
 
-1. `@compose/js` exports exactly one class — `KitStore` — plus the typed shapes its methods reference (`*FullDto`, `*Input`, `*Result`, `KitEvent`, `BackboneConfig`, `BackboneStatus`, `VcsState`, `KitConflict`, `Unsubscribe`). Nothing else.
-2. `@compose/js` stores nothing and caches nothing. Every call round-trips to `compose/rs`.
+1. `@semio-tech/compose-js` exports exactly one class — `KitStore` — plus the typed shapes its methods reference (`*FullDto`, `*Input`, `*Result`, `KitEvent`, `BackboneConfig`, `BackboneStatus`, `VcsState`, `KitConflict`, `Unsubscribe`). Nothing else.
+2. `@semio-tech/compose-js` stores nothing and caches nothing. Every call round-trips to `compose/rs`.
 3. Every method is `async` and typesafe (no `any`, no `unknown` in the public surface).
 4. RxJS is used only inside `KitStore` (request demux + event fan-out). It must not appear in the public `.d.ts`.
 5. Public eventing is callback-based: `subscribe(handler): Unsubscribe`. No `Observable` exported.
 6. Communication with `compose/rs` is GraphQL strings only, over **one dedicated `Worker` per `KitStore`**, with **one** `wasm-bindgen` entrypoint (`KitStoreHandle.execute(json, on_message)`). No Comlink, no MessagePort, no zod, no fflate, no inline path.
-7. **All domain knowledge** (diff math, flatten preview, anchoring, "best representation", `applyDiff`, entity classes, schemas) is forbidden in `@compose/js`, `@compose/react`, `@compose/sketchpad`, `@compose/ui`, `@compose/algorithms`. Anything those packages need must come from a typed `compose/rs` semantic command. Missing commands are added to `compose/rs` as part of this ticket.
+7. **All domain knowledge** (diff math, flatten preview, anchoring, "best representation", `applyDiff`, entity classes, schemas) is forbidden in `@semio-tech/compose-js`, `@semio-tech/compose-react`, `@semio-tech/compose-sketchpad`, `@compose/ui`, `@semio-tech/compose-algorithms`. Anything those packages need must come from a typed `compose/rs` semantic command. Missing commands are added to `compose/rs` as part of this ticket.
 
 ## Architecture
 
@@ -83,7 +83,7 @@ flowchart LR
 - Each mutation/query: fresh `reqId`, private `Subject<string>` collects response lines, parsed into the typed result, Subject completes, Promise resolves.
 - `dispose()` terminates worker, completes all Subjects, no more callbacks fire.
 
-## Public surface (`@compose/js`)
+## Public surface (`@semio-tech/compose-js`)
 
 Sole export `KitStore` plus the types its method signatures reference. Method shape mirrors `compose/rs` GraphQL schema 1:1.
 
@@ -93,7 +93,7 @@ Sole export `KitStore` plus the types its method signatures reference. Method sh
 - Events: `subscribe(handler: (event: KitEvent) => void): Unsubscribe`, `subscribeFiltered(filter: KitEventFilter, handler): Unsubscribe`. No `events$`, no rxjs in the signature.
 - VCS / backbone / conflicts (typed wrappers per rs commands): `vcsState()`, `attachBackbone(cfg: BackboneConfig)`, `detachBackbone()`, `backboneStatus()`, `listConflicts()`, `resolveConflict(input)`, `syncNow()`, `canUndo()`, `canRedo()`.
 
-Forbidden in `@compose/js`: any `Schema`, any entity class (`Design`, `Kit`, `Piece`, `Type`, `Plane`, `Vector`, `Coordinate`, …), `applyDiff`, `previewWithDiff`, `pickBestRepresentation`, `flattenDesignCachedOp`, `getConnections`, `composeToThreeRootBasis`, `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `KitHostStore`, `WorkerKitStoreClient`, `KitViewStore`, `kitGraphqlRun`, `KitGraphqlHandle`, `ALL_READ_KIT_COMMAND_KEYS`, `Compose`, `TOLERANCE`, `ICON_WIDTH`, etc.
+Forbidden in `@semio-tech/compose-js`: any `Schema`, any entity class (`Design`, `Kit`, `Piece`, `Type`, `Plane`, `Vector`, `Coordinate`, …), `applyDiff`, `previewWithDiff`, `pickBestRepresentation`, `flattenDesignCachedOp`, `getConnections`, `composeToThreeRootBasis`, `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `KitHostStore`, `WorkerKitStoreClient`, `KitViewStore`, `kitGraphqlRun`, `KitGraphqlHandle`, `ALL_READ_KIT_COMMAND_KEYS`, `Compose`, `TOLERANCE`, `ICON_WIDTH`, etc.
 
 ## File-level changes
 
@@ -105,16 +105,16 @@ Forbidden in `@compose/js`: any `Schema`, any entity class (`Design`, `Kit`, `Pi
   - `🧰Graphql` (private) — typed `mutation<TIn, TOut>(query, vars): Promise<TOut>`, `query<TIn, TOut>(...)`, `subscription<TOut>(query, onLine): Unsubscribe` — all use rxjs `firstValueFrom`/`take(1)`/`Subject` internally
   - `📦KitStore` — sole exported class; methods are 1-line wrappers over `🧰Graphql`; `subscribe(handler)` is a thin callback wrapper over a private `Subject<KitEvent>` (`.subscribe(handler).unsubscribe`)
   - `🧪EmbeddedTests` — vitest suite rewritten in place (single file rule)
-  - Delete every other current export listed under "Forbidden in `@compose/js`" above.
-- [compose/js/worker.ts](compose/js/worker.ts) — strip Comlink. Becomes a thin module worker that boots `@compose/rs-wasm`, holds one `KitStoreHandle`, and on each `message` (typed `{reqId, payload}` JSON-string) calls `handle.execute(payload, line => postMessage(JSON.stringify({reqId, line})))`. Strings only on the wire. On `{reqId, kind: "init", initialKit}` calls `KitStoreHandle.create(initialKit)`. On `{reqId, kind: "dispose"}` drops the handle and closes.
+  - Delete every other current export listed under "Forbidden in `@semio-tech/compose-js`" above.
+- [compose/js/worker.ts](compose/js/worker.ts) — strip Comlink. Becomes a thin module worker that boots `@semio-tech/compose-rs-wasm`, holds one `KitStoreHandle`, and on each `message` (typed `{reqId, payload}` JSON-string) calls `handle.execute(payload, line => postMessage(JSON.stringify({reqId, line})))`. Strings only on the wire. On `{reqId, kind: "init", initialKit}` calls `KitStoreHandle.create(initialKit)`. On `{reqId, kind: "dispose"}` drops the handle and closes.
 - [compose/js/package.json](compose/js/package.json) — add `rxjs`; remove `zod`, `fflate`, `comlink`, `@types/comlink`.
-- [compose/js/vite.config.ts](compose/js/vite.config.ts) — keep `@compose/rs-wasm` alias; remove anything specific to deleted code.
+- [compose/js/vite.config.ts](compose/js/vite.config.ts) — keep `@semio-tech/compose-rs-wasm` alias; remove anything specific to deleted code.
 
 ## Strip domain knowledge from consumers
 
 - [compose/react/kitWasmClient.ts](compose/react/kitWasmClient.ts) — former `kitEntities.ts` merged under `🧩KitEntitiesMerged` (file removed); long-term: strip entity graph from React per §Hard rules.
 - [compose/react/index.tsx](compose/react/index.tsx) — still hosts legacy hooks on merged entities; target: scopes on `KitStore.subscribe` + typed methods only.
-- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) — only consume `@compose/react` hooks; no direct `@compose/js` import.
+- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) — only consume `@semio-tech/compose-react` hooks; no direct `@semio-tech/compose-js` import.
 - [compose/algorithms/nativeAlgorithmAdapter.ts](compose/algorithms/nativeAlgorithmAdapter.ts) — **delete**. Every algorithm call goes through a typed `KitStore` semantic command. The native REST proxy in [compose/algorithms/.storybook/main.ts](compose/algorithms/.storybook/main.ts) is rewired to call `ks.flattenDesign(...)`, `ks.previewDragPieces(...)`, etc. directly.
 - [compose/algorithms/.storybook/stories/kit-store/commandSchema.ts](compose/algorithms/.storybook/stories/kit-store/commandSchema.ts) and siblings — drop the local `ALL_READ_KIT_COMMAND_KEYS` import; build the storybook command catalog from typed `KitStore` method names instead.
 - [compose/ui/index.tsx](compose/ui/index.tsx) — strip every call to `Design.applyDiff`, `Design.previewWithDiff`, `Design.getConnections`, `Type.pickBestRepresentation`, `Kit.composeToThreeRootBasis`, `Kit.flattenDesignCachedOp`, `Plane.toMatrix`, `cloneDesignWithDiff`. Replace with `KitStore.flattenDesign(...)` / `KitStore.previewDragPieces(...)` / `KitStore.bestRepresentation(...)` results. The only JS-side math left is generic linear algebra (column-major 4×4 from a {origin,xAxis,yAxis} triple) — that is not domain knowledge.
@@ -167,12 +167,12 @@ Reopen `2026/04/26/CLEAN-STATELESS-KIT-STORES-AND-KIT-COMMAND-REQUESTS` (already
 
 **Done in tree**
 
-- `@compose/js`: `KitStore` with opaque `ReadWireBatch` / `read`, callback `subscribe`, `ensureAlive` + post-`dispose()` rejection on `snapshot`/`read`/GraphQL paths; embedded Vitest (6 cases) covers dispose, `theKit`/`vcsState`/`materializeAt("")`/undo flags, and `keyof KitStore` rx-leak compile guard.
-- `@compose/react`: `kitWasmClient` batches use `ReadWireBatch` only (no exported read unions from js).
-- `@compose/algorithms`: `nativeAlgorithmAdapter.ts` **removed**; native runners live in `index.ts`; Storybook imports updated.
+- `@semio-tech/compose-js`: `KitStore` with opaque `ReadWireBatch` / `read`, callback `subscribe`, `ensureAlive` + post-`dispose()` rejection on `snapshot`/`read`/GraphQL paths; embedded Vitest (6 cases) covers dispose, `theKit`/`vcsState`/`materializeAt("")`/undo flags, and `keyof KitStore` rx-leak compile guard.
+- `@semio-tech/compose-react`: `kitWasmClient` batches use `ReadWireBatch` only (no exported read unions from js).
+- `@semio-tech/compose-algorithms`: `nativeAlgorithmAdapter.ts` **removed**; native runners live in `index.ts`; Storybook imports updated.
 - Inline WASM transport when `Worker` is missing remains for Node/Vitest (differs from strict “no inline path” in §Hard rules).
 
 **Explicitly not finished (needs dedicated tickets)**
 
-- **Domain in `@compose/react`**: former `kitEntities` code now lives under `kitWasmClient.ts` → `🧩KitEntitiesMerged`; hooks in `index.tsx` still use zod/entity classes until migrated to DTO + `KitStore` only.
+- **Domain in `@semio-tech/compose-react`**: former `kitEntities` code now lives under `kitWasmClient.ts` → `🧩KitEntitiesMerged`; hooks in `index.tsx` still use zod/entity classes until migrated to DTO + `KitStore` only.
 - **`compose/rs` preview / semantic gaps** (`previewDragPieces`, unified `deletePiecesAndConnections`, etc.): cancelled in plan; algorithms TS path still uses entity `applyDiff` / `dragBySelection` where rs commands are absent.

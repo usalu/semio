@@ -1,5 +1,5 @@
 {
-  "name": "@gis/map/play",
+  "name": "@semio-tech/gis-map-play",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

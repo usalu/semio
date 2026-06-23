@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, PasteDesignAnchoringKind } from "@compose/react";
+import type { Design, PasteDesignAnchoringKind } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
@@ -24,9 +24,9 @@ import {
   type AlgorithmContextValue,
   type AlgorithmWindowDef,
   type VecValue,
-} from "@compose/algorithm";
+} from "@semio-tech/compose-algorithm";
 
-import { MetabolismKit as metabolismKit } from "@compose/asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-asset";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const pasteTargetDesign = nakaginPasteTargetDesign();

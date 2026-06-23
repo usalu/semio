@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🏛️ `@compose/query` — `bun script.ts <build|test|wasm>`. */
+/** 🏛️ `@semio-tech/compose-query` — `bun script.ts <build|test|wasm>`. */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/src/index.ts";
 
@@ -11,7 +11,7 @@ class WasmScript extends BundleScript {
       logPrefix: "compose/query",
       wasmBaseName: "compose_query",
       pkg: {
-        name: "@compose/query/pkg",
+        name: "@semio-tech/compose-query/pkg",
         files: ["compose_query_bg.wasm", "compose_query.js", "compose_query.d.ts", "compose_query_bg.wasm.d.ts"],
         main: "compose_query.js",
         module: "compose_query.js",

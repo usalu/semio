@@ -242,7 +242,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 We are splitting puzzle 2d into general reusable bundles.
 It must be extendable on multiple levels.
-every extension is just a rust file.@infinite/cavas/react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @infinite/cavas/react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap 
+every extension is just a rust file.@semio-tech/infinite-cavas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-cavas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap 
 
 ---
 
@@ -2294,7 +2294,7 @@ The code is outdated and compose/rs now uses graphql. Expose a graphql api inste
 Add a dev command that start graphiql to launch.json
 
 Create a new rust binary (new bundle) that imports from compose/rs crate and exposes the store as a server (for non-rust and non-wasm libraries). It should work with stdio and json rpc. Same as mcp servers work. One running process as sidecar.
-Then make sure that compose/py and compose/cs use the rust store.@compose/store/bin.rs
+Then make sure that compose/py and compose/cs use the rust store.@semio-tech/compose-store/bin.rs
 
 ### ⭕graphql
 

@@ -103,7 +103,7 @@ File: [index.ts](compose/client/lib/js/index.ts) (single monolith; declarative `
 
 ## Out of scope
 
-`@compose/react` is currently a stub (`export {}`); no functional react work required. Sketchpad consumes `@compose/js` directly today, so no extra wiring needed for this change.
+`@semio-tech/compose-react` is currently a stub (`export {}`); no functional react work required. Sketchpad consumes `@semio-tech/compose-js` directly today, so no extra wiring needed for this change.
 
 ## Validation
 

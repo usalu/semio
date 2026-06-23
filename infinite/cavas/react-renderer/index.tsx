@@ -1,9 +1,9 @@
 // #region 🧲Header
-/** @emoji 🖼️ `@infinite/cavas/react-renderer` — r3f-style reconciler host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
+/** @emoji 🖼️ `@semio-tech/infinite-cavas-react-renderer` — r3f-style reconciler host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { ContextMenuController, decodeIcon, encodeIcon, resolveIconUrlsInBoardJson, reactHostPort, type ContextMenuItem, type Icon, type IconSelectorMode } from "@ui/react";
+import { ContextMenuController, decodeIcon, encodeIcon, resolveIconUrlsInBoardJson, reactHostPort, type ContextMenuItem, type Icon, type IconSelectorMode } from "@semio-tech/ui-react";
 import React from "react";
 import Reconciler from "react-reconciler";
 import { ContinuousEventPriority, DefaultEventPriority, DiscreteEventPriority, LegacyRoot, NoEventPriority } from "react-reconciler/constants";

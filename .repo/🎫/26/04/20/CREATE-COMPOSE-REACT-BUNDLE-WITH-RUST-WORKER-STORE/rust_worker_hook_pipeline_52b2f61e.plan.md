@@ -1,6 +1,6 @@
 ---
 name: Rust worker hook pipeline
-overview: End-to-end refactor so the single source of truth is the Rust `KitStore` running in a Web Worker via WASM; `@compose/js` exposes a typed Comlink client; `@compose/react` exports `[value, setValue, status]` hooks driven by `KitEvent`; `@compose/sketchpad` consumes those hooks. Setters are async, return `Promise<Result<void, SetError>>`, and surface domain rejections (`IllegalName`, `Timeout`, `DuplicateGuid`, …).
+overview: End-to-end refactor so the single source of truth is the Rust `KitStore` running in a Web Worker via WASM; `@semio-tech/compose-js` exposes a typed Comlink client; `@semio-tech/compose-react` exports `[value, setValue, status]` hooks driven by `KitEvent`; `@semio-tech/compose-sketchpad` consumes those hooks. Setters are async, return `Promise<Result<void, SetError>>`, and surface domain rejections (`IllegalName`, `Timeout`, `DuplicateGuid`, …).
 todos:
   - id: rs_errors
     content: Introduce SetError + KitEvent::SetRejected; refactor every set_* method in compose/rs to return SetResult with domain rejections and update existing events tests.
@@ -18,13 +18,13 @@ todos:
     content: Rewrite compose/react/index.tsx KitProvider + useField core on top of KitStoreClient event stream; regenerate per-field hooks to return [value, setValue, status].
     status: completed
   - id: sketchpad_migration
-    content: In compose/sketchpad/index.tsx replace local usePieceName/etc. with @compose/react re-exports and migrate all call sites from canSet to status.kind.
+    content: In compose/sketchpad/index.tsx replace local usePieceName/etc. with @semio-tech/compose-react re-exports and migrate all call sites from canSet to status.kind.
     status: cancelled
   - id: tests_pipeline
     content: Extend existing test regions (rs events, rs wasm-bindgen-test, js KitStoreClient, react hook tests, sketchpad Playwright spec) to cover success, IllegalName rejection, Timeout, concurrent writes.
     status: completed
   - id: verify_pipeline
-    content: cargo test --lib + cargo test --target wasm32-unknown-unknown, pnpm -F @compose/js test, pnpm -F @compose/react test, pnpm -F @compose/sketchpad test; confirm pipeline end-to-end.
+    content: cargo test --lib + cargo test --target wasm32-unknown-unknown, pnpm -F @semio-tech/compose-js test, pnpm -F @semio-tech/compose-react test, pnpm -F @semio-tech/compose-sketchpad test; confirm pipeline end-to-end.
     status: completed
 isProject: false
 ---
@@ -224,14 +224,14 @@ function useField<T>(
 
 ## 6. `compose/sketchpad` changes ([compose/sketchpad/index.tsx](compose/sketchpad/index.tsx))
 
-- Replace the ~300 local `useX` implementations and the `HookResult` / `conditionalHookResult` / `writableHookResult` helpers with re-exports / thin wrappers from `@compose/react`:
+- Replace the ~300 local `useX` implementations and the `HookResult` / `conditionalHookResult` / `writableHookResult` helpers with re-exports / thin wrappers from `@semio-tech/compose-react`:
   ```ts
   export {
     usePieceName,
     usePieceColor,
     useKitName /* ... */,
-  } from "@compose/react";
-  export type HookResult<T> = import("@compose/react").HookTriad<T>;
+  } from "@semio-tech/compose-react";
+  export type HookResult<T> = import("@semio-tech/compose-react").HookTriad<T>;
   ```
 - Replace the `useDesignAppCommands().updatePiece(...)` write path with direct `setValue(...)` from the hook triad. Delete `DesignAppCommands` mutation paths; keep selection/hover/etc. UX commands.
 - Update every `const [v, setV, canSet] = useX()` call site to `const [v, setV, status] = useX();` and `canSet` checks → `status.kind !== "readonly" && status.kind !== "pending"` (or just rely on `setV` always existing). Toast `status.lastError?.kind === "IllegalName"` next to the input.

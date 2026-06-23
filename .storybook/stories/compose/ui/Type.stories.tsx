@@ -5,11 +5,11 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { ConnectorGraphDto as Connector, Kit, Type as ComposeKind } from "@compose/react";
+import type { ConnectorGraphDto as Connector, Kit, Type as ComposeKind } from "@semio-tech/compose-react";
 import { ComposeType as TypeView } from "@compose/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
-import { MetabolismKit as metabolismKit } from "@compose/asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-asset";
 
 // #region 🖥️Data
 

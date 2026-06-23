@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@puzzle/3d/play` (mesh middleware + three aliases). */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/puzzle-3d-play` (mesh middleware + three aliases). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -18,12 +18,12 @@ export default createPlaygroundPlayViteConfig({
 	repoRoot,
 	playEntryKind: "3d",
 	extraAliases: [
-		{ find: "@puzzle/3d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@semio-tech/puzzle-3d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: /^three$/, replacement: threeModule },
 		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],
 	build: { outDir: "dist", emptyOutDir: true },
-	resolveDedupe: ["react", "react-dom", "three", "@puzzle/3d/react"],
+	resolveDedupe: ["react", "react-dom", "three", "@semio-tech/puzzle-3d-react"],
 	optimizeDeps: {
 		include: [
 			"react",
@@ -34,9 +34,9 @@ export default createPlaygroundPlayViteConfig({
 			"@react-three/fiber",
 			"@react-three/drei",
 			"lucide-react",
-			"@infinite/world/r3f",
-			"@infinite/cavas/react-renderer",
-			"@puzzle/3d/react",
+			"@semio-tech/infinite-world-r3f",
+			"@semio-tech/infinite-cavas-react-renderer",
+			"@semio-tech/puzzle-3d-react",
 		],
 		esbuildOptions: { target: "esnext" },
 	},

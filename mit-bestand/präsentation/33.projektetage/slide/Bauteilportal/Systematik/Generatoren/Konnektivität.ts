@@ -2,7 +2,7 @@ import {
 	PRESENTATION_DEFAULT_SLIDE_ASPECT,
 	type DispositionPosition,
 	type SlideFile,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
 const FIGURE_PARTICIPANT = "konnektivität-beispiel-3d";
 const FIGURE_EMBODIMENT = "konnektivität-beispiel-3d--figure";

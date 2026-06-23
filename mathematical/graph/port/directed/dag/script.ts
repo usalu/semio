@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀 `@dag/core` router: `bun ./script.ts wasm`. */
+/** 🦀 `@semio-tech/dag-core` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../../repo/lib/js/src/index.ts";
 
 class WasmScript extends BundleScript {
@@ -10,7 +10,7 @@ class WasmScript extends BundleScript {
       logPrefix: "graph/dag",
       wasmBaseName: "mathematical_graph_port_directed_dag",
       pkg: {
-        name: "@dag/core",
+        name: "@semio-tech/dag-core",
         files: [
           "mathematical_graph_port_directed_dag_bg.wasm",
           "mathematical_graph_port_directed_dag.js",

@@ -44,7 +44,7 @@ isProject: false
 ```mermaid
 flowchart TB
   subgraph main [Browser main thread]
-    UI[React UI / @flow/react]
+    UI[React UI / @semio-tech/flow-react]
     Setting["Worker-count setting<br/>navigator.hardwareConcurrency"]
   end
   subgraph orch [Dedicated orchestrator worker]

@@ -1,8 +1,8 @@
 {
 	"$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/presentation/renderer/react",
+	"name": "@semio-tech/framework-presentation-renderer-react",
 	"version": "0.1.0",
-	"description": "framework · React + reveal.js renderer for @framework/presentation/core",
+	"description": "framework · React + reveal.js renderer for @semio-tech/framework-presentation-core",
 	"type": "module",
 	"private": true,
 	"exports": {
@@ -10,9 +10,9 @@
 		"./globals.css": "./globals.css"
 	},
 	"dependencies": {
-		"@framework/core": "workspace:*",
-		"@framework/presentation/core": "workspace:*",
-		"@ui/react": "workspace:*",
+		"@semio-tech/framework-core": "workspace:*",
+		"@semio-tech/framework-presentation-core": "workspace:*",
+		"@semio-tech/ui-react": "workspace:*",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
 		"react-pdf": "^10.3.0",

@@ -17,7 +17,7 @@
 
 ## Sketchpad
 
-- No import changes (already uses `@compose/react` only); `npm run build` verified.
+- No import changes (already uses `@semio-tech/compose-react` only); `npm run build` verified.
 
 ## Tests run
 

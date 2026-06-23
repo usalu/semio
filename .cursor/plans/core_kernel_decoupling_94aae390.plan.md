@@ -59,8 +59,8 @@ flowchart LR
 ## Workstream A — Detach assets (register-entry)
 
 - In `cad/js/core/index.ts` `ModelDefinitionAssets` region: delete all `import.meta.glob` calls. Replace with a registry holding the raw catalogs (typology/action/interaction/manifest/attribute/property/transformation/extension) plus `registerModelDefinitionAssets(catalogs)` and a reset. Keep the existing `modelDefinition*Catalog()` accessors but have them read the registry. Clear the `*OwnerByIdCache` and `modelDefinitionFolderIdMapCache` on register. Zero `assets/` references remain in `index.ts`.
-- New file `cad/js/core/assets.ts`: holds the `import.meta.glob(...)` blocks (paths relative to this file) and calls `registerModelDefinitionAssets(...)` from `@cad/js/core` at import time. Add `assets.ts` to `cad/js/core/tsconfig.json` `include`.
-- Side-effect import `@cad/js/core/assets` from every consumer: `cad/js/kernel/brepjs/index.ts`, `cad/js/query/index.ts`, the play apps' entry files, `cad/js/renderer`, and the core `Tests` region (`import "./asset"`). Confirm bun resolves the `@cad/js/core/assets` subpath; if not, add a subpath to core `package.json`.
+- New file `cad/js/core/assets.ts`: holds the `import.meta.glob(...)` blocks (paths relative to this file) and calls `registerModelDefinitionAssets(...)` from `@semio-tech/cad-js-core` at import time. Add `assets.ts` to `cad/js/core/tsconfig.json` `include`.
+- Side-effect import `@semio-tech/cad-js-core/assets` from every consumer: `cad/js/kernel/brepjs/index.ts`, `cad/js/query/index.ts`, the play apps' entry files, `cad/js/renderer`, and the core `Tests` region (`import "./asset"`). Confirm bun resolves the `@semio-tech/cad-js-core/assets` subpath; if not, add a subpath to core `package.json`.
 
 ## Workstream B — Geometry primitives to the kernel
 
@@ -78,7 +78,7 @@ flowchart LR
 ## Workstream D — Tests & validation
 
 - Extend the core `Tests` region and kernel `Tests` region (no new test files): registry-driven asset loading; new kernel geometry primitives; data-driven energy `from_geometry` produces identical objects (`energy.energy.hull/roof/baseplate/externalwall/windows`).
-- Run vitest for `@cad/js/core`, `@cad/js/kernel/brepjs`, `@cad/js/query` via nx and confirm green with runtime output.
+- Run vitest for `@semio-tech/cad-js-core`, `@semio-tech/cad-js-kernel-brepjs`, `@semio-tech/cad-js-query` via nx and confirm green with runtime output.
 
 ## Ticket workflow (per repo rules)
 

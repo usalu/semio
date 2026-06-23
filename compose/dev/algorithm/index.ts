@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 compose/algorithm/index.ts
-// Specs: Story helpers over `@compose/js` `openSessionInMemory` + `installProjection` plus plain JSON {@link Design} types from `@compose/ui`.
+// Specs: Story helpers over `@semio-tech/compose-js` `openSessionInMemory` + `installProjection` plus plain JSON {@link Design} types from `@compose/ui`.
 // Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no snapshot store or schema bridge.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -25,13 +25,13 @@ import {
 } from "@compose/ui";
 import * as React from "react";
 
-import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@compose/fixture";
+import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio-tech/compose-fixture";
 
-import { openSessionInMemory, type Store as JsStore } from "@compose/js";
+import { openSessionInMemory, type Store as JsStore } from "@semio-tech/compose-js";
 // #endregion 🔌Adapters
 
 // #region 🧾GqlWire
-/** @emoji 🧾 Local GraphQL response fragment object (replaces re-exported @compose/js wire types). */
+/** @emoji 🧾 Local GraphQL response fragment object (replaces re-exported @semio-tech/compose-js wire types). */
 type GqlWireObject = { readonly [k: string]: unknown };
 // #endregion 🧾GqlWire
 

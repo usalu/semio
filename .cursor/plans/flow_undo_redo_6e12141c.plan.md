@@ -21,7 +21,7 @@ todos:
     content: Extend Rust tests in lib.rs and vitest in index.tsx for undo/redo
     status: completed
   - id: build-verify
-    content: Rebuild WASM (nx run @flow/core:wasm) and run core + react test suites
+    content: Rebuild WASM (nx run @semio-tech/flow-core:wasm) and run core + react test suites
     status: completed
 isProject: false
 ---
@@ -103,7 +103,7 @@ On a true result: `event.preventDefault()`, then `emitInteractionState(session);
 
 ## Build / verify
 
-- Rebuild WASM so JS picks up new methods: `nx run @flow/core:wasm` (the launch.json "flow core wasm" task) — required before the vitest test passes.
+- Rebuild WASM so JS picks up new methods: `nx run @semio-tech/flow-core:wasm` (the launch.json "flow core wasm" task) — required before the vitest test passes.
 - Run core Rust tests and the flow/react vitest suite to confirm runtime behavior.
 
 ## Notes

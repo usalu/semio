@@ -240,7 +240,7 @@
           "conversation_id": "38a6eeb1-e6c4-4934-bd47-fceef108f5f0",
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
-          "content": "// #region 🔖Header\n// [👤compose📚js💻compose](composerepo://p/u/compose/b/l/js/f/compose.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// Core domain model types, schemas and utilities for the compose platform.\n\n// #endregion 🔖Header\n\n// #region 🔖Imports\n// [👤compose📚js💻compose🔖imports](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Imports)\n// External dependency imports MUST be declared here.\nimport { default as adjectives } from \"@compose/assets/lists/adjectives.json\" with { type: \"json\" };\nimport { default as animals } from \"@compose/assets/lists/animals.json\" with { type: \"json\" };\nimport { ClassValue, clsx } from \"clsx\";\nimport cytoscape from \"cytoscape\";\nimport { twMerge } from \"tailwind-merge\";\nimport * as THREE from \"three\";\nimport { v7 as uuidv7 } from \"uuid\";\nimport { z } from \"zod\";\nimport CONSTANTS from \"./constants.json\" with { type: \"json\" };\n\n// #endregion 🔖Imports\n\n// #region 🔖Constants\n// [👤compose📚js💻compose🔖constants](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Constants)\n// Global constants MUST define shared numeric parameters.\n\n/** Standard icon width in pixels.\n * [👤compose📚js💻compose🔖constants🪨iconwidth](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Constants/d/i/ICON_WIDTH)\n**/\nexport const ICON_WIDTH = CONSTANTS.icon.width;\n/**\n * Numeric tolerance for floating-point comparisons.\n *\n *  * [👤compose📚js💻compose🔖constants🪨tolerance](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Constants/d/i/TOLERANCE)\n **/\nexport const TOLERANCE = CONSTANTS.tolerance;\n",
+          "content": "// #region 🔖Header\n// [👤compose📚js💻compose](composerepo://p/u/compose/b/l/js/f/compose.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// Core domain model types, schemas and utilities for the compose platform.\n\n// #endregion 🔖Header\n\n// #region 🔖Imports\n// [👤compose📚js💻compose🔖imports](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Imports)\n// External dependency imports MUST be declared here.\nimport { default as adjectives } from \"@semio-tech/compose-assets/lists/adjectives.json\" with { type: \"json\" };\nimport { default as animals } from \"@semio-tech/compose-assets/lists/animals.json\" with { type: \"json\" };\nimport { ClassValue, clsx } from \"clsx\";\nimport cytoscape from \"cytoscape\";\nimport { twMerge } from \"tailwind-merge\";\nimport * as THREE from \"three\";\nimport { v7 as uuidv7 } from \"uuid\";\nimport { z } from \"zod\";\nimport CONSTANTS from \"./constants.json\" with { type: \"json\" };\n\n// #endregion 🔖Imports\n\n// #region 🔖Constants\n// [👤compose📚js💻compose🔖constants](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Constants)\n// Global constants MUST define shared numeric parameters.\n\n/** Standard icon width in pixels.\n * [👤compose📚js💻compose🔖constants🪨iconwidth](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Constants/d/i/ICON_WIDTH)\n**/\nexport const ICON_WIDTH = CONSTANTS.icon.width;\n/**\n * Numeric tolerance for floating-point comparisons.\n *\n *  * [👤compose📚js💻compose🔖constants🪨tolerance](composerepo://p/u/compose/b/l/js/f/compose.ts/s/Constants/d/i/TOLERANCE)\n **/\nexport const TOLERANCE = CONSTANTS.tolerance;\n",
           "file_path": "/workspaces/semio/compose/js/compose.ts",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
@@ -4679,7 +4679,7 @@
           "conversation_id": "38a6eeb1-e6c4-4934-bd47-fceef108f5f0",
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
-          "content": "//tsconfig.json\n//2025 Ueli Saluz\n//This program is free software: you can redistribute it and/or modify\n//it under the terms of the GNU Lesser General Public License as\n//published by the Free Software Foundation, either version 3 of the\n//License, or (at your option) any later version.\n//This program is distributed in the hope that it will be useful,\n//but WITHOUT ANY WARRANTY; without even the implied warranty of\n//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n//GNU Lesser General Public License for more details.\n//You should have received a copy of the GNU Lesser General Public License\n//along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n{\n  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n  \"compilerOptions\": {\n    \"target\": \"ESNext\", // Must be present for MarkDoc, value must be \u003e= es2015\n    \"module\": \"ESNext\",\n    \"lib\": [\"DOM\", \"ESNext\"],\n    \"moduleResolution\": \"bundler\", // Don't change. Needed for Vite\n    \"jsx\": \"preserve\", // Don't change. Needed for Nextjs\n    \"strict\": true, // Must be present for Nextjs, value optional\n    \"esModuleInterop\": true, // Don't change. Needed for Nextjs, Electron and MarkDoc\n    \"isolatedModules\": true, // Don't change. Needed for Nextjs\n    \"resolveJsonModule\": true, // Must be present for Nextjs, value optional\n    \"skipLibCheck\": true, // Must be present for Nextjs (value optional), true recommended by XState\n    \"strictNullChecks\": true, // true recommended by XState\n    \"allowJs\": false, // Must be present for Nextjs, value optional\n    \"incremental\": false, // Must be present for Nextjs, value optional\n    \"noEmit\": true, // Must be present for Nextjs, value optional\n    // \"verbatimModuleSyntax\": true, // Recommended for astro to avoid bundling issues, value optional\n    // \"sourceMap\": true,\n    \"types\": [\"react\", \"react-dom\"],\n    \"baseUrl\": \".\",\n    \"paths\": {\n      \"@compose/js\": [\".\"],\n      \"@compose/js/*\": [\"./*\"],\n      \"@elements/ui\": [\"../../elements/ui\"],\n      \"@elements/ui/*\": [\"../../elements/ui/*\"],\n      \"@compose/assets\": [\"../assets\"],\n      \"@compose/assets/*\": [\"../assets/*\"]\n    }\n  },\n  \"include\": [\"index.ts\", \"compose.ts\", \"constants.json\"],\n  \"exclude\": [\"node_modules\", \"_debug_diff.ts\", \"debug_design.cjs\", \"compose.test.ts\", \"compose.benchmark.ts\"]\n}\n",
+          "content": "//tsconfig.json\n//2025 Ueli Saluz\n//This program is free software: you can redistribute it and/or modify\n//it under the terms of the GNU Lesser General Public License as\n//published by the Free Software Foundation, either version 3 of the\n//License, or (at your option) any later version.\n//This program is distributed in the hope that it will be useful,\n//but WITHOUT ANY WARRANTY; without even the implied warranty of\n//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n//GNU Lesser General Public License for more details.\n//You should have received a copy of the GNU Lesser General Public License\n//along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n{\n  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n  \"compilerOptions\": {\n    \"target\": \"ESNext\", // Must be present for MarkDoc, value must be \u003e= es2015\n    \"module\": \"ESNext\",\n    \"lib\": [\"DOM\", \"ESNext\"],\n    \"moduleResolution\": \"bundler\", // Don't change. Needed for Vite\n    \"jsx\": \"preserve\", // Don't change. Needed for Nextjs\n    \"strict\": true, // Must be present for Nextjs, value optional\n    \"esModuleInterop\": true, // Don't change. Needed for Nextjs, Electron and MarkDoc\n    \"isolatedModules\": true, // Don't change. Needed for Nextjs\n    \"resolveJsonModule\": true, // Must be present for Nextjs, value optional\n    \"skipLibCheck\": true, // Must be present for Nextjs (value optional), true recommended by XState\n    \"strictNullChecks\": true, // true recommended by XState\n    \"allowJs\": false, // Must be present for Nextjs, value optional\n    \"incremental\": false, // Must be present for Nextjs, value optional\n    \"noEmit\": true, // Must be present for Nextjs, value optional\n    // \"verbatimModuleSyntax\": true, // Recommended for astro to avoid bundling issues, value optional\n    // \"sourceMap\": true,\n    \"types\": [\"react\", \"react-dom\"],\n    \"baseUrl\": \".\",\n    \"paths\": {\n      \"@semio-tech/compose-js\": [\".\"],\n      \"@semio-tech/compose-js/*\": [\"./*\"],\n      \"@elements/ui\": [\"../../elements/ui\"],\n      \"@elements/ui/*\": [\"../../elements/ui/*\"],\n      \"@semio-tech/compose-assets\": [\"../assets\"],\n      \"@semio-tech/compose-assets/*\": [\"../assets/*\"]\n    }\n  },\n  \"include\": [\"index.ts\", \"compose.ts\", \"constants.json\"],\n  \"exclude\": [\"node_modules\", \"_debug_diff.ts\", \"debug_design.cjs\", \"compose.test.ts\", \"compose.benchmark.ts\"]\n}\n",
           "file_path": "/workspaces/semio/compose/js/tsconfig.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
@@ -4851,7 +4851,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Shell",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
             "cwd": "",
             "timeout": 120000
           },
@@ -4869,7 +4869,7 @@
       "event": {
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "cursor-chat",
-        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "llm": "claude-4.6-opus-high-thinking",
@@ -4887,7 +4887,7 @@
           "conversation_id": "38a6eeb1-e6c4-4934-bd47-fceef108f5f0",
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+          "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
           "cwd": "",
           "sandbox": false,
           "hook_event_name": "beforeShellExecution",
@@ -4902,7 +4902,7 @@
       "event": {
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "cursor-chat",
-        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "llm": "claude-4.6-opus-high-thinking",
@@ -4920,7 +4920,7 @@
           "conversation_id": "38a6eeb1-e6c4-4934-bd47-fceef108f5f0",
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+          "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
           "output": "\n NX   Cannot find module 'eslint/use-at-your-own-risk'\n\nRequire stack:\n- /workspaces/semio/node_modules/@typescript-eslint/utils/dist/ts-eslint/eslint/FlatESLint.js\n- /workspaces/semio/node_modules/@typescript-eslint/utils/dist/ts-eslint/ESLint.js\n- /workspaces/semio/node_modules/@typescript-eslint/utils/dist/ts-eslint/index.js\n- /workspaces/semio/node_modules/@typescript-eslint/utils/dist/index.js\n- /workspaces/semio/node_modules/@nx/eslint-plugin/src/rules/enforce-module-boundaries.js\n- /workspaces/semio/node_modules/@nx/eslint-plugin/src/index.js\n- /workspaces/semio/node_modules/nx/src/project-graph/plugins/load-resolved-plugin.js\n- /workspaces/semio/node_modules/nx/src/project-graph/plugins/isolation/plugin-worker.js\nPass --verbose to see the stacktrace.\n\n",
           "duration": 1415.292,
           "sandbox": false,
@@ -4936,7 +4936,7 @@
       "event": {
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "cursor-chat",
-        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.ended",
         "llm": "claude-4.6-opus-high-thinking",
@@ -4957,7 +4957,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Shell",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
             "cwd": "",
             "timeout": 120000
           },
@@ -4977,7 +4977,7 @@
       "event": {
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "cursor-chat",
-        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @compose/js:test 2\u003e\u00261",
+        "command": "cd /workspaces/semio \u0026\u0026 npx nx run @semio-tech/compose-js:test 2\u003e\u00261",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.ended",
         "llm": "claude-4.6-opus-high-thinking",

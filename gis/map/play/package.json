@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@gis/map/play",
+  "name": "@semio-tech/gis-map-play",
   "version": "0.1.0",
   "description": "gis · map play harness",
   "type": "module",
@@ -9,18 +9,18 @@
     ".": "./index.ts"
   },
   "scripts": {
-    "dev": "bun nx run @gis/map/play:dev",
-    "build": "bun nx run @gis/map/play:build",
-    "build-tiles": "bun nx run @gis/map/play:build-tiles",
-    "test": "bun nx run @gis/map/play:test",
-    "tiles": "bun nx run @gis/map/play:tiles",
-    "fixture": "bun nx run @gis/map/play:fixture"
+    "dev": "bun nx run @semio-tech/gis-map-play:dev",
+    "build": "bun nx run @semio-tech/gis-map-play:build",
+    "build-tiles": "bun nx run @semio-tech/gis-map-play:build-tiles",
+    "test": "bun nx run @semio-tech/gis-map-play:test",
+    "tiles": "bun nx run @semio-tech/gis-map-play:tiles",
+    "fixture": "bun nx run @semio-tech/gis-map-play:fixture"
   },
   "dependencies": {
-    "@framework/playground/core": "workspace:*"
+    "@semio-tech/framework-playground-core": "workspace:*"
   },
   "devDependencies": {
-    "@framework/playground/renderer/react": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.9.3",

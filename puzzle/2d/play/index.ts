@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 puzzle/2d/play/index.ts — Puzzle 2D play shell on `@framework/playground/core`: declarative bodies, LOD measures, toolbar tools (no React).
+// 💻 puzzle/2d/play/index.ts — Puzzle 2D play shell on `@semio-tech/framework-playground-core`: declarative bodies, LOD measures, toolbar tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -34,7 +34,7 @@ import {
 	normalizeKindWeightGroup,
 	syncKindWeightMap,
 	type KindWeightMap,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.2d.json";
 import concreteForestFixtureJson from "../fixture/concrete-forest.2d.json";
@@ -87,7 +87,7 @@ import {
 	type Puzzle2dRenderer,
 } from "../react/index.tsx";
 
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 
 export { PUZZLE_2D_FILL_COUNT_MAX };
 
@@ -3123,7 +3123,7 @@ if (
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {
 		await import("./globals.css");
-		const { boot2dPlay } = await import("@framework/playground/renderer/react/puzzle/2d");
+		const { boot2dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/2d");
 		boot2dPlay(new Playground2d());
 	})();
 }

@@ -18,7 +18,7 @@ todos:
     content: Add bim to flow/play, procedural/play, procedural/react build/test script module lists (+ flow_module_bim cargo -p)
     status: completed
   - id: aliases
-    content: Add @flow/module-bim aliases to flow/react, procedural/react, procedural/play vitest configs and procedural/play vite config
+    content: Add @semio-tech/flow-module-bim aliases to flow/react, procedural/react, procedural/play vitest configs and procedural/play vite config
     status: completed
   - id: launch
     content: Add module-bim launch.json dev entry and include flow_module_bim in the flow cargo test command
@@ -43,7 +43,7 @@ isProject: false
 Create mirroring `flow/modules/math/`:
 
 - `Cargo.toml`: package `flow_module_bim`, `crate-type = ["rlib","cdylib"]`, `default = ["standalone-wasm"]`; deps `flow_module_wasm`, `neural_engine`, `serde_json` (+ `serde` derive); wasm32 target dep `wasm-bindgen` (optional). No geometry/brep deps.
-- `package.json`: name `@flow/module-bim`, `bundleKind: "library"`, `wasm` script `bun nx run @flow/module-bim:wasm`, directory `flow/modules/bim`.
+- `package.json`: name `@semio-tech/flow-module-bim`, `bundleKind: "library"`, `wasm` script `bun nx run @semio-tech/flow-module-bim:wasm`, directory `flow/modules/bim`.
 - `project.json`: nx `wasm` target running `bun ./script.ts wasm` with `cwd flow/modules/bim`.
 - `script.ts`: `WasmScript` via `runWasmPackWebBuild` with `wasmBaseName: "flow_module_bim"`, pkg files `flow_module_bim*`.
 - `lib.rs`: structured with regions (mirroring `flow/modules/math/lib.rs`):
@@ -74,12 +74,12 @@ Create mirroring `flow/modules/math/`:
 
 ## 5. Vitest/Vite aliases (consistency with `@flow/module-*`)
 
-- `[flow/react/vitest.config.ts](flow/react/vitest.config.ts)`, `[procedural/react/vitest.config.ts](procedural/react/vitest.config.ts)`, `[procedural/play/vitest.config.ts](procedural/play/vitest.config.ts)`: add `@flow/module-bim` -> `flow/modules/bim/pkg/flow_module_bim.js`.
-- `[procedural/play/vite.config.ts](procedural/play/vite.config.ts)`: add `@flow/module-bim` alias.
+- `[flow/react/vitest.config.ts](flow/react/vitest.config.ts)`, `[procedural/react/vitest.config.ts](procedural/react/vitest.config.ts)`, `[procedural/play/vitest.config.ts](procedural/play/vitest.config.ts)`: add `@semio-tech/flow-module-bim` -> `flow/modules/bim/pkg/flow_module_bim.js`.
+- `[procedural/play/vite.config.ts](procedural/play/vite.config.ts)`: add `@semio-tech/flow-module-bim` alias.
 
 ## 6. launch.json
 
-- `[.vscode/launch.json](.vscode/launch.json)`: add `🛠️dev🌊flow🦀module-bim` entry (`bun nx run @flow/module-bim:wasm`, group `3_dev`, order `171.565` between brep `171.56` and test `171.6`); add `flow_module_bim` to the `🛠️dev🌊flow🦀test` cargo command (line 901).
+- `[.vscode/launch.json](.vscode/launch.json)`: add `🛠️dev🌊flow🦀module-bim` entry (`bun nx run @semio-tech/flow-module-bim:wasm`, group `3_dev`, order `171.565` between brep `171.56` and test `171.6`); add `flow_module_bim` to the `🛠️dev🌊flow🦀test` cargo command (line 901).
 
 ## 7. Ticket + validation (implementation)
 

@@ -226,7 +226,7 @@
       "name": "🛠️dev🏘️compose📐3dm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @compose/3dm-ui",
+      "command": "bun nx dev @semio-tech/compose-3dm-ui",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -308,7 +308,7 @@
       "name": "🛠️dev🏘️compose✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @compose/play:dev",
+      "command": "bun nx run @semio-tech/compose-sketchpad-play:dev",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -324,7 +324,7 @@
       "name": "🛠️dev🏘️compose🧮query🧪test",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @compose/query:test",
+      "command": "bun nx run @semio-tech/compose-query:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -335,7 +335,7 @@
       "name": "🛠️dev🥅framework🧪core",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @framework/core:test",
+      "command": "bun nx run @semio-tech/framework-core:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -346,7 +346,7 @@
       "name": "🛠️dev🥅framework🧪platform",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @framework/platform/core:test",
+      "command": "bun nx run @semio-tech/framework-platform-core:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -357,7 +357,7 @@
       "name": "🛠️dev🥅framework🧪playground",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @framework/playground/core:test",
+      "command": "bun nx run @semio-tech/framework-playground-core:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -368,7 +368,7 @@
       "name": "🛠️dev🖱️ui🪁typecheck",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @ui/react:typecheck",
+      "command": "bun nx run @semio-tech/ui-react:typecheck",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -379,7 +379,7 @@
       "name": "🛠️dev🏘️compose🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @compose/query:build",
+      "command": "bun nx run @semio-tech/compose-query:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -421,7 +421,7 @@
       "name": "🛠️dev🏘️compose🧪fixtures🔄metabolism-light",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @compose/fixture:regenerate-metabolism-light",
+      "command": "bun nx run @semio-tech/compose-fixture:regenerate-metabolism-light",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -432,7 +432,7 @@
       "name": "🛠️dev🏘️compose✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @compose/sketchpad",
+      "command": "bun nx dev @semio-tech/compose-sketchpad",
       "env": {
         "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
       },
@@ -483,7 +483,7 @@
       "name": "🛠️dev🏘️compose🎗️vscodeintegrated",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @compose/vscode",
+      "command": "bun nx dev @semio-tech/compose-vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -514,7 +514,7 @@
       "name": "🛠️dev🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @coda/desktop:dev",
+      "command": "bun nx run @semio-tech/coda-desktop:dev",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -628,7 +628,7 @@
       "name": "🛠️dev🧰repo🎗️vscodeintegrated",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev repo",
+      "command": "bun nx dev @semio-tech/repo-vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -697,7 +697,7 @@
       "name": "🛠️dev📐cad🧪kernel🪜fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/kernel/brepjs:fixture",
+      "command": "bun nx run @semio-tech/cad-js-kernel-brepjs:fixture",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -708,7 +708,7 @@
       "name": "🛠️dev📐cad🧪runtime",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/runtime:test",
+      "command": "bun nx run @semio-tech/cad-js-runtime:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -719,7 +719,7 @@
       "name": "🛠️dev📐cad🧪module🧭spatial-shape",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/module/spatial-shape:test",
+      "command": "bun nx run @semio-tech/cad-js-module-spatial-shape:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -730,7 +730,7 @@
       "name": "🛠️dev📐cad🧪module🏗️aec-building",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/module/aec-building:test",
+      "command": "bun nx run @semio-tech/cad-js-module-aec-building:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -741,7 +741,7 @@
       "name": "🛠️dev📐cad🧪module⚡aec-building-energy",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/module/aec-building-energy:test",
+      "command": "bun nx run @semio-tech/cad-js-module-aec-building-energy:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -752,7 +752,7 @@
       "name": "🛠️dev📐cad🧪module🏛️aec-building-structure",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @cad/js/module/aec-building-structure:test",
+      "command": "bun nx run @semio-tech/cad-js-module-aec-building-structure:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -763,7 +763,7 @@
       "name": "🛠️dev♾️infinite✈️cavas🧪react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @infinite/cavas/react-renderer:test",
+      "command": "bun nx run @semio-tech/infinite-cavas-react-renderer:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -774,7 +774,7 @@
       "name": "🛠️dev♾️infinite🏙️world🧪r3f",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @infinite/world/r3f:test",
+      "command": "bun nx run @semio-tech/infinite-world-r3f:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -815,7 +815,7 @@
       "name": "🛠️dev🌊flow🧪validate",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/play:validate",
+      "command": "bun nx run @semio-tech/flow-play:validate",
       "cwd": "${workspaceFolder}",
       "env": {
         "FLOW_PLAY_PORT": "6016"
@@ -829,7 +829,7 @@
       "name": "🛠️dev🌊flow🦀rs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/core:wasm",
+      "command": "bun nx run @semio-tech/flow-core:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -840,7 +840,7 @@
       "name": "🛠️dev🌊flow🦀module-core",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-core:wasm",
+      "command": "bun nx run @semio-tech/flow-module-core:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -851,7 +851,7 @@
       "name": "🛠️dev🌊flow🦀module-math",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-math:wasm",
+      "command": "bun nx run @semio-tech/flow-module-math:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -862,7 +862,7 @@
       "name": "🛠️dev🌊flow🦀module-text",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-text:wasm",
+      "command": "bun nx run @semio-tech/flow-module-text:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -873,7 +873,7 @@
       "name": "🛠️dev🌊flow🦀module-logic",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-logic:wasm",
+      "command": "bun nx run @semio-tech/flow-module-logic:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -884,7 +884,7 @@
       "name": "🛠️dev🌊flow🦀module-dictionary",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-dictionary:wasm",
+      "command": "bun nx run @semio-tech/flow-module-dictionary:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -895,7 +895,7 @@
       "name": "🛠️dev🌊flow🦀module-list",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-list:wasm",
+      "command": "bun nx run @semio-tech/flow-module-list:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -906,7 +906,7 @@
       "name": "🛠️dev🌊flow🦀module-brep",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-brep:wasm",
+      "command": "bun nx run @semio-tech/flow-module-brep:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -917,7 +917,7 @@
       "name": "🛠️dev🌊flow🦀module-bim",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @flow/module-bim:wasm",
+      "command": "bun nx run @semio-tech/flow-module-bim:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -958,7 +958,7 @@
       "name": "🛠️dev🌳dag🧪validate",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @dag/play:validate",
+      "command": "bun nx run @semio-tech/dag-play:validate",
       "cwd": "${workspaceFolder}",
       "env": {
         "DAG_PLAY_PORT": "6017"
@@ -972,7 +972,7 @@
       "name": "🛠️dev🌳dag🦀rs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @dag/core:wasm",
+      "command": "bun nx run @semio-tech/dag-core:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1021,7 +1021,7 @@
       "name": "🛠️dev🔧procedural🧪geometry-brep",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @geometry/brep/js:test",
+      "command": "bun nx run @semio-tech/geometry-brep-js:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1089,7 +1089,7 @@
       "name": "🛠️dev🌐gis📍map🧩tiles",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @gis/map/play:tiles",
+      "command": "bun nx run @semio-tech/gis-map-play:tiles",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1100,7 +1100,7 @@
       "name": "🛠️dev🌐gis📍map🧩fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @gis/map/play:fixture",
+      "command": "bun nx run @semio-tech/gis-map-play:fixture",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1111,7 +1111,7 @@
       "name": "📦build🌐gis📍map",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @gis/map/play:build",
+      "command": "bun nx run @semio-tech/gis-map-play:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1122,7 +1122,7 @@
       "name": "📦build🌐gis📍map🧩tiles",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @gis/map/play:build-tiles",
+      "command": "bun nx run @semio-tech/gis-map-play:build-tiles",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1133,7 +1133,7 @@
       "name": "🛠️dev🧩puzzle📷3d🦀rs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @puzzle/3d/rs:wasm",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1220,7 +1220,7 @@
       "name": "🛠️dev📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @mit-bestand/praesentation/projektetage:dev",
+      "command": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "PRAESENTATION_PROJEKTETAGE_PORT": "6050"
@@ -1239,7 +1239,7 @@
       "name": "🛠️dev📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @framework/presentation/play:dev",
+      "command": "bun nx run @semio-tech/framework-presentation-play:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "PRESENTATION_PLAY_PORT": "6051"
@@ -1337,7 +1337,7 @@
       "name": "🧪test🖱️ui🎨styling",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @ui/styling:test",
+      "command": "bun nx run @semio-tech/ui-styling:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1480,7 +1480,7 @@
       "name": "📦build📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @mit-bestand/praesentation/projektetage:build",
+      "command": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1491,7 +1491,7 @@
       "name": "📦build📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @framework/presentation/play:build",
+      "command": "bun nx run @semio-tech/framework-presentation-play:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

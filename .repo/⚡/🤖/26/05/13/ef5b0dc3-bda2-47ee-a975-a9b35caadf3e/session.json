@@ -912,7 +912,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 250,
-            "query": "from \"@compose/react\"|from '@compose/react'|useKit[A-Za-z]+\\(|useDesign[A-Za-z]+\\(|useType[A-Za-z]+\\(|usePiece[A-Za-z]+\\(",
+            "query": "from \"@semio-tech/compose-react\"|from '@semio-tech/compose-react'|useKit[A-Za-z]+\\(|useDesign[A-Za-z]+\\(|useType[A-Za-z]+\\(|usePiece[A-Za-z]+\\(",
             "isRegexp": true,
             "includePattern": "**/compose/sketchpad/index.tsx"
           },
@@ -999,7 +999,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 250,
-            "query": "from \"@compose/react\"|from '@compose/react'|useKit[A-Za-z]+\\(|useDesign[A-Za-z]+\\(|useType[A-Za-z]+\\(|usePiece[A-Za-z]+\\(",
+            "query": "from \"@semio-tech/compose-react\"|from '@semio-tech/compose-react'|useKit[A-Za-z]+\\(|useDesign[A-Za-z]+\\(|useType[A-Za-z]+\\(|usePiece[A-Za-z]+\\(",
             "isRegexp": true,
             "includePattern": "**/compose/sketchpad/index.tsx"
           },
@@ -1088,7 +1088,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 250,
-            "query": "from \"@compose/react\"|from '@compose/react'|useKit[A-Za-z]+\\(|useDesign[A-Za-z]+\\(|useType[A-Za-z]+\\(|usePiece[A-Za-z]+\\(",
+            "query": "from \"@semio-tech/compose-react\"|from '@semio-tech/compose-react'|useKit[A-Za-z]+\\(|useDesign[A-Za-z]+\\(|useType[A-Za-z]+\\(|usePiece[A-Za-z]+\\(",
             "isRegexp": true,
             "includePattern": "**/compose/sketchpad/index.tsx"
           },

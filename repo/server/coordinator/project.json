@@ -1,5 +1,5 @@
 {
-  "name": "@repo/coordinator",
+  "name": "@semio-tech/repo-coordinator",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

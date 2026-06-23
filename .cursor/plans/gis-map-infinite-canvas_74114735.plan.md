@@ -51,9 +51,9 @@ flowchart TB
     P2 --> IC
   end
   subgraph ts [TypeScript]
-    RR["@infinite/cavas/react-renderer"]
-    MR["@gis/map/react<br/>Map / Position / Route / Region"]
-    MP["@gis/map/play + OSM tile proxy"]
+    RR["@semio-tech/infinite-cavas-react-renderer"]
+    MR["@semio-tech/gis-map-react<br/>Map / Position / Route / Region"]
+    MP["@semio-tech/gis-map-play + OSM tile proxy"]
     RR --> MR --> MP
   end
   GM -->|"MapSession wasm"| MR
@@ -85,7 +85,7 @@ In `[puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs)`:
 
 - Replace local `Camera`/transforms/LOD/raster helpers with `infinite_cavas` re-exports; `BoardHost` implements `cavas::CanvasContent` (`build_scene` = existing `build_vector_scene`, `clear_color` = `vello_theme.raster_clear`).
 - Reduce `BoardSessionInner` to wrap `cavas::CanvasGpuSession` + `BoardHost`; keep the public `BoardSession` wasm API identical so `[puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx)` is unchanged.
-- Validate: `cargo test -p puzzle_2d -p infinite_cavas` and a `@puzzle/2d/play` dev smoke (confirm tiles/edges still render).
+- Validate: `cargo test -p puzzle_2d -p infinite_cavas` and a `@semio-tech/puzzle-2d-play` dev smoke (confirm tiles/edges still render).
 
 ## Stage 3 — `gis/map/rs` Rust crate (cdylib `gis_map`)
 
@@ -100,23 +100,23 @@ Restructure `gis/map/lib.rs` + `Cargo.toml` into `gis/map/rs/` and update worksp
   - implements `cavas::CanvasContent::build_scene` (tiles first, then regions, routes, positions) + pan/zoom/hit-test.
 - `#region WasmSession` (`cfg(wasm32)`): `MapSession` mirroring `BoardSession` surface API — `new`, `attach_canvas`, `setSize`, `setCamera`, `wheelScreen`, `pointerDown/Move/Up`, `renderFrame`, `gpuReady`, `syncMapJson(json)`, `uploadTile(z,x,y,bytes)`, `drainEventsJson`.
 - Cargo: `crate-type = ["rlib","cdylib"]`, deps `infinite_cavas`, `serde`, `serde_json`, `vello`, `image` (PNG decode), `cfg(wasm32)` wasm-bindgen stack — mirror `[puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)`.
-- Add `gis/map/rs/script.ts` using `runWasmPackWebBuild` (wasmBaseName `gis_map`, pkg `@gis/map/rs`) mirroring `[puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts)`.
+- Add `gis/map/rs/script.ts` using `runWasmPackWebBuild` (wasmBaseName `gis_map`, pkg `@semio-tech/gis-map-rs`) mirroring `[puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts)`.
 - Extend the `#region Tests` (projection round-trip, tile math, world-fit camera).
 
-## Stage 4 — `gis/map/react` React renderer (`@gis/map/react`)
+## Stage 4 — `gis/map/react` React renderer (`@semio-tech/gis-map-react`)
 
 New `gis/map/react/{index.tsx,package.json,project.json,script.ts,vitest.config.ts}` mirroring `[puzzle/2d/react](puzzle/2d/react)`:
 
 - Load `../rs/pkg/gis_map.js`; `ensureGisMapWasmLoaded()`; export `MapSession`.
 - `MapRenderer` owns one `MapSession`, RAF render loop, camera/event sync; a tile manager hook that computes needed tiles, fetches `/osm/{z}/{x}/{y}.png`, and calls `session.uploadTile(...)`.
-- Declarative `@infinite/cavas/react-renderer` reconciler host kinds `gis.map/position|route|region` + components `<MapCanvas>`, `<Position>`, `<Route>`, `<Region>`; default camera = whole world.
-- Depends on `@infinite/cavas/react-renderer`, `@gis/map/rs`, `@ui/react`, react stack.
+- Declarative `@semio-tech/infinite-cavas-react-renderer` reconciler host kinds `gis.map/position|route|region` + components `<MapCanvas>`, `<Position>`, `<Route>`, `<Region>`; default camera = whole world.
+- Depends on `@semio-tech/infinite-cavas-react-renderer`, `@semio-tech/gis-map-rs`, `@semio-tech/ui-react`, react stack.
 
 ## Stage 5 — `gis/map/play` playground + OSM tile proxy
 
 New `gis/map/play/{index.ts,index.html,globals.css,vite.config.ts,package.json,project.json,script.ts,vitest.config.ts,public/}` mirroring `[puzzle/2d/play](puzzle/2d/play)`:
 
-- `vite.config.ts` via `createPlaygroundPlayViteConfig({ playEntryKind: "map", extraAliases:[@gis/map/react] })`.
+- `vite.config.ts` via `createPlaygroundPlayViteConfig({ playEntryKind: "map", extraAliases:[@semio-tech/gis-map-react] })`.
 - Add `osmTileProxyVitePlugin` to `[ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts)` (mirrors `uiAssetsVitePlugin`): dev/preview middleware serving `/osm/:z/:x/:y.png` from `https://tile.openstreetmap.org/...` with a compliant `User-Agent` and a simple on-disk cache; wired in when `playEntryKind === "map"`.
 - Extend the kind union `PlaygroundRendererPuzzleKind` (`2d|3d|5d` → add `map`), boot subpath map, and host markers in `[ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts)`.
 - In `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)` add a `#region MapPlayHost` with `registerMapPlaySurfaceHosts`, a `mapPlayChromeBoot`, and `bootMapPlay`; add `buildMapWindowBody` in `[framework/product/playground/core/index.ts](framework/product/playground/core/index.ts)`.
@@ -125,7 +125,7 @@ New `gis/map/play/{index.ts,index.html,globals.css,vite.config.ts,package.json,p
 
 ## Stage 6 — Workspace wiring & validation
 
-- Add nx targets for `@gis/map/play` (dev/build/test) and `@gis/map/react` (test) in their `project.json`/`package.json`; pick a free dev port (e.g. `GIS_MAP_PLAY_PORT=6040`).
+- Add nx targets for `@semio-tech/gis-map-play` (dev/build/test) and `@semio-tech/gis-map-react` (test) in their `project.json`/`package.json`; pick a free dev port (e.g. `GIS_MAP_PLAY_PORT=6040`).
 - Register the new commands in `[.vscode/launch.json](.vscode/launch.json)` following existing order/grouping; the rust test target already includes `gis_map`.
-- Validate end-to-end: `cargo test` for `infinite_cavas`/`gis_map`/`puzzle_2d`; `@gis/map/react` vitest; `@gis/map/play` dev → confirm (with console logs) tiles load through the proxy, the world fits by default, and Position/Route/Region render and pan/zoom.
+- Validate end-to-end: `cargo test` for `infinite_cavas`/`gis_map`/`puzzle_2d`; `@semio-tech/gis-map-react` vitest; `@semio-tech/gis-map-play` dev → confirm (with console logs) tiles load through the proxy, the world fits by default, and Position/Route/Region render and pan/zoom.
 

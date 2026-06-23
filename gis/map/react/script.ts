@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@gis/map/react` task router: `bun ./script.ts test`. */
+/** 🧭 `@semio-tech/gis-map-react` task router: `bun ./script.ts test`. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runBun, runVitest } from "../../../repo/lib/js/src/index.ts";
 

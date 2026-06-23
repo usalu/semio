@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji ⚛️ `@framework/platform/renderer/react` — React renderer for {@link @framework/platform/core}: {@link ProductShell}, {@link PlatformView}, declarative {@link UiNode} host (monolith). */
+/** @emoji ⚛️ `@semio-tech/framework-platform-renderer-react` — React renderer for {@link @semio-tech/framework-platform-core}: {@link ProductShell}, {@link PlatformView}, declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
 export {
@@ -33,9 +33,9 @@ export {
 	PlatformTopologyStore,
 	getPlatformControllerById,
 	platformTopologyStoreId,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 
-export type { Level } from "@ui/react";
+export type { Level } from "@semio-tech/ui-react";
 export {
 	LevelProvider,
 	useLevel,
@@ -45,7 +45,7 @@ export {
 	getLevelZClass,
 	getLevelBorderElementClass,
 	getLevelDivideElementClass,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 
 // #region 🔌Adapters
 import {
@@ -136,15 +136,15 @@ import {
 	PlatformVirtualFileSystemDemoController,
 	virtualFileSystemSurfaceId,
 	PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
-import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
-import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
-import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController, classifyPuzzle2dIconSelectorMode } from "@puzzle/2d/react";
-import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
+import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@semio-tech/puzzle-2d-react";
+import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@semio-tech/puzzle-3d-react";
+import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController, classifyPuzzle2dIconSelectorMode } from "@semio-tech/puzzle-2d-react";
+import { FiveD, StoreProvider, compose5d, createStore } from "@semio-tech/puzzle-5d-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -251,11 +251,11 @@ import {
 	renderControlIcon,
 	type IconName,
 	type IconSource,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
-import type { AppToolCategory } from "@framework/core";
-import { ICONS } from "@ui/asset";
+import type { AppToolCategory } from "@semio-tech/framework-core";
+import { ICONS } from "@semio-tech/ui-asset";
 
 const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToolCategory> = true;
 
@@ -272,7 +272,7 @@ export interface ChromeFooterRow {
 	readonly disabled?: boolean;
 }
 
-export type { SidePanelTabConfig, TreePanelConfig, TreePanelDefinition, TreePanelSource } from "@ui/react";
+export type { SidePanelTabConfig, TreePanelConfig, TreePanelDefinition, TreePanelSource } from "@semio-tech/ui-react";
 
 //#endregion 📦shell-chrome-types.tsx
 
@@ -814,7 +814,7 @@ function findWindowTemplate(catalog: readonly WindowKindRuntime[], windowKindId:
 	return findWindowTemplateInList(kind.templates, templateId);
 }
 
-function mapWindowTemplatesToTreeItems(windowKindId: string, templates: readonly WindowTemplate[]): import("@ui/react").TreeDataItem[] {
+function mapWindowTemplatesToTreeItems(windowKindId: string, templates: readonly WindowTemplate[]): import("@semio-tech/ui-react").TreeDataItem[] {
 	return templates.map((template) => ({
 		id: `framework.display.windows.${windowKindId}.${template.id}`,
 		label: template.label,
@@ -830,11 +830,11 @@ function groupNamedLayoutsToTreeItems(
 	layouts: readonly NamedLayout[],
 	onApply: (layoutId: string) => void,
 	onDeleteUser?: (layoutId: string) => void,
-): import("@ui/react").TreeDataItem[] {
-	const root: import("@ui/react").TreeDataItem[] = [];
-	const folderByKey = new Map<string, import("@ui/react").TreeDataItem>();
+): import("@semio-tech/ui-react").TreeDataItem[] {
+	const root: import("@semio-tech/ui-react").TreeDataItem[] = [];
+	const folderByKey = new Map<string, import("@semio-tech/ui-react").TreeDataItem>();
 
-	const layoutLeaf = (entry: NamedLayout): import("@ui/react").TreeDataItem => ({
+	const layoutLeaf = (entry: NamedLayout): import("@semio-tech/ui-react").TreeDataItem => ({
 		id: `framework.display.layout.${entry.id}`,
 		label: entry.label,
 		description: entry.origin === "user" ? resolveTranslationLabel("ui.display.deleteLayout") : undefined,
@@ -2332,7 +2332,7 @@ const UIToolbar: React.FC<{
 };
 
 export { UISearch, UIFind, UIToolbar };
-export { App, Mode, Ui } from "@ui/react";
+export { App, Mode, Ui } from "@semio-tech/ui-react";
 
 // #endregion 📔UIToolbar
 

@@ -1,5 +1,5 @@
 {
-  "name": "@compose/play",
+  "name": "@semio-tech/compose-sketchpad-play",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

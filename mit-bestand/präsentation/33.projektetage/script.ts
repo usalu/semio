@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@mit-bestand/praesentation/projektetage` task router: `bun ./script.ts <dev|build> [args…]`. */
+/** 🧭 `@semio-tech/mit-bestand-praesentation-projektetage` task router: `bun ./script.ts <dev|build> [args…]`. */
 import {
 	BundleScript,
 	ScriptRouter,

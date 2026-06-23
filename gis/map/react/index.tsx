@@ -4,10 +4,12 @@
 
 // #region 🔌Adapters
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { cn, floatingMenuSurfaceClass, Icon, type IconName } from "@ui/react";
+import { cn, floatingMenuSurfaceClass, Icon, type IconName } from "@semio-tech/ui-react";
 import initGisMapWasm, { MapSession } from "../rs/pkg/gis_map.js";
 
-if (import.meta.vitest) {
+const gisMapWasmLoadedSync = Boolean(import.meta.vitest || (typeof process !== "undefined" && process.env.VITEST));
+
+if (gisMapWasmLoadedSync) {
   const { readFileSync } = await import("node:fs");
   const { initSync } = await import("../rs/pkg/gis_map.js");
   const wasmPath = new URL("../rs/pkg/gis_map_bg.wasm", import.meta.url).pathname;
@@ -17,6 +19,9 @@ if (import.meta.vitest) {
 }
 
 export async function ensureGisMapWasmLoaded(): Promise<void> {
+  if (gisMapWasmLoadedSync) {
+    return;
+  }
   await initGisMapWasm();
 }
 

@@ -1,7 +1,7 @@
 import {
 	figureFrameForSourceAspect,
 	type SlideFile,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
 const PARTICIPANT = "eingabeprozess-eingabearten";
 const EMBODIMENT = "eingabeprozess-eingabearten--figure";

@@ -2,7 +2,7 @@
   "title": "Fix Puzzle 3d Play Dev",
   "status": "closed",
   "description": "puzzle 3d play dev server fails with Babel duplicate declaration BoardStructuralDeleteReporter in framework playground react renderer.",
-  "summary": "Fixed puzzle 3d play 504 Outdated Optimize Dep: root cause was clearing node_modules/.vite while an old Vite server still listened on 6013, plus non-strict port fallback to 6014. runViteBunxDev now skips cache clear when the target port is in use, logs a clear message, and passes --strictPort by default. Added lucide-react to puzzle 3d play optimizeDeps. Tests: repo/lib/js 19/19, @puzzle/3d/play vitest 14/14.",
+  "summary": "Fixed puzzle 3d play 504 Outdated Optimize Dep: root cause was clearing node_modules/.vite while an old Vite server still listened on 6013, plus non-strict port fallback to 6014. runViteBunxDev now skips cache clear when the target port is in use, logs a clear message, and passes --strictPort by default. Added lucide-react to puzzle 3d play optimizeDeps. Tests: repo/lib/js 19/19, @semio-tech/puzzle-3d-play vitest 14/14.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪80276a7fbc27489ab72bd53969bc3776",

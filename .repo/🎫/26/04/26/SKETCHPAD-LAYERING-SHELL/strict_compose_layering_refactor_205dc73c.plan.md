@@ -15,7 +15,7 @@ todos:
    content: "js: rewrite index.ts into KitStore + per-entity Store classes (DesignStore/TypeStore/PieceStore/ConnectionStore/PortStore/ConnectorStore/RepresentationStore/AuthorStore/FileStore/FolderStore/ConceptStore/TagStore/QualityStore/BenchmarkStore/StatStore/PropStore/LayerStore/GroupStore/LocationStore/AttributeStore/FamilyStore) with typed methods + per-entity subscribe; delete patchEntityField/addChild/removeChild/getPieces/read shape mapping"
    status: pending
  - id: react_thin
-   content: "react: delete kitWasmClient.ts; shrink index.tsx to scopes + useSyncExternalStore reads + useCallback mutations; move domain types/classes to @compose/js"
+   content: "react: delete kitWasmClient.ts; shrink index.tsx to scopes + useSyncExternalStore reads + useCallback mutations; move domain types/classes to @semio-tech/compose-js"
    status: in_progress
  - id: sketchpad_clean
    content: "sketchpad: remove all *KitStore host instantiations and kit registry; open kits via useAttachBackbone({memory|dev|local|remote}); keep only local selection state"
@@ -52,7 +52,7 @@ flowchart LR
 
 Hard rules per layer (enforced by AGENTS.md + dependency-cruiser):
 
-- `compose/sketchpad` MUST NOT import `@compose/js` or `@compose/rs-wasm`.
+- `compose/sketchpad` MUST NOT import `@semio-tech/compose-js` or `@semio-tech/compose-rs-wasm`.
 - `compose/react` MUST NOT touch domain math, kit DTO mutation, or persistence.
 - `compose/js` MUST NOT cache kit data (every read goes through rs; subscriptions are passthrough events).
 - `compose/rs` is the single source of truth and the only mutator.
@@ -238,9 +238,9 @@ Reduce [`compose/react/index.tsx`](compose/react/index.tsx) (currently 635KB) an
 
 | Currently in react                                                                                                                                      | New home                                            | Rationale            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------- | ----- | --------- | ----------------- |
-| `Coordinate`, `Vec`, `Plane`, `Point`, `Vector`, schemas                                                                                                | `@compose/js` (re-exported domain types)              | not React            |
-| `Kit`, `Type`, `Design`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Author`, `File`, `Folder`, `Concept`, `Quality`, `Tag`, schemas | `@compose/js` per-entity store DTOs                   | not React            |
-| `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `createSessionKitStore`                                                                       | `@compose/rs` backbones via `attachBackbone({memory   | dev                  | local | remote})` | persistence in rs |
+| `Coordinate`, `Vec`, `Plane`, `Point`, `Vector`, schemas                                                                                                | `@semio-tech/compose-js` (re-exported domain types)              | not React            |
+| `Kit`, `Type`, `Design`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Author`, `File`, `Folder`, `Concept`, `Quality`, `Tag`, schemas | `@semio-tech/compose-js` per-entity store DTOs                   | not React            |
+| `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `createSessionKitStore`                                                                       | `@semio-tech/compose-rs` backbones via `attachBackbone({memory   | dev                  | local | remote})` | persistence in rs |
 | `LiveKitRoot`, `ComposeKitLiveReadStore`, `ComposeKitViewStore`, `ComposeKitDesignReadStore`, `ComposeKitShallowListReadStore`                                  | folded into `KitStore`/`DesignStore` subscriptions  | reads in rs          |
 | `kitEventAffects*` predicates                                                                                                                           | rs ships per-event affected ids; JS just dispatches | classification in rs |
 | `diffSchemaPropertyEvents`, `applyKitClientSnapshotToLocalStore`, `importKitToPlain`, `acquireComposeKitCommandFacade`, `createKitCommandEngine*`         | delete (no consumer outside react/sketchpad)        | dead glue            |
@@ -326,7 +326,7 @@ function App() {
  return (
   <KitStoreProvider initial={emptyKit}>
    <KitScope id={activeKitId}>
-    <Sketchpad /> // uses @compose/react hooks only
+    <Sketchpad /> // uses @semio-tech/compose-react hooks only
    </KitScope>
   </KitStoreProvider>
  );
@@ -355,9 +355,9 @@ Each phase opens a ticket via `repo` MCP, edits the existing files only, runs th
 2. **`refactor-rs-diff-only-applier`** — single `apply_kit_diff` mutator; delete `apply_kit_mutation(before, after)`; enforce `forward_diff` / `inverse_for` on every variant (§2.3). Tests: extend `kit_diff` and `change_command` units.
 3. **`refactor-rs-backbone-memory-and-shell`** — add `Memory` backbone; move `attach/detach/status/listConflicts/resolveConflict/syncNow` into `submitKitCommand`; emit results on the event stream (§2.4). Tests: extend `backbone` + `kit_coordinator`.
 4. **`refactor-js-per-entity-stores`** — rewrite [`compose/js/index.ts`](compose/js/index.ts) into per-entity Store classes; delete inline read shape mapping; update [`compose/js/worker.ts`](compose/js/worker.ts) to GraphQL-only (§3). Tests: extend the existing embedded tests at the bottom of `index.ts`.
-5. **`refactor-react-thin-hooks`** — delete [`compose/react/kitWasmClient.ts`](compose/react/kitWasmClient.ts); reduce [`compose/react/index.tsx`](compose/react/index.tsx) to scopes + `useSyncExternalStore` reads + `useCallback` mutations; move domain types to `@compose/js` (§4). Tests: extend `compose/react` test file (vitest).
+5. **`refactor-react-thin-hooks`** — delete [`compose/react/kitWasmClient.ts`](compose/react/kitWasmClient.ts); reduce [`compose/react/index.tsx`](compose/react/index.tsx) to scopes + `useSyncExternalStore` reads + `useCallback` mutations; move domain types to `@semio-tech/compose-js` (§4). Tests: extend `compose/react` test file (vitest).
 6. **`refactor-sketchpad-no-host-store`** — strip every `*KitStore` host instantiation and the kit registry from [`compose/sketchpad/index.tsx`](compose/sketchpad/index.tsx); replace VS Code/file/folder/remote opening with `useAttachBackbone(...)`; consolidate selection in a tiny zustand store (§5). Tests: extend the existing sketchpad playwright/vitest specs.
-7. **`enforce-strict-layering`** — add a dependency-cruiser config in repo root that fails CI when `sketchpad` imports `@compose/js` or `@compose/rs-wasm`, when `react` imports `@compose/rs-wasm` directly, or when `js` imports anything from `react`/`sketchpad`. Add an AGENTS.md update per bundle pinning these rules.
+7. **`enforce-strict-layering`** — add a dependency-cruiser config in repo root that fails CI when `sketchpad` imports `@semio-tech/compose-js` or `@semio-tech/compose-rs-wasm`, when `react` imports `@semio-tech/compose-rs-wasm` directly, or when `js` imports anything from `react`/`sketchpad`. Add an AGENTS.md update per bundle pinning these rules.
 
 ## 7. Out of scope
 

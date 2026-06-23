@@ -1,5 +1,5 @@
 {
-  "name": "@mit-bestand/praesentation/projektetage",
+  "name": "@semio-tech/mit-bestand-praesentation-projektetage",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

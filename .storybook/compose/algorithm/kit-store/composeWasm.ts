@@ -3,9 +3,9 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion
 
-import initCompose, { boot, KitStoreHandle } from "@compose/rs-wasm";
+import initCompose, { boot, KitStoreHandle } from "@semio-tech/compose-rs-wasm";
 
-/** @emoji 🧪 Empty WASM store URI — must match {@link RS_WASM_EMPTY_STORE_URI} in `@compose/js`. */
+/** @emoji 🧪 Empty WASM store URI — must match {@link RS_WASM_EMPTY_STORE_URI} in `@semio-tech/compose-js`. */
 export const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
 // Bundle `compose.js` in Storybook, the default `new URL("compose_bg.wasm", import.meta.url)` is often wrong;

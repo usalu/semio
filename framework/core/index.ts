@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/core` — Render-independent shared framework: declarative {@link UiPrimitiveNode}, layout, toolbar, {@link CommandBus}, {@link Platform} shell, and generic body registries. */
+/** 🧱 `@semio-tech/framework-core` — Render-independent shared framework: declarative {@link UiPrimitiveNode}, layout, toolbar, {@link CommandBus}, {@link Platform} shell, and generic body registries. */
 // #endregion 🧱Header
 
 //#region 🔖JsonValue

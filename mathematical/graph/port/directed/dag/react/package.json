@@ -1,15 +1,15 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@dag/react",
+  "name": "@semio-tech/dag-react",
   "version": "0.1.0",
   "description": "dag · react",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @dag/react:test"
+    "test": "bun nx run @semio-tech/dag-react:test"
   },
   "dependencies": {
-    "@ui/styling": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

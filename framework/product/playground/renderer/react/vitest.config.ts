@@ -10,7 +10,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(root, "../../../../../");
 const rendererIndex = resolve(root, "index.tsx");
 
-/** @emoji 🧪 Vitest for `@framework/playground/renderer/react`. */
+/** @emoji 🧪 Vitest for `@semio-tech/framework-playground-renderer-react`. */
 export default defineConfig({
   root,
   plugins: [react(), playgroundRendererVitestShellOnlyPlugin(rendererIndex), playgroundRendererShellEntryPlugin(rendererIndex)],

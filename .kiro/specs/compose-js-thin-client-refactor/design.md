@@ -93,7 +93,7 @@ The following are removed entirely:
 
 ### KitStoreClient Interface (unchanged contract)
 
-The `KitStoreClient` interface remains the boundary contract consumed by `@compose/react` and the sketchpad. No methods are added or removed — every method delegates to `KitStoreHandle` via WASM.
+The `KitStoreClient` interface remains the boundary contract consumed by `@semio-tech/compose-react` and the sketchpad. No methods are added or removed — every method delegates to `KitStoreHandle` via WASM.
 
 ```typescript
 export interface KitStoreClient {
@@ -391,7 +391,7 @@ This is the raw WASM `KitStoreHandle.execute` shape. All reads, mutations, and s
 
 ```mermaid
 sequenceDiagram
-    participant Consumer as @compose/react
+    participant Consumer as @semio-tech/compose-react
     participant Client as KitStoreClient
     participant Worker as Web Worker
     participant WASM as KitStoreHandle (Rust)

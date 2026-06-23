@@ -1,4 +1,4 @@
-# @compose/query
+# @semio-tech/compose-query
 
 Cypher-inspired **architect** query language for compose. Parses `MATCH` / `WITH` / `UNWIND` / `CALL` / `RETURN`, plans hand-crafted GraphQL documents against the compose schema, and executes them end-to-end via an injected async transport (native tests or WASM host).
 

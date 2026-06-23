@@ -1,10 +1,10 @@
 // #region 🧲Header
-/** @emoji 🌍 `@infinite/world/r3f` — generic r3f infinite-world engine: layers, chunking, view radius, pooling, precision, LOD/grid, mesh borders. */
+/** @emoji 🌍 `@semio-tech/infinite-world-r3f` — generic r3f infinite-world engine: layers, chunking, view radius, pooling, precision, LOD/grid, mesh borders. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { cn, floatingToolbarSurfaceClass, menuListItemClassName, reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@ui/react";
-import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@ui/styling";
+import { cn, floatingToolbarSurfaceClass, menuListItemClassName, reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@semio-tech/ui-react";
+import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
@@ -2201,7 +2201,7 @@ export { Canvas, PerspectiveCamera, useFrame, useThree, Vector3 };
 /** @emoji 🖼️ Persisted media source for a world reference plane. */
 export interface WorldReferenceSource {
   readonly url: string;
-  readonly mediaKind: import("@ui/react").ReferenceMediaKind;
+  readonly mediaKind: import("@semio-tech/ui-react").ReferenceMediaKind;
   readonly page?: number;
 }
 

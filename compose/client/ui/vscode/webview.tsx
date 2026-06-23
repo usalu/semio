@@ -9,8 +9,8 @@
 // #region 🛎️Entrypoint
 
 // #region 🔌Adapters
-import { mountPlatform } from "@framework/platform/renderer/react";
-import { Kit, KitFullDtoSchema, asKitInstance } from "@compose/react";
+import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
+import { Kit, KitFullDtoSchema, asKitInstance } from "@semio-tech/compose-react";
 import { attachSketchpadKit, ensureSketchpadPlatform, InMemoryComposeKitStore } from "../../lib/sketchpad/js";
 // #endregion 🔌Adapters
 

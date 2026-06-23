@@ -1,11 +1,11 @@
 {
-  "name": "@compose/net",
+  "name": "@semio-tech/compose-net",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "compose/client/lib/net/Compose",
   "projectType": "library",
   "devDependencies": {
-    "@compose/asset": "*"
+    "@semio-tech/compose-asset": "*"
   },
   "author": {
     "name": "Ueli Saluz",

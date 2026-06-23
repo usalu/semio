@@ -1,17 +1,17 @@
 {
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@puzzle/3d/react",
+	"name": "@semio-tech/puzzle-3d-react",
 	"version": "0.1.0",
 	"description": "puzzle · 3d react",
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"test": "bun nx run @puzzle/3d/react:test"
+		"test": "bun nx run @semio-tech/puzzle-3d-react:test"
 	},
 	"dependencies": {
-		"@infinite/world/r3f": "workspace:*",
-		"@ui/react": "workspace:*",
-		"@ui/styling": "workspace:*",
+		"@semio-tech/infinite-world-r3f": "workspace:*",
+		"@semio-tech/ui-react": "workspace:*",
+		"@semio-tech/ui-styling": "workspace:*",
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.4.2",
 		"react": "^19.2.3",

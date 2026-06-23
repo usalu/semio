@@ -1,5 +1,5 @@
 {
-  "name": "@compose/fixture",
+  "name": "@semio-tech/compose-fixture",
   "version": "1.0.0",
   "type": "module",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",

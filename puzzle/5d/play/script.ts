@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/5d/play` task router: `bun ./script.ts <dev|build|test|regenerate-fixture> [fixture <id>] [args…]`. */
+/** 🧭 `@semio-tech/puzzle-5d-play` task router: `bun ./script.ts <dev|build|test|regenerate-fixture> [fixture <id>] [args…]`. */
 import { BundleScript, ScriptRouter, consumePlaygroundFixtureArgv, playPollingEnv, runBun, runBundleScriptMain, runPlaywright, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
 import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 import { resolvePuzzle5dPlayFixtureSlug } from "./index.ts";
@@ -26,7 +26,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     runVitest(this.root, segments);
-    runPlaywright(this.root, "playwright.config.ts", segments);
+    runPlaywright(this.root, "playwright.config.ts", ["--pass-with-no-tests", ...segments]);
   }
 }
 

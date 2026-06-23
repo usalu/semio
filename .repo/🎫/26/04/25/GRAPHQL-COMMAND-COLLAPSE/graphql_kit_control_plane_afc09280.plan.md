@@ -21,7 +21,7 @@ todos:
    content: Rewire compose/react, compose/sketchpad, compose/algorithms to consume only the JS GraphQL document surface (no ReadCommandBatch).
    status: pending
  - id: verification
-   content: Extend tests; run cargo test, wasm tests, pnpm -F @compose/js|react|sketchpad (note Windows LNK1104 if linker locks test exe).
+   content: Extend tests; run cargo test, wasm tests, pnpm -F @semio-tech/compose-js|react|sketchpad (note Windows LNK1104 if linker locks test exe).
    status: in_progress
 isProject: false
 ---
@@ -80,13 +80,13 @@ graph LR
 
 5. **Align downstream packages.**
    - [compose/react/index.tsx](compose/react/index.tsx): hooks and Scopes call the JS GraphQL stores only; subscriptions update hook state from `eventStream`.
-   - [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx): remove local kit command strings and direct `@compose/js` control imports; use `@compose/react` hooks/Scopes.
+   - [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx): remove local kit command strings and direct `@semio-tech/compose-js` control imports; use `@semio-tech/compose-react` hooks/Scopes.
    - [compose/algorithms](compose/algorithms): replace any direct command/client calls with the shared JS GraphQL client surface.
 
 6. **Testing and verification.**
    - Extend existing Rust tests in [compose/rs/lib.rs](compose/rs/lib.rs) for GraphQL queries, queued mutations, subscription events, pointer traversal, and computed fields.
    - Extend existing JS/React/sketchpad tests rather than creating new test files: verify operation typing, no `executeRead`/string command imports, hook reads/writes, and event-driven updates.
-   - Run `cargo test` in `compose/rs`, wasm tests where available, `pnpm -F @compose/js test`, `pnpm -F @compose/react test`, and relevant sketchpad/algorithm tests.
+   - Run `cargo test` in `compose/rs`, wasm tests where available, `pnpm -F @semio-tech/compose-js test`, `pnpm -F @semio-tech/compose-react test`, and relevant sketchpad/algorithm tests.
 
 ## Key Risks
 

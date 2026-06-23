@@ -18,7 +18,7 @@ CAD reference planes now live in shared play state keyed by model definition id 
 - `InteractionRepl` / `InteractionSpatialView` accept `revealedReferenceIds` for hierarchy hover reveal.
 
 ## Tests
-- `@cad/js/renderer` `index.tsx`: 65 passed
+- `@semio-tech/cad-js-renderer` `index.tsx`: 65 passed
 - `play/index.tsx` suite: pre-existing load failure (`gis_map_bg.wasm` missing in vitest graph)
 - Build: passed
 

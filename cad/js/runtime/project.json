@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js/runtime",
+  "name": "@semio-tech/cad-js-runtime",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

@@ -6,7 +6,7 @@ todos:
    content: Add executeChangeKitCommands WASM export in compose/rs/lib.rs and rebuild pkg
    status: completed
  - id: storybook_wiring
-   content: Alias @compose/rs-wasm in compose/algorithms/.storybook/main.ts and add the dep in package.json
+   content: Alias @semio-tech/compose-rs-wasm in compose/algorithms/.storybook/main.ts and add the dep in package.json
    status: completed
  - id: command_schema
    content: Author kit-store/commandSchema.ts enumerating every Change*Command variant + payload shape
@@ -34,7 +34,7 @@ Single Storybook story (`compose-algorithms/Kit/Store`) that lets us manually ex
 
 ```mermaid
 graph LR
-  UI[Kit/Store story React tree] -->|alias @compose/rs-wasm| WASM[compose/rs/pkg KitStoreHandle]
+  UI[Kit/Store story React tree] -->|alias @semio-tech/compose-rs-wasm| WASM[compose/rs/pkg KitStoreHandle]
   UI -->|kitHistory* free fns| WASM
   WASM -->|subscribe callback| Events[Events feed pane]
   UI --> CmdForm[Command form pane]
@@ -49,7 +49,7 @@ The command form is driven by a TS schema that mirrors every `Change{Entity}Comm
 
 ## Key files
 
-- [compose/algorithms/.storybook/main.ts](compose/algorithms/.storybook/main.ts) — add `@compose/rs-wasm` Vite alias (mirroring `[compose/sketchpad/vite.config.ts](compose/sketchpad/vite.config.ts)` line 118) and ensure `.wasm` assets are served with the correct MIME.
+- [compose/algorithms/.storybook/main.ts](compose/algorithms/.storybook/main.ts) — add `@semio-tech/compose-rs-wasm` Vite alias (mirroring `[compose/sketchpad/vite.config.ts](compose/sketchpad/vite.config.ts)` line 118) and ensure `.wasm` assets are served with the correct MIME.
 - [compose/algorithms/package.json](compose/algorithms/package.json) — add `"compose": "file:../rs/pkg"` (or equivalent) so Storybook resolves the WASM package.
 - [compose/algorithms/.storybook/stories/KitStore.stories.tsx](compose/algorithms/.storybook/stories/KitStore.stories.tsx) — new story; title `"compose-algorithms/Kit/Store"`.
 - [compose/algorithms/.storybook/stories/kit-store/](compose/algorithms/.storybook/stories/kit-store/) — co-located UI pieces:

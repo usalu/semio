@@ -2,13 +2,13 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "type": "module",
-  "name": "@compose/docs",
+  "name": "@semio-tech/compose-sketchpad-docs",
   "version": "0.1.0",
   "description": "compose ⋅ docs",
   "dependencies": {
-    "@ui/react": "workspace:*",
-    "@compose/js": "*",
-    "@compose/sketchpad": "*"
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/compose-js": "*",
+    "@semio-tech/compose-sketchpad": "*"
   },
   "author": {
     "name": "Ueli Saluz",

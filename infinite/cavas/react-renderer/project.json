@@ -1,5 +1,5 @@
 {
-  "name": "@infinite/cavas/react-renderer",
+  "name": "@semio-tech/infinite-cavas-react-renderer",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

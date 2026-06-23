@@ -1,9 +1,9 @@
 ---
 name: Sketchpad kit-state removal
-overview: Remove all kit state management from `compose/sketchpad`, consume `@compose/react` hooks/context exclusively (async, status-bearing, non-blocking), and consolidate every remaining piece of sketchpad UI state into one `sketchpadMachine`. Add a multi-kit `KitRegistry` to `@compose/react`, flip the `react -> sketchpad` dependency, and standardize async-aware UI patterns.
+overview: Remove all kit state management from `compose/sketchpad`, consume `@semio-tech/compose-react` hooks/context exclusively (async, status-bearing, non-blocking), and consolidate every remaining piece of sketchpad UI state into one `sketchpadMachine`. Add a multi-kit `KitRegistry` to `@semio-tech/compose-react`, flip the `react -> sketchpad` dependency, and standardize async-aware UI patterns.
 todos:
  - id: flip_deps
-   content: Move backbone factories (createSessionKitStore, createFolderKitStore, file/folder adapters) from compose/sketchpad to compose/js; delete @compose/sketchpad from compose/react/package.json; add @compose/react to compose/sketchpad/package.json; drop yjs from sketchpad deps.
+   content: Move backbone factories (createSessionKitStore, createFolderKitStore, file/folder adapters) from compose/sketchpad to compose/js; delete @semio-tech/compose-sketchpad from compose/react/package.json; add @semio-tech/compose-react to compose/sketchpad/package.json; drop yjs from sketchpad deps.
    status: completed
  - id: react_registry
    content: Add KitRegistryProvider + useKitRegistry + kitGuid prop on KitProvider in compose/react/index.tsx; add useSetErrors, useWriteQueue, useKitSync utility hooks; add useOptimistic + useWriteIndicator helpers.
@@ -18,13 +18,13 @@ todos:
    content: "Rewrite root tree: SketchpadActorProvider > KitRegistryProvider > SketchpadScopeProvider (UI-only) > routes; mount <KitProvider kitGuid={...}> at kit-scoped routes; machine KIT.OPEN/CLOSE events drive registry."
    status: completed
  - id: callsite_migration
-   content: Migrate every kit-field call site to @compose/react hook triads with useOptimistic/useWriteIndicator; replace canSet with status.kind checks; ensure spinners/disabled/warnings/errors render; remove synchronous mutation paths.
+   content: Migrate every kit-field call site to @semio-tech/compose-react hook triads with useOptimistic/useWriteIndicator; replace canSet with status.kind checks; ensure spinners/disabled/warnings/errors render; remove synchronous mutation paths.
    status: cancelled
  - id: tests_update
    content: Extend existing Playwright spec in compose/sketchpad for pending/error/readonly UI affordances and concurrent writes; extend vitest region in compose/react for KitRegistry refcount + useOptimistic rollback; no new test files.
    status: completed
  - id: verify
-   content: Run cargo tests, pnpm -F @compose/js test, pnpm -F @compose/react test, pnpm -F @compose/sketchpad test; confirm non-blocking end-to-end pipeline.
+   content: Run cargo tests, pnpm -F @semio-tech/compose-js test, pnpm -F @semio-tech/compose-react test, pnpm -F @semio-tech/compose-sketchpad test; confirm non-blocking end-to-end pipeline.
    status: completed
 isProject: false
 ---
@@ -50,17 +50,17 @@ flowchart LR
   end
 ```
 
-Sketchpad becomes a pure consumer: all kit reads/writes go through `@compose/react`; all UI state (navigation, theme, panels, selection, hover, tools, tutorial, per-app slices) lives in a single XState machine.
+Sketchpad becomes a pure consumer: all kit reads/writes go through `@semio-tech/compose-react`; all UI state (navigation, theme, panels, selection, hover, tools, tutorial, per-app slices) lives in a single XState machine.
 
 ## 2. Dependency flip (prerequisite)
 
-`@compose/react` currently depends on `@compose/sketchpad` (circular) and dynamically imports it for `createSessionKitStore` (see [compose/react/index.tsx](compose/react/index.tsx) line 710, 12178).
+`@semio-tech/compose-react` currently depends on `@semio-tech/compose-sketchpad` (circular) and dynamically imports it for `createSessionKitStore` (see [compose/react/index.tsx](compose/react/index.tsx) line 710, 12178).
 
-- Move backbone factories (`createSessionKitStore`, `createFolderKitStore`, file/folder adapters currently under `SketchpadStore` in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) ~20564+) into `@compose/js` as first-class exports.
-- Delete `@compose/sketchpad` from [compose/react/package.json](compose/react/package.json) dependencies; rewrite the two dynamic imports to call `@compose/js` directly.
-- Add `@compose/react` to [compose/sketchpad/package.json](compose/sketchpad/package.json) dependencies; remove `yjs` and `sql.js` (sql.js only if no remaining consumer).
+- Move backbone factories (`createSessionKitStore`, `createFolderKitStore`, file/folder adapters currently under `SketchpadStore` in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) ~20564+) into `@semio-tech/compose-js` as first-class exports.
+- Delete `@semio-tech/compose-sketchpad` from [compose/react/package.json](compose/react/package.json) dependencies; rewrite the two dynamic imports to call `@semio-tech/compose-js` directly.
+- Add `@semio-tech/compose-react` to [compose/sketchpad/package.json](compose/sketchpad/package.json) dependencies; remove `yjs` and `sql.js` (sql.js only if no remaining consumer).
 
-## 3. `@compose/react` extensions
+## 3. `@semio-tech/compose-react` extensions
 
 Single file to edit: [compose/react/index.tsx](compose/react/index.tsx).
 
@@ -117,18 +117,18 @@ export function useWriteIndicator(status: WriteStatus): {
 
 All form-like sites in sketchpad use `useOptimistic` so failed writes surface errors without losing user input, and `useWriteIndicator` standardizes spinner/disable/warning/error affordances. Everything non-blocking.
 
-## 4. `@compose/sketchpad` removals
+## 4. `@semio-tech/compose-sketchpad` removals
 
 All in one file: [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx).
 
 ### 4.1 Kit-state deletions
 
-- `#region 🎙️Granular Hook Types` (~2335-2471): delete `HookResult`, `readonlyHookResult`, `writableHookResult`, `conditionalHookResult`, `Field`, `createField`, `fieldToHookResult`. Replace downstream usages with `HookTriad` from `@compose/react`.
-- `#region 🥈Entity Hooks`, `⏰Entity Data Hooks`, `🎆Piece Derived Hooks`, `🎹Design Derived Hooks`, `⏱️Kit`, `💧Targeted Kit Hooks` (~9237-10050): delete every local `useKitSnapshot`, `useAuthor`, `useType`, `useQuality`, `useDesign`, `usePiece`, `useConnection`, `usePieces`, `useConnections`, `usePiece*`, `useKitName`, `useKitDescription`, ... -> re-export equivalents from `@compose/react`.
-- Design-inspector field hooks (~19154-19587): `usePieceCenterU/V`, `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `usePieceColor`, `usePieceDescription`, `usePieceName`, connection hooks -> replace with `@compose/react` hooks; callers use `useOptimistic` at input sites.
+- `#region 🎙️Granular Hook Types` (~2335-2471): delete `HookResult`, `readonlyHookResult`, `writableHookResult`, `conditionalHookResult`, `Field`, `createField`, `fieldToHookResult`. Replace downstream usages with `HookTriad` from `@semio-tech/compose-react`.
+- `#region 🥈Entity Hooks`, `⏰Entity Data Hooks`, `🎆Piece Derived Hooks`, `🎹Design Derived Hooks`, `⏱️Kit`, `💧Targeted Kit Hooks` (~9237-10050): delete every local `useKitSnapshot`, `useAuthor`, `useType`, `useQuality`, `useDesign`, `usePiece`, `useConnection`, `usePieces`, `useConnections`, `usePiece*`, `useKitName`, `useKitDescription`, ... -> re-export equivalents from `@semio-tech/compose-react`.
+- Design-inspector field hooks (~19154-19587): `usePieceCenterU/V`, `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `usePieceColor`, `usePieceDescription`, `usePieceName`, connection hooks -> replace with `@semio-tech/compose-react` hooks; callers use `useOptimistic` at input sites.
 - `#region 💧useDesignAppCommands` (~31718-31820): delete `updatePiece`, `updatePieces`, `updateConnection`, `updateConnections` kit-mutation methods. Kit mutations happen inline at call sites via the hook triad.
 - `SketchpadStore` kit paths (~20564+): remove `SessionKitStore`, `InMemoryKitStore` usage, file/folder factories, `createSessionKitStore`, `kit(kitGuid)` accessors, `kitStore` prop on `SketchpadScopeProvider`, `KitScopeProvider` / `KitScopeContext` (~9558-9584). Routes read the active kit from `KitRegistry`/`KitProvider`.
-- `#region 🌉Sync` helpers `useSync`, `useSyncOptional`, `useSyncDeep`, `useSyncField(s)`, `usePath`, `useDerived`, `useSyncWithState` (~19992-20420): delete (they are Yjs-scoped). Kit-derived computations either move to `@compose/react` or become local `useMemo` over `usePieces()` / `useConnections()`.
+- `#region 🌉Sync` helpers `useSync`, `useSyncOptional`, `useSyncDeep`, `useSyncField(s)`, `usePath`, `useDerived`, `useSyncWithState` (~19992-20420): delete (they are Yjs-scoped). Kit-derived computations either move to `@semio-tech/compose-react` or become local `useMemo` over `usePieces()` / `useConnections()`.
 
 ### 4.2 UI-state consolidation into `sketchpadMachine`
 
@@ -198,7 +198,7 @@ const ind = useWriteIndicator(status);
 ## 6. Tests
 
 - Update the existing Playwright spec in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) `describe(...)` region to cover: edit piece name to empty -> inline `IllegalName` error + draft preserved; edit to valid -> spinner appears briefly -> value commits; readonly mode disables input; concurrent writes (two inputs) keep independent pending counters.
-- Extend `@compose/react` tests in [compose/react/index.tsx](compose/react/index.tsx) for `KitRegistry` open/close/refcount and `useOptimistic` rollback semantics.
+- Extend `@semio-tech/compose-react` tests in [compose/react/index.tsx](compose/react/index.tsx) for `KitRegistry` open/close/refcount and `useOptimistic` rollback semantics.
 - No new test files (follows the `no new test files` repo rule).
 
 ## 7. Out of scope

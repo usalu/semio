@@ -1,6 +1,6 @@
 ---
 name: React JS Store Boundary
-overview: Refactor `compose/react` so it consumes only clean `@compose/js` store promise and subscribe APIs, while `compose/js` owns RxJS internals, command wire construction, read stores, and all direct `compose/rs` command knowledge.
+overview: Refactor `compose/react` so it consumes only clean `@semio-tech/compose-js` store promise and subscribe APIs, while `compose/js` owns RxJS internals, command wire construction, read stores, and all direct `compose/rs` command knowledge.
 todos:
  - id: ticket-workflow
    content: Use repo MCP search/goals/ticket workflow before edits and associate the work with the strict layering goal.
@@ -12,7 +12,7 @@ todos:
    content: Refactor compose/react hooks to call only JS store promise methods and subscribe methods, removing command wire and LiveKitRoot knowledge.
    status: completed
  - id: package-boundaries
-   content: Remove direct React package aliases/dependencies that imply @compose/rs-wasm, RxJS, or command-schema ownership.
+   content: Remove direct React package aliases/dependencies that imply @semio-tech/compose-rs-wasm, RxJS, or command-schema ownership.
    status: completed
  - id: tests-validation
    content: Extend existing embedded JS/React tests and run package build/test validation.
@@ -34,7 +34,7 @@ Primary files:
 - [`compose/js/index.ts`](compose/js/index.ts): make this the only owner of command wire shapes, `LiveKitRoot`, read stores, RxJS subjects, and promise-based store operations.
 - [`compose/react/index.tsx`](compose/react/index.tsx): remove command wire construction and direct read command access; consume only JS stores through `Promise` methods plus `subscribe`.
 - [`compose/react/package.json`](compose/react/package.json): remove unused direct dependencies after React no longer imports RxJS/Zod-backed command/schema internals directly.
-- [`compose/react/tsconfig.json`](compose/react/tsconfig.json) and [`compose/react/vite.config.ts`](compose/react/vite.config.ts): remove direct `@compose/rs-wasm` aliases from React once no longer needed.
+- [`compose/react/tsconfig.json`](compose/react/tsconfig.json) and [`compose/react/vite.config.ts`](compose/react/vite.config.ts): remove direct `@semio-tech/compose-rs-wasm` aliases from React once no longer needed.
 
 Target flow:
 
@@ -70,10 +70,10 @@ flowchart LR
    - Extend [`compose/react/index.tsx`](compose/react/index.tsx) tests to assert React no longer imports/exposes command wire helpers or `LiveKitRoot`, and hooks call store methods plus subscribe methods rather than constructing command wires.
 
 6. Run validation after implementation:
-   - `npm run build --workspace @compose/js`
-   - `npm run test --workspace @compose/js`
-   - `npm run build --workspace @compose/react`
-   - `npm run test --workspace @compose/react`
+   - `npm run build --workspace @semio-tech/compose-js`
+   - `npm run test --workspace @semio-tech/compose-js`
+   - `npm run build --workspace @semio-tech/compose-react`
+   - `npm run test --workspace @semio-tech/compose-react`
    - Add a workspace-level layer/import check if one is already available in scripts; otherwise report that no such script was found.
 
 ## Notes

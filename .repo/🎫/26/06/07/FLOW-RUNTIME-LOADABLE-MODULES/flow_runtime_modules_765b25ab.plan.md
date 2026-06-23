@@ -82,7 +82,7 @@ File: `[flow/core/lib.rs](flow/core/lib.rs)`
 ## 4. flow/react — the extension host
 File: `[flow/react/index.tsx](flow/react/index.tsx)` (new region `🔖ExtensionHost`)
 - Static module loader map (vite-analyzable):
-  `{ math: () => import("@flow/module-math"), text: ..., logic: ..., dictionary: ... }`.
+  `{ math: () => import("@semio-tech/flow-module-math"), text: ..., logic: ..., dictionary: ... }`.
 - `FlowExtensionHost` class:
   - `installed`: ids from the loader map (the "marketplace").
   - `activate(id)`: dynamic import glue, `await init()`, read `manifest()`, register contributions (neuronKinds, commands, settings), fire `activationEvents`.
@@ -120,8 +120,8 @@ Files: `[.vscode/launch.json](.vscode/launch.json)` (flow group, lines 776-826),
 - `[flow/play/index.ts](flow/play/index.ts)`: vitest for Extensions panel toggle building active-module catalogue.
 
 ## Runtime validation (per repo rules)
-- `bun nx run @flow/core:wasm` and each module wasm build succeed.
-- `bun nx run @flow/play:validate` (extend `[flow/play/validate-flow-runtime.mjs]`) to assert: default modules activate, catalogue lists their kinds, disabling `math` removes `math.add` from catalogue and makes the default fixture report an evaluation error, re-enabling restores preview `3`. Confirm via console logs (`[DEBUG]` prefixed).
+- `bun nx run @semio-tech/flow-core:wasm` and each module wasm build succeed.
+- `bun nx run @semio-tech/flow-play:validate` (extend `[flow/play/validate-flow-runtime.mjs]`) to assert: default modules activate, catalogue lists their kinds, disabling `math` removes `math.add` from catalogue and makes the default fixture report an evaluation error, re-enabling restores preview `3`. Confirm via console logs (`[DEBUG]` prefixed).
 
 ## Scope notes / decisions
 - Custom per-extension Vello widget rendering is declared in the manifest but rendered with existing generic widget kinds in v1 (true custom canvas chrome per extension is a separate large effort).

@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@ui/react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🛒Accordion

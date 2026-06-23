@@ -30,12 +30,12 @@
 - Prompt: "create a color strategy for ports to enhance UX including compatible ports and different port types, refactor as needed, and ensure ticket plan/log/summary workflow."
 - Opened ticket via `repo ticket open` and initialized `plan.md`.
 - Implemented shared port color strategy and integrated it into Kit, Type, and Design rendering paths.
-- Validation run: `npx nx test @compose/js --skipNxCache`.
-- Validation run: `npx nx build @compose/js --skipNxCache`.
+- Validation run: `npx nx test @semio-tech/compose-js --skipNxCache`.
+- Validation run: `npx nx build @semio-tech/compose-js --skipNxCache`.
 - Reopened with prompt: "i cant see these color strategy".
 - Identified active code paths missing `portColor` consumption and corrected integrations.
-- Validation run: `npx nx test @compose/js --skipNxCache`.
-- Validation run: `npx nx build @compose/js --skipNxCache`.
+- Validation run: `npx nx test @semio-tech/compose-js --skipNxCache`.
+- Validation run: `npx nx build @semio-tech/compose-js --skipNxCache`.
 
 ## Summary
 

@@ -1,6 +1,6 @@
 ---
 name: CAD Live Model Stats
-overview: "Add a general per-model-definition \"live stats\" mechanism to cad: a new spatial.stat/v1 asset kind shipped by each model definition, a TypeScript stat-computer registry in @cad/js/core that computes whole-model and per-selection KPIs live using the kernel, and a renderer panel that displays them. Ship three real example stats: shape geometry KPIs, energy demand, and structural stability."
+overview: "Add a general per-model-definition \"live stats\" mechanism to cad: a new spatial.stat/v1 asset kind shipped by each model definition, a TypeScript stat-computer registry in @semio-tech/cad-js-core that computes whole-model and per-selection KPIs live using the kernel, and a renderer panel that displays them. Ship three real example stats: shape geometry KPIs, energy demand, and structural stability."
 todos:
   - id: schema
     content: Add cad/schema/json/stat.json (spatial.stat/v1)
@@ -36,7 +36,7 @@ Introduce a general extension point so every model definition can declare "live 
 
 ```mermaid
 flowchart LR
-  asset["statDefinition/*.json (spatial.stat/v1)"] --> core["@cad/js/core catalog + scope"]
+  asset["statDefinition/*.json (spatial.stat/v1)"] --> core["@semio-tech/cad-js-core catalog + scope"]
   computer["registerStatComputer(id, fn)"] --> core
   core --> scope["resolveModelDefinitionScope().statDefinitions"]
   scope --> panel["ModelStatsPanel (renderer)"]
@@ -88,7 +88,7 @@ Add `"stat"` to the `kinds` array of each `modelDefinition.json` (`[cad/asset/mo
 
 ## 4. Renderer: `ModelStatsPanel`
 
-In `[cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)`, add and export `ModelStatsPanel` next to `SelectionPropertiesPanel` (line 5568+), importing `listStatDefinitionsForModelDefinition` / `computeStat` (add to the `@cad/js/core` import block at line ~65). It:
+In `[cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)`, add and export `ModelStatsPanel` next to `SelectionPropertiesPanel` (line 5568+), importing `listStatDefinitionsForModelDefinition` / `computeStat` (add to the `@semio-tech/cad-js-core` import block at line ~65). It:
 
 - Resolves scoped stat definitions for `activeModelDefinitionId`.
 - For each scope a definition supports, computes values in a cancellable `useEffect` (same async pattern as `SelectionPropertiesPanel` lines 5584-5600); selection scope passes selected objects, model scope passes all objects.

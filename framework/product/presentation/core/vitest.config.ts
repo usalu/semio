@@ -6,12 +6,12 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@framework/presentation/core`. */
+/** @emoji 🧪 Vitest for `@semio-tech/framework-presentation-core`. */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@framework/core": resolve(root, "../../../core/index.ts"),
+			"@semio-tech/framework-core": resolve(root, "../../../core/index.ts"),
 		},
 	},
 	test: {

@@ -179,8 +179,8 @@ export class SetupScript extends Script {
     new SetupScript(this.root).run(["git"]);
 
     console.log("[setup] VS Code extension build & package…");
-    tryRun("bun", ["nx", "run", "repo:build"], { cwd: this.root });
-    tryRun("bun", ["nx", "run", "repo:build-vsix"], { cwd: this.root });
+    tryRun("bun", ["nx", "run", "@semio-tech/repo-vscode:build"], { cwd: this.root });
+    tryRun("bun", ["nx", "run", "@semio-tech/repo-vscode:build-vsix"], { cwd: this.root });
     console.log("[setup] done.");
   }
 }
@@ -230,42 +230,42 @@ export class DevScript extends Script {
       return;
     }
     if (segments[0] === "2d") {
-      runCmd("bun", ["nx", "run", "@puzzle/2d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/puzzle-2d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "wires") {
-      runCmd("bun", ["nx", "run", "@reasoning/mindmap/wires/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/reasoning-mindmap-wires-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "3d") {
-      runCmd("bun", ["nx", "run", "@puzzle/3d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/puzzle-3d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "5d") {
-      runCmd("bun", ["nx", "run", "@puzzle/5d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/puzzle-5d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "flow") {
-      runCmd("bun", ["nx", "run", "@flow/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/flow-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "dag") {
-      runCmd("bun", ["nx", "run", "@dag/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/dag-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "procedural") {
-      runCmd("bun", ["nx", "run", "@procedural/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/procedural-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "cad") {
-      runCmd("bun", ["nx", "run", "@cad/js/renderer:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      runCmd("bun", ["nx", "run", "@semio-tech/cad-js-renderer:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "mcp") {
       this.runMcp(segments.slice(1));
       return;
     }
-    runCmd("bun", ["nx", "run", "@compose/desktop:dev"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root });
   }
 
   private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
@@ -506,7 +506,7 @@ export class TestScript extends Script {
       this.runRepoGoTest("./repo/client/cli", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
       return;
     }
-    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@compose/js", "@compose/react"], { cwd: this.root });
+    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root });
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "workspace:test-storybook"], { cwd: this.root });
@@ -584,15 +584,15 @@ export class BuildScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
     const single: Record<string, string> = {
-      "3dm": "@compose/3dm-ui:build",
-      assets: "@compose/asset:build",
-      desktop: "@compose/desktop:build",
-      engine: "@compose/engine:build",
+      "3dm": "@semio-tech/compose-3dm-ui:build",
+      assets: "@semio-tech/compose-asset:build",
+      desktop: "@semio-tech/compose-desktop:build",
+      engine: "@semio-tech/compose-engine:build",
       storybook: "workspace:build-storybook",
-      "coda-desktop": "@coda/desktop:build",
-      "repo-cli": "@repo/client:build",
-      "repo-server": "@repo/coordinator:build",
-      "repo-vscode": "repo:build-vsix",
+      "coda-desktop": "@semio-tech/coda-desktop:build",
+      "repo-cli": "@semio-tech/repo-client:build",
+      "repo-server": "@semio-tech/repo-coordinator:build",
+      "repo-vscode": "@semio-tech/repo-vscode:build-vsix",
     };
 
     if (!slice) {
@@ -605,7 +605,7 @@ export class BuildScript extends Script {
       return;
     }
     if (slice === "sites") {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@compose/play", "@compose/docs"], { cwd: this.root });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root });
       return;
     }
     const target = single[slice];
@@ -773,11 +773,11 @@ export class PublishScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
     const map: Record<string, string> = {
-      desktop: "@compose/desktop:publish",
-      play: "@compose/play:publish",
-      sketchpad: "@compose/sketchpad:publish",
-      docs: "@compose/docs:publish",
-      "coda-desktop": "@coda/desktop:publish",
+      desktop: "@semio-tech/compose-desktop:publish",
+      play: "@semio-tech/compose-sketchpad-play:publish",
+      sketchpad: "@semio-tech/compose-sketchpad:publish",
+      docs: "@semio-tech/compose-sketchpad-docs:publish",
+      "coda-desktop": "@semio-tech/coda-desktop:publish",
     };
     if (!slice) {
       console.error(`[publish] usage: bun ./script.ts publish <${Object.keys(map).join(" | ")}>`);

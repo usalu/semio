@@ -1,11 +1,11 @@
 // #region 🧲Header
-/** @emoji 🌊 `@flow/react` — WASM flow renderer + React canvas. */
+/** @emoji 🌊 `@semio-tech/flow-react` — WASM flow renderer + React canvas. */
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { borderNormalBottomClass, canvasViewportClass, cn, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@ui/react";
-import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@ui/styling";
-import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
+import { borderNormalBottomClass, canvasViewportClass, cn, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
+import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@semio-tech/ui-styling";
+import { isDagDrawLodKind, type DagDrawLodKind } from "@semio-tech/dag-react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 import flowCoreWasmUrl from "../core/pkg/flow_core_bg.wasm?url";
 import { FlowOrchestratorClient } from "../worker-client.ts";
@@ -72,7 +72,7 @@ export {
   isDagDrawLodKind,
   type DagDrawLodKind,
   type DagLodModeKind,
-} from "@dag/react";
+} from "@semio-tech/dag-react";
 // #endregion 🔖GpuWasmBridge
 
 // #region 🔖ExtensionHost
@@ -1283,7 +1283,7 @@ export function flowWidgetDragAcceptsTransfer(types: readonly string[]): boolean
 /** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry flow widget palette `dragData`. */
 export function flowWidgetPaletteTreeDragController(
   dragDataByItemId: ReadonlyMap<string, Record<string, string>>,
-): import("@framework/platform/core").TreeDragAndDropController {
+): import("@semio-tech/framework-platform-core").TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
     const payload = dragData?.[FLOW_WIDGET_DRAG_V1_MIME];
     return payload?.trim() ? payload : undefined;

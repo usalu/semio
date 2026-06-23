@@ -1,5 +1,5 @@
 // #region 🧭Header
-/** @emoji 🏛️ `@cad/js/module/aec-building-structure` — structure stat, transformation, and STEP import profiles. */
+/** @emoji 🏛️ `@semio-tech/cad-js-module-aec-building-structure` — structure stat, transformation, and STEP import profiles. */
 // #endregion 🧭Header
 
 import {
@@ -17,7 +17,7 @@ import {
   type StatComputeContext,
   type TransformationSpec,
   type TypologyRef,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 
 // #region 🏷️Ids
 export const AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID = "aec.building.structure";
@@ -130,9 +130,9 @@ export function register(): void {
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { bootstrapCadModules } = await import("@cad/js/runtime");
-  const { BrepjsKernel, preciseSpatialKernelMath } = await import("@cad/js/kernel/brepjs");
-  const core = await import("@cad/js/core");
+  const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
+  const { BrepjsKernel, preciseSpatialKernelMath } = await import("@semio-tech/cad-js-kernel-brepjs");
+  const core = await import("@semio-tech/cad-js-core");
   const {
     Model,
     applyModelDiff,
@@ -150,7 +150,7 @@ if (import.meta.vitest) {
   bootstrapCadModules();
   const M = preciseSpatialKernelMath;
 
-  describe("@cad/js/module/aec-building-structure", () => {
+  describe("@semio-tech/cad-js-module-aec-building-structure", () => {
     it("computes structure stability stats with finite outputs", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [0.4, 0.4, 0], height: 3 }, solidRef("column-solid")));

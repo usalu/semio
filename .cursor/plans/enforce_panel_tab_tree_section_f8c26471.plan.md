@@ -70,7 +70,7 @@ Strict means: no `SidePanelTabConfig.panel` escape hatch, no `TreeDataSection.co
 - Remove `SidePanelBodyMount`, the `mount` option, `sidePanelBodyMountByKey`, and `getSidePanelBodyMount` ([framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) ~447-473). `registerSidePanelBody(bodyKey, build)` now always means "build a `UiTreeNode`". Add an assertion in the build path that `node.type === "tree"` (throw otherwise), mirroring `assertCanvasOnlyWindowBody`.
 - Unify the duplicated side-panel-body registry: platform core ([framework/product/platform/core/index.ts](framework/product/platform/core/index.ts) ~1374-1414) and playground core both expose `registerSidePanelBody`; collapse onto one shared implementation/source so "frameworks are built the same way".
 
-## 2. `@ui/react` primitives (`ui/react/index.tsx`)
+## 2. `@semio-tech/ui-react` primitives (`ui/react/index.tsx`)
 
 - `SidePanelTabConfig`: drop `panel?`; make `tree: TreePanelConfig` required (~~11178-11186). Delete `SidePanelTreePane`'s `activeTabPanel` branch and the `panel ?? tree` fallthrough in both `SidePanel` (~~11362, ~~11447) and `MobilePanel` (~~11490).
 - `TreePanelConfig.sections`: keep required; add dev assertion that it is non-empty.

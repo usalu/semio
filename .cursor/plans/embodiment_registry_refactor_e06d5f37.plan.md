@@ -1,6 +1,6 @@
 ---
 name: Embodiment Registry Refactor
-overview: Restructure @framework/presentation so embodiments are a scoped sibling registry (not children of participants), dispositions bind participantId+embodimentId, participants/embodiments are available at every artifact level (presentation→slide), and tile/split become templates that produce figure embodiments+dispositions (removing DispositionSplit/SplitTile). Migrate the React renderer and the real 33.projektetage deck to the new model with all inline tests passing.
+overview: Restructure @semio-tech/framework-presentation so embodiments are a scoped sibling registry (not children of participants), dispositions bind participantId+embodimentId, participants/embodiments are available at every artifact level (presentation→slide), and tile/split become templates that produce figure embodiments+dispositions (removing DispositionSplit/SplitTile). Migrate the React renderer and the real 33.projektetage deck to the new model with all inline tests passing.
 todos:
   - id: ticket
     content: Open repo MCP ticket (read repo://goals, associate with presentation/framework goal); do not edit AGENTS.md.
@@ -112,4 +112,4 @@ In `[renderer/react/index.tsx](framework/product/presentation/renderer/react/ind
 - Core `🧪Tests`: scope resolution (nearest-wins across levels), `resolveArrangement(scope,…)`, `tile`/`split` output shape, migrated `intro`/`analogy`, unchanged slide counts/bookmarks. Update every existing test that constructs `Participant{embodiments}` or `Disposition` without `embodimentId`.
 - Renderer `🧪Tests`: drop split/tile/morph-participant DOM assertions; assert tiles render as positioned cropped figures; positioned dispositions and video/pdf still get `data-id`.
 - Deck `🧪Tests` in `[index.ts](mit-bestand/präsentation/33.projektetage/index.ts)`: catalogue produces N tile dispositions, columns morph focus→labels, kinds present.
-- Run `bun nx run @framework/presentation/core:test`, `@framework/presentation/renderer/react:test`, and the deck test config; run the projektetage dev server and confirm catalogue/split/morph render live via screenshot/CDP. Close the ticket with summary + touched files.
+- Run `bun nx run @semio-tech/framework-presentation-core:test`, `@semio-tech/framework-presentation-renderer-react:test`, and the deck test config; run the projektetage dev server and confirm catalogue/split/morph render live via screenshot/CDP. Close the ticket with summary + touched files.

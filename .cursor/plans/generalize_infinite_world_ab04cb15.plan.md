@@ -3,7 +3,7 @@ name: Generalize Infinite World
 overview: Build infinite/world into a generic r3f 3D-infinite-experience engine (mirroring how infinite/cavas underpins infinite map), expose a first-class composable Layer system plus generic capability layers (chunking, view-radius, pooling, precision, LOD/grid), then fully refactor the puzzle/3d monolith to be a specialization composed of those layers.
 todos:
   - id: scaffold-world
-    content: Scaffold infinite/world/r3f package (index.tsx engine module, package.json, project.json, script.ts, vitest.config.ts) mirroring @infinite/cavas/react-renderer; use sceneHostPort/reactHostPort from @ui/react.
+    content: Scaffold infinite/world/r3f package (index.tsx engine module, package.json, project.json, script.ts, vitest.config.ts) mirroring @semio-tech/infinite-cavas-react-renderer; use sceneHostPort/reactHostPort from @semio-tech/ui-react.
     status: completed
   - id: layer-system
     content: "Implement first-class composable Layer system: WorldLayer/useWorldLayer + ordered WorldLayerStack context, and WorldCanvas wrapper (Canvas + camera + gated OrbitControls with injectable controlsGate)."
@@ -12,7 +12,7 @@ todos:
     content: "Extract+generalize generic capability layers into infinite/world/r3f: Chunking, ViewRadius streaming, Pool (behind AssetPoolPort), Precision/Coordinates (+floating origin), Lod + Grid; extend in-file tests."
     status: completed
   - id: refactor-puzzle3d
-    content: "Refactor puzzle/3d to depend on @infinite/world/r3f: remove inline Chunking/Coordinates/Pool/Lod, recast Objects/Vortex/Attraction/Cable/Grid/Marquee as layers on WorldCanvas, keep PlayCanvas/Canvas3D API stable."
+    content: "Refactor puzzle/3d to depend on @semio-tech/infinite-world-r3f: remove inline Chunking/Coordinates/Pool/Lod, recast Objects/Vortex/Attraction/Cable/Grid/Marquee as layers on WorldCanvas, keep PlayCanvas/Canvas3D API stable."
     status: completed
   - id: wire-validate
     content: Wire workspace (root package.json), vite alias, launch.json test entry; validate world + puzzle/3d react tests and a puzzle/3d play dev smoke with [DEBUG] logs.
@@ -24,9 +24,9 @@ isProject: false
 
 ## Architecture goal
 
-`infinite/cavas` is the generic 2D infinite-canvas engine; `infinite map` (`gis/map`) is a thin specialization that builds on it (`MapHost implements cavas::CanvasContent`, `@gis/map/react` builds on `@infinite/cavas/react-renderer`). Apply the exact same relationship in 3D: make `infinite/world` the generic r3f engine and turn `puzzle/3d` into a specialization composed of generic world layers.
+`infinite/cavas` is the generic 2D infinite-canvas engine; `infinite map` (`gis/map`) is a thin specialization that builds on it (`MapHost implements cavas::CanvasContent`, `@semio-tech/gis-map-react` builds on `@semio-tech/infinite-cavas-react-renderer`). Apply the exact same relationship in 3D: make `infinite/world` the generic r3f engine and turn `puzzle/3d` into a specialization composed of generic world layers.
 
-`puzzle/3d` is pure three.js/r3f (no Rust), and its [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (~10.6k lines) already contains generic 3D-world primitives inline — `Chunking` (4277), `Coordinates` (4335), `Pool` (3839), `Lod` (1066) — mixed with puzzle content (`Object`, `Vortex`, `Attraction`, `Cable`, `Brush`, `Registry`, `Viewport`). So `infinite/world` is a TS-only r3f library (no Rust), mirroring the [@infinite/cavas/react-renderer](infinite/cavas/react-renderer/index.tsx) packaging.
+`puzzle/3d` is pure three.js/r3f (no Rust), and its [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (~10.6k lines) already contains generic 3D-world primitives inline — `Chunking` (4277), `Coordinates` (4335), `Pool` (3839), `Lod` (1066) — mixed with puzzle content (`Object`, `Vortex`, `Attraction`, `Cable`, `Brush`, `Registry`, `Viewport`). So `infinite/world` is a TS-only r3f library (no Rust), mirroring the [@semio-tech/infinite-cavas-react-renderer](infinite/cavas/react-renderer/index.tsx) packaging.
 
 ```mermaid
 flowchart TB
@@ -48,8 +48,8 @@ flowchart TB
 ## Stage 1 - Scaffold `infinite/world/r3f` package
 
 Mirror [infinite/cavas/react-renderer](infinite/cavas/react-renderer) packaging exactly:
-- `infinite/world/r3f/index.tsx` (currently empty file): the engine module, organized with `#region` sections. Use `sceneHostPort`/`reactHostPort` from `@ui/react` (the existing r3f/three/drei interface — keeps "external libs behind an interface"; same pattern puzzle/3d uses at [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) lines 15-57).
-- `infinite/world/r3f/package.json` (name `@infinite/world/r3f`, `bundleKind: library`, deps `@ui/react`, react, three, `@react-three/fiber`, `@react-three/drei`), `project.json` (nx `test` target), `script.ts` (BundleScript router -> `runVitest`), `vitest.config.ts` — copy shapes from cavas react-renderer.
+- `infinite/world/r3f/index.tsx` (currently empty file): the engine module, organized with `#region` sections. Use `sceneHostPort`/`reactHostPort` from `@semio-tech/ui-react` (the existing r3f/three/drei interface — keeps "external libs behind an interface"; same pattern puzzle/3d uses at [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) lines 15-57).
+- `infinite/world/r3f/package.json` (name `@semio-tech/infinite-world-r3f`, `bundleKind: library`, deps `@semio-tech/ui-react`, react, three, `@react-three/fiber`, `@react-three/drei`), `project.json` (nx `test` target), `script.ts` (BundleScript router -> `runVitest`), `vitest.config.ts` — copy shapes from cavas react-renderer.
 
 ## Stage 2 - First-class composable Layer system
 
@@ -71,16 +71,16 @@ Extend `#region Tests` in the same file (port the existing `lodProgressiveGridLa
 ## Stage 4 - Refactor `puzzle/3d` onto the engine
 
 In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
-- Add `@infinite/world/r3f` workspace dep ([puzzle/3d/react/package.json](puzzle/3d/react/package.json)); replace the inline `Chunking`, `Coordinates`, `Pool`, `Lod` regions with imports/re-exports from `@infinite/world/r3f` (puzzle keeps thin CAD-specific wrappers only where vocabulary differs).
+- Add `@semio-tech/infinite-world-r3f` workspace dep ([puzzle/3d/react/package.json](puzzle/3d/react/package.json)); replace the inline `Chunking`, `Coordinates`, `Pool`, `Lod` regions with imports/re-exports from `@semio-tech/infinite-world-r3f` (puzzle keeps thin CAD-specific wrappers only where vocabulary differs).
 - Recast content as layers on `WorldCanvas` + `WorldLayerStack`: `ObjectsLayer`, `VortexLayer`, `AttractionLayer`, `CableLayer`, `GridLayer`, `MarqueeLayer`, ordered explicitly. `Canvas3D`/`Inner`/`PlayCanvas` ([puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) 8860/8777) compose `WorldCanvas` and register these layers instead of hand-rolled grouping; puzzle-specific `Registry`/`Brush`/`Relocate` inject their gates into the generic controls/streaming.
 - Keep the public `PlayCanvas`/`Canvas3D` API stable so [puzzle/3d/play](puzzle/3d/play) is unchanged.
 
 ## Stage 5 - Wiring & validation
 
 - Root [package.json](package.json) `workspaces`: add `infinite/world/r3f` (after `infinite/cavas/react-renderer`).
-- Vite alias in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) (~405): add `@infinite/world/r3f` -> `infinite/world/r3f/index.tsx`.
-- [.vscode/launch.json](.vscode/launch.json): add `🛠️dev♾️world🧪r3f` test entry next to the cavas entry (~678, order ~169.55), `bun nx run @infinite/world/r3f:test`.
-- Validate: `bun nx run @infinite/world/r3f:test`, `bun nx run @puzzle/3d/react:test`, and a `@puzzle/3d/play` dev smoke confirming (with `[DEBUG]` console logs) chunk load/unload, grid/LOD bands, object pooling, selection/attraction still work.
+- Vite alias in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) (~405): add `@semio-tech/infinite-world-r3f` -> `infinite/world/r3f/index.tsx`.
+- [.vscode/launch.json](.vscode/launch.json): add `🛠️dev♾️world🧪r3f` test entry next to the cavas entry (~678, order ~169.55), `bun nx run @semio-tech/infinite-world-r3f:test`.
+- Validate: `bun nx run @semio-tech/infinite-world-r3f:test`, `bun nx run @semio-tech/puzzle-3d-react:test`, and a `@semio-tech/puzzle-3d-play` dev smoke confirming (with `[DEBUG]` console logs) chunk load/unload, grid/LOD bands, object pooling, selection/attraction still work.
 
 ## Workflow note (execution)
 

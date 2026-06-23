@@ -11,8 +11,8 @@
 
 // #endregion 🧲Header
 
-import { BottomPanel, Panel, PanelSection, SidePanel } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { BottomPanel, Panel, PanelSection, SidePanel } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

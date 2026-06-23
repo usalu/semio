@@ -9,4 +9,4 @@ bundle:
 
 # 🧾 Specification
 
-Import via `@compose/fixture` from tests, storybook, and dev harnesses only. Builtin kits, meshes, and icons live under `@compose/asset`.
+Import via `@semio-tech/compose-fixture` from tests, storybook, and dev harnesses only. Builtin kits, meshes, and icons live under `@semio-tech/compose-asset`.

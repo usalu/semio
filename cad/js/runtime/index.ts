@@ -1,12 +1,12 @@
 // #region 🧭Header
-/** @emoji 🚀 `@cad/js/runtime` — CAD composition root: assets glob + module registration. */
+/** @emoji 🚀 `@semio-tech/cad-js-runtime` — CAD composition root: assets glob + module registration. */
 // #endregion 🧭Header
 
-import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "@cad/js/core";
-import * as spatialShape from "@cad/js/module/spatial-shape";
-import * as aecBuilding from "@cad/js/module/aec-building";
-import * as aecBuildingEnergy from "@cad/js/module/aec-building-energy";
-import * as aecBuildingStructure from "@cad/js/module/aec-building-structure";
+import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "@semio-tech/cad-js-core";
+import * as spatialShape from "@semio-tech/cad-js-module-spatial-shape";
+import * as aecBuilding from "@semio-tech/cad-js-module-aec-building";
+import * as aecBuildingEnergy from "@semio-tech/cad-js-module-aec-building-energy";
+import * as aecBuildingStructure from "@semio-tech/cad-js-module-aec-building-structure";
 
 // #region 📥ModelDefinitionAssets
 const __modelDefinitionTypologyModules = import.meta.glob(
@@ -106,13 +106,13 @@ if (import.meta.vitest) {
     loadPropertyDefinition,
     loadStatDefinition,
     resolveModelDefinitionScope,
-  } = await import("@cad/js/core");
-  const { SPATIAL_SHAPE_VOLUME_PROPERTY_ID } = await import("@cad/js/module/spatial-shape");
-  const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID } = await import("@cad/js/module/aec-building-energy");
+  } = await import("@semio-tech/cad-js-core");
+  const { SPATIAL_SHAPE_VOLUME_PROPERTY_ID } = await import("@semio-tech/cad-js-module-spatial-shape");
+  const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID } = await import("@semio-tech/cad-js-module-aec-building-energy");
 
   bootstrapCadModules();
 
-  describe("@cad/js/runtime", () => {
+  describe("@semio-tech/cad-js-runtime", () => {
     it("loads model definition manifests and catalogs", () => {
       const manifests = listModelDefinitionManifests();
       expect(manifests.some((row) => row.id === defaultModelDefinitionId())).toBe(true);

@@ -1,12 +1,12 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@puzzle/3d/rs",
+  "name": "@semio-tech/puzzle-3d-rs",
   "version": "0.1.0",
   "description": "puzzle · 3d rs",
   "type": "module",
   "private": true,
   "scripts": {
-    "wasm": "bun nx run @puzzle/3d/rs:wasm"
+    "wasm": "bun nx run @semio-tech/puzzle-3d-rs:wasm"
   },
   "author": {
     "name": "Ueli Saluz",

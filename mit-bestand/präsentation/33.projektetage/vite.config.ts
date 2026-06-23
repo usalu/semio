@@ -29,12 +29,12 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@ui/react", replacement: uiReact },
-			{ find: "@framework/presentation/core", replacement: presentationCore },
-			{ find: "@framework/presentation/renderer/react", replacement: presentationRenderer },
-			{ find: "@framework/core", replacement: frameworkCore },
+			{ find: "@semio-tech/ui-react", replacement: uiReact },
+			{ find: "@semio-tech/framework-presentation-core", replacement: presentationCore },
+			{ find: "@semio-tech/framework-presentation-renderer-react", replacement: presentationRenderer },
+			{ find: "@semio-tech/framework-core", replacement: frameworkCore },
 			{
-				find: "@mit-bestand/praesentation/projektetage-spec",
+				find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
 				replacement: resolve(dir, "spec.ts"),
 			},
 		],

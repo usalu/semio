@@ -41,31 +41,31 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@compose/rs-wasm": [
+      "@semio-tech/compose-rs-wasm": [
         "../rs/pkg/compose.d.ts"
       ],
-      "@compose/js": [
+      "@semio-tech/compose-js": [
         "."
       ],
-      "@compose/js/*": [
+      "@semio-tech/compose-js/*": [
         "./*"
       ],
-      "@ui/react": [
+      "@semio-tech/ui-react": [
         "../../../ui/react"
       ],
-      "@ui/react/*": [
+      "@semio-tech/ui-react/*": [
         "../../../ui/react/*"
       ],
-      "@compose/asset": [
+      "@semio-tech/compose-asset": [
         "../asset"
       ],
-      "@compose/asset/*": [
+      "@semio-tech/compose-asset/*": [
         "../asset/*"
       ],
-      "@compose/sketchpad": [
+      "@semio-tech/compose-sketchpad": [
         "../client/ui/sketchpad"
       ],
-      "@compose/sketchpad/*": [
+      "@semio-tech/compose-sketchpad/*": [
         "../client/ui/sketchpad/*"
       ]
     }

@@ -6,7 +6,7 @@ todos:
     content: Add channel-level hover/selection getters+setters to DagHost (mathematical/graph/port/directed/dag/lib.rs) using handle_key_map + handle.role, with LOD fallback; expose via FlowHost/FlowSession in flow/core/lib.rs.
     status: completed
   - id: flowcanvas-surface
-    content: Define ChannelRef in dag/react, re-export from @flow/react; emit onChannelHoverChange/onChannelSelectionChange and accept hoveredChannel/selectedChannels controlled props in FlowCanvas.
+    content: Define ChannelRef in dag/react, re-export from @semio-tech/flow-react; emit onChannelHoverChange/onChannelSelectionChange and accept hoveredChannel/selectedChannels controlled props in FlowCanvas.
     status: completed
   - id: preview-per-port
     content: Add portId to ProceduralPreviewItem, make extractPreviewItems per output port, key items by (widgetId, portId), and drive chrome from hovered/selectedGeometryTargets; thread portId through pointer handlers.
@@ -53,7 +53,7 @@ File: [flow/core/lib.rs](flow/core/lib.rs) (`FlowHost` + `FlowSession`)
 
 ## Step 2 - FlowCanvas: surface channels to React
 Files: [flow/react/index.tsx](flow/react/index.tsx), [mathematical/graph/port/directed/dag/react/index.tsx](mathematical/graph/port/directed/dag/react/index.tsx)
-- Define canonical `ChannelRef` type in the DAG react module and re-export from `@flow/react` (same pattern as `DagDrawLodKind`).
+- Define canonical `ChannelRef` type in the DAG react module and re-export from `@semio-tech/flow-react` (same pattern as `DagDrawLodKind`).
 - In `emitInteractionState` (~2245) also emit `onChannelHoverChange?(ChannelRef | null)` from `session.hoveredChannelJson()` and `onChannelSelectionChange?(ChannelRef[])` from `session.selectedChannelsJson()`.
 - Accept controlled props `hoveredChannel?`, `selectedChannels?` and apply them in the controlled-sync effect (~2441) via `session.setHoverChannel` / `session.setSelectedChannels`. After applying inbound props, re-run `emitInteractionState` so derived state stays consistent (controller guards prevent loops).
 

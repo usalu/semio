@@ -17,7 +17,7 @@ import {
 	type PresentationMeta,
 	type SplitArtifacts,
 	unionSourceCrops,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 // #endregion 🔌Adapters
 
 //#region 🔖Meta

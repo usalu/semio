@@ -1,5 +1,5 @@
 // #region 🧭Header
-/** @emoji 📐 `@cad/js/module/spatial-shape` — shape model-definition stat and property computers. */
+/** @emoji 📐 `@semio-tech/cad-js-module-spatial-shape` — shape model-definition stat and property computers. */
 // #endregion 🧭Header
 
 import {
@@ -16,7 +16,7 @@ import {
   type SolidRef,
   type StatComputeContext,
   type TypologyRef,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 
 // #region 🏷️Ids
 export const SPATIAL_SHAPE_MODEL_DEFINITION_ID = "spatial.shape";
@@ -72,9 +72,9 @@ export function register(): void {
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { bootstrapCadModules } = await import("@cad/js/runtime");
-  const { BrepjsKernel, preciseSpatialKernelMath } = await import("@cad/js/kernel/brepjs");
-  const core = await import("@cad/js/core");
+  const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
+  const { BrepjsKernel, preciseSpatialKernelMath } = await import("@semio-tech/cad-js-kernel-brepjs");
+  const core = await import("@semio-tech/cad-js-core");
   const {
     Model,
     applyModelDiff,
@@ -92,7 +92,7 @@ if (import.meta.vitest) {
   bootstrapCadModules();
   const M = preciseSpatialKernelMath;
 
-  describe("@cad/js/module/spatial-shape", () => {
+  describe("@semio-tech/cad-js-module-spatial-shape", () => {
     it("computes geometry stats for solid-backed objects", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));

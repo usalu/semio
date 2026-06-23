@@ -1,6 +1,6 @@
 {
 	"$schema": "../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/core",
+	"name": "@semio-tech/framework-core",
 	"version": "0.1.0",
 	"description": "framework · render-independent shared core (declarative UI graph, runtime shell, command routing)",
 	"type": "module",

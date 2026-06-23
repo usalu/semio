@@ -25,7 +25,7 @@ isProject: false
 
 ## Diagnosis
 
-Hover cost has two app-independent causes (in `@ui/react`) plus one cad-play-specific cause.
+Hover cost has two app-independent causes (in `@semio-tech/ui-react`) plus one cad-play-specific cause.
 
 ```mermaid
 flowchart TD
@@ -39,7 +39,7 @@ flowchart TD
 - `ui/react/index.tsx`: `TreeItem` (~~8202), `SortableTreeItem` (~~7857), `TreeSection` (~~7690), `FileTreeItem` (~~9404) each keep an `isHovered` `useState` that is set on every enter/leave but **never read** in the rendered classes (CSS `hover:bg-hover-panel` already does the visual). Pure wasted re-render per hover, every app.
 - `handleTreePointerOver` (~9241) runs `clearTreeHoverPath` + `applyTreeHoverPath` (DOM walk + attribute mutation) on **every** `pointerover`, including moves within the same row.
 - CAD play ([cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)): `chromeKey` (~~2131) includes `hoveredKey`, so each hover re-runs `buildCadPlayHierarchySections(...)` (~~2141) rebuilding every item with fresh `isHighlighted`, forcing a full `<Tree>` reconcile.
-- Puzzle 2d/3d hierarchy trees have **no** hover wiring, so their slowness is only the two `@ui/react` causes above.
+- Puzzle 2d/3d hierarchy trees have **no** hover wiring, so their slowness is only the two `@semio-tech/ui-react` causes above.
 
 ## Fix 1 - ui/react: kill wasted hover re-renders
 

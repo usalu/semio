@@ -1,19 +1,19 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@cad/js/core",
+  "name": "@semio-tech/cad-js-core",
   "version": "0.1.0",
   "description": "🧭 Spatial factory runtime, model graph, and kernel contracts (headless).",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @cad/js/core:test"
+    "test": "bun nx run @semio-tech/cad-js-core:test"
   },
   "dependencies": {
-    "@geometry/brep/js": "workspace:*"
+    "@semio-tech/geometry-brep-js": "workspace:*"
   },
   "devDependencies": {
-    "@cad/js/kernel/brepjs": "workspace:*",
-    "@cad/js/runtime": "workspace:*",
+    "@semio-tech/cad-js-kernel-brepjs": "workspace:*",
+    "@semio-tech/cad-js-runtime": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

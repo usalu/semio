@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 puzzle/5d/play/index.ts — Puzzle 5d play on `@framework/playground/core`: unified 5d fixture, LOD measures, relocate tools (no React).
+// 💻 puzzle/5d/play/index.ts — Puzzle 5d play on `@semio-tech/framework-playground-core`: unified 5d fixture, LOD measures, relocate tools (no React).
 // #endregion 🧲Header
 
 import {
@@ -34,7 +34,7 @@ import {
   type UiTreeSectionNode,
   enforcePlaygroundWindowEngagementInput,
   collectUiTreeItemDragData,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
 import {
   buildPuzzle2dPlayToolbarTools,
@@ -64,7 +64,7 @@ import {
   type Puzzle2dSelectionTargets,
   puzzle2dPlayNodeKindDragData,
 } from "../../2d/react/index.tsx";
-import { type GumballConfig } from "@ui/react";
+import { type GumballConfig } from "@semio-tech/ui-react";
 import { PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
   FIXTURE_DRAG_V1_MIME,
@@ -1505,7 +1505,7 @@ if (
 ) {
   void (async () => {
     await import("./globals.css");
-    const { boot5dPlay } = await import("@framework/playground/renderer/react/puzzle/5d");
+    const { boot5dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/5d");
     boot5dPlay(new Playground5d());
   })();
 }

@@ -9,11 +9,11 @@
 
 ## Changes
 - Converted app browser-launch configs in `.vscode/launch.json` to attach-free Node launches:
-  - `@compose/js dev`
-  - `@compose/js dev:storybook`
-  - `@compose/js dev:sketchpad`
-  - `@compose/docs dev`
-  - `@compose/play dev`
+  - `@semio-tech/compose-js dev`
+  - `@semio-tech/compose-js dev:storybook`
+  - `@semio-tech/compose-js dev:sketchpad`
+  - `@semio-tech/compose-sketchpad-docs dev`
+  - `@semio-tech/compose-sketchpad-play dev`
 - Added `serverReadyAction` with `openExternally` for those profiles so URLs open automatically once dev servers are ready.
 - Updated sketchpad launch URL pattern to `http://localhost:5173` to match `dev:sketchpad`.
 - Updated README bundle docs to describe attach-free launch behavior.

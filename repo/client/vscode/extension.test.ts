@@ -11,7 +11,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../compose/vscode/extension";
+import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../../compose/client/ui/vscode/extension";
 import {
   buildCliTreeArgs,
   buildEntityEmojiPattern,

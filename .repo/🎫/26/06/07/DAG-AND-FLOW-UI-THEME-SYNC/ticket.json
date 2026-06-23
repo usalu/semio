@@ -3,7 +3,7 @@
   "emoji": "🎨",
   "status": "closed",
   "description": "DAG and Flow canvases use hardcoded dark colors and do not respect UI light/dark theme. Wire VelloThemePalette from CSS tokens like puzzle2d/map.",
-  "summary": "DAG and Flow canvases now respect UI light/dark theme. React hosts use `bg-canvas` and sync `serializeGraphVelloThemePaletteJson()` from `@ui/styling` into WASM each frame. Rust hosts paint from `VelloThemePalette` instead of hardcoded dark colors.",
+  "summary": "DAG and Flow canvases now respect UI light/dark theme. React hosts use `bg-canvas` and sync `serializeGraphVelloThemePaletteJson()` from `@semio-tech/ui-styling` into WASM each frame. Rust hosts paint from `VelloThemePalette` instead of hardcoded dark colors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1541"
   },

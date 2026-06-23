@@ -48,14 +48,14 @@ flowchart LR
 ## Implementation Steps
 
 1. Remove sketchpad-owned kit authority.
-   - Delete direct `@compose/js` kit imports from [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx), including `executeComposeKitCommand`, `createKitCommandEngineExplicitOrigin`, concrete store constructors, local kit file state helpers, and direct DTO import/export helpers.
+   - Delete direct `@semio-tech/compose-js` kit imports from [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx), including `executeComposeKitCommand`, `createKitCommandEngineExplicitOrigin`, concrete store constructors, local kit file state helpers, and direct DTO import/export helpers.
    - Replace `SketchpadStore` kit registry/shallow caches, browser persistence caches, `kitStore.getSnapshot()` reads, and direct `kitStore.subscribe()` reads with `compose/react` hooks.
    - Remove the window bridge `__COMPOSE_EXECUTE_COMPOSE_KIT_COMMAND__` and the legacy `sketchpadAttachKitReadShell` snapshot mutation path.
 
 2. Promote missing hook APIs into `compose/react`.
    - Add narrow hooks for sketchpad needs that are currently implemented locally: open kit list, active kit, kit kind/source, kit shallow list, kit persistence/file URLs, command dispatchers, import/export/open/create, undo/redo, and backbone/conflict operations where UI needs them.
    - Keep hooks focused: each hook returns only the field or command surface needed, backed by `useSyncExternalStore` or existing store selectors.
-   - Ensure `compose/react` imports only `@compose/js` plus React.
+   - Ensure `compose/react` imports only `@semio-tech/compose-js` plus React.
 
 3. Collapse `compose/js` to the execute-only Rust boundary.
    - Refactor `kitGraphqlRun`, `kitGraphqlExecuteStoreCommand`, read helpers, and command shell helpers so all Rust interaction routes through one internal `execute` wrapper over `KitStoreHandle.execute`.

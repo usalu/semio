@@ -60,7 +60,7 @@ import {
   writeStoredUiChromeExpertise,
   writeStoredComputeWorkerCount,
   isCrossOriginIsolatedRuntime,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 import { clsx, type ClassValue } from "clsx";
 
 //#region 🪁I18n Compile Gate
@@ -125,7 +125,7 @@ import {
   type WindowEngagementControl,
   type WindowLayout,
   type WindowMeasure,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 // #endregion 🔌Adapters
 
 export type {
@@ -144,16 +144,16 @@ export type {
   WindowBodyViewContext,
   WindowKindRuntime,
   WindowLayout,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
-export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@framework/playground/core";
+export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@semio-tech/framework-playground-core";
 export {
   isPlaygroundNoFixtureId,
   PLAYGROUND_NO_FIXTURE_ID,
   PLAYGROUND_NO_FIXTURE_OPTION,
   playgroundFixtureCatalogWithNoOption,
   resolvePlaygroundFixtureCatalog,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
 export {
   APP_TOOL_CATEGORY_ORDER,
@@ -174,8 +174,8 @@ export {
   resolveAppState,
   playgroundTreePanelRootItems,
   buildCadWindowBody,
-} from "@framework/playground/core";
-import { renderControlIcon } from "@ui/react";
+} from "@semio-tech/framework-playground-core";
+import { renderControlIcon } from "@semio-tech/ui-react";
 import {
   ProductShell,
   createBrowserStoragePort,
@@ -206,11 +206,11 @@ import {
   type SettingsHostApi,
   type UiComponentHostSurfaceNode,
   type UIWindowMeasure,
-} from "@framework/platform/renderer/react";
-import { NamedLayoutStore } from "@framework/core";
+} from "@semio-tech/framework-platform-renderer-react";
+import { NamedLayoutStore } from "@semio-tech/framework-core";
 
-export { uiTreeNodeToTreePanelConfig, useControllerStore, useStore } from "@framework/platform/renderer/react";
-export type { Store } from "@framework/playground/core";
+export { uiTreeNodeToTreePanelConfig, useControllerStore, useStore } from "@semio-tech/framework-platform-renderer-react";
+export type { Store } from "@semio-tech/framework-playground-core";
 
 function cnPlay(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -351,11 +351,11 @@ type PlaygroundSurfaceBindingHost = React.ComponentType<{ readonly node: UiCompo
 
 const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
 const puzzle2dSurfaceHosts = new Map<string, Puzzle2dSurfaceHost>();
-type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiGisMapHostSurfaceNode }>;
+type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiGisMapHostSurfaceNode }>;
 const gisMapSurfaceHosts = new Map<string, GisMapSurfaceHost>();
-type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiFlowHostSurfaceNode }>;
+type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiFlowHostSurfaceNode }>;
 const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
-type DagSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiDagHostSurfaceNode }>;
+type DagSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDagHostSurfaceNode }>;
 const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
@@ -784,7 +784,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
 //#endregion 🔖UiRenderer
 
 //#region 🔖DeclarativeHosts
-import { registerIcon, registerTabIcon } from "@framework/platform/renderer/react";
+import { registerIcon, registerTabIcon } from "@semio-tech/framework-platform-renderer-react";
 export { registerIcon, registerTabIcon };
 
 const declarativeWindowBodyComponents = new Map<string, React.FC>();
@@ -1114,7 +1114,7 @@ function usePlaygroundFixtureCatalog(runtime: Platform, controllerId: string | u
       const controller = app?.controller.id === controllerId ? app.controller : undefined;
       const unsubscribeSnapshot =
         controller && "subscribeSnapshot" in controller && typeof controller.subscribeSnapshot === "function"
-          ? (controller as import("@framework/playground/core").Controller & { subscribeSnapshot: (l: () => void) => () => void }).subscribeSnapshot(listener)
+          ? (controller as import("@semio-tech/framework-playground-core").Controller & { subscribeSnapshot: (l: () => void) => () => void }).subscribeSnapshot(listener)
           : undefined;
       const unsubscribeRuntime = runtime.subscribe(listener);
       return () => {
@@ -1569,7 +1569,7 @@ export const mountReactApp = mountPlaygroundApp;
 
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
-import { sceneHostPort } from "@ui/react";
+import { sceneHostPort } from "@semio-tech/ui-react";
 import {
   PlayCanvas,
   ObjectStateProvider,
@@ -1597,7 +1597,7 @@ import {
   type Puzzle3dFixtureDropDetail,
   type Puzzle3dHoverPayload,
   type RelocatePayload,
-} from "@puzzle/3d/react";
+} from "@semio-tech/puzzle-3d-react";
 import {
   PUZZLE_3D_PLAY_BODY_KEY,
   PUZZLE_3D_PLAY_CONTROLLER_ID,
@@ -1629,7 +1629,7 @@ import {
   parseKindCompatibility,
   type Puzzle3dPlayHostBridge,
   type Puzzle3dPlaySnapshot,
-} from "@puzzle/3d/play";
+} from "@semio-tech/puzzle-3d-play";
 // #endregion 🔌Adapters
 
 function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
@@ -2087,13 +2087,13 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
     [ctrl],
   );
   const onReferenceRelocatePersist = reactHostPort.useCallback(
-    (payload: import("@infinite/world/r3f").WorldReferenceRelocatePayload) => {
+    (payload: import("@semio-tech/infinite-world-r3f").WorldReferenceRelocatePayload) => {
       ctrl?.patchReferenceRelocate(payload);
     },
     [ctrl],
   );
   const onTargetVolumeRelocatePersist = reactHostPort.useCallback(
-    (payload: import("@infinite/world/r3f").WorldVolumeRelocatePayload) => {
+    (payload: import("@semio-tech/infinite-world-r3f").WorldVolumeRelocatePayload) => {
       ctrl?.patchTargetVolumeRelocate(payload);
     },
     [ctrl],
@@ -2348,9 +2348,9 @@ import {
   Puzzle5dBrushPairedSync,
   puzzle5dFlatRendererRef,
   type Store as Puzzle5dStore,
-} from "@puzzle/5d/react";
-import { puzzle2dSetBrushPlaceCommitHandler, type Puzzle2dBrushPlacePayload } from "@puzzle/2d/react";
-import type { Playground } from "@framework/playground/core";
+} from "@semio-tech/puzzle-5d-react";
+import { puzzle2dSetBrushPlaceCommitHandler, type Puzzle2dBrushPlacePayload } from "@semio-tech/puzzle-2d-react";
+import type { Playground } from "@semio-tech/framework-playground-core";
 import {
   PUZZLE_5D_PLAY_APP_ID,
   PUZZLE_5D_PLAY_2D_BODY_KEY,
@@ -2373,7 +2373,7 @@ import {
   PUZZLE_5D_PLAY_KINDS_TAB_ID,
   PUZZLE_5D_PLAY_ICON_KINDS,
   type Puzzle5dPlaySnapshot,
-} from "@puzzle/5d/play";
+} from "@semio-tech/puzzle-5d-play";
 import {
   puzzle2dActiveRenderer,
   puzzle2dBrushCandidateDisplayLabels,
@@ -2385,10 +2385,10 @@ import {
   type Puzzle2dSelectionMethod,
   type Puzzle2dSelectionMode,
   type Puzzle2dSelectionTargets,
-} from "@puzzle/2d/react";
-import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@puzzle/3d/play";
-import { puzzle3dBrushEngagementSourceRef, resolvePuzzle3dFixtureDrop, type Puzzle3dFixtureDropDetail } from "@puzzle/3d/react";
-import { sceneHostPort } from "@ui/react";
+} from "@semio-tech/puzzle-2d-react";
+import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@semio-tech/puzzle-3d-play";
+import { puzzle3dBrushEngagementSourceRef, resolvePuzzle3dFixtureDrop, type Puzzle3dFixtureDropDetail } from "@semio-tech/puzzle-3d-react";
+import { sceneHostPort } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 //#region 🔖Snapshot
@@ -2598,7 +2598,7 @@ function buildPuzzle5dPlayStatusTree(): UiTreeNode {
 //#region 🔖DetailsPanel
 class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   constructor(
-    private readonly buildTree: () => import("@framework/playground/core").UiTreeNode,
+    private readonly buildTree: () => import("@semio-tech/framework-playground-core").UiTreeNode,
     private readonly commandBus: CommandBus,
   ) {
     super();
@@ -2620,7 +2620,7 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 
 class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   constructor(
-    private readonly buildTree: () => import("@framework/playground/core").UiTreeNode,
+    private readonly buildTree: () => import("@semio-tech/framework-playground-core").UiTreeNode,
     private readonly commandBus: CommandBus,
   ) {
     super();
@@ -2890,7 +2890,7 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
 //#region 🔖Mount
 let topologyPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers topology play flat+volume surface hosts (called from `@framework/playground/renderer/react`). */
+/** @emoji 🧊 Registers topology play flat+volume surface hosts (called from `@semio-tech/framework-playground-renderer-react`). */
 export function registerPuzzle5dPlaySurfaceHosts(): void {
   if (topologyPlayChromeRegistered) return;
   topologyPlayChromeRegistered = true;
@@ -3012,7 +3012,7 @@ import {
   puzzle2dPlayFixtureForId,
   puzzle2dPlayFixtureJson,
   puzzle2dPlayTriptychCamerasFromFixture,
-} from "@puzzle/2d/play";
+} from "@semio-tech/puzzle-2d-play";
 import {
   buildWiresPlayHierarchySections,
   buildWiresPlayKindsTree,
@@ -3028,7 +3028,7 @@ import {
   wiresPlayHierarchyTreeSelectedIds,
   wiresPlayIdentityLabelForNodeId,
   wiresPlayRelationshipKindDisplayName,
-} from "@reasoning/mindmap/wires/play";
+} from "@semio-tech/reasoning-mindmap-wires-play";
 import {
   PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
   Puzzle2dPlayShellController,
@@ -3069,7 +3069,7 @@ import {
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
-} from "@puzzle/2d/play";
+} from "@semio-tech/puzzle-2d-play";
 import {
   DEFAULT_KIND_CATALOG_BUNDLE,
   BUILTIN_PORT_HANDLE_KIND,
@@ -3141,8 +3141,8 @@ import {
   type KindCatalogBundle,
   type CameraState,
   puzzle2dSelectionActionsRef,
-} from "@puzzle/2d/react";
-import type { Playground } from "@framework/playground/core";
+} from "@semio-tech/puzzle-2d-react";
+import type { Playground } from "@semio-tech/framework-playground-core";
 // #endregion 🔌Adapters
 
 const PUZZLE_2D_PLAY_IS_WIRES = import.meta.env.PUZZLE_PLAY_ENTRY === "wires";
@@ -3185,7 +3185,7 @@ function puzzle2dPlayResolvedDefaultFixture(): Puzzle2dFixtureV1 {
 const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayResolvedDefaultFixture());
 
 // #region 🔖Kinds
-export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
+export type { Puzzle2dPlayPaneId } from "@semio-tech/puzzle-2d-play";
 
 const puzzle2dPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const puzzle2dPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -4132,7 +4132,7 @@ function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSu
 
 let puzzle2dPlayChromeRegistered = false;
 
-/** @emoji 🧊 Registers puzzle 2d play surface host, window bodies, and tab icons (called from `@framework/playground/renderer/react`). */
+/** @emoji 🧊 Registers puzzle 2d play surface host, window bodies, and tab icons (called from `@semio-tech/framework-playground-renderer-react`). */
 export function registerPuzzle2dPlaySurfaceHosts(): void {
   if (puzzle2dPlayChromeRegistered) return;
   puzzle2dPlayChromeRegistered = true;
@@ -4575,7 +4575,7 @@ function Puzzle2dPlayInner({
   playgroundKeybindings,
 }: {
   readonly puzzle2dRuntime: Platform;
-  readonly playgroundKeybindings?: readonly import("@framework/playground/core").PlaygroundKeybinding[];
+  readonly playgroundKeybindings?: readonly import("@semio-tech/framework-playground-core").PlaygroundKeybinding[];
 }): ReactElement {
   const [activeFixtureId, setActiveFixtureId] = reactHostPort.useState(PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID);
   const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(() => clonePuzzle2dFixtureV1(initialFixture));
@@ -6059,9 +6059,9 @@ import {
   GIS_MAP_PLAY_WINDOW_KIND_ID,
   buildMapPlayMainDeclarativeBody,
   type MapPlayController,
-} from "@gis/map/play";
-import { MapCanvas, Position, Route, type GisMapLodId } from "@gis/map/react";
-import type { UiGisMapHostSurfaceNode } from "@framework/platform/core";
+} from "@semio-tech/gis-map-play";
+import { MapCanvas, Position, Route, type GisMapLodId } from "@semio-tech/gis-map-react";
+import type { UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let mapPlayChromeRegistered = false;
 
@@ -6169,7 +6169,7 @@ import {
   buildFlowPlayExtensionsTree,
   buildFlowPlayKindsTree,
   registerFlowPlayDeclarativeBodies,
-} from "@flow/play";
+} from "@semio-tech/flow-play";
 import {
   DAG_LOD_MODE_AUTOMATIC,
   FLOW_DEFAULT_PROXIMITY_DISTANCE,
@@ -6177,8 +6177,8 @@ import {
   FlowCanvas,
   dagLodCanvasProps,
   flowWidgetPaletteTreeDragController,
-} from "@flow/react";
-import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
+} from "@semio-tech/flow-react";
+import type { UiFlowHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
@@ -6234,7 +6234,7 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
   const proximityDistance = ctrl?.proximityDistanceValue() ?? FLOW_DEFAULT_PROXIMITY_DISTANCE;
   const onLodChange = reactHostPort.useCallback(
-    (lod: import("@flow/react").DagDrawLodKind) => {
+    (lod: import("@semio-tech/flow-react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
     },
     [ctrl, scopeId],
@@ -6247,7 +6247,7 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
     [ctrl],
   );
   const onCatalogueReady = reactHostPort.useCallback(
-    (sections: readonly import("@flow/react").CatalogueSection[]) => {
+    (sections: readonly import("@semio-tech/flow-react").CatalogueSection[]) => {
       ctrl?.run("setCatalogueSections", { sections: [...sections] });
     },
     [ctrl],
@@ -6368,9 +6368,9 @@ import {
   DAG_PLAY_WINDOW_KIND_ID,
   DagPlayController,
   registerDagPlayDeclarativeBodies,
-} from "@dag/play";
-import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas, dagLodCanvasProps } from "@dag/react";
-import type { UiDagHostSurfaceNode } from "@framework/platform/core";
+} from "@semio-tech/dag-play";
+import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas, dagLodCanvasProps } from "@semio-tech/dag-react";
+import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let dagPlayChromeRegistered = false;
 
@@ -6384,7 +6384,7 @@ function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode 
   const scopeId = node.paneId ?? DAG_PLAY_WINDOW_KIND_ID;
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_HOST_LOD_AUTOMATIC);
   const onLodChange = reactHostPort.useCallback(
-    (lod: import("@dag/react").DagDrawLodKind) => {
+    (lod: import("@semio-tech/dag-react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
     },
     [ctrl, scopeId],
@@ -6446,10 +6446,10 @@ import {
   buildProceduralPlayKindsTree,
   registerProceduralPlayDeclarativeBodies,
   type ProceduralPlayHostBridge,
-} from "@procedural/play";
-import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, FLOW_DEFAULT_PROXIMITY_DISTANCE, flowWidgetPaletteTreeDragController } from "@flow/react";
-import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@procedural/react";
-import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
+} from "@semio-tech/procedural-play";
+import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, FLOW_DEFAULT_PROXIMITY_DISTANCE, flowWidgetPaletteTreeDragController } from "@semio-tech/flow-react";
+import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@semio-tech/procedural-react";
+import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
@@ -6585,7 +6585,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
   const proximityDistance = ctrl?.proximityDistanceValue() ?? FLOW_DEFAULT_PROXIMITY_DISTANCE;
   const onLodChange = reactHostPort.useCallback(
-    (lod: import("@flow/react").DagDrawLodKind) => {
+    (lod: import("@semio-tech/flow-react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
     },
     [ctrl, scopeId],
@@ -6605,7 +6605,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     [ctrl],
   );
   const onCatalogueReady = reactHostPort.useCallback(
-    (sections: readonly import("@flow/react").CatalogueSection[]) => {
+    (sections: readonly import("@semio-tech/flow-react").CatalogueSection[]) => {
       ctrl?.run("setCatalogueSections", { sections: [...sections] });
     },
     [ctrl],
@@ -6635,13 +6635,13 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     [ctrl],
   );
   const onChannelHoverChange = reactHostPort.useCallback(
-    (channel: import("@procedural/react").ProceduralChannelRef | null) => {
+    (channel: import("@semio-tech/procedural-react").ProceduralChannelRef | null) => {
       ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
     },
     [ctrl],
   );
   const onSelectedChannelsChange = reactHostPort.useCallback(
-    (channels: readonly import("@procedural/react").ProceduralChannelRef[]) => {
+    (channels: readonly import("@semio-tech/procedural-react").ProceduralChannelRef[]) => {
       ctrl?.run("setSelectedChannels", { channels: [...channels] });
     },
     [ctrl],
@@ -6699,25 +6699,25 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   void interactionRevision;
   const onHover = reactHostPort.useCallback(
-    (channel: import("@procedural/react").ProceduralChannelRef | null) => {
+    (channel: import("@semio-tech/procedural-react").ProceduralChannelRef | null) => {
       ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
     },
     [ctrl],
   );
   const onSelect = reactHostPort.useCallback(
-    (channel: import("@procedural/react").ProceduralChannelRef) => {
+    (channel: import("@semio-tech/procedural-react").ProceduralChannelRef) => {
       ctrl?.run("setSelectChannels", { channels: [channel] });
     },
     [ctrl],
   );
   const onSelectionChange = reactHostPort.useCallback(
-    (ids: readonly string[], mode: import("@procedural/react").ProceduralSelectionMode) => {
+    (ids: readonly string[], mode: import("@semio-tech/procedural-react").ProceduralSelectionMode) => {
       ctrl?.run("setSelection", { ids: [...ids], mode });
     },
     [ctrl],
   );
   const onGumballTransform = reactHostPort.useCallback(
-    (request: import("@procedural/react").ProceduralGumballTransformRequest) => {
+    (request: import("@semio-tech/procedural-react").ProceduralGumballTransformRequest) => {
       ctrl?.run("applyGumballTransform", request);
     },
     [ctrl],
@@ -6845,7 +6845,7 @@ import {
 	PresentationPlayController,
 	registerPresentationPlayDeclarativeBodies,
 	type PresentationPlaySnapshot,
-} from "@framework/presentation/play";
+} from "@semio-tech/framework-presentation-play";
 import {
 	moveNormalizedRect,
 	resizeNormalizedRect,
@@ -6856,7 +6856,7 @@ import {
 	type NormalizedRectHandle,
 	type DispositionPosition,
 	type FigureTileSource,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
 const PRESENTATION_TILE_HANDLES: readonly NormalizedRectHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PRESENTATION_TILE_VIEWPORT_MIN_ZOOM = 0.2;
@@ -7497,7 +7497,7 @@ export function bootPresentationPlay(playground: Playground, rootId = "root"): v
 //#endregion 🔖PresentationPlayHost
 
 //#region 🔖Boot
-import type { Playground } from "@framework/playground/core";
+import type { Playground } from "@semio-tech/framework-playground-core";
 
 /** @emoji 🧩 Play package supplies host registration + React mount (one puzzle surface per boot). */
 export interface PlaygroundChromeBoot {
@@ -7529,7 +7529,7 @@ if (import.meta.vitest) {
 
     it("keeps panel toggles right-aligned when no navbar center slot is present", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { AppRuntime, Controller, createTabStackLayout, registerWindowBody, buildPanelWindowBody } = await import("@framework/playground/core");
+      const { AppRuntime, Controller, createTabStackLayout, registerWindowBody, buildPanelWindowBody } = await import("@semio-tech/framework-playground-core");
       const runtime = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
       class TestController extends Controller {
         constructor() {
@@ -7550,7 +7550,7 @@ if (import.meta.vitest) {
 
     it("renders display panel toggle with layout-grid icon when app has window kinds", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { AppRuntime, Controller, createTabStackLayout, registerWindowBody, registerSidePanelBody, buildPanelWindowBody } = await import("@framework/playground/core");
+      const { AppRuntime, Controller, createTabStackLayout, registerWindowBody, registerSidePanelBody, buildPanelWindowBody } = await import("@semio-tech/framework-playground-core");
       const runtime = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
       class TestController extends Controller {
         constructor() {
@@ -7733,7 +7733,7 @@ if (import.meta.vitest) {
 
   describe("puzzle 2d play cameras", () => {
     it("imports puzzle 2d camera zoom limits used by host clamping", async () => {
-      const { PUZZLE_2D_CAMERA_ZOOM_MIN, PUZZLE_2D_CAMERA_ZOOM_MAX } = await import("@puzzle/2d/react");
+      const { PUZZLE_2D_CAMERA_ZOOM_MIN, PUZZLE_2D_CAMERA_ZOOM_MAX } = await import("@semio-tech/puzzle-2d-react");
       expect(PUZZLE_2D_CAMERA_ZOOM_MIN).toBeGreaterThan(0);
       expect(PUZZLE_2D_CAMERA_ZOOM_MAX).toBeGreaterThan(PUZZLE_2D_CAMERA_ZOOM_MIN);
     });
@@ -7804,7 +7804,7 @@ if (import.meta.vitest) {
 
     it("renders puzzle2d nodes through platform surface bindings", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { buildPuzzle2dWindowBody } = await import("@framework/playground/core");
+      const { buildPuzzle2dWindowBody } = await import("@semio-tech/framework-playground-core");
       const surfaceId = "playground.test/puzzle2d";
       function TestPuzzle2dHost(): React.ReactElement {
         return <div data-host="puzzle2d">puzzle 2d canvas</div>;
@@ -7823,7 +7823,7 @@ if (import.meta.vitest) {
 
     it("renders gismap nodes through GIS map surface hosts", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { buildMapWindowBody } = await import("@framework/playground/core");
+      const { buildMapWindowBody } = await import("@semio-tech/framework-playground-core");
       const surfaceId = "playground.test/gismap";
       function TestGisMapHost(): React.ReactElement {
         return <div data-host="gismap">gis map canvas</div>;
@@ -7841,7 +7841,7 @@ if (import.meta.vitest) {
 
     it("renders flow nodes through flow surface hosts", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { buildFlowWindowBody } = await import("@framework/playground/core");
+      const { buildFlowWindowBody } = await import("@semio-tech/framework-playground-core");
       const surfaceId = "playground.test/flow";
       function TestFlowHost(): React.ReactElement {
         return <div data-host="flow">flow canvas</div>;

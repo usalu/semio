@@ -2,7 +2,7 @@
   "title": "Get Sketchpad Running",
   "status": "closed",
   "description": "Reproduce why sketchpad is not currently running, fix the runtime and integration issues directly in existing files without preserving legacy behavior, extend existing tests as needed, verify by running the relevant app/tests/build locally, and close the ticket with a concise summary.",
-  "summary": "Fixed the sketchpad/play Vite runtime path so the app starts again on localhost:4000. Added a Vite fallback alias for plugin-react's vite/internal lookup in sketchpad and play, tightened the use-sync-external-store shim aliases in sketchpad to exact matches so production builds resolve correctly, and moved sketchpad's in-file Playwright-only imports behind a runtime import helper to keep Node-only test modules out of the browser bundle. Verified the play app responds on http://localhost:4000/ and leaves the loading screen without browser errors, and verified both @compose/play and @compose/sketchpad production builds succeed.",
+  "summary": "Fixed the sketchpad/play Vite runtime path so the app starts again on localhost:4000. Added a Vite fallback alias for plugin-react's vite/internal lookup in sketchpad and play, tightened the use-sync-external-store shim aliases in sketchpad to exact matches so production builds resolve correctly, and moved sketchpad's in-file Playwright-only imports behind a runtime import helper to keep Node-only test modules out of the browser bundle. Verified the play app responds on http://localhost:4000/ and leaves the loading screen without browser errors, and verified both @semio-tech/compose-sketchpad-play and @semio-tech/compose-sketchpad production builds succeed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1322"
   },

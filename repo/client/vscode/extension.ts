@@ -11,7 +11,7 @@
 // #region 🔌Adapters
 // Imports MUST include VS Code API, Node.js utilities, and compose validation.
 
-// import { deserializeKit, Problem, validateKit } from "@compose/js/compose";
+// import { deserializeKit, Problem, validateKit } from "@semio-tech/compose-js/compose";
 import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -2316,6 +2316,8 @@ function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
   if (cleanScope.startsWith("@compose/breachs/")) {
     cleanScope = cleanScope.replace("@compose/breachs/", "");
+  } else if (cleanScope.startsWith("@semio-tech/breachs/")) {
+    cleanScope = cleanScope.replace("@semio-tech/breachs/", "");
   }
 
   let bestBundle: BundleInfo | undefined;
@@ -2340,7 +2342,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
     return filePath.endsWith("/") ? filePath.slice(0, -1) : filePath;
   }
 
-  if (cleanScope.startsWith("@compose/") || cleanScope.startsWith("@repo/")) {
+  if (cleanScope.startsWith("@compose/") || cleanScope.startsWith("@repo/") || cleanScope.startsWith("@semio-tech/")) {
     const parts = cleanScope.split("/");
     if (parts.length > 2) {
       cleanScope = parts.slice(2).join("/");
@@ -2505,6 +2507,8 @@ function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[])
     let kindId = breach.kind.id;
     if (kindId.startsWith("@compose/policies//breachs/")) {
       kindId = kindId.replace("@compose/policies//breachs/", "");
+    } else if (kindId.startsWith("@semio-tech/policies//breachs/")) {
+      kindId = kindId.replace("@semio-tech/policies//breachs/", "");
     }
     const diagnostic = new vscode.Diagnostic(range, breach.summary, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;

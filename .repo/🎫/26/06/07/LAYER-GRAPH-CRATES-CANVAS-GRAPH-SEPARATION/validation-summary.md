@@ -7,11 +7,11 @@
 - `mathematical_graph`: 3 passed
 
 ## Vitest
-- `@dag/play`: 2 passed
-- `@dag/react`: 2 passed
+- `@semio-tech/dag-play`: 2 passed
+- `@semio-tech/dag-react`: 2 passed
 
 ## Runtime (Playwright)
-- `bun nx run @dag/play:validate` on http://127.0.0.1:6017/
+- `bun nx run @semio-tech/dag-play:validate` on http://127.0.0.1:6017/
 - `[DEBUG] dag play surface mount`
 - `[DEBUG] dag canvas loaded fixture`
 - Single `<canvas>` rendered, no Unsupported UiNode

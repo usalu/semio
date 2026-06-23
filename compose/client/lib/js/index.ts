@@ -189,7 +189,7 @@ function defaultRsWasmSpecifier(): string {
   if (typeof window === "undefined" || typeof document === "undefined") {
     return new URL("../rs/pkg/compose.js", import.meta.url).href;
   }
-  return "@compose/rs-wasm";
+  return "@semio-tech/compose-rs-wasm";
 }
 
 /** @emoji 🛰️ Creates a WASM-backed GraphQL executor; {@code bootstrapUri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
@@ -202,12 +202,12 @@ export async function createRsWasmGraphqlHandle(
   }
   const wasmSpecifier = opts?.wasmSpecifier ?? defaultRsWasmSpecifier();
   const wasmBytesPre = opts?.wasmBytes ?? (await readComposeWasmBytesFromMonorepoCandidates());
-  let mod: typeof import("@compose/rs-wasm");
+  let mod: typeof import("@semio-tech/compose-rs-wasm");
   try {
-    mod = wasmSpecifier === "@compose/rs-wasm" ? await import("@compose/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+    mod = wasmSpecifier === "@semio-tech/compose-rs-wasm" ? await import("@semio-tech/compose-rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
   } catch (e) {
     const base = e instanceof Error ? e.message : String(e);
-    throw new Error(`Failed to load @compose/rs-wasm: ${base}`, { cause: e });
+    throw new Error(`Failed to load @semio-tech/compose-rs-wasm: ${base}`, { cause: e });
   }
   if (typeof mod.default === "function") {
     if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
@@ -229,12 +229,12 @@ export async function createRsWasmGraphqlHandle(
 export type ID = string
 
 //#region 🌐Transport
-/** @emoji 🧵 Bundled worker — Vite resolves `@compose/rs-wasm`; Blob workers cannot import bare specifiers. */
+/** @emoji 🧵 Bundled worker — Vite resolves `@semio-tech/compose-rs-wasm`; Blob workers cannot import bare specifiers. */
 export function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker", import.meta.url), { type: "module" });
 }
 
-/** @emoji 🧵 File-local GraphQL wire JSON (not part of the public @compose/js surface). */
+/** @emoji 🧵 File-local GraphQL wire JSON (not part of the public @semio-tech/compose-js surface). */
 type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
 /** @emoji 🧵 File-local GraphQL wire JSON object node. */
 type JsonObject = { readonly [k: string]: JsonValue };
@@ -805,10 +805,10 @@ function shouldStartLiveSubscriptionLoop(): boolean {
 
 //#region 🛠️Base
 /** @emoji 🧬 Strong entity anchor: {@link Session} + id (no cached fields on the instance). */
-export abstract class Entity {
+export class Entity {
   public readonly session: Session;
 
-  protected constructor(session: Session, public readonly id: string, public readonly storeId?: string) {
+  constructor(session: Session, public readonly id: string, public readonly storeId?: string) {
     this.session = session;
   }
 
@@ -1468,21 +1468,21 @@ function vfsKitFields(branch: string | null, designId?: string) {
   const vfs = (frag: JsonObject | null) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "");
   const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
   return [
-    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag) => vfs(frag), parseEntity: (entity, frag) => vfs(frag) },
-    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
-    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
-    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
+    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag: JsonValue) => vfs(frag as JsonObject | null), parseEntity: (entity: Entity, frag: JsonValue) => vfs(frag as JsonObject | null) },
+    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag: JsonValue) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity: Entity, frag: JsonValue) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
+    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag: JsonValue) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity: Entity, frag: JsonValue) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
+    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag: JsonValue) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity: Entity, frag: JsonValue) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
     {
       method: "fileSystemHasChildren",
       selection: "... on FileSystemNode { fileSystemHasChildren }",
-      parse: (frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
-      parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parse: (frag: JsonValue) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity: Entity, frag: JsonValue) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
     },
     {
       method: "fileSystemParent",
       selection: "... on FileSystemNode { fileSystemParent { id fileSystemKind } }",
       parse: () => null,
-      parseEntity: (entity, frag) => {
+      parseEntity: (entity: Entity, frag: JsonValue) => {
         const ref = parseFileSystemNodeRef(b(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
         return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : null;
       },
@@ -1492,7 +1492,7 @@ function vfsKitFields(branch: string | null, designId?: string) {
       selection: vfsChildrenSelection,
       parse: () => [],
       coarseEvent: true,
-      parseEntity: (entity, frag) => {
+      parseEntity: (entity: Entity, frag: JsonValue) => {
         const nodeFrag = b(frag as JsonObject | null);
         return Object.freeze(
           ((nodeFrag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined ?? []).map((e) =>
@@ -1511,39 +1511,39 @@ function vfsEntityPathFields(path: readonly string[], designId?: string) {
     {
       method: "fileSystemPath",
       selection: "... on FileSystemNode { fileSystemPath }",
-      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
-      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+      parse: (frag: JsonValue) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+      parseEntity: (entity: Entity, frag: JsonValue) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
     },
     {
       method: "fileSystemName",
       selection: "... on FileSystemNode { fileSystemName }",
-      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
-      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+      parse: (frag: JsonValue) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+      parseEntity: (entity: Entity, frag: JsonValue) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
     },
     {
       method: "isFileSystemRoot",
       selection: "... on FileSystemNode { isFileSystemRoot }",
-      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
-      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+      parse: (frag: JsonValue) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+      parseEntity: (entity: Entity, frag: JsonValue) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
     },
     {
       method: "fileSystemKind",
       selection: "... on FileSystemNode { fileSystemKind }",
-      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
-      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+      parse: (frag: JsonValue) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+      parseEntity: (entity: Entity, frag: JsonValue) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
     },
     {
       method: "fileSystemHasChildren",
       selection: "... on FileSystemNode { fileSystemHasChildren }",
-      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
-      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parse: (frag: JsonValue) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity: Entity, frag: JsonValue) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
     },
     {
       method: "fileSystemChildren",
       selection: vfsChildrenSelection,
       parse: () => [],
       coarseEvent: true,
-      parseEntity: (entity, frag) =>
+      parseEntity: (entity: Entity, frag: JsonValue) =>
         Object.freeze(
           (parseFileSystemChildrenRefs(nodeAt(frag as JsonObject | null)) as readonly ComposeFileSystemChildRef[]).map((child) =>
             resolveFileSystemNode(entity.session, entity.storeId, { id: child.id, kind: child.kind }, child.designId, child.typeId),
@@ -3228,6 +3228,13 @@ export class Design extends Entity {
   declare deletePiece: (id: string) => Promise<SetResult>;
   declare deletePieces: (ids: readonly string[]) => Promise<SetResult>;
   declare deletePiecesAndConnections: (pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 function parseDesignBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
@@ -3562,6 +3569,13 @@ export class Type extends Entity {
   declare addConnector: (code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>;
   declare removeConnector: (id: string) => Promise<SetResult>;
   declare removeConnectors: (ids: readonly string[]) => Promise<SetResult>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 const TYPE_FIELDS = defineBoundKitFields([

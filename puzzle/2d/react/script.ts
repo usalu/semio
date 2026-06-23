@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/2d/react` task router: `bun ./script.ts test|policy [args…]`. */
+/** 🧭 `@semio-tech/puzzle-2d-react` task router: `bun ./script.ts test|policy [args…]`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../../repo/lib/js/src/index.ts";
@@ -17,7 +17,7 @@ import { defineLint } from "../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.tsx";
 
-export const policy = defineLint("@puzzle/2d/react-index", (l: FileLinter) => {
+export const policy = defineLint("@semio-tech/puzzle-2d-react-index", (l: FileLinter) => {
   const repoRoot = getWorkspaceRoot();
   const file = l.path();
   return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧠 `@reasoning/mindmap/react` — mindmap fixture types; render via `@puzzle/2d/react` `graphPortMode="normal"`. */
+/** @emoji 🧠 `@semio-tech/reasoning-mindmap-react` — mindmap fixture types; render via `@semio-tech/puzzle-2d-react` `graphPortMode="normal"`. */
 // #endregion 🧲Header
 
 export type {
@@ -8,9 +8,9 @@ export type {
   Puzzle2dFixtureEdgeV1 as MindmapFixtureEdgeV1,
   Puzzle2dFixtureNodeV1 as MindmapFixtureNodeV1,
   Puzzle2dFixtureV1 as MindmapFixtureV1,
-} from "@puzzle/2d/react";
+} from "@semio-tech/puzzle-2d-react";
 
-import type { Puzzle2dFixtureV1 } from "@puzzle/2d/react";
+import type { Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
 
 export function mindmapFixtureKindCatalogsJson(fixture: Puzzle2dFixtureV1): string | undefined {
   const catalogs = fixture.meta?.kindCatalogs;

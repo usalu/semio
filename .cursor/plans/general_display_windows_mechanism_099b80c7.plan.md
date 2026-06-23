@@ -59,14 +59,14 @@ Per-window state must key off the shell instance so duplicates are independent.
 - `[cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)`
   - The empty-rows bug is fixed for free by Part 1 (each of the 4 kinds becomes draggable). No templates strictly required.
   - For full per-instance independence (scope_all): `CadPlaySurfaceHost` / `CadPlayInteractionPane` (~~2147-2159) read `useShellWindowInstance()` and scope camera/interaction state by instance id (model-definition stays keyed by pane). `onActiveWindowChange` (~~743) resolves the pane from the instance id.
-  - Optionally add orbit-style view templates per scene using the shared `createOrbitCameraViewTemplates({ controllerId: CAD_PLAY_CONTROLLER_ID })` from `@infinite/world/r3f` if CAD scenes expose an orbit camera; otherwise leave templates empty (kind row still draggable).
+  - Optionally add orbit-style view templates per scene using the shared `createOrbitCameraViewTemplates({ controllerId: CAD_PLAY_CONTROLLER_ID })` from `@semio-tech/infinite-world-r3f` if CAD scenes expose an orbit camera; otherwise leave templates empty (kind row still draggable).
 
 ## Part 5 - Tests (extend existing files only)
 
 - `[framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx)` vitest: kind row without `templateId` produces a drop payload and creates an instance; template child still dispatches with `instanceId`.
 - `[puzzle/2d/play/index.ts](puzzle/2d/play/index.ts)` vitest: `setLodModeForPane` with `{ instanceId, value }` updates per-instance LOD; legacy `{ pane, value }` still works.
 - `[cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)` vitest: each window kind yields a draggable Windows-tab row.
-- Re-run `@infinite/world/r3f`, `@puzzle/3d/play`, `@puzzle/2d/play`, `@framework/...` suites.
+- Re-run `@semio-tech/infinite-world-r3f`, `@semio-tech/puzzle-3d-play`, `@semio-tech/puzzle-2d-play`, `@framework/...` suites.
 
 ## Flow
 

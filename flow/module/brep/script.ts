@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀 `@flow/module-brep` router: `bun ./script.ts wasm`. */
+/** 🦀 `@semio-tech/flow-module-brep` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/index.ts";
 
 class WasmScript extends BundleScript {
@@ -11,7 +11,7 @@ class WasmScript extends BundleScript {
       wasmBaseName: "flow_module_brep",
       threads: false,
       pkg: {
-        name: "@flow/module-brep",
+        name: "@semio-tech/flow-module-brep",
         files: ["flow_module_brep_bg.wasm", "flow_module_brep.js", "flow_module_brep.d.ts", "flow_module_brep_bg.wasm.d.ts"],
         main: "flow_module_brep.js",
         module: "flow_module_brep.js",

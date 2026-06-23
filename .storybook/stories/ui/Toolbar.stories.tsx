@@ -11,8 +11,8 @@
 
 // #endregion 🧲Header
 
-import { ButtonGroup, ButtonGroupItem, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { ButtonGroup, ButtonGroupItem, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🌙Toolbar

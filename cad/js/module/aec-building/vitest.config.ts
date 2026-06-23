@@ -11,9 +11,9 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@cad/js/core": resolve(jsRoot, "core/index.ts"),
-      "@cad/js/runtime": resolve(jsRoot, "runtime/index.ts"),
-      "@cad/js/module/aec-building": resolve(root, "index.ts"),
+      "@semio-tech/cad-js-core": resolve(jsRoot, "core/index.ts"),
+      "@semio-tech/cad-js-runtime": resolve(jsRoot, "runtime/index.ts"),
+      "@semio-tech/cad-js-module-aec-building": resolve(root, "index.ts"),
     },
   },
   test: {

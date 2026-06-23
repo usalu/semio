@@ -1,5 +1,5 @@
 {
-  "name": "@infinite/world/r3f",
+  "name": "@semio-tech/infinite-world-r3f",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

@@ -12,8 +12,8 @@ Dependency direction is **one step down only** (no skipping, no upward imports):
 
 - **`compose/rs`**: sole owner of domain logic, kit caches, semantic change semantics, and diff algebra. One logical process (WASM worker or OS native); async, non-blocking toward clients.
 - **`compose/js`**: thin GraphQL client + `KitStore` (typed methods, subscription callbacks). No kit authority, no domain caches.
-- **`compose/react`**: thin adapter to `@compose/js` stores; hooks use `useSyncExternalStore` (or equivalent) on those subscriptions for external reads.
-- **`compose/sketchpad`**: UI + wiring only; kit I/O exclusively through `@compose/react` exports (never `@compose/js`).
+- **`compose/react`**: thin adapter to `@semio-tech/compose-js` stores; hooks use `useSyncExternalStore` (or equivalent) on those subscriptions for external reads.
+- **`compose/sketchpad`**: UI + wiring only; kit I/O exclusively through `@semio-tech/compose-react` exports (never `@semio-tech/compose-js`).
 
 ## 🕸️ Systems
 

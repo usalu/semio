@@ -11,7 +11,7 @@ export default defineConfig({
 	resolve: {
 		alias: [
 			{
-				find: "@framework/presentation/core",
+				find: "@semio-tech/framework-presentation-core",
 				replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts"),
 			},
 		],

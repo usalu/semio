@@ -1,5 +1,5 @@
 {
-  "name": "@compose/asset",
+  "name": "@semio-tech/compose-asset",
   "version": "1.0.0",
   "type": "module",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -11,8 +11,8 @@
     "url": "https://github.com/usalu"
   },
   "dependencies": {
-    "@ui/asset": "workspace:*",
-    "@ui/react": "workspace:*"
+    "@semio-tech/ui-asset": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*"
   },
   "bundleKind": "asset"
 }

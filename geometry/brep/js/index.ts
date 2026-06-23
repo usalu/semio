@@ -1,7 +1,7 @@
 // #region 🧲Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧭 `@geometry/brep/js` — brep WASM bridge and mesh contracts. */
+/** @emoji 🧭 `@semio-tech/geometry-brep-js` — brep WASM bridge and mesh contracts. */
 // #endregion 🧲Header
 
 // #region 📐Contracts
@@ -368,7 +368,7 @@ export async function createDefaultBrepWasmBridge(): Promise<BrepWasmBridge> {
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
-	describe("@geometry/brep/js", () => {
+	describe("@semio-tech/geometry-brep-js", () => {
 		it("isRenderableMeshTransfer accepts triangle meshes", () => {
 			const mesh: MeshTransfer = {
 				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),

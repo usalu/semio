@@ -1,10 +1,10 @@
 {
-  "name": "@compose/js",
+  "name": "@semio-tech/compose-js",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@compose/rs:build"],
+      "dependsOn": ["@semio-tech/compose-rs:build"],
       "options": {
         "cwd": "compose/client/lib/js",
         "command": "bunx tsc --noEmit",
@@ -13,7 +13,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@compose/rs:build"],
+      "dependsOn": ["@semio-tech/compose-rs:build"],
       "options": {
         "cwd": "compose/client/lib/js",
         "command": "bunx vitest run --config vite.config.ts",

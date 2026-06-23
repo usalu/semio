@@ -1,9 +1,9 @@
 // #region 🧲Header
-// 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
+// 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@semio-tech/framework-playground-core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
-import { WORLD_REFERENCE_DEFAULT_WIDTH } from "@infinite/world/r3f";
-import { bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@ui/react";
+import { WORLD_REFERENCE_DEFAULT_WIDTH } from "@semio-tech/infinite-world-r3f";
+import { bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@semio-tech/ui-react";
 import {
   AppRuntime,
   CommandBus,
@@ -48,7 +48,7 @@ import {
   normalizeKindWeightGroup,
   syncKindWeightMap,
   type KindWeightMap,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
 import {
   DEFAULT_MANUAL_LOD,
@@ -825,8 +825,8 @@ export {
   brushMeshUrlsForFillSession,
   buildBrushFillSequence,
   puzzle3dBrushMeshRootForFill,
-} from "@puzzle/3d/react";
-export { PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID } from "@puzzle/3d/react";
+} from "@semio-tech/puzzle-3d-react";
+export { PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID } from "@semio-tech/puzzle-3d-react";
 //#endregion 🎬Play
 
 function puzzle3dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -2001,6 +2001,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.fixture = parsed;
     this.fixtureRevision += 1;
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
+    this.objectKindWeights = {};
+    this.vortexKindWeights = {};
     this.syncBrushKindWeightsFromFixture();
     this.syncShell();
   }
@@ -2469,7 +2471,10 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (isPlaygroundFixtureLocked()) return;
         const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
         const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-        if (nextId === this.activeFixtureId) return;
+        if (nextId === this.activeFixtureId) {
+          this.syncBrushKindWeightsFromFixture();
+          return;
+        }
         this.activeFixtureId = nextId;
         this.fixtureCatalogCache = null;
         this.loadFixtureById(nextId);
@@ -4093,8 +4098,8 @@ if (import.meta.vitest) {
 
     it("getFixtureCatalog returns null when fixture host is locked", () => {
       const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
-      (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID =
-        PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+      const env = import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string };
+      env.PLAYGROUND_LOCKED_FIXTURE_ID = PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
       try {
         const bus = new CommandBus();
         const ctrl = new Puzzle3dPlayShellController(bus, () => {});
@@ -4102,7 +4107,11 @@ if (import.meta.vitest) {
         ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
         expect(ctrl.getFixtureCatalog()).toBeNull();
       } finally {
-        (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+        if (prev === undefined) {
+          delete env.PLAYGROUND_LOCKED_FIXTURE_ID;
+        } else {
+          env.PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+        }
       }
     });
 
@@ -5616,7 +5625,7 @@ if (
   bootstrapElementsSurfaceChromeDocument("system");
   void (async () => {
     await import("./globals.css");
-    const { bootPuzzle3dPlay } = await import("@framework/playground/renderer/react/puzzle/3d");
+    const { bootPuzzle3dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/3d");
     bootPuzzle3dPlay(new Playground3d());
   })();
 }

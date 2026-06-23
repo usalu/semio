@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🌐Popover

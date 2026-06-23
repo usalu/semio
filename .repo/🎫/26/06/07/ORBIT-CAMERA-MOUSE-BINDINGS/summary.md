@@ -1,6 +1,6 @@
 # Orbit Camera Mouse Bindings
 
-Projection-aware orbit mouse map in `@infinite/world/r3f`:
+Projection-aware orbit mouse map in `@semio-tech/infinite-world-r3f`:
 
 - **Orthographic**: middle click orbit, Alt+right pan
 - **Perspective**: middle click pan, Alt+right orbit

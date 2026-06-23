@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀 `@flow/module-bim` router: `bun ./script.ts wasm`. */
+/** 🦀 `@semio-tech/flow-module-bim` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/index.ts";
 
 class WasmScript extends BundleScript {
@@ -10,7 +10,7 @@ class WasmScript extends BundleScript {
       logPrefix: "flow/module/bim",
       wasmBaseName: "flow_module_bim",
       pkg: {
-        name: "@flow/module-bim",
+        name: "@semio-tech/flow-module-bim",
         files: ["flow_module_bim_bg.wasm", "flow_module_bim.js", "flow_module_bim.d.ts", "flow_module_bim_bg.wasm.d.ts"],
         main: "flow_module_bim.js",
         module: "flow_module_bim.js",

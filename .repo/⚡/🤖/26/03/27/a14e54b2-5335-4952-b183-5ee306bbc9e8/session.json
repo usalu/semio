@@ -2181,7 +2181,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
@@ -2211,7 +2211,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
@@ -2241,13 +2241,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
             "timeout": 30000
           },
-          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @compose/algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
+          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @semio-tech/compose-algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
           "tool_use_id": "toolu_vrtx_01KL3SDhdChNJZT3KDa5B7pq__vscode-1774623237738",
           "cwd": "/workspaces/semio"
         }
@@ -2272,13 +2272,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
             "timeout": 30000
           },
-          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @compose/algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
+          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @semio-tech/compose-algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
           "tool_use_id": "toolu_vrtx_01KL3SDhdChNJZT3KDa5B7pq__vscode-1774623237738",
           "cwd": "/workspaces/semio"
         }
@@ -2357,7 +2357,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01Bnnzycs3KdnEHdoaAkWBdL__vscode-1774623237739",
           "cwd": "/workspaces/semio"
         }
@@ -2384,7 +2384,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01Bnnzycs3KdnEHdoaAkWBdL__vscode-1774623237739",
           "cwd": "/workspaces/semio"
         }
@@ -2585,7 +2585,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_013VQsjGfs9eQuCkXNhSScDe__vscode-1774623237741",
           "cwd": "/workspaces/semio"
         }
@@ -2612,7 +2612,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_013VQsjGfs9eQuCkXNhSScDe__vscode-1774623237741",
           "cwd": "/workspaces/semio"
         }
@@ -2637,7 +2637,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
@@ -2667,7 +2667,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
@@ -2697,13 +2697,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
             "timeout": 0
           },
-          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
+          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @semio-tech/compose-algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
           "tool_use_id": "toolu_vrtx_019cmnsEvrvxRdYwrXtnpnQE__vscode-1774623237742",
           "cwd": "/workspaces/semio"
         }
@@ -2728,13 +2728,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
             "timeout": 0
           },
-          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
+          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @semio-tech/compose-algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
           "tool_use_id": "toolu_vrtx_019cmnsEvrvxRdYwrXtnpnQE__vscode-1774623237742",
           "cwd": "/workspaces/semio"
         }
@@ -2813,7 +2813,7 @@
           "tool_input": {
             "id": "c73e07d1-e051-4151-b1c8-fb5300e94bbb"
           },
-          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\n\n\u003e @compose/algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261\n\n\u003e @semio-tech/compose-algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @semio-tech/compose-algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01VMB7UWBgWFwcDyGLHRsD5L__vscode-1774623237743",
           "cwd": "/workspaces/semio"
         }
@@ -2840,7 +2840,7 @@
           "tool_input": {
             "id": "c73e07d1-e051-4151-b1c8-fb5300e94bbb"
           },
-          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\n\n\u003e @compose/algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio-tech/compose-algorithms 2\u003e\u00261\n\n\u003e @semio-tech/compose-algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @semio-tech/compose-algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01VMB7UWBgWFwcDyGLHRsD5L__vscode-1774623237743",
           "cwd": "/workspaces/semio"
         }

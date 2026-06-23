@@ -38502,7 +38502,7 @@ func installMicroCommitHook(repoRoot, hookName string) error {
 	if repoRoot == "" {
 		return nil
 	}
-	src := filepath.Join(repoRoot, "repo", "hooks", hookName)
+	src := filepath.Join(repoRoot, "repo", "hook", hookName)
 	data, err := os.ReadFile(src)
 	if err != nil {
 		return fmt.Errorf("read micro-commit hook %s: %w", hookName, err)

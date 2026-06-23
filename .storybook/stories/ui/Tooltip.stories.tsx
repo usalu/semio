@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const TooltipExamples = () => (

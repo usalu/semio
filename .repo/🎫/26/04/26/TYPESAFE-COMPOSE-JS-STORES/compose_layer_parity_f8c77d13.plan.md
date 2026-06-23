@@ -9,10 +9,10 @@ todos:
    content: Make Rust command execution actor-based, id-returning, event-result driven, and diff/inverse centered.
    status: completed
  - id: js-store-layer
-   content: Refactor @compose/js into typed store classes with structured events, selector subscriptions, and one GraphQL execution path.
+   content: Refactor @semio-tech/compose-js into typed store classes with structured events, selector subscriptions, and one GraphQL execution path.
    status: completed
  - id: react-hook-layer
-   content: Refactor @compose/react hooks to use exact useSyncExternalStore selectors and useCallback mutation enqueuers.
+   content: Refactor @semio-tech/compose-react hooks to use exact useSyncExternalStore selectors and useCallback mutation enqueuers.
    status: completed
  - id: sketchpad-boundary
    content: Update sketchpad usage so it depends on React hooks/components and respects the strict layer boundary.
@@ -83,8 +83,8 @@ Layer rules to implement:
    - Tighten types enough to remove or substantially shrink `@ts-nocheck` regions touched by this work.
 
 5. In [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx), update usage to the strict layer boundary:
-   - Keep UI code on `@compose/react` hooks/components.
-   - Move any direct domain/store assumptions to either `@compose/js` where non-React store access is truly needed, or to typed React hooks when used by UI.
+   - Keep UI code on `@semio-tech/compose-react` hooks/components.
+   - Move any direct domain/store assumptions to either `@semio-tech/compose-js` where non-React store access is truly needed, or to typed React hooks when used by UI.
    - Verify the exported hook/class parity expected by sketchpad still exists, but through the new layer boundaries.
 
 ## Validation
@@ -92,8 +92,8 @@ Layer rules to implement:
 Run focused tests after each layer, then the cross-layer suite:
 
 - Rust: `cargo test` scoped to the existing `compose/rs` command, diff, event, GraphQL, wasm handle, and JSON-RPC tests.
-- JavaScript: `pnpm --filter @compose/js test` and `pnpm --filter @compose/js build`.
-- React: `pnpm --filter @compose/react test` and `pnpm --filter @compose/react build`.
+- JavaScript: `pnpm --filter @semio-tech/compose-js test` and `pnpm --filter @semio-tech/compose-js build`.
+- React: `pnpm --filter @semio-tech/compose-react test` and `pnpm --filter @semio-tech/compose-react build`.
 - Sketchpad: run the existing build/test command for [compose/sketchpad/package.json](compose/sketchpad/package.json) after React import changes.
 
 Add/extend tests for:

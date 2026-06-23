@@ -6,7 +6,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Adjusted clipboard behavior to copy active kit JSON by default, removed design payload override from diagram Cmd/Ctrl+C, and updated existing clipboard e2e assertions to validate kit payload shape. TSC passes; focused Playwright remains blocked by existing @compose/assets named-export runtime mismatch.
+Adjusted clipboard behavior to copy active kit JSON by default, removed design payload override from diagram Cmd/Ctrl+C, and updated existing clipboard e2e assertions to validate kit payload shape. TSC passes; focused Playwright remains blocked by existing @semio-tech/compose-assets named-export runtime mismatch.
 
 ## Changes
 
@@ -50,7 +50,7 @@ Adjusted clipboard behavior to copy active kit JSON by default, removed design p
 - Updated clipboard e2e assertions from design payload shape to kit payload shape.
 - Validation:
 - `cd compose/js && npx tsc --noEmit` passed.
-- `cd compose/js && npm run test:e2e -- --grep "Copy Json To Clipboard Command"` failed before test execution with existing `@compose/assets` named export interop error (`CodeIcon`).
+- `cd compose/js && npm run test:e2e -- --grep "Copy Json To Clipboard Command"` failed before test execution with existing `@semio-tech/compose-assets` named export interop error (`CodeIcon`).
 - Gathered repo + ticket context via `./repo/cli/cli tree sketchpad`.
 - Opened ticket under goal `SKETCHPAD-IMPROVEMENTS`.
 - Implemented command + hotkey + locales + test extension.
@@ -63,12 +63,12 @@ Adjusted clipboard behavior to copy active kit JSON by default, removed design p
 - Locale JSON parse check passed.
 - `cd compose/js && npx tsc --noEmit` passed.
 - Focused e2e run failed before test execution due to pre-existing import error:
-- `SyntaxError: Named export 'CodeIcon' not found` from `@compose/assets` CommonJS interop in Playwright runtime.
+- `SyntaxError: Named export 'CodeIcon' not found` from `@semio-tech/compose-assets` CommonJS interop in Playwright runtime.
 
 ## Todos
 
-- Re-run `npm run test:e2e -- --grep "Copy Json To Clipboard Command"` after resolving the pre-existing `@compose/assets` named export runtime mismatch.
-- Resolve the existing `@compose/assets` ESM/CJS named export mismatch in the Playwright test runtime.
+- Re-run `npm run test:e2e -- --grep "Copy Json To Clipboard Command"` after resolving the pre-existing `@semio-tech/compose-assets` named export runtime mismatch.
+- Resolve the existing `@semio-tech/compose-assets` ESM/CJS named export mismatch in the Playwright test runtime.
 - Re-run `npm run test:e2e -- --grep "Copy Json To Clipboard Command"` after the import issue is fixed.
 
 ## Plan

@@ -3,7 +3,7 @@
   "emoji": "🎚️",
   "status": "closed",
   "description": "Add per-kind suggestion percentage sliders (node/object and handle/vortex groups each sum to 1 with proportional renorm). When brush is active, weighted-random re-order brush suggestion candidates in puzzle 2D and 3D.",
-  "summary": "Added per-kind suggestion percentage sliders (node/object and handle/vortex groups, each summing to 1 with proportional renorm) on window measures for puzzle 2D and 3D play. Shared helpers in @framework/core: uniformKindWeights, normalizeKindWeightGroup, syncKindWeightMap, weightedOrder. 2D WASM: brush_node/handle kind weights, setBrushKindWeights, weighted candidate ordering and weighted target-handle pick. Playground host wires catalogs and weight sync to renderer. 3D: weightedOrderBrushCompatibleCandidates with object×vortex weights in BrushSession.",
+  "summary": "Added per-kind suggestion percentage sliders (node/object and handle/vortex groups, each summing to 1 with proportional renorm) on window measures for puzzle 2D and 3D play. Shared helpers in @semio-tech/framework-core: uniformKindWeights, normalizeKindWeightGroup, syncKindWeightMap, weightedOrder. 2D WASM: brush_node/handle kind weights, setBrushKindWeights, weighted candidate ordering and weighted target-handle pick. Playground host wires catalogs and weight sync to renderer. 3D: weightedOrderBrushCompatibleCandidates with object×vortex weights in BrushSession.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪3c608eeb5357442c9f725daf08c01fd4"

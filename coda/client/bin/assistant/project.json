@@ -1,5 +1,5 @@
 {
-  "name": "@coda/assistant",
+  "name": "@semio-tech/coda-assistant",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

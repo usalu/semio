@@ -69,5 +69,5 @@
     "tsc": "npx tsc -p compose/js/tsconfig.json",
     "vitest": "COMPOSE_JS_RUN_EMBEDDED_TESTS=1 npx vitest run --config compose/js/vite.config.ts"
   },
-  "followUp": "compose/react and compose/sketchpad still import removed @compose/js symbols; ticket stays open until downstream Phase 2/3."
+  "followUp": "compose/react and compose/sketchpad still import removed @semio-tech/compose-js symbols; ticket stays open until downstream Phase 2/3."
 }

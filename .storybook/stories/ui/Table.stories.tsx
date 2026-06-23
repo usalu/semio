@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Table, TableAvatar, TableColumn, TableSkeleton } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Table, TableAvatar, TableColumn, TableSkeleton } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 📊#region 🛎️Table

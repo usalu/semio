@@ -13,5 +13,5 @@ Flattened kit mutation events onto a single `KitEvent` tree: removed `SemanticCh
 ## Verification
 
 - `cargo test tests::events::backbone` (and `gql_kit_event` tests)
-- `npm --workspace @compose/js run build` + `test`
+- `npm --workspace @semio-tech/compose-js run build` + `test`
 - `npm run depcruise:layers`

@@ -1,0 +1,370 @@
+{
+  "@flow/react": {
+    "path": "flow/react/package.json",
+    "newName": "@semio-tech/flow-react"
+  },
+  "@flow/play": {
+    "path": "flow/play/package.json",
+    "newName": "@semio-tech/flow-play"
+  },
+  "@flow/module-text": {
+    "path": "flow/module/text/pkg/package.json",
+    "newName": "@semio-tech/flow-module-text"
+  },
+  "@flow/module-bim": {
+    "path": "flow/module/bim/pkg/package.json",
+    "newName": "@semio-tech/flow-module-bim"
+  },
+  "@flow/module-list": {
+    "path": "flow/module/list/pkg/package.json",
+    "newName": "@semio-tech/flow-module-list"
+  },
+  "@flow/module-dictionary": {
+    "path": "flow/module/dictionary/pkg/package.json",
+    "newName": "@semio-tech/flow-module-dictionary"
+  },
+  "@flow/module-math": {
+    "path": "flow/module/math/pkg/package.json",
+    "newName": "@semio-tech/flow-module-math"
+  },
+  "@flow/module-logic": {
+    "path": "flow/module/logic/pkg/package.json",
+    "newName": "@semio-tech/flow-module-logic"
+  },
+  "@flow/module-brep": {
+    "path": "flow/module/brep/pkg/package.json",
+    "newName": "@semio-tech/flow-module-brep"
+  },
+  "@flow/module-core": {
+    "path": "flow/module/core/pkg/package.json",
+    "newName": "@semio-tech/flow-module-core"
+  },
+  "@flow/core": {
+    "path": "flow/core/pkg/package.json",
+    "newName": "@semio-tech/flow-core"
+  },
+  "@procedural/react": {
+    "path": "procedural/react/package.json",
+    "newName": "@semio-tech/procedural-react"
+  },
+  "@procedural/play": {
+    "path": "procedural/play/package.json",
+    "newName": "@semio-tech/procedural-play"
+  },
+  "@gis/map/react": {
+    "path": "gis/map/react/package.json",
+    "newName": "@semio-tech/gis-map-react"
+  },
+  "@gis/map/play": {
+    "path": "gis/map/play/package.json",
+    "newName": "@semio-tech/gis-map-play"
+  },
+  "@gis/map/rs": {
+    "path": "gis/map/rs/pkg/package.json",
+    "newName": "@semio-tech/gis-map-rs"
+  },
+  "@coda/assistant": {
+    "path": "coda/client/bin/assistant/package.json",
+    "newName": "@semio-tech/coda-assistant"
+  },
+  "@coda/desktop": {
+    "path": "coda/client/ui/desktop/package.json",
+    "newName": "@semio-tech/coda-desktop"
+  },
+  "repo": {
+    "path": "repo/client/vscode/package.json",
+    "newName": "@semio-tech/repo-vscode"
+  },
+  "@repo/client": {
+    "path": "repo/client/cli/package.json",
+    "newName": "@semio-tech/repo-client"
+  },
+  "@repo/sqlite": {
+    "path": "repo/client/sqlite/package.json",
+    "newName": "@semio-tech/repo-sqlite"
+  },
+  "@repo/lib": {
+    "path": "repo/lib/js/package.json",
+    "newName": "@semio-tech/repo-lib"
+  },
+  "@repo/coordinator": {
+    "path": "repo/server/coordinator/package.json",
+    "newName": "@semio-tech/repo-coordinator"
+  },
+  "@infinite/cavas/react-renderer": {
+    "path": "infinite/cavas/react-renderer/package.json",
+    "newName": "@semio-tech/infinite-cavas-react-renderer"
+  },
+  "@infinite/world/r3f": {
+    "path": "infinite/world/r3f/package.json",
+    "newName": "@semio-tech/infinite-world-r3f"
+  },
+  "@dag/core": {
+    "path": "mathematical/graph/port/directed/dag/pkg/package.json",
+    "newName": "@semio-tech/dag-core"
+  },
+  "@dag/react": {
+    "path": "mathematical/graph/port/directed/dag/react/package.json",
+    "newName": "@semio-tech/dag-react"
+  },
+  "@dag/play": {
+    "path": "mathematical/graph/port/directed/dag/play/package.json",
+    "newName": "@semio-tech/dag-play"
+  },
+  "@geometry/brep/js": {
+    "path": "geometry/brep/js/package.json",
+    "newName": "@semio-tech/geometry-brep-js"
+  },
+  "@mit-bestand/praesentation/projektetage": {
+    "path": "mit-bestand/präsentation/33.projektetage/package.json",
+    "newName": "@semio-tech/mit-bestand-praesentation-projektetage"
+  },
+  "@cad/js": {
+    "path": "cad/js/package.json",
+    "newName": "@semio-tech/cad-js"
+  },
+  "@cad/js/kernel/brepjs": {
+    "path": "cad/js/kernel/brepjs/package.json",
+    "newName": "@semio-tech/cad-js-kernel-brepjs"
+  },
+  "@cad/js/query": {
+    "path": "cad/js/query/package.json",
+    "newName": "@semio-tech/cad-js-query"
+  },
+  "@cad/js/machine/stately": {
+    "path": "cad/js/machine/stately/package.json",
+    "newName": "@semio-tech/cad-js-machine-stately"
+  },
+  "@cad/js/runtime": {
+    "path": "cad/js/runtime/package.json",
+    "newName": "@semio-tech/cad-js-runtime"
+  },
+  "@cad/js/module/spatial-shape": {
+    "path": "cad/js/module/spatial-shape/package.json",
+    "newName": "@semio-tech/cad-js-module-spatial-shape"
+  },
+  "@cad/js/module/aec-building-structure": {
+    "path": "cad/js/module/aec-building-structure/package.json",
+    "newName": "@semio-tech/cad-js-module-aec-building-structure"
+  },
+  "@cad/js/module/aec-building-energy": {
+    "path": "cad/js/module/aec-building-energy/package.json",
+    "newName": "@semio-tech/cad-js-module-aec-building-energy"
+  },
+  "@cad/js/module/aec-building": {
+    "path": "cad/js/module/aec-building/package.json",
+    "newName": "@semio-tech/cad-js-module-aec-building"
+  },
+  "@cad/js/core": {
+    "path": "cad/js/core/package.json",
+    "newName": "@semio-tech/cad-js-core"
+  },
+  "@cad/js/renderer": {
+    "path": "cad/js/renderer/package.json",
+    "newName": "@semio-tech/cad-js-renderer"
+  },
+  "@reasoning/mindmap/react": {
+    "path": "reasoning/mindmap/react/package.json",
+    "newName": "@semio-tech/reasoning-mindmap-react"
+  },
+  "@reasoning/mindmap/play": {
+    "path": "reasoning/mindmap/play/package.json",
+    "newName": "@semio-tech/reasoning-mindmap-play"
+  },
+  "@reasoning/mindmap/wires/react": {
+    "path": "reasoning/mindmap/wires/react/package.json",
+    "newName": "@semio-tech/reasoning-mindmap-wires-react"
+  },
+  "@reasoning/mindmap/wires/play": {
+    "path": "reasoning/mindmap/wires/play/package.json",
+    "newName": "@semio-tech/reasoning-mindmap-wires-play"
+  },
+  "@compose/play": {
+    "path": "compose/client/lib/sketchpad/play/package.json",
+    "newName": "@semio-tech/compose-sketchpad-play"
+  },
+  "@compose/docs": {
+    "path": "compose/client/lib/sketchpad/doc/package.json",
+    "newName": "@semio-tech/compose-sketchpad-docs"
+  },
+  "@compose/sketchpad": {
+    "path": "compose/client/lib/sketchpad/js/package.json",
+    "newName": "@semio-tech/compose-sketchpad"
+  },
+  "@compose/react": {
+    "path": "compose/client/lib/react/package.json",
+    "newName": "@semio-tech/compose-react"
+  },
+  "@compose/query": {
+    "path": "compose/client/lib/query/package.json",
+    "newName": "@semio-tech/compose-query"
+  },
+  "@compose/rs": {
+    "path": "compose/client/lib/rs/package.json",
+    "newName": "@semio-tech/compose-rs"
+  },
+  "@compose/js": {
+    "path": "compose/client/lib/js/package.json",
+    "newName": "@semio-tech/compose-js"
+  },
+  "@compose/go": {
+    "path": "compose/client/lib/go/package.json",
+    "newName": "@semio-tech/compose-go"
+  },
+  "@compose/net": {
+    "path": "compose/client/lib/net/Compose/package.json",
+    "newName": "@semio-tech/compose-net"
+  },
+  "@compose/py": {
+    "path": "compose/client/lib/py/package.json",
+    "newName": "@semio-tech/compose-py"
+  },
+  "@compose/sqlite": {
+    "path": "compose/client/schema/sqlite/package.json",
+    "newName": "@semio-tech/compose-sqlite"
+  },
+  "@compose/store": {
+    "path": "compose/client/bin/store/package.json",
+    "newName": "@semio-tech/compose-store"
+  },
+  "@compose/engine": {
+    "path": "compose/client/bin/engine/package.json",
+    "newName": "@semio-tech/compose-engine"
+  },
+  "@compose/vscode": {
+    "path": "compose/client/ui/vscode/package.json",
+    "newName": "@semio-tech/compose-vscode"
+  },
+  "@compose/desktop": {
+    "path": "compose/client/ui/desktop/package.json",
+    "newName": "@semio-tech/compose-desktop"
+  },
+  "@compose/rhino": {
+    "path": "compose/client/ui/3dm/Compose.Rhino/package.json",
+    "newName": "@semio-tech/compose-rhino"
+  },
+  "@compose/3dm-ui": {
+    "path": "compose/client/ui/3dm/ui/package.json",
+    "newName": "@semio-tech/compose-3dm-ui"
+  },
+  "@compose/grasshopper": {
+    "path": "compose/client/ui/gh/Compose.Grasshopper/package.json",
+    "newName": "@semio-tech/compose-grasshopper"
+  },
+  "@compose/algorithm": {
+    "path": "compose/dev/algorithm/package.json",
+    "newName": "@semio-tech/compose-algorithm"
+  },
+  "@compose/fixture": {
+    "path": "compose/fixture/package.json",
+    "newName": "@semio-tech/compose-fixture"
+  },
+  "@compose/asset": {
+    "path": "compose/asset/package.json",
+    "newName": "@semio-tech/compose-asset"
+  },
+  "@compose/icon": {
+    "path": "compose/asset/icon/package.json",
+    "newName": "@semio-tech/compose-icon"
+  },
+  "@compose/logo": {
+    "path": "compose/asset/logo/package.json",
+    "newName": "@semio-tech/compose-logo"
+  },
+  "@compose/image": {
+    "path": "compose/asset/image/package.json",
+    "newName": "@semio-tech/compose-image"
+  },
+  "@puzzle/2d/react": {
+    "path": "puzzle/2d/react/package.json",
+    "newName": "@semio-tech/puzzle-2d-react"
+  },
+  "@puzzle/2d/play": {
+    "path": "puzzle/2d/play/package.json",
+    "newName": "@semio-tech/puzzle-2d-play"
+  },
+  "@puzzle/2d/rs": {
+    "path": "puzzle/2d/rs/pkg/package.json",
+    "newName": "@semio-tech/puzzle-2d-rs"
+  },
+  "@puzzle/5d/react": {
+    "path": "puzzle/5d/react/package.json",
+    "newName": "@semio-tech/puzzle-5d-react"
+  },
+  "@puzzle/5d/play": {
+    "path": "puzzle/5d/play/package.json",
+    "newName": "@semio-tech/puzzle-5d-play"
+  },
+  "@puzzle/asset": {
+    "path": "puzzle/asset/package.json",
+    "newName": "@semio-tech/puzzle-asset"
+  },
+  "@puzzle/3d/react": {
+    "path": "puzzle/3d/react/package.json",
+    "newName": "@semio-tech/puzzle-3d-react"
+  },
+  "@puzzle/3d/play": {
+    "path": "puzzle/3d/play/package.json",
+    "newName": "@semio-tech/puzzle-3d-play"
+  },
+  "@puzzle/3d/rs": {
+    "path": "puzzle/3d/rs/pkg/package.json",
+    "newName": "@semio-tech/puzzle-3d-rs"
+  },
+  "@framework/presentation": {
+    "path": "framework/product/presentation/package.json",
+    "newName": "@semio-tech/framework-presentation"
+  },
+  "@framework/presentation/play": {
+    "path": "framework/product/presentation/play/package.json",
+    "newName": "@semio-tech/framework-presentation-play"
+  },
+  "@framework/presentation/core": {
+    "path": "framework/product/presentation/core/package.json",
+    "newName": "@semio-tech/framework-presentation-core"
+  },
+  "@framework/presentation/renderer/react": {
+    "path": "framework/product/presentation/renderer/react/package.json",
+    "newName": "@semio-tech/framework-presentation-renderer-react"
+  },
+  "@framework/platform": {
+    "path": "framework/product/platform/package.json",
+    "newName": "@semio-tech/framework-platform"
+  },
+  "@framework/platform/core": {
+    "path": "framework/product/platform/core/package.json",
+    "newName": "@semio-tech/framework-platform-core"
+  },
+  "@framework/platform/renderer/react": {
+    "path": "framework/product/platform/renderer/react/package.json",
+    "newName": "@semio-tech/framework-platform-renderer-react"
+  },
+  "@framework/playground": {
+    "path": "framework/product/playground/package.json",
+    "newName": "@semio-tech/framework-playground"
+  },
+  "@framework/playground/core": {
+    "path": "framework/product/playground/core/package.json",
+    "newName": "@semio-tech/framework-playground-core"
+  },
+  "@framework/playground/renderer/react": {
+    "path": "framework/product/playground/renderer/react/package.json",
+    "newName": "@semio-tech/framework-playground-renderer-react"
+  },
+  "@framework/core": {
+    "path": "framework/core/package.json",
+    "newName": "@semio-tech/framework-core"
+  },
+  "@ui/react": {
+    "path": "ui/react/package.json",
+    "newName": "@semio-tech/ui-react"
+  },
+  "@ui/styling": {
+    "path": "ui/styling/js/package.json",
+    "newName": "@semio-tech/ui-styling"
+  },
+  "@ui/asset": {
+    "path": "ui/asset/package.json",
+    "newName": "@semio-tech/ui-asset"
+  }
+}

@@ -2,7 +2,7 @@
   "title": "Fix All Sketchpad and Apps Compilation",
   "status": "closed",
   "prompt": "get all sketchpad and apps complying and running without breaking any functionality",
-  "summary": "Fixed all TS compilation errors across compose/js (4→0), compose/play (14→0), compose/sketchpad (19→0) with minimal type-level fixes: arrow function wrappers in Design.tsx, ReactNode cast in elements.tsx, any[] cast in sketchpad.test.ts, @compose/js path mapping in tsconfig.json, vite/client types in play+sketchpad tsconfigs. 14/14 unit tests pass, both dev servers return 200.",
+  "summary": "Fixed all TS compilation errors across compose/js (4→0), compose/play (14→0), compose/sketchpad (19→0) with minimal type-level fixes: arrow function wrappers in Design.tsx, ReactNode cast in elements.tsx, any[] cast in sketchpad.test.ts, @semio-tech/compose-js path mapping in tsconfig.json, vite/client types in play+sketchpad tsconfigs. 14/14 unit tests pass, both dev servers return 200.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/772"
   },

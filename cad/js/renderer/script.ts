@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@cad/js/renderer` task router: `bun ./script.ts <dev|build|test|policy> [fixture <id>] [args…]`. */
+/** 🧭 `@semio-tech/cad-js-renderer` task router: `bun ./script.ts <dev|build|test|policy> [fixture <id>] [args…]`. */
 import type { FileLinter } from "../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../../repo/lib/js/src/index.ts";
@@ -20,7 +20,7 @@ import { resolveCadPlayFixtureSlug } from "./play/fixture-slugs.ts";
 
 export const policyFile = "index.tsx";
 
-export const policy = defineLint("@cad/js/renderer-index", (l: FileLinter) => {
+export const policy = defineLint("@semio-tech/cad-js-renderer-index", (l: FileLinter) => {
   const repoRoot = getWorkspaceRoot();
   const file = l.path();
   return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);

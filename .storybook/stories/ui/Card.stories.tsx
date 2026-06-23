@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Aside, Card, CardGrid, LoadingRow, NotFound, Section, Spinner } from "@ui/react";
+import { Aside, Card, CardGrid, LoadingRow, NotFound, Section, Spinner } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter } from "react-router";
 

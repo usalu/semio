@@ -24,7 +24,7 @@ isProject: false
 
 ## Concept
 
-Replace the URL-derived `Platform.breadcrumb` hook with a navigation-tree model in `framework/core`. Each breadcrumb level carries the chosen node plus the **alternatives** reachable from it; the `@ui/react` `Breadcrumb` already renders these alternatives as a dropdown on each `>` separator (`ui/react/index.tsx` lines 10271-10277, 10360-10424). The tree is its own model, independent of the URL path and the virtual file system, so sketchpad can show `Typologies > {Typology}` levels even though the URL is `/kits/{kit}/design/{design}`.
+Replace the URL-derived `Platform.breadcrumb` hook with a navigation-tree model in `framework/core`. Each breadcrumb level carries the chosen node plus the **alternatives** reachable from it; the `@semio-tech/ui-react` `Breadcrumb` already renders these alternatives as a dropdown on each `>` separator (`ui/react/index.tsx` lines 10271-10277, 10360-10424). The tree is its own model, independent of the URL path and the virtual file system, so sketchpad can show `Typologies > {Typology}` levels even though the URL is `/kits/{kit}/design/{design}`.
 
 ```mermaid
 flowchart LR

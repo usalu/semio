@@ -105,6 +105,6 @@ Play ([cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)):
 ## Notes / decisions
 
 - View semantics (Z-up): Right=+X, Left=-X, Below=-Z, Top=+Z, Front=-Y, Back=+Y; isometry corners are the four diagonals; Two Point Perspective is a horizontal eye-level perspective (no vertical convergence).
-- Keep `@infinite/world/r3f` free of `@framework/*` types (descriptors stay abstract; mapping to `WindowTemplate`/`NamedLayout` happens in the framework/play layers), matching the existing `as readonly WindowTemplate[]` cast pattern.
-- All edits extend existing files within their regions per repo rules; tests extend existing in-file vitest blocks. Validate by running the `@infinite/world/r3f`, `@puzzle/3d/play`, `@cad/js/renderer`, and `@framework/...` suites, plus a runtime smoke of both plays.
+- Keep `@semio-tech/infinite-world-r3f` free of `@framework/*` types (descriptors stay abstract; mapping to `WindowTemplate`/`NamedLayout` happens in the framework/play layers), matching the existing `as readonly WindowTemplate[]` cast pattern.
+- All edits extend existing files within their regions per repo rules; tests extend existing in-file vitest blocks. Validate by running the `@semio-tech/infinite-world-r3f`, `@semio-tech/puzzle-3d-play`, `@semio-tech/cad-js-renderer`, and `@framework/...` suites, plus a runtime smoke of both plays.
 

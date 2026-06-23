@@ -38,7 +38,7 @@ Add to the `🎨Resolve` region:
 - Add a small private helper `nodeLabelFillForOverlay(node, style, chromeKey)` (near `paintTextOverlays`) that returns the effective fill ref: catalog color from `this.kindCatalogsBundle.nodes` by `node.nodeKind` when chromeKey is the base `node`, else `style.fill`; falls back to `themeColorVar("panel")`.
 - Replace the node label color line (6639) with `ctx.fillStyle = readableForegroundHex(effectiveFill, ...)` instead of `style.stroke`.
 - Replace the handle label color line (6708) similarly, using the handle's effective fill (handle `color` override / `handle.style` fill).
-- Import `readableForegroundHex` from `@ui/styling/js/resolve` alongside the existing `themeColorVar`/`tokenHex` imports (line ~27).
+- Import `readableForegroundHex` from `@semio-tech/ui-styling/js/resolve` alongside the existing `themeColorVar`/`tokenHex` imports (line ~27).
 - Extend the existing overlay vitest blocks (the `fillText` mock tests around 8034-8546) to assert the label `fillStyle` is the readable token for a dark vs light node fill.
 
 ## 3. Fix discrete theme violations (from audit)

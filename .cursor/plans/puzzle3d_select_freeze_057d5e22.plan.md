@@ -65,7 +65,7 @@ The `<Tree>` already supports efficient selection via a `selectedIds` prop and a
 - Run the existing puzzle 3D play test suites via nx; confirm green.
 
 ## Validation
-- Run the puzzle 3D play suite (`nx` test for `@puzzle/3d/play` and the framework playground renderer) and confirm pass.
+- Run the puzzle 3D play suite (`nx` test for `@semio-tech/puzzle-3d-play` and the framework playground renderer) and confirm pass.
 - Manually confirm selecting an object is instant (add a temporary `[DEBUG]` timing log around the tree render to verify only affected rows re-render, then remove).
 
 ## Scope note

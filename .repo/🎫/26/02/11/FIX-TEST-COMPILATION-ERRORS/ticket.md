@@ -39,7 +39,7 @@ Fixed all TypeScript compilation errors (300 to 0) across 10 files with 11/11 te
 
 ## Log
 
-- Fixed @compose/assets module resolution by adding path mappings to tsconfig.json
+- Fixed @semio-tech/compose-assets module resolution by adding path mappings to tsconfig.json
 - Extended ImportMeta interface in vite-env.d.ts to support glob and hot properties
 - Added type declarations for json?raw imports
 - Fixed lucide-react Intersect icon import by replacing with Combine icon

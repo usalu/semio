@@ -12,7 +12,7 @@ todos:
     content: Add ghost_node state + widget_from_descriptor + set/clear_ghost_widget to FlowHost; paint ghost in paint_scene
     status: completed
   - id: flow-wasm-bindings
-    content: Expose setGhostWidget/clearGhostWidget on FlowSession and rebuild @flow/core wasm pkg
+    content: Expose setGhostWidget/clearGhostWidget on FlowSession and rebuild @semio-tech/flow-core wasm pkg
     status: completed
   - id: rank-helper
     content: Add pure flowRankCatalogueSuggestions in flow/react Catalogue region
@@ -75,7 +75,7 @@ Add `#[wasm_bindgen(js_name = setGhostWidget)] set_ghost_widget(descriptor_json,
 
 ### Rebuild WASM
 
-Run the `@flow/core` wasm build (`bun ./flow/core/script.ts wasm` via nx) so `flow/core/pkg` picks up the new bindings (the `dag` crate compiles into `flow_core`, so no separate dag pkg rebuild is needed for Flow). Verify the new methods appear in `flow/core/pkg/flow_core.d.ts`.
+Run the `@semio-tech/flow-core` wasm build (`bun ./flow/core/script.ts wasm` via nx) so `flow/core/pkg` picks up the new bindings (the `dag` crate compiles into `flow_core`, so no separate dag pkg rebuild is needed for Flow). Verify the new methods appear in `flow/core/pkg/flow_core.d.ts`.
 
 ## 2. React: spotlight overlay - [flow/react/index.tsx](flow/react/index.tsx)
 

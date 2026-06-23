@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/asset",
+  "name": "@semio-tech/puzzle-asset",
   "version": "0.1.0",
   "type": "module",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",

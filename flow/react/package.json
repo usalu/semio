@@ -1,17 +1,17 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@flow/react",
+  "name": "@semio-tech/flow-react",
   "version": "0.1.0",
   "description": "flow · react",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @flow/react:test"
+    "test": "bun nx run @semio-tech/flow-react:test"
   },
   "dependencies": {
-    "@dag/react": "workspace:*",
-    "@flow/module-core": "workspace:*",
-    "@ui/styling": "workspace:*",
+    "@semio-tech/dag-react": "workspace:*",
+    "@semio-tech/flow-module-core": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

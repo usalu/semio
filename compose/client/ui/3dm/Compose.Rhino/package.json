@@ -1,11 +1,11 @@
 {
-  "name": "@compose/rhino",
+  "name": "@semio-tech/compose-rhino",
   "version": "1.0.0",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "compose/client/ui/3dm/Compose.Rhino",
   "projectType": "application",
   "devDependencies": {
-    "@compose/net": "*"
+    "@semio-tech/compose-net": "*"
   },
   "author": {
     "name": "Ueli Saluz",

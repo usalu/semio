@@ -17,7 +17,7 @@ function splitReact(dim: "2d" | "3d" | "5d", marker: string): void {
 	const hostBody = lines.slice(start).join("\n");
 	const hostHeader =
 		dim === "2d"
-			? `/** @emoji 🛝 Board play React host — entry-only via play/main.ts; wires @puzzle/2d-react into @framework/playground/core-renderer-react. */\n`
+			? `/** @emoji 🛝 Board play React host — entry-only via play/main.ts; wires @puzzle/2d-react into @semio-tech/framework-playground-core-renderer-react. */\n`
 			: dim === "3d"
 				? `/** @emoji 🛝 Scene play React host — entry-only via play/main.ts. */\n`
 				: `/** @emoji 🛝 Topology play React host — entry-only via play/main.ts. */\n`;

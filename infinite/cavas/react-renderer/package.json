@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@infinite/cavas/react-renderer",
+  "name": "@semio-tech/infinite-cavas-react-renderer",
   "version": "0.1.0",
   "description": "infinite · cavas react renderer",
   "type": "module",
@@ -9,10 +9,10 @@
     ".": "./index.tsx"
   },
   "scripts": {
-    "test": "bun nx run @infinite/cavas/react-renderer:test"
+    "test": "bun nx run @semio-tech/infinite-cavas-react-renderer:test"
   },
   "dependencies": {
-    "@ui/react": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "its-fine": "^2.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

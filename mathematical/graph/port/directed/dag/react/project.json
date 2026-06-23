@@ -1,5 +1,5 @@
 {
-  "name": "@dag/react",
+  "name": "@semio-tech/dag-react",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

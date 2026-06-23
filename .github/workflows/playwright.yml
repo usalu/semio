@@ -24,6 +24,6 @@ jobs:
       - name: Workspace setup (toolchains)
         run: bun nx run workspace:setup
       - name: Run Playwright tests (sketchpad)
-        run: bun nx run @compose/sketchpad:test
+        run: bun nx run @semio-tech/compose-sketchpad:test
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/node_modules/.cache/ms-playwright

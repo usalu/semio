@@ -6,11 +6,11 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@dag/react` inlined source tests (`import.meta.vitest` blocks). */
+/** @emoji 🧪 Vitest for `@semio-tech/dag-react` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@dag/core", replacement: resolve(root, "../pkg/mathematical_graph_port_directed_dag.js") }],
+    alias: [{ find: "@semio-tech/dag-core", replacement: resolve(root, "../pkg/mathematical_graph_port_directed_dag.js") }],
   },
   test: {
     mode: "test",

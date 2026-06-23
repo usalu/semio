@@ -77,13 +77,13 @@ The machine remains the only runtime authority for sketchpad UI state, shell sta
 
 4. Replace XState-facing public hooks with clean wrappers such as `useSketchpadField`, `useSketchpadAction`, `useKitAppField`, `useDesignAppField`, `useTypeAppField`, and `useQualityAppField`. Keep XState imports, actor references, `useSelector`, and transition inspection private to the Store section. Existing consumer hooks like `useTheme`, `useLanguage`, `useKitAppSelection`, and `useDesignAppSelection` continue returning `HookResult` or action tuples, but no consumer receives an actor or XState snapshot.
 
-5. Remove or inline the sketchpad-local sync helpers: `useSync`, `useSyncOptional`, `useSyncDeep`, `useSyncField`, `useSyncFields`, and direct `useSyncExternalStore` uses in sketchpad state hooks. Any remaining external subscriptions must either move into the machine or be replaced by existing `@compose/react` kit hooks when they represent kit data.
+5. Remove or inline the sketchpad-local sync helpers: `useSync`, `useSyncOptional`, `useSyncDeep`, `useSyncField`, `useSyncFields`, and direct `useSyncExternalStore` uses in sketchpad state hooks. Any remaining external subscriptions must either move into the machine or be replaced by existing `@semio-tech/compose-react` kit hooks when they represent kit data.
 
 6. Collapse duplicate state surfaces: delete the unused `SketchpadMachineContext`/`StoreSyncContext` sync bridge concepts, stop writing to `syncSketchpad` as state authority, and make `readSketchpadStateFromLocalStorage` / `writeSketchpadStateToLocalStorage` hydrate and persist the machine context directly.
 
 7. Update existing embedded or package-level verification without adding new test files. If no real sketchpad test file exists, add focused runtime assertions to the existing sketchpad test harness path used by `npm run test` or extend the nearest existing repo test only for structural rules. Cover one unit per test: machine transitions, capability derivation, hook wrapper return shape, and absence of duplicate sync helpers.
 
-8. Run validation after implementation: `npm run build --workspace @compose/sketchpad` or the repo-equivalent build, `npm run test --workspace @compose/sketchpad`, and any available layer/dependency check such as `npm run depcruise:layers` from the repo root.
+8. Run validation after implementation: `npm run build --workspace @semio-tech/compose-sketchpad` or the repo-equivalent build, `npm run test --workspace @semio-tech/compose-sketchpad`, and any available layer/dependency check such as `npm run depcruise:layers` from the repo root.
 
 ## Ticket Workflow
 

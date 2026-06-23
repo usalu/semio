@@ -1,5 +1,5 @@
 {
-  "name": "@reasoning/mindmap/wires/play",
+  "name": "@semio-tech/reasoning-mindmap-wires-play",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

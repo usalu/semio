@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Slide}, {@link SlideFile}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link expandThoughtSlides}, {@link loadPresentationFromSlideGlob}, {@link intro}, and {@link analogy}. */
+/** 🧱 `@semio-tech/framework-presentation-core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Slide}, {@link SlideFile}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link expandThoughtSlides}, {@link loadPresentationFromSlideGlob}, {@link intro}, and {@link analogy}. */
 // #endregion 🧱Header
 
 //#region 🔖Emphasis
@@ -783,7 +783,7 @@ function formatTilePlayDispositionPosition(position: DispositionPosition): strin
 export function buildTileMorphPrompt(source: FigureTileSource, drafts: readonly FigureTileDraft[]): string {
 	const kind = source.kind ?? "figure";
 	const lines: string[] = [
-		"Wire a one-to-many morph for `@framework/presentation/core` using the parameters below.",
+		"Wire a one-to-many morph for `@semio-tech/framework-presentation-core` using the parameters below.",
 		"",
 		"## Source media",
 		`- kind: ${kind}`,

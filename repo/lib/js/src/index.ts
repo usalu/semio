@@ -1,13 +1,14 @@
 //#region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// AGPL-3.0 — @repo/lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
+// AGPL-3.0 — @semio-tech/repo-lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
 //#endregion 🧲Header
 
 //#region 🔌Adapters
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
 //#region 🔖breach
@@ -111,7 +112,7 @@ export function runCliGraphql(
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** 🧭Package dir for `@repo/lib` (…/repo/lib/js). */
+/** 🧭Package dir for `@semio-tech/repo-lib` (…/repo/lib/js). */
 export function getLibRoot(): string {
   return resolve(__dirname, "..");
 }
@@ -123,7 +124,7 @@ query NodeQ($id: ID!) {
   node(id: $id) {
     __typename
     ... on File {
-      id path name extension kind
+      id path name extension fileKind: kind
       sections { id name path range { start end } }
       definitions { id name kind range { start end } }
     }
@@ -131,21 +132,18 @@ query NodeQ($id: ID!) {
       id path name
     }
     ... on Bundle {
-      id name root kind technologyName
-    }
-    ... on Technology {
-      id name kind root
+      id name root bundleKind: kind
     }
     ... on Section {
       id name path
       range { start end }
-      file { path }
+      sectionFile: file { path }
       definitions { id name kind range { start end } }
     }
     ... on Definition {
-      id name kind
+      id name defKind: kind
       range { start end }
-      file { path }
+      defFile: file { path }
     }
   }
 }
@@ -189,9 +187,15 @@ export class TechnologyLinter extends BaseLinter {
   private node: GraphNode | undefined;
 
   private load(): GraphNode {
-    if (!this.node) this.node = this.loadNode();
-    if (this.node.__typename !== "Technology") {
-      throw new Error(`[TechnologyLinter] expected Technology, got ${this.node.__typename}`);
+    if (!this.node) {
+      const data = this.gql<{ technologies: GraphNode[] }>(
+        `query T { technologies { id name kind root } }`
+      );
+      const found = (data.technologies ?? []).find((t) => String(t.id) === this.entityId);
+      if (!found) {
+        throw new Error(`[TechnologyLinter] technology not found for id ${this.entityId}`);
+      }
+      this.node = { ...found, __typename: "Technology" };
     }
     return this.node;
   }
@@ -211,10 +215,10 @@ export class TechnologyLinter extends BaseLinter {
   /** 📦Lists bundle rows for this technology. */
   bundles(): GraphNode[] {
     const data = this.gql<{ bundles: GraphNode[] }>(
-      `query B { bundles { id name root kind technologyName } }`,
+      `query B { bundles { id name root kind } }`,
     );
     const tech = this.name();
-    return (data.bundles ?? []).filter((b) => String(b.technologyName ?? "") === tech);
+    return (data.bundles ?? []).filter((b) => String(b.name ?? "").split("/")[0] === tech);
   }
 }
 
@@ -239,11 +243,11 @@ export class BundleLinter extends BaseLinter {
   }
 
   kind(): string {
-    return String(this.load().kind ?? "");
+    return String(this.load().bundleKind ?? "");
   }
 
   technologyName(): string {
-    return String(this.load().technologyName ?? "");
+    return this.name().split("/")[0] ?? "";
   }
 }
 
@@ -289,7 +293,7 @@ export class FileLinter extends BaseLinter {
   }
 
   kind(): string {
-    return String(this.load().kind ?? "");
+    return String(this.load().fileKind ?? "");
   }
 
   content(): string {
@@ -323,7 +327,7 @@ export class SectionLinter extends BaseLinter {
   }
 
   filePath(): string {
-    const f = this.load().file as GraphNode | undefined;
+    const f = this.load().sectionFile as GraphNode | undefined;
     return String(f?.path ?? "").replaceAll("\\", "/");
   }
 
@@ -368,7 +372,7 @@ export class DefinitionLinter extends BaseLinter {
   }
 
   filePath(): string {
-    const f = this.load().file as GraphNode | undefined;
+    const f = this.load().defFile as GraphNode | undefined;
     return String(f?.path ?? "").replaceAll("\\", "/");
   }
 
@@ -377,7 +381,7 @@ export class DefinitionLinter extends BaseLinter {
   }
 
   kind(): string {
-    return String(this.load().kind ?? "");
+    return String(this.load().defKind ?? "");
   }
 
   startLine(): number {
@@ -415,7 +419,7 @@ export function resolveFolderByPath(repoRoot: string, folderPath: string): Graph
 /** 🔎Resolves bundle name like `repo/client` to bundle id. */
 export function resolveBundleByName(repoRoot: string, name: string): GraphNode {
   const data = runCliGraphql(
-    `query B($n: String!) { bundle(name: $n) { __typename id name root kind technologyName } }`,
+    `query B($n: String!) { bundle(name: $n) { __typename id name root kind } }`,
     { n: name },
     { repoRoot },
   ) as { bundle: GraphNode };
@@ -675,6 +679,7 @@ export async function runPolicyScript(scriptPath: string, repoRoot = getWorkspac
   breachs: BreachRecord[];
   cachePath: string;
 }> {
+  console.log("[DEBUG] runPolicyScript starting for", scriptPath);
   const absScript =
     scriptPath.includes(":") || scriptPath.startsWith("/") || /^[A-Za-z]:\\/.test(scriptPath)
       ? scriptPath
@@ -684,22 +689,28 @@ export async function runPolicyScript(scriptPath: string, repoRoot = getWorkspac
     throw new Error(`[policy-runner] expected script.ts, got ${base}`);
   }
 
+  console.log("[DEBUG] runPolicyScript parsing policy file export");
   const policyFile = parsePolicyFileExport(absScript);
   let entity: ResolvedLintEntity;
   if (policyFile) {
+    console.log("[DEBUG] runPolicyScript resolving file entity for", policyFile);
     const target = join(dirname(absScript), policyFile).replaceAll("\\", "/");
     entity = { kind: "file", id: fileEntityId(repoRoot, target), path: target };
   } else {
+    console.log("[DEBUG] runPolicyScript resolving folder/bundle entity");
     entity = resolvePolicyScriptEntity(repoRoot, absScript);
   }
 
+  console.log("[DEBUG] runPolicyScript importing module dynamically from url", absScript);
   const href = pathToFileURL(absScript).href;
   const mod = (await import(href)) as LintScriptModule;
+  console.log("[DEBUG] runPolicyScript imported module successfully");
   const fn = mod.policy;
   if (typeof fn !== "function") {
     throw new Error(`[policy-runner] ${absScript} must export const policy = defineLint(...)`);
   }
 
+  console.log("[DEBUG] runPolicyScript invoking policy function for kind", entity.kind);
   let breachs: BreachRecord[];
   switch (entity.kind) {
     case "file":
@@ -748,7 +759,14 @@ export { resolvePolicyScriptEntity as resolveLintScriptEntity, runPolicyScript a
 /** 🚪When argv contains `policy`, runs this bundle's policy lint and exits. */
 export async function dispatchPolicyArgv(segments: string[], scriptUrl: string): Promise<boolean> {
   if (segments[0] !== "policy") return false;
-  await runPolicyExit(fileURLToPath(scriptUrl));
+  setTimeout(async () => {
+    try {
+      await runPolicyExit(fileURLToPath(scriptUrl));
+    } catch (e) {
+      console.error(e);
+      process.exit(1);
+    }
+  }, 0);
   return true;
 }
 //#endregion 🔖policy-cli
@@ -1277,9 +1295,6 @@ export function scriptPathFromUrl(scriptUrl: string): string {
 //#endregion 🔖bundle-script
 
 //#region 🔖uloc-metrics
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { spawnSync } from "node:child_process";
 
 //#region Types
 export type MicroCommitLangMetrics = {
@@ -1930,10 +1945,6 @@ export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangM
 //#endregion 🔖uloc-metrics
 
 //#region 🔖micro-commit
-import { createHash } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { spawnSync } from "node:child_process";
 
 export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-and-commit-and-push";
 
@@ -2667,9 +2678,6 @@ export function runMicroCommit(root: string, segments: string[]): void {
 //#endregion 🔖micro-commit
 
 //#region 🔖commit
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { spawnSync } from "node:child_process";
 export type CommitLevel =
   | "prepare-only"
   | "prepare-and-tag"
@@ -3213,8 +3221,10 @@ export function parseCommitBundleBody(text: string): CommitBundleSection[] {
       if (isBundleScopeLine(line)) {
         const scopeErr = bundleScopeLabelError(line);
         if (scopeErr) throw new Error(scopeErr);
-        current.dates.push(dateSection);
-        bundles.push(current);
+        if (current) {
+          current.dates.push(dateSection);
+          bundles.push(current);
+        }
         current = { label: normalizeBundleScopeLabel(line), dates: [] };
         dateSection = null;
         continue;

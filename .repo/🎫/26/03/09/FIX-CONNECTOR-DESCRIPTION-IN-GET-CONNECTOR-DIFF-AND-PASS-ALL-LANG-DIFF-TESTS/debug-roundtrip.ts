@@ -1,4 +1,4 @@
-import { MetabolismKit } from "@compose/assets";
+import { MetabolismKit } from "@semio-tech/compose-assets";
 import { deserializeKit, serializeKit, areKitsEqual, importKit, Kit } from "../../../compose/js/compose";
 import * as fsModule from "node:fs";
 import * as pathModule from "node:path";

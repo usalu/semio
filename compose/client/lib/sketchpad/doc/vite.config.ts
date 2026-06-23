@@ -36,9 +36,9 @@ export default defineConfig(async () => {
   return {
     resolve: {
       alias: {
-        "@compose/js": path.resolve(__dirname, "../../js"),
-        "@compose/sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@compose/asset": path.resolve(__dirname, "../../asset"),
+        "@semio-tech/compose-js": path.resolve(__dirname, "../../js"),
+        "@semio-tech/compose-sketchpad": path.resolve(__dirname, "../../sketchpad"),
+        "@semio-tech/compose-asset": path.resolve(__dirname, "../../asset"),
       },
     },
     plugins: [
@@ -83,7 +83,7 @@ export default defineConfig(async () => {
     ],
     optimizeDeps: {
       include: ["golden-layout"],
-      exclude: ["@compose/js", "@compose/sketchpad"],
+      exclude: ["@semio-tech/compose-js", "@semio-tech/compose-sketchpad"],
       esbuildOptions: {
         target: "es2020",
       },

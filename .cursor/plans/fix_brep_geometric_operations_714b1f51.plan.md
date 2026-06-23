@@ -33,7 +33,7 @@ todos:
     content: Extend procedural/react tests for cut, non-Z extrude, rotate axis, mirror plane via evaluateBrepFlowKind
     status: completed
   - id: verify
-    content: Run @geometry/brep/js:test and @procedural/react:test; ensure launch.json entries; close ticket with summary
+    content: Run @semio-tech/geometry-brep-js:test and @semio-tech/procedural-react:test; ensure launch.json entries; close ticket with summary
     status: completed
 isProject: false
 ---
@@ -73,4 +73,4 @@ Expose the now-parameterizable inputs (chosen scope) by extending `BREP_FLOW_KIN
 ## 4. Repo workflow + verification
 - Work inside a ticket (reopen the related `2026/06/08/PROCEDURAL-PREVIEW-RECTANGLE-EXTRUDE` if it covers this, else open a new ticket); associate with the best goal from `repo://goals`.
 - Use regions/subregions; concise code; emoji docstrings; no in-definition comments; `[DEBUG]` prefix for any temporary logs.
-- Verify by running the suites (do not claim passing without running): `@geometry/brep/js:test` and `@procedural/react:test` via `nx`; register/confirm any commands in `launch.json` following existing grouping.
+- Verify by running the suites (do not claim passing without running): `@semio-tech/geometry-brep-js:test` and `@semio-tech/procedural-react:test` via `nx`; register/confirm any commands in `launch.json` following existing grouping.

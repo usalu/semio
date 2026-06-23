@@ -36,7 +36,7 @@ const BUNDLE_DEFS: BundleDef[] = [
   { label: "🧩puzzle🎮play", keywords: ["puzzle", "board play", "board→puzzle", "marquee", "vortex", "topology board", "5d topology", "peer sync", "brush tool", "nakagin 2d", "nakagin 3d", "puzzle2d", "fill brush", "wires 5d"], pathTokens: ["puzzle"] },
   { label: "📐cad🪟spatial", keywords: ["cad", "spatial", "brep", "curve", "extrude", "scene package", "construct query", "model-definition", "elements scene", "elements geometry", "topologic", "spatial play", "spatial doctrine", "cell-complex", "chevrotain"], pathTokens: ["cad"] },
   { label: "🥅framework", keywords: ["@framework", "framework/", "playground", "platform shell", "playgroundcontroller", "uinode", "product/base"], pathTokens: ["framework"] },
-  { label: "🖱️ui⚛️react", keywords: ["@ui/react", "ui/react", "engagement", "ghost", "golden layout", "window fill", "storybook", "scrollbar", "selection/hover", "context-menu", "platform settings"], pathTokens: ["ui", "react"] },
+  { label: "🖱️ui⚛️react", keywords: ["@semio-tech/ui-react", "ui/react", "engagement", "ghost", "golden layout", "window fill", "storybook", "scrollbar", "selection/hover", "context-menu", "platform settings"], pathTokens: ["ui", "react"] },
   { label: "🖱️ui🎨assets", keywords: ["svg icon", "ui/assets", "ui/styling", "vite-elements", "globals-ui"], pathTokens: ["ui", "assets"] },
   { label: "🗺️gis🧭map", keywords: ["gis", "maplibre", "mvt", "vector tile", "figure-ground", "mapvector", "ancestor map", "lod tier"], pathTokens: ["gis"] },
   { label: "♾️infinite", keywords: ["infinite", "cavas", "vello", "world r3f"], pathTokens: ["infinite"] },

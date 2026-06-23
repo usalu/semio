@@ -87,7 +87,7 @@ flowchart LR
 
 ## 5. Rebuild WASM
 
-- Rebuild the `gis_map` WASM package so the new `setVectorStyle` binding is emitted (`bun nx run @gis/map/rs:wasm`; the `dev:gis:map` dev task also rebuilds it). Then verify in the play app (port 6040) at city zoom (buildings -> ink poche) and world zoom (land/water silhouette), plus the inverted variant.
+- Rebuild the `gis_map` WASM package so the new `setVectorStyle` binding is emitted (`bun nx run @semio-tech/gis-map-rs:wasm`; the `dev:gis:map` dev task also rebuilds it). Then verify in the play app (port 6040) at city zoom (buildings -> ink poche) and world zoom (land/water silhouette), plus the inverted variant.
 
 ## Notes
 

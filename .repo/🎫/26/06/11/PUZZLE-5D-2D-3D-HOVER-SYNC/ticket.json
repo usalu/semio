@@ -3,7 +3,7 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "The hover between 2d and 3d views in puzzle 5d is not synchronized. Wire shared hover focus through the unified Store so hovering in one surface highlights the corresponding element in the other.",
-  "summary": "Added unified hover focus to the puzzle 5d Store so 2d and 3d surfaces share the same hover state. Conversion helpers map part/anchor/tie instances and catalog-kind hovers between flat and volume projections. FiveD2d and FiveD3d now use controlled hover props wired through the store. Added vitest coverage for hover mapping (suite still blocked by pre-existing @infinite/world/r3f resolution in vitest config).",
+  "summary": "Added unified hover focus to the puzzle 5d Store so 2d and 3d surfaces share the same hover state. Conversion helpers map part/anchor/tie instances and catalog-kind hovers between flat and volume projections. FiveD2d and FiveD3d now use controlled hover props wired through the store. Added vitest coverage for hover mapping (suite still blocked by pre-existing @semio-tech/infinite-world-r3f resolution in vitest config).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1664"
   },

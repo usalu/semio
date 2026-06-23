@@ -9,7 +9,7 @@ todos:
     content: Remove torus guards + SolidSource machinery in geometry/brep/brepkit/lib.rs; simplify register_solid and translate_sync
     status: completed
   - id: build-wasm
-    content: Rebuild flow/core WASM via nx wasm @flow/core
+    content: Rebuild flow/core WASM via nx wasm @semio-tech/flow-core
     status: completed
   - id: verify-fixture
     content: Run eval-sphere-cut-fixture.ts and confirm brep_bool_cut_5 yields a geometry handle without hanging
@@ -39,7 +39,7 @@ The `SolidSource` enum, `Entry.source`, `entry_source`, `solid_bounds_overlap`, 
 - Keep code organized within the existing `#region` structure.
 
 ## Build & verify (execution, not plan mode)
-- Rebuild WASM: `nx wasm @flow/core` (runs `bun ./script.ts wasm` in `flow/core`).
+- Rebuild WASM: `nx wasm @semio-tech/flow-core` (runs `bun ./script.ts wasm` in `flow/core`).
 - Run the existing ticket eval script to confirm the cut succeeds and completes fast:
   `bun .repo/🎫/26/06/09/ASYNC-FLOW-EVAL-AND-COMPUTING-NODE-CHROME/eval-sphere-cut-fixture.ts`
   Expect `brep_bool_cut_5.out.out` to be a `geometry` handle (no `error`) and elapsed well under the 30s worker timeout.

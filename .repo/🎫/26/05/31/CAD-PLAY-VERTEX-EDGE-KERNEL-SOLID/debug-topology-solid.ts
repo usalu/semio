@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { applyModelDiff, Model, solidRef } from "@cad/js/core";
-import { BrepjsKernel, boxModelDiff } from "@cad/js/kernel/brepjs";
+import { applyModelDiff, Model, solidRef } from "@semio-tech/cad-js-core";
+import { BrepjsKernel, boxModelDiff } from "@semio-tech/cad-js-kernel-brepjs";
 
 const kernel = new BrepjsKernel();
 const g = new Model();

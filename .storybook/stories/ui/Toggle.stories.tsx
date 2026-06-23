@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Toggle } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Toggle } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🗡️Toggle

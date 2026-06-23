@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@framework/presentation/play` task router: `bun ./script.ts <dev|build|test>`. */
+/** 🧭 `@semio-tech/framework-presentation-play` task router: `bun ./script.ts <dev|build|test>`. */
 import {
 	BundleScript,
 	ScriptRouter,

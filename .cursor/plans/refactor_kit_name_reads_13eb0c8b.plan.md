@@ -156,7 +156,7 @@ export class OperationRouter {
 
 ### `WriteStatus` types (moved from `compose/react`)
 
-`SetError`, `SetResult`, `WriteStatus`, `SCHEMA_HOOK_IDLE_STATUS`, `SCHEMA_HOOK_READONLY_STATUS`, `USE_KIT_NAME_PENDING_STATUS`, `writeStatusEquivalent` — defined exactly once in `compose/js/index.ts`, re-exported from `@compose/js`, consumed from `@compose/react`.
+`SetError`, `SetResult`, `WriteStatus`, `SCHEMA_HOOK_IDLE_STATUS`, `SCHEMA_HOOK_READONLY_STATUS`, `USE_KIT_NAME_PENDING_STATUS`, `writeStatusEquivalent` — defined exactly once in `compose/js/index.ts`, re-exported from `@semio-tech/compose-js`, consumed from `@semio-tech/compose-react`.
 
 ### `KitStore` glue (one-time)
 

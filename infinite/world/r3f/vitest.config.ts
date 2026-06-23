@@ -6,11 +6,11 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@infinite/world/r3f`. */
+/** @emoji 🧪 Vitest for `@semio-tech/infinite-world-r3f`. */
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") }],
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../ui/react/index.tsx") }],
   },
   test: {
     mode: "test",

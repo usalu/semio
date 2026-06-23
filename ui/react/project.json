@@ -1,5 +1,5 @@
 {
-  "name": "@ui/react",
+  "name": "@semio-tech/ui-react",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

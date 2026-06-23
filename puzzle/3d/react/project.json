@@ -1,13 +1,13 @@
 {
-  "name": "@puzzle/3d/react",
+  "name": "@semio-tech/puzzle-3d-react",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@puzzle/3d/rs:wasm"],
+      "dependsOn": ["@semio-tech/puzzle-3d-rs:wasm"],
       "options": {
         "cwd": "puzzle/3d/react",
-        "command": "bun nx run @puzzle/3d/rs:wasm"
+        "command": "bun nx run @semio-tech/puzzle-3d-rs:wasm"
       }
     },
     "test": {

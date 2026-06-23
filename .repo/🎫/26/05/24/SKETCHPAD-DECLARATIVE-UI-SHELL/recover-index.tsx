@@ -15,8 +15,8 @@
 
 // #region Ôø®´©ÅImports
 
-import type { Author, Concept, Connection, Connector, Design, Folder, Piece, Port, Quality, Representation, File as ComposeFile, Tag, Type } from "@compose/js";
-import { Camera, Kit, Session } from "@compose/js";
+import type { Author, Concept, Connection, Connector, Design, Folder, Piece, Port, Quality, Representation, File as ComposeFile, Tag, Type } from "@semio-tech/compose-js";
+import { Camera, Kit, Session } from "@semio-tech/compose-js";
 import {
   ActiveKitTabContext,
   ActiveKitTabContextProvider,
@@ -130,7 +130,7 @@ import {
   OPERATION_STATUS_IDLE,
   type OperationStatus,
   useWriteIndicator,
-} from "@compose/react";
+} from "@semio-tech/compose-react";
 import {
   layoutBoardFixtureForceGraph,
   type BoardEdgeLinkPayload,
@@ -425,7 +425,7 @@ import {
   TypeIcon,
   UserIcon,
   WorkbenchIcon,
-} from "@compose/assets/icons";
+} from "@semio-tech/compose-assets/icons";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@compose/ui";
@@ -976,7 +976,7 @@ class MemoryDoc implements SyncDoc {
 }
 
 /**
- * In-memory only; kit authority is `compose/rs` via `@compose/react` ÔåÆ `@compose/js` `KitStore` (Worker).
+ * In-memory only; kit authority is `compose/rs` via `@semio-tech/compose-react` ÔåÆ `@semio-tech/compose-js` `KitStore` (Worker).
  */
 export function createSyncDocFactory(): SyncDocFactory {
   return () => new MemoryDoc();
@@ -2022,7 +2022,7 @@ export type SketchpadInstance = { id: string; remote?: RemoteProviders; desktop?
 // #endregion ­ƒô╣Sketchpad State
 
 // #region ­ƒÆºCommands
-// Sketchpad command context/result; kit I/O is `@compose/react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOperation`, `executeComposeKitCommand` ÔåÆ `@compose/js` / rs).
+// Sketchpad command context/result; kit I/O is `@semio-tech/compose-react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOperation`, `executeComposeKitCommand` ÔåÆ `@semio-tech/compose-js` / rs).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.
@@ -2114,7 +2114,7 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 }
 
 /**
- * @emoji ­ƒº¥ Command result: optional typed {@link KitHostGraphOperation} runs through {@link applyKitHostGraphOperation} (`@compose/react` ÔåÆ `@compose/js` ÔåÆ `compose/rs`).
+ * @emoji ­ƒº¥ Command result: optional typed {@link KitHostGraphOperation} runs through {@link applyKitHostGraphOperation} (`@semio-tech/compose-react` ÔåÆ `@semio-tech/compose-js` ÔåÆ `compose/rs`).
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
   kitGraph?: KitHostGraphOperation;
@@ -7168,7 +7168,7 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 
 // #endregion ­ƒû▓´©ÅFile Provider
 
-// Kit file/url access: use @compose/react `useKitFileUrl`, `useKitFileBlobUrl`, `useEmbedKitFile`, `useKitBinary`.
+// Kit file/url access: use @semio-tech/compose-react `useKitFileUrl`, `useKitFileBlobUrl`, `useEmbedKitFile`, `useKitBinary`.
 
 type RootHostElement = HTMLElement & { __composeReactRoot__?: Root };
 
@@ -7187,10 +7187,10 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 // #region ÔÅ▒´©ÅKit
-// Shell kit id context lives in `@compose/react` ({@link ActiveKitTabContextProvider}, {@link ActiveKitTabContext}).
+// Shell kit id context lives in `@semio-tech/compose-react` ({@link ActiveKitTabContextProvider}, {@link ActiveKitTabContext}).
 
 /**
- * Wraps children with {@link KitWasmMountProvider} from `@compose/react` so command/query hooks work.
+ * Wraps children with {@link KitWasmMountProvider} from `@semio-tech/compose-react` so command/query hooks work.
  * The kit is already registered in {@link KitStoreProvider} via {@link SketchpadStore}'s registry open path.
  */
 function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode }): React.ReactElement {
@@ -23030,7 +23030,7 @@ const SketchpadContent: FC = () => {
  * Sketchpad holds the data fields for a Sketchpad record.
  **/
 /**
- * Host shell: persistence is opened via {@link useAttachBackbone} from `@compose/react` inside kit UI (WIP until JS stores land); factories here only bridge pickers ÔåÆ registry.
+ * Host shell: persistence is opened via {@link useAttachBackbone} from `@semio-tech/compose-react` inside kit UI (WIP until JS stores land); factories here only bridge pickers ÔåÆ registry.
  */
 const Sketchpad = ({
   id,
@@ -44708,7 +44708,7 @@ const isVscodeWebview = typeof globalThis !== "undefined" && typeof (globalThis 
 
 /**
  * Future host flow (strict layering ┬º5.2): `const attach = useAttachBackbone(); await attach({ dev: { filePath } }); await attach({ local: { folderPath } }); await attach({ remote: { serverUrl } });`
- * ÔÇö implemented in `@compose/react` once per-entity JS stores land; sketchpad stays picker/factory ÔåÆ registry until then.
+ * ÔÇö implemented in `@semio-tech/compose-react` once per-entity JS stores land; sketchpad stays picker/factory ÔåÆ registry until then.
  */
 async function boot() {
   let fileKitStoreFactory: SketchpadKitStoreFactory | undefined;
@@ -44766,7 +44766,7 @@ if (typeof document !== "undefined" && document.getElementById("root") && !isVsc
 // #region ­ƒôÉTests
 if (typeof process !== "undefined" && process.release && process.release.name === "node" && typeof (globalThis as any).__vitest_worker__ === "undefined") {
   const { expect, test } = await import(/* @vite-ignore */ "@playwright" + "/test");
-  const metabolismKitSpecifier = ["@compose/assets/compose/metabolism", "kit.compose.json"].join(".");
+  const metabolismKitSpecifier = ["@semio-tech/compose-assets/compose/metabolism", "kit.compose.json"].join(".");
   const MetabolismKitData = (await import(/* @vite-ignore */ metabolismKitSpecifier, { assert: { type: "json" } })).default;
   const { readFile } = await import(/* @vite-ignore */ "node" + ":fs/promises");
   const path = await import(/* @vite-ignore */ "node" + ":path");
@@ -46278,7 +46278,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       });
 
       // #region ­ƒÄ¿Sketchpad ­ƒº¬NegativeGrep
-      test("NegativeGrep sketchpad has no direct @compose/js import specifiers", async () => {
+      test("NegativeGrep sketchpad has no direct @semio-tech/compose-js import specifiers", async () => {
         const fs = await import(/* @vite-ignore */ "node" + ":fs");
         const pathMod = await import(/* @vite-ignore */ "node" + ":path");
         const urlMod = await import(/* @vite-ignore */ "node" + ":url");

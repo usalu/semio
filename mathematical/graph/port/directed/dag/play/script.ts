@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@dag/play` task router. */
+/** 🧭 `@semio-tech/dag-play` task router. */
 import { join } from "node:path";
 import {
   BundleScript,

@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

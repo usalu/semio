@@ -1,6 +1,6 @@
 # Infinite World 2d References
 
-Added shared 2D reference planes (png, svg, pdf) on the infinite world grid with move, resize, lock, and hide. Implemented via ReferenceMediaPort in @ui/react, WorldReferenceLayer in @infinite/world/r3f, puzzle 3d FixtureV1.references[], and CAD cad.references layer on the shape pane.
+Added shared 2D reference planes (png, svg, pdf) on the infinite world grid with move, resize, lock, and hide. Implemented via ReferenceMediaPort in @semio-tech/ui-react, WorldReferenceLayer in @semio-tech/infinite-world-r3f, puzzle 3d FixtureV1.references[], and CAD cad.references layer on the shape pane.
 
 Test fixtures served at `/infinite-fixture/sketch.png` and `/infinite-fixture/site.pdf`.
 

@@ -19,6 +19,6 @@
 
 ## `compose/react/index.tsx`
 - Remove `// @ts-nocheck` after store types land.
-- `KitHostGraphOp`: replace `unknown` id/patch/body with DTOs from `@compose/js` / kit JSON shapes; use `string` for entity ids.
+- `KitHostGraphOp`: replace `unknown` id/patch/body with DTOs from `@semio-tech/compose-js` / kit JSON shapes; use `string` for entity ids.
 - `executeComposeKitCommand` / `createKitCommandEngineExplicitOrigin`: remove or mark `@internal` with minimal typed entry points; consumers use `applyKitHostGraphOp` + specific hooks.
 - `HookTriad<readonly unknown[]>`, `any` in schema hooks: use DTO array types (TypeDto, DesignDto, etc. from compose).

@@ -158,5 +158,5 @@ Optional tiny helper in [playground/react/index.tsx](elements/lib/playground/rea
 - Attraction-based nesting of scene objects (can add later under `Objects`)
 - Full B-rep expansion under spatial primitives
 - Moving spatial `PlayModelSpacePanel` out of `InteractionRepl` aside (hierarchy is additive)
-- `@compose/play` sketchpad (different product; user asked playgrounds in elements/spatial)
+- `@semio-tech/compose-sketchpad-play` sketchpad (different product; user asked playgrounds in elements/spatial)
 

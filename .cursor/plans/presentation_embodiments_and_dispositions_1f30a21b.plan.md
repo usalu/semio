@@ -1,6 +1,6 @@
 ---
 name: Presentation Embodiments And Dispositions
-overview: "Reconcile @framework/presentation with presentation/AGENTS.md: add Video + Pdf (react-pdf) embodiments, rename ParticipantPlacement to a positioned/styled Disposition, add an Analogy template, and make every embodiment render and auto-animate in the React + reveal.js renderer, verified live in 33.projektetage with its real PDF/MP4/PNG assets."
+overview: "Reconcile @semio-tech/framework-presentation with presentation/AGENTS.md: add Video + Pdf (react-pdf) embodiments, rename ParticipantPlacement to a positioned/styled Disposition, add an Analogy template, and make every embodiment render and auto-animate in the React + reveal.js renderer, verified live in 33.projektetage with its real PDF/MP4/PNG assets."
 todos:
   - id: ticket
     content: Read repo://goals and open/reopen a repo MCP ticket under the framework goal
@@ -72,7 +72,7 @@ Update its inline test for the new arrangement count. No vite.config change expe
 ## 5. Validate (repo rules)
 
 - Open repo MCP ticket (read `repo://goals`; reopen the existing presentation ticket if it matches, else `ticket_open` under `🎯framework`); keep temp logs in the ticket folder.
-- Run `bun nx run @framework/presentation/core:test` and `@framework/presentation/renderer/react:test`.
+- Run `bun nx run @semio-tech/framework-presentation-core:test` and `@semio-tech/framework-presentation-renderer-react:test`.
 - Run the projektetage dev server (port 6050) and confirm via screenshots/CDP that PDF page, video frame, and figure render and auto-animate (no horizontal fly-in regression); add `[DEBUG]` logs while checking, then remove.
 - `ticket_close` with summary + file list.
 

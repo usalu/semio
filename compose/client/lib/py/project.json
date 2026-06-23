@@ -1,5 +1,5 @@
 {
-  "name": "@compose/py",
+  "name": "@semio-tech/compose-py",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {

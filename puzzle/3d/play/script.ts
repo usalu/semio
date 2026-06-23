@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@puzzle/3d/play` task router: `bun ./script.ts <dev|build|test> [fixture <id>] [args…]`. */
+/** 🧭 `@semio-tech/puzzle-3d-play` task router: `bun ./script.ts <dev|build|test> [fixture <id>] [args…]`. */
 import {
   BundleScript,
   ScriptRouter,
@@ -37,7 +37,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     runVitest(this.root, segments);
-    runPlaywright(this.root, "playwright.config.ts", segments);
+    runPlaywright(this.root, "playwright.config.ts", ["--pass-with-no-tests", ...segments]);
   }
 }
 

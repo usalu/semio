@@ -6,14 +6,14 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@puzzle/2d/react` inlined source tests (`import.meta.vitest` blocks). */
+/** @emoji 🧪 Vitest for `@semio-tech/puzzle-2d-react` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@infinite/cavas/react-renderer", replacement: resolve(root, "../../../infinite/cavas/react-renderer/index.tsx") },
-			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
-			{ find: "@puzzle/2d/rs", replacement: resolve(root, "../rs/pkg/puzzle_2d.js") },
+			{ find: "@semio-tech/infinite-cavas-react-renderer", replacement: resolve(root, "../../../infinite/cavas/react-renderer/index.tsx") },
+			{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../ui/react/index.tsx") },
+			{ find: "@semio-tech/puzzle-2d-rs", replacement: resolve(root, "../rs/pkg/puzzle_2d.js") },
 		],
 	},
 	test: {

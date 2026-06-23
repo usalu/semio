@@ -9,10 +9,10 @@
 // #endregion 🧲Header
 
 //#region 🗃️Exports
-// Builtin Metabolism kit and UI icons only — test JSON lives in `@compose/fixture`.
+// Builtin Metabolism kit and UI icons only — test JSON lives in `@semio-tech/compose-fixture`.
 
 import metabolismShallowKit from "../fixture/metabolism.shallow.kit.compose.json";
-import { createIconComponent } from "@ui/react";
+import { createIconComponent } from "@semio-tech/ui-react";
 
 const MetabolismKitData = { wip: { initialKit: metabolismShallowKit } };
 
@@ -106,7 +106,7 @@ export const TutorialIcon = createIconComponent("graduation-cap");
 export const TypeIcon = createIconComponent("box");
 export const UserIcon = createIconComponent("user");
 export const WorkbenchIcon = createIconComponent("box");
-export type { IconName } from "@ui/asset";
+export type { IconName } from "@semio-tech/ui-asset";
 //#endregion 🔖Icons
 
 //#region 🔖KitBootstrapHelpers

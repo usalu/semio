@@ -1,5 +1,5 @@
 {
-  "name": "@compose/vscode",
+  "name": "@semio-tech/compose-vscode",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {

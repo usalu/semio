@@ -377,7 +377,7 @@
           "timestamp": "2026-03-20T22:49:12.190794292Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "command_line": "npx nx show project @compose/vscode",
+            "command_line": "npx nx show project @semio-tech/compose-vscode",
             "cwd": "/workspaces/semio"
           }
         }

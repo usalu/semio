@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@repo/client` bundle policy router: `bun ./script.ts policy`. */
+/** 🧭 `@semio-tech/repo-client` bundle policy router: `bun ./script.ts policy`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { BundleLinter } from "../lib/js/src/index.ts";

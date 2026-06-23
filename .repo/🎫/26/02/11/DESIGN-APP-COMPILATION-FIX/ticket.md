@@ -31,6 +31,6 @@ Bulk close
 
 ## Plan
 
-1. Re-run the `@compose/js` sketchpad dev entrypoint after removing `--strictPort`
+1. Re-run the `@semio-tech/compose-js` sketchpad dev entrypoint after removing `--strictPort`
 2. Confirm Vite starts and reports a served URL on `5173` or the next available port
 3. Close the ticket with the verified file list

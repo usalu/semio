@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📋 `@puzzle/2d/react` — WASM puzzle 2d renderer + React canvas (depends only on `@ui/react`). */
+/** @emoji 📋 `@semio-tech/puzzle-2d-react` — WASM puzzle 2d renderer + React canvas (depends only on `@semio-tech/ui-react`). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -18,8 +18,8 @@ import {
   type ContextMenuItem,
   type GraphWasmSession,
   type RenderMode,
-} from "@infinite/cavas/react-renderer";
-import { type TreeDragAndDropController, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson } from "@ui/react";
+} from "@semio-tech/infinite-cavas-react-renderer";
+import { type TreeDragAndDropController, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson } from "@semio-tech/ui-react";
 import { createPortal } from "react-dom";
 import {
   blendTokenHex,
@@ -33,7 +33,7 @@ import {
   themeColorVar,
   tokenHex,
   tokenVar,
-} from "@ui/styling";
+} from "@semio-tech/ui-styling";
 
 /** @emoji 🧩 Puzzle 2d alias for the generic canvas event binding controller. */
 type Puzzle2dEventBindingController = CavasEventBindingController;
@@ -43,7 +43,9 @@ const Puzzle2dEventBindingController = CavasEventBindingController;
 // #region 🔖GpuWasmBridge
 import initPuzzle2dWasm, { boardComputeEdgeBezier, boardHandlePositionCircle, boardHandlePositionRectangle, boardRedrawHandlesFixtureJson, boardRedrawLayoutFixtureJson, BoardSession, initSync } from "../rs/pkg/puzzle_2d.js";
 
-if (import.meta.vitest) {
+const puzzle2dWasmLoadedSync = Boolean(import.meta.vitest || (typeof process !== "undefined" && process.env.VITEST));
+
+if (puzzle2dWasmLoadedSync) {
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
@@ -55,11 +57,14 @@ if (import.meta.vitest) {
 
 /** @emoji 🌐 Idempotent: resolves after the wasm-bindgen `web` target has finished instantiating. */
 export async function ensurePuzzle2dWasmLoaded(): Promise<void> {
+  if (puzzle2dWasmLoadedSync) {
+    return;
+  }
   await initPuzzle2dWasm();
 }
 
 export { BoardSession };
-export { GraphWasmCanvas, type GraphWasmSession, type CanvasWasmBridge } from "@infinite/cavas/react-renderer";
+export { GraphWasmCanvas, type GraphWasmSession, type CanvasWasmBridge } from "@semio-tech/infinite-cavas-react-renderer";
 
 /** @emoji 🧠 Normal graphs bind edges to node ids; ported graphs use handle endpoints. */
 export type Puzzle2dGraphPortMode = "normal" | "ported";
@@ -933,7 +938,7 @@ export interface Puzzle2dFixtureV1 {
 
 // #region 🏷️IconSelectorMode
 
-export { classifyIconSelectorMode as classifyPuzzle2dIconSelectorMode, type IconSelectorMode as Puzzle2dIconSelectorMode } from "@ui/react";
+export { classifyIconSelectorMode as classifyPuzzle2dIconSelectorMode, type IconSelectorMode as Puzzle2dIconSelectorMode } from "@semio-tech/ui-react";
 
 // #endregion 🏷️IconSelectorMode
 
@@ -1916,7 +1921,7 @@ export function puzzle2dLodAutomaticSelectLabel(effectiveTier: Puzzle2dDrawLodKi
   return `Automatic · ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
 }
 
-/** @emoji 🎨 Offline / headless paint defaults derived from `@ui/styling` palette tokens. */
+/** @emoji 🎨 Offline / headless paint defaults derived from `@semio-tech/ui-styling` palette tokens. */
 const PUZZLE_2D_STYLES_HEADLESS_FALLBACK: Record<string, Puzzle2dStyle> = {
   edge: { stroke: tokenHex("gray"), strokeWidth: 2 },
   "edge.highlighted": { stroke: tokenHex("secondary"), strokeWidth: 2 },
@@ -10999,7 +11004,7 @@ export const PUZZLE_2D_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
   registerSuspenseInstanceRetry: () => {},
   releaseResource: () => null,
   releaseSingletonInstance: () => null,
-  rendererPackageName: "@puzzle/2d/react",
+  rendererPackageName: "@semio-tech/puzzle-2d-react",
   rendererVersion: "0.1.0",
   replaceContainerChildren: () => {},
   resetFormInstance: () => {},

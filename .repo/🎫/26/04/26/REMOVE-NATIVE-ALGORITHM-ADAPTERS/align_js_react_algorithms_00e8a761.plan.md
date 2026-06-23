@@ -22,7 +22,7 @@ isProject: false
 
 ## Scope
 
-- No new files. WASM-only surface (per prior decision); `compose-store` JSON-RPC client stays out of `@compose/js` for now.
+- No new files. WASM-only surface (per prior decision); `compose-store` JSON-RPC client stays out of `@semio-tech/compose-js` for now.
 - New commands (`AttachBackbone`, `DetachBackbone`, `BackboneStatus`, `ListConflicts`, `ResolveConflict`, `SyncNow`) are built in JS and sent through `handle.execute(cmd)`. On wasm the Dev/Local backbones error server-side (already handled by `KitStoreCommand::execute`), which is surfaced as a TS `SetResult` failure.
 - `compose/algorithms` Storybook already talks to `KitStoreHandle` directly, so only the **native Rust bridge** needs a rename.
 
@@ -109,7 +109,7 @@ Add hooks next to `useKitSync` (≈1237), using the existing `useKitRuntime()` p
 - `useResolveConflict()` — `{ resolve, pending, lastError }`.
 - `useSyncNow()` — `{ sync, pending, lastError }`.
 
-Each hook calls `runtime.client.<method>()` (type-narrowed) and refreshes `useKitSync` state on error. Re-export new wire types from `@compose/js` for consumer convenience (`BackboneConfig`, `ConflictResolution`, `BackboneStatus`, `KitConflict`).
+Each hook calls `runtime.client.<method>()` (type-narrowed) and refreshes `useKitSync` state on error. Re-export new wire types from `@semio-tech/compose-js` for consumer convenience (`BackboneConfig`, `ConflictResolution`, `BackboneStatus`, `KitConflict`).
 
 ## 4. [`compose/algorithms/native-bridges/rs/src/main.rs`](compose/algorithms/native-bridges/rs/src/main.rs)
 
@@ -136,13 +136,13 @@ No behavior change; relies on the new `pub use kit_graph::KitGraph;` at the crat
 ## What explicitly stays as-is
 
 - `compose/algorithms/.storybook/**` (`composeWasm.ts`, `useKitStore.ts`, `HistoryControls.tsx`) — already use `KitStoreHandle.execute(...)`; still works unchanged. Any preset JSON examples in `commandSchema.ts` are kept as-is unless trivially extended during review.
-- `@compose/rs-wasm` binding name `KitStoreHandle` — intentionally preserved (already renamed in `compose/rs` to match).
+- `@semio-tech/compose-rs-wasm` binding name `KitStoreHandle` — intentionally preserved (already renamed in `compose/rs` to match).
 - `compose/react/vite.config.ts` alias to `../rs/pkg` — unchanged.
 
 ## Verification
 
-- `pnpm -F @compose/js test` (focused on the `KitStoreClient` describe block).
-- `pnpm -F @compose/react build` (type-check of new hooks).
+- `pnpm -F @semio-tech/compose-js test` (focused on the `KitStoreClient` describe block).
+- `pnpm -F @semio-tech/compose-react build` (type-check of new hooks).
 - `cargo build -p compose-algorithms-bridge` (or equivalent path in `compose/algorithms/native-bridges/rs`) — verifies the rename compiles with the current `compose` crate.
 - Existing `compose/store/tests/rpc.rs` remains unaffected.
 

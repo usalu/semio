@@ -85,7 +85,7 @@ Rationale: **No per-bundle `stories/` folder** under `elements/` or `compose/` i
 
 5. **Update [.storybook/main.ts](.storybook/main.ts)** `stories` glob to a single tree, e.g. `./story/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)` (or equivalent). Keep existing Vite aliases in `viteFinal`.
 
-6. **Import fixes in moved stories:** replace broken relatives with `@compose/algorithm`, `@compose/asset`, `@compose/ui`, `@compose/react`, `@elements/ui`, and stable relatives from `.storybook/story/...` (e.g. `../../../fixture/nakagin`, `../../../compose/algorithm/kit-store/...`) or optional Vite aliases if you add them in `main.ts`.
+6. **Import fixes in moved stories:** replace broken relatives with `@semio-tech/compose-algorithm`, `@semio-tech/compose-asset`, `@compose/ui`, `@semio-tech/compose-react`, `@elements/ui`, and stable relatives from `.storybook/story/...` (e.g. `../../../fixture/nakagin`, `../../../compose/algorithm/kit-store/...`) or optional Vite aliases if you add them in `main.ts`.
 
 7. **Delete** entire `elements/client/lib/react/.storybook/`, `compose/client/lib/react/rendering/.storybook/`, `compose/dev/algorithm/.storybook/` after nothing references them.
 

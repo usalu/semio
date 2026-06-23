@@ -24,10 +24,10 @@ todos:
    content: "Update `compose/js/package.json`: add `rxjs`, remove `zod`/`fflate`/`comlink`"
    status: pending
  - id: migrate-react
-   content: Rewrite `compose/react/index.tsx` hooks/scopes against the new `KitStore` only; remove all references to deleted `@compose/js` exports
+   content: Rewrite `compose/react/index.tsx` hooks/scopes against the new `KitStore` only; remove all references to deleted `@semio-tech/compose-js` exports
    status: pending
  - id: migrate-sketchpad
-   content: Update `compose/sketchpad/index.tsx` to consume only `compose/react` hooks; remove direct `@compose/js` usage
+   content: Update `compose/sketchpad/index.tsx` to consume only `compose/react` hooks; remove direct `@semio-tech/compose-js` usage
    status: pending
  - id: migrate-others
    content: Migrate `sites/play`, `desktop`, `vscode`, `3dm/ui`, `algorithms` (delete `nativeAlgorithmAdapter.ts`), and `ui` + storybook stories to the new API
@@ -84,14 +84,14 @@ flowchart LR
   - `📦KitStore` — sole exported class
   - `🧪EmbeddedTests` — vitest suite rewritten in place (no new test files)
   - Remove every other current export: `Compose`, `Coordinate`/`Vec`/`Point`/`Vector`/`Plane`/`Camera`, `Attribute`/`Author`/`File`/`Folder`/`Benchmark`/`Quality`/`Port`/`Family`/`Prop`/`Tag`/`Concept`/`Representation`/`Connector`/`Type`/`Layer`/`Piece`/`Group`/`Side`/`Connection`/`Stat`/`Design`/`Kit` (classes, zod schemas, `*Plain`/`*Diff`/`*Shallow`/`*MetadataDto`), `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `createSessionKitStore`, `KitHostStore`, `KitBinaryStore`, `DEFAULT_KIT_SYNC`, `FallbackKitStoreClient`, `WorkerKitStoreClient`, `createKitStoreClient`, `KitWorkerApi`, `KitViewStore`, `getComposeKitViewStore`, `kitGraphqlExecuteStoreCommand`, `kitGraphqlRun`, `KitGraphqlHandle`, `readCommandTypes`, all `*Schema` / `*Id` / `DiffStatus` / `ICON_WIDTH` / `TOLERANCE`.
-- [compose/js/worker.ts](compose/js/worker.ts) — strip Comlink. Becomes a thin module worker that calls `boot()` from `@compose/rs-wasm`, holds one `KitStoreHandle`, and on each `message` (typed `{ reqId, kind, payload }`) calls `handle.execute(json, onLine => postMessage({ reqId, line }))` / `handle.snapshot()` / `KitStoreHandle.create(initialKit)`. Strings only on the wire.
+- [compose/js/worker.ts](compose/js/worker.ts) — strip Comlink. Becomes a thin module worker that calls `boot()` from `@semio-tech/compose-rs-wasm`, holds one `KitStoreHandle`, and on each `message` (typed `{ reqId, kind, payload }`) calls `handle.execute(json, onLine => postMessage({ reqId, line }))` / `handle.snapshot()` / `KitStoreHandle.create(initialKit)`. Strings only on the wire.
 - [compose/js/package.json](compose/js/package.json) — add `rxjs`; remove `zod`, `fflate`, `comlink`.
-- [compose/js/vite.config.ts](compose/js/vite.config.ts) — keep `@compose/rs-wasm` alias.
+- [compose/js/vite.config.ts](compose/js/vite.config.ts) — keep `@semio-tech/compose-rs-wasm` alias.
 
 ## Dependent migrations (greenfield, no compat)
 
-- [compose/react/index.tsx](compose/react/index.tsx) — drop every removed import. Rebuild hooks (`useKit`, `useDesign`, `usePiece`, `useType`, `useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`, `KitScope`, `DesignScope`, `PieceScope`, `TypeScope`, …) directly on `KitStore.events$` + typed methods. Remove all `export type/{…} from "@compose/js"` re-exports of deleted symbols.
-- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) — only consume `compose/react` hooks (its AGENTS rule); strip any direct `@compose/js` imports.
+- [compose/react/index.tsx](compose/react/index.tsx) — drop every removed import. Rebuild hooks (`useKit`, `useDesign`, `usePiece`, `useType`, `useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`, `KitScope`, `DesignScope`, `PieceScope`, `TypeScope`, …) directly on `KitStore.events$` + typed methods. Remove all `export type/{…} from "@semio-tech/compose-js"` re-exports of deleted symbols.
+- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) — only consume `compose/react` hooks (its AGENTS rule); strip any direct `@semio-tech/compose-js` imports.
 - [compose/sites/play/index.tsx](compose/sites/play/index.tsx), [compose/desktop/renderer.tsx](compose/desktop/renderer.tsx), [compose/vscode/webview.tsx](compose/vscode/webview.tsx), [compose/3dm/ui/index.tsx](compose/3dm/ui/index.tsx) — replace `InMemoryKitStore` / `createJsonFileKitStore` / `Kit` usage with `KitStore.open(initialKit)` + typed method calls (host-side persistence becomes a thin wrapper around `KitStore.snapshot()` + `KitStore.changeKitCommands(...)`; no host kit graph kept in JS).
 - [compose/algorithms/nativeAlgorithmAdapter.ts](compose/algorithms/nativeAlgorithmAdapter.ts) — delete; algorithm calls go through `KitStore.flattenDesign` / `read(...)` (rs AGENTS forbids JS-side domain logic).
 - [compose/algorithms/.storybook/stories/\*](compose/algorithms/.storybook/stories), [compose/ui/index.tsx](compose/ui/index.tsx), [compose/ui/.storybook/stories/\*](compose/ui/.storybook/stories) — rewrite imports against `KitStore` types only; remove uses of `Design`/`Kit`/`DesignEntity`/`KitRuntime`/`getKitPorts`/etc.

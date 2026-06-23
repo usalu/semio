@@ -13,8 +13,8 @@
 
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Kit, type Type as ComposeType, type Design, type Representation } from "@compose/react";
-import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@compose/asset";
+import { Kit, type Type as ComposeType, type Design, type Representation } from "@semio-tech/compose-react";
+import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio-tech/compose-asset";
 import "./globals.css";
 
 // #endregion 🔌Adapters

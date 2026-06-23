@@ -7,7 +7,7 @@
 
 import type { Preview } from "@storybook/react-vite";
 
-import { Expertise } from "@ui/react";
+import { Expertise } from "@semio-tech/ui-react";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 

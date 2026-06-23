@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Page } from "@ui/react";
+import { Page } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🌈Page

@@ -16,8 +16,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 1,
       "passes": true,
@@ -44,8 +44,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 2,
       "passes": true,
@@ -74,8 +74,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 3,
       "passes": true,
@@ -104,8 +104,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 4,
       "passes": true,
@@ -133,8 +133,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 5,
       "passes": true,
@@ -164,8 +164,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 6,
       "passes": true,
@@ -196,8 +196,8 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes."
       ],
       "priority": 7,
       "passes": true,
@@ -227,9 +227,9 @@
         "cargo test --manifest-path compose/rs/Cargo.toml passes.",
         "cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings passes.",
         "pnpm exec nx build compose/graphql passes.",
-        "pnpm --filter @compose/js test passes.",
-        "pnpm --filter @compose/react test passes.",
-        "pnpm --filter @compose/sketchpad build passes."
+        "pnpm --filter @semio-tech/compose-js test passes.",
+        "pnpm --filter @semio-tech/compose-react test passes.",
+        "pnpm --filter @semio-tech/compose-sketchpad build passes."
       ],
       "priority": 8,
       "passes": true,

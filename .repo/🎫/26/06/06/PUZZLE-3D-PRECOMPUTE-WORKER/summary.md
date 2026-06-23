@@ -24,6 +24,6 @@ Background Web Worker + Rust/WASM (`parry3d`) precomputes brush collision-free c
 
 ## Tests
 
-- 306 vitest tests pass in `@puzzle/3d/react`
+- 306 vitest tests pass in `@semio-tech/puzzle-3d-react`
 - Rust unit test `brush_candidates_allow_separated_boxes`
 - WASM vs mesh-bvh parity test in vitest

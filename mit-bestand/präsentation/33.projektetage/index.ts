@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📽 33. Projektetage — declarative paper intro via `@framework/presentation`. */
+/** @emoji 📽 33. Projektetage — declarative paper intro via `@semio-tech/framework-presentation`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -16,7 +16,7 @@ import {
 	type Slide,
 	type SlideFile,
 	type Thought,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 import { presentationMeta } from "./spec.ts";
 import {
 	CATALOGUE_COL1,
@@ -153,7 +153,7 @@ function mount(): void {
 	if (!el) {
 		return;
 	}
-	void import("@framework/presentation/renderer/react").then(({ Expertise, mountPresentation }) => {
+	void import("@semio-tech/framework-presentation-renderer-react").then(({ Expertise, mountPresentation }) => {
 		mountPresentation(el, deck, {
 			transition: "fade",
 			slideNumber: false,

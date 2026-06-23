@@ -96,6 +96,6 @@ flowchart LR
 
 ## Verification
 
-- `nx test` for `@flow/react`, `@flow/play`, `@procedural/react`, `@procedural/play`.
+- `nx test` for `@semio-tech/flow-react`, `@semio-tech/flow-play`, `@semio-tech/procedural-react`, `@semio-tech/procedural-play`.
 - Manual: in flow + procedural playgrounds, right-click background and a node; confirm context-appropriate items and that Delete/Add/Toggle preview/Reorganize/Select all actually mutate the graph (confirmed via `[DEBUG]` logs).
 

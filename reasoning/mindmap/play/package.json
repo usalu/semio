@@ -1,13 +1,13 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@reasoning/mindmap/play",
+  "name": "@semio-tech/reasoning-mindmap-play",
   "version": "0.1.0",
   "description": "reasoning · mindmap play",
   "type": "module",
   "private": true,
   "dependencies": {
-    "@puzzle/2d/react": "workspace:*",
-    "@reasoning/mindmap/react": "workspace:*"
+    "@semio-tech/puzzle-2d-react": "workspace:*",
+    "@semio-tech/reasoning-mindmap-react": "workspace:*"
   },
   "bundleKind": "library"
 }

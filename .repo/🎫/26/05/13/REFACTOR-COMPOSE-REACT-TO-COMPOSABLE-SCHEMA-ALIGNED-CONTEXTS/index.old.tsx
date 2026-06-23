@@ -3,7 +3,7 @@
 // #endregion ⚛️Header
 
 // #region 🧷JsReexports
-// Value/type re-exports follow the local `@compose/js` imports below (single binding per symbol).
+// Value/type re-exports follow the local `@semio-tech/compose-js` imports below (single binding per symbol).
 // #endregion 🧷JsReexports
 
 // #region ⚛️Imports

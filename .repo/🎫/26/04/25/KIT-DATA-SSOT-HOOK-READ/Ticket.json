@@ -1,5 +1,5 @@
 {
   "title": "Kit Data Ssot Read Hooks Hookread",
   "status": "closed",
-  "summary": "HookRead: extended to RPC + catalog reads — useRpcPieces/Connections/Designs/Types/Authors, usePiecesTriad, useConnectionsTriad, useTypes/useDesigns destructuring, useAuthors, useIncludedDesigns, useDesignClusterableGroups, useDesignQualitySum, useTypeBestRepresentation, useKitColoredConnectors, useReplacableTypes/Designs, useExplodeableDesignNodes. tsc --noEmit @compose/react."
+  "summary": "HookRead: extended to RPC + catalog reads — useRpcPieces/Connections/Designs/Types/Authors, usePiecesTriad, useConnectionsTriad, useTypes/useDesigns destructuring, useAuthors, useIncludedDesigns, useDesignClusterableGroups, useDesignQualitySum, useTypeBestRepresentation, useKitColoredConnectors, useReplacableTypes/Designs, useExplodeableDesignNodes. tsc --noEmit @semio-tech/compose-react."
 }

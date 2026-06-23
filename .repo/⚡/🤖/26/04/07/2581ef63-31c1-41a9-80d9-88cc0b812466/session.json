@@ -6299,7 +6299,7 @@
           "conversation_id": "2581ef63-31c1-41a9-80d9-88cc0b812466",
           "generation_id": "f7dd7fcc-a01a-4148-b1be-827ba7097b3e",
           "model": "default",
-          "content": "{\n  \"name\": \"@compose/go\",\n  \"version\": \"1.0.0\",\n  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n  \"sourceRoot\": \"compose/go\",\n  \"projectType\": \"library\",\n  \"scripts\": {\n    \"build\": \"go build ./...\",\n    \"test\": \"go test -v ./...\"\n  },\n  \"author\": {\n    \"name\": \"Ueli Saluz\",\n    \"email\": \"ueli@semio-tech.com\",\n    \"url\": \"https://github.com/usalu\"\n  },\n  \"bundleKind\": \"library\",\n  \"years\": [\n    \"2025-2026\"\n  ]\n}",
+          "content": "{\n  \"name\": \"@semio-tech/compose-go\",\n  \"version\": \"1.0.0\",\n  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n  \"sourceRoot\": \"compose/go\",\n  \"projectType\": \"library\",\n  \"scripts\": {\n    \"build\": \"go build ./...\",\n    \"test\": \"go test -v ./...\"\n  },\n  \"author\": {\n    \"name\": \"Ueli Saluz\",\n    \"email\": \"ueli@semio-tech.com\",\n    \"url\": \"https://github.com/usalu\"\n  },\n  \"bundleKind\": \"library\",\n  \"years\": [\n    \"2025-2026\"\n  ]\n}",
           "file_path": "/workspaces/semio/compose/go/package.json",
           "attachments": [],
           "session_id": "2581ef63-31c1-41a9-80d9-88cc0b812466",

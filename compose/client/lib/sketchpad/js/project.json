@@ -1,5 +1,5 @@
 {
-  "name": "@compose/sketchpad",
+  "name": "@semio-tech/compose-sketchpad",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "setup": {
@@ -15,7 +15,7 @@
     },
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@compose/rs:wasm"],
+      "dependsOn": ["@semio-tech/compose-rs:wasm"],
       "options": {
         "cwd": "compose/client/lib/sketchpad/js",
         "command": "bun ./script.ts dev",
@@ -28,7 +28,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@compose/rs:build"],
+      "dependsOn": ["@semio-tech/compose-rs:build"],
       "options": {
         "cwd": "compose/client/lib/sketchpad/js",
         "command": "vite build",

@@ -12,14 +12,17 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "paths": {
-      "compose/js/*": [
-        "../../compose/js/*"
+      "@semio-tech/compose-js/*": [
+        "../../../compose/client/lib/js/*"
       ],
-      "compose/js": [
-        "../../compose/js/index.ts"
+      "@semio-tech/compose-js": [
+        "../../../compose/client/lib/js/index.ts"
       ],
-      "compose/asset/*": [
-        "../../compose/asset/*"
+      "@semio-tech/compose-asset/*": [
+        "../../../compose/asset/*"
+      ],
+      "@semio-tech/compose-asset": [
+        "../../../compose/asset/index.ts"
       ]
     }
   },

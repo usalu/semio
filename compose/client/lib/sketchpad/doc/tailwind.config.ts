@@ -10,7 +10,7 @@
 
 // #region 🗄️Configuration
 // Tailwind CSS configuration extending the shared compose preset for the docs application.
-// Configuration MUST use the shared tailwindConfig preset from `@ui/styling`.
+// Configuration MUST use the shared tailwindConfig preset from `@semio-tech/ui-styling`.
 
 import type { Config } from "tailwindcss";
 import { tailwindConfig } from "../../../../../elements/client/lib/styling/tailwind.config";

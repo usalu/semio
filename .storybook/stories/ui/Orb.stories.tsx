@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Orb } from "@ui/react";
+import { Orb } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🎄Orb

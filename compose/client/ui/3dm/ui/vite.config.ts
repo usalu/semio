@@ -35,7 +35,7 @@ export default defineConfig(async () => {
   return {
     resolve: {
       alias: {
-        "@compose/js": path.resolve(__dirname, "../../js"),
+        "@semio-tech/compose-js": path.resolve(__dirname, "../../js"),
       },
     },
     plugins: [
@@ -53,7 +53,7 @@ export default defineConfig(async () => {
       topLevelAwait(),
     ],
     optimizeDeps: {
-      exclude: ["@compose/js"],
+      exclude: ["@semio-tech/compose-js"],
       esbuildOptions: {
         target: "es2020",
       },

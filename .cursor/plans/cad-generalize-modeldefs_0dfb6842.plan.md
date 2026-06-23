@@ -1,27 +1,27 @@
 ---
 name: cad-generalize-modeldefs
-overview: "Remove all concrete model-definition identities (spatial.shape, aec.building, energy.*, structure.*) from the generic cad layers (core, kernel, renderer) by introducing a flow-style cad module system: a generic engine in @cad/js/core plus per-domain modules that self-register their assets and compute, wired by a runtime composition root."
+overview: "Remove all concrete model-definition identities (spatial.shape, aec.building, energy.*, structure.*) from the generic cad layers (core, kernel, renderer) by introducing a flow-style cad module system: a generic engine in @semio-tech/cad-js-core plus per-domain modules that self-register their assets and compute, wired by a runtime composition root."
 todos:
   - id: core-registries
     content: "Generalize core: remove asset glob, domain stat computers, property-derivation branch, transformation applier; add additive asset registration, registerPropertyComputer, registerImportProfile; export helpers; drive default typology from manifest."
     status: completed
   - id: module-shape
-    content: Create @cad/js/module/spatial-shape registering geometry stat + volume property computer.
+    content: Create @semio-tech/cad-js-module-spatial-shape registering geometry stat + volume property computer.
     status: completed
   - id: module-building
-    content: Create @cad/js/module/aec-building registering building STEP import profile.
+    content: Create @semio-tech/cad-js-module-aec-building registering building STEP import profile.
     status: completed
   - id: module-energy
-    content: Create @cad/js/module/aec-building-energy registering energy demand stat, heatedvolume property, energy import profile.
+    content: Create @semio-tech/cad-js-module-aec-building-energy registering energy demand stat, heatedvolume property, energy import profile.
     status: completed
   - id: module-structure
-    content: Create @cad/js/module/aec-building-structure registering stability stat, building->structure transformation, structure import profiles.
+    content: Create @semio-tech/cad-js-module-aec-building-structure registering stability stat, building->structure transformation, structure import profiles.
     status: completed
   - id: kernel-generalize
     content: Rewrite kernel STEP import to consume core importProfile registry; remove constants, layer maps, hardcoded defaults.
     status: completed
   - id: runtime
-    content: Create @cad/js/runtime composition root (asset glob + module register + bootstrapCadModules); wire workspaces, vite/vitest aliases, launch.json.
+    content: Create @semio-tech/cad-js-runtime composition root (asset glob + module register + bootstrapCadModules); wire workspaces, vite/vitest aliases, launch.json.
     status: completed
   - id: host-play
     content: Bootstrap modules in play host; generalize transformation scoring and structure derivation; fix user-facing copy.
@@ -34,7 +34,7 @@ isProject: false
 
 ## Goal
 
-The generic layers (`@cad/js/core`, `@cad/js/kernel/brepjs`, `@cad/js/renderer`) must contain zero concrete model-definition IDs. All domain knowledge moves into per-domain **cad modules** that self-register against generic core registries, mirroring `flow/core` + `flow/module/`* (each module depends only on the engine; the host composes them).
+The generic layers (`@semio-tech/cad-js-core`, `@semio-tech/cad-js-kernel-brepjs`, `@semio-tech/cad-js-renderer`) must contain zero concrete model-definition IDs. All domain knowledge moves into per-domain **cad modules** that self-register against generic core registries, mirroring `flow/core` + `flow/module/`* (each module depends only on the engine; the host composes them).
 
 ## Current leaks (production code only)
 
@@ -47,13 +47,13 @@ The generic layers (`@cad/js/core`, `@cad/js/kernel/brepjs`, `@cad/js/renderer`)
 
 ```mermaid
 flowchart TD
-  core["@cad/js/core (generic engine: registries, no concrete IDs, no asset glob)"]
-  kernel["@cad/js/kernel/brepjs (reads importProfile from core)"]
-  shape["@cad/js/module/spatial-shape"]
-  building["@cad/js/module/aec-building"]
-  energy["@cad/js/module/aec-building-energy"]
-  structure["@cad/js/module/aec-building-structure"]
-  runtime["@cad/js/runtime (composition root: globs assets + module register())"]
+  core["@semio-tech/cad-js-core (generic engine: registries, no concrete IDs, no asset glob)"]
+  kernel["@semio-tech/cad-js-kernel-brepjs (reads importProfile from core)"]
+  shape["@semio-tech/cad-js-module-spatial-shape"]
+  building["@semio-tech/cad-js-module-aec-building"]
+  energy["@semio-tech/cad-js-module-aec-building-energy"]
+  structure["@semio-tech/cad-js-module-aec-building-structure"]
+  runtime["@semio-tech/cad-js-runtime (composition root: globs assets + module register())"]
   play["renderer/play (host) + tests"]
 
   kernel --> core
@@ -88,18 +88,18 @@ Split rule: executable domain compute (stat formulas, volume property, transform
 
 ### 2-5. Create four cad module packages
 
-Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.json` calls nx, `tsconfig.json` aliases `@cad/js/core`, single `index.ts` with `register()` exported, region-structured) depending only on `@cad/js/core`:
+Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.json` calls nx, `tsconfig.json` aliases `@semio-tech/cad-js-core`, single `index.ts` with `register()` exported, region-structured) depending only on `@semio-tech/cad-js-core`:
 
-- `@cad/js/module/spatial-shape`: registers `spatial.shape.geometry` stat computer and `spatial.shape.volume` property computer; the base/default module.
-- `@cad/js/module/aec-building`: registers building STEP import profile (BIM layer map + `building.building.slab` fallback) for `aec.building`.
-- `@cad/js/module/aec-building-energy`: registers `energy.demand` stat, `energy.heatedvolume` property computer, energy import profile.
-- `@cad/js/module/aec-building-structure`: registers `structure.stability` stat, `aec.building.structure/from_building` transformation applier (+ building→structure typology map), structure import profiles (classic + fem variants).
+- `@semio-tech/cad-js-module-spatial-shape`: registers `spatial.shape.geometry` stat computer and `spatial.shape.volume` property computer; the base/default module.
+- `@semio-tech/cad-js-module-aec-building`: registers building STEP import profile (BIM layer map + `building.building.slab` fallback) for `aec.building`.
+- `@semio-tech/cad-js-module-aec-building-energy`: registers `energy.demand` stat, `energy.heatedvolume` property computer, energy import profile.
+- `@semio-tech/cad-js-module-aec-building-structure`: registers `structure.stability` stat, `aec.building.structure/from_building` transformation applier (+ building→structure typology map), structure import profiles (classic + fem variants).
 
 ### 6. Generalize kernel STEP import (`cad/js/kernel/brepjs/index.ts`)
 
 - Remove the three `*_MODEL_DEFINITION_ID` constants and the three layer-typology maps; rewrite `typologyFromStepLayer` and the import path to read `importProfileFor(modelDefinitionId)` from core. Take target `modelDefinitionId` from options (no concrete default; default to `defaultModelDefinitionId()`); resolve the kernel solid typology (2580) and fallback typology from the manifest/import profile.
 
-### 7. Create `@cad/js/runtime` composition root
+### 7. Create `@semio-tech/cad-js-runtime` composition root
 
 - New package depending on core + all four modules; does the single generic `import.meta.glob("../../asset/modelDefinition/**")` and calls `registerModelDefinitionAssets`, then calls each module's `register()` (shape first). Export `bootstrapCadModules()`.
 - Add Vite/Vitest aliases for the new packages in `cad/js/renderer/play/vite.config.ts` and `vitest.config.ts`; add packages to `cad/js/package.json` workspaces; register new `test` targets in `.vscode/launch.json` following existing grouping/order.
@@ -110,9 +110,9 @@ Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.js
 
 ### 9. Migrate domain tests and validate
 
-- Because core no longer self-registers (and cannot import modules), move the domain-specific inline tests out of `core/index.ts` (stat/property/transformation assertions for `spatial.shape.*`, `energy.*`, `structure.*`, building→structure) into the matching module packages' inline tests; core retains only generic-mechanism tests using synthetic registered fixtures, and `@cad/js/runtime` hosts the cross-module integration test. Kernel STEP-import tests stay in kernel but bootstrap via the runtime/registered profiles.
+- Because core no longer self-registers (and cannot import modules), move the domain-specific inline tests out of `core/index.ts` (stat/property/transformation assertions for `spatial.shape.*`, `energy.*`, `structure.*`, building→structure) into the matching module packages' inline tests; core retains only generic-mechanism tests using synthetic registered fixtures, and `@semio-tech/cad-js-runtime` hosts the cross-module integration test. Kernel STEP-import tests stay in kernel but bootstrap via the runtime/registered profiles.
 - Fix the stale `SHAPE_MODEL_DEFINITION_ID` import in `cad/js/machine/stately/script.ts` to use `defaultModelDefinitionId()`.
-- Run all suites (`@cad/js/core`, `@cad/js/kernel/brepjs`, `@cad/js/query`, `@cad/js/machine/stately`, `@cad/js/renderer`, new modules + runtime) green; run play dev/build to confirm runtime bootstrap (with `[DEBUG]`-prefixed logs to confirm module registration order).
+- Run all suites (`@semio-tech/cad-js-core`, `@semio-tech/cad-js-kernel-brepjs`, `@semio-tech/cad-js-query`, `@semio-tech/cad-js-machine-stately`, `@semio-tech/cad-js-renderer`, new modules + runtime) green; run play dev/build to confirm runtime bootstrap (with `[DEBUG]`-prefixed logs to confirm module registration order).
 
 ## Notes / decisions
 

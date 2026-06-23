@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🌊 Flow play harness on `@framework/playground/core`. */
+/** @emoji 🌊 Flow play harness on `@semio-tech/framework-playground-core`. */
 // #endregion 🧲Header
 
 import {
@@ -21,9 +21,9 @@ import {
   type WindowEngagement,
   type UiNode,
   type UiTreeSectionNode,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   DAG_LOD_MODE_AUTOMATIC,
   dagPlayLodTiers,
@@ -46,9 +46,9 @@ import {
   type FlowExtensionEntry,
   type FlowFixtureV1,
   type FlowReorganizeRequest,
-} from "@flow/react";
-import type { ContextMenuItem } from "@ui/react";
-import type { WindowMeasure } from "@framework/playground/core";
+} from "@semio-tech/flow-react";
+import type { ContextMenuItem } from "@semio-tech/ui-react";
+import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 
 export const FLOW_PLAY_APP_ID = "flow-play";
 export const FLOW_PLAY_CONTROLLER_ID = "flow-play";
@@ -585,7 +585,8 @@ if (import.meta.vitest) {
             version: "0.1.0",
             activationEvents: ["onStartup"],
             contributes: {
-              neuronKinds: [{ id: "math.add", module: "math", name: "Add", summary: "Sum", inputs: ["a"], outputs: ["number"] }],
+              schemas: [],
+              operators: [{ id: "math.add", module: "math", name: "Add", abbreviation: "Add", icon: "emoji:+", summary: "Sum", inputs: [], outputs: [] }],
               widgets: [],
               commands: [{ id: "math.showHelp", title: "Math: Show Help" }],
               settings: [],
@@ -692,7 +693,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
   bootstrapElementsSurfaceChromeDocument("system");
   void (async () => {
     await import("./globals.css");
-    const { bootFlowPlay } = await import("@framework/playground/renderer/react/flow");
+    const { bootFlowPlay } = await import("@semio-tech/framework-playground-renderer-react/flow");
     bootFlowPlay(new PlaygroundFlow());
   })();
 }

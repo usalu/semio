@@ -11,8 +11,8 @@
 // #region 🛎️Entrypoint
 
 // #region 🔌Adapters
-import { mountPlatform } from "@framework/platform/renderer/react";
-import { ensureSketchpadPlatform } from "@compose/sketchpad";
+import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
+import { ensureSketchpadPlatform } from "@semio-tech/compose-sketchpad";
 // #endregion 🔌Adapters
 
 import "./globals.css";

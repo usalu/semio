@@ -2,7 +2,7 @@
   "title": "Coda Assistant Npm Workspace",
   "status": "closed",
   "description": "Register coda/assistant workspace, rename package, fix IDE MCP paths, verify mcp-app build.",
-  "summary": "Registered coda/assistant in root npm workspaces as @coda/assistant; aligned .windsurf/mcp.json and VS Code launch MCP URIs; added assistant to Electron Forge extraResource; removed stray assistant patch scripts; npm install and build:mcp-app produce dist/mcp-app.html; pruned stale coda/engine lockfile entries.",
+  "summary": "Registered coda/assistant in root npm workspaces as @semio-tech/coda-assistant; aligned .windsurf/mcp.json and VS Code launch MCP URIs; added assistant to Electron Forge extraResource; removed stray assistant patch scripts; npm install and build:mcp-app produce dist/mcp-app.html; pruned stale coda/engine lockfile entries.",
   "goal": "🎯���aioptimizedrepo���repoclient�����repocli",
   "sessions": [
     "⚪faddbda437844912a5ff42bf7906c7ba"

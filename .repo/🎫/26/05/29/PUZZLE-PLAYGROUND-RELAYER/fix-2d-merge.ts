@@ -12,7 +12,7 @@ if (start < 0 || end < 0) {
 }
 c = c.slice(0, start) + c.slice(end + endMarker.length);
 
-const inject = `import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground/core";
+const inject = `import { Expertise, ProductRuntime, type FooterItem } from "@semio-tech/framework-playground-core";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
@@ -20,7 +20,7 @@ import {
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground/core-renderer-react";
+} from "@semio-tech/framework-playground-core-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import {
 	createContext,
@@ -53,7 +53,7 @@ import {
 
 `;
 
-const anchor = '} from "@ui/react";\n';
+const anchor = '} from "@semio-tech/ui-react";\n';
 const pos = c.indexOf(anchor);
 if (pos < 0) {
 	console.error("[fix-2d] ui/react anchor missing");

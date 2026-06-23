@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js",
+  "name": "@semio-tech/cad-js",
   "private": true,
   "workspaces": [
     "core",

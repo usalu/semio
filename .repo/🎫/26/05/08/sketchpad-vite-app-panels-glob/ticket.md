@@ -9,7 +9,7 @@
 3. `SketchpadScopeWithKitRegistry` referenced an undefined `piecesMetadata` global in a `window` assignment.
 4. `SketchpadStore.hasKitApp` checked `typeof kitAppStore?.id === "function"` but `Store.id` is a string field, leaving the UI on “Preparing kit app…”.
 5. `useKitName` infinite-loop in browser fallback path: `subscribeKitName` / `subscribeRenameStatus` in `FallbackKitClient` invoked the React subscriber callback synchronously, and `getRenameStatusSnapshot` returned a fresh `{ kind: "idle" }` object on every call (`useSyncExternalStore` requires referential stability).
-6. Dedicated WASM worker init silently timed out: a Blob worker can't resolve the bare specifier `@compose/rs-wasm`, so the new rename architecture fell all the way back to `FallbackKitClient` (no real rename).
+6. Dedicated WASM worker init silently timed out: a Blob worker can't resolve the bare specifier `@semio-tech/compose-rs-wasm`, so the new rename architecture fell all the way back to `FallbackKitClient` (no real rename).
 
 ## Changes
 
@@ -26,7 +26,7 @@
   - `KitStore.open` falls back from the dedicated Blob worker to the inline main-thread WASM transport when the worker init throws (still real rust authority, so the new rename architecture works through real `KitStoreHandle` even without a worker).
 - `compose/react/index.tsx`
   - `useKitName` snapshot for kit name and rename status now use stable references (`runtime.store.getSnapshot()` instead of identity-changing `runtime.snapshot`; `KIT_RENAME_STATUS_IDLE` for the no-client branch).
-  - Imported `KIT_RENAME_STATUS_IDLE` from `@compose/js`.
+  - Imported `KIT_RENAME_STATUS_IDLE` from `@semio-tech/compose-js`.
   - Replaced the `{ kind: "idle" } as const` test-stub literals with `KIT_RENAME_STATUS_IDLE`.
 
 ## Verification
@@ -243,19 +243,19 @@ cd compose/js && npm test -- --testNamePattern=rename                  → renam
 
 ---
 
-## Follow-up: `npx nx dev @compose/sketchpad` always uses the latest rs WASM (zero-touch)
+## Follow-up: `npx nx dev @semio-tech/compose-sketchpad` always uses the latest rs WASM (zero-touch)
 
-**Problem reported:** `npx nx dev @compose/sketchpad` fails with `Failed to resolve import "@compose/rs-wasm" from "../js/index.ts"` even after `wasm-pack` ran successfully. Root cause: `wasm-pack build --no-pack` regenerates `compose/rs/pkg/` on every invocation and **wipes `pkg/package.json`**, so the Vite alias `path.resolve(__dirname, "../rs/pkg")` (a directory) has no `main` / `module` entry to resolve.
+**Problem reported:** `npx nx dev @semio-tech/compose-sketchpad` fails with `Failed to resolve import "@semio-tech/compose-rs-wasm" from "../js/index.ts"` even after `wasm-pack` ran successfully. Root cause: `wasm-pack build --no-pack` regenerates `compose/rs/pkg/` on every invocation and **wipes `pkg/package.json`**, so the Vite alias `path.resolve(__dirname, "../rs/pkg")` (a directory) has no `main` / `module` entry to resolve.
 
 ### Resilient fix (two layers, defence in depth)
 
-1. **Direct-file Vite aliases** — alias `@compose/rs-wasm` to `pkg/compose.js` (the wasm-bindgen entry) instead of the directory. Survives `wasm-pack` regenerations because there's no `package.json` lookup involved.
+1. **Direct-file Vite aliases** — alias `@semio-tech/compose-rs-wasm` to `pkg/compose.js` (the wasm-bindgen entry) instead of the directory. Survives `wasm-pack` regenerations because there's no `package.json` lookup involved.
    - `compose/sketchpad/vite.config.ts`
    - `compose/js/vite.config.ts`
    - `compose/react/vite.config.ts`
 2. **Always-fresh WASM via predev / prebuild / pretest hooks** — new `compose/rs/scripts/build-wasm.mjs`:
    - Runs `wasm-pack build --release --target web --out-dir pkg --no-pack` (cargo's incremental cache makes this ~1-2s on no-source-change vs. ~80s for a clean build).
-   - Always restores `pkg/package.json` (with the canonical `@compose/rs-wasm` name) so node-style module resolution (cli, vitest, ssr) still works alongside the file aliases.
+   - Always restores `pkg/package.json` (with the canonical `@semio-tech/compose-rs-wasm` name) so node-style module resolution (cli, vitest, ssr) still works alongside the file aliases.
    - Cross-platform (`spawnSync('npx', [...], { shell: true })`) — works on devcontainer, native Windows, native macOS, native Linux.
    - Skip with `COMPOSE_SKIP_WASM_BUILD=1` for CI that pre-builds.
 3. **Wired into npm script lifecycle** — npm runs `pre*` automatically:

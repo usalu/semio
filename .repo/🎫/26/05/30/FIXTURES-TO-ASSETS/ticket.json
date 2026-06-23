@@ -2,7 +2,7 @@
   "title": "Fixtures To Assets",
   "status": "closed",
   "description": "Builtin puzzle and CAD sample JSON must live under asset packages; play/playground/storybook import assets; libraries must not embed fixture files.",
-  "summary": "Added @puzzle/assets with Nakagin board/scene/topology JSON (moved from play/fixtures). Play, playground, and storybook import @puzzle/assets. CAD builtin geometry JSON moved to cad/assets/builtin; cad/js/core loads them only under vitest. Renamed playground boardFixtureMarkers (was nakaginBoardMarkers). All @puzzle/5d/react vitest pass.",
+  "summary": "Added @semio-tech/puzzle-assets with Nakagin board/scene/topology JSON (moved from play/fixtures). Play, playground, and storybook import @semio-tech/puzzle-assets. CAD builtin geometry JSON moved to cad/assets/builtin; cad/js/core loads them only under vitest. Renamed playground boardFixtureMarkers (was nakaginBoardMarkers). All @semio-tech/puzzle-5d-react vitest pass.",
   "files": [
     "puzzle/assets/package.json",
     "puzzle/assets/project.json",

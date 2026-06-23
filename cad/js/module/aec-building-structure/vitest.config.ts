@@ -11,11 +11,11 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@cad/js/core": resolve(jsRoot, "core/index.ts"),
-      "@cad/js/runtime": resolve(jsRoot, "runtime/index.ts"),
-      "@cad/js/kernel/brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
-      "@cad/js/module/aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
-      "@cad/js/module/aec-building-structure": resolve(root, "index.ts"),
+      "@semio-tech/cad-js-core": resolve(jsRoot, "core/index.ts"),
+      "@semio-tech/cad-js-runtime": resolve(jsRoot, "runtime/index.ts"),
+      "@semio-tech/cad-js-kernel-brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
+      "@semio-tech/cad-js-module-aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
+      "@semio-tech/cad-js-module-aec-building-structure": resolve(root, "index.ts"),
     },
   },
   test: {

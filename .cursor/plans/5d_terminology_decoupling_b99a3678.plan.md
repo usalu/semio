@@ -86,6 +86,6 @@ Reopen `2026/05/30/PUZZLE-BUNDLE-TERMINOLOGY-CLEANUP` (same task; it already hol
 
 ## 5. Verify
 
-- Run vitest for `@puzzle/5d/react`, `@puzzle/5d/play`, and the two framework renderer packages via nx.
-- Boot the 5d play app (`@puzzle/5d/play:dev`) and confirm via `[DEBUG]` console logs that hierarchy/kinds trees, selection, hover, connect, and palette drag work on both canvases; remove the debug logs after confirmation.
+- Run vitest for `@semio-tech/puzzle-5d-react`, `@semio-tech/puzzle-5d-play`, and the two framework renderer packages via nx.
+- Boot the 5d play app (`@semio-tech/puzzle-5d-play:dev`) and confirm via `[DEBUG]` console logs that hierarchy/kinds trees, selection, hover, connect, and palette drag work on both canvases; remove the debug logs after confirmation.
 

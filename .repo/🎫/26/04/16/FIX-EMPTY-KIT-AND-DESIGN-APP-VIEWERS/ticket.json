@@ -2,7 +2,7 @@
   "title": "Fix Empty Kit And Design App Viewers",
   "status": "closed",
   "description": "Kit app viewer and design app viewer render empty after invoking start_working_in_local_kit. Existing search found related historical tickets but no dated ticket id was exposed for reopening. Investigate existing MCP app payload flow, patch existing files, extend existing tests only, rebuild generated app output if needed, and verify tests pass.",
-  "summary": "Fixed empty compose engine MCP app viewers by hard-disabling @compose/js embedded tests and benchmarks in the MCP app Vite build, preventing sketchpad-only runtime code from being bundled and crashing before React mounts. Rebuilt compose/engine/dist/mcp-app.html; the bundle shrank to 4.4 MB and browser runtime no longer throws the previous startup ReferenceError. Added an existing engine endpoint regression test asserting the built viewer HTML excludes embedded JS/sketchpad test markers. Verified @compose/ui Vitest and @compose/engine pytest pass.",
+  "summary": "Fixed empty compose engine MCP app viewers by hard-disabling @semio-tech/compose-js embedded tests and benchmarks in the MCP app Vite build, preventing sketchpad-only runtime code from being bundled and crashing before React mounts. Rebuilt compose/engine/dist/mcp-app.html; the bundle shrank to 4.4 MB and browser runtime no longer throws the previous startup ReferenceError. Added an existing engine endpoint regression test asserting the built viewer HTML excludes embedded JS/sketchpad test markers. Verified @compose/ui Vitest and @semio-tech/compose-engine pytest pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1339"
   },

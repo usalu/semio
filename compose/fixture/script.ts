@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧪 `@compose/fixture` router: `bun ./script.ts regenerate-metabolism-light`. */
+/** @emoji 🧪 `@semio-tech/compose-fixture` router: `bun ./script.ts regenerate-metabolism-light`. */
 import fs from "node:fs";
 import path from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";

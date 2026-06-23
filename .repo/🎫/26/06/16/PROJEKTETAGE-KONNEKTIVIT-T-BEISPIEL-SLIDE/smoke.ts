@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧪 Smoke-check Konnektivität Beispiel slide deck wiring. */
-import { collectPresentationSlides, loadPresentationFromSlideGlob } from "@framework/presentation/core";
+import { collectPresentationSlides, loadPresentationFromSlideGlob } from "@semio-tech/framework-presentation-core";
 import { presentationMeta } from "./spec.ts";
 
 const slideModules = import.meta.glob<{ default: unknown }>("./slide/**/*.ts", { eager: true });

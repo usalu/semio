@@ -1,6 +1,6 @@
 ---
 name: framework icon interface
-overview: Replace direct lucide-react usage and inconsistent ad-hoc icon styling across the framework with a single vendored-SVG icon asset package (`@ui/asset`, with js/net/py codegen) plus a library-agnostic `Icon` interface in `@ui/react`. The framework picks icons for all static chrome (Workbench, Details, navbar, panels, footer, toolbar); consumers registering new tabs/tools must supply an icon asset (svg/url) or reference a built-in name.
+overview: Replace direct lucide-react usage and inconsistent ad-hoc icon styling across the framework with a single vendored-SVG icon asset package (`@semio-tech/ui-asset`, with js/net/py codegen) plus a library-agnostic `Icon` interface in `@semio-tech/ui-react`. The framework picks icons for all static chrome (Workbench, Details, navbar, panels, footer, toolbar); consumers registering new tabs/tools must supply an icon asset (svg/url) or reference a built-in name.
 todos: []
 isProject: false
 ---
@@ -15,9 +15,9 @@ isProject: false
 ## Decisions (confirmed)
 
 - Vendor SVGs (initial set copied from lucide), with a README notice listing vendored icons + lucide (ISC) attribution.
-- New general UI asset package lives at `ui/asset`; the JS `Icon` interface lives in `@ui/react`.
+- New general UI asset package lives at `ui/asset`; the JS `Icon` interface lives in `@semio-tech/ui-react`.
 - `ui/asset/script.ts` codegen emits bindings for **JS/TS, .NET (C#), and Python** from the SVG source of truth.
-- Remove direct lucide from **framework + `@ui/react` + `@compose/asset`** (full migration).
+- Remove direct lucide from **framework + `@semio-tech/ui-react` + `@semio-tech/compose-asset`** (full migration).
 
 ## Architecture
 
@@ -27,31 +27,31 @@ flowchart TD
   script --> js["generated/icons.ts (IconName union + svg strings)"]
   script --> net["generated/Icons.cs"]
   script --> py["generated/icons.py"]
-  js --> uiassets["@ui/asset index.ts"]
-  uiassets --> icon["@ui/react Icon primitive + IconName"]
+  js --> uiassets["@semio-tech/ui-asset index.ts"]
+  uiassets --> icon["@semio-tech/ui-react Icon primitive + IconName"]
   icon --> fw["framework renderers: built-in chrome role -> IconName"]
-  icon --> compose["@compose/asset semantic re-exports"]
+  icon --> compose["@semio-tech/compose-asset semantic re-exports"]
   fw --> consumer["consumer tab/tool registration: IconSource (name | svg | url | node)"]
 ```
 
 
 
-## 1. New `@ui/asset` package (source of truth + codegen)
+## 1. New `@semio-tech/ui-asset` package (source of truth + codegen)
 
-- Add [ui/asset/package.json](ui/asset/package.json) (`@ui/asset`, library, no lucide dep), [ui/asset/project.json](ui/asset/project.json) with `build`/`dev` targets calling `bun ./script.ts generate ...` (mirror [compose/asset/logo/project.json](compose/asset/logo/project.json)), and a single [ui/asset/script.ts](ui/asset/script.ts) using `BundleScript`/`ScriptRouter`/`runBundleScriptMain` from `repo/lib/js/src/index.ts` (mirror [compose/asset/logo/script.ts](compose/asset/logo/script.ts)).
+- Add [ui/asset/package.json](ui/asset/package.json) (`@semio-tech/ui-asset`, library, no lucide dep), [ui/asset/project.json](ui/asset/project.json) with `build`/`dev` targets calling `bun ./script.ts generate ...` (mirror [compose/asset/logo/project.json](compose/asset/logo/project.json)), and a single [ui/asset/script.ts](ui/asset/script.ts) using `BundleScript`/`ScriptRouter`/`runBundleScriptMain` from `repo/lib/js/src/index.ts` (mirror [compose/asset/logo/script.ts](compose/asset/logo/script.ts)).
 - `script.ts generate {js|net|py|all}` reads `ui/asset/icon/*.svg`, normalizes (strip fixed width/height, force `stroke="currentColor"`/`fill` conventions), and writes into `ui/asset/icon/generated/`:
   - `icons.ts`: `export const ICONS = { ... } as const; export type IconName = keyof typeof ICONS;`
   - `Icons.cs`: static class with name constants + `IReadOnlyDictionary<string,string>`.
   - `icons.py`: `ICONS: dict[str,str]` + `IconName` literal.
 - Add [ui/asset/index.ts](ui/asset/index.ts) barrel re-exporting `ICONS`/`IconName` from generated JS.
 - Vendor SVGs into `ui/asset/icon/*.svg` for the union of icon names currently used (chrome roles + compose-named set). Add `ui/asset/README.md` listing every vendored-from-lucide icon and the lucide ISC attribution.
-- Register `@ui/asset` in root [package.json](package.json) `workspaces` and add a `📦build👤ui🏪assets` entry in [.vscode/launch.json](.vscode/launch.json) following the existing `4_build` group ordering/naming.
+- Register `@semio-tech/ui-asset` in root [package.json](package.json) `workspaces` and add a `📦build👤ui🏪assets` entry in [.vscode/launch.json](.vscode/launch.json) following the existing `4_build` group ordering/naming.
 
-## 2. `Icon` interface in `@ui/react` (library-agnostic primitive)
+## 2. `Icon` interface in `@semio-tech/ui-react` (library-agnostic primitive)
 
 In [ui/react/index.tsx](ui/react/index.tsx), add a `#region 🔖Icon`:
 
-- `export type { IconName } from "@ui/asset"`.
+- `export type { IconName } from "@semio-tech/ui-asset"`.
 - `export type IconSource = IconName | { name: IconName } | { svg: string } | { url: string } | { node: React.ReactNode }` — the abstraction by which registrants "provide an asset or link to an existing one".
 - `export interface IconProps { icon: IconSource; size?: number | "tiny" | "small" | "base" | "large"; className?; title? }` and `export function Icon(props)` rendering vendored inline SVG via a sized wrapper using `currentColor` and the existing size tokens. No lucide.
 - Migrate internal lucide usages to `Icon`/`IconName`: remove the lucide import block, switch `ContextMenuItem.icon`, `Card.icon`, `renderContextMenuIcon`, `IconSelector`, and the VFS `VIRTUAL_FILE_SYSTEM_ICON_BY_ID`/`virtualFileSystemKindIcon` map to `IconName`/`IconSource`. Keep `Cursor`/`Spinner` (already custom SVG).
@@ -66,21 +66,21 @@ In [ui/react/index.tsx](ui/react/index.tsx), add a `#region 🔖Icon`:
 - Sizing: route every framework icon through `Icon` size tokens; drop ad-hoc `size-tiny`/`size-small`/`size={16}`/`size-10`.
 - Remove `lucide-react` from [framework/product/platform/renderer/react/package.json](framework/product/platform/renderer/react/package.json) and [framework/product/playground/renderer/react/package.json](framework/product/playground/renderer/react/package.json).
 
-## 4. `@compose/asset` migration
+## 4. `@semio-tech/compose-asset` migration
 
-- In [compose/asset/index.ts](compose/asset/index.ts): replace the lucide re-export block with compose-named exports backed by `@ui/react` `Icon` / `@ui/asset` `IconName` (keep names like `WorkbenchIcon`, `DetailsIcon`, etc.). Drop `lucide-react` from [compose/asset/package.json](compose/asset/package.json). Repurpose/zero the `@compose/icon` placeholder ([compose/asset/icon/project.json](compose/asset/icon/project.json)) to delegate to `@ui/asset` or note it as superseded.
+- In [compose/asset/index.ts](compose/asset/index.ts): replace the lucide re-export block with compose-named exports backed by `@semio-tech/ui-react` `Icon` / `@semio-tech/ui-asset` `IconName` (keep names like `WorkbenchIcon`, `DetailsIcon`, etc.). Drop `lucide-react` from [compose/asset/package.json](compose/asset/package.json). Repurpose/zero the `@semio-tech/compose-icon` placeholder ([compose/asset/icon/project.json](compose/asset/icon/project.json)) to delegate to `@semio-tech/ui-asset` or note it as superseded.
 
 ## 5. Tests (extend existing only)
 
 - Update the inline vitest blocks in the renderer `index.tsx` files (they currently assert lucide CSS classes) to assert vendored-svg/`data-icon` output.
-- Extend `@ui/react` tests for the new `Icon` primitive and add inline tests in `ui/asset/script.ts` for SVG normalization + generated-name stability.
+- Extend `@semio-tech/ui-react` tests for the new `Icon` primitive and add inline tests in `ui/asset/script.ts` for SVG normalization + generated-name stability.
 
 ## 6. Remaining direct lucide consumers (same ticket, after core waves)
 
-- [puzzle/2d/react](puzzle/2d/react), [puzzle/3d/react](puzzle/3d/react), [puzzle/5d/react](puzzle/5d/react), and [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) also import lucide directly; migrate them to `@ui/react` `Icon` / `@compose/asset`. Storybook stories under `.storybook/story/ui/*` that import lucide are updated to use `Icon`.
+- [puzzle/2d/react](puzzle/2d/react), [puzzle/3d/react](puzzle/3d/react), [puzzle/5d/react](puzzle/5d/react), and [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) also import lucide directly; migrate them to `@semio-tech/ui-react` `Icon` / `@semio-tech/compose-asset`. Storybook stories under `.storybook/story/ui/*` that import lucide are updated to use `Icon`.
 
 ## Notes
 
 - All work happens inside a repo MCP ticket (open first, associate with the most appropriate goal from `repo://goals`, close with summary at the end). Code is added via regions/subregions; no new script/test/example files beyond the package's single `script.ts`.
 
-[{"id": "ticket", "content": "Open repo MCP ticket, read repo://goals and associate with the best goal."}, {"id": "assets-pkg", "content": "Create @ui/asset package: package.json, project.json, script.ts (js/net/py codegen), index.ts; vendor lucide SVGs into ui/asset/icon/*.svg; add README notice; register in root workspaces + launch.json."}, {"id": "icon-primitive", "content": "Add library-agnostic Icon primitive + IconName/IconSource to @ui/react; migrate @ui/react internals off lucide; drop lucide dep."}, {"id": "framework-chrome", "content": "Framework renderers: replace lucide/glyphs with Icon, framework-owned chrome icon mapping, unified single icon registry, consistent sizing; drop lucide deps."}, {"id": "compose-assets", "content": "Migrate @compose/asset semantic re-exports onto @ui/asset/@ui/react; drop lucide dep."}, {"id": "tests", "content": "Extend existing vitest blocks (renderers, @ui/react, ui/asset script) to cover new icon rendering and codegen."}, {"id": "remaining-lucide", "content": "Migrate remaining direct lucide consumers (puzzle 2d/3d/5d react, cad play, storybook stories)."}, {"id": "close", "content": "Run builds/tests, then close ticket with summary and file list."}]
+[{"id": "ticket", "content": "Open repo MCP ticket, read repo://goals and associate with the best goal."}, {"id": "assets-pkg", "content": "Create @semio-tech/ui-asset package: package.json, project.json, script.ts (js/net/py codegen), index.ts; vendor lucide SVGs into ui/asset/icon/*.svg; add README notice; register in root workspaces + launch.json."}, {"id": "icon-primitive", "content": "Add library-agnostic Icon primitive + IconName/IconSource to @semio-tech/ui-react; migrate @semio-tech/ui-react internals off lucide; drop lucide dep."}, {"id": "framework-chrome", "content": "Framework renderers: replace lucide/glyphs with Icon, framework-owned chrome icon mapping, unified single icon registry, consistent sizing; drop lucide deps."}, {"id": "compose-assets", "content": "Migrate @semio-tech/compose-asset semantic re-exports onto @semio-tech/ui-asset/@semio-tech/ui-react; drop lucide dep."}, {"id": "tests", "content": "Extend existing vitest blocks (renderers, @semio-tech/ui-react, ui/asset script) to cover new icon rendering and codegen."}, {"id": "remaining-lucide", "content": "Migrate remaining direct lucide consumers (puzzle 2d/3d/5d react, cad play, storybook stories)."}, {"id": "close", "content": "Run builds/tests, then close ticket with summary and file list."}]

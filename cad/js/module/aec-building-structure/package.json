@@ -1,20 +1,20 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@cad/js/module/aec-building-structure",
+  "name": "@semio-tech/cad-js-module-aec-building-structure",
   "version": "0.1.0",
   "description": "🏛️ AEC building structure model-definition module.",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @cad/js/module/aec-building-structure:test"
+    "test": "bun nx run @semio-tech/cad-js-module-aec-building-structure:test"
   },
   "dependencies": {
-    "@cad/js/core": "workspace:*",
-    "@cad/js/module/aec-building": "workspace:*"
+    "@semio-tech/cad-js-core": "workspace:*",
+    "@semio-tech/cad-js-module-aec-building": "workspace:*"
   },
   "devDependencies": {
-    "@cad/js/kernel/brepjs": "workspace:*",
-    "@cad/js/runtime": "workspace:*",
+    "@semio-tech/cad-js-kernel-brepjs": "workspace:*",
+    "@semio-tech/cad-js-runtime": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

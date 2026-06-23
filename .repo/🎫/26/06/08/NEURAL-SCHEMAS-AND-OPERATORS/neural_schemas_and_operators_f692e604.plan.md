@@ -114,7 +114,7 @@ flowchart TB
 ## Part D: flow/react ([flow/react/index.tsx](flow/react/index.tsx))
 
 - Mirror new TS types: `FlowDocumentV1 {flow, tree}`, `OperatorInfo`, `ChannelSpec`, `Schema`; catalogue keyed by operators + schemas. Bridge signature unchanged (`(operatorId, inputJson) => json`).
-- Render input chrome (slider/note/image) from a neuron's params + `flow.nodes[id].chrome`; render ports from operator channels; render previews from `flow.previews`. Load `@flow/module-core` in `activateDefaults()`. Update `#region Tests`.
+- Render input chrome (slider/note/image) from a neuron's params + `flow.nodes[id].chrome`; render ports from operator channels; render previews from `flow.previews`. Load `@semio-tech/flow-module-core` in `activateDefaults()`. Update `#region Tests`.
 
 ## Part E: wiring / infra
 

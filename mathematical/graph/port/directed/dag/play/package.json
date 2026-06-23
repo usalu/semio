@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@dag/play",
+  "name": "@semio-tech/dag-play",
   "version": "0.1.0",
   "description": "dag · play",
   "type": "module",
@@ -9,16 +9,16 @@
     ".": "./index.ts"
   },
   "scripts": {
-    "dev": "bun nx run @dag/play:dev",
-    "build": "bun nx run @dag/play:build",
-    "test": "bun nx run @dag/play:test"
+    "dev": "bun nx run @semio-tech/dag-play:dev",
+    "build": "bun nx run @semio-tech/dag-play:build",
+    "test": "bun nx run @semio-tech/dag-play:test"
   },
   "dependencies": {
-    "@dag/react": "workspace:*",
-    "@framework/playground/core": "workspace:*"
+    "@semio-tech/dag-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*"
   },
   "devDependencies": {
-    "@framework/playground/renderer/react": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.9.3",

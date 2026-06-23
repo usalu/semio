@@ -11,12 +11,12 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@cad/js/core": resolve(jsRoot, "core/index.ts"),
-      "@cad/js/runtime": resolve(root, "index.ts"),
-      "@cad/js/module/spatial-shape": resolve(jsRoot, "module/spatial-shape/index.ts"),
-      "@cad/js/module/aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
-      "@cad/js/module/aec-building-energy": resolve(jsRoot, "module/aec-building-energy/index.ts"),
-      "@cad/js/module/aec-building-structure": resolve(jsRoot, "module/aec-building-structure/index.ts"),
+      "@semio-tech/cad-js-core": resolve(jsRoot, "core/index.ts"),
+      "@semio-tech/cad-js-runtime": resolve(root, "index.ts"),
+      "@semio-tech/cad-js-module-spatial-shape": resolve(jsRoot, "module/spatial-shape/index.ts"),
+      "@semio-tech/cad-js-module-aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
+      "@semio-tech/cad-js-module-aec-building-energy": resolve(jsRoot, "module/aec-building-energy/index.ts"),
+      "@semio-tech/cad-js-module-aec-building-structure": resolve(jsRoot, "module/aec-building-structure/index.ts"),
     },
   },
   test: {

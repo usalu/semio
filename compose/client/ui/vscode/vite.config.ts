@@ -91,10 +91,10 @@ export default defineConfig(async ({ mode }) => {
       },
       resolve: {
         alias: {
-          "@compose/sketchpad": path.resolve(__dirname, "../sketchpad"),
-          "@compose/js": path.resolve(__dirname, "../js"),
-          "@ui/react": path.resolve(__dirname, "../../../../ui/react"),
-          "@compose/asset": path.resolve(__dirname, "../asset"),
+          "@semio-tech/compose-sketchpad": path.resolve(__dirname, "../sketchpad"),
+          "@semio-tech/compose-js": path.resolve(__dirname, "../js"),
+          "@semio-tech/ui-react": path.resolve(__dirname, "../../../../ui/react"),
+          "@semio-tech/compose-asset": path.resolve(__dirname, "../asset"),
         },
       },
     };

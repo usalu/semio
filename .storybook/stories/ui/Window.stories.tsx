@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, HorizontalWindows, VerticalWindows, Window } from "@ui/react";
+import { Canvas, HorizontalWindows, VerticalWindows, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🌊Window

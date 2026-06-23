@@ -88,7 +88,7 @@ Introduce a panel-scoped "ghost" controller that unifies and replaces the inert 
 
 ## Verification (per repo rules: confirm runtime, do not assume)
 - Open a repo ticket (`ticket_open`) before editing; keep temp logs/screenshots in the ticket folder with `[DEBUG]` prefixed logs.
-- `nx` build/typecheck of `@ui/react` and a consuming app.
+- `nx` build/typecheck of `@semio-tech/ui-react` and a consuming app.
 - Manual via launch.json + browser:
   - Drag a slider in a side panel -> only the slider row stays visible, rest at 5%, canvas visible behind, slider keeps tracking the cursor.
   - Resize handle drag triggers ghost and still resizes.

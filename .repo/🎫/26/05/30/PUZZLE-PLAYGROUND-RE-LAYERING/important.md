@@ -1,8 +1,8 @@
 # Root cause
 
-`puzzle/5d/play/index.ts` (and siblings) had DOM auto-boot blocks that ran whenever the module loaded—not only as the Vite entry. The renderer imports `@puzzle/5d/play` for the 5D host, so 2D/3D bundles executed `boot5dPlay` on load.
+`puzzle/5d/play/index.ts` (and siblings) had DOM auto-boot blocks that ran whenever the module loaded—not only as the Vite entry. The renderer imports `@semio-tech/puzzle-5d-play` for the 5D host, so 2D/3D bundles executed `boot5dPlay` on load.
 
-Vite aliases also mapped all `@framework/playground/renderer/react/puzzle/*` subpaths to the full `index.tsx`, so every playground pulled every dimension’s hosts.
+Vite aliases also mapped all `@semio-tech/framework-playground-renderer-react/puzzle/*` subpaths to the full `index.tsx`, so every playground pulled every dimension’s hosts.
 
 # Fix
 

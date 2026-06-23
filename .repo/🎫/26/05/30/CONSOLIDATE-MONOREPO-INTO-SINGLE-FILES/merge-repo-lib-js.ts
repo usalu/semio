@@ -37,7 +37,7 @@ function stripFile(src: string, file: string): string {
 
 const header = `//#region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// AGPL-3.0 — @repo/lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
+// AGPL-3.0 — @semio-tech/repo-lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
 //#endregion 🧲Header
 
 `;

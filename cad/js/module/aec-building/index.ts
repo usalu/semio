@@ -1,8 +1,8 @@
 // #region 🧭Header
-/** @emoji 🏗️ `@cad/js/module/aec-building` — building BIM STEP import profile. */
+/** @emoji 🏗️ `@semio-tech/cad-js-module-aec-building` — building BIM STEP import profile. */
 // #endregion 🧭Header
 
-import { registerImportProfile, typologyFromStepLayer, type TypologyRef } from "@cad/js/core";
+import { registerImportProfile, typologyFromStepLayer, type TypologyRef } from "@semio-tech/cad-js-core";
 
 // #region 🏷️Ids
 export const AEC_BUILDING_MODEL_DEFINITION_ID = "aec.building";
@@ -48,11 +48,11 @@ export function register(): void {
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { bootstrapCadModules } = await import("@cad/js/runtime");
+  const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
 
   bootstrapCadModules();
 
-  describe("@cad/js/module/aec-building", () => {
+  describe("@semio-tech/cad-js-module-aec-building", () => {
     it("maps STEP layer names to building typologies", () => {
       expect(typologyFromStepLayer("Beams", AEC_BUILDING_MODEL_DEFINITION_ID)).toBe("building.building.beam");
       expect(typologyFromStepLayer("Column", AEC_BUILDING_MODEL_DEFINITION_ID)).toBe("building.building.column");

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📽 Presentation tile play — dev sandbox for one-to-many morph tile parameters on `@framework/playground/core`. */
+/** @emoji 📽 Presentation tile play — dev sandbox for one-to-many morph tile parameters on `@semio-tech/framework-playground-core`. */
 // #endregion 🧲Header
 
 import {
@@ -33,8 +33,8 @@ import {
 	type WindowBodyViewContext,
 	type WindowEngagement,
 	uiDeclarativeSectionsToTree,
-} from "@framework/playground/core";
-import { Store } from "@framework/core";
+} from "@semio-tech/framework-playground-core";
+import { Store } from "@semio-tech/framework-core";
 import {
 	buildTileMorphPrompt,
 	clampNormalizedFraction,
@@ -43,9 +43,9 @@ import {
 	populateTileDraftsFromGrid,
 	type FigureTileDraft,
 	type FigureTileSource,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 
 //#region 🔖Ids
 export const PRESENTATION_PLAY_APP_ID = "presentation-tile-play";
@@ -721,6 +721,7 @@ if (import.meta.vitest) {
 			runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
 			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "addTile");
 			const tileId = ctrl.tiles[0]!.id;
+			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "setSelectedIds", { ids: [tileId] });
 			const body = buildPresentationPlayDetailsBody({
 				runtime,
 				windowKindId: `${PRESENTATION_PLAY_APP_ID}.details`,
@@ -730,7 +731,7 @@ if (import.meta.vitest) {
 			});
 			expect(body.type).toBe("tree");
 			const items = body.sections[0]?.items ?? [];
-			expect(items.some((item) => item.control?.type === "field" && item.id === `presentation.play.tile.${tileId}.name`)).toBe(true);
+			expect(items.some((item) => item.control?.type === "input" && item.id === `presentation.play.tile.${tileId}.name`)).toBe(true);
 		});
 
 		it("selects and deletes tiles", () => {
@@ -780,7 +781,7 @@ if (
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {
 		await import("./globals.css");
-		const { bootPresentationPlay } = await import("@framework/playground/renderer/react/presentation");
+		const { bootPresentationPlay } = await import("@semio-tech/framework-playground-renderer-react/presentation");
 		bootPresentationPlay(new PresentationPlay());
 	})();
 }

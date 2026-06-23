@@ -112,7 +112,7 @@ These resolve `usePanelGhost()` / `useInteractionCommands()` to the global provi
 ## Verification (runtime, per repo rules)
 
 - Reopen the existing ticket `.repo/...PANEL-GHOST-INTERACTION` (do not open a new one); keep temp logs there with `[DEBUG]` prefixes.
-- `nx` typecheck/test of `@ui/react` (note: 3 pre-existing tree-layout test failures are unrelated).
+- `nx` typecheck/test of `@semio-tech/ui-react` (note: 3 pre-existing tree-layout test failures are unrelated).
 - Manual via launch.json + browser:
   - GIS map: drag a window -> all side panels dim to 5% and are click-through, the window stays fully visible and keeps dragging; on drop, panels restore.
   - Slider/Ring/tree DnD inside a panel: active element stays bright, that panel's other rows + all other panels dim; canvas unaffected.

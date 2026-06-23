@@ -1,12 +1,12 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@flow/module-math",
+  "name": "@semio-tech/flow-module-math",
   "version": "0.1.0",
   "description": "flow · module · math",
   "type": "module",
   "private": true,
   "scripts": {
-    "wasm": "bun nx run @flow/module-math:wasm"
+    "wasm": "bun nx run @semio-tech/flow-module-math:wasm"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

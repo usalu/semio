@@ -92,7 +92,7 @@ flowchart TB
 
 ## Part E: procedural — keep working ([procedural/react/index.tsx](procedural/react/index.tsx), [procedural/play/script.ts](procedural/play/script.ts))
 
-- It re-exports `@flow/react` types and the same `FlowCanvas`; verify the brep play app builds/evaluates with clusters. Add cluster + contract channels to its catalogue passthrough if it filters kinds. No mixing of brep logic into flow.
+- It re-exports `@semio-tech/flow-react` types and the same `FlowCanvas`; verify the brep play app builds/evaluates with clusters. Add cluster + contract channels to its catalogue passthrough if it filters kinds. No mixing of brep logic into flow.
 
 ## Part F: validation
 

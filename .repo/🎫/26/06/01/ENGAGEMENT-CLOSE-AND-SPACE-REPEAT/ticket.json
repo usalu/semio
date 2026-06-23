@@ -3,7 +3,7 @@
   "emoji": "⌨️",
   "status": "closed",
   "description": "When CAD engagement is finalized, close it instead of auto-starting same interaction. Space with no active engagement repeats last interaction across all UIs.",
-  "summary": "Finalized CAD interactions now clear interactionId (close engagement) instead of leaving a stale id that Space restarted via repeatCurrentInteraction. Added EngagementInput.onRepeatLast with routeWindowEngagementSpace in @ui/react Mode/Engagement; CAD wires it to lastFinalizedInteractionId. Playground mirrors (CAD play, puzzle 2D/3D) route engagementRepeatLast through the command bus.",
+  "summary": "Finalized CAD interactions now clear interactionId (close engagement) instead of leaving a stale id that Space restarted via repeatCurrentInteraction. Added EngagementInput.onRepeatLast with routeWindowEngagementSpace in @semio-tech/ui-react Mode/Engagement; CAD wires it to lastFinalizedInteractionId. Playground mirrors (CAD play, puzzle 2D/3D) route engagementRepeatLast through the command bus.",
   "goal": "🎯framework",
   "sessions": [
     "⚪49978c4abcc54d318c1e5d05662fa3d9"

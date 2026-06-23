@@ -3,7 +3,7 @@
   "emoji": "🧹",
   "status": "closed",
   "description": "Find and remove legacy terminology across the monorepo (elements play, spatial/r3f package names, @elements/* play hosts, renderer-r3f, dev:spatial, etc.). Align names with current folders: cad/js/renderer/play, puzzle/*/play, framework. Update puzzle and related packages. Run tests.",
-  "summary": "Removed legacy elements/spatial play naming across puzzle play hosts and framework playground: HTML titles (Puzzle 2D/3D/5D Play), app ids (puzzle-3d-play, puzzle.2d.play extension), PUZZLE_3D_PLAY_APP_ID replacing PLAY_APP_ID/elements-puzzle-3d-play, playground localStorage keys framework.playground.*, PlaygroundDomRoot, uiAssetsVitePlugin. Updated path comments and docstrings. Playground renderer tests 11/11; CAD renderer 47/47. Puzzle play vitest blocked by pre-existing @framework/platform/core resolution in vitest config.",
+  "summary": "Removed legacy elements/spatial play naming across puzzle play hosts and framework playground: HTML titles (Puzzle 2D/3D/5D Play), app ids (puzzle-3d-play, puzzle.2d.play extension), PUZZLE_3D_PLAY_APP_ID replacing PLAY_APP_ID/elements-puzzle-3d-play, playground localStorage keys framework.playground.*, PlaygroundDomRoot, uiAssetsVitePlugin. Updated path comments and docstrings. Playground renderer tests 11/11; CAD renderer 47/47. Puzzle play vitest blocked by pre-existing @semio-tech/framework-platform-core resolution in vitest config.",
   "goal": "🎯cad",
   "sessions": [
     "⚪7323c150777c45bc99e50328cce5a1ad"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🔗 `@reasoning/mindmap/wires/react` router: `bun ./script.ts test`. */
+/** 🔗 `@semio-tech/reasoning-mindmap-wires-react` router: `bun ./script.ts test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
 
 class TestScript extends BundleScript {

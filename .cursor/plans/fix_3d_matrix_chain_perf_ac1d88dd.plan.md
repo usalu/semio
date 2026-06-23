@@ -54,4 +54,4 @@ This turns each getter from O(scene) into O(chain-depth) and reads `getWorldPosi
 ## Notes
 
 - Fix lives in puzzle/3d (root of the bug) even though the symptom appears in the puzzle 5d view; this is the correct root-cause location.
-- Restart/refresh the `@puzzle/5d/play` dev server (port 6014) after the edit to clear stale HMR before re-profiling.
+- Restart/refresh the `@semio-tech/puzzle-5d-play` dev server (port 6014) after the edit to clear stale HMR before re-profiling.

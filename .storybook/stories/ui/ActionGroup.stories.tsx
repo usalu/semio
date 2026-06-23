@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { ActionGroup, ActionGroupItem } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { ActionGroup, ActionGroupItem } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🌩️ActionGroup

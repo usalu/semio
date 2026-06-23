@@ -1,5 +1,5 @@
 {
-	"name": "@ui/styling-tokens",
+	"name": "@semio-tech/ui-styling-tokens",
 	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"generate": {

@@ -2,7 +2,7 @@
   "title": "Store Graphql Kit Surface Tested",
   "emoji": "🛒",
   "status": "closed",
-  "description": "compose/store (@compose/store): expose kit materialization as clean tested GraphQL interface aligned with compose/rs schema.",
+  "description": "compose/store (@semio-tech/compose-store): expose kit materialization as clean tested GraphQL interface aligned with compose/rs schema.",
   "summary": "Hardened compose-store GraphQL-over-HTTP: is_mutation_request skips fragment definitions so comment+fragment+mutation bodies are classified correctly for the no-install mutation guard. Documented POST body contract on post_graphql. Extended integration tests: install+rename asserts initialKit vs theKit.kit vs checkpoint initial/kit; preview mode reads the same materialization slice without POST /install; unit test for mutation detection. cargo test -p compose-store: 4 passed.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [

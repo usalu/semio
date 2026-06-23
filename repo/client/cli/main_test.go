@@ -16327,16 +16327,16 @@ func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
 		t.Fatalf("mkdir hooks: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(repoRoot, "repo", "hooks"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(repoRoot, "repo", "hook"), 0o755); err != nil {
 		t.Fatalf("mkdir repo hooks: %v", err)
 	}
 	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
-		hookSrc := filepath.Join("..", "..", "hooks", hookName)
+		hookSrc := filepath.Join("..", "..", "hook", hookName)
 		data, err := os.ReadFile(hookSrc)
 		if err != nil {
 			t.Fatalf("read hook source %s: %v", hookName, err)
 		}
-		if err := os.WriteFile(filepath.Join(repoRoot, "repo", "hooks", hookName), data, 0o755); err != nil {
+		if err := os.WriteFile(filepath.Join(repoRoot, "repo", "hook", hookName), data, 0o755); err != nil {
 			t.Fatalf("write hook source %s: %v", hookName, err)
 		}
 	}

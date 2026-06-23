@@ -26,7 +26,7 @@ import {
   cn,
   glassMenuClass,
   type ContextMenuItem,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 import {
   blendTokenHex,
   resolveBackgroundColorHex,
@@ -36,7 +36,7 @@ import {
   themeColorVar,
   tokenHex,
   tokenVar,
-} from "@ui/styling";
+} from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -109,7 +109,7 @@ import {
   type LodContextValue,
   type LodGridLayer,
   type WorldEntityFlags,
-} from "@infinite/world/r3f";
+} from "@semio-tech/infinite-world-r3f";
 
 export type { LodContextValue };
 export { useLod };
@@ -135,7 +135,7 @@ export {
   type WorldReferenceSource,
   type WorldVolumeProps,
   type WorldVolumeRelocatePayload,
-} from "@infinite/world/r3f";
+} from "@semio-tech/infinite-world-r3f";
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
@@ -272,7 +272,7 @@ export interface CameraState {
   target: Vec3;
   zoom: number;
   up?: Vec3;
-  projection?: import("@infinite/world/r3f").OrbitCameraProjection;
+  projection?: import("@semio-tech/infinite-world-r3f").OrbitCameraProjection;
 }
 
 /** @emoji 📶 Scene LOD as scale denominator/numerator (e.g. 50000 = 1:50000, 0.5 = 2:1); higher = coarser. */

@@ -13,8 +13,8 @@ Implemented typed semantic kit subscription events: Rust owns `SemanticKitEvent`
 ## Verification
 
 - `cargo test` in `compose/rs` (exit 0)
-- `npm --workspace @compose/js run build` (pass)
-- `npm --workspace @compose/js run test` (21 tests)
+- `npm --workspace @semio-tech/compose-js run build` (pass)
+- `npm --workspace @semio-tech/compose-js run test` (21 tests)
 - `npm run depcruise:layers` (no violations)
 
 ## Log

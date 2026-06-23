@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧪 `@compose/fixture` — test and story JSON only; not for application or play bundles. */
+/** @emoji 🧪 `@semio-tech/compose-fixture` — test and story JSON only; not for application or play bundles. */
 // #endregion 🧲Header
 
 export { default as DragDesign } from "./drag/design.compose.json";

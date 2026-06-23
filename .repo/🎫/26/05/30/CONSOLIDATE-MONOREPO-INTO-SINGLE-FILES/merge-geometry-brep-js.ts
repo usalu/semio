@@ -41,7 +41,7 @@ const mesh = stripContractsImport(stripHeader(readFileSync(join(dir, "mesh.ts"),
 const merged = `// #region 🧲Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧭 \`@geometry/brep/js\` — cad-free brepjs + OpenCascade kernel and contracts. */
+/** @emoji 🧭 \`@semio-tech/geometry-brep-js\` — cad-free brepjs + OpenCascade kernel and contracts. */
 // #endregion 🧲Header
 
 // #region 📐Contracts

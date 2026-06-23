@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@compose/algorithm",
+  "name": "@semio-tech/compose-algorithm",
   "version": "0.1.0",
   "description": "semio · algorithms",
   "type": "module",
@@ -15,13 +15,12 @@
     }
   },
   "dependencies": {
-    "@ui/react": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "@mdx-js/react": "^3.1.1",
     "@microlink/react-json-view": "^1.31.18",
-    "@compose/fixture": "workspace:*",
-    "@compose/js": "*",
-    "@compose/react": "*",
-    "@compose/ui": "*",
+    "@semio-tech/compose-fixture": "workspace:*",
+    "@semio-tech/compose-js": "*",
+    "@semio-tech/compose-react": "*",
     "@storybook/addon-docs": "^10.3.5",
     "@storybook/addon-vitest": "^10.3.5",
     "@storybook/react-vite": "^10.3.5",

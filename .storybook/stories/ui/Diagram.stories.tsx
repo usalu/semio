@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { DiagramNode, DiagramSkeleton } from "@ui/react";
+import { DiagramNode, DiagramSkeleton } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🧫Diagram

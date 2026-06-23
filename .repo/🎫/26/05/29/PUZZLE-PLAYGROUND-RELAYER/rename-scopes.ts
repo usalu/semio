@@ -8,7 +8,7 @@ const replacements: [string, string][] = [
 	["@puzzle/board", "@puzzle/2d-react"],
 	["@puzzle/scene", "@puzzle/3d-react"],
 	["@puzzle/topology", "@puzzle/5d-react"],
-	["@framework/playground/core-react", "@framework/playground/core-renderer-react"],
+	["@semio-tech/framework-playground-core-react", "@semio-tech/framework-playground-core-renderer-react"],
 ];
 
 function walk(dir: string): string[] {

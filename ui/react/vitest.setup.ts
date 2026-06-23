@@ -1,4 +1,4 @@
-/** @emoji 🧪 jsdom polyfills for `@ui/react` vitest. */
+/** @emoji 🧪 jsdom polyfills for `@semio-tech/ui-react` vitest. */
 // #region 🔌Adapters
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";

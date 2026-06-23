@@ -7,18 +7,18 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 const jsRoot = resolve(root, "..");
 
-/** @emoji 🧪 Vitest for `@cad/js/query` (inline `import.meta.vitest`). */
+/** @emoji 🧪 Vitest for `@semio-tech/cad-js-query` (inline `import.meta.vitest`). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@cad/js/core": resolve(jsRoot, "core/index.ts"),
-			"@cad/js/runtime": resolve(jsRoot, "runtime/index.ts"),
-			"@cad/js/module/spatial-shape": resolve(jsRoot, "module/spatial-shape/index.ts"),
-			"@cad/js/module/aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
-			"@cad/js/module/aec-building-energy": resolve(jsRoot, "module/aec-building-energy/index.ts"),
-			"@cad/js/module/aec-building-structure": resolve(jsRoot, "module/aec-building-structure/index.ts"),
-			"@cad/js/kernel/brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
+			"@semio-tech/cad-js-core": resolve(jsRoot, "core/index.ts"),
+			"@semio-tech/cad-js-runtime": resolve(jsRoot, "runtime/index.ts"),
+			"@semio-tech/cad-js-module-spatial-shape": resolve(jsRoot, "module/spatial-shape/index.ts"),
+			"@semio-tech/cad-js-module-aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
+			"@semio-tech/cad-js-module-aec-building-energy": resolve(jsRoot, "module/aec-building-energy/index.ts"),
+			"@semio-tech/cad-js-module-aec-building-structure": resolve(jsRoot, "module/aec-building-structure/index.ts"),
+			"@semio-tech/cad-js-kernel-brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
 		},
 	},
 	test: {

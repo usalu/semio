@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@compose/js",
+  "name": "@semio-tech/compose-js",
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
@@ -11,7 +11,7 @@
   "devDependencies": {
     "cross-env": "^10.1.0",
     "fast-check": "^3.23.2",
-    "@compose/asset": "^1.0.0",
+    "@semio-tech/compose-asset": "^1.0.0",
     "@types/node": "^25.0.8",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",

@@ -2,5 +2,5 @@
   "id": "2026/04/26/SKETCHPAD-LAYERING-SHELL",
   "title": "Sketchpad Layering Shell Per Strict Plan Section 5",
   "status": "closed",
-  "summary": "Sketchpad: KitStoreProvider wrapper, removed injected KitHostStore ctor path, registry-first openKitInRegistry + wireRegistryKitStore, memory backbone fallback when factories missing, boot uses @compose/react default factories + vscode initialState, importKit decodes via fflate+KitFullDtoSchema, local selection external store, Playwright tests prime bridge via renderToString(KitStoreProvider). React: KitStoreProvider alias + sketchpad default kit factories. VS Code webview: same registry pattern without pre-built kitStore prop."
+  "summary": "Sketchpad: KitStoreProvider wrapper, removed injected KitHostStore ctor path, registry-first openKitInRegistry + wireRegistryKitStore, memory backbone fallback when factories missing, boot uses @semio-tech/compose-react default factories + vscode initialState, importKit decodes via fflate+KitFullDtoSchema, local selection external store, Playwright tests prime bridge via renderToString(KitStoreProvider). React: KitStoreProvider alias + sketchpad default kit factories. VS Code webview: same registry pattern without pre-built kitStore prop."
 }

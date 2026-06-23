@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧪 Vitest for `@reasoning/mindmap/wires/react`. */
+/** @emoji 🧪 Vitest for `@semio-tech/reasoning-mindmap-wires-react`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters

@@ -3,7 +3,7 @@
   "title": "Core Scope No Renderer Symlinks",
   "status": "closed",
   "goal": null,
-  "summary": "Bun nested renderer packages under core when core used the parent scope name. Renamed core to @framework/platform/core and @framework/playground/core; added namespace package.json at framework/platform and framework/playground (cad/js pattern); updated imports and aliases. Core dirs now have zero symlinks.",
+  "summary": "Bun nested renderer packages under core when core used the parent scope name. Renamed core to @semio-tech/framework-platform-core and @semio-tech/framework-playground-core; added namespace package.json at framework/platform and framework/playground (cad/js pattern); updated imports and aliases. Core dirs now have zero symlinks.",
   "files": [
     "framework/platform/package.json",
     "framework/playground/package.json",

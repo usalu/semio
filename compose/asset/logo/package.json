@@ -1,5 +1,5 @@
 {
-  "name": "@compose/logo",
+  "name": "@semio-tech/compose-logo",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "compose/asset/logo",

@@ -12,7 +12,7 @@ todos:
     content: In Tree, build memoized context value and wrap sections render in TreeDataContext.Provider
     status: completed
   - id: tests
-    content: Run @ui/react:test, @puzzle/3d/react:test, @puzzle/3d/play:test; fix any breaks
+    content: Run @semio-tech/ui-react:test, @semio-tech/puzzle-3d-react:test, @semio-tech/puzzle-3d-play:test; fix any breaks
     status: completed
   - id: runtime
     content: "Runtime-verify Ctrl+A on Nakagin: instant 3D highlight, working expand/collapse + drag"
@@ -50,8 +50,8 @@ Expected result: the Ctrl+A generation bump reconciles ~700 rows (no unmount/rem
 
 ## Validation
 
-- Run `@ui/react:test` (Tree behavior: selection, expand/collapse, drag) and confirm green.
-- Run `@puzzle/3d/react:test` and `@puzzle/3d/play:test` (unchanged, sanity).
+- Run `@semio-tech/ui-react:test` (Tree behavior: selection, expand/collapse, drag) and confirm green.
+- Run `@semio-tech/puzzle-3d-react:test` and `@semio-tech/puzzle-3d-play:test` (unchanged, sanity).
 - Runtime-check Ctrl+A on the Nakagin fixture: 3D selection should appear within ~1 frame, no multi-second freeze; expand/collapse and drag in the hierarchy still work.
 
 ## Ticket

@@ -10,7 +10,7 @@ name = "semio-store"
 path = "bin.rs"
 
 [dependencies]
-semio = { path = "../../lib/rs" }
+semio = { package = "compose", path = "../../lib/rs" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 futures-lite = "2.6.0"

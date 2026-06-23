@@ -4,15 +4,15 @@
 // #endregion 🧲Header
 
 //#region 🔌Adapters
-import type { Design, Kit, Piece, Session, SetResult, Type } from "@compose/js";
-import { Design as JsDesign, Kit as JsKitEntity, Piece as JsPiece, Session as ComposeSession } from "@compose/js";
+import type { Design, Kit, Piece, Session, SetResult, Type } from "@semio-tech/compose-js";
+import { Design as JsDesign, Kit as JsKitEntity, Piece as JsPiece, Session as ComposeSession } from "@semio-tech/compose-js";
 import {
 	fetchComposeFileSystemChildren,
 	type ComposeFileSystemChildRef,
 	type ComposeFileSystemParentRef,
-} from "@compose/react";
+} from "@semio-tech/compose-react";
 import { gunzipSync } from "fflate";
-import type { Store as JsKitStore } from "@compose/js";
+import type { Store as JsKitStore } from "@semio-tech/compose-js";
 import {
 	CommandBus,
 	Component,
@@ -59,14 +59,14 @@ import {
 	getPlatformControllerById,
 	WindowKindRuntime,
 	AppRuntime,
-} from "@framework/platform/core";
-import { PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY, type NavigationDestination, type NavigationLevel, type SearchItemSpec } from "@framework/core";
+} from "@semio-tech/framework-platform-core";
+import { PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY, type NavigationDestination, type NavigationLevel, type SearchItemSpec } from "@semio-tech/framework-core";
 import {
 	type RelationshipKind,
 	type WiresFixtureV1,
 	wiresFixtureBoard,
 	wiresKitInstanceId,
-} from "@reasoning/mindmap/wires/react";
+} from "@semio-tech/reasoning-mindmap-wires-react";
 //#endregion 🔌Adapters
 
 //#region 🪁ComposeUiI18n
@@ -79,7 +79,7 @@ import {
 	type UiLabelValue,
 	type UiLocale,
 	type UiToolbarParentCategory,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 
 /** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiToolbarParentCategory}. */
 type ComposeSketchpadToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
@@ -10933,7 +10933,7 @@ export class ComposeKitStore extends Store<SketchpadKitSnapshot> {
 	}
 }
 
-/** @emoji 💾 In-memory kit store for hosts without a live {@link @compose/js} session yet. */
+/** @emoji 💾 In-memory kit store for hosts without a live {@link @semio-tech/compose-js} session yet. */
 export class InMemoryComposeKitStore extends ComposeKitStore {
 	constructor(kit: Kit) {
 		let current = kit;
@@ -10946,7 +10946,7 @@ export class InMemoryComposeKitStore extends ComposeKitStore {
 	}
 }
 
-/** @emoji 🌐 {@link ComposeKitStore} backed by {@link @compose/js} with live kit mutations. */
+/** @emoji 🌐 {@link ComposeKitStore} backed by {@link @semio-tech/compose-js} with live kit mutations. */
 export class ComposeJsKitStore extends ComposeKitStore {
 	constructor(
 		backend: ComposeKitStoreBackend,
@@ -11146,7 +11146,7 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 	} as Kit;
 }
 
-/** @emoji 🌐 Builds a {@link ComposeJsKitStore} from a live {@link @compose/js} store. */
+/** @emoji 🌐 Builds a {@link ComposeJsKitStore} from a live {@link @semio-tech/compose-js} store. */
 export async function createComposeKitStoreFromJsStore(
 	jsStore: JsKitStore,
 	options?: { readonly onDispose?: () => void | Promise<void>; readonly portCompatSource?: Kit },
@@ -11190,7 +11190,7 @@ export async function executeSketchpadJsKitMutation(
 ): Promise<SetResult> {
 	const store = storeOverride ?? getSketchpadShellController()?.getKitStore(kitId);
 	if (!(store instanceof ComposeJsKitStore)) {
-		return { ok: false, error: { kind: "NotSupported", message: "compose/sketchpad: kit is not backed by @compose/js" } };
+		return { ok: false, error: { kind: "NotSupported", message: "compose/sketchpad: kit is not backed by @semio-tech/compose-js" } };
 	}
 	const result = await run(await store.jsKitEntity());
 	await store.refreshFromJs();
@@ -14585,7 +14585,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		return kitId;
 	}
 
-	/** @emoji 🆕 Creates an empty in-memory kit backed by {@link @compose/js} and opens it. */
+	/** @emoji 🆕 Creates an empty in-memory kit backed by {@link @semio-tech/compose-js} and opens it. */
 	async createTemporaryKit(name = "Untitled Kit"): Promise<string> {
 		const session = await ComposeSession.openInMemory();
 		const jsStore = (await session.stores())[0];

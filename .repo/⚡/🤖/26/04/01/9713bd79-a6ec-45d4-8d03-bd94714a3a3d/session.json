@@ -1704,8 +1704,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
-                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
+                "old_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
+                "new_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
               }
             ],
             "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
@@ -1732,8 +1732,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
-                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
+                "old_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
+                "new_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
               }
             ],
             "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
@@ -1873,8 +1873,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
-                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
+                "old_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
+                "new_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
               }
             ],
             "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
@@ -1901,8 +1901,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
-                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
+                "old_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
+                "new_string": "const STUBBED_PREFIXES = [\"@semio-tech/compose-assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
               }
             ],
             "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"

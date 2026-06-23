@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@framework/presentation/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/framework-presentation-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -16,12 +16,12 @@ export default createPlaygroundPlayViteConfig({
 	repoRoot,
 	playEntryKind: "presentation",
 	extraAliases: [
-		{ find: "@framework/presentation/core", replacement: path.resolve(playDir, "../core/index.ts") },
-		{ find: "@framework/presentation/renderer/react", replacement: path.resolve(playDir, "../renderer/react/index.tsx") },
+		{ find: "@semio-tech/framework-presentation-core", replacement: path.resolve(playDir, "../core/index.ts") },
+		{ find: "@semio-tech/framework-presentation-renderer-react", replacement: path.resolve(playDir, "../renderer/react/index.tsx") },
 	],
-	resolveDedupe: ["react", "react-dom", "@framework/presentation/core"],
+	resolveDedupe: ["react", "react-dom", "@semio-tech/framework-presentation-core"],
 	optimizeDeps: {
-		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@framework/presentation/core"],
+		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/framework-presentation-core"],
 		esbuildOptions: { target: "esnext" },
 	},
 });

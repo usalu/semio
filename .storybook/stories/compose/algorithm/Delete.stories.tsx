@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff } from "@compose/react";
+import type { Design, DesignDiff } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
@@ -22,9 +22,9 @@ import {
   useReconciledPieceSelection,
   type AlgorithmContextValue,
   type AlgorithmWindowDef,
-} from "@compose/algorithm";
+} from "@semio-tech/compose-algorithm";
 
-import { MetabolismKit as metabolismKit } from "@compose/asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-asset";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const defaultPieceIds = ((rawDesign.pieces as { id: string }[] | undefined) ?? []).slice(0, 3).map((p) => p.id);

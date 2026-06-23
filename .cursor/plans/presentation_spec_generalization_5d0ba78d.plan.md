@@ -1,6 +1,6 @@
 ---
 name: Presentation Spec Generalization
-overview: Align @framework/presentation with the spec by introducing a first-class Slide (arrangement + optional transition to the next slide), generalizing Morph so the renderer auto-derives the required "morph position/style first, then switch embodiment" step, and simplifying Split to "one figure into many tiles" by removing the bespoke column/ghost/morphTarget machinery. The real 33.projektetage deck is re-expressed using the clean primitives.
+overview: Align @semio-tech/framework-presentation with the spec by introducing a first-class Slide (arrangement + optional transition to the next slide), generalizing Morph so the renderer auto-derives the required "morph position/style first, then switch embodiment" step, and simplifying Split to "one figure into many tiles" by removing the bespoke column/ghost/morphTarget machinery. The real 33.projektetage deck is re-expressed using the clean primitives.
 todos:
   - id: ticket
     content: Open repo MCP ticket (read repo://goals, associate with running-sketchpad goal); do not edit AGENTS.md.
@@ -28,7 +28,7 @@ isProject: false
 
 # Presentation Spec Generalization
 
-Make `@framework/presentation` match `[framework/product/presentation/AGENTS.md](framework/product/presentation/AGENTS.md)` and generalize cleanly. (Per repo rules: open a ticket via repo MCP first, read `repo://goals`, do not edit any `AGENTS.md`.)
+Make `@semio-tech/framework-presentation` match `[framework/product/presentation/AGENTS.md](framework/product/presentation/AGENTS.md)` and generalize cleanly. (Per repo rules: open a ticket via repo MCP first, read `repo://goals`, do not edit any `AGENTS.md`.)
 
 ## Spec vs. code gaps
 

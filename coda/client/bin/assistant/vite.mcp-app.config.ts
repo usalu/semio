@@ -1,7 +1,7 @@
 // #region Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
-// Specs: Vite single-file MCP App bundle for coda (@ui/react + ext-apps).
-// Summary: Mirrors compose/engine/vite.mcp-app.config.ts with @ui/react and meshopt noop.
+// Specs: Vite single-file MCP App bundle for coda (@semio-tech/ui-react + ext-apps).
+// Summary: Mirrors compose/engine/vite.mcp-app.config.ts with @semio-tech/ui-react and meshopt noop.
 // #endregion Header
 
 // #region 🔌Adapters
@@ -48,7 +48,7 @@ export default MeshoptDecoder;
   };
 }
 
-const STUBBED_PREFIXES = ["@compose/asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
+const STUBBED_PREFIXES = ["@semio-tech/compose-asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 function stubHeavyDepsPlugin(): Plugin {
   return {
@@ -81,7 +81,7 @@ export default defineConfig({
   root: __dirname,
   resolve: {
     alias: {
-      "@ui/react": path.resolve(__dirname, "../../../ui/react"),
+      "@semio-tech/ui-react": path.resolve(__dirname, "../../../ui/react"),
     },
   },
   build: {

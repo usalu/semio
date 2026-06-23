@@ -333,7 +333,7 @@ export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
 }
 
 /** @emoji 🛝 Shared Vite preset for puzzle play harnesses (assets, renderer subpaths, workspace aliases). */
-const PLAYGROUND_RENDERER_SHELL_SUBPATHS = ["@framework/playground/renderer/react/shell", "@framework/playground/renderer/react/boot"] as const;
+const PLAYGROUND_RENDERER_SHELL_SUBPATHS = ["@semio-tech/framework-playground-renderer-react/shell", "@semio-tech/framework-playground-renderer-react/boot"] as const;
 
 const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
@@ -342,15 +342,15 @@ const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural" | "presentation" | "wires";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
-  "@framework/playground/renderer/react/puzzle/2d": "2d",
-  "@framework/playground/renderer/react/puzzle/3d": "3d",
-  "@framework/playground/renderer/react/puzzle/5d": "5d",
-  "@framework/playground/renderer/react/puzzle/map": "map",
-  "@framework/playground/renderer/react/flow": "flow",
-  "@framework/playground/renderer/react/dag": "dag",
-  "@framework/playground/renderer/react/procedural": "procedural",
-  "@framework/playground/renderer/react/presentation": "presentation",
-  "@framework/playground/renderer/react/reasoning/wires": "wires",
+  "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
+  "@semio-tech/framework-playground-renderer-react/puzzle/3d": "3d",
+  "@semio-tech/framework-playground-renderer-react/puzzle/5d": "5d",
+  "@semio-tech/framework-playground-renderer-react/puzzle/map": "map",
+  "@semio-tech/framework-playground-renderer-react/flow": "flow",
+  "@semio-tech/framework-playground-renderer-react/dag": "dag",
+  "@semio-tech/framework-playground-renderer-react/procedural": "procedural",
+  "@semio-tech/framework-playground-renderer-react/presentation": "presentation",
+  "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
 };
 
 const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendererPuzzleKind, { readonly start: string; readonly end: string }>> = {
@@ -898,13 +898,13 @@ export function mapLibreVectorTileProxyVitePlugin(cacheDir: string, mode: GisMap
 
 /** @emoji 🦀 Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
 export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
-  "@flow/module-core",
-  "@flow/module-math",
-  "@flow/module-text",
-  "@flow/module-logic",
-  "@flow/module-dictionary",
-  "@flow/module-list",
-  "@flow/module-brep",
+  "@semio-tech/flow-module-core",
+  "@semio-tech/flow-module-math",
+  "@semio-tech/flow-module-text",
+  "@semio-tech/flow-module-logic",
+  "@semio-tech/flow-module-dictionary",
+  "@semio-tech/flow-module-list",
+  "@semio-tech/flow-module-brep",
 ] as const;
 
 /** @emoji 🔀 Vite resolve aliases shared by playground play hosts and renderer vitest graphs. */
@@ -917,38 +917,38 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: /^@framework\/platform\/core$/, replacement: resolve(repoRoot, "framework/product/platform/core/index.ts") },
     { find: /^@framework\/platform\/renderer\/react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx") },
     { find: /^@framework\/core$/, replacement: resolve(repoRoot, "framework/core/index.ts") },
-    { find: "@ui/react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
-    { find: "@ui/asset", replacement: resolve(repoRoot, "ui/asset/index.ts") },
-    { find: "@infinite/cavas/react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
-    { find: "@infinite/world/r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
-    { find: "@puzzle/2d/play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
-    { find: "@puzzle/3d/play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },
-    { find: "@puzzle/5d/play", replacement: resolve(repoRoot, "puzzle/5d/play/index.ts") },
-    { find: "@puzzle/2d/react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
-    { find: "@puzzle/3d/react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
-    { find: "@puzzle/5d/react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
-    { find: "@gis/map/play", replacement: resolve(repoRoot, "gis/map/play/index.ts") },
-    { find: "@gis/map/react", replacement: resolve(repoRoot, "gis/map/react/index.tsx") },
-    { find: "@reasoning/mindmap/wires/play", replacement: resolve(repoRoot, "reasoning/mindmap/wires/play/index.ts") },
-    { find: "@reasoning/mindmap/wires/react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/index.ts") },
-    { find: "@reasoning/mindmap/react", replacement: resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
-    { find: "@framework/presentation/play", replacement: resolve(repoRoot, "framework/product/presentation/play/index.ts") },
-    { find: "@framework/presentation/core", replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts") },
-    { find: "@framework/presentation/renderer/react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
-    { find: "@flow/play", replacement: resolve(repoRoot, "flow/play/index.ts") },
-    { find: "@flow/react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
-    { find: "@flow/module-core", replacement: resolve(repoRoot, "flow/module/core/pkg/flow_module_core.js") },
-    { find: "@flow/module-brep", replacement: resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
-    { find: "@flow/module-math", replacement: resolve(repoRoot, "flow/module/math/pkg/flow_module_math.js") },
-    { find: "@flow/module-text", replacement: resolve(repoRoot, "flow/module/text/pkg/flow_module_text.js") },
-    { find: "@flow/module-logic", replacement: resolve(repoRoot, "flow/module/logic/pkg/flow_module_logic.js") },
-    { find: "@flow/module-dictionary", replacement: resolve(repoRoot, "flow/module/dictionary/pkg/flow_module_dictionary.js") },
-    { find: "@flow/module-list", replacement: resolve(repoRoot, "flow/module/list/pkg/flow_module_list.js") },
-    { find: "@dag/play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
-    { find: "@dag/react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
-    { find: "@procedural/play", replacement: resolve(repoRoot, "procedural/play/index.ts") },
-    { find: "@procedural/react", replacement: resolve(repoRoot, "procedural/react/index.tsx") },
-    { find: "@geometry/brep/js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
+    { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
+    { find: "@semio-tech/ui-asset", replacement: resolve(repoRoot, "ui/asset/index.ts") },
+    { find: "@semio-tech/infinite-cavas-react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
+    { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
+    { find: "@semio-tech/puzzle-2d-play", replacement: resolve(repoRoot, "puzzle/2d/play/index.ts") },
+    { find: "@semio-tech/puzzle-3d-play", replacement: resolve(repoRoot, "puzzle/3d/play/index.ts") },
+    { find: "@semio-tech/puzzle-5d-play", replacement: resolve(repoRoot, "puzzle/5d/play/index.ts") },
+    { find: "@semio-tech/puzzle-2d-react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+    { find: "@semio-tech/puzzle-3d-react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+    { find: "@semio-tech/puzzle-5d-react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
+    { find: "@semio-tech/gis-map-play", replacement: resolve(repoRoot, "gis/map/play/index.ts") },
+    { find: "@semio-tech/gis-map-react", replacement: resolve(repoRoot, "gis/map/react/index.tsx") },
+    { find: "@semio-tech/reasoning-mindmap-wires-play", replacement: resolve(repoRoot, "reasoning/mindmap/wires/play/index.ts") },
+    { find: "@semio-tech/reasoning-mindmap-wires-react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/index.ts") },
+    { find: "@semio-tech/reasoning-mindmap-react", replacement: resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
+    { find: "@semio-tech/framework-presentation-play", replacement: resolve(repoRoot, "framework/product/presentation/play/index.ts") },
+    { find: "@semio-tech/framework-presentation-core", replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts") },
+    { find: "@semio-tech/framework-presentation-renderer-react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
+    { find: "@semio-tech/flow-play", replacement: resolve(repoRoot, "flow/play/index.ts") },
+    { find: "@semio-tech/flow-react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
+    { find: "@semio-tech/flow-module-core", replacement: resolve(repoRoot, "flow/module/core/pkg/flow_module_core.js") },
+    { find: "@semio-tech/flow-module-brep", replacement: resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
+    { find: "@semio-tech/flow-module-math", replacement: resolve(repoRoot, "flow/module/math/pkg/flow_module_math.js") },
+    { find: "@semio-tech/flow-module-text", replacement: resolve(repoRoot, "flow/module/text/pkg/flow_module_text.js") },
+    { find: "@semio-tech/flow-module-logic", replacement: resolve(repoRoot, "flow/module/logic/pkg/flow_module_logic.js") },
+    { find: "@semio-tech/flow-module-dictionary", replacement: resolve(repoRoot, "flow/module/dictionary/pkg/flow_module_dictionary.js") },
+    { find: "@semio-tech/flow-module-list", replacement: resolve(repoRoot, "flow/module/list/pkg/flow_module_list.js") },
+    { find: "@semio-tech/dag-play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
+    { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
+    { find: "@semio-tech/procedural-play", replacement: resolve(repoRoot, "procedural/play/index.ts") },
+    { find: "@semio-tech/procedural-react", replacement: resolve(repoRoot, "procedural/react/index.tsx") },
+    { find: "@semio-tech/geometry-brep-js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
   ];
 }
 
@@ -1228,10 +1228,10 @@ if (import.meta.vitest) {
       expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).not.toContain("host-2d");
     });
 
-    it("puzzle-2d virtual entry has no duplicate @puzzle/2d/react named imports", () => {
+    it("puzzle-2d virtual entry has no duplicate @semio-tech/puzzle-2d-react named imports", () => {
       const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
       const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "2d");
-      expect(duplicateNamedImportsForModule(stripped, "@puzzle/2d/react")).toEqual([]);
+      expect(duplicateNamedImportsForModule(stripped, "@semio-tech/puzzle-2d-react")).toEqual([]);
     });
 
     it("wires virtual entry imports registerTabIcon when host registration calls it", () => {

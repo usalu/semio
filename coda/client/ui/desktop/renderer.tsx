@@ -16,7 +16,7 @@
 // #region 🔌Adapters
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@ui/react";
+import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 import "./globals.css";

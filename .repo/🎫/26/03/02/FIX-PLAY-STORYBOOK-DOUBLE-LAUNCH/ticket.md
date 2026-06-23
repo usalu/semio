@@ -18,7 +18,7 @@ Refactored the JS Storybook launcher to reuse an existing listener on port 6006 
 - Intercepted Storybook’s hidden `process.exit(-1)` path and traced it to `getServerPort` inside `storybook/dist/core-server/index.js`, which exits when `--exact-port` sees port 6006 already in use.
 - Confirmed port 6006 was already listening and found active `storybook` and `nx dev:storybook compose/js` processes in the workspace, which explained the silent exit.
 - Verified `timeout 3s npm run dev:storybook` now exits cleanly after printing `http://localhost:6006/` and `Storybook already running at http://localhost:6006/` when port 6006 is already occupied.
-- Verified `npm run test --workspace @compose/js -- compose.test.ts` passed with 14 tests after the launcher refactor.
+- Verified `npm run test --workspace @semio-tech/compose-js -- compose.test.ts` passed with 14 tests after the launcher refactor.
 
 ## Todos
 - [x] Reproduce the current `dev:storybook` failure and identify the real exit path.

@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design } from "@compose/react";
+import type { Design } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
@@ -21,10 +21,10 @@ import {
   useReconciledPieceSelection,
   type AlgorithmContextValue,
   type AlgorithmWindowDef,
-} from "@compose/algorithm";
+} from "@semio-tech/compose-algorithm";
 
-import { MetabolismKit as metabolismKit } from "@compose/asset";
-import { DragDesign, DragOffset, DragPieces } from "@compose/fixture";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-asset";
+import { DragDesign, DragOffset, DragPieces } from "@semio-tech/compose-fixture";
 
 const rawDesign = { ...DragDesign, id: "drag-preset-id", name: "Drag Preset" };
 const defaultPieceIds = pieceIdsFromWire(DragPieces as { pieces?: { id?: string }[] });

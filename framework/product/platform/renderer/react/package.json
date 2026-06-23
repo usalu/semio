@@ -1,20 +1,20 @@
 {
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/platform/renderer/react",
+	"name": "@semio-tech/framework-platform-renderer-react",
 	"version": "0.1.0",
-	"description": "framework · React renderer for @framework/platform/core",
+	"description": "framework · React renderer for @semio-tech/framework-platform-core",
 	"type": "module",
 	"private": true,
 	"exports": {
 		".": "./index.tsx"
 	},
 	"dependencies": {
-		"@cad/js/renderer": "workspace:*",
-		"@framework/platform/core": "workspace:*",
-		"@puzzle/2d/react": "workspace:*",
-		"@puzzle/3d/react": "workspace:*",
-		"@puzzle/5d/react": "workspace:*",
-		"@ui/react": "workspace:*",
+		"@semio-tech/cad-js-renderer": "workspace:*",
+		"@semio-tech/framework-platform-core": "workspace:*",
+		"@semio-tech/puzzle-2d-react": "workspace:*",
+		"@semio-tech/puzzle-3d-react": "workspace:*",
+		"@semio-tech/puzzle-5d-react": "workspace:*",
+		"@semio-tech/ui-react": "workspace:*",
 		"clsx": "^2.1.1",
 		"fuse.js": "^7.1.0",
 		"react": "^19.2.3",

@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js/kernel/brepjs",
+  "name": "@semio-tech/cad-js-kernel-brepjs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

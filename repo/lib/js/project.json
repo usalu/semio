@@ -1,5 +1,5 @@
 {
-  "name": "@repo/lib",
+  "name": "@semio-tech/repo-lib",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "repo/lib/js",
   "projectType": "library",

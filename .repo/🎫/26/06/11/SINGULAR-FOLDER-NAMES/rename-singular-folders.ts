@@ -107,10 +107,10 @@ const TEXT_EXTENSIONS = new Set([
 ]);
 
 const TEXT_REPLACEMENTS: [string, string][] = [
-	["@compose/assets", "@compose/asset"],
-	["@compose/fixtures", "@compose/fixture"],
-	["@puzzle/assets", "@puzzle/asset"],
-	["@ui/assets", "@ui/asset"],
+	["@semio-tech/compose-assets", "@semio-tech/compose-asset"],
+	["@semio-tech/compose-fixtures", "@semio-tech/compose-fixture"],
+	["@semio-tech/puzzle-assets", "@semio-tech/puzzle-asset"],
+	["@semio-tech/ui-assets", "@semio-tech/ui-asset"],
 	['"bundleKind": "assets"', '"bundleKind": "asset"'],
 	['"bundleKind": "fixtures"', '"bundleKind": "fixture"'],
 	["  kind: assets", "  kind: asset"],

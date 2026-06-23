@@ -18,7 +18,7 @@ import {
   type VirtualFileSystemNode,
   type VirtualFileSystemRow,
   type VirtualFileSystemSchema,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 📁#region 📁VirtualFileSystem

@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { PageNavigation } from "@ui/react";
+import { PageNavigation } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter } from "react-router";
 

@@ -18,7 +18,7 @@ todos:
     content: Replace ensureSketchpadDeclarativeShell/manifest/body/surface registration with buildSketchpadPlatform() returning new Platform({...}); render via PlatformView; update boot + Sketchpad export.
     status: completed
   - id: sketchpad-slice
-    content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @compose/react."
+    content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @semio-tech/compose-react."
     status: completed
   - id: sketchpad-rest
     content: Re-wire remaining apps (design/type/quality/doc/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
@@ -39,7 +39,7 @@ isProject: false
 
 ## Locked decisions
 - `ProductRuntime` -> renamed to `Platform`; sketchpad becomes one declarative `new Platform({...})` instance. Core stays pure TS, render-agnostic. No legacy names kept.
-- React renderer (`@framework/platform/renderer/react`) depends on `@puzzle/2d|3d|5d/react` and `@cad/js/renderer` and registers them as built-in named component kinds.
+- React renderer (`@semio-tech/framework-platform-renderer-react`) depends on `@puzzle/2d|3d|5d/react` and `@semio-tech/cad-js-renderer` and registers them as built-in named component kinds.
 - Component kinds replace `board`/`scene3d`: `table`, `puzzle2d`, `puzzle3d`, `puzzle5d`, `cad`, `panel`.
 - Scope = architecture + one vertical slice: build the full Platform + all component kinds, migrate `home table`, `kit table`, `kit diagram` (puzzle2d) end-to-end; remaining apps stay working and become follow-up tickets.
 
@@ -51,24 +51,24 @@ flowchart TB
     def["new Platform(PlatformDefinition)"]
     adapters["per-surface data adapters (kit state -> component props)"]
   end
-  subgraph core ["@framework/platform (pure TS)"]
+  subgraph core ["@semio-tech/framework-platform (pure TS)"]
     Platform[Platform]
     App[AppRuntime]
     Mode[ModeRuntime]
     WK["WindowKind -> componentKind"]
     Nodes["UiNode: table | puzzle2d | puzzle3d | puzzle5d | cad | panel"]
   end
-  subgraph react ["@framework/platform/renderer/react"]
+  subgraph react ["@semio-tech/framework-platform-renderer-react"]
     PV[PlatformView]
     UR[UiRenderer]
     CM["component map: kind -> React component"]
   end
   subgraph comps ["component packages"]
-    UiTable["@ui/react Table"]
-    P2["@puzzle/2d/react"]
-    P3["@puzzle/3d/react"]
-    P5["@puzzle/5d/react"]
-    CAD["@cad/js/renderer"]
+    UiTable["@semio-tech/ui-react Table"]
+    P2["@semio-tech/puzzle-2d-react"]
+    P3["@semio-tech/puzzle-3d-react"]
+    P5["@semio-tech/puzzle-5d-react"]
+    CAD["@semio-tech/cad-js-renderer"]
   end
   def --> Platform
   Platform --> App --> Mode --> WK --> Nodes
@@ -90,9 +90,9 @@ flowchart TB
 - All new code uses `//#region 🔖...` structuring per repo rules; docstrings start with an emoji.
 
 ## B. framework/platform/renderer/react ([framework/platform/renderer/react/index.tsx](framework/platform/renderer/react/index.tsx))
-- Add deps to its `package.json`: `@puzzle/2d/react`, `@puzzle/3d/react`, `@puzzle/5d/react`, `@cad/js/renderer`.
+- Add deps to its `package.json`: `@semio-tech/puzzle-2d-react`, `@semio-tech/puzzle-3d-react`, `@semio-tech/puzzle-5d-react`, `@semio-tech/cad-js-renderer`.
 - Replace the four `registerUi*SurfaceHost` registries + dispatch (1354-1413, 1490-1538) with a single component-kind model:
-  - Built-in `componentRenderers: Record<ComponentKind, React.ComponentType<ComponentProps>>` wiring `table`->`@ui/react` `Table`, `puzzle2d`->`@puzzle/2d/react`, `puzzle3d`->`@puzzle/3d/react`, `puzzle5d`->`@puzzle/5d/react` `FiveD`, `cad`->`@cad/js/renderer`.
+  - Built-in `componentRenderers: Record<ComponentKind, React.ComponentType<ComponentProps>>` wiring `table`->`@semio-tech/ui-react` `Table`, `puzzle2d`->`@semio-tech/puzzle-2d-react`, `puzzle3d`->`@semio-tech/puzzle-3d-react`, `puzzle5d`->`@semio-tech/puzzle-5d-react` `FiveD`, `cad`->`@semio-tech/cad-js-renderer`.
   - `registerSurfaceBinding(surfaceId, adapter)` where the host supplies a data/props adapter (plain data in, component props out) keyed by `surfaceId`. This is the renderer-agnostic seam a future Svelte renderer reuses with the same core + its own component map.
 - Rename `ProductView` -> `PlatformView` and update `UiRenderer` (1587) to instantiate `componentRenderers[node.componentKind]` with adapter output; update `mountReactApp` references.
 
@@ -101,7 +101,7 @@ flowchart TB
   - home: `home-main` -> `table`
   - kit: `table` -> `table`, `diagram` -> `puzzle2d`
   - design: `scene`/`diagram` -> `puzzle5d`; type -> `cad`; docs/feedback/quality -> `panel`/existing.
-- Migrate the slice cleanly: home table, kit table, kit diagram. Implement `registerSurfaceBinding` adapters that read kit state (via `@compose/react`) and return `table`/`puzzle2d` props. Kit diagram is re-wired from today's FiveD-flat onto the `puzzle2d` component per the chosen mapping.
+- Migrate the slice cleanly: home table, kit table, kit diagram. Implement `registerSurfaceBinding` adapters that read kit state (via `@semio-tech/compose-react`) and return `table`/`puzzle2d` props. Kit diagram is re-wired from today's FiveD-flat onto the `puzzle2d` component per the chosen mapping.
 - Keep remaining apps (design/type/quality/doc/feedback) functional by binding them to `puzzle5d`/`cad`/`panel` with thin adapters wrapping their current React implementations; deeper clean-rewrite of those deferred to follow-up tickets.
 - Render via `<PlatformView platform={...} />`. Update boot path and `Sketchpad` export. Reorganize regions so the file stays a single clean `index.ts`.
 
@@ -122,4 +122,4 @@ flowchart TB
 
 ## Follow-up tickets (deferred)
 - Clean-rewrite design app (`puzzle5d` flat + spatial), type app (`cad`), quality app, docs app, feedback app onto the Platform component model.
-- Svelte renderer (`@framework/platform/renderer/svelte`) implementing the same core + component map / surface-binding seam.
+- Svelte renderer (`@semio-tech/framework-platform/renderer/svelte`) implementing the same core + component map / surface-binding seam.

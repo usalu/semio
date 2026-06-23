@@ -11,13 +11,13 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@cad/js/core": coreEntry,
-			"@cad/js/runtime": resolve(root, "../../runtime/index.ts"),
-			"@cad/js/module/spatial-shape": resolve(root, "../../module/spatial-shape/index.ts"),
-			"@cad/js/module/aec-building": resolve(root, "../../module/aec-building/index.ts"),
-			"@cad/js/module/aec-building-energy": resolve(root, "../../module/aec-building-energy/index.ts"),
-			"@cad/js/module/aec-building-structure": resolve(root, "../../module/aec-building-structure/index.ts"),
-			"@cad/js/kernel/brepjs": resolve(root, "../../kernel/brepjs/index.ts"),
+			"@semio-tech/cad-js-core": coreEntry,
+			"@semio-tech/cad-js-runtime": resolve(root, "../../runtime/index.ts"),
+			"@semio-tech/cad-js-module-spatial-shape": resolve(root, "../../module/spatial-shape/index.ts"),
+			"@semio-tech/cad-js-module-aec-building": resolve(root, "../../module/aec-building/index.ts"),
+			"@semio-tech/cad-js-module-aec-building-energy": resolve(root, "../../module/aec-building-energy/index.ts"),
+			"@semio-tech/cad-js-module-aec-building-structure": resolve(root, "../../module/aec-building-structure/index.ts"),
+			"@semio-tech/cad-js-kernel-brepjs": resolve(root, "../../kernel/brepjs/index.ts"),
 		},
 	},
 	test: {

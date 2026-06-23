@@ -1,5 +1,5 @@
 {
-	"name": "@framework/playground",
+	"name": "@semio-tech/framework-playground",
 	"private": true,
 	"workspaces": ["core", "renderer/react"]
 }

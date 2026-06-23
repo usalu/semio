@@ -29,8 +29,8 @@
 
 ### Files
 
-- `compose/react/index.tsx` — Kit list hooks use **`Kit#readDesigns` / `readTypes` / `readAuthors` / `readQualities` / `readTags` / `readConcepts`** (`useKitDesigns`, `useKitTypes`, …); **`useDesigns` / `useTypes` / `usePieces`** bundles for sketchpad; **`useDesignPieces` / `useDesignConnections`**; entity reads renamed to **`usePieceContextRead` / `useTypeContextRead` / `useQualityContextRead`**; dropped stale **`DESIGN_*` / `KIT_*_SPECS`** re-exports that no longer exist on `@compose/js`.
-- `compose/sketchpad/index.tsx` — **`KitTabContextProvider`** (was kit tab “scope” wrapper); route **`contextProvider`**; **`RouteParamContextShell`**; **`SketchpadInstance` / `SketchpadInstanceContext` / `SketchpadInstanceProvider` / `useSketchpadInstance`**; **`DesignAppShell*` / `QualityAppShell*` / `TypeAppShell*`**; fixed **`TypeAppShellProvider`** (was commented out); **`LayoutContextHost` / `ToolbarContextHost`**; **`useXStateFieldWithContext`**; imports **`use*ContextRead`** + list hooks from `@compose/react`.
+- `compose/react/index.tsx` — Kit list hooks use **`Kit#readDesigns` / `readTypes` / `readAuthors` / `readQualities` / `readTags` / `readConcepts`** (`useKitDesigns`, `useKitTypes`, …); **`useDesigns` / `useTypes` / `usePieces`** bundles for sketchpad; **`useDesignPieces` / `useDesignConnections`**; entity reads renamed to **`usePieceContextRead` / `useTypeContextRead` / `useQualityContextRead`**; dropped stale **`DESIGN_*` / `KIT_*_SPECS`** re-exports that no longer exist on `@semio-tech/compose-js`.
+- `compose/sketchpad/index.tsx` — **`KitTabContextProvider`** (was kit tab “scope” wrapper); route **`contextProvider`**; **`RouteParamContextShell`**; **`SketchpadInstance` / `SketchpadInstanceContext` / `SketchpadInstanceProvider` / `useSketchpadInstance`**; **`DesignAppShell*` / `QualityAppShell*` / `TypeAppShell*`**; fixed **`TypeAppShellProvider`** (was commented out); **`LayoutContextHost` / `ToolbarContextHost`**; **`useXStateFieldWithContext`**; imports **`use*ContextRead`** + list hooks from `@semio-tech/compose-react`.
 
 ### Commands
 
@@ -63,7 +63,7 @@
 
 ### Notes
 
-- Sketchpad still imports many symbols not yet restored on `@compose/react`; full `index.tsx` strict check remains for a follow-up when the barrel is complete.
+- Sketchpad still imports many symbols not yet restored on `@semio-tech/compose-react`; full `index.tsx` strict check remains for a follow-up when the barrel is complete.
 
 ---
 
@@ -72,7 +72,7 @@
 - **No** `KitRuntime` / embed-host umbrella in React: context holds **`Kit` only**; `useKit()` returns **`Kit`**. Materialization read point stays in provider state and is applied via **`Kit#setReadPoint`** (not exposed as a synthetic runtime object).
 - **JS**: VCS navigation uses **entity classes** aligned with the plan: `Graph`, `Session`, `TheKit`, `Checkpoint`, `Alternative`, `Change`, `Edit`, `Conflict`, abstract **`Operation`**, plus **`Kit#wip` / `#authoritative` / `#session` / `#conflict`**.
 - **React**: **`useWipGraph`**, **`useAuthoritativeGraph`**, **`useSession`** (no shim). Optional **`GraphContextProvider` + `useGraph()`** when a subtree must bind `GraphRootKind` explicitly.
-- **Algorithms story**: `FindReplaceableTypesInDesigns` now imports **`Kit` from `../../index`** (algorithms façade `Kit.ensure`) — not `@compose/react` — removed **`Kit as KitRuntime`** pattern.
+- **Algorithms story**: `FindReplaceableTypesInDesigns` now imports **`Kit` from `../../index`** (algorithms façade `Kit.ensure`) — not `@semio-tech/compose-react` — removed **`Kit as KitRuntime`** pattern.
 
 ## Commands (this pass)
 
@@ -337,8 +337,8 @@
 ### Done this slice
 
 - **`compose/js`**: `JsonValue` / `JsonObject` are **file-local** wire aliases (no longer exported) per plan `js-purge-json`.
-- **`compose/algorithms`**: local **`GqlWireObject`**; dropped `JsonObject` import from `@compose/js`.
-- **`compose/ui`**: local **`PlainJsonObject` / `PlainJsonValue`**; removed `@compose/js` type import; **`toSceneVector`** accepts `unknown` for piece plane origins.
+- **`compose/algorithms`**: local **`GqlWireObject`**; dropped `JsonObject` import from `@semio-tech/compose-js`.
+- **`compose/ui`**: local **`PlainJsonObject` / `PlainJsonValue`**; removed `@semio-tech/compose-js` type import; **`toSceneVector`** accepts `unknown` for piece plane origins.
 - **`compose/react`**: **`useAttachBackbone`**, **`useDetachBackbone`**, **`useBackboneSyncNow`**, **`useBackboneStatus`** (`🪝BackboneOps` under kit hooks), wired to existing `Kit` GraphQL methods.
 
 ### Commands

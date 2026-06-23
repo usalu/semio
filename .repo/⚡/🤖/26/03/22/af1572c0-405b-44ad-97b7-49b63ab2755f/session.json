@@ -22,7 +22,7 @@
           "timestamp": "2026-03-22T13:32:19.497275506Z",
           "execution_id": "e8781093-bedd-4491-8afe-ae7faa2149e9",
           "tool_info": {
-            "user_prompt": "compose dev sketchpad:\nunato attatch browser\n *  Executing task: npx nx dev compose/sketchpad \n\n\n\u003e @compose/sketchpad@0.1.0 dev\n\u003e vite\n\n\n  VITE v7.3.1  ready in 457 ms\n\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n\n\n"
+            "user_prompt": "compose dev sketchpad:\nunato attatch browser\n *  Executing task: npx nx dev compose/sketchpad \n\n\n\u003e @semio-tech/compose-sketchpad@0.1.0 dev\n\u003e vite\n\n\n  VITE v7.3.1  ready in 457 ms\n\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n\n\n"
           }
         }
       },

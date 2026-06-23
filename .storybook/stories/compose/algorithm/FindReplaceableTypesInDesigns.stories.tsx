@@ -19,13 +19,13 @@ import {
   type AlgorithmContextValue,
   type AlgorithmWindowDef,
   type Design,
-} from "@compose/algorithm";
+} from "@semio-tech/compose-algorithm";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { MetabolismKit as metabolismKit } from "@compose/asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-asset";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const { pieceIds: selectionPieceIds, connectionIds: selectionConnectionIds } = nakaginStoryCopySelection();

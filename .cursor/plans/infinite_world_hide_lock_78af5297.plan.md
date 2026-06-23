@@ -1,6 +1,6 @@
 ---
 name: Infinite World Hide Lock
-overview: Add a shared persisted hide/lock mechanism to @infinite/world/r3f, consume it in CAD and puzzle 3d (hidden = unrendered but revealed-on-tree-hover as hovered; locked = dimmed + non-interactive), and expose it through the shared Tree UI with per-row toggles and a selection context menu.
+overview: Add a shared persisted hide/lock mechanism to @semio-tech/infinite-world-r3f, consume it in CAD and puzzle 3d (hidden = unrendered but revealed-on-tree-hover as hovered; locked = dimmed + non-interactive), and expose it through the shared Tree UI with per-row toggles and a selection context menu.
 todos:
   - id: ticket
     content: Open/reopen repo MCP ticket; read repo://goals and associate with the most fitting goal.
@@ -47,7 +47,7 @@ isProject: false
 ## Workflow
 - Open a ticket via repo MCP first (read `repo://goals`, associate with the puzzle3d/world goal used by the closed unify ticket `🎯puzzle3d🎯puzzle3dplay`, or a more fitting one). Keep temp files under the ticket folder. Add code into existing files using `//#region` blocks. Extend existing test regions only. Close ticket with summary + touched files when done.
 
-## 1. Shared mechanism in `@infinite/world/r3f`
+## 1. Shared mechanism in `@semio-tech/infinite-world-r3f`
 In [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx) add a new `//#region 👁️EntityFlags`:
 - `export interface WorldEntityFlags { readonly hidden?: boolean; readonly locked?: boolean }`
 - `export const WORLD_LOCKED_OPACITY_SCALE = 0.35` (dim factor) and a desaturation hint.
@@ -109,7 +109,7 @@ Rationale: the engine stays the generic layer; storage stays per-doc; reveal-on-
 - CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) `buildCadPlayHierarchySections`/`cadPlayPrimitiveChildTreeItem` (356/303): attach `actions` + `contextMenu`; add chrome callbacks `toggleHidden/toggleLocked` writing `Model.metadata` + bumping revision; keep highlight registration so locked entities still cross-highlight.
 
 ## 5. Tests + validation
-- Extend in-file test regions: `@infinite/world/r3f` (helpers), puzzle/3d/react (fixture parse round-trip of flags; render visibility/selectable), cad renderer (pick-target flag filtering; locked style; metadata round-trip), ui/react (tree actions + context menu render).
+- Extend in-file test regions: `@semio-tech/infinite-world-r3f` (helpers), puzzle/3d/react (fixture parse round-trip of flags; render visibility/selectable), cad renderer (pick-target flag filtering; locked style; metadata round-trip), ui/react (tree actions + context menu render).
 - Run world/puzzle/cad/ui tests via existing launch.json test entries (no new entries expected).
 - Smoke both plays with `[DEBUG]` console logs: hide an object (disappears, tree row muted), hover its tree row (reappears as hovered piece), lock an entity (dimmed, cannot select in 3D), right-click selection -> hide/lock all. Confirm runtime behavior in console before claiming done.
 

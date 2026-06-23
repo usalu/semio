@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/5d/play",
+  "name": "@semio-tech/puzzle-5d-play",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
@@ -27,7 +27,7 @@
       }
     },
     "test": {
-      "dependsOn": ["@puzzle/5d/react:test"],
+      "dependsOn": ["@semio-tech/puzzle-5d-react:test"],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "puzzle/5d/play",

@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Button, ButtonCycle } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Button, ButtonCycle } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

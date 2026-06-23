@@ -1,5 +1,5 @@
 {
-	"name": "@framework/platform/core",
+	"name": "@semio-tech/framework-platform-core",
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {

@@ -58,7 +58,7 @@ During a left-drag marquee the camera never moves (`OrbitControls` `LEFT: null`,
 
 ## Validation
 - Extend existing in-file vitest blocks only: in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (~8285) add cases that `previewMarqueeSelection` and `commitMarqueeSelection` resolve identically from the same cached candidates, and that additive/subtractive modes merge against the captured base. In [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) (~1977) assert `noteSelection` still updates `selection`/`selectedLabel`.
-- Run `bun nx run @puzzle/3d/react:test` and `@puzzle/3d/play:test`.
+- Run `bun nx run @semio-tech/puzzle-3d-react:test` and `@semio-tech/puzzle-3d-play:test`.
 - Runtime: launch the 3D play dev server on the Nakagin fixture; with a temporary `[DEBUG] performance.now()` around capture/preview/commit, confirm (a) objects highlight live while dragging, (b) release is sub-100ms vs the current multi-second freeze; then remove the debug logs.
 
 ## Process

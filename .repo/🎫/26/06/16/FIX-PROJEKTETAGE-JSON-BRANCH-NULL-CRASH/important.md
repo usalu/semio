@@ -7,7 +7,7 @@ Added slides to thought **Eingabeprozess** (Bauteilportal → Systematik):
 
 ## Framework
 
-- `JsonEmbodiment` in `@framework/presentation/core`
+- `JsonEmbodiment` in `@semio-tech/framework-presentation-core`
 - `json.ts` tree renderer + `JsonMorphView` in React renderer
 
 ## Files

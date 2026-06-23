@@ -2,7 +2,7 @@
   "title": "Native Algorithm Rest Adapter",
   "emoji": "🔌",
   "status": "closed",
-  "description": "Add nativeAlgorithmAdapter.ts in compose/algorithms calling REST for python/go/rust and @compose/js for ts; wire Storybook language decorator and engine FastAPI routes end-to-end.",
+  "description": "Add nativeAlgorithmAdapter.ts in compose/algorithms calling REST for python/go/rust and @semio-tech/compose-js for ts; wire Storybook language decorator and engine FastAPI routes end-to-end.",
   "summary": "Enforced that compose language bundles are pure libraries (no bridge code). Removed bridge/REST/CLI glue from compose/go (deleted cmd/nativebridge), compose/rs (removed native_bridge bin + deleted src/bin/native_bridge.rs), compose/net (removed --native-bridge from Compose.Benchmark), and compose/py (removed Native Algorithms Rest server). Implemented Storybook-only native algorithm proxy in compose/algorithms that dispatches to ticket-local Go/Rust/C# bridge programs under the ticket folder and calls Python library functions via uv-run, keeping bridging out of the language implementations.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1163"

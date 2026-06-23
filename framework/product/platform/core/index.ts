@@ -1,8 +1,8 @@
 // #region 🧱Header
-/** 🧱 `@framework/platform/core` — Renderer-agnostic platform shell: {@link Platform} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link PlatformDefinition} + {@link SurfaceDefinition} for contribution routing. */
+/** 🧱 `@semio-tech/framework-platform-core` — Renderer-agnostic platform shell: {@link Platform} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link PlatformDefinition} + {@link SurfaceDefinition} for contribution routing. */
 // #endregion 🧱Header
 
-export * from "@framework/core";
+export * from "@semio-tech/framework-core";
 
 import {
 	BaseAppRuntime,
@@ -29,7 +29,7 @@ import {
 	type NamedLayout,
 	type WindowLayout,
 	type WindowMeasure,
-} from "@framework/core";
+} from "@semio-tech/framework-core";
 
 //#region 🔖UiNode
 export interface UiStackNode {
@@ -40,7 +40,7 @@ export interface UiStackNode {
 	readonly children: readonly UiNode[];
 }
 
-export type { UiButtonNode, UiSeparatorNode, UiTextNode } from "@framework/core";
+export type { UiButtonNode, UiSeparatorNode, UiTextNode } from "@semio-tech/framework-core";
 
 export interface UiTextNode {
 	readonly type: "text";
@@ -1705,7 +1705,7 @@ export class AppRuntime extends BaseAppRuntime {
 		id: string,
 		label: string,
 		iconId: string | undefined,
-		controller: import("@framework/core").Controller,
+		controller: import("@semio-tech/framework-core").Controller,
 		layout: WindowLayout,
 		windowKinds: readonly WindowKindRuntime[],
 	) {

@@ -1,0 +1,81 @@
+#!/usr/bin/env sh
+compose_micro_commit_seed_empty_gk() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  GK_TEMPLATE="$GIT_DIR/gkcommittemplate.txt"
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/gkcommittemplate*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+  : >"$GK_TEMPLATE" 2>/dev/null || true
+  git config --local commit.template "$GK_TEMPLATE" 2>/dev/null || true
+}
+compose_micro_commit_wipe() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  compose_micro_commit_seed_empty_gk
+  for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
+    if [ -f "$GIT_DIR/$msg" ]; then
+      : >"$GIT_DIR/$msg" 2>/dev/null || true
+    fi
+  done
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/compose-micro-commit-*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+}
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$ROOT" || exit 0
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+compose_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
+    echo "$COMPOSE_BUN"
+    return
+  fi
+  if [ -f "$ROOT/.repo/compose-micro-commit-bun" ]; then
+    B=$(head -n 1 "$ROOT/.repo/compose-micro-commit-bun" | tr -d '\r')
+    if [ -n "$B" ] && [ -x "$B" ]; then
+      echo "$B"
+      return
+    fi
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun" ]; then
+    echo "$BUN_INSTALL/bin/bun"
+    return
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun.exe" ]; then
+    echo "$BUN_INSTALL/bin/bun.exe"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun" ]; then
+    echo "$ROOT/node_modules/.bin/bun"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.cmd" ]; then
+    echo "$ROOT/node_modules/.bin/bun.cmd"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.exe" ]; then
+    echo "$ROOT/node_modules/.bin/bun.exe"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    echo "$HOME/.bun/bin/bun"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun.exe" ]; then
+    echo "$HOME/.bun/bin/bun.exe"
+    return
+  fi
+  B=$(command -v bun 2>/dev/null || true)
+  if [ -n "$B" ]; then
+    echo "$B"
+  fi
+}
+BUN=$(compose_resolve_bun "$ROOT")
+[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true
+compose_micro_commit_wipe
+exit 0

@@ -3,7 +3,7 @@ name: BVH solid-overlap brush collision
 overview: Replace the AABB-based brush/fill collision (which is fundamentally inadequate for the ~13%-fill sparse lattice meshes) with exact three-mesh-bvh geometry collision behind an interface, and change the brush tolerance to a solid-overlap volume budget in cubic meters.
 todos:
   - id: dep
-    content: Add three-mesh-bvh to @infinite/world/r3f (and resolve for @puzzle/3d/react) via bun
+    content: Add three-mesh-bvh to @semio-tech/infinite-world-r3f (and resolve for @semio-tech/puzzle-3d-react) via bun
     status: completed
   - id: interface
     content: "Add Collision region in infinite/world/r3f/index.tsx wrapping MeshBVH: collisionBodyFromObject, bodiesIntersect, solidOverlapVolume"
@@ -29,9 +29,9 @@ The concrete-forest meshes are sparse lattices that fill only ~12.7% of their AA
 
 ## 1. Add three-mesh-bvh behind an interface in the engine layer
 
-Per repo rules (external libs behind an interface), isolate the dependency in `@infinite/world/r3f`.
+Per repo rules (external libs behind an interface), isolate the dependency in `@semio-tech/infinite-world-r3f`.
 
-- `bun add three-mesh-bvh` in [infinite/world/r3f/package.json](infinite/world/r3f/package.json) (latest, three 0.182-compatible). Mirror the dep where `@puzzle/3d/react` resolves it.
+- `bun add three-mesh-bvh` in [infinite/world/r3f/package.json](infinite/world/r3f/package.json) (latest, three 0.182-compatible). Mirror the dep where `@semio-tech/puzzle-3d-react` resolves it.
 - In [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx) add a `//#region Collision` exposing a small interface that fully encapsulates `MeshBVH`/`computeBoundsTree`:
   - `collisionBodyFromObject(root: Object3D): CollisionBody` - traverse meshes, build a `MeshBVH` per geometry in the GLB mesh frame (reuse `GLB_MESH_FRAME_ROTATION_X`).
   - `bodiesIntersect(a, worldMatrixA, b, worldMatrixB): boolean` - BVH `intersectsGeometry` fast path.
@@ -59,7 +59,7 @@ In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 
 - Update [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) tests: replace AABB penetration tests with `solidOverlapVolume` cases on simple meshes with known overlap (e.g. two unit cubes overlapping 0.5 m3), a sparse-lattice regression (two synthetic meshes: deep overlap detected, clean interleave free), and budget-threshold behavior. Update fill/preview tests.
 - Update [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) tolerance tests to the m3 budget.
-- Add a verification script under `.repo/🎫/26/06/05/FIX-BRUSH-FILL-COLLISION/` re-running the real-mesh-overlap audit after the fix (expect 0 pairs over budget). Run the existing `@puzzle/3d/react` and `@puzzle/3d/play` test targets.
+- Add a verification script under `.repo/🎫/26/06/05/FIX-BRUSH-FILL-COLLISION/` re-running the real-mesh-overlap audit after the fix (expect 0 pairs over budget). Run the existing `@semio-tech/puzzle-3d-react` and `@semio-tech/puzzle-3d-play` test targets.
 
 ## Defaults to confirm during implementation
 

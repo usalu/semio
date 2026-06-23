@@ -44,8 +44,8 @@ import {
 	type ContextMenuItem,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
-} from "@ui/react";
-import { Expertise, ProductRuntime, type FooterItem } from "@framework/playground/core";
+} from "@semio-tech/ui-react";
+import { Expertise, ProductRuntime, type FooterItem } from "@semio-tech/framework-playground-core";
 import {
 	PlaygroundView,
 	mountPlaygroundApp,
@@ -53,7 +53,7 @@ import {
 	registerUiBoardSurfaceHost,
 	registerWindowBody,
 	type UiBoardHostSurfaceNode,
-} from "@framework/playground/core-renderer-react";
+} from "@semio-tech/framework-playground-core-renderer-react";
 import { ClipboardList, Library, ListTree, Settings } from "lucide-react";
 import {
 	createContext,
@@ -121,7 +121,7 @@ function extract3d(): void {
 /** @emoji 🛝 Scene play React host — entry-only; imported from play/main.ts. */
 // #endregion 🧲Header
 
-import { LevelProvider, getLevelBgClass } from "@ui/react";
+import { LevelProvider, getLevelBgClass } from "@semio-tech/ui-react";
 import { useGLTF } from "@react-three/drei";
 import { ClipboardList, ListTree, Settings, Tags } from "lucide-react";
 import React, { useCallback, useMemo, useSyncExternalStore } from "react";
@@ -131,7 +131,7 @@ import {
 	registerWindowBody,
 	useApp,
 	type UiScene3DHostSurfaceNode,
-} from "@framework/playground/core-renderer-react";
+} from "@semio-tech/framework-playground-core-renderer-react";
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
 	PlaySceneCanvas,

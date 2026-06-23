@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🌍 `@infinite/world/r3f` router: `bun ./script.ts test`. */
+/** @emoji 🌍 `@semio-tech/infinite-world-r3f` router: `bun ./script.ts test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/index.ts";
 
 class TestScript extends BundleScript {

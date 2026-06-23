@@ -91,8 +91,8 @@ In [flow/module/list/lib.rs](flow/module/list/lib.rs) add `list.range` (`start`,
 
 ## 5. Build, wire, verify
 
-- Rebuild changed Rust modules: `bun nx run @flow/module-math:wasm` and `@flow/module-list:wasm` (regenerates the `pkg/` JS/WASM that `flow/react` and vitest aliases import). No `launch.json` changes (extending existing modules, no new executables).
-- Run tests: brep kernel + procedural via `nx run @geometry/brep/js:test` and `@procedural/react:test`; Rust via `cargo test` for the math/list crates. Confirm new nodes appear in the catalogue and evaluate (validate at runtime, not by assumption).
+- Rebuild changed Rust modules: `bun nx run @semio-tech/flow-module-math:wasm` and `@semio-tech/flow-module-list:wasm` (regenerates the `pkg/` JS/WASM that `flow/react` and vitest aliases import). No `launch.json` changes (extending existing modules, no new executables).
+- Run tests: brep kernel + procedural via `nx run @semio-tech/geometry-brep-js:test` and `@semio-tech/procedural-react:test`; Rust via `cargo test` for the math/list crates. Confirm new nodes appear in the catalogue and evaluate (validate at runtime, not by assumption).
 
 ## 6. Repo ticket
 

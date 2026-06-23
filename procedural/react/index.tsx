@@ -1,7 +1,7 @@
 // #region 🧲Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🔧 `@procedural/react` — flow-based brep editor with R3F viewport. */
+/** @emoji 🔧 `@semio-tech/procedural-react` — flow-based brep editor with R3F viewport. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -18,8 +18,8 @@ import {
 	UnifiedGumball,
 	type GumballHandleKind,
 	type GumballPose,
-} from "@ui/react";
-import { clearColorResolveCache, resolveSemanticColorHex } from "@ui/styling";
+} from "@semio-tech/ui-react";
+import { clearColorResolveCache, resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import {
 	createDefaultBrepWasmBridge,
 	ensureBrepWasmLoaded,
@@ -29,7 +29,7 @@ import {
 	type GeometryRef,
 	type MeshTransfer,
 	type Vec3,
-} from "@geometry/brep/js";
+} from "@semio-tech/geometry-brep-js";
 import {
 	FlowCanvas,
 	createEphemeralFlowStore,
@@ -42,9 +42,9 @@ import {
 	type FlowFixtureV1,
 	type FlowModuleCommandV1,
 	type FlowReorganizeRequest,
-} from "@flow/react";
-import type { ContextMenuItem } from "@ui/react";
-import { meshStyleColors, resolveMeshStyle, type MeshStyleKind } from "@puzzle/3d/react";
+} from "@semio-tech/flow-react";
+import type { ContextMenuItem } from "@semio-tech/ui-react";
+import { meshStyleColors, resolveMeshStyle, type MeshStyleKind } from "@semio-tech/puzzle-3d-react";
 import {
 	applyOrbitProjectionToCameraState,
 	DEFAULT_LOD_GRID_FACTOR,
@@ -63,7 +63,7 @@ import {
 	WorldEventBindingController,
 	type OrbitCameraProjection,
 	type WorldCameraState,
-} from "@infinite/world/r3f";
+} from "@semio-tech/infinite-world-r3f";
 import {
 	SelectionMarquee,
 	marqueeCoverageFromGesture,
@@ -74,7 +74,7 @@ import {
 	selectionMergeIds,
 	type SelectionMergeMode,
 	type SelectionMarqueeCoverage,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 import { type ReactNode } from "react";
 
 const THREE = sceneHostPort.three;
@@ -94,7 +94,7 @@ export async function ensureProceduralBrepBridge(): Promise<BrepWasmBridge> {
 	return proceduralBrepBridgePromise;
 }
 
-/** @emoji 🔌 Flow extension host with `@flow/module-brep` loaded through the normal module path. */
+/** @emoji 🔌 Flow extension host with `@semio-tech/flow-module-brep` loaded through the normal module path. */
 export class ProceduralExtensionHost extends FlowExtensionHost {
 	private bridge: BrepWasmBridge | null = null;
 
@@ -1519,8 +1519,8 @@ if (import.meta.vitest) {
 		extractPreviewItems,
 		proceduralPreviewCameraSeed,
 	} = await import("./index.tsx");
-	const { applyOrbitProjectionToCameraState } = await import("@infinite/world/r3f");
-	const { ensureBrepWasmLoaded, isRenderableMeshTransfer } = await import("@geometry/brep/js");
+	const { applyOrbitProjectionToCameraState } = await import("@semio-tech/infinite-world-r3f");
+	const { ensureBrepWasmLoaded, isRenderableMeshTransfer } = await import("@semio-tech/geometry-brep-js");
 
 	function numberDict(value: number) {
 		return { $schema: "number", value };
@@ -1535,7 +1535,7 @@ if (import.meta.vitest) {
 		return (typeof payload === "object" && payload !== null ? payload : out) as T;
 	}
 
-	describe("@procedural/react", () => {
+	describe("@semio-tech/procedural-react", () => {
 		let host: ProceduralExtensionHost;
 		let bridge: Awaited<ReturnType<typeof host.getBrepBridge>>;
 
@@ -1586,7 +1586,7 @@ if (import.meta.vitest) {
 				) as { geometry: { handle: string } },
 				"geometry",
 			);
-			const mesh = await bridge.tessellateGeometry(moved.handle as import("@geometry/brep/js").GeometryRef, 0.05);
+			const mesh = await bridge.tessellateGeometry(moved.handle as import("@semio-tech/geometry-brep-js").GeometryRef, 0.05);
 			expect(isRenderableMeshTransfer(mesh)).toBe(true);
 		});
 

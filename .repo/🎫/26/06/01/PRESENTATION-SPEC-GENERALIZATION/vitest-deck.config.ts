@@ -10,8 +10,8 @@ export default defineConfig({
 	root: deckRoot,
 	resolve: {
 		alias: {
-			"@framework/presentation/core": resolve(repoRoot, "framework/product/presentation/core/index.ts"),
-			"@framework/presentation/renderer/react": resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx"),
+			"@semio-tech/framework-presentation-core": resolve(repoRoot, "framework/product/presentation/core/index.ts"),
+			"@semio-tech/framework-presentation-renderer-react": resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx"),
 		},
 	},
 	test: {

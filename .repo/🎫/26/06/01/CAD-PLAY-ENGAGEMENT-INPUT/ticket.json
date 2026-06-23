@@ -3,7 +3,7 @@
   "emoji": "💬",
   "status": "closed",
   "description": "Fix PlaygroundView crash: cad-play-shape window must declare engagement.input (command line).",
-  "summary": "CAD play quad windows now always expose engagement.input so windowKindsToGolden passes.\n\n- cadPlayPlaceholderPaneEngagement + cadPlayResolvePaneEngagement ensure command-line input per pane\n- CadPlayShellController rebuildShellMode/setPaneEngagement use resolved engagement with enforcePlaygroundWindowEngagementInput\n- Test: every buildCadPlayAppRuntime window kind has engagement-input\n\nTests: @cad/js/renderer 71 passed.",
+  "summary": "CAD play quad windows now always expose engagement.input so windowKindsToGolden passes.\n\n- cadPlayPlaceholderPaneEngagement + cadPlayResolvePaneEngagement ensure command-line input per pane\n- CadPlayShellController rebuildShellMode/setPaneEngagement use resolved engagement with enforcePlaygroundWindowEngagementInput\n- Test: every buildCadPlayAppRuntime window kind has engagement-input\n\nTests: @semio-tech/cad-js-renderer 71 passed.",
   "goal": "🎯framework",
   "sessions": [
     "⚪7b4918f9372e4167800a1461170b5ad5"

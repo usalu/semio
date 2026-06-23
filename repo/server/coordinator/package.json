@@ -1,5 +1,5 @@
 {
-  "name": "@repo/coordinator",
+  "name": "@semio-tech/repo-coordinator",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "repo/server/coordinator",

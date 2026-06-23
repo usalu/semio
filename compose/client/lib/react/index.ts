@@ -4,5 +4,5 @@ export {
   fetchComposeFileSystemRootChildren,
   type ComposeFileSystemChildRef,
   type ComposeFileSystemParentRef,
-} from "@compose/js";
-export type { Store as JsKitStore } from "@compose/js";
+} from "@semio-tech/compose-js";
+export type { Store as JsKitStore } from "@semio-tech/compose-js";

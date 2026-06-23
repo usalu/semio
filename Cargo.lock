@@ -903,6 +903,92 @@ dependencies = [
 ]
 
 [[package]]
+name = "compose"
+version = "0.1.0"
+dependencies = [
+ "async-broadcast",
+ "async-channel",
+ "async-executor",
+ "async-graphql",
+ "async-lock",
+ "async-stream",
+ "base64",
+ "blake3",
+ "chrono",
+ "console_error_panic_hook",
+ "futures-channel",
+ "futures-lite",
+ "futures-util",
+ "getrandom 0.3.4",
+ "hex",
+ "instant",
+ "js-sys",
+ "nalgebra 0.34.2",
+ "paste",
+ "rusqlite",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror 2.0.18",
+ "ureq",
+ "uuid",
+ "walkdir",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "wasm-bindgen-test",
+ "web-sys",
+ "zip 7.2.0",
+]
+
+[[package]]
+name = "compose-hub"
+version = "0.1.0"
+dependencies = [
+ "axum 0.8.9",
+ "compose",
+ "dashmap",
+ "futures",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sqlx-core",
+ "sqlx-postgres",
+ "testcontainers",
+ "testcontainers-modules",
+ "thiserror 2.0.18",
+ "time",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite 0.26.2",
+ "tower-http 0.6.10",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "compose_query"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "compose",
+ "console_error_panic_hook",
+ "futures-util",
+ "js-sys",
+ "nom",
+ "pin-project-lite",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4952,108 +5038,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "compose"
-version = "0.1.0"
-dependencies = [
- "async-broadcast",
- "async-channel",
- "async-executor",
- "async-graphql",
- "async-lock",
- "async-stream",
- "base64",
- "blake3",
- "chrono",
- "console_error_panic_hook",
- "futures-channel",
- "futures-lite",
- "futures-util",
- "getrandom 0.3.4",
- "hex",
- "instant",
- "js-sys",
- "nalgebra 0.34.2",
- "paste",
- "rusqlite",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "sha2",
- "tempfile",
- "thiserror 2.0.18",
- "ureq",
- "uuid",
- "walkdir",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-bindgen-test",
- "web-sys",
- "zip 7.2.0",
-]
-
-[[package]]
-name = "compose-hub"
-version = "0.1.0"
-dependencies = [
- "axum 0.8.9",
- "dashmap",
- "futures",
- "reqwest",
- "compose",
- "serde",
- "serde_json",
- "sqlx-core",
- "sqlx-postgres",
- "testcontainers",
- "testcontainers-modules",
- "thiserror 2.0.18",
- "time",
- "tokio",
- "tokio-stream",
- "tokio-tungstenite 0.26.2",
- "tower-http 0.6.10",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
-name = "compose-store"
+name = "semio-store"
 version = "0.1.0"
 dependencies = [
  "async-broadcast",
  "async-channel",
  "async-graphql",
  "axum 0.7.9",
+ "compose",
  "futures-lite",
  "reqwest",
- "compose",
  "serde",
  "serde_json",
  "tokio",
  "tower-http 0.5.2",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "compose_query"
-version = "0.1.0"
-dependencies = [
- "async-graphql",
- "console_error_panic_hook",
- "futures-util",
- "js-sys",
- "nom",
- "pin-project-lite",
- "compose",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
 ]
 
 [[package]]

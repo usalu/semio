@@ -62,7 +62,7 @@ Per repo rules, open a ticket via repo MCP first; associate to goal `compose` (t
 
 ## 4. compose/react (`compose/client/lib/react/index.ts`)
 
-- Expose an imperative helper (e.g. `fetchComposeFileSystemChildren(store, nodeId, kind)` and `fetchComposeFileSystemRoot`) that runs the `fileSystemChildren` query via the js store and returns `{ id, kind, name, path, hasChildren }[]`. Sketchpad must consume VFS only through react, never `@compose/js` directly.
+- Expose an imperative helper (e.g. `fetchComposeFileSystemChildren(store, nodeId, kind)` and `fetchComposeFileSystemRoot`) that runs the `fileSystemChildren` query via the js store and returns `{ id, kind, name, path, hasChildren }[]`. Sketchpad must consume VFS only through react, never `@semio-tech/compose-js` directly.
 
 ## 5. framework/product/platform/core (`framework/product/platform/core/index.ts`) - async children
 

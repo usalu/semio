@@ -23,18 +23,18 @@
 - Opened ticket via `repo ticket open` and wrote `plan.md`.
 - Traced Design diagram selection path (`onSelectionChange`) and identified primary-button pointer-down panning guard as a selection blocker.
 - Implemented fix in `Design.tsx` by scoping pointer-down panning guard to middle/right mouse buttons.
-- Validation run (failed args): `npx nx test @compose/js --skipNxCache --runInBand --testPathPattern=sketchpad.test.ts --testNamePattern="Design"`.
-- Validation run (failed filter): `npx nx test @compose/js --skipNxCache -- sketchpad.test.ts -t "Design"`.
-- Validation run (pass): `npx nx test @compose/js --skipNxCache`.
+- Validation run (failed args): `npx nx test @semio-tech/compose-js --skipNxCache --runInBand --testPathPattern=sketchpad.test.ts --testNamePattern="Design"`.
+- Validation run (failed filter): `npx nx test @semio-tech/compose-js --skipNxCache -- sketchpad.test.ts -t "Design"`.
+- Validation run (pass): `npx nx test @semio-tech/compose-js --skipNxCache`.
 - Reproduced reopened selection breakpoints in both Design diagram and scene selection pathways.
 - Identified diagram piece guid extraction bug (`split("-").pop()`) and missing React Flow selection delta application in node changes.
 - Identified scene multi-select guid resolution mismatch (`pieceId` lookup only) causing selection clear churn.
 - Implemented Design diagram + scene selection fixes and reran tests.
-- Validation run (pass): `npx nx test @compose/js --skipNxCache`.
+- Validation run (pass): `npx nx test @semio-tech/compose-js --skipNxCache`.
 - Reproduced model-selection miss in scene window and traced object ancestry ids from loaded meshes.
 - Identified missing `userData.pieceId` metadata on scene transform/wrapper groups for non-design model meshes.
 - Added explicit piece identity metadata on scene wrapper ancestors and reran tests.
-- Validation run (pass): `npx nx test @compose/js --skipNxCache`.
+- Validation run (pass): `npx nx test @semio-tech/compose-js --skipNxCache`.
 
 ## Summary
 

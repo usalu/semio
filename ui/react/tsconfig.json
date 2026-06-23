@@ -23,10 +23,10 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@ui/react": [
+      "@semio-tech/ui-react": [
         "./index.tsx"
       ],
-      "@ui/react/*": [
+      "@semio-tech/ui-react/*": [
         "./*"
       ],
     }

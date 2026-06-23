@@ -1,5 +1,5 @@
 {
-  "name": "@compose/query",
+  "name": "@semio-tech/compose-query",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "setup": {

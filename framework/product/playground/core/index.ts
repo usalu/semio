@@ -1,10 +1,10 @@
 // #region 🧲Header
-/** @emoji 🛝 `@framework/playground/core` — React-neutral playground runtime, one-app shell (selection + filter toolbars, workbench + details), declarative {@link UiNode} bodies, command routing (no DOM). */
+/** @emoji 🛝 `@semio-tech/framework-playground-core` — React-neutral playground runtime, one-app shell (selection + filter toolbars, workbench + details), declarative {@link UiNode} bodies, command routing (no DOM). */
 // #endregion 🧲Header
 
-export * from "@framework/core";
+export * from "@semio-tech/framework-core";
 
-import type { OrbitCameraViewLayoutArrangement, OrbitCameraViewLayoutDescriptor, OrbitCameraViewLayoutPane } from "@infinite/world/r3f";
+import type { OrbitCameraViewLayoutArrangement, OrbitCameraViewLayoutDescriptor, OrbitCameraViewLayoutPane } from "@semio-tech/infinite-world-r3f";
 import {
   BaseAppRuntime,
   BaseModeRuntime,
@@ -31,7 +31,7 @@ import {
   type WindowLayout,
   type WindowLayoutWindowNode,
   type WindowMeasure,
-} from "@framework/core";
+} from "@semio-tech/framework-core";
 
 //#region 🔖UiNode
 export interface UiStackNode {
@@ -42,7 +42,7 @@ export interface UiStackNode {
   readonly children: readonly UiNode[];
 }
 
-export type { UiButtonNode, UiSeparatorNode, UiTextNode } from "@framework/core";
+export type { UiButtonNode, UiSeparatorNode, UiTextNode } from "@semio-tech/framework-core";
 
 export interface UiTextNode {
   readonly type: "text";
@@ -69,10 +69,10 @@ export type {
   UiPuzzle3dHostSurfaceNode,
   UiPuzzle5dHostSurfaceNode,
   UiCadHostSurfaceNode,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 
 /** @emoji 📋 Playground alias for {@link UiPuzzle2dHostSurfaceNode}. */
-export type UiPuzzle2dHostSurfaceNode = import("@framework/platform/core").UiPuzzle2dHostSurfaceNode;
+export type UiPuzzle2dHostSurfaceNode = import("@semio-tech/framework-platform-core").UiPuzzle2dHostSurfaceNode;
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
@@ -90,7 +90,7 @@ import {
   unregisterSidePanelBody,
   type UiTreeNode,
   type UiTreeSectionNode,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 
 export type {
   UiControlNode,
@@ -107,12 +107,12 @@ export type {
   UiTreeSectionNode,
   UiVec3Node,
   SidePanelTreeSelection,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 
-export { collectUiTreeItemDragData, sidePanelTreeRootItems, uiDeclarativeSectionsToTree } from "@framework/platform/core";
+export { collectUiTreeItemDragData, sidePanelTreeRootItems, uiDeclarativeSectionsToTree } from "@semio-tech/framework-platform-core";
 
 /** @emoji 🎯 Playground alias for {@link SidePanelTreeSelection}. */
-export type PlaygroundTreePanelSelection = import("@framework/platform/core").SidePanelTreeSelection;
+export type PlaygroundTreePanelSelection = import("@semio-tech/framework-platform-core").SidePanelTreeSelection;
 
 /** @emoji 🌲 Playground alias for {@link sidePanelTreeRootItems}. */
 export { sidePanelTreeRootItems as playgroundTreePanelRootItems };
@@ -124,10 +124,10 @@ export type UiNode =
   | UiSeparatorNode
   | UiPuzzle3dHostSurfaceNode
   | UiPuzzle2dHostSurfaceNode
-  | import("@framework/platform/core").UiPuzzle5dHostSurfaceNode
-  | import("@framework/platform/core").UiCadHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiPuzzle5dHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiCadHostSurfaceNode
   | UiTableHostSurfaceNode
-  | import("@framework/platform/core").UiTreeNode;
+  | import("@semio-tech/framework-platform-core").UiTreeNode;
 
 import {
   buildPuzzle2dWindowBody,
@@ -136,7 +136,7 @@ import {
   buildFlowWindowBody,
   buildDagWindowBody,
   isCanvasOnlyWindowBody,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 
 export {
   buildPuzzle2dWindowBody,
@@ -148,7 +148,7 @@ export {
   buildDagWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
   if (isCanvasOnlyWindowBody(node)) return;
@@ -329,7 +329,7 @@ export class WindowKindRuntime extends BaseWindowKindRuntime {
     iconId?: string,
     measures: readonly WindowMeasure[] = [],
     engagement?: WindowEngagement,
-    templates: readonly import("@framework/core").WindowTemplate[] = [],
+    templates: readonly import("@semio-tech/framework-core").WindowTemplate[] = [],
   ) {
     super(id, label, bodyKey, iconId, measures, templates);
     this.engagement = engagement;
@@ -399,7 +399,7 @@ export class AppRuntime extends BaseAppRuntime {
     id: string,
     label: string,
     iconId: string | undefined,
-    controller: import("@framework/core").Controller,
+    controller: import("@semio-tech/framework-core").Controller,
     layout: WindowLayout,
     windowKinds: readonly WindowKindRuntime[],
   ) {
@@ -414,7 +414,7 @@ export class AppRuntime extends BaseAppRuntime {
 //#endregion 🔖AppRuntime
 
 //#region 🔖ResolvedState
-export type { ResolvedAppState } from "@framework/core";
+export type { ResolvedAppState } from "@semio-tech/framework-core";
 
 /** @emoji 🧮 Resolves playground app + active mode overlays. */
 export function resolveAppState(app: AppRuntime, requestedModeId?: string | null): ResolvedAppState {
@@ -466,13 +466,13 @@ export function unregisterWindowBody(bodyKey: string): void {
 //#endregion 🔖WindowBodyViewContext
 
 //#region 🔖SidePanelBodyViewContext
-export type { SidePanelBodyViewContext } from "@framework/platform/core";
+export type { SidePanelBodyViewContext } from "@semio-tech/framework-platform-core";
 
 export {
   getSidePanelBodyFactory,
   registerSidePanelBody,
   unregisterSidePanelBody,
-} from "@framework/platform/core";
+} from "@semio-tech/framework-platform-core";
 //#endregion 🔖SidePanelBodyViewContext
 
 //#region 🔖Playground
@@ -490,7 +490,7 @@ export function createProductPlaygroundPlatform(id: string, name?: string): Plat
 export function createPlayAppRuntime(
   id: string,
   label: string,
-  controller: import("@framework/core").Controller,
+  controller: import("@semio-tech/framework-core").Controller,
   layout: WindowLayout,
   mode: ModeRuntime,
   iconId?: string,
@@ -582,7 +582,7 @@ export type PlaygroundFocusFilter<K extends string> = "all" | K;
 //#endregion 🔖Ids
 
 //#region 🔖Fixture
-/** @emoji ∅ Sentinel id for the navbar “No fixture” row (shared with {@link NAVBAR_NO_FIXTURE_ID} in `@ui/react`). */
+/** @emoji ∅ Sentinel id for the navbar “No fixture” row (shared with {@link NAVBAR_NO_FIXTURE_ID} in `@semio-tech/ui-react`). */
 export const PLAYGROUND_NO_FIXTURE_ID = "__none__";
 
 /** @emoji 🧪 One selectable playground fixture (kit, graph, shape source, …). */

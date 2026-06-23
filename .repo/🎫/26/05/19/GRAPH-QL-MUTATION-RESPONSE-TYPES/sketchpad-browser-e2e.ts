@@ -1,6 +1,6 @@
 /**
  * @emoji 🌐 Browser E2E: sketchpad preview + WASM session + live subscription loop.
- * Prereq: `bun nx run @compose/sketchpad:build` (serves dist on 4181).
+ * Prereq: `bun nx run @semio-tech/compose-sketchpad:build` (serves dist on 4181).
  * Run: `bun .repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/sketchpad-browser-e2e.ts`
  */
 import { spawn } from "node:child_process";

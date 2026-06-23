@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧪 Vitest for `@gis/map/react`. */
+/** @emoji 🧪 Vitest for `@semio-tech/gis-map-react`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -17,7 +17,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@gis/map/rs": path.resolve(reactDir, "../rs/pkg/gis_map.js"),
+      "@semio-tech/gis-map-rs": path.resolve(reactDir, "../rs/pkg/gis_map.js"),
     },
   },
 });

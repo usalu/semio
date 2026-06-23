@@ -1,5 +1,5 @@
 {
-  "name": "@compose/logo",
+  "name": "@semio-tech/compose-logo",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

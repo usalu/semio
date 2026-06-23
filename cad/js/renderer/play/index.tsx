@@ -2,7 +2,7 @@
 // 💻 cad/js/renderer/play/index.tsx — CAD play shell (headless + React chrome + Vite entry).
 // #endregion 🧲Header
 
-import { AppPointerFocusStore } from "@framework/core";
+import { AppPointerFocusStore } from "@semio-tech/framework-core";
 import {
   CommandBus,
   Controller,
@@ -30,7 +30,7 @@ import {
   type CommandDescriptor,
   isPlaygroundFixtureLocked,
   playgroundLockedFixtureId,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 import {
   ORBIT_CAMERA_VIEW_COMMAND,
   applyWorldReferenceTransform,
@@ -46,7 +46,7 @@ import {
   type OrbitCameraProjection,
   type WorldReferenceProps,
   type WorldReferenceRelocatePayload,
-} from "@infinite/world/r3f";
+} from "@semio-tech/infinite-world-r3f";
 import {
   DocumentHistory,
   defaultModelDefinitionId,
@@ -91,14 +91,14 @@ import {
   type ModelDiff,
   deleteObjectsFromModel,
   deletableObjectIdsFromSelection,
-} from "@cad/js/core";
-import { bootstrapCadModules } from "@cad/js/runtime";
-import { AEC_BUILDING_MODEL_DEFINITION_ID } from "@cad/js/module/aec-building";
-import { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } from "@cad/js/module/aec-building-energy";
+} from "@semio-tech/cad-js-core";
+import { bootstrapCadModules } from "@semio-tech/cad-js-runtime";
+import { AEC_BUILDING_MODEL_DEFINITION_ID } from "@semio-tech/cad-js-module-aec-building";
+import { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } from "@semio-tech/cad-js-module-aec-building-energy";
 import {
   AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
   AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID,
-} from "@cad/js/module/aec-building-structure";
+} from "@semio-tech/cad-js-module-aec-building-structure";
 
 bootstrapCadModules();
 
@@ -1145,8 +1145,8 @@ import {
   type TreeDataItem,
   type TreeDataSection,
   type UiTranslationKey,
-} from "@ui/react";
-import { createIconComponent } from "@ui/react";
+} from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import { StrictMode, type ChangeEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -1167,10 +1167,10 @@ import {
   mountPlaygroundApp,
   uiTreeNodeToTreePanelConfig,
   type SidePanelTabConfig,
-} from "@framework/playground/renderer/react/shell";
-import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode } from "@framework/playground/core";
-import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
-import { defaultConstructRunner } from "@cad/js/query";
+} from "@semio-tech/framework-playground-renderer-react/shell";
+import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode } from "@semio-tech/framework-playground-core";
+import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@semio-tech/framework-platform-renderer-react";
+import { defaultConstructRunner } from "@semio-tech/cad-js-query";
 import geometryNakagin from "../../../asset/play/geometry.json";
 import geometryLoom from "../../../asset/play/geometry-loom.json";
 import geometryRoutes from "../../../asset/play/geometry-routes.json";
@@ -1179,8 +1179,8 @@ import geometryTallBuilding from "../../../asset/play/tall-building.model.json";
 import geometryLargeBuilding from "../../../asset/play/large-building.model.json";
 import geometryConcreteForestLeft from "../../../asset/play/hexagonal-cut-concrete-forest-left.model.json";
 import geometryConcreteForestRight from "../../../asset/play/hexagonal-cut-concrete-forest-right.model.json";
-import { BrepjsKernel, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
-import { statelyStateEngineProvider } from "@cad/js/machine/stately";
+import { BrepjsKernel, preciseSpatialKernelMath } from "@semio-tech/cad-js-kernel-brepjs";
+import { statelyStateEngineProvider } from "@semio-tech/cad-js-machine-stately";
 import {
   InteractionRepl,
   modelHasCommittedSolidsForDisplay,
@@ -3376,8 +3376,8 @@ if (import.meta.vitest) {
 
   describe("cad play delete selection", () => {
     it("deleteObjectsFromModel removes selected objects but keeps solid primitives", async () => {
-      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
-      const { applyModelDiff, solidRef } = await import("@cad/js/core");
+      const { preciseSpatialKernelMath: M } = await import("@semio-tech/cad-js-kernel-brepjs");
+      const { applyModelDiff, solidRef } = await import("@semio-tech/cad-js-core");
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-solid")));
       model.objects["box-a"] = { id: "box-a" as never, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
@@ -3659,7 +3659,7 @@ if (import.meta.vitest) {
     });
 
     it("buildCadPlayHierarchySections lists objects after box commit object binding", async () => {
-      const { BrepjsKernel } = await import("@cad/js/kernel/brepjs");
+      const { BrepjsKernel } = await import("@semio-tech/cad-js-kernel-brepjs");
       const spec = loadSpatialInteraction("primitive.box")!;
       const model = new Model();
       const kernel = new BrepjsKernel() as never;
@@ -3678,8 +3678,8 @@ if (import.meta.vitest) {
     });
 
     it("buildCadPlayHierarchySections maps hover keys to tree item ids", async () => {
-      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
-      const { applyModelDiff, solidRef } = await import("@cad/js/core");
+      const { preciseSpatialKernelMath: M } = await import("@semio-tech/cad-js-kernel-brepjs");
+      const { applyModelDiff, solidRef } = await import("@semio-tech/cad-js-core");
       const model = new Model();
       const solid = solidRef("solid-1");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
@@ -3694,8 +3694,8 @@ if (import.meta.vitest) {
     });
 
     it("buildCadPlayHierarchySections nests child primitives under primitive slots", async () => {
-      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
-      const { applyModelDiff, solidRef } = await import("@cad/js/core");
+      const { preciseSpatialKernelMath: M } = await import("@semio-tech/cad-js-kernel-brepjs");
+      const { applyModelDiff, solidRef } = await import("@semio-tech/cad-js-core");
       const model = new Model();
       const solid = solidRef("solid-1");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
@@ -3856,8 +3856,8 @@ if (import.meta.vitest) {
     });
 
     it("buildCadPlayHierarchySections lists kernel-imported STEP objects", async () => {
-      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
-      const { applyModelDiff, defaultModelDefinitionId, solidRef } = await import("@cad/js/core");
+      const { preciseSpatialKernelMath: M } = await import("@semio-tech/cad-js-kernel-brepjs");
+      const { applyModelDiff, defaultModelDefinitionId, solidRef } = await import("@semio-tech/cad-js-core");
       const model = new Model();
       const solid = solidRef("imported-solid");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));

@@ -32,7 +32,7 @@ isProject: false
 
 ```mermaid
 flowchart TD
-  tokens["@ui/styling tokens + ui.css .selection-marquee"] --> react["@ui/react SelectionMarquee (SVG rect/polygon)"]
+  tokens["@semio-tech/ui-styling tokens + ui.css .selection-marquee"] --> react["@semio-tech/ui-react SelectionMarquee (SVG rect/polygon)"]
   tokens --> rust["puzzle 2D Vello (board_vello tokens)"]
   react --> cad["CAD renderer"]
   react --> p3d["puzzle 3D overlay"]

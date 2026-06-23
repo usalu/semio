@@ -7,7 +7,7 @@ Split metabolism dev `initialKit` into a canonical store layout under `compose/f
 - `designs/*.design.compose.json` (10 files): full design payloads
 - `index.compose.json`: id → sidecar path index
 
-Added `assembleSplitInitialKitFromDirectory` / `readInitialKitFixtureFromPath` in `compose/fixtures/script.ts` and matching loaders in C# (`Utility.ReadKitFixtureJson`), Python (`_test_load_json`), Go tests, sketchpad Vite fixture middleware, and `@compose/assets` bootstrap.
+Added `assembleSplitInitialKitFromDirectory` / `readInitialKitFixtureFromPath` in `compose/fixtures/script.ts` and matching loaders in C# (`Utility.ReadKitFixtureJson`), Python (`_test_load_json`), Go tests, sketchpad Vite fixture middleware, and `@semio-tech/compose-assets` bootstrap.
 
 Removed the 23 MiB monolithic `kit/dev/metabolism/wip/initialKit/kit.compose.json` and duplicate `types/` / `designs/` trees; representations/icons remain under `kit/dev/metabolism/`.
 

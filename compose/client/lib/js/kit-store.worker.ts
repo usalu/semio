@@ -1,12 +1,12 @@
 //#region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // GNU LGPL-3.0 or later — GraphQL WASM worker: JSON `execute` / `subscribe` only (no JS-side DTO marshaling).
-// Bundled by Vite so `@compose/rs-wasm` resolves; Blob workers cannot import bare specifiers.
+// Bundled by Vite so `@semio-tech/compose-rs-wasm` resolves; Blob workers cannot import bare specifiers.
 //#endregion 🧲Header
 
 /// <reference lib="webworker" />
 
-/** @emoji 🧪 Empty in-memory WASM store URI (worker must not import full `@compose/js` index). */
+/** @emoji 🧪 Empty in-memory WASM store URI (worker must not import full `@semio-tech/compose-js` index). */
 const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
 //#region 🧷WasmHandle
@@ -40,7 +40,7 @@ self.onmessage = async (ev: MessageEvent<string>) => {
   }
   try {
     if (msg.op === "init") {
-      const mod = await import("@compose/rs-wasm");
+      const mod = await import("@semio-tech/compose-rs-wasm");
       if (typeof mod.default === "function") await mod.default();
       if (typeof mod.boot === "function") mod.boot();
       const uri = typeof msg.uri === "string" ? msg.uri : "";

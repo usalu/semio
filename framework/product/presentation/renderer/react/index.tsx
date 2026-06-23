@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📽 React + reveal.js renderer for `@framework/presentation/core` declarative decks. */
+/** @emoji 📽 React + reveal.js renderer for `@semio-tech/framework-presentation-core` declarative decks. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -29,7 +29,7 @@ import type {
     TextEmbodiment,
     Thought,
     VideoEmbodiment
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 import {
     abbreviateAuthorFirstName,
     affiliationLineName,
@@ -53,7 +53,7 @@ import {
     split,
     splitFigureGrid,
     unionDispositionPositions
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 import {
     applyElementsSurfaceChrome,
     Expertise,
@@ -61,7 +61,7 @@ import {
     Scrollable,
     SelectionMarquee,
     type ElementsSurfaceChromeInput,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 import {
     act,
     createContext,
@@ -116,7 +116,7 @@ export type {
     Thought,
     Transition,
     VideoEmbodiment
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
 export {
     analogy,
@@ -146,7 +146,7 @@ export {
     splitFigureGrid,
     tile,
     unionSourceCrops,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 export type {
     MorphFromSlot,
     PresentationLanguageKind,
@@ -156,11 +156,11 @@ export type {
     RenderSlide,
     Slide,
     TextMorphRoot
-} from "@framework/presentation/core";
-export { Expertise } from "@ui/react";
+} from "@semio-tech/framework-presentation-core";
+export { Expertise } from "@semio-tech/ui-react";
 
 //#region 🔖MountOptions
-/** @emoji ⚙️ Reveal.js and @ui/react surface chrome options for {@link mountPresentation}. */
+/** @emoji ⚙️ Reveal.js and @semio-tech/ui-react surface chrome options for {@link mountPresentation}. */
 export interface PresentationMountOptions {
 	readonly surfaceChrome?: ElementsSurfaceChromeInput | false;
 	readonly transition?: "fade" | "slide" | "convex" | "concave" | "zoom" | "none";
@@ -972,7 +972,7 @@ export function resolvePresentationAutoAnimateRunSlides(
 /**
  * @emoji 🩹 Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
  *
- * `@ui/react` surface chrome ships Tailwind v4 preflight, whose layered
+ * `@semio-tech/ui-react` surface chrome ships Tailwind v4 preflight, whose layered
  * `[hidden]{display:none!important}` outranks reveal.js's inline `display:block` on the off-screen
  * slides it briefly un-hides to measure auto-animate `from`/`to` rects. The collapsed measurement
  * makes morph elements fly in from the deck origin instead of morphing in place. Dropping only the
@@ -8732,7 +8732,7 @@ if (import.meta.vitest) {
 				inlineColumnLabelPosition,
 				mediaEmbodiments,
 				mediaParticipants,
-			} = await import("@mit-bestand/praesentation/projektetage-spec");
+			} = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const deck: Presentation = {
 				id: "projektetage-morph",
 				name: "Morph",
@@ -8880,9 +8880,9 @@ if (import.meta.vitest) {
 
 		it("shows catalogue full figure at rest with source ghosts and focus tiles visible", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
-				await import("@framework/presentation/core");
-			type SlideFile = import("@framework/presentation/core").SlideFile;
-			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+				await import("@semio-tech/framework-presentation-core");
+			type SlideFile = import("@semio-tech/framework-presentation-core").SlideFile;
+			const { presentationMeta } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },
@@ -8920,9 +8920,9 @@ if (import.meta.vitest) {
 		});
 
 		it("renders target ghosts but no source ghosts on focus and labels slides", async () => {
-			const { loadPresentationFromSlideGlob } = await import("@framework/presentation/core");
-			type SlideFile = import("@framework/presentation/core").SlideFile;
-			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const { loadPresentationFromSlideGlob } = await import("@semio-tech/framework-presentation-core");
+			type SlideFile = import("@semio-tech/framework-presentation-core").SlideFile;
+			const { presentationMeta } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },
@@ -8950,9 +8950,9 @@ if (import.meta.vitest) {
 
 		it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
-				await import("@framework/presentation/core");
-			type SlideFile = import("@framework/presentation/core").SlideFile;
-			const { presentationMeta, CATALOGUE_FOCUS_TILES } = await import("@mit-bestand/praesentation/projektetage-spec");
+				await import("@semio-tech/framework-presentation-core");
+			type SlideFile = import("@semio-tech/framework-presentation-core").SlideFile;
+			const { presentationMeta, CATALOGUE_FOCUS_TILES } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },
@@ -8988,9 +8988,9 @@ if (import.meta.vitest) {
 
 		it("auto-animates catalogue tiles into focus layout", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
-				await import("@framework/presentation/core");
-			type SlideFile = import("@framework/presentation/core").SlideFile;
-			const { presentationMeta, CATALOGUE_FOCUS_TILES } = await import("@mit-bestand/praesentation/projektetage-spec");
+				await import("@semio-tech/framework-presentation-core");
+			type SlideFile = import("@semio-tech/framework-presentation-core").SlideFile;
+			const { presentationMeta, CATALOGUE_FOCUS_TILES } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },
@@ -9028,10 +9028,10 @@ if (import.meta.vitest) {
 
 		it("places catalogue-labels target ghosts at inline label frames", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
-				await import("@framework/presentation/core");
-			type SlideFile = import("@framework/presentation/core").SlideFile;
+				await import("@semio-tech/framework-presentation-core");
+			type SlideFile = import("@semio-tech/framework-presentation-core").SlideFile;
 			const { presentationMeta, inlineColumnLabelPosition } =
-				await import("@mit-bestand/praesentation/projektetage-spec");
+				await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },
@@ -9066,9 +9066,9 @@ if (import.meta.vitest) {
 
 		it("fires reveal auto-animate when advancing projektetage focus to labels", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
-				await import("@framework/presentation/core");
-			type SlideFile = import("@framework/presentation/core").SlideFile;
-			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+				await import("@semio-tech/framework-presentation-core");
+			type SlideFile = import("@semio-tech/framework-presentation-core").SlideFile;
+			const { presentationMeta } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },

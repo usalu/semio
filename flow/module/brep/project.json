@@ -1,5 +1,5 @@
 {
-  "name": "@flow/module-brep",
+  "name": "@semio-tech/flow-module-brep",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {

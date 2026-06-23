@@ -2,7 +2,7 @@
 // .storybook/story/elements/ui/Engagement.stories.tsx
 // #endregion 🧲Header
 
-import { Engagement, Window } from "@ui/react";
+import { Engagement, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import { expect, within } from "storybook/test";

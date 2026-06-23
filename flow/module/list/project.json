@@ -1,5 +1,5 @@
 {
-  "name": "@flow/module-list",
+  "name": "@semio-tech/flow-module-list",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {

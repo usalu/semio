@@ -1,6 +1,6 @@
 ---
 name: Lint scripts JS facade
-overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@repo/lib` JS facade that spawns `client.exe` per call. An nx inferred plugin discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breach/<entity-id>.json`.
+overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@semio-tech/repo-lib` JS facade that spawns `client.exe` per call. An nx inferred plugin discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breach/<entity-id>.json`.
 todos:
   - id: scaffold_bundle
     content: Scaffold repo/lib/js bundle (package.json, project.json, tsconfig, README)
@@ -36,8 +36,8 @@ isProject: false
 
 Create the JS sibling of [repo/lib/go](repo/lib/go):
 
-- `repo/lib/js/package.json` — name `@repo/lib`, type `module`, exports `./src/index.ts`, deps: just `typescript`/`@types/node`. Bun runs `.ts` directly so no build step needed.
-- `repo/lib/js/project.json` — nx project `@repo/lib`, with `lint`, `test` targets.
+- `repo/lib/js/package.json` — name `@semio-tech/repo-lib`, type `module`, exports `./src/index.ts`, deps: just `typescript`/`@types/node`. Bun runs `.ts` directly so no build step needed.
+- `repo/lib/js/project.json` — nx project `@semio-tech/repo-lib`, with `lint`, `test` targets.
 - `repo/lib/js/tsconfig.json` — strict, `module: ESNext`, `moduleResolution: Bundler`.
 - `repo/lib/js/src/`:
   - `cli.ts` — single `runCli(args: string[]): Promise<unknown>` helper that spawns `repo/client/client.exe` (or `client` on unix) with `--json`, captures stdout, parses JSON, throws on non-zero exit. Resolves binary via `REPO_CLI_BIN` env or relative to monorepo root. Stateless: every call = new process.
@@ -83,7 +83,7 @@ In the runner:
 }
 ```
 
-Register the plugin in [nx.json](nx.json) `plugins` as `"@repo/lib/nx-plugin"`. nx caching handles the "automatic" part — if neither the script nor the target entity files changed, the cached breach JSON is restored.
+Register the plugin in [nx.json](nx.json) `plugins` as `"@semio-tech/repo-lib/nx-plugin"`. nx caching handles the "automatic" part — if neither the script nor the target entity files changed, the cached breach JSON is restored.
 
 ## 4. Remove legacy Go breach machinery
 

@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Textarea } from "@ui/react";
+import { Textarea } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { nakagin } from "../../fixture/nakagin";
 

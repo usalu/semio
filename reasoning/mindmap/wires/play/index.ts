@@ -7,7 +7,7 @@ export {
   PUZZLE_2D_PLAY_APP_ID as WIRES_PLAY_APP_ID,
   PUZZLE_2D_PLAY_CONTROLLER_ID as WIRES_PLAY_CONTROLLER_ID,
   buildPuzzle2dPlayRuntime as buildWiresPlayRuntime,
-} from "@puzzle/2d/play";
+} from "@semio-tech/puzzle-2d-play";
 
 export const WIRES_PLAY_HIERARCHY_TAB_ID = "wires-play-hierarchy";
 export const WIRES_PLAY_KINDS_TAB_ID = "wires-play-kinds";
@@ -28,11 +28,11 @@ export {
   type WiresFixtureV1,
 } from "../react/index.ts";
 
-import { Playground2d, type Puzzle2dPlayHierarchyBuildOptions } from "@puzzle/2d/play";
-import type { KindCatalogBundle, Puzzle2dFixtureV1 } from "@puzzle/2d/react";
-import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
-import { puzzle2dFixtureMergedKindCatalogs } from "@puzzle/2d/react";
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { Playground2d, type Puzzle2dPlayHierarchyBuildOptions } from "@semio-tech/puzzle-2d-play";
+import type { KindCatalogBundle, Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@semio-tech/framework-playground-core";
+import { puzzle2dFixtureMergedKindCatalogs } from "@semio-tech/puzzle-2d-react";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   METABOLISM_WIRES_FIXTURE,
   relationshipKindDisplayName,
@@ -239,7 +239,7 @@ if (
   bootstrapElementsSurfaceChromeDocument("system");
   void (async () => {
     await import("./globals.css");
-    const { bootWiresPlay } = await import("@framework/playground/renderer/react/reasoning/wires");
+    const { bootWiresPlay } = await import("@semio-tech/framework-playground-renderer-react/reasoning/wires");
     bootWiresPlay(new Playground2d());
   })();
 }

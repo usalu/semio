@@ -1,16 +1,16 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@gis/map/react",
+  "name": "@semio-tech/gis-map-react",
   "version": "0.1.0",
   "description": "gis · map react",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @gis/map/react:test"
+    "test": "bun nx run @semio-tech/gis-map-react:test"
   },
   "dependencies": {
-    "@infinite/cavas/react-renderer": "workspace:*",
-    "@ui/react": "workspace:*",
+    "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

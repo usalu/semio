@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎭 `@cad/js/machine/stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
+/** @emoji 🎭 `@semio-tech/cad-js-machine-stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -28,7 +28,7 @@ import {
 	type Vec3,
 	type VertexRef,
 	type WireRef,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 // #endregion 🔌Adapters
 
 // #region 🎭AdvanceEvent
@@ -270,7 +270,7 @@ export class StatelyStateEngine implements StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		preview?: import("@cad/js/core").SpatialPreviewKernel,
+		preview?: import("@semio-tech/cad-js-core").SpatialPreviewKernel,
 		activeModelDefinitionId?: string | null,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
@@ -307,8 +307,8 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 // #endregion 🎭Provider
 
 // #region 🧪Tests
-const __spatialStatelyTestRuntime = import.meta.vitest ? await import("@cad/js/runtime") : null;
-const __spatialStatelyTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
+const __spatialStatelyTestRuntime = import.meta.vitest ? await import("@semio-tech/cad-js-runtime") : null;
+const __spatialStatelyTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
 	__spatialStatelyTestRuntime!.bootstrapCadModules();
@@ -391,7 +391,7 @@ if (import.meta.vitest) {
 		}
 	}
 
-	describe("@cad/js/machine/stately", () => {
+	describe("@semio-tech/cad-js-machine-stately", () => {
 		it("buildSpatialStatelyMachineCatalogView lists scoped interactions with edges and mermaid", () => {
 			const doc = buildSpatialStatelyMachineCatalogView({ modelDefinitionId: defaultModelDefinitionId() });
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");

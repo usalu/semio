@@ -1,7 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@compose/sketchpad",
+  "name": "@semio-tech/compose-sketchpad",
   "version": "0.1.0",
   "type": "module",
   "description": "compose ⋅ sketchpad",
@@ -10,14 +10,14 @@
     "./boot": "./boot.tsx"
   },
   "dependencies": {
-    "@framework/core": "workspace:*",
-    "@framework/platform/core": "workspace:*",
-    "@framework/platform/renderer/react": "workspace:*",
+    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-platform-renderer-react": "workspace:*",
     "@mdx-js/react": "^3.1.1",
-    "@compose/js": "*",
-    "@reasoning/mindmap/wires/react": "workspace:*",
-    "@compose/react": "workspace:*",
-    "@ui/react": "workspace:*",
+    "@semio-tech/compose-js": "*",
+    "@semio-tech/reasoning-mindmap-wires-react": "workspace:*",
+    "@semio-tech/compose-react": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "fflate": "^0.8.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -25,7 +25,7 @@
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",
     "@playwright/test": "^1.57.0",
-    "@compose/asset": "^1.0.0",
+    "@semio-tech/compose-asset": "^1.0.0",
     "@tailwindcss/vite": "^4.1.13",
     "@types/mdx": "^2.0.13",
     "@types/node": "^25.0.8",

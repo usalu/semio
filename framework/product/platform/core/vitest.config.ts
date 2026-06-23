@@ -10,7 +10,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	resolve: {
 		alias: {
-			"@framework/core": resolve(root, "../../../core/index.ts"),
+			"@semio-tech/framework-core": resolve(root, "../../../core/index.ts"),
 		},
 	},
 	test: {

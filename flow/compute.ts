@@ -7,7 +7,7 @@ export {
   readStoredComputeWorkerCount,
   UI_COMPUTE_WORKER_COUNT_STORAGE_KEY,
   writeStoredComputeWorkerCount,
-} from "@ui/react";
+} from "@semio-tech/ui-react";
 
 export type FlowThreadPoolInit = (numThreads: number) => Promise<unknown>;
 

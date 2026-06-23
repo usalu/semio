@@ -4,7 +4,7 @@
 // #endregion ­ƒº▓Header
 
 //#region ­ƒîÉTransport
-/** @emoji ­ƒºÁ Bundled worker ÔÇö Vite resolves `@compose/rs-wasm`; Blob workers cannot import bare specifiers. */
+/** @emoji ­ƒºÁ Bundled worker ÔÇö Vite resolves `@semio-tech/compose-rs-wasm`; Blob workers cannot import bare specifiers. */
 export function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
 }
@@ -590,7 +590,7 @@ export class Kit {
 
   static async open(seed: KitBootstrapJson, opts?: KitOpenOptions): Promise<Kit> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
-    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __COMPOSE_WASM_SPECIFIER__?: string }).__COMPOSE_WASM_SPECIFIER__ ?? "@compose/rs-wasm";
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __COMPOSE_WASM_SPECIFIER__?: string }).__COMPOSE_WASM_SPECIFIER__ ?? "@semio-tech/compose-rs-wasm";
     const dto: KitBootstrapJson = JSON.parse(JSON.stringify(seed)) as KitBootstrapJson;
     const preferInlineWasmInVitest = (() => {
       try {
@@ -624,12 +624,12 @@ export class Kit {
       }
     }
 
-    let mod: typeof import("@compose/rs-wasm");
+    let mod: typeof import("@semio-tech/compose-rs-wasm");
     try {
-      mod = wasmSpecifier === "@compose/rs-wasm" ? await import("@compose/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+      mod = wasmSpecifier === "@semio-tech/compose-rs-wasm" ? await import("@semio-tech/compose-rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
     } catch (e) {
       const base = e instanceof Error ? e.message : String(e);
-      throw new Error(`Failed to load @compose/rs-wasm (inline path): ${base}`);
+      throw new Error(`Failed to load @semio-tech/compose-rs-wasm (inline path): ${base}`);
     }
     if (typeof mod.default === "function") {
       if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });

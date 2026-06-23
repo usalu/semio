@@ -3,5 +3,5 @@
   "description": "Decompose puzzle/2d monolith into crate-per-bundle stack: infinite/cavas, mathematical/graph, gis/map, reasoning/mindmap, puzzle/2d with React renderer split.",
   "goal": "puzzle",
   "status": "closed",
-  "summary": "Split puzzle/2d into crate-per-bundle stack: infinite_cavas (vcompute, geom_sel, scene_json, svg icons, CanvasExtension), mathematical_graph (layouts, BoardEngine, GraphExtension), gis_map and reasoning_mindmap extension stubs, puzzle_2d leaf cdylib+wasm; @infinite/cavas/react-renderer for generic reconciler adapters; puzzle/2d/react re-exports. cargo test puzzle_2d 97 passed, react vitest 154+2 passed, wasm build ok."
+  "summary": "Split puzzle/2d into crate-per-bundle stack: infinite_cavas (vcompute, geom_sel, scene_json, svg icons, CanvasExtension), mathematical_graph (layouts, BoardEngine, GraphExtension), gis_map and reasoning_mindmap extension stubs, puzzle_2d leaf cdylib+wasm; @semio-tech/infinite-cavas-react-renderer for generic reconciler adapters; puzzle/2d/react re-exports. cargo test puzzle_2d 97 passed, react vitest 154+2 passed, wasm build ok."
 }

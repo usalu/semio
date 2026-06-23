@@ -3,8 +3,8 @@
 ## Nx + Bun
 
 - Set `NX_WORKSPACE_DATA_DIRECTORY` to `${workspaceFolder}/.nx/workspace-data-terminal` (IDE uses default `.nx/workspace-data`; CLI uses this path to avoid SQLite lock contention on Windows).
-- Ran `bun nx run @compose/net:build`: first follow-up run showed `[local cache]` for dependent tasks.
-- Ran `bun nx run @compose/net:build --skip-nx-cache` to force a fresh .NET build after Compose changes.
+- Ran `bun nx run @semio-tech/compose-net:build`: first follow-up run showed `[local cache]` for dependent tasks.
+- Ran `bun nx run @semio-tech/compose-net:build --skip-nx-cache` to force a fresh .NET build after Compose changes.
 
 ## Compose.NET kit JSON
 

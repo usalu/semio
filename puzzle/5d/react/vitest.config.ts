@@ -6,17 +6,17 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@puzzle/5d/react` inlined source tests (`import.meta.vitest` blocks). */
+/** @emoji 🧪 Vitest for `@semio-tech/puzzle-5d-react` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@infinite/cavas/react-renderer", replacement: resolve(root, "../../../infinite/cavas/react-renderer/index.tsx") },
-			{ find: "@infinite/world/r3f", replacement: resolve(root, "../../../infinite/world/r3f/index.tsx") },
-			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
-			{ find: "@puzzle/2d/react", replacement: resolve(root, "../../2d/react/index.tsx") },
-			{ find: "@puzzle/3d/react", replacement: resolve(root, "../../3d/react/index.tsx") },
-			{ find: "@puzzle/3d/rs", replacement: resolve(root, "../../3d/rs/pkg/puzzle_3d.js") },
+			{ find: "@semio-tech/infinite-cavas-react-renderer", replacement: resolve(root, "../../../infinite/cavas/react-renderer/index.tsx") },
+			{ find: "@semio-tech/infinite-world-r3f", replacement: resolve(root, "../../../infinite/world/r3f/index.tsx") },
+			{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../ui/react/index.tsx") },
+			{ find: "@semio-tech/puzzle-2d-react", replacement: resolve(root, "../../2d/react/index.tsx") },
+			{ find: "@semio-tech/puzzle-3d-react", replacement: resolve(root, "../../3d/react/index.tsx") },
+			{ find: "@semio-tech/puzzle-3d-rs", replacement: resolve(root, "../../3d/rs/pkg/puzzle_3d.js") },
 		],
 	},
 	test: {

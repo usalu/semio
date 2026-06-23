@@ -11,7 +11,7 @@ bundle:
 
 ## Strict layering (algorithms Storybook)
 
-All algorithm story paths use **`@compose/js` `Session`** (`openSessionInMemory` + `Store.installProjection`) as the browser-facing `compose/rs` GraphQL wire. For **UI** and shared DTO shapes, use **`@compose/react`** and **`@compose/ui`** re-exports.
+All algorithm story paths use **`@semio-tech/compose-js` `Session`** (`openSessionInMemory` + `Store.installProjection`) as the browser-facing `compose/rs` GraphQL wire. For **UI** and shared DTO shapes, use **`@semio-tech/compose-react`** and **`@compose/ui`** re-exports.
 
 ## 🕸️ Systems
 
@@ -30,6 +30,6 @@ All algorithm story paths use **`@compose/js` `Session`** (`openSessionInMemory`
 ## 🛠️ Mechanisms
 
 - **AlgorithmApp Shell**: Standardized golden-layout configuration that wires context state to specialized windows (VecInput, PiecesSelectionInput, etc.).
-- **Single Source Runner**: Storybook helpers call `@compose/js` `KitStore`, which re-exports the `compose/rs` WASM implementation. Do not add native bridge, REST, stdin, or multi-language adapter paths here.
+- **Single Source Runner**: Storybook helpers call `@semio-tech/compose-js` `KitStore`, which re-exports the `compose/rs` WASM implementation. Do not add native bridge, REST, stdin, or multi-language adapter paths here.
 
 ## 📛 Entities

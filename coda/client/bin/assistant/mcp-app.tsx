@@ -1,12 +1,12 @@
 // #region Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
-// Specs: MCP App for coda; uses @ui/react and @modelcontextprotocol/ext-apps/react like semio engine pattern.
+// Specs: MCP App for coda; uses @semio-tech/ui-react and @modelcontextprotocol/ext-apps/react like semio engine pattern.
 // Summary: Host iframe renders workspace payload from show_coda_workspace with panel tabs.
 // #endregion Header
 
 // #region 🔌Adapters
-import { Card, CardGrid, reactHostPort, setUiLocale } from "@ui/react";
-import "@ui/react/globals.css";
+import { Card, CardGrid, reactHostPort, setUiLocale } from "@semio-tech/ui-react";
+import "@semio-tech/ui-react/globals.css";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 import React from "react";

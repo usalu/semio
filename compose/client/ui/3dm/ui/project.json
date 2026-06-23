@@ -1,5 +1,5 @@
 {
-  "name": "@compose/3dm-ui",
+  "name": "@semio-tech/compose-3dm-ui",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

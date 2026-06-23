@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@coda/desktop` router: `bun ./script.ts <dev|build|publish|policy> [args…]`. */
+/** 🧭 `@semio-tech/coda-desktop` router: `bun ./script.ts <dev|build|publish|policy> [args…]`. */
 import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";
 import { getWorkspaceRoot } from "../../../../repo/lib/js/src/index.ts";
@@ -8,7 +8,7 @@ import { defineLint } from "../../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "renderer.tsx";
 
-export const policy = defineLint("@coda/desktop-renderer", (l: FileLinter) => {
+export const policy = defineLint("@semio-tech/coda-desktop-renderer", (l: FileLinter) => {
   const repoRoot = getWorkspaceRoot();
   const file = l.path();
   return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);

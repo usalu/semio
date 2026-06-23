@@ -1,7 +1,7 @@
 import {
 	figureFrameForSourceAspect,
 	type SlideFile,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
 const PARTICIPANT = "typologien-baum";
 const EMBODIMENT = "typologien-baum--figure";

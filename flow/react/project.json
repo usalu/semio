@@ -1,5 +1,5 @@
 {
-  "name": "@flow/react",
+  "name": "@semio-tech/flow-react",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

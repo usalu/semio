@@ -1,12 +1,12 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@flow/module-bim",
+  "name": "@semio-tech/flow-module-bim",
   "version": "0.1.0",
   "description": "flow · module · bim",
   "type": "module",
   "private": true,
   "scripts": {
-    "wasm": "bun nx run @flow/module-bim:wasm"
+    "wasm": "bun nx run @semio-tech/flow-module-bim:wasm"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

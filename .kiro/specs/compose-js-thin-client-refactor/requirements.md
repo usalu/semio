@@ -7,9 +7,9 @@ Refactor `compose/js` (`index.ts`, ~31k lines) from a monolithic TypeScript libr
 ## Glossary
 
 - **Thin_Client**: The refactored `compose/js` library that contains zero domain logic and zero caching, delegating all computation to `compose/rs` via WASM.
-- **WASM_Bridge**: The Worker + Comlink communication layer between `compose/js` and the `KitStoreHandle` class exposed by `@compose/rs-wasm`.
+- **WASM_Bridge**: The Worker + Comlink communication layer between `compose/js` and the `KitStoreHandle` class exposed by `@semio-tech/compose-rs-wasm`.
 - **KitStoreHandle**: The Rust-side WASM class (`compose/rs/pkg`) that owns the live `KitGraph`, exposes GraphQL, read commands, change commands, VCS state, and domain operations.
-- **KitStoreClient**: The TypeScript interface in `compose/js` that defines the boundary contract consumed by `@compose/react` and the sketchpad.
+- **KitStoreClient**: The TypeScript interface in `compose/js` that defines the boundary contract consumed by `@semio-tech/compose-react` and the sketchpad.
 - **Domain_Logic**: Any computation that transforms, resolves, or derives data from kit entities — including flatten geometry, piece placement, child plane computation, representation selection (Jaccard scoring), quality aggregation, type/design/piece resolution, connector compatibility, diff computation, and merkle hashing.
 - **Free_Function**: Any exported `const fn = () => ...` or `export function fn()` that is not a method on a class or a static method on a class.
 - **Entity_Class**: An OO class representing a kit domain entity (e.g., `Coordinate`, `Plane`, `Type`, `Design`, `Piece`, `Connection`, `Kit`).
@@ -108,7 +108,7 @@ Refactor `compose/js` (`index.ts`, ~31k lines) from a monolithic TypeScript libr
 
 1. THE Thin_Client SHALL retain the `WorkerKitStoreClient` class that communicates with `KitStoreHandle` via a Web Worker and Comlink.
 2. THE Thin_Client SHALL retain the `FallbackKitStoreClient` class that communicates with `KitStoreHandle` in-process for Node/test environments.
-3. THE Thin_Client SHALL retain the `KitStoreClient` interface as the boundary contract consumed by `@compose/react` and the sketchpad.
+3. THE Thin_Client SHALL retain the `KitStoreClient` interface as the boundary contract consumed by `@semio-tech/compose-react` and the sketchpad.
 4. THE Thin_Client SHALL retain the `createKitStoreClient` factory function (as a static method on an appropriate class) that selects between Worker and fallback modes.
 5. THE Thin_Client SHALL retain the `kitWorkerApi` object (as a class) that hosts the WASM module in the Worker thread.
 6. WHEN a `KitStoreClient` method is called, THE Thin_Client SHALL forward the call to `KitStoreHandle` via the WASM_Bridge without performing any local computation or transformation beyond JSON serialization.

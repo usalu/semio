@@ -8,8 +8,8 @@
 
 // #endregion 🧲Header
 
-import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@ui/react";
-import { createIconComponent } from "@ui/react";
+import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@semio-tech/ui-react";
+import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter } from "react-router";
 

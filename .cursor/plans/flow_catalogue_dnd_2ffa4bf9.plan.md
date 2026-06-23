@@ -27,7 +27,7 @@ todos:
     content: Update flow/core/Cargo.toml deps, root Cargo.toml members, and launch.json cargo entries; verify framework exports build.
     status: completed
   - id: validate
-    content: Run cargo tests, wasm build, vitest, and extend @flow/play:validate playwright probe for catalogue + drag-drop + wiring + persistence.
+    content: Run cargo tests, wasm build, vitest, and extend @semio-tech/flow-play:validate playwright probe for catalogue + drag-drop + wiring + persistence.
     status: completed
 isProject: false
 ---
@@ -65,8 +65,8 @@ isProject: false
 
 ## 5. Validation (must confirm at runtime)
 - `cargo test -p neural_engine -p flow_module_math -p flow_module_text -p flow_module_logic -p flow_core -p mathematical_graph_port_directed_dag`.
-- `bun nx run @flow/core:wasm`; `bun nx run @flow/react:test` and `@flow/play:test`.
-- `bun nx run @flow/play:validate` (extend the playwright probe): catalogue shows module/Inputs/Outputs sections; drag a `math.add` onto canvas creates a node; wire ports; preview updates; reload restores persisted fixture; `[DEBUG]` logs confirm evaluate.
+- `bun nx run @semio-tech/flow-core:wasm`; `bun nx run @semio-tech/flow-react:test` and `@semio-tech/flow-play:test`.
+- `bun nx run @semio-tech/flow-play:validate` (extend the playwright probe): catalogue shows module/Inputs/Outputs sections; drag a `math.add` onto canvas creates a node; wire ports; preview updates; reload restores persisted fixture; `[DEBUG]` logs confirm evaluate.
 
 ## Execution notes (repo rules)
 - At start: read `repo://goals`, `ticket_reopen` the existing `Flow Language Vertical Slice` ticket (`2603...`) or `ticket_open` a new one; keep temp/logs in the ticket folder. Do not edit any `AGENTS.md`. Use regions, concise code, emoji docstrings; permanent commands only via each package `script.ts`.

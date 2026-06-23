@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@puzzle/5d/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/puzzle-5d-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -55,14 +55,14 @@ export default createPlaygroundPlayViteConfig({
 	playEntryKind: "5d",
 	extraPlugins: [puzzle5dFixtureServePlugin(puzzle5dFixtureRoot)],
 	extraAliases: [
-		{ find: "@puzzle/2d/react", replacement: path.resolve(repoRoot, "puzzle/2d/react/index.tsx") },
-		{ find: "@puzzle/3d/react", replacement: path.resolve(repoRoot, "puzzle/3d/react/index.tsx") },
-		{ find: "@puzzle/5d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+		{ find: "@semio-tech/puzzle-3d-react", replacement: path.resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+		{ find: "@semio-tech/puzzle-5d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: /^three$/, replacement: threeModule },
 		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],
 	build: { outDir: "dist", emptyOutDir: true },
-	resolveDedupe: ["react", "react-dom", "three", "@puzzle/2d/react", "@puzzle/3d/react", "@puzzle/5d/react"],
+	resolveDedupe: ["react", "react-dom", "three", "@semio-tech/puzzle-2d-react", "@semio-tech/puzzle-3d-react", "@semio-tech/puzzle-5d-react"],
 	optimizeDeps: {
 		include: [
 			"react",
@@ -73,10 +73,10 @@ export default createPlaygroundPlayViteConfig({
 			"@react-three/fiber",
 			"@react-three/drei",
 			"lucide-react",
-			"@infinite/world/r3f",
-			"@puzzle/2d/react",
-			"@puzzle/3d/react",
-			"@puzzle/5d/react",
+			"@semio-tech/infinite-world-r3f",
+			"@semio-tech/puzzle-2d-react",
+			"@semio-tech/puzzle-3d-react",
+			"@semio-tech/puzzle-5d-react",
 		],
 		esbuildOptions: { target: "esnext" },
 	},

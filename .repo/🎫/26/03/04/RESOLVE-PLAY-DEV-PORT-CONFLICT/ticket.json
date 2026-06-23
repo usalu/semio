@@ -1,7 +1,7 @@
 {
   "title": "Resolve Play Dev Port Conflict",
   "status": "closed",
-  "prompt": "Investigate and resolve the @compose/play dev server failing because port 4000 is already occupied by an existing local process.",
+  "prompt": "Investigate and resolve the @semio-tech/compose-sketchpad-play dev server failing because port 4000 is already occupied by an existing local process.",
   "summary": "Bulk close",
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-03-04T12:28:34.670375948Z",
@@ -16,7 +16,7 @@
       "system": "linux",
       "client": "codex",
       "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
-      "prompt": "Investigate and resolve the @compose/play dev server failing because port 4000 is already occupied by an existing local process.",
+      "prompt": "Investigate and resolve the @semio-tech/compose-sketchpad-play dev server failing because port 4000 is already occupied by an existing local process.",
       "llm": "gpt-5-3-codex"
     }
   ]

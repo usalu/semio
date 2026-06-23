@@ -20,7 +20,7 @@ const mainTests = lines.slice(secondTestsStart, playgroundHostStart);
 const playgroundHost = lines.slice(playgroundHostStart);
 
 const treeImport =
-	'import type { TreeDataItem, TreeDataSection } from "@ui/react";\nimport { playgroundTreePanelRootItems } from "@framework/playground/renderer/react";\n';
+	'import type { TreeDataItem, TreeDataSection } from "@semio-tech/ui-react";\nimport { playgroundTreePanelRootItems } from "@semio-tech/framework-playground-renderer-react";\n';
 
 const reactWithImports = [...reactMiddle];
 const globalsIdx = reactWithImports.findIndex((l) => l.startsWith('import "./globals.css"'));

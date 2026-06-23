@@ -12,8 +12,8 @@
 // Storybook stories exercising the validation tree viewer with real evaluation data.
 // Stories MUST use the Treppenraum_A example from the OWL ontology validation.
 
-import type { ValidationReport } from "@coda/desktop/renderer";
-import { ValidationTree } from "@coda/desktop/renderer";
+import type { ValidationReport } from "@semio-tech/coda-desktop/renderer";
+import { ValidationTree } from "@semio-tech/coda-desktop/renderer";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 

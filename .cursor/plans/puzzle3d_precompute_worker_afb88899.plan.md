@@ -90,7 +90,7 @@ Wiring:
 
 ## 4. Build / launch / tooling wiring (zero-touch, cross-platform)
 
-- `puzzle/3d/rs/project.json` + `package.json`: `wasm` target calling `bun ./script.ts wasm` (mirror `@puzzle/2d/rs`).
+- `puzzle/3d/rs/project.json` + `package.json`: `wasm` target calling `bun ./script.ts wasm` (mirror `@semio-tech/puzzle-2d-rs`).
 - Register the wasm build + worker debug entries in `launch.json` following the existing puzzle/2d ordering/grouping.
 - Vite already bundles `new Worker(new URL(...))`; confirm `puzzle/3d/play/vite.config.ts` resolves the wasm asset (same approach as 2d).
 

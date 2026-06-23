@@ -3,16 +3,16 @@ name: Folder Structure Migration
 overview: "Complete the in-progress monorepo restructure for the ui, framework, cad and puzzle technologies: the code already physically sits in the new top-level folders, so this migration renames package scopes to match folders (folder = technology = scope) and rewires all stale tooling paths. compose and coda are deferred."
 todos:
   - id: ticket-ui
-    content: "Open ticket; rename ui technology: @elements/ui->@ui/react, @elements/styling->@ui/styling (+ Nx @ui/styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
+    content: "Open ticket; rename ui technology: @elements/ui->@semio-tech/ui-react, @elements/styling->@semio-tech/ui-styling (+ Nx @semio-tech/ui-styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
     status: completed
   - id: ticket-framework
-    content: "Open ticket; rename framework technology: @elements/framework->@framework/platform/core, @elements/framework-react->@framework/platform/core-react, @elements/playground->@framework/playground/core; split playground renderer into @framework/playground/core-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
+    content: "Open ticket; rename framework technology: @elements/framework->@semio-tech/framework-platform-core, @elements/framework-react->@semio-tech/framework-platform-core-react, @elements/playground->@semio-tech/framework-playground-core; split playground renderer into @semio-tech/framework-playground-core-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
     status: completed
   - id: ticket-puzzle
-    content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @ui/react/@framework/playground/core(-react)."
+    content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @semio-tech/ui-react/@semio-tech/framework-playground-core(-react)."
     status: completed
   - id: ticket-cad
-    content: Open ticket; rename cad packages @spatial/js-*->@cad/js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @framework/playground/core + @ui/react.
+    content: Open ticket; rename cad packages @spatial/js-*->@semio-tech/cad-js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @semio-tech/framework-playground-core + @semio-tech/ui-react.
     status: completed
   - id: ticket-root-rewire
     content: Open consolidating ticket; rewire root package.json workspaces + scripts (dev:spatial->dev:cad, storybook ids), script.ts dev mapping, .vscode/launch.json, .storybook/main.ts + stories, nx.json/eslint/Monorepo.sln. Run bun install to regenerate bun.lock.
@@ -34,20 +34,20 @@ Work happens inside repo MCP tickets under the `AI-optimized Repo` goal (folder/
 ## Target scope renames (folder = scope)
 
 - ui
-  - `@elements/ui` (`ui/react`) -> `@ui/react`
-  - `@elements/styling` (`ui/styling/js`) -> `@ui/styling`
-  - Nx `@elements/styling-core` (`ui/styling/project.json`) -> `@ui/styling-tokens`
+  - `@elements/ui` (`ui/react`) -> `@semio-tech/ui-react`
+  - `@elements/styling` (`ui/styling/js`) -> `@semio-tech/ui-styling`
+  - Nx `@elements/styling-core` (`ui/styling/project.json`) -> `@semio-tech/ui-styling-tokens`
 - framework
-  - `@elements/framework` (`framework/platform/core`) -> `@framework/platform/core`
-  - `@elements/framework-react` (`framework/platform/renderer/react`) -> `@framework/platform/core-react`
-  - `@elements/playground` (`framework/playground/core`) -> `@framework/playground/core`
-  - new `@framework/playground/core-react` package at `framework/playground/renderer/react` (currently a broken `./react` export off core)
+  - `@elements/framework` (`framework/platform/core`) -> `@semio-tech/framework-platform-core`
+  - `@elements/framework-react` (`framework/platform/renderer/react`) -> `@semio-tech/framework-platform-core-react`
+  - `@elements/playground` (`framework/playground/core`) -> `@semio-tech/framework-playground-core`
+  - new `@semio-tech/framework-playground-core-react` package at `framework/playground/renderer/react` (currently a broken `./react` export off core)
 - puzzle
   - `@elements/board` (`puzzle/2d`) -> `@puzzle/board`; crate `elements_board` (`puzzle/2d/rs`) -> `puzzle_board`; `@elements/board-wasm` -> `@puzzle/board-wasm`
   - `@elements/scene` (`puzzle/3d`) -> `@puzzle/scene`
   - `@elements/topology` (`puzzle/combined`) -> `@puzzle/topology`
 - cad (folder `cad`, all packages currently `@spatial/js-*`)
-  - `@spatial/js-workspace|core|kernel-brepjs|query|machine-stately|renderer-r3f` -> `@cad/js-workspace|js-core|js-kernel-brepjs|js-query|js-machine-stately|js-renderer-r3f`
+  - `@spatial/js-workspace|core|kernel-brepjs|query|machine-stately|renderer-r3f` -> `@semio-tech/cad-js-workspace|js-core|js-kernel-brepjs|js-query|js-machine-stately|js-renderer-r3f`
 
 ## Tooling to rewire
 
@@ -55,7 +55,7 @@ Work happens inside repo MCP tickets under the `AI-optimized Repo` goal (folder/
 - Root [script.ts](script.ts): update `dev` subcommand mapping (`spatial`/`board`/`scene`) and any `@spatial/*` / `@elements/*` references and storybook project ids.
 - Every `project.json` under `ui/`, `framework/`, `puzzle/`, `cad/js/`: fix `cwd` (still `elements/lib/...` / `spatial/js/...`) and Nx project `name`.
 - Every package's `package.json` `name`, `repository.directory`, and intra-repo `dependencies` (the `@elements/*` / `@spatial/*` deps between these packages).
-- Per-package `vite.config.ts` aliases (notably `cad/js/renderer-r3f` aliasing `@elements/playground` -> `@framework/playground/core`, `@elements/ui` -> `@ui/react`).
+- Per-package `vite.config.ts` aliases (notably `cad/js/renderer-r3f` aliasing `@elements/playground` -> `@semio-tech/framework-playground-core`, `@elements/ui` -> `@semio-tech/ui-react`).
 - Fix `framework/playground/core/package.json` `./react` export and implement/export `renderPlayground` in `framework/playground/renderer/react/index.tsx` (referenced by `puzzle/3d/play/main.ts`).
 - [.storybook/main.ts](.storybook/main.ts) + stories under `.storybook/story/elements/**`: update `@elements/*` imports and story paths.
 - [.vscode/launch.json](.vscode/launch.json): rename launch configs referencing spatial/elements/board/scene per existing grouping.
@@ -67,22 +67,22 @@ Per-technology renames (ui, framework, puzzle, cad) are largely independent and 
 
 ## Known breakage (accepted, deferred)
 
-- `compose` (`@compose/sketchpad` imports `@elements/ui`, `@elements/framework-react`, `@elements/board`, `@elements/scene`) and `coda` (`@coda/desktop` imports `@elements/ui`) will have dangling imports. Their workspace entries stay; fixing their import specifiers is deferred to the future compose/coda migration ticket.
+- `compose` (`@semio-tech/compose-sketchpad` imports `@elements/ui`, `@elements/framework-react`, `@elements/board`, `@elements/scene`) and `coda` (`@semio-tech/coda-desktop` imports `@elements/ui`) will have dangling imports. Their workspace entries stay; fixing their import specifiers is deferred to the future compose/coda migration ticket.
 
 ## Target dependency graph
 
 ```mermaid
 flowchart TB
   subgraph ui [ui]
-    UIR["@ui/react"]
-    UIS["@ui/styling"]
+    UIR["@semio-tech/ui-react"]
+    UIS["@semio-tech/ui-styling"]
     UIR --> UIS
   end
   subgraph fw [framework]
-    FP["@framework/platform/core"]
-    FPR["@framework/platform/core-react"]
-    PG["@framework/playground/core"]
-    PGR["@framework/playground/core-react"]
+    FP["@semio-tech/framework-platform-core"]
+    FPR["@semio-tech/framework-platform-core-react"]
+    PG["@semio-tech/framework-playground-core"]
+    PGR["@semio-tech/framework-playground-core-react"]
     FPR --> FP
     FPR --> UIR
     PGR --> PG
@@ -98,8 +98,8 @@ flowchart TB
     TOP --> BRD
   end
   subgraph cad [cad]
-    CR["@cad/js-renderer-r3f"]
-    CC["@cad/js-core"]
+    CR["@semio-tech/cad-js-renderer-r3f"]
+    CC["@semio-tech/cad-js-core"]
     CR --> CC
     CR --> PGR
     CR --> UIR

@@ -10,17 +10,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - project: "@compose/play"
+          - project: "@semio-tech/compose-sketchpad-play"
             dist: compose/client/lib/sketchpad/play/dist
-          - project: "@cad/js/renderer"
+          - project: "@semio-tech/cad-js-renderer"
             dist: cad/js/renderer/play/dist
-          - project: "@puzzle/2d/play"
+          - project: "@semio-tech/puzzle-2d-play"
             dist: puzzle/2d/play/dist
-          - project: "@puzzle/3d/play"
+          - project: "@semio-tech/puzzle-3d-play"
             dist: puzzle/3d/play/dist
-          - project: "@puzzle/5d/play"
+          - project: "@semio-tech/puzzle-5d-play"
             dist: puzzle/5d/play/dist
-          - project: "@mit-bestand/praesentation/projektetage"
+          - project: "@semio-tech/mit-bestand-praesentation-projektetage"
             dist: mit-bestand/präsentation/33.projektetage/dist
     steps:
       - uses: actions/checkout@v4

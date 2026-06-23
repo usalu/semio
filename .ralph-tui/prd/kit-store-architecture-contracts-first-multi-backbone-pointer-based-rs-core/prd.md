@@ -49,13 +49,13 @@ pnpm exec nx build compose/graphql
 
 **Embedded/unit tests when behavior changes in TS layers (run when the story touches that package):**
 - ```bash
-pnpm --filter @compose/js test
-pnpm --filter @compose/react test
+pnpm --filter @semio-tech/compose-js test
+pnpm --filter @semio-tech/compose-react test
 ```
 
 **Sketchpad build gate when sketchpad changes:**
 - ```bash
-pnpm --filter @compose/sketchpad build
+pnpm --filter @semio-tech/compose-sketchpad build
 ```
 
 For **UI / sketchpad** stories, also include:

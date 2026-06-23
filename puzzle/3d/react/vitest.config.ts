@@ -7,19 +7,19 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 const playgroundRendererRoot = resolve(root, "../../../framework/product/playground/renderer/react");
 
-/** @emoji 🧪 Vitest for `@puzzle/3d/react` inlined source tests (`import.meta.vitest` blocks). */
+/** @emoji 🧪 Vitest for `@semio-tech/puzzle-3d-react` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@infinite/world/r3f": resolve(root, "../../../infinite/world/r3f/index.tsx"),
-			"@puzzle/3d/rs": resolve(root, "../rs/pkg/puzzle_3d.js"),
-			"@ui/react": resolve(root, "../../../ui/react/index.tsx"),
-			"@puzzle/3d/play": resolve(root, "../play/index.ts"),
-			"@framework/playground/core": resolve(root, "../../../framework/product/playground/core/index.ts"),
-			"@framework/playground/renderer/react/puzzle/3d": resolve(playgroundRendererRoot, "index.tsx"),
-			"@framework/platform/core": resolve(root, "../../../framework/product/platform/core/index.ts"),
-			"@framework/platform/renderer/react": resolve(root, "../../../framework/product/platform/renderer/react/index.tsx"),
+			"@semio-tech/infinite-world-r3f": resolve(root, "../../../infinite/world/r3f/index.tsx"),
+			"@semio-tech/puzzle-3d-rs": resolve(root, "../rs/pkg/puzzle_3d.js"),
+			"@semio-tech/ui-react": resolve(root, "../../../ui/react/index.tsx"),
+			"@semio-tech/puzzle-3d-play": resolve(root, "../play/index.ts"),
+			"@semio-tech/framework-playground-core": resolve(root, "../../../framework/product/playground/core/index.ts"),
+			"@semio-tech/framework-playground-renderer-react/puzzle/3d": resolve(playgroundRendererRoot, "index.tsx"),
+			"@semio-tech/framework-platform-core": resolve(root, "../../../framework/product/platform/core/index.ts"),
+			"@semio-tech/framework-platform-renderer-react": resolve(root, "../../../framework/product/platform/renderer/react/index.tsx"),
 		},
 	},
 	test: {

@@ -43,7 +43,7 @@ The intro `data-id` elements, section `data-auto-animate-id`, and `autoAnimateId
 ## Tests / verification
 - The intro DOM/id tests (around index.tsx 5240-5320) already assert the commit's structure and must stay green; do not change them.
 - Adjust only CSS-source string assertions that reference a rule we delete/move (verify the regexes at index.tsx 5256-5264 and 5409-5415 still pass; update them only if a removed declaration was asserted).
-- Run `bun nx run @framework/presentation/renderer/react:test` and `bun nx run @mit-bestand/praesentation/projektetage:test`, then `:typecheck`, and confirm all green before closing.
+- Run `bun nx run @semio-tech/framework-presentation-renderer-react:test` and `bun nx run @semio-tech/mit-bestand-praesentation-projektetage:test`, then `:typecheck`, and confirm all green before closing.
 
 ## Repo workflow
 - Read `repo://goals`, then open (or reopen) a ticket via the repo MCP under `🎯presentation` for this fix; keep any temp/log files inside the ticket folder.

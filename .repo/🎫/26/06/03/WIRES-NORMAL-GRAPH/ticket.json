@@ -3,7 +3,7 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Make WIRES/mindmaps render as true normal graphs (no handles, edges node-to-node) by generalizing the Rust rendering host over the port-model axis, adding a normal-graph fixture schema, and reducing the React/wires layer to a thin canvas wrapper.",
-  "summary": "Added GraphPortMode (Normal|Ported) to BoardHost in puzzle/2d/rs with branching for parse_fixture_v1 (reasoning.mindmap.fixture/v1), edge_curve/visibility, scene draw, hit-test, delete_selection; BoardSession.newNormal() WASM export. Migrated metabolism.wires.json to node-id edges without handles. Created @reasoning/mindmap/react MindmapCanvas thin wrapper, reasoning/mindmap/rs crate, reasoning/mindmap/play exports. Framework wires play uses MindmapCanvas instead of port-graph Puzzle2dCanvas. Tests: cargo puzzle_2d mindmap fixture, reasoning_mindmap_rs, wires/react vitest, mindmap/react vitest, wires/play test script — all passed.",
+  "summary": "Added GraphPortMode (Normal|Ported) to BoardHost in puzzle/2d/rs with branching for parse_fixture_v1 (reasoning.mindmap.fixture/v1), edge_curve/visibility, scene draw, hit-test, delete_selection; BoardSession.newNormal() WASM export. Migrated metabolism.wires.json to node-id edges without handles. Created @semio-tech/reasoning-mindmap-react MindmapCanvas thin wrapper, reasoning/mindmap/rs crate, reasoning/mindmap/play exports. Framework wires play uses MindmapCanvas instead of port-graph Puzzle2dCanvas. Tests: cargo puzzle_2d mindmap fixture, reasoning_mindmap_rs, wires/react vitest, mindmap/react vitest, wires/play test script — all passed.",
   "goal": "🎯mathematical🎯graph",
   "plan": {
     "client": "cursor",

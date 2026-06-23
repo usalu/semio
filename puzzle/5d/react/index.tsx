@@ -1,9 +1,9 @@
 // #region 🧲Header
-/** @emoji 🔗 `@puzzle/5d/react` — paired 2d + 3d puzzle 5d surfaces and play harness (monolith). */
+/** @emoji 🔗 `@semio-tech/puzzle-5d-react` — paired 2d + 3d puzzle 5d surfaces and play harness (monolith). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, type ContextMenuItem, type GumballConfig } from "@ui/react";
+import { reactHostPort, type ContextMenuItem, type GumballConfig } from "@semio-tech/ui-react";
 import { PUZZLE_3D_GUMBALL_CONFIG, puzzle3dObjectGumballConfig } from "../../3d/react/index.tsx";
 import type { ReactElement } from "react";
 
@@ -57,7 +57,7 @@ import {
   usePuzzle2dRenderer,
   type Puzzle2dBrushSessionSnapshot,
   type Puzzle2dRenderer,
-} from "@puzzle/2d/react";
+} from "@semio-tech/puzzle-2d-react";
 import {
   ObjectStateProvider as Puzzle3dPartStateProvider,
   Objects as Puzzle3dParts,

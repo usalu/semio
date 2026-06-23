@@ -1,5 +1,5 @@
 {
-  "name": "@compose/net",
+  "name": "@semio-tech/compose-net",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {

@@ -26,7 +26,7 @@ jobs:
       - name: Install and build docs site
         run: |
           bun install --frozen-lockfile
-          bun nx run @compose/docs:build
+          bun nx run @semio-tech/compose-sketchpad-docs:build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

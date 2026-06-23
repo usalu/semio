@@ -1,4 +1,4 @@
-# @repo/lib (JS)
+# @semio-tech/repo-lib (JS)
 
 Repo policy lint facade and GraphQL CLI subprocess helpers.
 

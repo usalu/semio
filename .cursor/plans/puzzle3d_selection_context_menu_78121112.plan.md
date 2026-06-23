@@ -49,7 +49,7 @@ flowchart LR
 
 New region `🖱️SelectionContextMenu` placed next to the brush menu (`Puzzle3dBrushCandidateMenu`, ~L8753) and overlay (`<Puzzle3dBrushCandidateMenu />`, ~L8403):
 
-- Import `ContextMenuItem`, `renderContextMenuItems` from `@ui/react` (already importing `glassMenuClass`, `cn`, `SelectionMarquee` from there).
+- Import `ContextMenuItem`, `renderContextMenuItems` from `@semio-tech/ui-react` (already importing `glassMenuClass`, `cn`, `SelectionMarquee` from there).
 - `puzzle3dSelectionMenuStore`: external store `{ open: boolean; anchor: ScreenPoint | null; target: HoverTarget | null }` (mirror `createBrushUiStore`/`puzzle3dBrushUiStore` at ~L7423).
 - `puzzle3dSelectionActionsRef`: module ref holding host callbacks `{ toggleHidden(value); toggleLocked(value); delete(); duplicate(); selectSameKind() }`, published by `PlayCanvas` (same pattern as `puzzle3dBrushMenuSourceRef`).
 - `buildPuzzle3dSelectionMenuItems(selection, flags, target)`: pure builder returning `ContextMenuItem[]`:

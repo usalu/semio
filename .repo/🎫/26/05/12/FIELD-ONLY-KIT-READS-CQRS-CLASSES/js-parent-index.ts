@@ -10,7 +10,7 @@ import { z } from "zod";
 
 // #region 🧵InlineWorker
 
-/** @emoji 🧵 Bundled worker chunk — Vite resolves `@compose/rs-wasm`; Blob workers cannot import bare specifiers. */
+/** @emoji 🧵 Bundled worker chunk — Vite resolves `@semio-tech/compose-rs-wasm`; Blob workers cannot import bare specifiers. */
 function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
 }
@@ -1769,7 +1769,7 @@ class WorkerStringTransport {
     this.worker = worker;
   }
 
-  /** @emoji 🧵 Resolves on `ready`; rejects fast on worker-thread `error` (e.g. `@compose/rs-wasm` not resolvable from Blob worker) instead of waiting the full timeout. */
+  /** @emoji 🧵 Resolves on `ready`; rejects fast on worker-thread `error` (e.g. `@semio-tech/compose-rs-wasm` not resolvable from Blob worker) instead of waiting the full timeout. */
   init(dto: KitFullDto): Promise<void> {
     return new Promise((resolve, reject) => {
       const t = setTimeout(() => {
@@ -2193,7 +2193,7 @@ export class KitStore {
 
   static async open(initialKit: KitFullDto, opts?: KitStoreOpenOptions): Promise<KitStore> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
-    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __COMPOSE_WASM_SPECIFIER__?: string }).__COMPOSE_WASM_SPECIFIER__ ?? "@compose/rs-wasm";
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __COMPOSE_WASM_SPECIFIER__?: string }).__COMPOSE_WASM_SPECIFIER__ ?? "@semio-tech/compose-rs-wasm";
     const dto = JSON.parse(JSON.stringify(initialKit)) as KitFullDto;
     /** Vitest may expose `Worker` (e.g. jsdom); blob worker still `fetch`es `.wasm` — prefer inline init when Vitest is active. */
     const preferInlineWasmInVitest = (() => {
@@ -2219,7 +2219,7 @@ export class KitStore {
         void ks.startSubscriptionLoop();
         return ks;
       } catch (workerErr) {
-        /** @emoji 🧵 Blob worker can't resolve `@compose/rs-wasm` bare specifier → fall back to inline WASM on the main thread (still real rust authority). */
+        /** @emoji 🧵 Blob worker can't resolve `@semio-tech/compose-rs-wasm` bare specifier → fall back to inline WASM on the main thread (still real rust authority). */
         console.warn("[compose/js] dedicated WASM worker init failed; falling back to inline main-thread WASM", workerErr);
         try {
           wt.dispose();
@@ -2229,16 +2229,16 @@ export class KitStore {
       }
     }
 
-    let mod: typeof import("@compose/rs-wasm");
+    let mod: typeof import("@semio-tech/compose-rs-wasm");
     try {
-      mod = wasmSpecifier === "@compose/rs-wasm" ? await import("@compose/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+      mod = wasmSpecifier === "@semio-tech/compose-rs-wasm" ? await import("@semio-tech/compose-rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
     } catch (e) {
       const base = e instanceof Error ? e.message : String(e);
       const net = /Failed to fetch|fetch|ERR_CONNECTION_REFUSED|LOAD_FAILED|network/i.test(base);
       const hint = net
         ? " The Vite dev server may have stopped (restore with `npm run dev` in compose/sketchpad, then hard-refresh)."
         : "";
-      throw new Error(`Failed to load @compose/rs-wasm (inline path): ${base}.${hint}`);
+      throw new Error(`Failed to load @semio-tech/compose-rs-wasm (inline path): ${base}.${hint}`);
     }
     if (typeof mod.default === "function") {
       if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
@@ -4158,7 +4158,7 @@ const COMPOSE_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
 
 /**
  * @emoji 🧾 Hub for async GraphQL-backed kit reads: {@link KitStoreClient} subscription fan-out, per-key
- * {@link KitStoreReadSnap}, and invalidation predicates — {@link useSyncExternalStore} wires in `@compose/react`.
+ * {@link KitStoreReadSnap}, and invalidation predicates — {@link useSyncExternalStore} wires in `@semio-tech/compose-react`.
  */
 export class ComposeKitLiveReadStore {
   private readonly snap = new Map<string, KitStoreReadSnap>();
@@ -6905,7 +6905,7 @@ export type KitSyncSnapshot = { status: string; dirty: boolean; readonly: boolea
 export const DEFAULT_KIT_SYNC: Readonly<KitSyncSnapshot> = Object.freeze({ status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null });
 export type KitStoreSnapshot = { kit: Kit; sync: KitSyncSnapshot };
 export type KitHostStore = { getSnapshot(): KitStoreSnapshot; subscribe(onChange: () => void): () => void; replace(kit: Kit): void };
-/** @emoji 🧾 Alias for hosts that still import `KitHostStoreSnapshot` from `@compose/js`. */
+/** @emoji 🧾 Alias for hosts that still import `KitHostStoreSnapshot` from `@semio-tech/compose-js`. */
 export type KitHostStoreSnapshot = KitStoreSnapshot;
 /** @emoji 🧾 Plain DTO aliases for React/schema bridges (same as `*Dto` types). */
 export type DesignPlain = DesignDto;
@@ -6918,7 +6918,7 @@ export type CoordinatePlain = CoordinateDto;
 export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
-  /** @internal Used by `inferPersistenceFromInit` in @compose/react. */
+  /** @internal Used by `inferPersistenceFromInit` in @semio-tech/compose-react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: KitLike) {
     this._kit = seed instanceof Kit ? seed : Kit.fromDto(seed as KitFullDto);

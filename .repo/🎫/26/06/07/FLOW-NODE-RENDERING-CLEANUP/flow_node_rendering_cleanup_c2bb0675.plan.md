@@ -91,8 +91,8 @@ Add a `shows_name`-style helper on `DagDrawLod` and apply it uniformly across `C
 
 ## Build, verify, ticket
 
-- Rust unit tests: `cargo test` for the dag and `@flow/core` crates (extend the existing `#[cfg(test)] mod tests` in both `lib.rs` files for new kinds, mapping, centering helper, and sync-back; do not add new test files).
-- Rebuild wasm so the playground reflects changes: `@dag/core:wasm` and `@flow/core:wasm` (both run `bun ./script.ts wasm`), then confirm visually in the procedural play canvas; verify slider drag still updates the preview at runtime via the existing `[DEBUG]` logs.
+- Rust unit tests: `cargo test` for the dag and `@semio-tech/flow-core` crates (extend the existing `#[cfg(test)] mod tests` in both `lib.rs` files for new kinds, mapping, centering helper, and sync-back; do not add new test files).
+- Rebuild wasm so the playground reflects changes: `@semio-tech/dag-core:wasm` and `@semio-tech/flow-core:wasm` (both run `bun ./script.ts wasm`), then confirm visually in the procedural play canvas; verify slider drag still updates the preview at runtime via the existing `[DEBUG]` logs.
 - Per repo rules, do this inside a ticket: read `repo://goals`, then open a new ticket (e.g. "Flow Node Rendering Cleanup") under the most fitting goal and close it with the touched files when done. The existing `PROCEDURAL-BREP-PLAYGROUND` ticket is a different task.
 
 ## Out of scope

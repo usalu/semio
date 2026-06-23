@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Input } from "@ui/react";
+import { Input } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 📝#region 🩺Input

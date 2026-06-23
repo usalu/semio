@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🔧 Procedural play harness on `@framework/playground/core`. */
+/** @emoji 🔧 Procedural play harness on `@semio-tech/framework-playground-core`. */
 // #endregion 🧲Header
 
 import {
@@ -30,8 +30,8 @@ import {
 	type UiTreeSectionNode,
 	type WindowBodyViewContext,
 	type WindowEngagement,
-} from "@framework/playground/core";
-import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@ui/react";
+} from "@semio-tech/framework-playground-core";
+import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@semio-tech/ui-react";
 import {
 	buildFlowContextMenuItems,
 	DAG_LOD_MODE_AUTOMATIC,
@@ -52,9 +52,9 @@ import {
 	type FlowGraphEditOp,
 	type FlowReorganizeRequest,
 	flowSensibleSliderRange,
-} from "@flow/react";
-import type { ContextMenuItem } from "@ui/react";
-import type { WindowMeasure } from "@framework/playground/core";
+} from "@semio-tech/flow-react";
+import type { ContextMenuItem } from "@semio-tech/ui-react";
+import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import {
 	extractChannelPreviewItems,
 	filterVisiblePreviewItems,
@@ -72,8 +72,8 @@ import {
 	type ProceduralPreviewItem,
 	type ProceduralPreviewShowMode,
 	type ProceduralTransformGranularity,
-} from "@procedural/react";
-import { meshTransferFromPreviewPayload } from "@geometry/brep/js";
+} from "@semio-tech/procedural-react";
+import { meshTransferFromPreviewPayload } from "@semio-tech/geometry-brep-js";
 
 function previewItemKey(item: ProceduralPreviewItem): string {
 	return `${item.widgetId}:${item.port}:${item.direction}`;
@@ -218,7 +218,7 @@ export type {
 	ProceduralGumballTransformPhase,
 	ProceduralGumballTransformRequest,
 	ProceduralTransformGranularity,
-} from "@procedural/react";
+} from "@semio-tech/procedural-react";
 
 interface GumballTransformBinding {
 	readonly sourceWidgetId: string;
@@ -1731,7 +1731,7 @@ export class PlaygroundProcedural extends Playground {
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
-	describe("@procedural/play", () => {
+	describe("@semio-tech/procedural-play", () => {
 		it("exports default fixture json", () => {
 			expect(PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON).toContain("flow.fixture/v1");
 		});
@@ -2454,7 +2454,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {
 		await import("./globals.css");
-		const { bootProceduralPlay } = await import("@framework/playground/renderer/react/procedural");
+		const { bootProceduralPlay } = await import("@semio-tech/framework-playground-renderer-react/procedural");
 		bootProceduralPlay(new PlaygroundProcedural());
 	})();
 }

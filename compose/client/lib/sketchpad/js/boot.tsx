@@ -4,10 +4,10 @@
 
 import "./globals.css";
 import { MDXProvider } from "@mdx-js/react";
-import type { Platform } from "@framework/core";
-import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
-import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@framework/platform/renderer/react";
-import { Aside, Button, Card, CardGrid, FileTree, Input, NavbarFixtureSelect, NAVBAR_NO_FIXTURE_ID, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@ui/react";
+import type { Platform } from "@semio-tech/framework-core";
+import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
+import { Aside, Button, Card, CardGrid, FileTree, Input, NavbarFixtureSelect, NAVBAR_NO_FIXTURE_ID, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@semio-tech/ui-react";
 import React, { Suspense, useEffect, useState } from "react";
 import {
 	SKETCHPAD_SHELL_CONTROLLER_ID,

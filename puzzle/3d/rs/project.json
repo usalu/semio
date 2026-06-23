@@ -1,5 +1,5 @@
 {
-  "name": "@puzzle/3d/rs",
+  "name": "@semio-tech/puzzle-3d-rs",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {

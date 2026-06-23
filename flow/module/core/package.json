@@ -1,12 +1,12 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@flow/module-core",
+  "name": "@semio-tech/flow-module-core",
   "version": "0.1.0",
   "description": "flow · module · core",
   "type": "module",
   "private": true,
   "scripts": {
-    "wasm": "bun nx run @flow/module-core:wasm"
+    "wasm": "bun nx run @semio-tech/flow-module-core:wasm"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

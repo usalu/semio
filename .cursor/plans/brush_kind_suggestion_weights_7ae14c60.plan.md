@@ -52,7 +52,7 @@ isProject: false
 - The existing open ticket [.repo/.../BRUSH-ENGAGEMENT-NO-SUGGESTIONS/ticket.json](.repo/🎫/26/06/02/BRUSH-ENGAGEMENT-NO-SUGGESTIONS/ticket.json) is about hit-testing, a different concern. At execution start, read `repo://goals`, then open a NEW ticket (e.g. `Brush Kind Suggestion Percentages`) via `ticket_open`, associating it with the most appropriate goal (likely `🎯r2602🎯runningsketchpad`). Put any temp files under that ticket folder.
 
 ## Shared helper
-Add a pure normalizer used by both play controllers in `@framework/playground/core` (extend the existing exports in [framework/core/index.ts](framework/core/index.ts), region `WindowMeasure` or a new `KindWeights` region):
+Add a pure normalizer used by both play controllers in `@semio-tech/framework-playground-core` (extend the existing exports in [framework/core/index.ts](framework/core/index.ts), region `WindowMeasure` or a new `KindWeights` region):
 - `normalizeKindWeightGroup(weights, changedId, newValue)`: clamp `newValue` to [0,1]; set `weights[changedId]=newValue`; scale remaining entries so they sum to `1-newValue` (if all remaining are 0, distribute `1-newValue` equally). Returns a fresh record.
 - `uniformKindWeights(ids)`: equal weights summing to 1.
 - `weightedOrder(ids, weightOf, rng)`: weighted sampling without replacement (full permutation; top = highest expected). Generic so both surfaces reuse the ordering logic.

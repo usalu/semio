@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🏷️ Rename @framework/platform → @framework/platform/core and @framework/playground → @framework/playground/core (skip renderer subpaths). */
+/** @emoji 🏷️ Rename @semio-tech/framework-platform → @semio-tech/framework-platform-core and @semio-tech/framework-playground → @semio-tech/framework-playground-core (skip renderer subpaths). */
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -31,8 +31,8 @@ function renameCoreScope(content: string, base: string, next: string): string {
 let changed = 0;
 for (const file of walk(root)) {
   const orig = readFileSync(file, "utf8");
-  let next = renameCoreScope(orig, "@framework/platform", "@framework/platform/core");
-  next = renameCoreScope(next, "@framework/playground", "@framework/playground/core");
+  let next = renameCoreScope(orig, "@semio-tech/framework-platform", "@semio-tech/framework-platform-core");
+  next = renameCoreScope(next, "@semio-tech/framework-playground", "@semio-tech/framework-playground-core");
   if (next !== orig) {
     writeFileSync(file, next);
     changed++;

@@ -1,11 +1,11 @@
 {
-  "name": "@compose/grasshopper",
+  "name": "@semio-tech/compose-grasshopper",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "compose/client/ui/gh/Compose.Grasshopper",
   "projectType": "application",
   "devDependencies": {
-    "@compose/net": "*"
+    "@semio-tech/compose-net": "*"
   },
   "author": {
     "name": "Ueli Saluz",

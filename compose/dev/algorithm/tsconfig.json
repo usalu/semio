@@ -26,10 +26,10 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@compose/algorithm": [
+      "@semio-tech/compose-algorithm": [
         "./index.ts"
       ],
-      "@compose/algorithm/*": [
+      "@semio-tech/compose-algorithm/*": [
         "./*"
       ],
       "@compose/ui": [
@@ -38,19 +38,19 @@
       "@compose/ui/*": [
         "../ui/*"
       ],
-      "@compose/js": [
+      "@semio-tech/compose-js": [
         "../js/index.ts"
       ],
-      "@compose/js/*": [
+      "@semio-tech/compose-js/*": [
         "../js/*"
       ],
-      "@compose/rs-wasm": [
+      "@semio-tech/compose-rs-wasm": [
         "../rs/pkg"
       ],
-      "@compose/rs-wasm/*": [
+      "@semio-tech/compose-rs-wasm/*": [
         "../rs/pkg/*"
       ],
-      "@ui/react": [
+      "@semio-tech/ui-react": [
         "../../../ui/react/index.tsx"
       ]
     }

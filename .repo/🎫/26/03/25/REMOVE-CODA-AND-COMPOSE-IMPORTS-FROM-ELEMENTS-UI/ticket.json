@@ -3,7 +3,7 @@
   "emoji": "🗑️",
   "status": "closed",
   "description": "Remove all coda and compose imports from elements/ui. Refactor cleanly so elements/ui is fully self-contained with no dependencies on @compose/* or coda packages.",
-  "summary": "Removed all @compose and @coda imports from elements/ui. Replaced @compose/assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @compose/assets dependency with lucide-react in package.json. Removed @compose/assets path aliases from tsconfig.json. Removed @coda/desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors.",
+  "summary": "Removed all @compose and @coda imports from elements/ui. Replaced @semio-tech/compose-assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @semio-tech/compose-assets dependency with lucide-react in package.json. Removed @semio-tech/compose-assets path aliases from tsconfig.json. Removed @semio-tech/coda-desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1086"
   },

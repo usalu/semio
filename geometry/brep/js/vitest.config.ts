@@ -10,7 +10,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@flow/module-brep": resolve(root, "../../flow/module/brep/pkg/flow_module_brep.js"),
+			"@semio-tech/flow-module-brep": resolve(root, "../../flow/module/brep/pkg/flow_module_brep.js"),
 		},
 	},
 	assetsInclude: ["**/*.wasm"],

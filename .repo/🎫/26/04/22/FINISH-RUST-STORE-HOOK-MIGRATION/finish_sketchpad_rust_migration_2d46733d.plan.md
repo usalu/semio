@@ -1,6 +1,6 @@
 ---
 name: finish sketchpad rust migration
-overview: Inline the new Rust `kit_domain` / `kit_queries` modules into `KitStore` methods, finish the React hook surface as instance hooks on the existing `KitRuntime` (no new pure helpers), strip the JS domain helpers, and convert the Sketchpad to a thin `@compose/react` consumer with all UI state moved into the existing `sketchpadMachine` and event/store mechanisms — then verify.
+overview: Inline the new Rust `kit_domain` / `kit_queries` modules into `KitStore` methods, finish the React hook surface as instance hooks on the existing `KitRuntime` (no new pure helpers), strip the JS domain helpers, and convert the Sketchpad to a thin `@semio-tech/compose-react` consumer with all UI state moved into the existing `sketchpadMachine` and event/store mechanisms — then verify.
 todos:
  - id: rs_inline
    content: Inline kit_domain.rs and kit_queries.rs into impl KitStore in lib.rs; rewire impl KitStoreHandle to call methods directly; delete the two files; cargo test.
@@ -9,13 +9,13 @@ todos:
    content: Move ex-helpers to instance methods on KitImpl; finish KitStoreClient methods (paste/createHanging/createConnected/createFixed); delete the free helper exports; rewrite vitest tests; clean up sketchpad imports.
    status: completed
  - id: react_queries
-   content: Add the remaining derived/RPC query hooks in @compose/react using only useKitRuntime + useMemo + kitClient.subscribe (no new event bus). Add aliases usePieces/useConnections/etc.
+   content: Add the remaining derived/RPC query hooks in @semio-tech/compose-react using only useKitRuntime + useMemo + kitClient.subscribe (no new event bus). Add aliases usePieces/useConnections/etc.
    status: completed
  - id: sketchpad_strip
    content: Delete Granular Hook Types, Entity/Derived/Targeted Kit Hooks, useKitTransaction, useKitStore, useKit, useKitCommands, KitScopeProvider/Context, useKitScope, SketchpadStore kit paths, Sync helpers.
    status: in_progress
  - id: sketchpad_callsites
-   content: Rewire all commands.*, kitCommands.* and store.execute('compose.designApp.*') call sites to @compose/react command hooks or sketchpadMachine actor.send; replace canSet with status.kind; apply useOptimistic+useWriteIndicator at every input.
+   content: Rewire all commands.*, kitCommands.* and store.execute('compose.designApp.*') call sites to @semio-tech/compose-react command hooks or sketchpadMachine actor.send; replace canSet with status.kind; apply useOptimistic+useWriteIndicator at every input.
    status: in_progress
  - id: sketchpad_ui_machine
    content: Promote tutorial/panel/dnd/focus/origin/footer/sidePanel/openKit slices into sketchpadMachine context; reduce ad-hoc providers to useSelector reads; move I/O to fromPromise actors.
@@ -24,7 +24,7 @@ todos:
    content: Extend existing Playwright spec with pending/error/readonly affordances, illegal-name preserved draft, concurrent independent pending counters.
    status: pending
  - id: verify_all
-   content: Run cargo test (compose/rs), pnpm -F @compose/js test, pnpm -F @compose/react test, pnpm -F @compose/sketchpad test, and desktop smoke over metabolism kit.
+   content: Run cargo test (compose/rs), pnpm -F @semio-tech/compose-js test, pnpm -F @semio-tech/compose-react test, pnpm -F @semio-tech/compose-sketchpad test, and desktop smoke over metabolism kit.
    status: pending
 isProject: false
 ---
@@ -96,7 +96,7 @@ Goal: every removed helper either (a) becomes a `KitStoreClient` method backed b
 
 3. Delete the free helper exports listed in the plan: `createClusteredDesign`, `replaceClusterWithDesign`, `expandDesignPieces`, `dragPiecesInDesign`, `movePiecesInDesign`, `fixPiecesInDesign`, `findReplaceableTypesInDesignsForPiecesInDesign`, `piecesMetadata`, `piecesMetadataCached`, free `applyDesignDiffCore`.
 
-4. Update direct consumers in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) (lines 19–106 and 364): remove the deleted names from the import list. Remaining call sites for these helpers move to `@compose/react` hooks/commands in Phase D, but the _imports themselves_ go away in this phase.
+4. Update direct consumers in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) (lines 19–106 and 364): remove the deleted names from the import list. Remaining call sites for these helpers move to `@semio-tech/compose-react` hooks/commands in Phase D, but the _imports themselves_ go away in this phase.
 
 5. Vitest in [compose/js](compose/js): delete or rewrite tests that exercised the pure helpers; add small instance-method tests on `KitImpl` mirroring the previous coverage. Keep `KitStoreClient` worker tests (already added).
 
@@ -139,20 +139,20 @@ Done strictly inside [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx).
    - `Piece Derived Hooks` (7731–7818): all 10 hooks.
    - `Design Derived Hooks` (7820–7849): all 6 hooks.
    - `Targeted Kit Hooks` (7978–8313): all 15 hooks (including `useKitConnectorCompatibility`).
-   - `useKitTransaction` (8345), `useKitStore` (7947), `useKit` (7959) — replaced with `useKitRuntime`/`useKitStoreClient` from `@compose/react`.
+   - `useKitTransaction` (8345), `useKitStore` (7947), `useKit` (7959) — replaced with `useKitRuntime`/`useKitStoreClient` from `@semio-tech/compose-react`.
    - `useKitCommands` (8364) — entire kit-mutation half deleted.
-   - `Sync` helpers (`useSync*`/`usePath`/`useDerived`): the 64 call sites are rewritten to the corresponding `@compose/react` triads (most are `useKitInput*` shape).
+   - `Sync` helpers (`useSync*`/`usePath`/`useDerived`): the 64 call sites are rewritten to the corresponding `@semio-tech/compose-react` triads (most are `useKitInput*` shape).
 
-2. **Delete** `KitScopeProvider` / `KitScopeContext` / `useKitScope` (the **83** `useKitScope` call sites are rewritten to use the `KitProvider` from `@compose/react` — already injected by `KitWasmRuntimeBridge`). The bridge component stays; the local context is removed.
+2. **Delete** `KitScopeProvider` / `KitScopeContext` / `useKitScope` (the **83** `useKitScope` call sites are rewritten to use the `KitProvider` from `@semio-tech/compose-react` — already injected by `KitWasmRuntimeBridge`). The bridge component stays; the local context is removed.
 
 3. **Delete** `SketchpadStore` kit paths (the kit slice of `SketchpadStore`). Kit lifecycle moves entirely into the existing `KitRegistry` (already imported via `useKitRegistrySafe`). Multi-kit listing/active-kit selection becomes a slice of `sketchpadMachine` context (`openKitGuids`, `activeKitGuid`).
 
 4. **Rewire callsites** (counts from explore):
    - `commands.updatePiece(` ×8 and `commands.updateConnection(` ×9 + lone `commands.addConnection(` ×1 → `useUpdatePiece().run(...)`, `useUpdateConnection().run(...)`, `useAddConnection().run(...)`.
-   - All **37** `store.execute("compose.designApp.*", ...)` sites in the ~29759–30144 block → `actor.send({ type: "designApp.*", ... })` for UI-only intents, or the corresponding `@compose/react` command hook for kit mutations (cluster/expand/flatten/drag/move/fix/changeType/paste/createHanging/createConnected/createFixed).
-   - All **34** `kitCommands.*` sites → `@compose/react` command hooks: `useCreateDesign`, `useCreateType`, `useCreateAuthor`, `useCreateQuality`, `useCreatePort`, `useCreateFolder`, `useUpdateType`, `useUpdateDesign`, `useMoveToFolder`, `useImportKit`, `useAddFile`, `useDeselectAll`. (Add the missing ones to `@compose/react` as instance methods on the runtime — same pattern as `useUpdatePiece`. They were never algorithmic, just CRUD on collections, so they go through `runtime.kitClient.setField` / `setObjectValue` already exposed by the runtime.)
+   - All **37** `store.execute("compose.designApp.*", ...)` sites in the ~29759–30144 block → `actor.send({ type: "designApp.*", ... })` for UI-only intents, or the corresponding `@semio-tech/compose-react` command hook for kit mutations (cluster/expand/flatten/drag/move/fix/changeType/paste/createHanging/createConnected/createFixed).
+   - All **34** `kitCommands.*` sites → `@semio-tech/compose-react` command hooks: `useCreateDesign`, `useCreateType`, `useCreateAuthor`, `useCreateQuality`, `useCreatePort`, `useCreateFolder`, `useUpdateType`, `useUpdateDesign`, `useMoveToFolder`, `useImportKit`, `useAddFile`, `useDeselectAll`. (Add the missing ones to `@semio-tech/compose-react` as instance methods on the runtime — same pattern as `useUpdatePiece`. They were never algorithmic, just CRUD on collections, so they go through `runtime.kitClient.setField` / `setObjectValue` already exposed by the runtime.)
    - Replace every `canSet`/`HookResult.canSet` check with `status.kind === "writable"` from the triad.
-   - Wrap every input that mutates the kit with the existing `useOptimistic` / `useWriteIndicator` (already in `@compose/react`).
+   - Wrap every input that mutates the kit with the existing `useOptimistic` / `useWriteIndicator` (already in `@semio-tech/compose-react`).
 
 5. Outcome: sketchpad's local `commands` / `kitCommands` / `useKit*` helpers **do not exist** anymore. All `HookResult`/`Field` (~133 occurrences) gone.
 
@@ -181,9 +181,9 @@ No new module — extend the **existing** `sketchpadMachine` already in [compose
 
 2. Run the full verification matrix:
    - `cargo test` in [compose/rs](compose/rs)
-   - `pnpm -F @compose/js test`
-   - `pnpm -F @compose/react test`
-   - `pnpm -F @compose/sketchpad test`
+   - `pnpm -F @semio-tech/compose-js test`
+   - `pnpm -F @semio-tech/compose-react test`
+   - `pnpm -F @semio-tech/compose-sketchpad test`
    - Desktop smoke run over `metabolism.zip`: cluster → expand → drag → paste.
 
 ---
@@ -191,5 +191,5 @@ No new module — extend the **existing** `sketchpadMachine` already in [compose
 ## Out of scope
 
 - No new top-level modules in any package.
-- No new pure helper functions (`function foo(...)`) in `@compose/js` or `@compose/react` — every addition is a method on `KitStoreClient`, `KitImpl`, `KitStore` (Rust), `KitStoreHandle`, the runtime context object, or the existing XState machine.
-- No new contexts/providers in `@compose/sketchpad` — only the already-established `KitProvider` / `KitRegistryProvider` / `SketchpadStateContext`.
+- No new pure helper functions (`function foo(...)`) in `@semio-tech/compose-js` or `@semio-tech/compose-react` — every addition is a method on `KitStoreClient`, `KitImpl`, `KitStore` (Rust), `KitStoreHandle`, the runtime context object, or the existing XState machine.
+- No new contexts/providers in `@semio-tech/compose-sketchpad` — only the already-established `KitProvider` / `KitRegistryProvider` / `SketchpadStateContext`.

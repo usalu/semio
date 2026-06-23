@@ -99,7 +99,7 @@ Update intro tests in [framework/product/presentation/renderer/react/index.tsx](
 - Add: matcher pairs one-to-one intro wrappers (not leaf text); pair options `{ scale: false, styles: [] }`.
 - Ghost mechanism still intact: keep/strengthen tests that the injected ghost CSS (`presentation-target-ghost-fade-out`, `presentation-morph-one-fade-out`) is present, and that it is NOT excluded on intro. Update the existing `section:not(.presentation-arrangement--intro)` assertions accordingly.
 - Keep catalogue figure many-to-one / one-to-many morph tests green.
-- Verify with the project test target (`@framework/presentation/renderer/react:test`) and the core package tests.
+- Verify with the project test target (`@semio-tech/framework-presentation-renderer-react:test`) and the core package tests.
 
 ## Manual verification
 Hard-refresh http://localhost:6050 and step the Einleitung: Titel -> Beschreibung -> Ziel -> Autoren -> Fakultaet -> Universitaeten -> Lehrstuehle. Each block should sit in its row and only slide smoothly as a unit when layout shifts; no text flying from top/bottom, no fades.

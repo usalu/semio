@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/technology-schema.json",
   "projectType": "application",
-  "name": "@compose/vscode",
+  "name": "compose-vscode",
   "displayName": "compose",
   "description": "compose sketchpad for VS Code ✏️",
   "icon": "compose.png",
@@ -44,9 +44,9 @@
     ]
   },
   "dependencies": {
-    "@compose/sketchpad": "*",
-    "@compose/react": "*",
-    "@compose/js": "*",
+    "@semio-tech/compose-sketchpad": "*",
+    "@semio-tech/compose-react": "*",
+    "@semio-tech/compose-js": "*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

@@ -137,7 +137,7 @@
             "description": "Find studio deps in package.json",
             "prompt": "Search for \"@compose/studio\" in all package.json files under compose/desktop, compose/sketchpad, compose/sites/play, compose/vscode, and compose/js directories. For each match, return the exact file path and the surrounding context (5 lines before and after). Thoroughness: thorough."
           },
-          "tool_response": "Based on my thorough search of all package.json files in the specified directories, I found **no matches** for \"@compose/studio\". Here's what I checked:\n\n## Results\n\n**Files Searched:**\n1. [compose/desktop/package.json](compose/desktop/package.json)\n2. [compose/sketchpad/package.json](compose/sketchpad/package.json)\n3. [compose/sites/play/package.json](compose/sites/play/package.json)\n4. [compose/vscode/package.json](compose/vscode/package.json)\n5. [compose/js/package.json](compose/js/package.json)\n\n**Conclusion:** None of these package.json files contain any reference to \"@compose/studio\" in their dependencies, devDependencies, or any other field. The packages referenced include @compose/js, @compose/sketchpad, @compose/ui, @compose/assets, and @elements/ui, but no @compose/studio package.",
+          "tool_response": "Based on my thorough search of all package.json files in the specified directories, I found **no matches** for \"@compose/studio\". Here's what I checked:\n\n## Results\n\n**Files Searched:**\n1. [compose/desktop/package.json](compose/desktop/package.json)\n2. [compose/sketchpad/package.json](compose/sketchpad/package.json)\n3. [compose/sites/play/package.json](compose/sites/play/package.json)\n4. [compose/vscode/package.json](compose/vscode/package.json)\n5. [compose/js/package.json](compose/js/package.json)\n\n**Conclusion:** None of these package.json files contain any reference to \"@compose/studio\" in their dependencies, devDependencies, or any other field. The packages referenced include @semio-tech/compose-js, @semio-tech/compose-sketchpad, @compose/ui, @semio-tech/compose-assets, and @elements/ui, but no @compose/studio package.",
           "tool_use_id": "toolu_bdrk_01W8Bkt2Aj9ejs8nhtnToemu__vscode-1776125604377",
           "cwd": "c:\\git\\compose"
         }
@@ -166,7 +166,7 @@
             "description": "Find studio deps in package.json",
             "prompt": "Search for \"@compose/studio\" in all package.json files under compose/desktop, compose/sketchpad, compose/sites/play, compose/vscode, and compose/js directories. For each match, return the exact file path and the surrounding context (5 lines before and after). Thoroughness: thorough."
           },
-          "tool_response": "Based on my thorough search of all package.json files in the specified directories, I found **no matches** for \"@compose/studio\". Here's what I checked:\n\n## Results\n\n**Files Searched:**\n1. [compose/desktop/package.json](compose/desktop/package.json)\n2. [compose/sketchpad/package.json](compose/sketchpad/package.json)\n3. [compose/sites/play/package.json](compose/sites/play/package.json)\n4. [compose/vscode/package.json](compose/vscode/package.json)\n5. [compose/js/package.json](compose/js/package.json)\n\n**Conclusion:** None of these package.json files contain any reference to \"@compose/studio\" in their dependencies, devDependencies, or any other field. The packages referenced include @compose/js, @compose/sketchpad, @compose/ui, @compose/assets, and @elements/ui, but no @compose/studio package.",
+          "tool_response": "Based on my thorough search of all package.json files in the specified directories, I found **no matches** for \"@compose/studio\". Here's what I checked:\n\n## Results\n\n**Files Searched:**\n1. [compose/desktop/package.json](compose/desktop/package.json)\n2. [compose/sketchpad/package.json](compose/sketchpad/package.json)\n3. [compose/sites/play/package.json](compose/sites/play/package.json)\n4. [compose/vscode/package.json](compose/vscode/package.json)\n5. [compose/js/package.json](compose/js/package.json)\n\n**Conclusion:** None of these package.json files contain any reference to \"@compose/studio\" in their dependencies, devDependencies, or any other field. The packages referenced include @semio-tech/compose-js, @semio-tech/compose-sketchpad, @compose/ui, @semio-tech/compose-assets, and @elements/ui, but no @compose/studio package.",
           "tool_use_id": "toolu_bdrk_01W8Bkt2Aj9ejs8nhtnToemu__vscode-1776125604377",
           "cwd": "c:\\git\\compose"
         }
@@ -200,23 +200,23 @@
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
-                "newString": "        \"@compose/sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
-                "newString": "        \"@compose/js\": \"*\",\n        \"@compose/ui\": \"*\","
+                "oldString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
+                "newString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/ui\": \"*\","
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@compose/js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
+                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@semio-tech/compose-js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
                 "newString": "    \"compose/ui\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
-                "newString": "        \"@compose/sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
               }
             ]
           },
@@ -253,23 +253,23 @@
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
-                "newString": "        \"@compose/sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
-                "newString": "        \"@compose/js\": \"*\",\n        \"@compose/ui\": \"*\","
+                "oldString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
+                "newString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/ui\": \"*\","
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@compose/js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
+                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@semio-tech/compose-js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
                 "newString": "    \"compose/ui\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
-                "newString": "        \"@compose/sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
               }
             ]
           },
@@ -306,23 +306,23 @@
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
-                "newString": "        \"@compose/sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
-                "newString": "        \"@compose/js\": \"*\",\n        \"@compose/ui\": \"*\","
+                "oldString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
+                "newString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/ui\": \"*\","
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@compose/js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
+                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@semio-tech/compose-js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
                 "newString": "    \"compose/ui\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
-                "newString": "        \"@compose/sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
               }
             ]
           },
@@ -360,23 +360,23 @@
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
-                "newString": "        \"@compose/sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\"\n      }\n    },\n    \"compose/sketchpad\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
-                "newString": "        \"@compose/js\": \"*\",\n        \"@compose/ui\": \"*\","
+                "oldString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"@compose/ui\": \"*\",",
+                "newString": "        \"@semio-tech/compose-js\": \"*\",\n        \"@compose/ui\": \"*\","
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@compose/js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
+                "oldString": "    \"compose/studio\": {\n      \"name\": \"@compose/studio\",\n      \"version\": \"0.1.0\",\n      \"license\": \"AGPL-3.0-or-later\",\n      \"dependencies\": {\n        \"@semio-tech/compose-js\": \"*\",\n        \"y-indexeddb\": \"^9.0.12\",\n        \"yjs\": \"^13.6.29\"\n      },\n      \"peerDependencies\": {\n        \"react\": \"\u003e=18.0.0\"\n      },\n      \"peerDependenciesMeta\": {\n        \"react\": {\n          \"optional\": true\n        }\n      }\n    },\n    \"compose/ui\":",
                 "newString": "    \"compose/ui\":"
               },
               {
                 "filePath": "c:\\git\\compose\\package-lock.json",
-                "oldString": "        \"@compose/sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
-                "newString": "        \"@compose/sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
+                "oldString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"@compose/studio\": \"*\",\n        \"react\": \"^19.2.3\",",
+                "newString": "        \"@semio-tech/compose-sketchpad\": \"*\",\n        \"react\": \"^19.2.3\","
               }
             ]
           },

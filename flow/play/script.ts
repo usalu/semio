@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@flow/play` task router. */
+/** 🧭 `@semio-tech/flow-play` task router. */
 import { join } from "node:path";
 import {
   BundleScript,
@@ -57,7 +57,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     runCargo(
-      ["test", "-p", "flow_module_wasm", "-p", "flow_module_core", "-p", "flow_module_math", "-p", "flow_module_text", "-p", "flow_module_logic", "-p", "flow_module_dictionary", "-p", "flow_module_list", "-p", "flow_module_bim", "-p", "flow_core", "-p", "neural_engine"],
+      ["test", "-p", "flow_module_wasm", "-p", "flow_module_core", "-p", "flow_module_math", "-p", "flow_module_text", "-p", "flow_module_logic", "-p", "flow_module_dictionary", "-p", "flow_module_list", "-p", "flow_module_bim", "-p", "flow_core", "-p", "neural_engine", "--", "--test-threads=1"],
       this.repoRoot,
       playPollingEnv(),
     );

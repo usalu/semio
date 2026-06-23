@@ -1,5 +1,5 @@
 {
-  "name": "@cad/js/module/aec-building-structure",
+  "name": "@semio-tech/cad-js-module-aec-building-structure",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

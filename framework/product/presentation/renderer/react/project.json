@@ -1,5 +1,5 @@
 {
-	"name": "@framework/presentation/renderer/react",
+	"name": "@semio-tech/framework-presentation-renderer-react",
 	"$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {

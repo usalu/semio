@@ -2910,7 +2910,7 @@
             "maxResults": 20,
             "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
-            "query": "import.*from.*@compose/js"
+            "query": "import.*from.*@semio-tech/compose-js"
           },
           "tool_use_id": "toolu_bdrk_01MCbb7rNeymZXBSTAB3v3ev__vscode-1776167109564",
           "cwd": "/workspaces/semio"
@@ -2939,7 +2939,7 @@
             "maxResults": 20,
             "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
-            "query": "import.*from.*@compose/js"
+            "query": "import.*from.*@semio-tech/compose-js"
           },
           "tool_use_id": "toolu_bdrk_01MCbb7rNeymZXBSTAB3v3ev__vscode-1776167109564",
           "cwd": "/workspaces/semio"
@@ -2968,7 +2968,7 @@
             "maxResults": 20,
             "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
-            "query": "import.*from.*@compose/js"
+            "query": "import.*from.*@semio-tech/compose-js"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01MCbb7rNeymZXBSTAB3v3ev__vscode-1776167109564",
@@ -2998,7 +2998,7 @@
             "maxResults": 20,
             "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
-            "query": "import.*from.*@compose/js"
+            "query": "import.*from.*@semio-tech/compose-js"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01MCbb7rNeymZXBSTAB3v3ev__vscode-1776167109564",

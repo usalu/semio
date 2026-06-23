@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@cad/js/machine/stately` task router: `generate` | `test` | `policy`. */
+/** 🧭 `@semio-tech/cad-js-machine-stately` task router: `generate` | `test` | `policy`. */
 import { join, resolve } from "node:path";
 import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";
@@ -9,7 +9,7 @@ import { defineLint } from "../../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.ts";
 
-export const policy = defineLint("@cad/js/machine/stately-index", (l: FileLinter) => {
+export const policy = defineLint("@semio-tech/cad-js-machine-stately-index", (l: FileLinter) => {
   const repoRoot = getWorkspaceRoot();
   const file = l.path();
   return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
@@ -23,8 +23,8 @@ class TestScript extends BundleScript {
 
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
-    const { bootstrapCadModules } = await import("@cad/js/runtime");
-    const { defaultModelDefinitionId } = await import("@cad/js/core");
+    const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
+    const { defaultModelDefinitionId } = await import("@semio-tech/cad-js-core");
     const { buildSpatialStatelyMachineCatalogView } = await import("./index.ts");
     bootstrapCadModules();
     let outPath = join(this.root, "machine.json");

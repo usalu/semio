@@ -1,9 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@ui/styling",
+  "name": "@semio-tech/ui-styling",
   "version": "0.1.0",
-  "description": "ui · Tailwind/CSS surface; canonical tokens + codegen live in ui/styling (@ui/styling-tokens)",
+  "description": "ui · Tailwind/CSS surface; canonical tokens + codegen live in ui/styling (@semio-tech/ui-styling-tokens)",
   "type": "module",
   "exports": {
     ".": "./index.ts",

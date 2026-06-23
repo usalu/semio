@@ -88,29 +88,29 @@ const loadComposeStack = storybookSliceActive("compose");
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
 	if (loadUiStack || loadPuzzleStack) {
-		alias["@puzzle/asset"] = toVitePath(puzzleAssetsDir);
-		alias["@ui/react"] = toVitePath(uiReactDir);
-		alias["@ui/styling"] = toVitePath(uiStylingDir);
-		alias["@framework/playground/core"] = toVitePath(frameworkPlaygroundDir);
-		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
-		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
-		alias["@puzzle/3d/react"] = toVitePath(puzzle3dReactDir);
-		alias["@puzzle/5d/react"] = toVitePath(puzzle5dReactDir);
-		alias["@infinite/cavas/react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
+		alias["@semio-tech/puzzle-asset"] = toVitePath(puzzleAssetsDir);
+		alias["@semio-tech/ui-react"] = toVitePath(uiReactDir);
+		alias["@semio-tech/ui-styling"] = toVitePath(uiStylingDir);
+		alias["@semio-tech/framework-playground-core"] = toVitePath(frameworkPlaygroundDir);
+		alias["@semio-tech/framework-playground-renderer-react"] = toVitePath(frameworkPlaygroundReactDir);
+		alias["@semio-tech/puzzle-2d-react"] = toVitePath(puzzle2dReactDir);
+		alias["@semio-tech/puzzle-3d-react"] = toVitePath(puzzle3dReactDir);
+		alias["@semio-tech/puzzle-5d-react"] = toVitePath(puzzle5dReactDir);
+		alias["@semio-tech/infinite-cavas-react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
 		alias["@elements/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
-		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
+		alias["@semio-tech/coda-desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
 	}
 	if (loadComposeStack) {
 		alias["@compose/ui"] = toVitePath(uiReactDir);
 		alias["@compose/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
-		alias["@compose/react"] = toVitePath(composeJsDir);
-		alias["@compose/js"] = toVitePath(composeJsDir);
-		alias["@compose/rs-wasm"] = toVitePath(composeRsWasmEntryPath);
-		alias["@compose/asset"] = toVitePath(composeAssetsDir);
-		alias["@compose/fixture"] = toVitePath(composeFixturesDir);
-		alias["@compose/algorithm"] = toVitePath(composeAlgorithmsEntryPath);
-		alias["@ui/react"] = toVitePath(uiReactDir);
-		alias["@ui/styling"] = toVitePath(uiStylingDir);
+		alias["@semio-tech/compose-react"] = toVitePath(composeJsDir);
+		alias["@semio-tech/compose-js"] = toVitePath(composeJsDir);
+		alias["@semio-tech/compose-rs-wasm"] = toVitePath(composeRsWasmEntryPath);
+		alias["@semio-tech/compose-asset"] = toVitePath(composeAssetsDir);
+		alias["@semio-tech/compose-fixture"] = toVitePath(composeFixturesDir);
+		alias["@semio-tech/compose-algorithm"] = toVitePath(composeAlgorithmsEntryPath);
+		alias["@semio-tech/ui-react"] = toVitePath(uiReactDir);
+		alias["@semio-tech/ui-styling"] = toVitePath(uiStylingDir);
 	}
 	return alias;
 }
@@ -228,17 +228,17 @@ const config: StorybookConfig = {
 		config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
-			"@ui/react",
-			"@framework/playground/core",
-			"@framework/playground/renderer/react",
-			"@puzzle/2d/react",
-			"@infinite/cavas/react-renderer",
+			"@semio-tech/ui-react",
+			"@semio-tech/framework-playground-core",
+			"@semio-tech/framework-playground-renderer-react",
+			"@semio-tech/puzzle-2d-react",
+			"@semio-tech/infinite-cavas-react-renderer",
 		]);
 		if (loadComposeStack) {
 			optimizeExclude.add("@compose/ui");
-			optimizeExclude.add("@compose/react");
-			optimizeExclude.add("@compose/js");
-			optimizeExclude.add("@compose/asset");
+			optimizeExclude.add("@semio-tech/compose-react");
+			optimizeExclude.add("@semio-tech/compose-js");
+			optimizeExclude.add("@semio-tech/compose-asset");
 		}
 		config.optimizeDeps.exclude = Array.from(optimizeExclude);
 		config.optimizeDeps.esbuildOptions = {

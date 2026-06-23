@@ -58,7 +58,7 @@ The catalogue passes through `FlowSession` (`set_host_catalogue_json` → `catal
 - Update tests in the file's `#region 🧪Tests` (catalogue/kinds-tree assertions now expect nested groups).
 
 ## Validation
-- Build flow + procedural WASM where needed; run `nx` test targets for `flow/core` (Rust), `@flow/react`, `@flow/play`, `@procedural/react`, `@procedural/play`.
+- Build flow + procedural WASM where needed; run `nx` test targets for `flow/core` (Rust), `@semio-tech/flow-react`, `@semio-tech/flow-play`, `@semio-tech/procedural-react`, `@semio-tech/procedural-play`.
 - Confirm at runtime via the procedural play workbench that brep kinds render as a nested tree and remain draggable (check console, since correctness must be observed, not assumed).
 
 ## Notes / decisions

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🗺️ GIS map play harness on `@framework/playground/core`. */
+/** @emoji 🗺️ GIS map play harness on `@semio-tech/framework-playground-core`. */
 // #endregion 🧲Header
 
 import {
@@ -24,12 +24,12 @@ import {
   type UiNode,
   type WindowMeasure,
   type WindowTemplate,
-} from "@framework/playground/core";
-import { Store } from "@framework/core";
+} from "@semio-tech/framework-playground-core";
+import { Store } from "@semio-tech/framework-core";
 
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 
-import type { IconName } from "@ui/react";
+import type { IconName } from "@semio-tech/ui-react";
 
 import {
   GIS_MAP_LAYER_IDS,
@@ -55,7 +55,7 @@ import {
   type MapRenderMode,
   type MapRouteProps,
   type MapVectorStyle,
-} from "@gis/map/react";
+} from "@semio-tech/gis-map-react";
 
 import reuseMapFixtureJson from "../fixture/reuse.map.gis.json";
 
@@ -674,7 +674,7 @@ if (
   bootstrapElementsSurfaceChromeDocument("system");
   void (async () => {
     await import("./globals.css");
-    const { bootMapPlay } = await import("@framework/playground/renderer/react/puzzle/map");
+    const { bootMapPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/map");
     bootMapPlay(new PlaygroundMap());
   })();
 }

@@ -84,7 +84,7 @@ Concise box-draw session reusing CAD box semantics (reference: [cad/asset/modelD
 - `infinite/world/r3f`: pose round-trip, `worldVolumesContainAabb` true/false, `applyWorldVolumeTransform`.
 - `puzzle/3d/react`: `targetVolumes` parse/encode round-trip; box-draw pose math from 3 points; fill sequence with a volume keeps every placement contained; selection snapshot with `targetVolumeIds`.
 - `puzzle/3d/rs`: `fill_step_one` containment test.
-- Run puzzle 3d play; confirm at runtime with temporary `[DEBUG]` logs: draw a box (3 points + height) inside fill edit mode, move/scale it via gumball, leave edit mode, and verify new fill suggestions appear only inside the volume. Run `bun nx run @puzzle/3d/react:test`, `@infinite/world/r3f:test`, `@puzzle/3d/rs:test`.
+- Run puzzle 3d play; confirm at runtime with temporary `[DEBUG]` logs: draw a box (3 points + height) inside fill edit mode, move/scale it via gumball, leave edit mode, and verify new fill suggestions appear only inside the volume. Run `bun nx run @semio-tech/puzzle-3d-react:test`, `@semio-tech/infinite-world-r3f:test`, `@semio-tech/puzzle-3d-rs:test`.
 
 ### Notes
 - No new launch.json entries required (reuses puzzle 3d play); the edit toggle/draw are declarative engagement options.

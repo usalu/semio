@@ -212,7 +212,7 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
 </head>
 <body>
 <h1>Kit: ${kitName}</h1>
-<p>The sketchpad app was not found in <code>sketchpad-dist/</code> or <code>../sketchpad/dist/</code>. Build it with <code>npx nx build @compose/sketchpad</code>.</p>
+<p>The sketchpad app was not found in <code>sketchpad-dist/</code> or <code>../sketchpad/dist/</code>. Build it with <code>npx nx build @semio-tech/compose-sketchpad</code>.</p>
 <pre>${content.slice(0, 5000)}</pre>
 </body></html>`;
   }

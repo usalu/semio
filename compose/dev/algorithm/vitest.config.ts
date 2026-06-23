@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 compose/dev/algorithm/vitest.config.ts
-// Specs: Vitest for @compose/algorithm index (embedded tests + WASM-backed runner smoke).
-// Summary: Mirrors compose/js wasm resolution; `@compose/asset` and `@compose/fixture` aliases.
+// Specs: Vitest for @semio-tech/compose-algorithm index (embedded tests + WASM-backed runner smoke).
+// Summary: Mirrors compose/js wasm resolution; `@semio-tech/compose-asset` and `@semio-tech/compose-fixture` aliases.
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -19,13 +19,13 @@ const composeFixtures = path.resolve(__dirname, "../../fixture");
 export default defineConfig({
   resolve: {
     alias: {
-      "@compose/rs-wasm": composeRsPkg,
-      "@compose/asset": composeAssets,
-      "@compose/fixture": composeFixtures,
+      "@semio-tech/compose-rs-wasm": composeRsPkg,
+      "@semio-tech/compose-asset": composeAssets,
+      "@semio-tech/compose-fixture": composeFixtures,
     },
   },
   test: {
-    name: "@compose/algorithm",
+    name: "@semio-tech/compose-algorithm",
     environment: "node",
     globals: true,
     testTimeout: 120_000,

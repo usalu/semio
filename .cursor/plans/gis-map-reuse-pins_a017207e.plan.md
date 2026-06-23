@@ -33,7 +33,7 @@ Mapping (confirmed): Pins = receiver projekte + donor bauwerke that have coordin
 - React `gis/map/react/index.tsx`: `MapPositionProps` is `{id,lon,lat,label}`; `mapDescriptorToJson` serializes only those; `MapCanvas` never consumes `drainEvents`.
 - Play host `MapPlayPaneSurfaceHost` in `framework/product/playground/renderer/react/index.tsx` hardcodes Zürich/Bern; `MapPlayController.getFixtureCatalog()` returns empty options.
 - Fixture pattern (from `[puzzle/2d/play/index.ts](puzzle/2d/play/index.ts)`): JSON imported as a module with a `schema` field, parsed to a typed fixture, listed in `FIXTURE_OPTIONS`, switched via `setActiveFixture`.
-- Icons: `Icon` + `IconName` exported from `[ui/react/index.tsx](ui/react/index.tsx)` (`@ui/react`), backed by `@ui/asset` `ICONS`.
+- Icons: `Icon` + `IconName` exported from `[ui/react/index.tsx](ui/react/index.tsx)` (`@semio-tech/ui-react`), backed by `@semio-tech/ui-asset` `ICONS`.
 
 ## Fixture schema `gis.map.fixture/v1`
 
@@ -83,8 +83,8 @@ Add a `FixtureScript` (registered as `fixture`) that reads `../fixture/reuse.gra
 - Extend the play `🧪Tests` (fixture parse + catalog options).
 
 ### 5. Validate
-- `cargo test -p gis_map`, `@gis/map/react` + `@gis/map/play` vitest.
-- `@gis/map/play` dev: confirm with console logs that pins load from the fixture, donor/receiver lines render, clicking a pin opens the popup with name + icon + working source link, and the popup follows pan/zoom.
+- `cargo test -p gis_map`, `@semio-tech/gis-map-react` + `@semio-tech/gis-map-play` vitest.
+- `@semio-tech/gis-map-play` dev: confirm with console logs that pins load from the fixture, donor/receiver lines render, clicking a pin opens the popup with name + icon + working source link, and the popup follows pan/zoom.
 
 ## Flow
 

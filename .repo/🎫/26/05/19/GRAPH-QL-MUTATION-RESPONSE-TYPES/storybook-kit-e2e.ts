@@ -1,5 +1,5 @@
 /**
- * @emoji 📚 Same contract as Storybook `createStorybookKitGraphqlHandle` via `@compose/js`.
+ * @emoji 📚 Same contract as Storybook `createStorybookKitGraphqlHandle` via `@semio-tech/compose-js`.
  * Run: `bun .repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/storybook-kit-e2e.ts`
  */
 delete process.env.COMPOSE_JS_RUN_EMBEDDED_TESTS;

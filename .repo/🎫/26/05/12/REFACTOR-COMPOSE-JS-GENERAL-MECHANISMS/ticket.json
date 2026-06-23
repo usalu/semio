@@ -3,7 +3,7 @@
   "emoji": "🧬",
   "status": "open",
   "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
-  "summary": "Parallel explore agents mapped Rust geom wire vs entity::Arc, JS regions, and React hook gaps. Implemented plan slice: JsonValue/JsonObject are file-local in compose/js (no public wire re-exports); algorithms uses GqlWireObject; ui uses PlainJsonObject/PlainJsonValue and drops @compose/js JSON imports; react adds useAttachBackbone, useDetachBackbone, useBackboneSyncNow, useBackboneStatus. Verified tsc for js/react/ui/algorithms/sketchpad, vitest compose/js (11), nx workspace:depcruise. cargo test -p compose not run (artifact dir file lock).",
+  "summary": "Parallel explore agents mapped Rust geom wire vs entity::Arc, JS regions, and React hook gaps. Implemented plan slice: JsonValue/JsonObject are file-local in compose/js (no public wire re-exports); algorithms uses GqlWireObject; ui uses PlainJsonObject/PlainJsonValue and drops @semio-tech/compose-js JSON imports; react adds useAttachBackbone, useDetachBackbone, useBackboneSyncNow, useBackboneStatus. Verified tsc for js/react/ui/algorithms/sketchpad, vitest compose/js (11), nx workspace:depcruise. cargo test -p compose not run (artifact dir file lock).",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",

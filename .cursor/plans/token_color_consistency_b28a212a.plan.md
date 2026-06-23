@@ -1,6 +1,6 @@
 ---
 name: Token Color Consistency
-overview: Introduce one shared, tokens.json-derived color resolver in @ui/styling and migrate every renderer/fixture/catalog across the monorepo from raw hex to design-token references, eliminating off-palette colors (e.g. WIRES) and duplicated per-file resolvers.
+overview: Introduce one shared, tokens.json-derived color resolver in @semio-tech/ui-styling and migrate every renderer/fixture/catalog across the monorepo from raw hex to design-token references, eliminating off-palette colors (e.g. WIRES) and duplicated per-file resolvers.
 todos:
   - id: ticket
     content: Read repo://goals and open/reopen a repo MCP ticket for the UI token-color consistency task
@@ -46,7 +46,7 @@ Constraint: the Vello WASM parses node/edge kind `color` as **hex only** and Thr
 
 ## Approach
 
-One shared resolver in `@ui/styling/js`, fed by a generated TS token map, normalizing any token reference / `var()` / `color-mix()` to hex (and an RGBA variant). All renderers import it; all fixtures/catalogs store token references instead of raw hex.
+One shared resolver in `@semio-tech/ui-styling/js`, fed by a generated TS token map, normalizing any token reference / `var()` / `color-mix()` to hex (and an RGBA variant). All renderers import it; all fixtures/catalogs store token references instead of raw hex.
 
 ### 1. Token map generation
 - Extend [ui/styling/script.ts](ui/styling/script.ts) `generateStylingArtifacts()` to also emit a generated TS module (e.g. `ui/styling/js/tokens.generated.ts`) exporting `STYLING_TOKENS: Record<string,string>` (hex by key, from `tokens.json`) alongside existing CSS/C# outputs. Keep regeneration via `bun ./script.ts generate`.

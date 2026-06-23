@@ -1,5 +1,5 @@
 {
-  "name": "@repo/lib",
+  "name": "@semio-tech/repo-lib",
   "version": "1.0.0",
   "private": true,
   "type": "module",

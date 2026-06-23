@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@compose/sketchpad-js` router: `bun ./script.ts dev|test|policy [args…]`. */
+/** 🧭 `@semio-tech/compose-sketchpad-js` router: `bun ./script.ts dev|test|policy [args…]`. */
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../../../../repo/lib/js/src/index.ts";
@@ -17,7 +17,7 @@ import {
 
 export const policyFile = "index.ts";
 
-export const policy = defineLint("@compose/sketchpad-js-index", (l: FileLinter) => {
+export const policy = defineLint("@semio-tech/compose-sketchpad-js-index", (l: FileLinter) => {
 	const repoRoot = getWorkspaceRoot();
 	const file = l.path();
 	return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);

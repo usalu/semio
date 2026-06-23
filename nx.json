@@ -52,7 +52,6 @@
       "cache": true
     },
     "lint": {
-      "dependsOn": ["^lint"],
       "inputs": ["default", "^default"],
       "cache": true
     },

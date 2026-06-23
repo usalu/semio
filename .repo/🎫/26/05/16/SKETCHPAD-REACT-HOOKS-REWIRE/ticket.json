@@ -2,8 +2,8 @@
   "title": "Sketchpad React Hooks Rewire",
   "emoji": "🖌️",
   "status": "closed",
-  "description": "Rewire sketchpad react app to use @compose/react ComposeStoreKitLineHost and context hooks; separate clean reads vs operations (mutations/side effects).",
-  "summary": "Pointed compose/client/lib/react/index.tsx at logic CQRS surface (barrel re-export). Fixed sketchpad tsconfig extends path to ../../js. Documented reads vs operations and ComposeStoreKitLineHost in sketchpad AGENTS. Attempted legacy wasm kit-host split failed: archived render layer requires KitStoreClient APIs removed from @compose/js; deleted render-kit-wasm and reverted sketchpad import experiment. Full sketchpad rewire blocked until wasm registry is reimplemented or call sites migrate to CQRS hooks.",
+  "description": "Rewire sketchpad react app to use @semio-tech/compose-react ComposeStoreKitLineHost and context hooks; separate clean reads vs operations (mutations/side effects).",
+  "summary": "Pointed compose/client/lib/react/index.tsx at logic CQRS surface (barrel re-export). Fixed sketchpad tsconfig extends path to ../../js. Documented reads vs operations and ComposeStoreKitLineHost in sketchpad AGENTS. Attempted legacy wasm kit-host split failed: archived render layer requires KitStoreClient APIs removed from @semio-tech/compose-js; deleted render-kit-wasm and reverted sketchpad import experiment. Full sketchpad rewire blocked until wasm registry is reimplemented or call sites migrate to CQRS hooks.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪e449cb9b60284874b5db4165a6cb9e3c"

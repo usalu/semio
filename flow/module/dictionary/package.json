@@ -1,12 +1,12 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@flow/module-dictionary",
+  "name": "@semio-tech/flow-module-dictionary",
   "version": "0.1.0",
   "description": "flow · module · dictionary",
   "type": "module",
   "private": true,
   "scripts": {
-    "wasm": "bun nx run @flow/module-dictionary:wasm"
+    "wasm": "bun nx run @semio-tech/flow-module-dictionary:wasm"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

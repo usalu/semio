@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀 `@compose/rs-wasm` router: `bun ./script.ts <wasm|build|test>`. */
+/** 🦀 `@semio-tech/compose-rs-wasm` router: `bun ./script.ts <wasm|build|test>`. */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/src/index.ts";
 
@@ -11,7 +11,7 @@ class WasmScript extends BundleScript {
       logPrefix: "compose/rs",
       wasmBaseName: "compose",
       pkg: {
-        name: "@compose/rs-wasm",
+        name: "@semio-tech/compose-rs-wasm",
         files: ["compose_bg.wasm", "compose.js", "compose.d.ts", "compose_bg.wasm.d.ts"],
         main: "compose.js",
         module: "compose.js",

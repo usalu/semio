@@ -5,9 +5,9 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Kit as ComposeKit } from "@compose/react";
-import { MetabolismKit as metabolismFullKit } from "@compose/asset";
-import { MetabolismShallowKit as metabolismShallowKit } from "@compose/fixture";
+import type { Kit as ComposeKit } from "@semio-tech/compose-react";
+import { MetabolismKit as metabolismFullKit } from "@semio-tech/compose-asset";
+import { MetabolismShallowKit as metabolismShallowKit } from "@semio-tech/compose-fixture";
 import { ComposeKit as Kit } from "@compose/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";

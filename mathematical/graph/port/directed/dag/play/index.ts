@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🌳 DAG play harness on `@framework/playground/core`. */
+/** @emoji 🌳 DAG play harness on `@semio-tech/framework-playground-core`. */
 // #endregion 🧲Header
 
 import {
@@ -20,9 +20,9 @@ import {
   type WindowBodyViewContext,
   type WindowEngagement,
   type UiNode,
-} from "@framework/playground/core";
+} from "@semio-tech/framework-playground-core";
 
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   DAG_DEFAULT_FIXTURE,
   DAG_LOD_MODE_AUTOMATIC,
@@ -35,8 +35,8 @@ import {
   type DagFixtureV1,
   type DagLodModeKind,
   type DagReorganizeRequest,
-} from "@dag/react";
-import type { WindowMeasure } from "@framework/playground/core";
+} from "@semio-tech/dag-react";
+import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 
 export const DAG_PLAY_APP_ID = "dag-play";
 export const DAG_PLAY_CONTROLLER_ID = "dag-play";
@@ -338,7 +338,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
   bootstrapElementsSurfaceChromeDocument("system");
   void (async () => {
     await import("./globals.css");
-    const { bootDagPlay } = await import("@framework/playground/renderer/react/dag");
+    const { bootDagPlay } = await import("@semio-tech/framework-playground-renderer-react/dag");
     bootDagPlay(new PlaygroundDag());
   })();
 }

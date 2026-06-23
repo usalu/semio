@@ -1,15 +1,15 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@compose/react",
+  "name": "@semio-tech/compose-react",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@compose/react` bundle when restored.",
+  "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@semio-tech/compose-react` bundle when restored.",
   "exports": {
     ".": "./index.ts"
   },
   "dependencies": {
-    "@compose/js": "workspace:*"
+    "@semio-tech/compose-js": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0"

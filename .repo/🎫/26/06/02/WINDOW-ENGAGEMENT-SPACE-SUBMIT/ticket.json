@@ -3,7 +3,7 @@
   "emoji": "⌨️",
   "status": "closed",
   "description": "Spacebar inside a window: empty command repeats last engagement; non-empty command submits on Space when focus is outside the engagement field (type-to-engage flow).",
-  "summary": "Window-level Space routing now matches in-field Engagement behavior: empty draft calls onRepeatLast (repeat last finalized engagement); non-empty draft calls onSubmit (start engagement). Previously routeWindowEngagementSpace only handled the empty repeat path, so type-to-engage (printable keys routed into the window, then Space) did not submit. Added tests for routeWindowEngagementSpace submit and Engagement Space with draft. All 118 @ui/react tests pass.",
+  "summary": "Window-level Space routing now matches in-field Engagement behavior: empty draft calls onRepeatLast (repeat last finalized engagement); non-empty draft calls onSubmit (start engagement). Previously routeWindowEngagementSpace only handled the empty repeat path, so type-to-engage (printable keys routed into the window, then Space) did not submit. Added tests for routeWindowEngagementSpace submit and Engagement Space with draft. All 118 @semio-tech/ui-react tests pass.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪bb3fc426613547159e5315f316039e3a"

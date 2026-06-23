@@ -102,12 +102,12 @@ Rewrite `serializeGraphVelloThemePaletteJson()` in [ui/styling/js/resolve.ts](ui
 
 ## 7. Wiring
 
-- Extend `@ui/styling-tokens:generate` in [ui/styling/project.json](ui/styling/project.json) to run the full multi-target generation; add nx projects for `ui/styling/rs` and `ui/styling/py`.
+- Extend `@semio-tech/ui-styling-tokens:generate` in [ui/styling/project.json](ui/styling/project.json) to run the full multi-target generation; add nx projects for `ui/styling/rs` and `ui/styling/py`.
 - Register the styling generate/test commands in `launch.json` following existing order/grouping.
 
 ## 8. Validation
 
-- Run `bun nx run @ui/styling-tokens:generate`, then `cargo build`/`bun test` across affected crates/packages.
+- Run `bun nx run @semio-tech/ui-styling-tokens:generate`, then `cargo build`/`bun test` across affected crates/packages.
 - Extend existing tests only (no new test files): the `resolve.ts` vitest block, Rust `#[cfg(test)]` palette tests in the styling crate + graph crate, and a guard test asserting no raw `Color::from_rgba8(`/literal strokes remain in migrated render libs.
 - Confirm runtime light/dark switching with `[DEBUG]` logs before removing them.
 

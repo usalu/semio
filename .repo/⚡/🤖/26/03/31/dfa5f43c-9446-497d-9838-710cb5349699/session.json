@@ -3292,8 +3292,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/compose/js/index.ts",
-            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@compose/assets\");",
-            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@compose/assets\");"
+            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@semio-tech/compose-assets\");",
+            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@semio-tech/compose-assets\");"
           },
           "tool_use_id": "toolu_vrtx_01FFtde9rRPmaXXfJCqwNygs__vscode-1774909010711",
           "cwd": "/workspaces/semio"
@@ -3320,8 +3320,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/compose/js/index.ts",
-            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@compose/assets\");",
-            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@compose/assets\");"
+            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@semio-tech/compose-assets\");",
+            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@semio-tech/compose-assets\");"
           },
           "tool_use_id": "toolu_vrtx_01FFtde9rRPmaXXfJCqwNygs__vscode-1774909010711",
           "cwd": "/workspaces/semio"
@@ -3348,8 +3348,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/compose/js/index.ts",
-            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@compose/assets\");",
-            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@compose/assets\");"
+            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@semio-tech/compose-assets\");",
+            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@semio-tech/compose-assets\");"
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01FFtde9rRPmaXXfJCqwNygs__vscode-1774909010711",
@@ -3377,8 +3377,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/compose/js/index.ts",
-            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@compose/assets\");",
-            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@compose/assets\");"
+            "newString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n    NakaginCapsuleTowerDiffDesign,\n    NakaginCapsuleTowerWithDiffDesign,\n  } = await import(\"@semio-tech/compose-assets\");",
+            "oldString": "    NakaginCapsuleTowerDeletedDesignDiff,\n    NakaginCapsuleTowerDeletedSelection,\n  } = await import(\"@semio-tech/compose-assets\");"
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01FFtde9rRPmaXXfJCqwNygs__vscode-1774909010711",

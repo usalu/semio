@@ -78,7 +78,7 @@ Rust currently has `kit_store::KitStore::execute(cmd) -> KitStoreCommandResult` 
 4. Update `compose/react` consumers.
    - Rename request-id concepts to task-id concepts where the public API leaks them.
    - Keep hooks consuming lifecycle events, but adapt to the task event shape and the stateless store wrappers.
-   - Avoid reintroducing store-owned state in React-facing `@compose/js` classes.
+   - Avoid reintroducing store-owned state in React-facing `@semio-tech/compose-js` classes.
 
 5. Extend existing tests in place.
    - In `compose/rs/lib.rs`, add Rust tests that `execute` always returns a task id and emits accepted/succeeded/failed events for read, write, and error cases.

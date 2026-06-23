@@ -9,7 +9,7 @@ bundle:
 
 # 🧾 Specification
 
-Ship icons, logos, lists, and builtin kits (Metabolism under `compose/metabolism/`). Test JSON belongs in `@compose/fixture`, not here.
+Ship icons, logos, lists, and builtin kits (Metabolism under `compose/metabolism/`). Test JSON belongs in `@semio-tech/compose-fixture`, not here.
 
 ## 🕸️ Systems
 

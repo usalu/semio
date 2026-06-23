@@ -1,5 +1,5 @@
 // #region 🧭Header
-/** @emoji ⚡ `@cad/js/module/aec-building-energy` — energy stat, property, and STEP import profile. */
+/** @emoji ⚡ `@semio-tech/cad-js-module-aec-building-energy` — energy stat, property, and STEP import profile. */
 // #endregion 🧭Header
 
 import {
@@ -15,7 +15,7 @@ import {
   type SolidRef,
   type StatComputeContext,
   type TypologyRef,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 
 // #region 🏷️Ids
 export const AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
@@ -86,9 +86,9 @@ export function register(): void {
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { bootstrapCadModules } = await import("@cad/js/runtime");
-  const { BrepjsKernel, preciseSpatialKernelMath } = await import("@cad/js/kernel/brepjs");
-  const core = await import("@cad/js/core");
+  const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
+  const { BrepjsKernel, preciseSpatialKernelMath } = await import("@semio-tech/cad-js-kernel-brepjs");
+  const core = await import("@semio-tech/cad-js-core");
   const { Model, applyModelDiff, computeStat, loadStatDefinition, objectsForStatCompute, solidRef } = core;
   type ObjectRef = core.ObjectRef;
   type SpatialKernel = core.SpatialKernel;
@@ -97,7 +97,7 @@ if (import.meta.vitest) {
   bootstrapCadModules();
   const M = preciseSpatialKernelMath;
 
-  describe("@cad/js/module/aec-building-energy", () => {
+  describe("@semio-tech/cad-js-module-aec-building-energy", () => {
     it("computes energy demand stats with finite outputs", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("hull-solid")));

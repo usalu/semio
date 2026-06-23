@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Steps } from "@ui/react";
+import { Steps } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🪬Steps

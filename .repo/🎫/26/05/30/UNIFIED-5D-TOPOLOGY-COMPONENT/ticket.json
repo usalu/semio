@@ -2,7 +2,7 @@
   "title": "Unified 5D Topology Component",
   "status": "closed",
   "description": "Single neutral TopologyV1 model, shared TopologyStore, FiveD flat|volume, paired connect/LOD semantics across @puzzle/2d and @puzzle/3d.",
-  "summary": "Replaced legacy spatial/scene topology vocabulary with flat/volume: TopologyV1 uses volumeCamera and part.volume aspects, FiveD mode=volume, projectVolume, volumeChromeDefaults, play PUZZLE_5D_PLAY_VOLUME_* ids, TopologyVolumeSurfaceHost. Nakagin topology fixture migrated. @puzzle/5d/react (26) and play vitest (6) pass.",
+  "summary": "Replaced legacy spatial/scene topology vocabulary with flat/volume: TopologyV1 uses volumeCamera and part.volume aspects, FiveD mode=volume, projectVolume, volumeChromeDefaults, play PUZZLE_5D_PLAY_VOLUME_* ids, TopologyVolumeSurfaceHost. Nakagin topology fixture migrated. @semio-tech/puzzle-5d-react (26) and play vitest (6) pass.",
   "files": [
     "puzzle/5d/react/index.tsx",
     "puzzle/5d/play/index.ts",

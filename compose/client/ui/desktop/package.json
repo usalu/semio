@@ -1,16 +1,16 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "@compose/desktop",
+  "name": "@semio-tech/compose-desktop",
   "version": "2.0.0-alpha",
   "description": "A sketchpad for compose 🧩",
   "main": ".vite/build/main.js",
   "dependencies": {
     "@electron/fuses": "^2.0.0",
-    "@ui/react": "workspace:*",
-    "@compose/js": "^0.1.0",
-    "@compose/react": "^0.1.0",
-    "@compose/sketchpad": "^0.1.0",
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/compose-js": "^0.1.0",
+    "@semio-tech/compose-react": "^0.1.0",
+    "@semio-tech/compose-sketchpad": "^0.1.0",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {

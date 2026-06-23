@@ -1,6 +1,6 @@
 ---
 name: sketchpad full rust migration
-overview: Port all kit domain logic (commands and derived queries) from @compose/js to Rust as RPCs on KitStoreHandle, expose each as an async HookTriad in @compose/react, then strip every local kit hook, HookResult helper, and kitCommand from @compose/sketchpad so sketchpad consumes @compose/react exclusively.
+overview: Port all kit domain logic (commands and derived queries) from @semio-tech/compose-js to Rust as RPCs on KitStoreHandle, expose each as an async HookTriad in @semio-tech/compose-react, then strip every local kit hook, HookResult helper, and kitCommand from @semio-tech/compose-sketchpad so sketchpad consumes @semio-tech/compose-react exclusively.
 todos:
  - id: rs_commands
    content: "compose/rs: add kit::commands module + RPC methods on KitStoreHandle for clusterPieces, expandDesign, flattenDesign alias, dragPieces, movePieces, fixPieces, pasteDesignSelection, createHangingPieces, createConnectedPiece, createFixedPiece, changePieceType, deletePiece, deleteConnection; cargo tests per command."
@@ -30,7 +30,7 @@ todos:
    content: "compose/sketchpad: delete useKitCommands + kit-mutation half of useDesignAppCommands; preserve UI-selection/hover/panel commands for phase E (xstate migration)."
    status: pending
  - id: sketchpad_callsites
-   content: "compose/sketchpad: migrate ~220 commands.* call sites to @compose/react command hooks; migrate ~41 local hook usages to @compose/react; replace canSet with status.kind checks; apply useOptimistic+useWriteIndicator at every input."
+   content: "compose/sketchpad: migrate ~220 commands.* call sites to @semio-tech/compose-react command hooks; migrate ~41 local hook usages to @semio-tech/compose-react; replace canSet with status.kind checks; apply useOptimistic+useWriteIndicator at every input."
    status: pending
  - id: sketchpad_ui_machine
    content: "compose/sketchpad: consolidate remaining UI slices (tutorial, panels, DnD, focus, origin, footer, side-panel) into sketchpadMachine; reduce Origin/Focus/PanelSection/SidePanelTab/FooterItem/DragDrop providers to useSelector reads; migrate store.execute to actor.send; move I/O to fromPromise actors."
@@ -42,7 +42,7 @@ todos:
    content: "compose/sketchpad: extend Playwright spec for pending/error/readonly affordances, illegal-name preserved draft, concurrent writes keep independent pending counters."
    status: pending
  - id: verify_all
-   content: Run cargo test (compose/rs), pnpm -F @compose/js test, pnpm -F @compose/react test, pnpm -F @compose/sketchpad test; desktop smoke over metabolism kit exercising cluster/expand/drag/paste.
+   content: Run cargo test (compose/rs), pnpm -F @semio-tech/compose-js test, pnpm -F @semio-tech/compose-react test, pnpm -F @semio-tech/compose-sketchpad test; desktop smoke over metabolism kit exercising cluster/expand/drag/paste.
    status: pending
 isProject: false
 ---
@@ -164,7 +164,7 @@ Delete these regions:
 - `#region 💧useKitCommands` / `useDesignAppCommands` kit-mutation half (~8319, ~31718-31820). UI-only command methods (selection, hover, panels) stay but move into xstate events (phase E).
 - `#region 🌉Sync` (~19992-20420) and all Yjs-backed `useSyncXxx` helpers.
 - `KitScopeProvider` / `KitScopeContext` (~9558-9584).
-- `SessionKitStore` / `InMemoryKitStore` / `SketchpadStore` kit paths (~20564+). Backbone factories already moved to `@compose/js`.
+- `SessionKitStore` / `InMemoryKitStore` / `SketchpadStore` kit paths (~20564+). Backbone factories already moved to `@semio-tech/compose-js`.
 - Design-inspector field hooks (`usePieceCenterU/V`, `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `usePieceColor`, `usePieceDescription`, `usePieceName`, connection analogues ~19154-19587, ~17593-17901).
 
 ### 5.2 Rewire call sites
@@ -176,7 +176,7 @@ Delete these regions:
 - `commands.clusterPieces(ids)` -> `useClusterPieces`.
 - `commands.expandDesign(guid)` -> `useExpandDesign`. (Analogous for every command.)
 - `canSet: boolean` -> `status.kind !== "readonly"` everywhere; purely UI `canSet` (xstate-gated) renamed via `useSketchpadActor`+`useSelector`.
-- Every `usePiece`/`useConnection`/`useType`/`useDesign`/`useKit*`/`usePieces`/`useConnections`/etc. import from `@compose/react` instead of being declared locally.
+- Every `usePiece`/`useConnection`/`useType`/`useDesign`/`useKit*`/`usePieces`/`useConnections`/etc. import from `@semio-tech/compose-react` instead of being declared locally.
 
 ### 5.3 Remove transaction / undo from sketchpad
 
@@ -226,7 +226,7 @@ No new test files (repo rule).
 ## 9. Phase H: Verify
 
 - `cargo test` in [compose/rs](compose/rs).
-- `pnpm -F @compose/js test`, `pnpm -F @compose/react test`, `pnpm -F @compose/sketchpad test`.
+- `pnpm -F @semio-tech/compose-js test`, `pnpm -F @semio-tech/compose-react test`, `pnpm -F @semio-tech/compose-sketchpad test`.
 - Desktop smoke: launch [compose/desktop](compose/desktop), open metabolism kit, exercise cluster/expand/drag/paste.
 
 ## 10. Out of scope

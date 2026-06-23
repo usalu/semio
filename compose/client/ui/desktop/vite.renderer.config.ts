@@ -222,10 +222,10 @@ export default defineConfig(async ({ mode }) => {
         { find: /^react-i18next$/, replacement: reactI18nextEntry },
         { find: /^react-router$/, replacement: reactRouterEntry },
         { find: /^stats\.js$/, replacement: statsEntry },
-        { find: "@compose/js", replacement: path.resolve(__dirname, "../js") },
+        { find: "@semio-tech/compose-js", replacement: path.resolve(__dirname, "../js") },
         { find: "@compose/ui", replacement: path.resolve(__dirname, "../ui") },
-        { find: "@compose/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
-        { find: "@compose/asset", replacement: path.resolve(__dirname, "../asset") },
+        { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
+        { find: "@semio-tech/compose-asset", replacement: path.resolve(__dirname, "../asset") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
       ],
     },
@@ -263,7 +263,7 @@ export default defineConfig(async ({ mode }) => {
         "use-sync-external-store/with-selector",
         "void-elements",
       ],
-      exclude: ["@compose/js", "@compose/sketchpad", "@playwright/test", "playwright", "playwright-core"],
+      exclude: ["@semio-tech/compose-js", "@semio-tech/compose-sketchpad", "@playwright/test", "playwright", "playwright-core"],
     },
   };
 });

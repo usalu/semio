@@ -1,9 +1,9 @@
 // #region 🧲Header
-/** @emoji 🌳 `@dag/react` — WASM DAG renderer + React canvas. */
+/** @emoji 🌳 `@semio-tech/dag-react` — WASM DAG renderer + React canvas. */
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@ui/styling";
+import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
 import initDagWasm, { DagSession, initSync } from "../pkg/mathematical_graph_port_directed_dag.js";
 
 // #region 🔖GpuWasmBridge

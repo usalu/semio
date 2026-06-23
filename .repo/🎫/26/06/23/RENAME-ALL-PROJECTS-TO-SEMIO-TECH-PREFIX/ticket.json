@@ -1,0 +1,13 @@
+{
+  "title": "Rename All Projects to Semio-Tech Prefix",
+  "emoji": "📦",
+  "status": "open",
+  "description": "Rename all package names in the monorepo to have the @semio-tech/ prefix.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1731"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪a7eaaa8d70ee4863b826ca16da6aaa51"
+  ]
+}

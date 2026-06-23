@@ -1,12 +1,12 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
 // #region 🧲Header
-/** @emoji 🎬 `@cad/js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/box.json`. */
+/** @emoji 🎬 `@semio-tech/cad-js-renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/box.json`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, borderNormalClass, canvasHostRootClass, cn, editorShellRootClass, ENGAGEMENT_USER, floatingFieldSurfaceClass, floatingMenuItemClass, floatingMenuSurfaceClass, floatingPanelAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
-import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
+import { Button, borderNormalClass, canvasHostRootClass, cn, editorShellRootClass, ENGAGEMENT_USER, floatingFieldSurfaceClass, floatingMenuItemClass, floatingMenuSurfaceClass, floatingPanelAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@semio-tech/ui-react";
+import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -44,7 +44,7 @@ import {
   WORLD_LOCKED_OPACITY_SCALE,
   worldEntityRendered,
   worldEntitySelectable,
-} from "@infinite/world/r3f";
+} from "@semio-tech/infinite-world-r3f";
 
 import {
   abortActiveInteractionSession,
@@ -147,7 +147,7 @@ import {
   typologyStyleCacheKey,
   type ResolvedTypologyStyle,
   type SpatialEntityFlags,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
 type AnchorRef = kernelGeometry.AnchorRef;
@@ -164,7 +164,7 @@ type WireRef = kernelGeometry.WireRef;
 type EdgeRef = kernelGeometry.EdgeRef;
 
 export type { SpatialComputeMode };
-import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
+import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "@semio-tech/cad-js-kernel-brepjs";
 
 // #region ⚡R3FPreviewKernel
 /** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
@@ -3648,7 +3648,7 @@ export interface InteractionSpatialViewProps {
   readonly orbitProjection?: OrbitCameraProjection;
   readonly showOrbitViewGizmo?: boolean;
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
-  readonly onOrbitCameraChange?: (state: import("@infinite/world/r3f").WorldCameraState) => void;
+  readonly onOrbitCameraChange?: (state: import("@semio-tech/infinite-world-r3f").WorldCameraState) => void;
   /** @emoji 🖼️ Grid reference planes persisted beside the CAD model. */
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
@@ -6525,8 +6525,8 @@ export function SelectionPropertiesPanel({ model, kernel, activeModelDefinitionI
 // #endregion ­ƒ¬®Repl
 
 // #region ­ƒº¬Tests
-const __cadRendererTestRuntime = import.meta.vitest ? await import("@cad/js/runtime") : null;
-const __cadRendererTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
+const __cadRendererTestRuntime = import.meta.vitest ? await import("@semio-tech/cad-js-runtime") : null;
+const __cadRendererTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
   __cadRendererTestRuntime!.bootstrapCadModules();
@@ -6739,7 +6739,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@cad/js/renderer interaction adapter", () => {
+  describe("@semio-tech/cad-js-renderer interaction adapter", () => {
     it("replHostGeometryPickingEnabled follows pickDisabledStates while session is active", () => {
       const spec = loadSpatialInteraction("primitive.box");
       expect(replHostGeometryPickingEnabled("primitive.box", spec, "first_corner")).toBe(false);
@@ -6964,7 +6964,7 @@ if (import.meta.vitest) {
     it("small building fixture keeps committed face visibility toggles", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
-      const { ModelSpace } = await import("@cad/js/core");
+      const { ModelSpace } = await import("@semio-tech/cad-js-core");
       const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../asset/play/small-building.model.json"), "utf8"));
       const model = ModelSpace.fromJSON(json).models[defaultModelDefinitionId()]!;
       const mdId = defaultModelDefinitionId();

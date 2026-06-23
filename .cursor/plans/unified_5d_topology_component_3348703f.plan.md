@@ -88,7 +88,7 @@ flowchart TB
 - Fixtures: make a single canonical `puzzle/5d/play/fixture/nakagin-capsule-tower.topology.json` in the new `puzzle.5d.topology/v1` schema (parts/anchors/bonds with flat+spatial aspects). Refactor `parseBoardFixtureV1`/`parseFixtureV1` usage in the 2d/3d plays to project from the unified fixture so it is the single source of truth.
 - Update e2e specs ([puzzle/5d/play/e2e/topology.spec.ts](puzzle/5d/play/e2e/topology.spec.ts), 2d/3d specs) to cover: edit-in-flat updates spatial and vice versa; indirect connect started in flat previews in spatial and is terminated in spatial.
 - Remove the old dual-surface exports (`TopologyBoardPane`, `TopologyScenePane`, `buildTopologyDualSurfaceBindings`, mirror helpers) - no backwards-compat/legacy per repo rules.
-- Run the full suites: `bun nx run @puzzle/2d/react:test`, `@puzzle/3d/react:test`, `@puzzle/5d/react:test`, the Rust tests, and the play e2e; confirm runtime via `[DEBUG]` logs before declaring done. Close the ticket (`ticket_close`) with summary + touched files.
+- Run the full suites: `bun nx run @semio-tech/puzzle-2d-react:test`, `@semio-tech/puzzle-3d-react:test`, `@semio-tech/puzzle-5d-react:test`, the Rust tests, and the play e2e; confirm runtime via `[DEBUG]` logs before declaring done. Close the ticket (`ticket_close`) with summary + touched files.
 
 ### Delegation
 

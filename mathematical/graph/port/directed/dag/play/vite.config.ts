@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@dag/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/dag-play`. */
 // #endregion 🧲Header
 
 import path from "node:path";
@@ -17,7 +17,7 @@ export default createPlaygroundPlayViteConfig({
   resolveDedupe: ["react", "react-dom"],
   optimizeDeps: {
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
-    exclude: ["@framework/playground/renderer/react/dag", "@dag/react"],
+    exclude: ["@semio-tech/framework-playground-renderer-react/dag", "@semio-tech/dag-react"],
     esbuildOptions: { target: "esnext" },
   },
   watchIgnored: ["../lib.rs", "../target/**", "../Cargo.toml", "../Cargo.lock", "../script.ts"],

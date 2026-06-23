@@ -1,7 +1,7 @@
 import {
 	figureFrameForSourceAspect,
 	type SlideFile,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 
 const PARTICIPANT = "recherche-schweiz-zoom-in-3";
 const EMBODIMENT = "recherche-schweiz-zoom-in-3--figure";

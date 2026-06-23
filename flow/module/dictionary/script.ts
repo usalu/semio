@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🦀 `@flow/module-dictionary` router: `bun ./script.ts wasm`. */
+/** 🦀 `@semio-tech/flow-module-dictionary` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/index.ts";
 
 class WasmScript extends BundleScript {
@@ -10,7 +10,7 @@ class WasmScript extends BundleScript {
       logPrefix: "flow/module/dictionary",
       wasmBaseName: "flow_module_dictionary",
       pkg: {
-        name: "@flow/module-dictionary",
+        name: "@semio-tech/flow-module-dictionary",
         files: [
           "flow_module_dictionary_bg.wasm",
           "flow_module_dictionary.js",

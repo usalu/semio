@@ -1,5 +1,5 @@
 {
-  "name": "@ui/styling",
+  "name": "@semio-tech/ui-styling",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "generate": {

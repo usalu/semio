@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/technology-schema.json",
   "projectType": "application",
-  "name": "repo",
+  "name": "repo-vscode",
   "displayName": "repo",
   "description": "compose devtools for VS Code 🧑‍💻",
   "icon": "compose.png",
@@ -1002,7 +1002,7 @@
     "@vscode/test-electron": "^2.5.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "@compose/js": "^0.1.0",
+    "@semio-tech/compose-js": "^0.1.0",
     "jsonc-parser": "^3.3.1"
   },
   "dependencies": {},

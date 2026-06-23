@@ -13,7 +13,7 @@ import {
 } from "../../repo/lib/js/src/index.ts";
 import { defineLint } from "../../repo/lib/js/src/index.ts";
 
-export const policy = defineLint("@ui/react-bundle", (l: BundleLinter) => {
+export const policy = defineLint("@semio-tech/ui-react-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
   return dependencyBoundaryBreachesForBundleDir(repoRoot, l.root());
 });

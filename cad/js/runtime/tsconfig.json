@@ -5,11 +5,11 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@cad/js/core": ["../core/index.ts"],
-      "@cad/js/module/spatial-shape": ["../module/spatial-shape/index.ts"],
-      "@cad/js/module/aec-building": ["../module/aec-building/index.ts"],
-      "@cad/js/module/aec-building-energy": ["../module/aec-building-energy/index.ts"],
-      "@cad/js/module/aec-building-structure": ["../module/aec-building-structure/index.ts"]
+      "@semio-tech/cad-js-core": ["../core/index.ts"],
+      "@semio-tech/cad-js-module-spatial-shape": ["../module/spatial-shape/index.ts"],
+      "@semio-tech/cad-js-module-aec-building": ["../module/aec-building/index.ts"],
+      "@semio-tech/cad-js-module-aec-building-energy": ["../module/aec-building-energy/index.ts"],
+      "@semio-tech/cad-js-module-aec-building-structure": ["../module/aec-building-structure/index.ts"]
     }
   },
   "include": ["index.ts"]

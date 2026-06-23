@@ -6,11 +6,11 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@ui/react` (inline tests in index.tsx). */
+/** @emoji 🧪 Vitest for `@semio-tech/ui-react` (inline tests in index.tsx). */
 export default defineConfig({
 	root,
 	resolve: {
-		alias: [{ find: "@ui/react", replacement: resolve(root, "index.tsx") }],
+		alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "index.tsx") }],
 	},
 	test: {
 		environment: "jsdom",

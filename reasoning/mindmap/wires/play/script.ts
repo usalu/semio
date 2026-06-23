@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🔗 `@reasoning/mindmap/wires/play` router: `bun ./script.ts <dev|build|test>`. */
+/** 🔗 `@semio-tech/reasoning-mindmap-wires-play` router: `bun ./script.ts <dev|build|test>`. */
 import { join } from "node:path";
 import {
   BundleScript,

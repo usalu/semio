@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Mode, createEvenWindowLayout, reactHostPort } from "@ui/react";
+import { Mode, createEvenWindowLayout, reactHostPort } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 // #endregion 🔌Adapters

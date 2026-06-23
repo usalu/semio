@@ -1,12 +1,12 @@
 {
-  "name": "@compose/asset",
+  "name": "@semio-tech/compose-asset",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/asset",
-        "command": "bun -e \"console.log('@compose/asset is a source-only workspace and does not require a build step.')\"",
+        "command": "bun -e \"console.log('@semio-tech/compose-asset is a source-only workspace and does not require a build step.')\"",
         "forwardAllArgs": true
       }
     }

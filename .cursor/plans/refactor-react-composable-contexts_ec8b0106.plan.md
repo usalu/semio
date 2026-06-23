@@ -65,7 +65,7 @@ graph LR
 
 
 
-Consumers import **only** `@compose/react`. compose/js is an implementation detail.
+Consumers import **only** `@semio-tech/compose-react`. compose/js is an implementation detail.
 
 ## Context tree (mirrors schema)
 
@@ -265,7 +265,7 @@ import {
   OriginContextProvider,
   useOrigin,
   type EntityReadState,
-} from "@compose/react";
+} from "@semio-tech/compose-react";
 
 function App({ session, storeId, kitId, designId, pieceId }: { session: Session; storeId: string; kitId: string; designId: string; pieceId: string }) {
   return (
@@ -361,7 +361,7 @@ function PieceRow() {
 }
 ```
 
-In every example above the consumer never imports anything from `@compose/js` — the only handles in scope are `EntityReadState` rows, `FieldReadState` reads, and operation tuples.
+In every example above the consumer never imports anything from `@semio-tech/compose-js` — the only handles in scope are `EntityReadState` rows, `FieldReadState` reads, and operation tuples.
 
 ## Private internals (NOT exported)
 
@@ -381,10 +381,10 @@ In every example above the consumer never imports anything from `@compose/js` �
 
 ## Acceptance
 
-- No `compose/js` entity class is reachable from `@compose/react` (tested via banned-substring check on the file's export list).
+- No `compose/js` entity class is reachable from `@semio-tech/compose-react` (tested via banned-substring check on the file's export list).
 - Every entity in the schema has a context, a provider, a `useX(id?)` hook, plus the matching field + operation hooks.
 - Every hook accepts at most **one** optional `id` — always **that hook's own entity id**; parent scope is **only** from context (plus `PiecesBatchContext` for batch piece ops). Without `id`, hooks read the matching `XContext`.
-- `bun nx run @compose/react:lint` + `tsc --noEmit` on `compose/react` pass in isolation.
+- `bun nx run @semio-tech/compose-react:lint` + `tsc --noEmit` on `compose/react` pass in isolation.
 - Embedded Vitest banned-substring scan and the new "no JS entity class exported" scan pass.
 
 ## Out of scope (follow-up tickets)

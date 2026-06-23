@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Combobox } from "@ui/react";
+import { Combobox } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

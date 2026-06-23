@@ -3,14 +3,14 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion
 
-import type { Design, Kit } from "@compose/react";
-import { Design as DesignEntity } from "@compose/react";
+import type { Design, Kit } from "@semio-tech/compose-react";
+import { Design as DesignEntity } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { MetabolismKit as metabolismKit } from "@compose/asset";
-import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, kitSurface, type AlgorithmContextValue, type AlgorithmWindowDef } from "@compose/algorithm";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-asset";
+import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, kitSurface, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio-tech/compose-algorithm";
 
 import { CommandForm } from "../../../compose/algorithm/kit-store/CommandForm";
 import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS, KIT_STORE_COVERAGE_ROWS } from "../../../compose/algorithm/kit-store/commandSchema";

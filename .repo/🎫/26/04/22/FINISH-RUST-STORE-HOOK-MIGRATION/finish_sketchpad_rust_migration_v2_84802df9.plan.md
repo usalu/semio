@@ -1,6 +1,6 @@
 ---
 name: finish sketchpad rust migration v2
-overview: Finish stripping every kit-state and sync layer (yjs, Sync*, SketchpadStore, AppStore hierarchy, kitCommands, useKit*, useKitScope, HookResult/Field) out of [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx). All kit reads/writes come exclusively from `@compose/react` async `HookTriad` hooks with per-call `WriteStatus`; all sketchpad UI state (including undo/redo invocation, tutorial, panels, origin, focus, footer, sidePanelTab, dragDrop, openKitGuids, activeKitGuid) lives in the single existing `sketchpadMachine`. Undo/redo itself is implemented on `KitStore` in Rust and surfaced as async hooks from `@compose/react`. Kit lifecycle moves entirely into `KitRegistryProvider` from `@compose/react`.
+overview: Finish stripping every kit-state and sync layer (yjs, Sync*, SketchpadStore, AppStore hierarchy, kitCommands, useKit*, useKitScope, HookResult/Field) out of [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx). All kit reads/writes come exclusively from `@semio-tech/compose-react` async `HookTriad` hooks with per-call `WriteStatus`; all sketchpad UI state (including undo/redo invocation, tutorial, panels, origin, focus, footer, sidePanelTab, dragDrop, openKitGuids, activeKitGuid) lives in the single existing `sketchpadMachine`. Undo/redo itself is implemented on `KitStore` in Rust and surfaced as async hooks from `@semio-tech/compose-react`. Kit lifecycle moves entirely into `KitRegistryProvider` from `@semio-tech/compose-react`.
 todos:
  - id: rs_undo_redo_oo
    content: "Rust: add undo/redo/tx + demote every free helper to methods on impl KitStore; extend KitStoreHandle; cargo test."
@@ -21,19 +21,19 @@ todos:
    content: "Sketchpad: delete OriginProvider/FooterItemProvider/DragDropProvider/FocusProvider/PanelSectionProvider/SidePanelTabProvider; promote slices into sketchpadMachine context with typed events and fromCallback/fromPromise actors."
    status: completed
  - id: sketchpad_rewire_callsites
-   content: "Sketchpad: rewire every commands.*/kitCommands.*/store.execute('compose.designApp.*') to @compose/react command hooks or actor.send; replace canSet/HookResult[2] with status.kind; wrap inputs with useDraft + useWriteIndicator."
+   content: "Sketchpad: rewire every commands.*/kitCommands.*/store.execute('compose.designApp.*') to @semio-tech/compose-react command hooks or actor.send; replace canSet/HookResult[2] with status.kind; wrap inputs with useDraft + useWriteIndicator."
    status: cancelled
  - id: tests_verify
-   content: Extend vitest + Playwright specs; run cargo test, pnpm -F @compose/js|react|sketchpad test; desktop smoke over metabolism.zip.
+   content: Extend vitest + Playwright specs; run cargo test, pnpm -F @semio-tech/compose-js|react|sketchpad test; desktop smoke over metabolism.zip.
    status: completed
 isProject: false
 ---
 
 ## Non-negotiable architectural invariants
 
-1. **One source of kit state.** `@compose/sketchpad` imports kit data and mutation only via hooks from `@compose/react`. No `yjs`, no `Y.*`, no `Sync*`, no `KitStore` direct use, no `kitCommands`, no `useKit`, no `useKitScope`, no `useKitCommands`, no `useKitTransaction`. `@compose/react` is the only consumer of `@compose/js` (which owns the worker + RPC). `@compose/js` is the only consumer of `@compose/rs` (wasm).
+1. **One source of kit state.** `@semio-tech/compose-sketchpad` imports kit data and mutation only via hooks from `@semio-tech/compose-react`. No `yjs`, no `Y.*`, no `Sync*`, no `KitStore` direct use, no `kitCommands`, no `useKit`, no `useKitScope`, no `useKitCommands`, no `useKitTransaction`. `@semio-tech/compose-react` is the only consumer of `@semio-tech/compose-js` (which owns the worker + RPC). `@semio-tech/compose-js` is the only consumer of `@semio-tech/compose-rs` (wasm).
 2. **All sketchpad UI state in `sketchpadMachine`.** The single existing machine in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) owns every UI slice: `tutorial`, `origin`, `focus`, `panelSections`, `sidePanelTab`, `footerItem`, `dragDrop`, `openKitGuids`, `activeKitGuid`, `homeApp`, `kitApps`, `typeApps`, `designApps`, `qualityApps`, `feedbackApp`, `backgroundOperations`. No ad-hoc providers, no `createContext` + `useState` islands, no `SketchpadStore`/`AppStore`/`KitDiffAppStore`/`PlainAppStore` classes.
-3. **Everything non-blocking and status-bearing.** Every write goes through an `@compose/react` `HookTriad<T> = [value, setter, WriteStatus]`. UI components mirror the current server value into a local `useState` (draft) so they keep the user's input when the async setter rejects, and render `status` (`idle` / `pending` / `error` / `readonly`) as spinners, disabled affordances, warnings, and errors.
+3. **Everything non-blocking and status-bearing.** Every write goes through an `@semio-tech/compose-react` `HookTriad<T> = [value, setter, WriteStatus]`. UI components mirror the current server value into a local `useState` (draft) so they keep the user's input when the async setter rejects, and render `status` (`idle` / `pending` / `error` / `readonly`) as spinners, disabled affordances, warnings, and errors.
 4. **Rust store is an OO graph, not a bag of pure functions.** Any surviving free function in `impl kit` (e.g. `type_index`, `normalize_coord`, `cross`, `design_dto_by_guid`, `connection_key`, `strip_design_piece_guid`, `expand_nested_design_pieces_in_dto`) MUST be small composable methods on `impl KitStore` (or `impl DesignView`/`impl PieceView` if we grow helpers). Undo/redo joins them as instance methods.
 
 ```mermaid
@@ -64,7 +64,7 @@ Edits confined to [compose/rs/src/lib.rs](compose/rs/src/lib.rs) inside existing
 3. On `impl KitStoreHandle`, add matching `#[wasm_bindgen(js_name=undo|redo|canUndo|canRedo|beginTx|commitTx|abortTx)]` that lock `inner` and forward.
 4. `cargo test` in [compose/rs](compose/rs).
 
-## Phase J — @compose/js: expose undo/redo + tx via client
+## Phase J — @semio-tech/compose-js: expose undo/redo + tx via client
 
 Edits in [compose/js/index.ts](compose/js/index.ts) only.
 
@@ -72,7 +72,7 @@ Edits in [compose/js/index.ts](compose/js/index.ts) only.
 2. Implement on `WorkerKitStoreClient` (forward to worker) and `FallbackKitStoreClient` (delegate to `this.kit.undo()` etc. — add those as instance methods on `class KitImpl`).
 3. [compose/js/worker.ts](compose/js/worker.ts): forward the new messages to `KitStoreHandle`.
 
-## Phase X — @compose/react: add the remaining triad hooks
+## Phase X — @semio-tech/compose-react: add the remaining triad hooks
 
 Edits in [compose/react/index.tsx](compose/react/index.tsx) only, reusing the `runtime.kitClient.subscribe(load)` RPC pattern already used by `usePiecesMetadataMap`.
 
@@ -103,14 +103,14 @@ Done in-place in [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx). No 
 
 ### S.2 Delete kit state plumbing
 
-- Region `🎙️Granular Hook Types` (654–788): `HookResult`, `HookNoSetResult`, `READONLY_SETTER`, `READONLY_CAN`, `readonlyHookResult`, `writableHookResult`, `conditionalHookResult`, `Field`, `ActionField`, `NOOP_SETTER`, `createField`, `createReadonlyField`, `createAction`, `fieldToHookResult`, `hookResultToField`. Every `canSet`/`HookResult` consumer (~728 occurrences) migrates to `status.kind === "idle" || status.kind === "pending"` from the `HookTriad` returned by `@compose/react`.
+- Region `🎙️Granular Hook Types` (654–788): `HookResult`, `HookNoSetResult`, `READONLY_SETTER`, `READONLY_CAN`, `readonlyHookResult`, `writableHookResult`, `conditionalHookResult`, `Field`, `ActionField`, `NOOP_SETTER`, `createField`, `createReadonlyField`, `createAction`, `fieldToHookResult`, `hookResultToField`. Every `canSet`/`HookResult` consumer (~728 occurrences) migrates to `status.kind === "idle" || status.kind === "pending"` from the `HookTriad` returned by `@semio-tech/compose-react`.
 - Region `💧Commands` (1644–1681): `KitCommandContext`, `KitCommandResult` interfaces.
 - Region `⏰Entity Data Hooks` (7627–7718): `useLocalKitSnapshot`, `useAuthor`, `useType`, `useQuality`, `useDesign`, `usePiece`, `useConnection`, `usePieces`, `useConnections`.
 - Region `🎆Piece Derived Hooks` (7720–7807): `PieceMetadata`, `usePiecesMetadataMap`, `usePieceMetadata`, `useFlatPiecePlane`, `useFlatPieceCenter`, `useIsConnectedPiece`, `usePieceDepth`, `useFixedPieceId`, `useParentPieceId`, `useCurrentPiecePlane`, `usePieceParentConnection`.
 - Region `🎹Design Derived Hooks` (7809–7838): `useIncludedDesigns`, `useDesignId`, `usePiecesFromIds`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`.
 - Region `⏱️Kit` scaffolding (7842–8401): `executeKitCommand`, `KitScope`, `KitScopeContext`, `KitWasmRuntimeBridge`, `KitScopeProvider`, `useKitScope`, `useIsInKitScope`, `useKitStoreFromProvider`, `useKit`, all `useKit*` hooks (`useKitTypes`, `useKitName`, `useKitDescription`, `useKitAuthors`, `useKitFiles`, `useKitQualities`, `useKitDesigns`, `useDesigns`, `useKitFolders`, `useKitPorts`, `useKitTags`, `useKitConcepts`, `useTypeFromKit`, `useDesignFromKit`, `useKitConnectorCompatibility`), `useFileUrls`, `useKitTransaction`, `useKitCommands`.
 - Region `💧Commands` (8403–8840): `kitCommands` object.
-- Region `🎊kitSelectionHelper` (5216–5790) if it depends on kit data; keep only geometry helpers that remain pure, move them next to consumers as methods on the relevant component. If `kitSelectionHelper` reads kit data, rewire to `@compose/react` hooks.
+- Region `🎊kitSelectionHelper` (5216–5790) if it depends on kit data; keep only geometry helpers that remain pure, move them next to consumers as methods on the relevant component. If `kitSelectionHelper` reads kit data, rewire to `@semio-tech/compose-react` hooks.
 
 ### S.3 Delete UI provider islands, fold into sketchpadMachine
 
@@ -124,18 +124,18 @@ Each of these regions becomes a ≤10-line `useSelector(actor, …)` wrapper aro
 
 ### S.4 Delete kit lifecycle bridge
 
-- `KitWasmRuntimeBridge` (7877) and `KitScopeProvider` (7915) are replaced at every call site by `<KitProvider kitGuid={guid} backbone={...}>` from `@compose/react`. The sketchpad factory wrappers `createJsonFileKitStore`/`createFolderKitStore`/`createSessionKitStore` re-exports at line 615–628 are deleted; consumers use `KitRegistryProvider` + `KitProvider` with the appropriate `KitProviderBackbone`.
-- Anything currently using `useSketchpadStore().kit(guid).store` uses `useKitStoreClient()` or a data hook (`usePieces`, `useDesigns`, ...) from `@compose/react`.
+- `KitWasmRuntimeBridge` (7877) and `KitScopeProvider` (7915) are replaced at every call site by `<KitProvider kitGuid={guid} backbone={...}>` from `@semio-tech/compose-react`. The sketchpad factory wrappers `createJsonFileKitStore`/`createFolderKitStore`/`createSessionKitStore` re-exports at line 615–628 are deleted; consumers use `KitRegistryProvider` + `KitProvider` with the appropriate `KitProviderBackbone`.
+- Anything currently using `useSketchpadStore().kit(guid).store` uses `useKitStoreClient()` or a data hook (`usePieces`, `useDesigns`, ...) from `@semio-tech/compose-react`.
 
 ### S.5 Rewire call sites
 
 - `commands.updatePiece(` (×8) → `useUpdatePiece().run(...)` + `useDraft(...)` at the input level.
 - `commands.updateConnection(` (×9) → `useUpdateConnection().run(...)`.
 - `commands.addConnection(` (×1) → `useAddConnection().run(...)`.
-- `store.execute("compose.designApp.*", ...)` (×37 in 29759–30144) → either `actor.send({ type: "designApp.*", ... })` for UI-only intents, or the corresponding `useX` hook from `@compose/react`.
-- `kitCommands.*` (×34) → matching `@compose/react` command hooks from Phase X.
+- `store.execute("compose.designApp.*", ...)` (×37 in 29759–30144) → either `actor.send({ type: "designApp.*", ... })` for UI-only intents, or the corresponding `useX` hook from `@semio-tech/compose-react`.
+- `kitCommands.*` (×34) → matching `@semio-tech/compose-react` command hooks from Phase X.
 - Every `.canSet` / `HookResult[2]` check → `status.kind === "idle"` / negated `status.kind === "readonly"` / `status.kind === "pending"` as appropriate.
-- Every editable input: wrap with `useDraft(triad)` so the draft survives async rejection; render `status` via `useWriteIndicator(status)` already in `@compose/react`.
+- Every editable input: wrap with `useDraft(triad)` so the draft survives async rejection; render `status` via `useWriteIndicator(status)` already in `@semio-tech/compose-react`.
 
 ## Phase M — Promote remaining UI slices into `sketchpadMachine`
 
@@ -147,17 +147,17 @@ In the existing machine [compose/sketchpad/index.tsx](compose/sketchpad/index.ts
 
 ## Phase T — Tests & verification
 
-1. Extend existing vitest in `@compose/react` with a `useDraft` roundtrip test: successful commit clears draft, rejection keeps draft + exposes `status.kind === "error"`, concurrent writes on different guids do not cross-contaminate pending counters.
+1. Extend existing vitest in `@semio-tech/compose-react` with a `useDraft` roundtrip test: successful commit clears draft, rejection keeps draft + exposes `status.kind === "error"`, concurrent writes on different guids do not cross-contaminate pending counters.
 2. Extend existing Playwright spec under [compose/sketchpad](compose/sketchpad): pending/error/readonly affordances on `useUpdatePiece`, illegal-name preserved draft, concurrent independent pending counters on two pieces, undo/redo via `useUndo`/`useRedo`.
 3. Run, in this order:
    - `cargo test` in [compose/rs](compose/rs)
-   - `pnpm -F @compose/js test`
-   - `pnpm -F @compose/react test`
-   - `pnpm -F @compose/sketchpad test`
+   - `pnpm -F @semio-tech/compose-js test`
+   - `pnpm -F @semio-tech/compose-react test`
+   - `pnpm -F @semio-tech/compose-sketchpad test`
    - Desktop smoke run over `metabolism.zip`: open kit → drag piece → update connection → undo → redo → export.
 
 ## Out of scope
 
 - No new top-level modules in any package.
-- No new pure helper functions in `@compose/js` or `@compose/react`; every new thing is a method on `KitStoreClient`, `KitImpl`, `KitStore` (Rust), `KitStoreHandle`, the `KitRuntimeContextValue`, or the existing `sketchpadMachine`.
-- No new contexts/providers in `@compose/sketchpad`; only `KitProvider` / `KitRegistryProvider` / `SketchpadStateContext`.
+- No new pure helper functions in `@semio-tech/compose-js` or `@semio-tech/compose-react`; every new thing is a method on `KitStoreClient`, `KitImpl`, `KitStore` (Rust), `KitStoreHandle`, the `KitRuntimeContextValue`, or the existing `sketchpadMachine`.
+- No new contexts/providers in `@semio-tech/compose-sketchpad`; only `KitProvider` / `KitRegistryProvider` / `SketchpadStateContext`.

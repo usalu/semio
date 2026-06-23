@@ -1,5 +1,5 @@
 {
-	"name": "@framework/presentation/play",
+	"name": "@semio-tech/framework-presentation-play",
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"dev": {

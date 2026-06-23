@@ -4,7 +4,7 @@ import {
 	PRESENTATION_DEFAULT_SLIDE_ASPECT,
 	collectPresentationSlides,
 	loadPresentationFromSlideGlob,
-} from "@framework/presentation/core";
+} from "@semio-tech/framework-presentation-core";
 import { presentationMeta } from "../../../mit-bestand/präsentation/33.projektetage/spec.ts";
 
 const projektetageRoot = new URL("../../../mit-bestand/präsentation/33.projektetage/", import.meta.url).pathname;

@@ -7,7 +7,7 @@ puzzle2d canvas and window options (select/combobox portals) sometimes render li
 Multiple nested `applyElementsSurfaceChrome` / `useElementsSurfaceChrome` subscribers (e.g. `PlatformShell` + `PlatformView`). Each cleanup unconditionally removed `html.dark`, so a child effect re-run or unmount briefly (or persistently if order was wrong) dropped dark while another lease was still active. Theme also applied in `useEffect` (after paint) so first puzzle2d CSS probes could read light `:root` tokens.
 
 ## Fix
-- Reference-counted lease stack in `@ui/react` surface chrome; DOM reflects only the top lease; releasing re-applies the previous lease.
+- Reference-counted lease stack in `@semio-tech/ui-react` surface chrome; DOM reflects only the top lease; releasing re-applies the previous lease.
 - `useLayoutEffect` for hook subscribers so `dark` is set before canvas layout/probes.
 - `color-scheme` on `html`/`body` for native controls in portals.
 - puzzle2d CSS probe mirrors `dark` class when present.

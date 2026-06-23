@@ -1,5 +1,5 @@
 {
-  "name": "@flow/module-math",
+  "name": "@semio-tech/flow-module-math",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {

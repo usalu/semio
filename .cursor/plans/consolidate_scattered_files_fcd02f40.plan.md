@@ -76,4 +76,4 @@ Convert `pub mod X;` + sibling file into inline `pub mod X { ... }` `// #region`
 
 ## Verification
 
-Run per affected package via the existing runner (no config changes): `nx` test/build for `@geometry/brep/js`, `@repo/lib`, the `vscode` extension build; `cargo check`/`cargo test` for the touched crates; `uv run pytest` for the py lib. Confirm region structure compiles and tests pass before closing the ticket with `ticket_close` listing all touched files.
+Run per affected package via the existing runner (no config changes): `nx` test/build for `@semio-tech/geometry-brep-js`, `@semio-tech/repo-lib`, the `vscode` extension build; `cargo check`/`cargo test` for the touched crates; `uv run pytest` for the py lib. Confirm region structure compiles and tests pass before closing the ticket with `ticket_close` listing all touched files.

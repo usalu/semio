@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@infinite/world/r3f",
+  "name": "@semio-tech/infinite-world-r3f",
   "version": "0.1.0",
   "description": "infinite · world r3f",
   "type": "module",
@@ -9,13 +9,13 @@
     ".": "./index.tsx"
   },
   "scripts": {
-    "test": "bun nx run @infinite/world/r3f:test"
+    "test": "bun nx run @semio-tech/infinite-world-r3f:test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
-    "@ui/react": "workspace:*",
-    "@ui/styling": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "three": "^0.182.0",

@@ -1,6 +1,6 @@
 ---
 name: Brep Suite Procedural
-overview: Generalize the cad-free @geometry/brep/js kernel from solid-only to a full multi-type BREP suite (points, curves, wires, surfaces, faces, solids, 2D shapes), wrapping essentially the entire brepjs surface, then expose it exhaustively as categorized flow nodes in @procedural/react with a multi-type R3F viewport that renders points, lines, surfaces and solids.
+overview: Generalize the cad-free @semio-tech/geometry-brep-js kernel from solid-only to a full multi-type BREP suite (points, curves, wires, surfaces, faces, solids, 2D shapes), wrapping essentially the entire brepjs surface, then expose it exhaustively as categorized flow nodes in @semio-tech/procedural-react with a multi-type R3F viewport that renders points, lines, surfaces and solids.
 todos:
   - id: contracts
     content: "Expand contracts.ts: GeometryKind/GeometryRef, optional points on MeshTransfer, exhaustive BrepKernel interface"
@@ -116,5 +116,5 @@ Catalogue/extensions trees are already generic. Update the default fixture refer
 
 - Input ergonomics: bounded to `inputSlider`(0–10)/`inputNote` by the Rust flow core; handled via node defaults + `brep.point`/`brep.vector` rather than expanding `flow/core`. Adding typed `inputVec3`/`inputNumber` widgets would be a separate flow-core ticket.
 - `MeshTransfer.points` is optional to avoid touching `cad/js` MeshTransfer construction (different technology).
-- Validate at runtime with `[DEBUG]` logs and run the three vitest suites (`@geometry/brep/js`, `@procedural/react`, `@procedural/play`) before closing the ticket with the file list and summary.
+- Validate at runtime with `[DEBUG]` logs and run the three vitest suites (`@semio-tech/geometry-brep-js`, `@semio-tech/procedural-react`, `@semio-tech/procedural-play`) before closing the ticket with the file list and summary.
 

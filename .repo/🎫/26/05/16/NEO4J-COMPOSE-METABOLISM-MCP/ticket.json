@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "Product graphs stay fixed (`compose`, `elements`, `coda`, `reuse`). Extra Bolt graphs come from `NEO4J_EXTRA_GRAPH_DATABASES` (comma list) for generate, native `CREATE DATABASE`, stub `.cypher`, and devcontainer reload. MCP `neo4j-extra` uses `NEO4J_EXTRA_GRAPH_DATABASE` for `NEO4J_DATABASE` when running `… mcp neo4j` without argv segments.",
-  "summary": "`NEO4J_PRODUCT_GRAPH_DATABASE_SPECS` + `parseExtraNeo4jGraphDatabaseNamesFromEnv` / `getAllNeo4jGraphExportSpecs` in `generate.neo4j.gen.ts`; `script.ts` bulk generate uses env-aware specs. Replaced per-name extra MCP with `neo4j-extra` in `.mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`, `.kiro/settings/mcp.json`, `.vscode/mcp.json`, `.codex/config.toml`. `script.ps1`, `script.sh`, `.devcontainer/post-start.sh`, `devcontainer.json` env placeholders, README, `.devcontainer/README.md`, `.github/agents/compose.agent.md`, `@repo/lib` tests.",
+  "summary": "`NEO4J_PRODUCT_GRAPH_DATABASE_SPECS` + `parseExtraNeo4jGraphDatabaseNamesFromEnv` / `getAllNeo4jGraphExportSpecs` in `generate.neo4j.gen.ts`; `script.ts` bulk generate uses env-aware specs. Replaced per-name extra MCP with `neo4j-extra` in `.mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`, `.kiro/settings/mcp.json`, `.vscode/mcp.json`, `.codex/config.toml`. `script.ps1`, `script.sh`, `.devcontainer/post-start.sh`, `devcontainer.json` env placeholders, README, `.devcontainer/README.md`, `.github/agents/compose.agent.md`, `@semio-tech/repo-lib` tests.",
   "github": {},
   "sessions": []
 }

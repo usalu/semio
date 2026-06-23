@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@gis/map/play` task router: `bun ./script.ts <dev|build|build-tiles|test|tiles|fixture>`. */
+/** 🧭 `@semio-tech/gis-map-play` task router: `bun ./script.ts <dev|build|build-tiles|test|tiles|fixture>`. */
 import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import {

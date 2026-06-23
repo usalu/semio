@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🔍 `@cad/js/query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query` (view `CALL` removed). */
+/** @emoji 🔍 `@semio-tech/cad-js-query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query` (view `CALL` removed). */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -34,7 +34,7 @@ import {
 	type Vec3,
 	evalExpr,
 	type ExprEnv,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
@@ -1206,7 +1206,7 @@ type Row = Record<string, ModelEntityRef | unknown>;
 function rowVarsToEnv(
 	row: Row,
 	model: Model,
-	meta: import("@cad/js/core").AttributeStore,
+	meta: import("@semio-tech/cad-js-core").AttributeStore,
 	preview: SpatialKernel,
 	activeModelDefinitionId?: string | null,
 ): ExprEnv {
@@ -1415,7 +1415,7 @@ export async function runConstruct(text: string, ctx: ConstructQueryContext): Pr
 	return { rows, ...(data !== undefined ? { data } : {}), ...(diff !== undefined ? { diff } : {}) };
 }
 
-/** @emoji 🔍 Default `InteractionRuntimeOptions.query` bridge (`@cad/js/core`). */
+/** @emoji 🔍 Default `InteractionRuntimeOptions.query` bridge (`@semio-tech/cad-js-core`). */
 export const defaultConstructRunner: ConstructRunner = (text, ctx) => runConstruct(text, ctx);
 
 /** @emoji 🔍 Cached `KernelIndex` wrapper for repeated `construct` scripts on one document revision. */
@@ -1441,8 +1441,8 @@ export class ConstructEngine {
 // #endregion Api
 
 // #region 🧪Tests
-const __spatialQueryTestRuntime = import.meta.vitest ? await import("@cad/js/runtime") : null;
-const __spatialQueryTestKernel = import.meta.vitest ? await import("@cad/js/kernel/brepjs") : null;
+const __spatialQueryTestRuntime = import.meta.vitest ? await import("@semio-tech/cad-js-runtime") : null;
+const __spatialQueryTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
 	__spatialQueryTestRuntime!.bootstrapCadModules();
@@ -1484,7 +1484,7 @@ if (import.meta.vitest) {
 		return { solid: c0, shell: sh, faces: [f0, f1] };
 	}
 
-	describe("@cad/js/query parse", () => {
+	describe("@semio-tech/cad-js-query parse", () => {
 		it("parses MATCH RETURN with property access", () => {
 			const a = parseConstruct("MATCH (f:Object {typology: 'spatial.shape.kernel.face', id: 'f0'}) RETURN f.id");
 			expect(a.clauses[0]?.kind).toBe("match");
@@ -1536,7 +1536,7 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@cad/js/query execute", () => {
+	describe("@semio-tech/cad-js-query execute", () => {
 		it("MATCH solid shell face chain returns face ids", async () => {
 			const model = new Model();
 			seedSolidShellFaces(model);
@@ -1699,7 +1699,7 @@ if (import.meta.vitest) {
 			const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
 			applyModelDiff(model, r);
 			model.objects["energy-hull"] = {
-				id: "energy-hull" as import("@cad/js/core").ObjectRef,
+				id: "energy-hull" as import("@semio-tech/cad-js-core").ObjectRef,
 				typology: "energy.energy.hull",
 				primitives: { solid: String(r.solid ?? "box") },
 			};
@@ -1729,7 +1729,7 @@ if (import.meta.vitest) {
 			const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
 			applyModelDiff(model, r);
 			model.objects["object-box"] = {
-				id: "object-box" as import("@cad/js/core").ObjectRef,
+				id: "object-box" as import("@semio-tech/cad-js-core").ObjectRef,
 				typology: "spatial.shape.primitive.box",
 				primitives: { solid: String(r.solid ?? "box") },
 			};

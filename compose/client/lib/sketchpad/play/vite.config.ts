@@ -13,6 +13,7 @@
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
 // #region 🔌Adapters
+import { readFileSync } from "node:fs";
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -22,7 +23,7 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { playgroundIframeEmbedHeadersPlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -39,6 +40,60 @@ const __filename = fileURLToPath(import.meta.url);
  **/
 const __dirname = path.dirname(__filename);
 
+const PLAYWRIGHT_DEV_STUB_ID = "\0compose-sketchpad-play-playwright-dev-stub";
+const EMBEDDED_NODE_TEST_REGIONS = [
+  /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
+  /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
+];
+
+function isEmbeddedNodeTestIndexModule(id: string): boolean {
+  const file = id.replace(/\\/g, "/");
+  return file.endsWith("/compose/client/lib/sketchpad/js/index.ts") || file.endsWith("/compose/client/lib/js/index.ts");
+}
+
+/** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle. */
+function stripEmbeddedNodeTests(source: string): string {
+  let next = source;
+  for (const region of EMBEDDED_NODE_TEST_REGIONS) {
+    next = next.replace(region, "");
+  }
+  return next;
+}
+
+/** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle. */
+function stripEmbeddedNodeTestsPlugin(): Plugin {
+  return {
+    name: "compose-sketchpad-play-strip-embedded-node-tests",
+    enforce: "pre",
+    load(id) {
+      if (!isEmbeddedNodeTestIndexModule(id)) return;
+      return stripEmbeddedNodeTests(readFileSync(id, "utf8"));
+    },
+    transform(code, id) {
+      if (!isEmbeddedNodeTestIndexModule(id)) return;
+      const next = stripEmbeddedNodeTests(code);
+      if (next === code) return;
+      return { code: next, map: null };
+    },
+  };
+}
+
+/** @emoji 🧱 Keeps Playwright out of the browser graph when embedded E2E regions are scanned. */
+function monorepoPlaywrightDevStubPlugin(): Plugin {
+  return {
+    name: "compose-sketchpad-play-playwright-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "@playwright/test" || id === "playwright" || id === "playwright-core") return PLAYWRIGHT_DEV_STUB_ID;
+      return undefined;
+    },
+    load(id) {
+      if (id !== PLAYWRIGHT_DEV_STUB_ID) return;
+      return "export default {}; export const test = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} });";
+    },
+  };
+}
+
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
 export default defineConfig(async () => {
@@ -48,14 +103,20 @@ export default defineConfig(async () => {
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
   return {
     base: "./",
+    define: {
+      __COMPOSE_JS_RUN_BENCHMARKS__: "false",
+      __COMPOSE_JS_RUN_EMBEDDED_TESTS__: "false",
+      __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+      "import.meta.env.COMPOSE_SKETCHPAD_E2E": JSON.stringify(process.env.COMPOSE_SKETCHPAD_E2E ?? ""),
+    },
     resolve: {
       alias: [
-        { find: "@compose/js", replacement: path.resolve(__dirname, "../../js") },
-        { find: "@compose/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
-        { find: "@compose/ui", replacement: path.resolve(__dirname, "../../react/rendering") },
-        { find: "@compose/sketchpad", replacement: path.resolve(__dirname, "../react") },
+        { find: "@semio-tech/compose-js", replacement: path.resolve(__dirname, "../../js") },
+        { find: "@semio-tech/compose-rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
+        { find: "@compose/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
+        { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname, "../react") },
         { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-        { find: "@compose/asset", replacement: path.resolve(__dirname, "../../../../asset") },
+        { find: "@semio-tech/compose-asset", replacement: path.resolve(__dirname, "../../../../asset") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../../ui/react/index.tsx") },
         { find: "vite/internal", replacement: viteInternalFallback },
       ],
@@ -71,6 +132,8 @@ export default defineConfig(async () => {
         enforce: "pre",
       },
       react(),
+      monorepoPlaywrightDevStubPlugin(),
+      stripEmbeddedNodeTestsPlugin(),
       playgroundIframeEmbedHeadersPlugin(),
       wasm(),
       topLevelAwait(), // needed for older browsers to run wasm
@@ -121,13 +184,22 @@ export default defineConfig(async () => {
     ],
     optimizeDeps: {
       include: ["golden-layout"],
-      exclude: ["@compose/js", "@compose/sketchpad", "@playwright/test", "playwright", "playwright-core"],
+      exclude: ["@semio-tech/compose-js", "@semio-tech/compose-sketchpad", "@playwright/test", "playwright", "playwright-core"],
       esbuildOptions: {
         target: "es2020",
       },
     },
     ssr: {
       noExternal: ["golden-layout"],
+    },
+    build: {
+      target: "es2022",
+      rollupOptions: {
+        external: ["@playwright/test"],
+      },
+    },
+    worker: {
+      format: "es",
     },
   };
 });

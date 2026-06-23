@@ -1,5 +1,5 @@
 {
-  "name": "@reasoning/mindmap/play",
+  "name": "@semio-tech/reasoning-mindmap-play",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {}
 }

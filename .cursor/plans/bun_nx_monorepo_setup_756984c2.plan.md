@@ -193,7 +193,7 @@ Per-toolchain build/install steps (uv sync, cargo wasm config, dotnet restore, g
   with: { bun-version: latest }
 - run: bun install --frozen-lockfile
 - run: bun nx run workspace:setup
-- run: bun nx affected -t test     # or run @compose/docs:build for pages
+- run: bun nx affected -t test     # or run @semio-tech/compose-sketchpad-docs:build for pages
 ```
 
 Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, `uv.lock`, `go.sum` aggregate hash.
@@ -205,7 +205,7 @@ Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, 
 - `bun nx run-many -t build` produces all artifacts, second run reports `[local cache]` everywhere.
 - `bun nx run-many -t test` green on existing suites (we don't touch test logic).
 - Devcontainer rebuild + native PowerShell run both end with `workspace:setup` exit 0.
-- Verify Bun runs Electron-Forge (`bun nx run @compose/desktop:build`); fall back to a single `node` install in Dockerfile if blocked.
+- Verify Bun runs Electron-Forge (`bun nx run @semio-tech/compose-desktop:build`); fall back to a single `node` install in Dockerfile if blocked.
 
 ## Out of scope
 
@@ -217,6 +217,6 @@ Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, 
 ## Notes
 
 - This is one focused refactor; no need to delegate. Estimated 4-6 hours of edits + verification.
-- `pnpm.overrides` (`@compose/asset`, `@compose/js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
+- `pnpm.overrides` (`@semio-tech/compose-asset`, `@semio-tech/compose-js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
 - `defaultBase = "⛳wip"` is unusual but kept.
 - The repo MCP `ticket_open` is unavailable in this Cursor session's MCP set; the ticket folder will be created via `repo/client/client(.exe) ticket open` once available, or scaffolded manually under `.repo/🎫/26/05/11/bun-nx-monorepo-setup/`.

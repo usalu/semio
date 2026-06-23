@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "@ui/react",
+  "name": "@semio-tech/ui-react",
   "version": "0.1.0",
   "description": "ui · react",
   "type": "module",
@@ -16,13 +16,13 @@
   },
   "targets": {
     "lint": {
-      "command": "bun nx run @ui/react:lint",
+      "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
       "cwd": "."
     }
   },
   "dependencies": {
-    "@ui/asset": "workspace:*",
-    "@ui/styling": "workspace:*",
+    "@semio-tech/ui-asset": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

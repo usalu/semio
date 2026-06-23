@@ -62,7 +62,7 @@ import {
   writeKitStoreClientSchemaField,
   getComposeKitLiveReadStore,
   CommandBuilder,
-} from "@compose/js";
+} from "@semio-tech/compose-js";
 import {
   asKitInstance,
   Attribute,
@@ -115,7 +115,7 @@ import {
   TypeShallowSchema,
   TypeStore,
   Vector,
-} from "@compose/js";
+} from "@semio-tech/compose-js";
 import type {
   BackboneConfig,
   BackboneStatusDto,
@@ -156,7 +156,7 @@ import type {
   TypeMetadataDto,
   TypePlain,
   TypeShallow,
-} from "@compose/js";
+} from "@semio-tech/compose-js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
@@ -628,7 +628,7 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 }
 // #endregion 🔖KitHostCommandDispatch
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadPoint, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@compose/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadPoint, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@semio-tech/compose-js";
 export {
   WRITE_STATUS_IDLE,
   WRITE_STATUS_READONLY,
@@ -636,18 +636,18 @@ export {
   writeStatusEquivalent,
   StoreField,
   StoreCommand,
-} from "@compose/js";
-export { getKitClientReadPoint, kitReadPointKey, kitStoreFromKitStoreClient, theKitReadPoint } from "@compose/js";
-export type { KitBinaryStore, KitFileState } from "@compose/js";
-export type { KitHostStore, KitHostStoreSnapshot } from "@compose/js";
+} from "@semio-tech/compose-js";
+export { getKitClientReadPoint, kitReadPointKey, kitStoreFromKitStoreClient, theKitReadPoint } from "@semio-tech/compose-js";
+export type { KitBinaryStore, KitFileState } from "@semio-tech/compose-js";
+export type { KitHostStore, KitHostStoreSnapshot } from "@semio-tech/compose-js";
 export type {
   KitStoreExecuteResult,
   KitDesignReadKind,
   KitShallowListKind,
   KitStoreReadSnap,
   KitViewCatalogKey,
-} from "@compose/js";
-export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@compose/js";
+} from "@semio-tech/compose-js";
+export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio-tech/compose-js";
 export {
   ComposeKitDesignReadStore,
   ComposeKitLiveReadStore,
@@ -657,7 +657,7 @@ export {
   getComposeKitLiveReadStore,
   getComposeKitShallowListReadStore,
   getComposeKitViewStore,
-} from "@compose/js";
+} from "@semio-tech/compose-js";
 
 // #region ⚛️Types
 
@@ -2030,7 +2030,7 @@ const EMPTY_KIT_READ_SNAP: KitStoreReadSnap = Object.freeze({
 
 /**
  * @emoji 📌 `useSyncExternalStore` on a `getSnapshot`/`subscribe` pair with a stable server snapshot.
- * Pairs with {@link getComposeKitLiveReadStore} from `@compose/js` and {@link getComposeKitDesignReadStore} / {@link getComposeKitShallowListReadStore}.
+ * Pairs with {@link getComposeKitLiveReadStore} from `@semio-tech/compose-js` and {@link getComposeKitDesignReadStore} / {@link getComposeKitShallowListReadStore}.
  */
 export function useComposeReadSnap<T extends KitStoreReadSnap>(
   subscribe: (onStoreChange: () => void) => () => void,
@@ -3630,7 +3630,7 @@ export function useRedo(): { run: () => Promise<SetResult>; status: WriteStatus 
 
 // #region 🔖ChangeLifecycleAndCommandBuilder
 
-/** @emoji 🧭 Stable {@link CommandBuilder} for nested `Mutation.session` writes (see `@compose/js` implementation). */
+/** @emoji 🧭 Stable {@link CommandBuilder} for nested `Mutation.session` writes (see `@semio-tech/compose-js` implementation). */
 export function useCommandBuilder(): CommandBuilder | null {
   const client = useKitStoreClient();
   return React.useMemo(() => (client ? new CommandBuilder(client) : null), [client]);
@@ -5634,7 +5634,7 @@ export function useKitStoredFileUrls(): Map<string, string> {
 export const useFileUrls = useKitStoredFileUrls;
 
 /**
- * @emoji 📌Readable URL for a kit file (provider, embedded, or remote) — thin wrapper over `@compose/js` kit file helpers.
+ * @emoji 📌Readable URL for a kit file (provider, embedded, or remote) — thin wrapper over `@semio-tech/compose-js` kit file helpers.
  */
 export function useKitFileUrl(fileId: string | undefined): KitFieldBinding<string | null> {
   const kitStore = useKitHostStore();
@@ -6157,7 +6157,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 
 // #region ⚛️Direct Domain Exports
 
-/** Re-exports of kit entities + WASM bridge; sketchpad UI helpers live in `@compose/sketchpad`. */
+/** Re-exports of kit entities + WASM bridge; sketchpad UI helpers live in `@semio-tech/compose-sketchpad`. */
 export {
   applyKitClientSnapshotToLocalStore,
   asKitInstance,
@@ -6201,9 +6201,9 @@ export {
   TOLERANCE,
   Type,
   Vector,
-} from "@compose/js";
-export { KitStore } from "@compose/js";
-export type { ChangeId } from "@compose/js";
+} from "@semio-tech/compose-js";
+export { KitStore } from "@semio-tech/compose-js";
+export type { ChangeId } from "@semio-tech/compose-js";
 export {
   AlternativeCommandNav,
   CommandBuilder,
@@ -6211,7 +6211,7 @@ export {
   SessionCommandNav,
   UnsavedChangeCommandNav,
   VersionCommandNav,
-} from "@compose/js";
+} from "@semio-tech/compose-js";
 export type {
   AuthorIdDto,
   ConnectionDiff,
@@ -6238,9 +6238,9 @@ export type {
   TypeDiff,
   TypeShallow,
   TypeMetadataDto,
-} from "@compose/js";
-export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@compose/js";
-export type { KitCommandContext, KitCommandResult } from "@compose/js";
+} from "@semio-tech/compose-js";
+export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio-tech/compose-js";
+export type { KitCommandContext, KitCommandResult } from "@semio-tech/compose-js";
 
 export function useJSON(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("JSON", idValue);
@@ -17464,7 +17464,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, cleanup, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance, kitReadPointKey, theKitReadPoint, StoreField, StoreCommand } = await import("@compose/js");
+  const { InMemoryKitStore, asKitInstance, kitReadPointKey, theKitReadPoint, StoreField, StoreCommand } = await import("@semio-tech/compose-js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -17480,7 +17480,7 @@ if (shouldRunReactEmbeddedTests) {
       push(initialName);
       return () => {};
     });
-    const renameKitCmd = new StoreCommand<import("@compose/js").RenameKitCommandArgs>(async (args) => {
+    const renameKitCmd = new StoreCommand<import("@semio-tech/compose-js").RenameKitCommandArgs>(async (args) => {
       const v = String(args.input?.name ?? "").trim();
       if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
       const kitDto: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
@@ -17574,7 +17574,7 @@ if (shouldRunReactEmbeddedTests) {
       finalizeKitWriteTransaction: async () => ({ ok: true }),
       abortKitWriteTransaction: async () => ({ ok: true }),
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
-      setKitReadPoint: (_s: import("@compose/js").KitReadPoint) => {},
+      setKitReadPoint: (_s: import("@semio-tech/compose-js").KitReadPoint) => {},
       dispose: () => {
         kitNameField.dispose();
         renameKitCmd.dispose();
@@ -17687,7 +17687,7 @@ if (shouldRunReactEmbeddedTests) {
         updatedAt: new Date().toISOString(),
       });
       const store = new InMemoryKitStore(kit);
-      const listeners = new Set<(ev: import("@compose/js").KitEvent) => void>();
+      const listeners = new Set<(ev: import("@semio-tech/compose-js").KitEvent) => void>();
       const mockKs = {
         piece(d: string, p: string, _scope: unknown) {
           void _scope;
@@ -17697,8 +17697,8 @@ if (shouldRunReactEmbeddedTests) {
         },
       };
       const kitClient = createTestKitClient(store) as KitStoreClient & { internalKs?: () => unknown };
-      kitClient.internalKs = () => mockKs as unknown as import("@compose/js").KitStore;
-      kitClient.subscribe = (cb: (ev: import("@compose/js").KitEvent) => void) => {
+      kitClient.internalKs = () => mockKs as unknown as import("@semio-tech/compose-js").KitStore;
+      kitClient.subscribe = (cb: (ev: import("@semio-tech/compose-js").KitEvent) => void) => {
         listeners.add(cb);
         return () => {
           listeners.delete(cb);
@@ -17733,7 +17733,7 @@ if (shouldRunReactEmbeddedTests) {
       const afterIdle = { p1: renders.p1, p2: renders.p2 };
 
       await act(async () => {
-        const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as import("@compose/js").KitEvent;
+        const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as import("@semio-tech/compose-js").KitEvent;
         for (const l of [...listeners]) l(ev);
       });
 
@@ -18000,7 +18000,7 @@ if (shouldRunReactEmbeddedTests) {
         resolveConflict: async () => ({ ok: true } as const),
         syncNow: async () => ({ ok: true } as const),
         kitName: new StoreField<string>(""),
-        renameKit: new StoreCommand<import("@compose/js").RenameKitCommandArgs>(async () => ({
+        renameKit: new StoreCommand<import("@semio-tech/compose-js").RenameKitCommandArgs>(async () => ({
           ok: false,
           error: { kind: "NotSupported", message: "stub" },
         })),

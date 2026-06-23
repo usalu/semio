@@ -100,10 +100,10 @@ const configuration: UserConfig = {
   },
   resolve: {
     alias: {
-      "@compose/js": path.resolve(__dirname, "../../../../compose/client/lib/js"),
-      "@compose/asset": path.resolve(__dirname, "../../../../compose/asset"),
-      "@ui/react": path.resolve(__dirname, "../../../../ui/react"),
-      "@coda/desktop": path.resolve(__dirname, "."),
+      "@semio-tech/compose-js": path.resolve(__dirname, "../../../../compose/client/lib/js"),
+      "@semio-tech/compose-asset": path.resolve(__dirname, "../../../../compose/asset"),
+      "@semio-tech/ui-react": path.resolve(__dirname, "../../../../ui/react"),
+      "@semio-tech/coda-desktop": path.resolve(__dirname, "."),
     },
   },
   plugins: [...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>), react() as unknown as NonNullable<UserConfig["plugins"]>[number]],

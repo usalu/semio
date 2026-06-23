@@ -3,7 +3,7 @@
   "emoji": "♻️",
   "status": "closed",
   "description": "Refactor compose/client/lib/js to only have one class per entity with exactly one method per field, one method for command, and one method for events for every field change. Align with compose/rs and graphql schema. Update downstream compose/react and tests.",
-  "summary": "Legacy-free client refactor verified end-to-end. Tests: @compose/js 13/13, @compose/react 8/8, @compose/rs 53/53, @compose/sketchpad:build OK, nx @compose/sketchpad:test OK (deps). Runtime: fixed shell hooks — Navigation/LayoutWrapper use useDesignContext/useTypeContext/useWipKitOptional; kit collection hooks use useWipKitOptional in react logic. Sketchpad home loads on preview :4181 without context crashes.",
+  "summary": "Legacy-free client refactor verified end-to-end. Tests: @semio-tech/compose-js 13/13, @semio-tech/compose-react 8/8, @semio-tech/compose-rs 53/53, @semio-tech/compose-sketchpad:build OK, nx @semio-tech/compose-sketchpad:test OK (deps). Runtime: fixed shell hooks — Navigation/LayoutWrapper use useDesignContext/useTypeContext/useWipKitOptional; kit collection hooks use useWipKitOptional in react logic. Sketchpad home loads on preview :4181 without context crashes.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1453"
   },

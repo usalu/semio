@@ -1,6 +1,6 @@
 # React
 
-React + reveal.js renderer for `@framework/presentation/core`. 
+React + reveal.js renderer for `@semio-tech/framework-presentation-core`. 
 
 - You MUST exclusively use [auto-animate](https://revealjs.com/auto-animate) for declarative transitions.
     - You MUST NOT animate anything manually and just create the right elements with matching data ids because reveal.js will auto-animate them.

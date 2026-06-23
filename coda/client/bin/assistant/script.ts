@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@coda/assistant` router: `bun ./script.ts <dev|build|policy>`. */
+/** 🧭 `@semio-tech/coda-assistant` router: `bun ./script.ts <dev|build|policy>`. */
 import { execFileSync } from "node:child_process";
 import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";

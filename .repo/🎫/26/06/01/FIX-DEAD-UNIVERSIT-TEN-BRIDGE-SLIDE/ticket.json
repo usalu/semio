@@ -3,7 +3,7 @@
   "emoji": "📽",
   "status": "closed",
   "description": "Presentation slide #/0/7?folie=Universitäten is a dead morph bridge showing step-1 affiliations instead of universities. Extend morphBridgeDirect for affiliation and author step transitions.",
-  "summary": "Removed dead morph bridge slides before intro affiliation steps 2 and 3.\n\n- Extended `morphBridgeDirect` so consecutive `marked-affiliations-step*` author embodiments and `step*` affiliation embodiments morph in one reveal.js auto-animate step without an intermediate bridge.\n- `#/0/7?folie=Universitäten` now lands on the real `affiliations-2` slide showing LUH and UdK (no duplicate bridge bookmark at the same index).\n- Updated German URL hash test and added regression test for single Universities bookmark at v=7.\n\nAll `@framework/presentation/core` and renderer tests pass.",
+  "summary": "Removed dead morph bridge slides before intro affiliation steps 2 and 3.\n\n- Extended `morphBridgeDirect` so consecutive `marked-affiliations-step*` author embodiments and `step*` affiliation embodiments morph in one reveal.js auto-animate step without an intermediate bridge.\n- `#/0/7?folie=Universitäten` now lands on the real `affiliations-2` slide showing LUH and UdK (no duplicate bridge bookmark at the same index).\n- Updated German URL hash test and added regression test for single Universities bookmark at v=7.\n\nAll `@semio-tech/framework-presentation-core` and renderer tests pass.",
   "goal": "🎯framework",
   "sessions": [
     "⚪251a28d0b1c843b8a7544d51d45c6d7b"

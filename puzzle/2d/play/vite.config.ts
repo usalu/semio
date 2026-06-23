@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@puzzle/2d/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/puzzle-2d-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -18,13 +18,13 @@ export default createPlaygroundPlayViteConfig({
 	repoRoot,
 	playEntryKind: "2d",
 	extraAliases: [
-		{ find: "@puzzle/2d/react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: /^three$/, replacement: threeModule },
 		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],
 	resolveDedupe: ["react", "react-dom", "three"],
 	optimizeDeps: {
-		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "three", "@react-three/fiber", "@react-three/drei", "lucide-react", "@infinite/cavas/react-renderer"],
+		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "three", "@react-three/fiber", "@react-three/drei", "lucide-react", "@semio-tech/infinite-cavas-react-renderer"],
 		esbuildOptions: { target: "esnext" },
 	},
 	// Rebuild wasm writes to `../rs/pkg` — do not ignore pkg or play keeps stale edge rendering after `bun ./script.ts wasm`.

@@ -89,7 +89,7 @@ Edge resolution rule (generalized from the design/type example): a transitive re
 
 - Add `visibleVirtualFileSystemNodes(scope): readonly VirtualFileSystemNodeRecord[]` to `VirtualFileSystemController` reusing the same data as `buildVirtualFileSystemModel` (root + expanded `childrenByScope`). The sketchpad shell exposes the kit-scope visible set + each node's `parentId`/`fileNodeKindId`.
 
-### 3. Reference data from Rust (sketchpad + @compose/js)
+### 3. Reference data from Rust (sketchpad + @semio-tech/compose-js)
 
 - Add an async relationship fetch in the shell keyed by visible node ids, using the existing JS store methods: per visible design call `referencesTypesTransitive()`/`referencesDesignsTransitive()`; per visible piece call `blueprint()`. Cache results per kit, invalidated alongside `invalidateKitVirtualFileSystem` (~14078).
 

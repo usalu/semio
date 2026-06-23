@@ -11,7 +11,7 @@ bundle:
 
 `compose/js` is a **thin GraphQL client** to `compose/rs` (`Session` + `Store.installProjection` over a dedicated Worker). It exposes **`Session`**, **`Store`**, **`openSessionInMemory`**, plus wire types required for method signatures.
 
-The root **`@compose/js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@compose/react`**;
+The root **`@semio-tech/compose-js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@semio-tech/compose-react`**;
 
 You MUST NOT store authoritative kit data.
 You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot` / reads are rs materializations, not a second source of truth).

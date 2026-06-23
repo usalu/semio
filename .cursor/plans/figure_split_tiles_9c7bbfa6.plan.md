@@ -74,7 +74,7 @@ File: [framework/product/presentation/renderer/react/globals.css](framework/prod
 
 File: [mit-bestand/präsentation/33.projektetage/index.ts](mit-bestand/präsentation/33.projektetage/index.ts)
 
-- Import `splitFigureGrid` from `@framework/presentation/core`.
+- Import `splitFigureGrid` from `@semio-tech/framework-presentation-core`.
 - The catalogue PNG is 1222×896 (aspect ≈ 1.364). Define an aspect-matched centered frame `CATALOGUE_FRAME` (e.g. `{ x: 0.127, y: 0.1, width: 0.746, height: 0.75 }`) and set the existing `catalogue` disposition to it, so the whole-figure slide and the assembled-tiles slide line up (seamless fade).
 - Insert new arrangements into `mediaThought` after `catalogue` (all reference participant `catalogue`):
   - `catalogue-tiles`: `split: { tiles: splitFigureGrid({ rows: 3, columns: 5, frame: CATALOGUE_FRAME, gap: 0 }) }` — looks identical to the figure; tiles are now individually addressable.
@@ -86,7 +86,7 @@ File: [mit-bestand/präsentation/33.projektetage/index.ts](mit-bestand/präsenta
 ## 4. Ticket + verification
 
 - Open a repo ticket (`ticket_open`) associated with the most appropriate goal (read `repo://goals` first) before editing; close it (`ticket_close`) with the file list when done.
-- Run core + renderer tests via nx (`bun nx run @framework/presentation/core:test`, `...renderer/react:test`) and the deck test, then run the projektetage dev server to visually confirm the split → spread → focus choreography in the browser (console-verify auto-animate matching).
+- Run core + renderer tests via nx (`bun nx run @semio-tech/framework-presentation-core:test`, `...renderer/react:test`) and the deck test, then run the projektetage dev server to visually confirm the split → spread → focus choreography in the browser (console-verify auto-animate matching).
 
 ## Notes / decisions
 

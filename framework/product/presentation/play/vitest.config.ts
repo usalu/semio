@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧪 Vitest for `@framework/presentation/play`. */
+/** @emoji 🧪 Vitest for `@semio-tech/framework-presentation-play`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -14,10 +14,10 @@ export default defineConfig({
 	root: playDir,
 	resolve: {
 		alias: {
-			"@framework/core": path.resolve(playDir, "../../../core/index.ts"),
-			"@framework/presentation/core": path.resolve(playDir, "../core/index.ts"),
-			"@framework/playground/core": path.resolve(playDir, "../../playground/core/index.ts"),
-			"@framework/platform/core": path.resolve(playDir, "../../platform/core/index.ts"),
+			"@semio-tech/framework-core": path.resolve(playDir, "../../../core/index.ts"),
+			"@semio-tech/framework-presentation-core": path.resolve(playDir, "../core/index.ts"),
+			"@semio-tech/framework-playground-core": path.resolve(playDir, "../../playground/core/index.ts"),
+			"@semio-tech/framework-platform-core": path.resolve(playDir, "../../platform/core/index.ts"),
 		},
 	},
 	test: {

@@ -6,7 +6,7 @@ Goal: Kit app Wires window — identities from visible VFS nodes, relationships 
 
 - Renamed kit Diagram window to **Wires** (`wires` window kind, `SKETCHPAD_SURFACE_KIT_WIRES`).
 - Added `visibleVirtualFileSystemNodes` on `VirtualFileSystemController`.
-- Built `sketchpadKitWiresFixtureFromVisible` + `sketchpadFetchKitWiresReferences` (Rust GraphQL via `@compose/js`, DTO fallback).
+- Built `sketchpadKitWiresFixtureFromVisible` + `sketchpadFetchKitWiresReferences` (Rust GraphQL via `@semio-tech/compose-js`, DTO fallback).
 - Sync on VFS expand, children load, route change, and topology refresh.
 
 ## Fix empty edges (reopened)

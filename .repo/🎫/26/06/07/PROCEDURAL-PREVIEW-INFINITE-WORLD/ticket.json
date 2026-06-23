@@ -2,7 +2,7 @@
   "title": "Procedural Preview Infinite World",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Extract brep kernel into @geometry/brep/js, setup @procedural/react flow-based brep editor with R3F viewport, and @procedural/play playground.",
+  "description": "Extract brep kernel into @semio-tech/geometry-brep-js, setup @semio-tech/procedural-react flow-based brep editor with R3F viewport, and @semio-tech/procedural-play playground.",
   "summary": "Fixed procedural 3D viewport navigation (pan/zoom/orbit). Root causes: WorldOrbitGated did not pass camera={camera} to OrbitControls (unlike puzzle 3d OrbitGated), so controls could bind to the wrong/default camera behind WorldOrbitCameraViewRig; WorldOrbitCameraViewRigSeed skipped re-seeding when the rig camera remounted with the same seed token; orbit-end React setCamera feedback fought live controls; preview host className overrode absolute fill layout; wheel guard now attaches to the WebGL canvas. Also kept canvas window body registration and removed domElement override.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1550"

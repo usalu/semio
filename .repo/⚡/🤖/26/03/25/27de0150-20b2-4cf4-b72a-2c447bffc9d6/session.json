@@ -845,8 +845,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@compose/assets\");",
-                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@compose/assets\");"
+                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@semio-tech/compose-assets\");",
+                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@semio-tech/compose-assets\");"
               }
             ],
             "file_path": "/workspaces/semio/compose/js/index.ts"
@@ -873,8 +873,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@compose/assets\");",
-                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@compose/assets\");"
+                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@semio-tech/compose-assets\");",
+                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases } = await import(\"@semio-tech/compose-assets\");"
               }
             ],
             "file_path": "/workspaces/semio/compose/js/index.ts"
@@ -1889,8 +1889,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@compose/assets\");\n  } = await import(\"@compose/assets\");",
-                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@compose/assets\");"
+                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@semio-tech/compose-assets\");\n  } = await import(\"@semio-tech/compose-assets\");",
+                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@semio-tech/compose-assets\");"
               }
             ],
             "file_path": "/workspaces/semio/compose/js/index.ts"
@@ -1917,8 +1917,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@compose/assets\");\n  } = await import(\"@compose/assets\");",
-                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@compose/assets\");"
+                "old_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@semio-tech/compose-assets\");\n  } = await import(\"@semio-tech/compose-assets\");",
+                "new_string": "const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, MetabolismKitFilteredNakaginCapsuleTower, ModelSelectionCases, NakaginCapsuleTowerFilteredKit, MetabolismMetaKit, MetabolismShallowKit, TambourMetaType, TambourShallowType, NakaginCapsuleTowerMetaDesign, NakaginCapsuleTowerShallowDesign } = await import(\"@semio-tech/compose-assets\");"
               }
             ],
             "file_path": "/workspaces/semio/compose/js/index.ts"

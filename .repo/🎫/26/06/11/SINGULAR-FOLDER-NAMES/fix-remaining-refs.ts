@@ -8,8 +8,8 @@ const SKIP = new Set(["node_modules", ".git", ".repo", ".venv", "temp", ".nx", "
 const EXT = new Set([".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".mdx", ".go", ".py", ".cs", ".rs", ".toml", ".yaml", ".yml"]);
 
 const REPLACEMENTS: [string, string][] = [
-	["@compose/algorithms", "@compose/algorithm"],
-	["@compose/icons", "@compose/icon"],
+	["@semio-tech/compose-algorithms", "@semio-tech/compose-algorithm"],
+	["@semio-tech/compose-icons", "@semio-tech/compose-icon"],
 	["compose/dev/algorithms", "compose/dev/algorithm"],
 	["compose/asset/icons", "compose/asset/icon"],
 	["../../../../assets", "../../../../asset"],

@@ -1,7 +1,7 @@
 // #region 🧲Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** @emoji 🧭 `@cad/js/kernel/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
+/** @emoji 🧭 `@semio-tech/cad-js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -97,7 +97,7 @@ import {
 	type ModelSpaceJson,
 	type ObjectRef,
 	type TypologyRef,
-} from "@cad/js/core";
+} from "@semio-tech/cad-js-core";
 import {
 	emptyMeshTransfer,
 	kernelGeometry,
@@ -109,7 +109,7 @@ import {
 	type MeshTransfer,
 	type Vec3,
 	solidRef,
-} from "@geometry/brep/js";
+} from "@semio-tech/geometry-brep-js";
 export { kernelGeometry };
 // #endregion 🔌Adapters
 
@@ -3692,14 +3692,14 @@ if (isBrepjsDedicatedWorker()) {
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { beforeEach, describe, expect, it } = import.meta.vitest;
-	const { bootstrapCadModules } = await import("@cad/js/runtime");
-	const { AEC_BUILDING_MODEL_DEFINITION_ID } = await import("@cad/js/module/aec-building");
-	const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } = await import("@cad/js/module/aec-building-energy");
-	const { AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID } = await import("@cad/js/module/aec-building-structure");
+	const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
+	const { AEC_BUILDING_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building");
+	const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building-energy");
+	const { AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building-structure");
 
 	bootstrapCadModules();
 
-	describe("@cad/js/kernel/brepjs", () => {
+	describe("@semio-tech/cad-js-kernel-brepjs", () => {
 		const kernel = new BrepjsKernel();
 
 		beforeEach(async () => {

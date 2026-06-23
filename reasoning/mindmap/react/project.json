@@ -1,5 +1,5 @@
 {
-  "name": "@reasoning/mindmap/react",
+  "name": "@semio-tech/reasoning-mindmap-react",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {

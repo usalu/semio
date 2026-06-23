@@ -6,8 +6,8 @@
     "compose/sketchpad/index.tsx"
   ],
   "forbiddenModuleSpecifiers": [
-    "@compose/react/host",
-    "@compose/js/legacy-host",
+    "@semio-tech/compose-react/host",
+    "@semio-tech/compose-js/legacy-host",
     "compose/react/host",
     "compose/js/legacy-host"
   ],
@@ -16,10 +16,10 @@
     "kit-wasm-store.ts"
   ],
   "deletedLegacyPaths": [
-    "compose/react/host (package subpath / folder — removed; only @compose/react root export)",
-    "compose/js/legacy-host (removed; consumers use @compose/js root)",
+    "compose/react/host (package subpath / folder — removed; only @semio-tech/compose-react root export)",
+    "compose/js/legacy-host (removed; consumers use @semio-tech/compose-js root)",
     "compose/sketchpad/sketchpad-runtime.tsx (must not exist as entry; inlined into sketchpad/index.tsx)",
-    "compose/**/kit-wasm-store.ts (must not exist as kit bridge; use @compose/js + @compose/react)"
+    "compose/**/kit-wasm-store.ts (must not exist as kit bridge; use @semio-tech/compose-js + @semio-tech/compose-react)"
   ],
   "validationCommandsRun": [
     "npx tsc --noEmit -p compose/js",
@@ -27,6 +27,6 @@
     "npx tsc --noEmit -p compose/sketchpad",
     "cd compose/sketchpad && npx vite build"
   ],
-  "notes": "Flat re-exports on @compose/js: DiffStatus and OperationResult<T> surfaced at package root for @compose/react re-exports. kitStoreFromKitStoreClient re-exported from @compose/react for sketchpad.",
-  "coordinator": "Entry surfaces: compose/js/index.ts, compose/react/index.tsx, compose/sketchpad/index.tsx only. No @compose/react/host, @compose/js/legacy-host, sketchpad-runtime.tsx, or kit-wasm-store.ts."
+  "notes": "Flat re-exports on @semio-tech/compose-js: DiffStatus and OperationResult<T> surfaced at package root for @semio-tech/compose-react re-exports. kitStoreFromKitStoreClient re-exported from @semio-tech/compose-react for sketchpad.",
+  "coordinator": "Entry surfaces: compose/js/index.ts, compose/react/index.tsx, compose/sketchpad/index.tsx only. No @semio-tech/compose-react/host, @semio-tech/compose-js/legacy-host, sketchpad-runtime.tsx, or kit-wasm-store.ts."
 }

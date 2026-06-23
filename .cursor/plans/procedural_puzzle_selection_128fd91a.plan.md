@@ -15,7 +15,7 @@ todos:
     content: "flow/react: pass modifiers/button, space/middle pan, SelectionMarquee DOM overlay from preview points, ctrl+a/delete/esc hotkeys, controlled selectionMethod/mode, emit preselect"
     status: completed
   - id: ts-shared
-    content: Lift generic marquee helpers into @ui/react next to SelectionMarquee; refactor puzzle-3d to import them
+    content: Lift generic marquee helpers into @semio-tech/ui-react next to SelectionMarquee; refactor puzzle-3d to import them
     status: completed
   - id: preview-marquee
     content: "procedural/react ProceduralPreview: rect/lasso marquee with screen-projected partial/full hit testing, modifier merge modes, overlay, orbit gating, preselect visuals; onSelectionChange(ids, mode)"
@@ -61,7 +61,7 @@ Goal: single source of truth for the selection algorithms currently embedded in 
 
 ## Phase 4 — Flow react (canvas overlay + hotkeys)
 - [flow/react/index.tsx](flow/react/index.tsx): update pointer handlers (~1111-1150) to pass `e.button`, `e.shiftKey`, `e.metaKey||e.ctrlKey`, `e.altKey`; remove `pan: e.shiftKey` (keep middle-mouse pan; add space-held pan). Emit preselect alongside selection in `emitInteractionState` (~902).
-- Add a DOM overlay layer rendering `@ui/react` `SelectionMarquee` from `session.selectionPreviewPointsJson()` (coverage from drag direction), positioned over the canvas (it currently has only `<canvas>`).
+- Add a DOM overlay layer rendering `@semio-tech/ui-react` `SelectionMarquee` from `session.selectionPreviewPointsJson()` (coverage from drag direction), positioned over the canvas (it currently has only `<canvas>`).
 - Add keydown handling (focus-scoped): `ctrl/cmd+a` → `selectAll`, `Delete`/`Backspace` → `deleteSelection`, `Esc` → `cancelAreaSelect`. Re-emit interaction state + evaluate after each.
 - New `FlowCanvasProps`: `selectionMethod`, `selectionMode` (controlled) → `session.setSelectionOptions`; `onPreselectChange` if needed.
 
@@ -71,7 +71,7 @@ Goal: single source of truth for the selection algorithms currently embedded in 
 - New `ProceduralPreviewProps`: `selectionMethod`, `selectionMode`, `onSelectionChange(ids, mode)`.
 
 ## Phase 6 — Procedural play harness + renderer wiring
-- [procedural/play/index.ts](procedural/play/index.ts): add controller state `selectionMode: "default"|...`, `selectionMethod: "rectangle"|"lasso"` with getters; make `setSelection` merge-aware (`{ ids, mode }`) using shared `selectionMergeIds` so flow ↔ preview share one persistent selection. Add commands `setSelectionMode`, `setSelectionMethod`, `selectAll`, `deleteSelection`. Add a Select tool group to the flow + preview window engagements (reuse `buildPlaygroundBrowseSelectionTools` from `@framework/playground/core`, as puzzle-3d does). Register `ctrl+a` / `delete` / `backspace` / `esc` keybindings following puzzle ordering/grouping (and `launch.json` if a new command entry is needed).
+- [procedural/play/index.ts](procedural/play/index.ts): add controller state `selectionMode: "default"|...`, `selectionMethod: "rectangle"|"lasso"` with getters; make `setSelection` merge-aware (`{ ids, mode }`) using shared `selectionMergeIds` so flow ↔ preview share one persistent selection. Add commands `setSelectionMode`, `setSelectionMethod`, `selectAll`, `deleteSelection`. Add a Select tool group to the flow + preview window engagements (reuse `buildPlaygroundBrowseSelectionTools` from `@semio-tech/framework-playground-core`, as puzzle-3d does). Register `ctrl+a` / `delete` / `backspace` / `esc` keybindings following puzzle ordering/grouping (and `launch.json` if a new command entry is needed).
 - [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx:6296): pass `selectionMode`/`selectionMethod` into `ProceduralFlowEditor` and `ProceduralPreview`; change preview `onSelect` (single replace, ~6368) to `onSelectionChange(ids, mode)` → `ctrl.run("setSelection", { ids, mode })`; forward flow preselect/selection. Ensure both panes re-render via the existing interaction revision hook.
 
 ## Phase 7 — Tests + validation
@@ -81,5 +81,5 @@ Goal: single source of truth for the selection algorithms currently embedded in 
 
 ## Key decisions
 - Pan moves off `shift` to middle-mouse + space-drag so puzzle modifier conventions apply in the flow graph.
-- Pure selection algorithms are shared (Rust in graph crate; TS in `@ui/react`); puzzle-2d/3d refactored to the shared source rather than duplicating.
+- Pure selection algorithms are shared (Rust in graph crate; TS in `@semio-tech/ui-react`); puzzle-2d/3d refactored to the shared source rather than duplicating.
 - Selection stays transient host/engine state (not persisted in fixture), shared and merge-aware across both procedural panes.

@@ -33,7 +33,7 @@ Each object `typology` renders differently, and the primitives of an object inhe
 
 ```mermaid
 flowchart LR
-  asset["typology.json (optional style)"] --> core["@cad/js/core resolveTypologyStyle"]
+  asset["typology.json (optional style)"] --> core["@semio-tech/cad-js-core resolveTypologyStyle"]
   hash["typology id hash (auto fallback)"] --> core
   core --> idx["buildGeometryTypologyIndex solid:id -> typology"]
   idx --> host["renderer canvas contents"]

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@procedural/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/procedural-play`. */
 // #endregion 🧲Header
 
 import path from "node:path";
@@ -15,14 +15,14 @@ export default createPlaygroundPlayViteConfig({
 	repoRoot,
 	playEntryKind: "procedural",
 	extraAliases: [
-		{ find: "@procedural/react", replacement: path.resolve(playDir, "../react/index.tsx") },
-		{ find: "@geometry/brep/js", replacement: path.resolve(repoRoot, "geometry/brep/js/index.ts") },
-		{ find: "@flow/react", replacement: path.resolve(repoRoot, "flow/react/index.tsx") },
-		{ find: "@flow/module-brep", replacement: path.resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
-		{ find: "@flow/module-bim", replacement: path.resolve(repoRoot, "flow/module/bim/pkg/flow_module_bim.js") },
+		{ find: "@semio-tech/procedural-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@semio-tech/geometry-brep-js", replacement: path.resolve(repoRoot, "geometry/brep/js/index.ts") },
+		{ find: "@semio-tech/flow-react", replacement: path.resolve(repoRoot, "flow/react/index.tsx") },
+		{ find: "@semio-tech/flow-module-brep", replacement: path.resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
+		{ find: "@semio-tech/flow-module-bim", replacement: path.resolve(repoRoot, "flow/module/bim/pkg/flow_module_bim.js") },
 		{ find: /^three$/, replacement: threeModule },
 	],
-	resolveDedupe: ["react", "react-dom", "three", "scheduler", "@flow/react", "@procedural/react"],
+	resolveDedupe: ["react", "react-dom", "three", "scheduler", "@semio-tech/flow-react", "@semio-tech/procedural-react"],
 	optimizeDeps: {
 		include: [
 			"react",
@@ -30,9 +30,9 @@ export default createPlaygroundPlayViteConfig({
 			"three",
 			"@react-three/fiber",
 			"@react-three/drei",
-			"@infinite/world/r3f",
-			"@flow/react",
-			"@procedural/react",
+			"@semio-tech/infinite-world-r3f",
+			"@semio-tech/flow-react",
+			"@semio-tech/procedural-react",
 		],
 		exclude: [...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
 		esbuildOptions: { target: "esnext" },

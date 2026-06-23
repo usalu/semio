@@ -1,6 +1,6 @@
 ---
 name: alternatives-context-footer
-overview: Add a `KitAlternativeSelection` context in `@compose/react` for switching between `the kit` and named alternatives (null = the kit), and render a left-most footer dropdown in the kit, design, and type apps that drives that selection. All kit state stays in `compose/rs` — JS only holds the user-visible selection and forwards it to the rs read/write scope.
+overview: Add a `KitAlternativeSelection` context in `@semio-tech/compose-react` for switching between `the kit` and named alternatives (null = the kit), and render a left-most footer dropdown in the kit, design, and type apps that drives that selection. All kit state stays in `compose/rs` — JS only holds the user-visible selection and forwards it to the rs read/write scope.
 todos:
   - id: react-context
     content: Add KitAlternativeSelectionContext + Provider + useKitAlternativeSelection / useKitAlternatives hooks in compose/react/index.tsx (new 🌱KitAlternativeSelection region).
@@ -62,7 +62,7 @@ No new exports from `compose/js` are needed; the read/write scope branches alrea
 
 New region `🌱AlternativeSelector` (near the existing `🎮Footer` region around line 16495):
 
-- `KitAlternativeFooterSelector: FC` — uses `useKitAlternativeSelection()` + `useKitAlternatives()` from `@compose/react`, renders a `Select` (already imported from `@compose/elements`) with options `[{ id: null, label: "the kit" }, ...alternatives]`. Registers a single footer item:
+- `KitAlternativeFooterSelector: FC` — uses `useKitAlternativeSelection()` + `useKitAlternatives()` from `@semio-tech/compose-react`, renders a `Select` (already imported from `@compose/elements`) with options `[{ id: null, label: "the kit" }, ...alternatives]`. Registers a single footer item:
 
 ```ts
 addFooterItem({

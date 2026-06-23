@@ -95,7 +95,7 @@ In [ui/react/index.tsx](ui/react/index.tsx) `🪁I18n Resources` region:
 
 ## 6. Make broken i18n actually fail the build
 
-- Add a `typecheck` target (`bunx tsc --noEmit`) via `script.ts` `ScriptRouter` + `project.json` for the i18n-consuming projects: `@ui/react`, `@framework/platform/renderer/react`, `@framework/playground/renderer/react`, `@compose/sketchpad`, `@cad/js/renderer`, `@coda/desktop` (mirroring `@compose/js`'s existing `bunx tsc --noEmit`).
+- Add a `typecheck` target (`bunx tsc --noEmit`) via `script.ts` `ScriptRouter` + `project.json` for the i18n-consuming projects: `@semio-tech/ui-react`, `@semio-tech/framework-platform-renderer-react`, `@semio-tech/framework-playground-renderer-react`, `@semio-tech/compose-sketchpad`, `@semio-tech/cad-js-renderer`, `@semio-tech/coda-desktop` (mirroring `@semio-tech/compose-js`'s existing `bunx tsc --noEmit`).
 - Register each `typecheck` in `.vscode/launch.json` following existing grouping/order.
 
 ## 7. Tests (extend existing files only)

@@ -1,6 +1,6 @@
 {
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@framework/platform/core",
+	"name": "@semio-tech/framework-platform-core",
 	"version": "0.1.0",
 	"description": "framework · workbench shell (apps, modes, toolbars, controllers)",
 	"type": "module",
@@ -9,7 +9,7 @@
 		".": "./index.ts"
 	},
 	"dependencies": {
-		"@framework/core": "workspace:*"
+		"@semio-tech/framework-core": "workspace:*"
 	},
 	"devDependencies": {
 		"typescript": "^5.9.3"

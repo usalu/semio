@@ -3,7 +3,7 @@
   "emoji": "⌨️",
   "status": "closed",
   "description": "Engagements are always PascalCase.",
-  "summary": "Engagements use PascalCase everywhere: command text, option/possible labels, filtering, inline completion, and display.\n\n- normalizeEngagementCommandText: strip separators, split camelCase word boundaries, PascalCase join (SetHeight preserved).\n- Engagement: controlled/uncontrolled draft, PascalCase on options and possibles display.\n- shouldRouteKeysToWindowEngagement: skip routing when engagement input is focused.\n- CAD buildInteractionReplEngagement + replNormalizeCommandText (engagement mode) use shared normalizer.\n\nTests: @ui/react 90, @cad/js/renderer 66 passed.",
+  "summary": "Engagements use PascalCase everywhere: command text, option/possible labels, filtering, inline completion, and display.\n\n- normalizeEngagementCommandText: strip separators, split camelCase word boundaries, PascalCase join (SetHeight preserved).\n- Engagement: controlled/uncontrolled draft, PascalCase on options and possibles display.\n- shouldRouteKeysToWindowEngagement: skip routing when engagement input is focused.\n- CAD buildInteractionReplEngagement + replNormalizeCommandText (engagement mode) use shared normalizer.\n\nTests: @semio-tech/ui-react 90, @semio-tech/cad-js-renderer 66 passed.",
   "goal": "🎯ui",
   "sessions": [
     "⚪8d3b2e2eba1e440d8c281c22c1b80385"

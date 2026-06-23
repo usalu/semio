@@ -1,5 +1,5 @@
 {
-  "name": "@compose/rhino",
+  "name": "@semio-tech/compose-rhino",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {

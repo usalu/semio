@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@framework/presentation/core` task router: `bun ./script.ts test`. */
+/** 🧭 `@semio-tech/framework-presentation-core` task router: `bun ./script.ts test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
 
 class TestScript extends BundleScript {

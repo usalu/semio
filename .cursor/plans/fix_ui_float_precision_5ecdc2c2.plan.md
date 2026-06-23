@@ -1,6 +1,6 @@
 ---
 name: Fix UI float precision
-overview: Add one canonical number-display formatter in the `@ui/react` design system that strips IEEE-754 float artifacts (e.g. `-2.5999999999999996` to `-2.6`) without losing legitimate precision, and route every shared numeric display component (`Input`, `Stepper`, `Slider`) through it so the bug is fixed generally across puzzle 3d/2d, CAD, platform and playground UIs.
+overview: Add one canonical number-display formatter in the `@semio-tech/ui-react` design system that strips IEEE-754 float artifacts (e.g. `-2.5999999999999996` to `-2.6`) without losing legitimate precision, and route every shared numeric display component (`Input`, `Stepper`, `Slider`) through it so the bug is fixed generally across puzzle 3d/2d, CAD, platform and playground UIs.
 todos:
   - id: formatter
     content: Add exported formatNumber helper (toPrecision(12) + parseFloat) in a region in ui/react/index.tsx
@@ -9,19 +9,19 @@ todos:
     content: Route Input (type=number, unfocused), Stepper (not editing), and Slider value display through formatNumber
     status: completed
   - id: play-text
-    content: Format multi-select vortex position text in puzzle/3d/play via formatNumber and add @ui/react dependency
+    content: Format multi-select vortex position text in puzzle/3d/play via formatNumber and add @semio-tech/ui-react dependency
     status: completed
   - id: tests
-    content: Extend @ui/react test file with formatNumber cases and run affected nx test targets
+    content: Extend @semio-tech/ui-react test file with formatNumber cases and run affected nx test targets
     status: completed
 isProject: false
 ---
 
 ## Root cause
 
-Numbers are rendered raw via `String(n)`, `n.toString()`, `.join(",")`, or bound directly to `<input type="number">` with no normalization. Float arithmetic (gumball/relocate transforms) produces values like `-2.5999999999999996`, which then display verbatim. There is no shared number-display formatter (only `formatLod` in `@infinite/world/r3f` for LOD, and `quantizeCoord` in `@cad/js/core` for hashing).
+Numbers are rendered raw via `String(n)`, `n.toString()`, `.join(",")`, or bound directly to `<input type="number">` with no normalization. Float arithmetic (gumball/relocate transforms) produces values like `-2.5999999999999996`, which then display verbatim. There is no shared number-display formatter (only `formatLod` in `@semio-tech/infinite-world-r3f` for LOD, and `quantizeCoord` in `@semio-tech/cad-js-core` for hashing).
 
-Every editable numeric field in every UI funnels through three `@ui/react` primitives, so centralizing the fix there covers all surfaces at once.
+Every editable numeric field in every UI funnels through three `@semio-tech/ui-react` primitives, so centralizing the fix there covers all surfaces at once.
 
 ```mermaid
 flowchart TD
@@ -30,14 +30,14 @@ flowchart TD
   numrow["puzzle2d NumericStepperRow"] --> Input
   ctree["ControlTree / declarative number"] --> Stepper
   eng["Engagement controls"] --> Stepper
-  Input["@ui/react Input"] --> fmt["formatNumber()"]
-  Stepper["@ui/react Stepper"] --> fmt
-  Slider["@ui/react Slider"] --> fmt
+  Input["@semio-tech/ui-react Input"] --> fmt["formatNumber()"]
+  Stepper["@semio-tech/ui-react Stepper"] --> fmt
+  Slider["@semio-tech/ui-react Slider"] --> fmt
 ```
 
 ## Approach
 
-### 1. Add canonical `formatNumber` to `@ui/react`
+### 1. Add canonical `formatNumber` to `@semio-tech/ui-react`
 
 In [ui/react/index.tsx](ui/react/index.tsx), add an exported pure helper inside a `//#region` (near other formatting/util helpers), with an emoji docstring per repo rules:
 
@@ -67,7 +67,7 @@ This alone fixes the reported puzzle 3d `-2.6` coordinate inputs (vec3 axes in [
 
 ### 3. Fix the one read-only string surface that bypasses numeric inputs
 
-The multi-select vortex position in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) ~2429 builds a `text` node via `positions[0]!.join(", ")` (raw floats), so it does not pass through `Input`. Apply the same formatter: `positions[0]!.map(formatNumber).join(", ")`. This requires `@puzzle/3d/play` to import `formatNumber` from `@ui/react` (add `@ui/react` to its `dependencies` in [puzzle/3d/play/package.json](puzzle/3d/play/package.json); it already pulls it in transitively via `@puzzle/3d/react`).
+The multi-select vortex position in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) ~2429 builds a `text` node via `positions[0]!.join(", ")` (raw floats), so it does not pass through `Input`. Apply the same formatter: `positions[0]!.map(formatNumber).join(", ")`. This requires `@semio-tech/puzzle-3d-play` to import `formatNumber` from `@semio-tech/ui-react` (add `@semio-tech/ui-react` to its `dependencies` in [puzzle/3d/play/package.json](puzzle/3d/play/package.json); it already pulls it in transitively via `@semio-tech/puzzle-3d-react`).
 
 ### Explicitly NOT changed
 
@@ -76,7 +76,7 @@ The multi-select vortex position in [puzzle/3d/play/index.ts](puzzle/3d/play/ind
 
 ## Verification
 
-- Extend the existing `@ui/react` test file (vitest) with cases for `formatNumber`: `-2.5999999999999996` to `-2.6`, `0.1+0.2` to `0.3`, integers unchanged, `1e-7` preserved, `NaN`/`Infinity` to `""`, non-numeric strings passed through.
+- Extend the existing `@semio-tech/ui-react` test file (vitest) with cases for `formatNumber`: `-2.5999999999999996` to `-2.6`, `0.1+0.2` to `0.3`, integers unchanged, `1e-7` preserved, `NaN`/`Infinity` to `""`, non-numeric strings passed through.
 - Run the affected package test targets via nx and confirm green before closing.
 - Confirm runtime in the puzzle 3d play harness: select an object, drag the gumball, and verify the inspector shows `-2.6` rather than `-2.5999999999999996`.
 

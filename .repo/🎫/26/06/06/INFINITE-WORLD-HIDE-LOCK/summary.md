@@ -4,7 +4,7 @@
 
 Implemented a shared persisted hide/lock mechanism for CAD and puzzle 3d, wired through the shared Tree UI.
 
-### Shared engine (`@infinite/world/r3f`)
+### Shared engine (`@semio-tech/infinite-world-r3f`)
 - `WorldEntityFlags`, `WORLD_LOCKED_OPACITY_SCALE`, `WORLD_LOCKED_DESATURATION`
 - Pure helpers: `worldEntitySelectable`, `worldEntityRendered`, `worldEntityRenderMode`
 - In-file tests for flag helpers
@@ -26,11 +26,11 @@ Implemented a shared persisted hide/lock mechanism for CAD and puzzle 3d, wired 
 - Platform/playground `UiTreeItemNode` plumbing for `actions`, `contextMenu`, `isHidden`
 
 ## Tests run
-- `@infinite/world/r3f`: 34 passed (includes `worldEntityFlags`)
-- `@puzzle/3d/react`: 318 passed (includes fixture flag parse)
-- `@cad/js/renderer` `index.tsx`: 56 passed (includes entity-flag pick filtering)
-- `@cad/js/core`: `getEntityFlags` test added (suite has unrelated pre-existing e2e failures)
-- `@ui/react`: 154 passed; 6 pre-existing tree layout snapshot failures unrelated to hide/lock
+- `@semio-tech/infinite-world-r3f`: 34 passed (includes `worldEntityFlags`)
+- `@semio-tech/puzzle-3d-react`: 318 passed (includes fixture flag parse)
+- `@semio-tech/cad-js-renderer` `index.tsx`: 56 passed (includes entity-flag pick filtering)
+- `@semio-tech/cad-js-core`: `getEntityFlags` test added (suite has unrelated pre-existing e2e failures)
+- `@semio-tech/ui-react`: 154 passed; 6 pre-existing tree layout snapshot failures unrelated to hide/lock
 
 ## Files touched
 - `infinite/world/r3f/index.tsx`

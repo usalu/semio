@@ -2266,7 +2266,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "    \"mcp:inspector\": \"HOST=0.0.0.0 npx @mcpjam/inspector@latest uv --directory /workspaces/semio/compose/engine run main.py --mcp-stdio\",\n    \"mcp:inspector:repo\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"dev:3dm:ui\": \"npx nx dev @compose/3dm-ui\",\n    \"dev:sites:play\": \"npx nx dev compose/sites/play\",\n    \"dev:sites:docs\": \"npx nx dev compose/sites/docs\",",
+          "tool_response": "    \"mcp:inspector\": \"HOST=0.0.0.0 npx @mcpjam/inspector@latest uv --directory /workspaces/semio/compose/engine run main.py --mcp-stdio\",\n    \"mcp:inspector:repo\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"dev:3dm:ui\": \"npx nx dev @semio-tech/compose-3dm-ui\",\n    \"dev:sites:play\": \"npx nx dev compose/sites/play\",\n    \"dev:sites:docs\": \"npx nx dev compose/sites/docs\",",
           "tool_use_id": "toolu_vrtx_01V1f4dhNtXevN6qnnHcASi3__vscode-1774612037020",
           "cwd": "/workspaces/semio"
         }
@@ -2297,7 +2297,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "    \"mcp:inspector\": \"HOST=0.0.0.0 npx @mcpjam/inspector@latest uv --directory /workspaces/semio/compose/engine run main.py --mcp-stdio\",\n    \"mcp:inspector:repo\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"dev:3dm:ui\": \"npx nx dev @compose/3dm-ui\",\n    \"dev:sites:play\": \"npx nx dev compose/sites/play\",\n    \"dev:sites:docs\": \"npx nx dev compose/sites/docs\",",
+          "tool_response": "    \"mcp:inspector\": \"HOST=0.0.0.0 npx @mcpjam/inspector@latest uv --directory /workspaces/semio/compose/engine run main.py --mcp-stdio\",\n    \"mcp:inspector:repo\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"dev:3dm:ui\": \"npx nx dev @semio-tech/compose-3dm-ui\",\n    \"dev:sites:play\": \"npx nx dev compose/sites/play\",\n    \"dev:sites:docs\": \"npx nx dev compose/sites/docs\",",
           "tool_use_id": "toolu_vrtx_01V1f4dhNtXevN6qnnHcASi3__vscode-1774612037020",
           "cwd": "/workspaces/semio"
         }
@@ -9752,7 +9752,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "cli.js      jsx-runtime.js   NOTICE        test.js\nindex.d.ts  jsx-runtime.mjs  package.json  test.mjs\nindex.js    lib              README.md     ThirdPartyNotices.txt\nindex.mjs   LICENSE          test.d.ts     types\ncompose@1.0.0 /workspaces/semio\n└─┬ @compose/sketchpad@0.1.0 -\u003e ./compose/sketchpad\n  ├─┬ @playwright/test@1.57.0",
+          "tool_response": "cli.js      jsx-runtime.js   NOTICE        test.js\nindex.d.ts  jsx-runtime.mjs  package.json  test.mjs\nindex.js    lib              README.md     ThirdPartyNotices.txt\nindex.mjs   LICENSE          test.d.ts     types\ncompose@1.0.0 /workspaces/semio\n└─┬ @semio-tech/compose-sketchpad@0.1.0 -\u003e ./compose/sketchpad\n  ├─┬ @playwright/test@1.57.0",
           "tool_use_id": "toolu_vrtx_01UTtng9iAN6ThPAccdY2zi4__vscode-1774612037081",
           "cwd": "/workspaces/semio"
         }
@@ -9783,7 +9783,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "cli.js      jsx-runtime.js   NOTICE        test.js\nindex.d.ts  jsx-runtime.mjs  package.json  test.mjs\nindex.js    lib              README.md     ThirdPartyNotices.txt\nindex.mjs   LICENSE          test.d.ts     types\ncompose@1.0.0 /workspaces/semio\n└─┬ @compose/sketchpad@0.1.0 -\u003e ./compose/sketchpad\n  ├─┬ @playwright/test@1.57.0",
+          "tool_response": "cli.js      jsx-runtime.js   NOTICE        test.js\nindex.d.ts  jsx-runtime.mjs  package.json  test.mjs\nindex.js    lib              README.md     ThirdPartyNotices.txt\nindex.mjs   LICENSE          test.d.ts     types\ncompose@1.0.0 /workspaces/semio\n└─┬ @semio-tech/compose-sketchpad@0.1.0 -\u003e ./compose/sketchpad\n  ├─┬ @playwright/test@1.57.0",
           "tool_use_id": "toolu_vrtx_01UTtng9iAN6ThPAccdY2zi4__vscode-1774612037081",
           "cwd": "/workspaces/semio"
         }

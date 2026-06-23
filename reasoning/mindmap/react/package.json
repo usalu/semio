@@ -1,15 +1,15 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@reasoning/mindmap/react",
+  "name": "@semio-tech/reasoning-mindmap-react",
   "version": "0.1.0",
   "description": "reasoning · mindmap react",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @reasoning/mindmap/react:test"
+    "test": "bun nx run @semio-tech/reasoning-mindmap-react:test"
   },
   "dependencies": {
-    "@puzzle/2d/react": "workspace:*"
+    "@semio-tech/puzzle-2d-react": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

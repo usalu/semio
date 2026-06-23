@@ -12,7 +12,7 @@ todos:
     content: "Platform React renderer: group panelTabs by kind, dynamic navbar toggles (only when tabs exist), add left-panel-kind switching, rename options->settings"
     status: completed
   - id: renderer-breadcrumb
-    content: "Platform React renderer: replace raw-URI navbar item with Breadcrumb from @ui/react + optional platform.breadcrumb override hook"
+    content: "Platform React renderer: replace raw-URI navbar item with Breadcrumb from @semio-tech/ui-react + optional platform.breadcrumb override hook"
     status: completed
   - id: renderer-history
     content: "Platform React renderer: add platform.applyUri + browser-history wrapper around PlatformView; wire into ReactUI.mount/mountPlatform"
@@ -80,7 +80,7 @@ Panel slots driven by registered tabs:
 
 Breadcrumb:
 
-- Replace the raw-URI navbar item (2931-2935) with `<Breadcrumb items=...>` from `@ui/react` (already exported, `ui/react/index.tsx` 18838). Build items by splitting `uri` into cumulative-path segments, each `onNavigate(href) => onNavigate(href)`. Add optional `platform.breadcrumb?(uri): BreadcrumbItemData[]` override hook so products supply friendly labels.
+- Replace the raw-URI navbar item (2931-2935) with `<Breadcrumb items=...>` from `@semio-tech/ui-react` (already exported, `ui/react/index.tsx` 18838). Build items by splitting `uri` into cumulative-path segments, each `onNavigate(href) => onNavigate(href)`. Add optional `platform.breadcrumb?(uri): BreadcrumbItemData[]` override hook so products supply friendly labels.
 
 General URL-sync (the "general mechanism"):
 

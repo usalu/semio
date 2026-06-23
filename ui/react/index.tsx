@@ -28,7 +28,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { resolveColorHex, resolveSemanticColorHex, semanticVar, themeColorVar, tokenVar } from "@ui/styling";
+import { resolveColorHex, resolveSemanticColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -87,7 +87,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { ICONS, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@ui/asset";
+import { ICONS, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/ui-asset";
 export type { IconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -356,7 +356,7 @@ export type { ThreeEvent };
 
 // #region 🎼Utilities
 
-// Generic utility and type definitions that make @ui/react self-contained.
+// Generic utility and type definitions that make @semio-tech/ui-react self-contained.
 // These MUST NOT depend on any external compose package.
 
 /**
@@ -1865,7 +1865,7 @@ export type UiLabelValue = {
   readonly hotkey?: string;
 };
 
-/** @emoji 🪁 Toolbar parent category ids mirrored from {@link @framework/core AppToolCategory}. */
+/** @emoji 🪁 Toolbar parent category ids mirrored from {@link @semio-tech/framework-core AppToolCategory}. */
 export type UiToolbarParentCategory =
   | "history"
   | "hand"
@@ -22012,7 +22012,7 @@ if (import.meta.vitest) {
 // #region 🗿Framework Re-exports
 
 // Re-exports of common libraries used alongside UI primitives.
-// Workbench shell types and chrome live in `@framework/platform/core` / `@framework/platform/renderer/react`.
+// Workbench shell types and chrome live in `@semio-tech/framework-platform-core` / `@semio-tech/framework-platform-renderer-react`.
 
 // #region 🌩️DnD Kit
 export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";

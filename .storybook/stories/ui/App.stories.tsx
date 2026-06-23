@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { App, Mode, reactHostPort } from "@ui/react";
+import { App, Mode, reactHostPort } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 // #endregion 🔌Adapters
 

@@ -35,7 +35,7 @@ The unit tests (jsdom) only assert matcher pairing and that an `autoanimate` eve
 
 ## Step 1: Open a ticket and reproduce in the browser
 - Open a ticket (repo MCP `ticket_open`, goal `presentation`), e.g. `26/06/02/PROJEKTETAGE-FOCUS-LABEL-MORPH`. Put all temp logs/scripts inside the ticket folder.
-- Start the deck dev server (`bun nx run @mit-bestand/praesentation/projektetage:dev`, port 6050) and drive reveal to slide 8 then 9 in the browser.
+- Start the deck dev server (`bun nx run @semio-tech/mit-bestand-praesentation-projektetage:dev`, port 6050) and drive reveal to slide 8 then 9 in the browser.
 - Add temporary `[DEBUG]` logs inside `presentationAutoAnimateMatcher` ([renderer index.tsx](framework/product/presentation/renderer/react/index.tsx) ~L315-343) to print, for the focus->labels transition: each kept pair's `data-id`, `from`/`to` `nodeName`, and `from`/`to` `getBoundingClientRect()`. This confirms whether reveal pairs tile->ghost and whether the ghost `to` rect is the label position (non-zero, measurable).
 
 ## Step 2: Diagnose why the ghost FLIP does not play

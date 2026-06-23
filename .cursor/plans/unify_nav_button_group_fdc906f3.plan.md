@@ -119,7 +119,7 @@ Optional (low value): add a small static markup test in `[ui/react/index.tsx](ui
 ## Verification
 
 1. Open repo ticket via MCP (`repo://goals`, `ticket_open`) before implementation; temp notes in ticket folder only.
-2. Run platform renderer tests: `nx` target for `@framework/platform/renderer/react` vitest (or project’s existing `test` script via `script.ts`).
+2. Run platform renderer tests: `nx` target for `@semio-tech/framework-platform-renderer-react` vitest (or project’s existing `test` script via `script.ts`).
 3. Manually confirm in any app using `PlatformView` (platform play / presentation): navbar shows `[←|→|↑]  gap  breadcrumb` with aligned `h-medium` heights and no double-border between nav buttons.
 
 ## Out of scope

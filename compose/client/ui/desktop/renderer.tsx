@@ -9,7 +9,7 @@
 // #region ⛩️Renderer
 
 // #region 🔌Adapters
-import { mountPlatform } from "@framework/platform/renderer/react";
+import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
 import {
 	configureSketchpadKitFactories,
 	createComposeKitStoreFromJsStore,
@@ -17,7 +17,7 @@ import {
 	importKit,
 	InMemoryComposeKitStore,
 	type ComposeKitStore,
-} from "@compose/sketchpad";
+} from "@semio-tech/compose-sketchpad";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 

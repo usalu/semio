@@ -1,4 +1,4 @@
-import type { SlideFile } from "@framework/presentation/core";
+import type { SlideFile } from "@semio-tech/framework-presentation-core";
 import { catalogueFocusDispositions, mediaEmbodiments, mediaParticipants } from "../../../../spec.ts";
 
 export default {

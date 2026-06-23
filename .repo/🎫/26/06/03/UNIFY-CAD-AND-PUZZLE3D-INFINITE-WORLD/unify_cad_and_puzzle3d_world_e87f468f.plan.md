@@ -1,12 +1,12 @@
 ---
 name: Unify CAD And Puzzle3D World
-overview: Migrate @infinite/world/r3f and puzzle/3d to a native z-up scene (dropping the CAD->Three remap), then rebuild cad/js/renderer's canvas/orbit/grid/scene on the same engine so both consume one infinite-world mechanism including chunking, view-radius, pooling, and LOD grid.
+overview: Migrate @semio-tech/infinite-world-r3f and puzzle/3d to a native z-up scene (dropping the CAD->Three remap), then rebuild cad/js/renderer's canvas/orbit/grid/scene on the same engine so both consume one infinite-world mechanism including chunking, view-radius, pooling, and LOD grid.
 todos:
   - id: ticket
     content: Open/reopen the infinite-world ticket via repo MCP and associate with the appropriate goal.
     status: completed
   - id: engine-zup
-    content: "Make @infinite/world/r3f native z-up: identity remap in Precision, rotate WorldLodGridHelper grids into XY plane, keep GLB mesh rotation; update engine tests."
+    content: "Make @semio-tech/infinite-world-r3f native z-up: identity remap in Precision, rotate WorldLodGridHelper grids into XY plane, keep GLB mesh rotation; update engine tests."
     status: completed
   - id: engine-shell
     content: "Generalize WorldCanvas into the shared shell: cameraUp/position/fov/near/far, dpr, shadows, gl, background, frameloop, onCanvasReady, host pointer callbacks, optional owned PerspectiveCamera."
@@ -15,7 +15,7 @@ todos:
     content: "Adapt puzzle/3d to z-up: set camera up=[0,0,1], verify lights/grid/mesh standing, fix coordinate-dependent tests."
     status: completed
   - id: cad-canvas
-    content: Rebuild cad InteractionCanvas + SpatialOrbitControls on WorldCanvas + WorldOrbitGated; add @infinite/world/r3f dep and vite/vitest aliases.
+    content: Rebuild cad InteractionCanvas + SpatialOrbitControls on WorldCanvas + WorldOrbitGated; add @semio-tech/infinite-world-r3f dep and vite/vitest aliases.
     status: completed
   - id: cad-grid-layers
     content: Replace cad fixed GridHelper with WorldLodGridHelper + LOD provider; compose InteractionSpatialView contents as ordered WorldLayers.
@@ -31,11 +31,11 @@ isProject: false
 
 ## Goal
 
-Both `puzzle/3d` and `cad/js/renderer` render through one shared `@infinite/world/r3f` engine. Per decisions: the engine + puzzle move to native z-up (drop the `cadVec3ToThree` remap), and cad adopts the full layer set (chunking, view-radius, pooling, LOD grid).
+Both `puzzle/3d` and `cad/js/renderer` render through one shared `@semio-tech/infinite-world-r3f` engine. Per decisions: the engine + puzzle move to native z-up (drop the `cadVec3ToThree` remap), and cad adopts the full layer set (chunking, view-radius, pooling, LOD grid).
 
 ## Current state
 
-- `@infinite/world/r3f` ([infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx)) bakes in a CAD-z-up -> Three-y-up remap: `_eulerCadToThree = new Euler(-PI/2,0,0)` (line 71), used by `cadVec3ToThree`/`threeVec3ToCad`/`cadQuatToThree`/`threeQuatToCad` and `WorldLodGridHelper` (line 545). `WorldCanvas` (line 779) hardcodes `frameloop="demand"`, owns no camera, forwards no host pointer callbacks.
+- `@semio-tech/infinite-world-r3f` ([infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx)) bakes in a CAD-z-up -> Three-y-up remap: `_eulerCadToThree = new Euler(-PI/2,0,0)` (line 71), used by `cadVec3ToThree`/`threeVec3ToCad`/`cadQuatToThree`/`threeQuatToCad` and `WorldLodGridHelper` (line 545). `WorldCanvas` (line 779) hardcodes `frameloop="demand"`, owns no camera, forwards no host pointer callbacks.
 - `puzzle/3d` ([puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)) consumes the engine with a default y-up `<PerspectiveCamera makeDefault>` (line 8306) and 58 remap call sites.
 - `cad/js/renderer` ([cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)) is a separate stack: native z-up `InteractionCanvas` (`up:[0,0,1]`, line 2922), single fixed `GridHelper` rotated to XY at z=0 (line 3058), `SpatialOrbitControls` (line 2872), `SpatialAutoFit`/`SpatialInvalidator`. No chunking/LOD/pooling. Consumed by `cad/js/renderer/play` and aliased by `framework/product/platform/renderer/react` + sketchpad (public API is CAD coords, so scene-convention change is internal).
 
@@ -62,7 +62,7 @@ In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 
 In [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx):
 
-- Add `@infinite/world/r3f` dependency in [cad/js/renderer/package.json](cad/js/renderer/package.json) and a vite alias where cad is consumed ([cad/js/renderer/play/vite.config.ts](cad/js/renderer/play/vite.config.ts), and the `@infinite/world/r3f` alias in [framework/product/platform/renderer/react/vitest.config.ts](framework/product/platform/renderer/react/vitest.config.ts) and sketchpad vite config if it imports cad).
+- Add `@semio-tech/infinite-world-r3f` dependency in [cad/js/renderer/package.json](cad/js/renderer/package.json) and a vite alias where cad is consumed ([cad/js/renderer/play/vite.config.ts](cad/js/renderer/play/vite.config.ts), and the `@semio-tech/infinite-world-r3f` alias in [framework/product/platform/renderer/react/vitest.config.ts](framework/product/platform/renderer/react/vitest.config.ts) and sketchpad vite config if it imports cad).
 - `InteractionCanvas` (line 2891): re-implement on top of the generalized `WorldCanvas`, passing `cameraUp=[0,0,1]`, existing camera defaults (`position [10,10,8]`, `fov 45`, near/far), `background`, `frameloop`, `gl`, and all host pointer callbacks + `onCanvasReady`. Wrap children in `WorldLayerStack` (handled by WorldCanvas).
 - `SpatialOrbitControls` (line 2872): replace with `WorldOrbitGated` (same LEFT-disabled / MIDDLE-dolly / RIGHT-rotate mapping); wire `onCameraNavigate` through its gate. Drop `SpatialInvalidator` in favor of engine demand-frame kicks (or keep as a thin layer if camera-move invalidation differs).
 - Grid: replace the fixed `GridHelper` (line 3058) with `WorldLodGridHelper` + a `LodBridge`/`useLod` provider so cad gets progressive LOD grid bands like puzzle.
@@ -73,7 +73,7 @@ In [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx):
 ## Stage 4 - Wire + validate
 
 - Update [.vscode/launch.json](.vscode/launch.json) only if new run/test entries are needed (existing cad `dev`/`test` and world `r3f` test entries already exist).
-- Run `@infinite/world/r3f` tests, `@puzzle/3d/react` tests (262), and `@cad/js/renderer` tests; fix fallout.
+- Run `@semio-tech/infinite-world-r3f` tests, `@semio-tech/puzzle-3d-react` tests (262), and `@semio-tech/cad-js-renderer` tests; fix fallout.
 - Smoke both plays in the browser: puzzle/3d play (Nakagin tower renders, grid is horizontal XY, orbit z-up, LOD bands), and cad play port 6020 (model renders z-up, LOD grid, orbit, pick/gumball intact, meshes chunk/unload at distance). Confirm runtime via console logs per repo rules.
 
 ## Notes / risks

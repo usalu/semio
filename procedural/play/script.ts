@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@procedural/play` task router: `bun ./script.ts <dev|build|test> [fixture <id>] [args…]`. */
+/** 🧭 `@semio-tech/procedural-play` task router: `bun ./script.ts <dev|build|test> [fixture <id>] [args…]`. */
 import { join } from "node:path";
 import {
 	BundleScript,

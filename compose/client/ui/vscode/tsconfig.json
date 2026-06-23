@@ -16,28 +16,28 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@compose/sketchpad": [
+      "@semio-tech/compose-sketchpad": [
         "../sketchpad"
       ],
-      "@compose/sketchpad/*": [
+      "@semio-tech/compose-sketchpad/*": [
         "../sketchpad/*"
       ],
-      "@compose/js": [
+      "@semio-tech/compose-js": [
         "../js"
       ],
-      "@compose/js/*": [
+      "@semio-tech/compose-js/*": [
         "../js/*"
       ],
-      "@ui/react": [
+      "@semio-tech/ui-react": [
         "../../../ui/react"
       ],
-      "@ui/react/*": [
+      "@semio-tech/ui-react/*": [
         "../../../ui/react/*"
       ],
-      "@compose/asset": [
+      "@semio-tech/compose-asset": [
         "../asset"
       ],
-      "@compose/asset/*": [
+      "@semio-tech/compose-asset/*": [
         "../asset/*"
       ]
     },

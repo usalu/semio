@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@repo/lib` folder policy router: `bun ./script.ts policy`. */
+/** 🧭 `@semio-tech/repo-lib` folder policy router: `bun ./script.ts policy`. */
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { FolderLinter } from "./js/src/linter.ts";

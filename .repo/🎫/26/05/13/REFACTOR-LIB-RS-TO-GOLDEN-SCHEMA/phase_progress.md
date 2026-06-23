@@ -21,7 +21,7 @@
 ## Verified (2026-05-13)
 
 - `COMPOSE_GOLDEN_STRICT=1` + `cargo test -p compose --lib` — **37 passed**, 1 ignored (re-run after lib.rs marker scrub + `schema_gap_surfaces` rename).
-- `bun nx run @compose/rs:build` — **success** (wasm-pack release + `cargo build --release`).
+- `bun nx run @semio-tech/compose-rs:build` — **success** (wasm-pack release + `cargo build --release`).
 - `schema_matches_target_graphql_file` — **ok** under strict.
 
 ## Golden gap (strict)

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@flow/play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/flow-play`. */
 // #endregion 🧲Header
 
 import path from "node:path";
@@ -14,12 +14,12 @@ export default createPlaygroundPlayViteConfig({
   repoRoot,
   playEntryKind: "flow",
   extraAliases: [
-    { find: "@flow/react", replacement: path.resolve(playDir, "../react/index.tsx") },
-    { find: "@flow/module-core", replacement: path.resolve(playDir, "../module/core/pkg/flow_module_core.js") },
+    { find: "@semio-tech/flow-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+    { find: "@semio-tech/flow-module-core", replacement: path.resolve(playDir, "../module/core/pkg/flow_module_core.js") },
   ],
-  resolveDedupe: ["react", "react-dom", "@flow/react"],
+  resolveDedupe: ["react", "react-dom", "@semio-tech/flow-react"],
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@flow/react"],
+    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/flow-react"],
     exclude: [...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
     esbuildOptions: { target: "esnext" },
   },

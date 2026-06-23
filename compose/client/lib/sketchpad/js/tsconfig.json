@@ -3,23 +3,23 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@compose/sketchpad": ["."],
-      "@compose/sketchpad/*": ["./*"],
-      "@compose/js": ["../../js"],
-      "@compose/js/*": ["../../js/*"],
+      "@semio-tech/compose-sketchpad": ["."],
+      "@semio-tech/compose-sketchpad/*": ["./*"],
+      "@semio-tech/compose-js": ["../../js"],
+      "@semio-tech/compose-js/*": ["../../js/*"],
       "@compose/ui": ["../../react/rendering"],
       "@compose/ui/*": ["../../react/rendering/*"],
-      "@compose/asset": ["../../../../asset"],
-      "@compose/asset/*": ["../../../../asset/*"],
-      "@compose/react": ["../../react/logic"],
-      "@compose/react/*": ["../../react/logic/*"],
-      "@compose/rs-wasm": ["../../rs/pkg/compose.d.ts"],
-      "@compose/rs-wasm/*": ["../../rs/pkg/*"],
-      "@framework/core": ["../../../../../framework/core/index.ts"],
-      "@framework/platform/core": ["../../../../../framework/product/platform/core/index.ts"],
-      "@framework/platform/renderer/react": ["../../../../../framework/product/platform/renderer/react/index.tsx"],
-      "@ui/react": ["../../../../../ui/react/index.tsx"],
-      "@ui/react/*": ["../../../../../ui/react/*"]
+      "@semio-tech/compose-asset": ["../../../../asset"],
+      "@semio-tech/compose-asset/*": ["../../../../asset/*"],
+      "@semio-tech/compose-react": ["../../react/logic"],
+      "@semio-tech/compose-react/*": ["../../react/logic/*"],
+      "@semio-tech/compose-rs-wasm": ["../../rs/pkg/compose.d.ts"],
+      "@semio-tech/compose-rs-wasm/*": ["../../rs/pkg/*"],
+      "@semio-tech/framework-core": ["../../../../../framework/core/index.ts"],
+      "@semio-tech/framework-platform-core": ["../../../../../framework/product/platform/core/index.ts"],
+      "@semio-tech/framework-platform-renderer-react": ["../../../../../framework/product/platform/renderer/react/index.tsx"],
+      "@semio-tech/ui-react": ["../../../../../ui/react/index.tsx"],
+      "@semio-tech/ui-react/*": ["../../../../../ui/react/*"]
     },
     "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
   }

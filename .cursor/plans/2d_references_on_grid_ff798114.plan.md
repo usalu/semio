@@ -1,6 +1,6 @@
 ---
 name: 2D references on grid
-overview: Add a shared "2D reference" primitive to the infinite world (@infinite/world/r3f) that places png/jpg, svg, and pdf images on the grid plane as textured planes that can be moved, resized, rotated, locked, and hidden, then wire it into both puzzle 3d and CAD.
+overview: Add a shared "2D reference" primitive to the infinite world (@semio-tech/infinite-world-r3f) that places png/jpg, svg, and pdf images on the grid plane as textured planes that can be moved, resized, rotated, locked, and hidden, then wire it into both puzzle 3d and CAD.
 todos:
   - id: ticket
     content: Open repo ticket (INFINITE-WORLD-2D-REFERENCES) associated with the best repo://goals goal
@@ -39,16 +39,16 @@ isProject: false
 
 ## Goal
 
-A reference is a flat, textured plane sitting on (and movable above) the world grid, sourced from a file **path** (png/jpg/webp, svg, pdf). It supports select, move, resize (scale with aspect lock), rotate, lock, hide — reusing the existing shared world primitives. Ship it as one shared `@infinite/world/r3f` feature consumed by both `@puzzle/3d/react` and `@cad/js/renderer`.
+A reference is a flat, textured plane sitting on (and movable above) the world grid, sourced from a file **path** (png/jpg/webp, svg, pdf). It supports select, move, resize (scale with aspect lock), rotate, lock, hide — reusing the existing shared world primitives. Ship it as one shared `@semio-tech/infinite-world-r3f` feature consumed by both `@semio-tech/puzzle-3d-react` and `@semio-tech/cad-js-renderer`.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-  port["ReferenceMediaPort (@ui/react)\nimage/svg/pdf path to CanvasTexture + aspect"]
-  world["@infinite/world/r3f\nWorldReference* (plane, layer, gumball, flags)"]
-  puzzle["@puzzle/3d/react + play\nFixtureV1.references[]"]
-  cad["@cad/js/renderer + play\nreferences store"]
+  port["ReferenceMediaPort (@semio-tech/ui-react)\nimage/svg/pdf path to CanvasTexture + aspect"]
+  world["@semio-tech/infinite-world-r3f\nWorldReference* (plane, layer, gumball, flags)"]
+  puzzle["@semio-tech/puzzle-3d-react + play\nFixtureV1.references[]"]
+  cad["@semio-tech/cad-js-renderer + play\nreferences store"]
   port --> world
   world --> puzzle
   world --> cad
@@ -72,10 +72,10 @@ Per repo rule "external libraries behind an interface", add a `ReferenceMediaPor
 - Wiring (default `referenceMediaPort`):
   - `image`: `new THREE.TextureLoader()` (from `sceneHostPort.three`), read `image.naturalWidth/Height` for aspect.
   - `svg`: load via `Image` + draw to an offscreen `<canvas>` at a target raster size, wrap in `THREE.CanvasTexture` (vector rasterized; keeps it simple and uniform with pdf).
-  - `pdf`: add `pdfjs-dist` dependency to `@ui/react` only, render the requested page to a canvas, wrap in `THREE.CanvasTexture`. pdf.js worker configured once behind the port.
+  - `pdf`: add `pdfjs-dist` dependency to `@semio-tech/ui-react` only, render the requested page to a canvas, wrap in `THREE.CanvasTexture`. pdf.js worker configured once behind the port.
 - Mime/kind inference helper `referenceMediaKindFromUrl(url)` (extension based).
 
-## 2. Shared world primitive (`@infinite/world/r3f`)
+## 2. Shared world primitive (`@semio-tech/infinite-world-r3f`)
 
 New `#region 🖼️Reference` in [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx):
 
@@ -119,7 +119,7 @@ In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx): add import-
 
 ## 6. Verification
 
-- `bun nx run @ui/react:test`, `@infinite/world/r3f:test`, `@puzzle/3d/react:test`, `@cad/js/renderer:test` (extend existing test files only — no new test files: parse/encode round-trip of `references`, `worldEntitySelectable`/render-mode for references, `applyWorldReferenceTransform`, `referenceMediaKindFromUrl`).
+- `bun nx run @semio-tech/ui-react:test`, `@semio-tech/infinite-world-r3f:test`, `@semio-tech/puzzle-3d-react:test`, `@semio-tech/cad-js-renderer:test` (extend existing test files only — no new test files: parse/encode round-trip of `references`, `worldEntitySelectable`/render-mode for references, `applyWorldReferenceTransform`, `referenceMediaKindFromUrl`).
 - Run puzzle 3d and CAD play; confirm at runtime (with temporary `[DEBUG]` logs) that png + pdf render on the grid, and move/resize/rotate/lock/hide all work, including grid snap.
 
 ## Notes / conventions

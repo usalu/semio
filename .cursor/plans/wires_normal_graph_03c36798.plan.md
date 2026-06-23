@@ -70,14 +70,14 @@ In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (or lifted into [mathematical/grap
 
 ### Phase 4 - React: thin mindmap wrapper
 
-- Add a thin `reasoning/mindmap/react` (and `play`) that mounts the generic canvas host from `@infinite/cavas/react-renderer` against the Normal session, forwarding only `fixtureJson` + theme token values and subscribing to `drainEventsJson`. No `Handle` markers, no `syncPuzzle2dScene` handle path, no TS fixture parse for the normal path.
+- Add a thin `reasoning/mindmap/react` (and `play`) that mounts the generic canvas host from `@semio-tech/infinite-cavas-react-renderer` against the Normal session, forwarding only `fixtureJson` + theme token values and subscribing to `drainEventsJson`. No `Handle` markers, no `syncPuzzle2dScene` handle path, no TS fixture parse for the normal path.
 - Move the still-needed parsing/catalog/theme-default/observation responsibilities into Rust so the wrapper stays thin (Rust owns `parse`, styling defaults, hierarchy).
 - Re-point [wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) + [wires/play/index.ts](reasoning/mindmap/wires/play/index.ts) to the mindmap renderer instead of `@puzzle/2d/`*; update `bootWiresPlay` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (~~4456) and the default-fixture switch (~~1950) to the normal path.
 
 ### Phase 5 - Wiring & validation
 
 - Root [Cargo.toml](Cargo.toml) members + [.vscode/launch.json](.vscode/launch.json) cargo test `-p` list updated for any new crate, following existing order/grouping.
-- `cargo test` for the host + mindmap crates; `nx` vitest for `@reasoning/mindmap/wires/react` + `play`; runtime verification with `[DEBUG]` logs confirming WIRES renders **no** handles and edges connect node rims; close ticket with file summary.
+- `cargo test` for the host + mindmap crates; `nx` vitest for `@semio-tech/reasoning-mindmap-wires-react` + `play`; runtime verification with `[DEBUG]` logs confirming WIRES renders **no** handles and edges connect node rims; close ticket with file summary.
 
 ### Constraints
 
