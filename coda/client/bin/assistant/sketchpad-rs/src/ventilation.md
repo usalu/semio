@@ -197,3 +197,17 @@ If a mechanical system is present but the heat exchanger's exact efficiency is n
 | Standard / Older Systems        | `0.60`(60%)                         | Recovers 60% of delta T        |
 | Modern High-Efficiency Systems  | `0.80`(80%)                         | Recovers 80% of delta T        |
 | Premium / Passive House Systems | `0.90`(90%)                         | Recovers 90% of delta T        |
+
+## Simplified UI Data Mapping (The Lungs & The Heart)
+
+By asking chronological and physical questions, the user's brain can "walk through" their building, keeping the frontend conversational while the backend remains strictly DIN-compliant.
+
+### The Lungs: Passive Breathing (has_atd, air_tightness)
+Users don't understand "infiltration" or "ATDs", but they know what their windows look like.
+*   **has_atd**: "Do your windows or exterior walls have small, built-in ventilation slits that let air trickle in even when they are closed?" Yes -> `has_atd = true`, No -> `has_atd = false`.
+*   **air_tightness ($n_{50}$)**: "Has your building ever officially passed a Blower-Door pressure test?" If Yes, Category I. If No: "When were the windows and roof last replaced?" After 2000 -> Category II. Before 2000, no drafts -> Category III. Before 2000, drafts -> Category IV.
+
+### The Heart: Active Systems (Mechanical Volumes, Heat Recovery)
+Mechanical ventilation is intimidating. If a user doesn't know their exact flow rate ($m^3/h$), DIN 18599 allows us to assume the system was sized correctly to meet the minimum required fresh air rate ($n_{nutz}$).
+*   **Mechanical Ventilation Volumes**: "Do you have an active, motorized ventilation system?" If yes, but they don't know the exact airflow rate ($m^3/h$), our software applies an *Estimation Trick*. It automatically calculates the minimum required fresh air ($n_{nutz}$) and assumes the system was designed correctly, setting supply and exhaust equal to $n_{nutz} \times Volume$.
+*   **Heat Recovery Efficiency**: "Does your ventilation system feature 'Heat Recovery'?" If yes, and they don't know the percentage, we can safely estimate 80% (0.80) as a default fallback for modern systems.

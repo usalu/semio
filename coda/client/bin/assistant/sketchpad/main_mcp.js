@@ -982,6 +982,12 @@ function getRustStatePayload() {
         mech_exhaust: document.getElementById('mech-exhaust') ? parseFloat(document.getElementById('mech-exhaust').value) || 0 : 0,
         heat_recovery: document.getElementById('heat-recovery') ? (parseFloat(document.getElementById('heat-recovery').value) || 0) / 100.0 : 0,
         mech_hours: document.getElementById('mech-hours') ? parseFloat(document.getElementById('mech-hours').value) || 0 : 0,
+        
+        // Internal Heat Gains
+        lighting_exhaust: document.getElementById('lighting-exhaust') ? document.getElementById('lighting-exhaust').value : 'Standard',
+        material_transport: document.getElementById('material-transport') ? document.getElementById('material-transport').value : 'None',
+        custom_occupants: document.getElementById('custom-occupants') ? parseFloat(document.getElementById('custom-occupants').value) || 0 : 0,
+        custom_equipment: document.getElementById('custom-equipment') ? parseFloat(document.getElementById('custom-equipment').value) || 0 : 0,
     };
 
     const wallMat = document.getElementById('custom-wall-mat') ? document.getElementById('custom-wall-mat').value : 'none';
@@ -1169,6 +1175,11 @@ function syncUIFromState(state) {
     document.getElementById('usage-profile').value = state.params.usage_profile || "Residential";
     document.getElementById('automation-class').value = state.params.automation_class || "C";
     
+    if (document.getElementById('lighting-exhaust')) document.getElementById('lighting-exhaust').value = state.params.lighting_exhaust || "Standard";
+    if (document.getElementById('material-transport')) document.getElementById('material-transport').value = state.params.material_transport || "None";
+    if (document.getElementById('custom-occupants')) document.getElementById('custom-occupants').value = state.params.custom_occupants || 0;
+    if (document.getElementById('custom-equipment')) document.getElementById('custom-equipment').value = state.params.custom_equipment || 0;
+
     const cwCheckbox = document.getElementById('custom-wall-override');
     const cwLambda = document.getElementById('custom-wall-lambda');
     const cwThickness = document.getElementById('custom-wall-thickness');
@@ -1228,8 +1239,13 @@ function displayRustResults(data) {
                 html += `<div class="result-row"><span class="result-label">Ventilation Loss:</span><span class="result-value">${data.heat_losses.ventilation_loss_kWh_a.toFixed(1)} kWh/a</span></div>`;
             }
         }
-        if (data.heat_gains && typeof data.heat_gains.solar_gains_kWh_a === 'number') {
-            html += `<div class="result-row"><span class="result-label">Solar Gains:</span><span class="result-value">${data.heat_gains.solar_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
+        if (data.heat_gains) {
+            if (typeof data.heat_gains.solar_gains_kWh_a === 'number') {
+                html += `<div class="result-row"><span class="result-label">Solar Gains:</span><span class="result-value">${data.heat_gains.solar_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
+            }
+            if (typeof data.heat_gains.internal_gains_kWh_a === 'number') {
+                html += `<div class="result-row"><span class="result-label" style="color: #38bdf8; font-weight: 600;">Internal Gains (DIN V 18599):</span><span class="result-value highlight" style="color: #38bdf8;">${data.heat_gains.internal_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
+            }
         }
         if (data.final_energy) {
             html += `<div class="result-row"><span class="result-label">Final Energy:</span><span class="result-value">${data.final_energy.specific_Q_final_kWh_m2a.toFixed(1)} kWh/m²a</span></div>`;
@@ -1530,7 +1546,8 @@ function initEventListeners() {
 
     ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system', 'usage-profile', 'thermal-bridge', 'ground-contact', 'shutter-control', 'climate-region', 'automation-class',
      'custom-wall-mat', 'custom-wall-thick', 'custom-roof-mat', 'custom-roof-thick', 'custom-floor-mat', 'custom-floor-thick',
-     'air-tightness', 'has-atd', 'mech-supply', 'mech-exhaust', 'heat-recovery', 'mech-hours'].forEach(id => {
+     'air-tightness', 'has-atd', 'mech-supply', 'mech-exhaust', 'heat-recovery', 'mech-hours',
+     'lighting-exhaust', 'material-transport', 'custom-occupants', 'custom-equipment'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('change', () => {

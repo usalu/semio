@@ -771,6 +771,241 @@ pub mod ventilation {
     }
 }
 
+pub mod internal_gains {
+    // --- DATA MODELS ---
+
+    /// Represents the standard usage profile data derived strictly from DIN V 18599-10.
+    #[derive(Debug, Clone, Copy)]
+    pub struct StandardGainProfile {
+        pub is_residential: bool,
+        pub q_i_combined: f64, // Used only if residential (Eq. 126)
+        pub q_i_p: f64,        // Heat from persons (W/m²)
+        pub q_i_app: f64,      // Heat from equipment/work aids (W/m²)
+        pub q_i_sink_app: f64, // Sinks from equipment (W/m²)
+        pub t_nutz: f64,       // Daily usage hours (h/d)
+        pub d_nutz: f64,       // Annual usage days (d/a)
+    }
+
+    impl StandardGainProfile {
+        /// Factory method to load standard DIN 18599-10 profiles
+        pub fn from_profile_id(id: u32) -> Self {
+            match id {
+                0 => Self { // 0 = Residential fallback
+                    is_residential: true,
+                    q_i_combined: 3.75,
+                    q_i_p: 0.0, q_i_app: 0.0, q_i_sink_app: 0.0,
+                    t_nutz: 24.0, d_nutz: 365.0,
+                },
+                1 => Self { // Einzelbüro
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 4.50, q_i_app: 7.00, q_i_sink_app: 0.0,
+                    t_nutz: 13.0, d_nutz: 250.0,
+                },
+                2 => Self { // Gruppenbüro
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 5.00, q_i_app: 7.00, q_i_sink_app: 0.0,
+                    t_nutz: 13.0, d_nutz: 250.0,
+                },
+                3 => Self { // Großraumbüro
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 6.00, q_i_app: 9.00, q_i_sink_app: 0.0,
+                    t_nutz: 13.0, d_nutz: 250.0,
+                },
+                4 => Self { // Besprechung
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 15.00, q_i_app: 2.00, q_i_sink_app: 0.0,
+                    t_nutz: 13.0, d_nutz: 250.0,
+                },
+                6 => Self { // Einzelhandel/Kaufhaus
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 7.00, q_i_app: 2.00, q_i_sink_app: 0.0,
+                    t_nutz: 12.0, d_nutz: 300.0,
+                },
+                7 => Self { // Einzelhandel (Kühl)
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 7.00, q_i_app: 2.00, q_i_sink_app: 10.0,
+                    t_nutz: 12.0, d_nutz: 300.0,
+                },
+                8 => Self { // Klassenzimmer
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 15.00, q_i_app: 2.00, q_i_sink_app: 0.0,
+                    t_nutz: 12.0, d_nutz: 250.0,
+                },
+                10 => Self { // Bettenzimmer
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 4.00, q_i_app: 2.00, q_i_sink_app: 0.0,
+                    t_nutz: 24.0, d_nutz: 365.0,
+                },
+                11 => Self { // Hotelzimmer
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 3.00, q_i_app: 2.00, q_i_sink_app: 0.0,
+                    t_nutz: 24.0, d_nutz: 365.0,
+                },
+                13 => Self { // Restaurant
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 12.00, q_i_app: 5.00, q_i_sink_app: 0.0,
+                    t_nutz: 14.0, d_nutz: 365.0,
+                },
+                14 => Self { // Küchen (Gewerblich)
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 5.00, q_i_app: 20.00, q_i_sink_app: 0.0,
+                    t_nutz: 14.0, d_nutz: 365.0,
+                },
+                21 => Self { // Rechenzentrum
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 1.00, q_i_app: 150.00, q_i_sink_app: 0.0,
+                    t_nutz: 24.0, d_nutz: 365.0,
+                },
+                33 => Self { // Turnhalle
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 10.00, q_i_app: 0.00, q_i_sink_app: 0.0,
+                    t_nutz: 14.0, d_nutz: 300.0,
+                },
+                43 => Self { // Lagerhallen
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 1.00, q_i_app: 1.00, q_i_sink_app: 0.0,
+                    t_nutz: 14.0, d_nutz: 250.0,
+                },
+                // Default generic non-residential fallback
+                _ => Self {
+                    is_residential: false, q_i_combined: 0.0,
+                    q_i_p: 3.0, q_i_app: 3.0, q_i_sink_app: 0.0,
+                    t_nutz: 12.0, d_nutz: 250.0,
+                }
+            }
+        }
+    }
+
+    /// Represents the transport of physical goods/materials in and out of the zone.
+    #[derive(Debug, Clone, Copy)]
+    pub struct MaterialTransport {
+        pub c_specific_heat: f64, // c in Wh/(kg*K)
+        pub m_dot: f64,           // mass flow rate (kg/h)
+        pub theta_in: f64,        // Temperature of goods entering
+        pub theta_out: f64,       // Temperature of goods leaving (usually room temp)
+    }
+
+    /// Categorizes the type of lighting exhaust based on DIN 18599-2 Table 13.
+    #[derive(Debug, Clone, Copy)]
+    pub enum LightingExhaustType {
+        Standard,      // No exhaust, standard luminaires
+        CeilingCavity, // Abluftleuchten über Deckenhohlraum
+        AirDucts,      // Abluftleuchten über Luftleitung
+    }
+
+    impl LightingExhaustType {
+        /// Returns the room load factor (mu_l) associated with the exhaust type.
+        pub fn room_load_factor(&self) -> f64 {
+            match self {
+                Self::Standard => 1.0,
+                Self::CeilingCavity => 0.75, // Average range (0.7 - 0.8)
+                Self::AirDucts => 0.65,      // Average range (0.6 - 0.7)
+            }
+        }
+    }
+
+    /// Represents the artificial lighting system.
+    #[derive(Debug, Clone, Copy)]
+    pub struct LightingSystem {
+        pub q_l_f_daily: f64,                 // Daily electrical energy demand for lighting (Wh)
+        pub exhaust_type: LightingExhaustType, // Simplifies user input to specific categories
+    }
+
+    impl LightingSystem {
+        /// Calculates the effective room load factor based on the system type.
+        pub fn mu_l(&self) -> f64 {
+            self.exhaust_type.room_load_factor()
+        }
+    }
+
+    /// Represents the custom detailed inventory of a room.
+    #[derive(Debug, Clone)]
+    pub struct CustomInventoryProfile {
+        pub num_people: u32,
+        pub metabolic_rate_watts: f64,
+        pub equipment_watts_active: f64, // Sum of (Count * Power * DutyCycle)
+        pub t_nutz: f64,
+    }
+
+    // --- ENGINE ---
+
+    pub enum GainCalculationMethod {
+        Standard(StandardGainProfile),
+        Custom(CustomInventoryProfile),
+    }
+
+    /// The core engine struct to calculate total internal gains
+    pub struct InternalGainsEngine {
+        pub a_ngf: f64, // Net floor area (m²)
+        pub method: GainCalculationMethod,
+        pub material_transport: Option<MaterialTransport>,
+        pub lighting: LightingSystem,
+    }
+
+    impl InternalGainsEngine {
+        pub fn new(
+            a_ngf: f64, 
+            method: GainCalculationMethod, 
+            material_transport: Option<MaterialTransport>,
+            lighting: LightingSystem
+        ) -> Self {
+            Self { a_ngf, method, material_transport, lighting }
+        }
+
+        /// Calculates the daily internal energy gains and sinks (Wh/day).
+        pub fn daily_energy_balance_wh(&self) -> (f64, f64) {
+            let mut total_sources_wh = 0.0;
+            let mut total_sinks_wh = 0.0;
+
+            match &self.method {
+                GainCalculationMethod::Standard(profile) => {
+                    if profile.is_residential {
+                        // Eq. 126: Combined residential source
+                        total_sources_wh += (profile.q_i_combined * self.a_ngf) * profile.t_nutz;
+                    } else {
+                        // Eq. 127 & 128: Split non-residential sources
+                        total_sources_wh += (profile.q_i_p * self.a_ngf) * profile.t_nutz;
+                        total_sources_wh += (profile.q_i_app * self.a_ngf) * profile.t_nutz;
+                        // Eq. 129: Equipment sinks
+                        total_sinks_wh += (profile.q_i_sink_app * self.a_ngf) * profile.t_nutz;
+                    }
+                },
+                GainCalculationMethod::Custom(inventory) => {
+                    // Custom wattage * hours
+                    let person_heat = (inventory.num_people as f64) * inventory.metabolic_rate_watts;
+                    total_sources_wh += (person_heat + inventory.equipment_watts_active) * inventory.t_nutz;
+                }
+            }
+
+            // Eq. 132: Artificial Lighting (adjusted dynamically by mu_l)
+            total_sources_wh += self.lighting.mu_l() * self.lighting.q_l_f_daily;
+
+            // Eq. 130 & 131: Material Transport (Stofftransport)
+            if let Some(mat) = &self.material_transport {
+                // t = 24h as per the mass flow definition in standard
+                let t = 24.0; 
+                if mat.theta_in > mat.theta_out {
+                    // Eq. 130: Source
+                    total_sources_wh += mat.c_specific_heat * mat.m_dot * (mat.theta_in - mat.theta_out) * t;
+                } else if mat.theta_in < mat.theta_out {
+                    // Eq. 131: Sink
+                    total_sinks_wh += mat.c_specific_heat * mat.m_dot * (mat.theta_out - mat.theta_in) * t;
+                }
+            }
+
+            (total_sources_wh, total_sinks_wh)
+        }
+
+        /// Returns the net daily internal gain (Sources - Sinks)
+        pub fn net_daily_gain_wh(&self) -> f64 {
+            let (sources, sinks) = self.daily_energy_balance_wh();
+            // Prevent negative gains from overturning the balance completely, 
+            // though strictly DIN tracks them separately for heating vs cooling balances.
+            f64::max(0.0, sources - sinks)
+        }
+    }
+}
+
 // Embed the Tabula database
 static TABULA_DATA: &str = include_str!("../../tabula_data/extracted_data.json");
 
@@ -851,6 +1086,16 @@ pub struct Parameters {
     pub usage_profile: String,
     #[serde(default)]
     pub automation_class: String,
+
+    // New parameters for internal heat gains
+    #[serde(default)]
+    pub lighting_exhaust: String,
+    #[serde(default)]
+    pub material_transport: String,
+    #[serde(default)]
+    pub custom_occupants: f64,
+    #[serde(default)]
+    pub custom_equipment: f64,
 
     // New parameters for ventilation
     #[serde(default)]
@@ -1277,22 +1522,6 @@ fn calculate_energy(state: &State) -> Value {
     let n50 = b_air_data.resolve_n50(air_tightness);
     let f_atd = ventilation::calculate_f_atd(state.params.has_atd, n50);
     
-    // Mechanical System Setup
-    let mech_system = ventilation::MechanicalSystem {
-        v_dot_mech_b: state.params.mech_supply,
-        v_dot_eta: state.params.mech_exhaust,
-        eta_t: state.params.heat_recovery,
-        t_v_mech: state.params.mech_hours,
-    };
-
-    let n_sup = mech_system.n_mech_sup(conditioned_volume);
-    let n_eta = mech_system.n_mech_eta(conditioned_volume);
-    let f_e = ventilation::calculate_f_e(n_sup, n_eta, n50, f_atd);
-
-    let n_inf = ventilation::calculate_n_inf(n50, f_atd, f_e, state.params.mech_hours);
-    let h_v_inf = n_inf * conditioned_volume * 0.34;
-    let h_v_mech = mech_system.calculate_h_v_mech(conditioned_volume);
-
     // Required fresh air (n_nutz)
     let v_dot_a = match profile {
         transmission::UsageProfile::SingleOffice => 2.0,
@@ -1310,6 +1539,29 @@ fn calculate_energy(state: &State) -> Value {
     } else {
         ventilation::calculate_n_nutz(v_dot_a, a_floor_total, conditioned_volume)
     };
+
+    // Mechanical System Setup with Estimation Trick
+    let (mut mech_supply, mut mech_exhaust) = (state.params.mech_supply, state.params.mech_exhaust);
+    if state.params.mech_hours > 0.0 && mech_supply <= 0.0 && mech_exhaust <= 0.0 {
+        // Assume system was designed correctly to meet min required fresh air
+        mech_supply = n_nutz * conditioned_volume;
+        mech_exhaust = n_nutz * conditioned_volume;
+    }
+
+    let mech_system = ventilation::MechanicalSystem {
+        v_dot_mech_b: mech_supply,
+        v_dot_eta: mech_exhaust,
+        eta_t: state.params.heat_recovery,
+        t_v_mech: state.params.mech_hours,
+    };
+
+    let n_sup = mech_system.n_mech_sup(conditioned_volume);
+    let n_eta = mech_system.n_mech_eta(conditioned_volume);
+    let f_e = ventilation::calculate_f_e(n_sup, n_eta, n50, f_atd);
+
+    let n_inf = ventilation::calculate_n_inf(n50, f_atd, f_e, state.params.mech_hours);
+    let h_v_inf = n_inf * conditioned_volume * 0.34;
+    let h_v_mech = mech_system.calculate_h_v_mech(conditioned_volume);
 
     let hours_op = profile.daily_heating_hours();
 
@@ -1394,9 +1646,88 @@ fn calculate_energy(state: &State) -> Value {
     
     let q_sol = q_sol_n + q_sol_e + q_sol_s + q_sol_w + q_sol_h;
     
-    // Internal heat gains according to equation (9)
-    let phi_int = 3.0; // average thermal output of internal heat sources [W/m²]
-    let q_int = 0.024 * phi_int * d_hs * a_floor_total;
+    // Internal heat gains according to DIN V 18599-10
+    let profile_id = match profile {
+        transmission::UsageProfile::Residential => 0,
+        transmission::UsageProfile::SingleOffice => 1,
+        transmission::UsageProfile::GroupOffice => 2,
+        transmission::UsageProfile::OpenPlanOffice => 3,
+        transmission::UsageProfile::MeetingRoom => 4,
+        transmission::UsageProfile::RetailStore => 6,
+        transmission::UsageProfile::RetailFood => 7,
+        transmission::UsageProfile::Classroom => 8,
+        transmission::UsageProfile::HospitalRoom => 10,
+        transmission::UsageProfile::HotelRoom => 11,
+        transmission::UsageProfile::Restaurant => 13,
+        transmission::UsageProfile::KitchenCommercial => 14,
+        transmission::UsageProfile::DataCenter => 21,
+        transmission::UsageProfile::Gymnasium => 33,
+        transmission::UsageProfile::StorageArchive | transmission::UsageProfile::LogisticsHall => 43,
+        _ => 999, // default fallback
+    };
+    
+    let gain_profile = internal_gains::StandardGainProfile::from_profile_id(profile_id);
+    
+    let method = if state.params.custom_occupants > 0.0 || state.params.custom_equipment > 0.0 {
+        internal_gains::GainCalculationMethod::Custom(internal_gains::CustomInventoryProfile {
+            num_people: state.params.custom_occupants as u32,
+            metabolic_rate_watts: 80.0, // standard resting/light work
+            equipment_watts_active: state.params.custom_equipment,
+            t_nutz: gain_profile.t_nutz,
+        })
+    } else {
+        internal_gains::GainCalculationMethod::Standard(gain_profile)
+    };
+    
+    let exhaust_type = match state.params.lighting_exhaust.as_str() {
+        "CeilingCavity" => internal_gains::LightingExhaustType::CeilingCavity,
+        "AirDucts" => internal_gains::LightingExhaustType::AirDucts,
+        _ => internal_gains::LightingExhaustType::Standard,
+    };
+    
+    let lighting = internal_gains::LightingSystem {
+        q_l_f_daily: 0.0, // Defaults to 0 for now
+        exhaust_type,
+    };
+    
+    let material_transport = match state.params.material_transport.as_str() {
+        "ColdGoodsSmall" => Some(internal_gains::MaterialTransport {
+            c_specific_heat: 0.5,
+            m_dot: 100.0,
+            theta_in: -18.0,
+            theta_out: 20.0,
+        }),
+        "ColdGoodsLarge" => Some(internal_gains::MaterialTransport {
+            c_specific_heat: 0.5,
+            m_dot: 1000.0,
+            theta_in: -18.0,
+            theta_out: 20.0,
+        }),
+        "HotMetalSmall" => Some(internal_gains::MaterialTransport {
+            c_specific_heat: 0.13,
+            m_dot: 500.0,
+            theta_in: 200.0,
+            theta_out: 20.0,
+        }),
+        "HotMetalLarge" => Some(internal_gains::MaterialTransport {
+            c_specific_heat: 0.13,
+            m_dot: 2000.0,
+            theta_in: 200.0,
+            theta_out: 20.0,
+        }),
+        _ => None,
+    };
+    
+    let engine = internal_gains::InternalGainsEngine::new(
+        a_floor_total,
+        method,
+        material_transport,
+        lighting
+    );
+    
+    // Engine gives daily gain in Wh.
+    // Annual = daily * d_hs / 1000.0 (to get kWh)
+    let q_int = (engine.net_daily_gain_wh() * d_hs) / 1000.0;
     let q_gn = q_sol + q_int;
     
     let q_h_nd = f64::max(0.0, q_ht - 0.95 * q_gn);

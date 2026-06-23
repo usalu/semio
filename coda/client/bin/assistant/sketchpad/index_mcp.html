@@ -983,6 +983,43 @@
                 </div>
             </div>
 
+            <!-- Internal Heat Gains -->
+            <div class="section-card">
+                <h3>🔥 Internal Heat Gains</h3>
+                <div class="form-row single">
+                    <div>
+                        <label>Lighting Exhaust Type</label>
+                        <select id="lighting-exhaust" class="trigger-calc">
+                            <option value="Standard">Standard (No Exhaust)</option>
+                            <option value="CeilingCavity">Exhaust via Ceiling Cavity</option>
+                            <option value="AirDucts">Exhaust via Air Ducts</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div>
+                        <label>Material Transport</label>
+                        <select id="material-transport" class="trigger-calc">
+                            <option value="None">None</option>
+                            <option value="ColdGoodsSmall">Cold Goods (Small Volume)</option>
+                            <option value="ColdGoodsLarge">Cold Goods (Large Volume)</option>
+                            <option value="HotMetalSmall">Hot Metal/Materials (Small)</option>
+                            <option value="HotMetalLarge">Hot Metal/Materials (Large)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Occupants (Custom)</label>
+                        <input type="number" id="custom-occupants" class="trigger-calc" value="0" step="1" min="0">
+                    </div>
+                    <div>
+                        <label>Equipment (Watts)</label>
+                        <input type="number" id="custom-equipment" class="trigger-calc" value="0" step="50" min="0">
+                    </div>
+                </div>
+            </div>
+
             <!-- Hidden inputs to prevent JS errors when HVAC is commented out -->
             <input type="hidden" id="ventilation-system" value="Natural">
             <!-- Building Rotation (moved from wall-window-panel) -->
